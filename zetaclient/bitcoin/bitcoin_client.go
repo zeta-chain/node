@@ -330,13 +330,12 @@ func (ob *BTCChainClient) WatchInTx() {
 
 	defer ticker.Stop()
 	ob.logger.InTx.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.InTx.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C():
-			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsInboundEnabled {
-				continue
-			}
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			err := ob.ObserveInTx()
@@ -435,6 +434,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		}
 
 		// add block header to zetabridge
+		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
+		// https://github.com/zeta-chain/node/issues/1847
 		flags := ob.coreContext.GetCrossChainFlags()
 		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
 			err = ob.postBlockHeader(bn)
@@ -1129,13 +1130,13 @@ func (ob *BTCChainClient) WatchOutTx() {
 	}
 
 	defer ticker.Stop()
+	ob.logger.OutTx.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.OutTx.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C():
-			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsOutboundEnabled {
-				continue
-			}
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)

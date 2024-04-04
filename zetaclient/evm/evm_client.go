@@ -619,14 +619,14 @@ func (ob *ChainClient) WatchOutTx() {
 		return
 	}
 
+	ob.logger.OutTx.Info().Msgf("WatchOutTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.OutTx.Sample(&zerolog.BasicSampler{N: 10})
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsOutboundEnabled {
-				continue
-			}
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
@@ -639,22 +639,22 @@ func (ob *ChainClient) WatchOutTx() {
 					continue
 				}
 				txCount := 0
-				var receipt *ethtypes.Receipt
-				var transaction *ethtypes.Transaction
+				var outtxReceipt *ethtypes.Receipt
+				var outtx *ethtypes.Transaction
 				for _, txHash := range tracker.HashList {
-					if recpt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
+					if receipt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
 						txCount++
-						receipt = recpt
-						transaction = tx
+						outtxReceipt = receipt
+						outtx = tx
 						ob.logger.OutTx.Info().Msgf("WatchOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
 						if txCount > 1 {
 							ob.logger.OutTx.Error().Msgf(
-								"WatchOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, receipt, transaction)
+								"WatchOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outtxReceipt, outtx)
 						}
 					}
 				}
 				if txCount == 1 { // should be only one txHash confirmed for each nonce.
-					ob.SetTxNReceipt(nonceInt, receipt, transaction)
+					ob.SetTxNReceipt(nonceInt, outtxReceipt, outtx)
 				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
 					ob.logger.OutTx.Error().Msgf("WatchOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				}
@@ -841,11 +841,8 @@ func (ob *ChainClient) WatchInTx() {
 	for {
 		select {
 		case <-ticker.C():
-			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsInboundEnabled {
-				continue
-			}
-			if !ob.GetChainParams().IsSupported {
-				sampledLogger.Info().Msgf("WatchInTx: chain %d is not supported", ob.chain.ChainId)
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			err := ob.observeInTX(sampledLogger)
@@ -1127,6 +1124,7 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetabridge and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
+		// https://github.com/zeta-chain/node/issues/1847
 		flags := ob.coreContext.GetCrossChainFlags()
 		if flags.BlockHeaderVerificationFlags != nil &&
 			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&

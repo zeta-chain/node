@@ -135,46 +135,43 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 
 					// schedule keysign for pending cctxs on each chain
 					coreContext := appContext.ZetaCoreContext()
-					if flags := coreContext.GetCrossChainFlags(); flags.IsOutboundEnabled {
-						supportedChains := coreContext.GetEnabledChains()
-						for _, c := range supportedChains {
-							if c.ChainId == co.bridge.ZetaChain().ChainId {
-								continue
-							}
-							// update chain parameters for signer and chain client
-							signer, err := co.GetUpdatedSigner(coreContext, c.ChainId)
-							if err != nil {
-								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getUpdatedSigner failed for chain %d", c.ChainId)
-								continue
-							}
-							ob, err := co.GetUpdatedChainClient(coreContext, c.ChainId)
-							if err != nil {
-								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
-								continue
-							}
-							if !ob.GetChainParams().IsSupported {
-								co.logger.ZetaChainWatcher.Info().Msgf("startCctxScheduler: chain %d is not supported", c.ChainId)
-								continue
-							}
+					supportedChains := coreContext.GetEnabledChains()
+					for _, c := range supportedChains {
+						if c.ChainId == co.bridge.ZetaChain().ChainId {
+							continue
+						}
+						// update chain parameters for signer and chain client
+						signer, err := co.GetUpdatedSigner(coreContext, c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getUpdatedSigner failed for chain %d", c.ChainId)
+							continue
+						}
+						ob, err := co.GetUpdatedChainClient(coreContext, c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
+							continue
+						}
+						if !corecontext.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
+							continue
+						}
 
-							cctxList, totalPending, err := co.bridge.ListPendingCctx(c.ChainId)
-							if err != nil {
-								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: ListPendingCctx failed for chain %d", c.ChainId)
-								continue
-							}
-							// Set Pending transactions prometheus gauge
-							metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(totalPending))
+						cctxList, totalPending, err := co.bridge.ListPendingCctx(c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: ListPendingCctx failed for chain %d", c.ChainId)
+							continue
+						}
+						// Set Pending transactions prometheus gauge
+						metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(totalPending))
 
-							// #nosec G701 range is verified
-							zetaHeight := uint64(bn)
-							if chains.IsEVMChain(c.ChainId) {
-								co.scheduleCctxEVM(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
-							} else if chains.IsBitcoinChain(c.ChainId) {
-								co.scheduleCctxBTC(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
-							} else {
-								co.logger.ZetaChainWatcher.Error().Msgf("startCctxScheduler: unsupported chain %d", c.ChainId)
-								continue
-							}
+						// #nosec G701 range is verified
+						zetaHeight := uint64(bn)
+						if chains.IsEVMChain(c.ChainId) {
+							co.scheduleCctxEVM(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
+						} else if chains.IsBitcoinChain(c.ChainId) {
+							co.scheduleCctxBTC(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
+						} else {
+							co.logger.ZetaChainWatcher.Error().Msgf("startCctxScheduler: unsupported chain %d", c.ChainId)
+							continue
 						}
 					}
 

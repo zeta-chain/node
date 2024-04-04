@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"golang.org/x/net/context"
@@ -42,10 +43,7 @@ func (ob *ChainClient) WatchIntxTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsInboundEnabled {
-				continue
-			}
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ObserveIntxTrackers()
