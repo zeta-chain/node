@@ -124,6 +124,7 @@ type BTCRPCClient interface {
 	ListUnspentMinMaxAddresses(minConf int, maxConf int, addrs []btcutil.Address) ([]btcjson.ListUnspentResult, error)
 	EstimateSmartFee(confTarget int64, mode *btcjson.EstimateSmartFeeMode) (*btcjson.EstimateSmartFeeResult, error)
 	GetTransaction(txHash *chainhash.Hash) (*btcjson.GetTransactionResult, error)
+	GetRawTransaction(txHash *chainhash.Hash) (*btcutil.Tx, error)
 	GetRawTransactionVerbose(txHash *chainhash.Hash) (*btcjson.TxRawResult, error)
 	GetBlockCount() (int64, error)
 	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)

@@ -1,0 +1,42 @@
+{
+  "hex": "020000000001019481d17b8fb50d38fa5f726b858c2300567620447c93b4d77582ebd8ee286ec70000000000000000800269510f000000000017a91404b8d73fbfeccaea8c253279811e60c5e1d4a9a887ef03160000000000160014811535e6ed76ba320d54bb8f418fcb53d527e2c40247304402200e757ee5c1400ae06a47a558e11540ea7acc75ed366b2acc3301e4a17ebeccdc02204e00c03de16b6c14850cd556c503f1258da7d9f25886b4bc4d4510d182e1ec77012102f9edaa905fbafdacddbbae0fb3cefeb092c5a0dce8a7aeaeb7bd17cf6fa116c900000000",
+  "txid": "fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21",
+  "hash": "6e3db4ed0fcaad7daff5166615b5c432ba151fb885a603cbb33645fe6f360a86",
+  "size": 223,
+  "vsize": 142,
+  "weight": 565,
+  "version": 2,
+  "locktime": 0,
+  "vin": [
+    {
+      "txid": "c76e28eed8eb8275d7b4937c4420765600238c856b725ffa380db58f7bd18194",
+      "vout": 0,
+      "scriptSig": { "asm": "", "hex": "" },
+      "txinwitness": [
+        "304402200e757ee5c1400ae06a47a558e11540ea7acc75ed366b2acc3301e4a17ebeccdc02204e00c03de16b6c14850cd556c503f1258da7d9f25886b4bc4d4510d182e1ec7701",
+        "02f9edaa905fbafdacddbbae0fb3cefeb092c5a0dce8a7aeaeb7bd17cf6fa116c9"
+      ],
+      "sequence": 2147483648
+    }
+  ],
+  "vout": [
+    {
+      "value": 0.01003881,
+      "n": 0,
+      "scriptPubKey": {
+        "asm": "OP_HASH160 04b8d73fbfeccaea8c253279811e60c5e1d4a9a8 OP_EQUAL",
+        "hex": "a91404b8d73fbfeccaea8c253279811e60c5e1d4a9a887",
+        "type": "scripthash"
+      }
+    },
+    {
+      "value": 0.01442799,
+      "n": 1,
+      "scriptPubKey": {
+        "asm": "0 811535e6ed76ba320d54bb8f418fcb53d527e2c4",
+        "hex": "0014811535e6ed76ba320d54bb8f418fcb53d527e2c4",
+        "type": "witness_v0_keyhash"
+      }
+    }
+  ]
+}
