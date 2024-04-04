@@ -54,6 +54,10 @@ var evmChainsConfigs = map[int64]EVMConfig{
 		Chain:    chains.GoerliChain(),
 		Endpoint: "",
 	},
+	chains.SepoliaChain().ChainId: {
+		Chain:    chains.SepoliaChain(),
+		Endpoint: "",
+	},
 	chains.BscTestnetChain().ChainId: {
 		Chain:    chains.BscTestnetChain(),
 		Endpoint: "",

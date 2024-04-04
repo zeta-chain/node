@@ -4,9 +4,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -18,7 +15,9 @@ import (
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
