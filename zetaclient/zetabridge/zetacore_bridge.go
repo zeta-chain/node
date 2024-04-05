@@ -43,8 +43,12 @@ type ZetaCoreBridge struct {
 	zetaChain     chains.Chain
 	stop          chan struct{}
 	pause         chan struct{}
-	mockSDKClient rpcclient.Client
 	Telemetry     *metrics.TelemetryServer
+
+	// enableMockSDKClient is a flag that determines whether the mock cosmos sdk client should be used, primarily for
+	// unit testing
+	enableMockSDKClient bool
+	mockSDKClient       rpcclient.Client
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -60,12 +64,11 @@ func NewZetaCoreBridge(
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
-		ChainHost:        fmt.Sprintf("%s:1317", chainIP),
-		SignerName:       signerName,
-		SignerPasswd:     "password",
-		ChainRPC:         fmt.Sprintf("%s:26657", chainIP),
-		HsmMode:          hsmMode,
-		UseMockSDKClient: false,
+		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
+		SignerName:   signerName,
+		SignerPasswd: "password",
+		ChainRPC:     fmt.Sprintf("%s:26657", chainIP),
+		HsmMode:      hsmMode,
 	}
 
 	grpcConn, err := grpc.Dial(
@@ -89,20 +92,21 @@ func NewZetaCoreBridge(
 	}
 
 	return &ZetaCoreBridge{
-		logger:        logger,
-		grpcConn:      grpcConn,
-		accountNumber: accountsMap,
-		seqNumber:     seqMap,
-		cfg:           cfg,
-		encodingCfg:   app.MakeEncodingConfig(),
-		keys:          k,
-		broadcastLock: &sync.RWMutex{},
-		stop:          make(chan struct{}),
-		zetaChainID:   chainID,
-		zetaChain:     zetaChain,
-		pause:         make(chan struct{}),
-		mockSDKClient: nil,
-		Telemetry:     telemetry,
+		logger:              logger,
+		grpcConn:            grpcConn,
+		accountNumber:       accountsMap,
+		seqNumber:           seqMap,
+		cfg:                 cfg,
+		encodingCfg:         app.MakeEncodingConfig(),
+		keys:                k,
+		broadcastLock:       &sync.RWMutex{},
+		stop:                make(chan struct{}),
+		zetaChainID:         chainID,
+		zetaChain:           zetaChain,
+		pause:               make(chan struct{}),
+		Telemetry:           telemetry,
+		enableMockSDKClient: false,
+		mockSDKClient:       nil,
 	}, nil
 }
 
@@ -277,5 +281,5 @@ func (b *ZetaCoreBridge) Unpause() {
 
 func (b *ZetaCoreBridge) EnableMockSDKClient(client rpcclient.Client) {
 	b.mockSDKClient = client
-	b.cfg.UseMockSDKClient = true
+	b.enableMockSDKClient = true
 }

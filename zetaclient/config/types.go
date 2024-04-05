@@ -25,10 +25,6 @@ type ClientConfiguration struct {
 	SignerName      string `json:"signer_name" mapstructure:"signer_name"`
 	SignerPasswd    string `json:"signer_passwd"`
 	HsmMode         bool   `json:"hsm_mode"`
-
-	// UseMockSDKClient is a flag that determines whether the mock cosmos sdk client should be used, primarily for
-	// unit testing
-	UseMockSDKClient bool `json:"use_mock_sdk_client"`
 }
 
 type EVMConfig struct {

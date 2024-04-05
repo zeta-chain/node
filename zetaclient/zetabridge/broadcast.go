@@ -173,7 +173,7 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	ctx = ctx.WithLegacyAmino(b.encodingCfg.Amino)
 	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
 
-	if b.cfg.UseMockSDKClient {
+	if b.enableMockSDKClient {
 		ctx = ctx.WithClient(b.mockSDKClient)
 	} else {
 		remote := b.cfg.ChainRPC
