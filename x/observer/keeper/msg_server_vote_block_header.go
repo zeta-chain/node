@@ -2,12 +2,9 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -15,65 +12,21 @@ import (
 func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBlockHeader) (*types.MsgVoteBlockHeaderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check authorization for this chain
+	// check if the chain is enabled
 	chain := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, cosmoserrors.Wrapf(types.ErrSupportedChains, "chain id: %d", msg.ChainId)
 	}
 
+	// check if observer
 	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, types.ErrNotObserver
 	}
 
-	crosschainFlags, found := k.GetCrosschainFlags(ctx)
-	if !found {
-		return nil, fmt.Errorf("crosschain flags not found")
-	}
-	if crosschainFlags.BlockHeaderVerificationFlags == nil {
-		return nil, fmt.Errorf("block header verification flags not found")
-	}
-	if chains.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
-		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
-	}
-	if chains.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
-		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
-	}
-
-	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
-	if found {
-		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, fmt.Sprintf("block hash: %x", msg.BlockHash))
-	}
-
-	// if BlockHeaderState exists and parent block header is not found, this tx is rejected
-	// if no BlockHeaderState is found, allow this vote to pass through to create and initialize
-	// the Earliest/Latest height with this block header (after voting, not here)
-	// if BlockHeaderState is found, check if the block height is valid
-	// validate block height as it's not part of the header itself
-	bhs, found := k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
-	if found && bhs.EarliestHeight > 0 && bhs.EarliestHeight < msg.Height {
-		pHash, err := msg.Header.ParentHash()
-		if err != nil {
-			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
-		}
-		_, found = k.GetBlockHeader(ctx, pHash)
-		if !found {
-			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, "parent block header not found")
-		}
-		if msg.Height != bhs.LatestHeight+1 {
-			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, fmt.Sprintf("invalid block height: wanted %d, got %d", bhs.LatestHeight+1, msg.Height))
-		}
-	}
-
-	// Check timestamp
-	err := msg.Header.ValidateTimestamp(ctx.BlockTime())
+	// check the new block header is valid
+	parentHash, err := k.lightclientKeeper.CheckNewBlockHeader(ctx, msg.ChainId, msg.BlockHash, msg.Height, msg.Header)
 	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
-	}
-
-	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
-	pHash, err := msg.Header.ParentHash()
-	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrInvalidBlockHeader, err.Error())
 	}
 
 	// add vote to ballot
@@ -90,36 +43,8 @@ func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBloc
 		return &types.MsgVoteBlockHeaderResponse{}, nil
 	}
 
-	/**
-	 * Vote finalized, add block header to store
-	 */
-	bhs, found = k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
-	if !found {
-		bhs = types.BlockHeaderState{
-			ChainId:         msg.ChainId,
-			LatestHeight:    msg.Height,
-			EarliestHeight:  msg.Height,
-			LatestBlockHash: msg.BlockHash,
-		}
-	} else {
-		if msg.Height > bhs.LatestHeight {
-			bhs.LatestHeight = msg.Height
-			bhs.LatestBlockHash = msg.BlockHash
-		}
-		if bhs.EarliestHeight == 0 {
-			bhs.EarliestHeight = msg.Height
-		}
-	}
-	k.Keeper.SetBlockHeaderState(ctx, bhs)
-
-	bh := proofs.BlockHeader{
-		Header:     msg.Header,
-		Height:     msg.Height,
-		Hash:       msg.BlockHash,
-		ParentHash: pHash,
-		ChainId:    msg.ChainId,
-	}
-	k.SetBlockHeader(ctx, bh)
+	// add the new block header to the store
+	k.lightclientKeeper.AddBlockHeader(ctx, msg.ChainId, msg.Height, msg.BlockHash, msg.Header, parentHash)
 
 	return &types.MsgVoteBlockHeaderResponse{}, nil
 }

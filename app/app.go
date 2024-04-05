@@ -385,6 +385,7 @@ func New(
 		&stakingKeeper,
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
+		app.LighclientKeeper,
 	)
 
 	// register the staking hooks

@@ -20,9 +20,6 @@ var (
 	ErrKeygenBlockTooLow = errorsmod.Register(ModuleName, 1114, "please set a block number at-least 10 blocks higher than the current block number")
 	ErrKeygenCompleted   = errorsmod.Register(ModuleName, 1115, "keygen already completed")
 
-	ErrBlockAlreadyExist               = errorsmod.Register(ModuleName, 1119, "block already exists")
-	ErrNoParentHash                    = errorsmod.Register(ModuleName, 1120, "no parent hash")
-	ErrInvalidTimestamp                = errorsmod.Register(ModuleName, 1121, "invalid timestamp")
 	ErrBlockHeaderVerificationDisabled = errorsmod.Register(ModuleName, 1122, "block header verification is disabled")
 	ErrLastObserverCountNotFound       = errorsmod.Register(ModuleName, 1123, "last observer count not found")
 	ErrUpdateObserver                  = errorsmod.Register(ModuleName, 1124, "unable to update observer")
@@ -37,4 +34,5 @@ var (
 	ErrInboundDisabled      = errorsmod.Register(ModuleName, 1132, "inbound tx processing is disabled")
 	ErrInvalidZetaCoinTypes = errorsmod.Register(ModuleName, 1133, "invalid zeta coin types")
 	ErrNotObserver          = errorsmod.Register(ModuleName, 1134, "sender is not an observer")
+	ErrInvalidBlockHeader   = errorsmod.Register(ModuleName, 1135, "invalid block header")
 )

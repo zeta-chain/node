@@ -117,3 +117,8 @@ type ObserverSlashingKeeper interface {
 type ObserverAuthorityKeeper interface {
 	observertypes.AuthorityKeeper
 }
+
+//go:generate mockery --name ObserverLightclientKeeper --filename lightclient.go --case underscore --output ./observer
+type ObserverLightclientKeeper interface {
+	observertypes.LightclientKeeper
+}
