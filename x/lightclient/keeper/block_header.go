@@ -6,7 +6,6 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
@@ -68,28 +67,12 @@ func (k Keeper) CheckNewBlockHeader(
 	header proofs.HeaderData,
 ) ([]byte, error) {
 	// check verification flags are set
-	verificationFlags, found := k.GetVerificationFlags(ctx)
-	if !found {
-		return nil, types.ErrorVerificationFlagsNotFound
-	}
-	if chains.IsBitcoinChain(chainID) && !verificationFlags.BtcTypeChainEnabled {
-		return nil, cosmoserrors.Wrapf(
-			types.ErrBlockHeaderVerificationDisabled,
-			"proof verification not enabled for bitcoin ,chain id: %d",
-			chainID,
-		)
-	}
-	if chains.IsEVMChain(chainID) && !verificationFlags.EthTypeChainEnabled {
-		return nil, cosmoserrors.Wrapf(
-			types.ErrBlockHeaderVerificationDisabled,
-			"proof verification not enabled for evm ,chain id: %d",
-			chainID,
-		)
+	if err := k.CheckVerificationFlagsEnabled(ctx, chainID); err != nil {
+		return nil, err
 	}
 
 	// check if the block header already exists
-	_, found = k.GetBlockHeader(ctx, blockHash)
-	if found {
+	if _, found := k.GetBlockHeader(ctx, blockHash); found {
 		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, fmt.Sprintf("block hash: %x", blockHash))
 	}
 

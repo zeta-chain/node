@@ -41,6 +41,11 @@ type CrosschainAuthorityKeeper interface {
 	crosschaintypes.AuthorityKeeper
 }
 
+//go:generate mockery --name CrosschainLightclientKeeper --filename lightclient.go --case underscore --output ./crosschain
+type CrosschainLightclientKeeper interface {
+	crosschaintypes.LightclientKeeper
+}
+
 /**
  * Fungible Mocks
  */

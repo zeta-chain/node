@@ -1,7 +1,7 @@
-package keeper_test
+package types_test
 
 import (
-	"errors"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"testing"
 
@@ -9,123 +9,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-func TestKeeper_VerifyProof(t *testing.T) {
-	t.Run("should error if crosschain flags not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{}, false)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 5, sample.Hash().String(), 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
-	t.Run("should error if BlockHeaderVerificationFlags nil", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{
-			BlockHeaderVerificationFlags: nil,
-		}, true)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 5, sample.Hash().String(), 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
-	t.Run("should error if verification not enabled for btc chain", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{
-			BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
-				IsBtcTypeChainEnabled: false,
-			},
-		}, true)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 18444, sample.Hash().String(), 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
-	t.Run("should error if verification not enabled for evm chain", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{
-			BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
-				IsEthTypeChainEnabled: false,
-			},
-		}, true)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 5, sample.Hash().String(), 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
-	t.Run("should error if block header-based verification not supported", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{
-			BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
-				IsEthTypeChainEnabled: false,
-			},
-		}, true)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 101, sample.Hash().String(), 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
-	t.Run("should error if blockhash invalid", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{
-			BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
-				IsBtcTypeChainEnabled: true,
-			},
-		}, true)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 18444, "invalid", 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
-	t.Run("should error if block header not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetCrosschainFlags", mock.Anything).Return(observertypes.CrosschainFlags{
-			BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
-				IsEthTypeChainEnabled: true,
-			},
-		}, true)
-
-		observerMock.On("GetBlockHeader", mock.Anything, mock.Anything).Return(proofs.BlockHeader{}, false)
-
-		res, err := k.VerifyProof(ctx, &proofs.Proof{}, 5, sample.Hash().String(), 1)
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-	// TODO: // https://github.com/zeta-chain/node/issues/1875 add more tests
-}
 
 func TestKeeper_VerifyEVMInTxBody(t *testing.T) {
 	to := sample.EthAddress()

@@ -6,15 +6,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AddToInTxTracker adds a new record to the inbound transaction tracker.
-//
-// Authorized: admin policy group 1, observer.
 func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
@@ -27,19 +24,31 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 
 	isProven := false
 	if !(isAdmin || isObserver) && msg.Proof != nil {
-		txBytes, err := k.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
+		txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 		if err != nil {
 			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
 		}
 
-		if chains.IsEVMChain(msg.ChainId) {
-			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-			if err != nil {
-				return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
-			}
-		} else {
-			return nil, types.ErrTxBodyVerificationFail.Wrapf(fmt.Sprintf("cannot verify inTx body for chain %d", msg.ChainId))
+		// get chain params and tss addresses to verify the inTx body
+		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
+		if !found || chainParams == nil {
+			return nil, types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
 		}
+		tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+			BitcoinChainId: msg.ChainId,
+		})
+		if err != nil || tss == nil {
+			reason := "tss response is nil"
+			if err != nil {
+				reason = err.Error()
+			}
+			return nil, observertypes.ErrTssNotFound.Wrapf("tss address not found %s", reason)
+		}
+
+		if err := types.VerifyInTxBody(*msg, txBytes, *chainParams, *tss); err != nil {
+			return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
+		}
+
 		isProven = true
 	}
 

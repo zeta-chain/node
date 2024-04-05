@@ -24,6 +24,7 @@ type (
 		zetaObserverKeeper types.ObserverKeeper
 		fungibleKeeper     types.FungibleKeeper
 		authorityKeeper    types.AuthorityKeeper
+		lightclientKeeper  types.LightclientKeeper
 	}
 )
 
@@ -38,6 +39,7 @@ func NewKeeper(
 	zetaObserverKeeper types.ObserverKeeper,
 	fungibleKeeper types.FungibleKeeper,
 	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
 ) *Keeper {
 	// ensure governance module account is set
 	// FIXME: enable this check! (disabled for now to avoid unit test panic)
@@ -56,6 +58,7 @@ func NewKeeper(
 		zetaObserverKeeper: zetaObserverKeeper,
 		fungibleKeeper:     fungibleKeeper,
 		authorityKeeper:    authorityKeeper,
+		lightclientKeeper:  lightclientKeeper,
 	}
 }
 
@@ -85,6 +88,10 @@ func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 
 func (k Keeper) GetAuthorityKeeper() types.AuthorityKeeper {
 	return k.authorityKeeper
+}
+
+func (k Keeper) GetLightclientKeeper() types.LightclientKeeper {
+	return k.lightclientKeeper
 }
 
 func (k Keeper) GetStoreKey() storetypes.StoreKey {

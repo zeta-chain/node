@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	cosmoserrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
@@ -24,4 +26,39 @@ func (k Keeper) GetVerificationFlags(ctx sdk.Context) (val types.VerificationFla
 
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
+}
+
+// CheckVerificationFlagsEnabled checks for a specific chain if the verification flags are enabled
+func (k Keeper) CheckVerificationFlagsEnabled(ctx sdk.Context, chainID int64) error {
+	verificationFlags, found := k.GetVerificationFlags(ctx)
+	if !found {
+		return types.ErrVerificationFlagsNotFound
+	}
+
+	// check if the chain is enabled for the specific type
+	if chains.IsBitcoinChain(chainID) {
+		if !verificationFlags.BtcTypeChainEnabled {
+			return cosmoserrors.Wrapf(
+				types.ErrBlockHeaderVerificationDisabled,
+				"proof verification not enabled for bitcoin ,chain id: %d",
+				chainID,
+			)
+		}
+	} else if chains.IsEVMChain(chainID) {
+		if !verificationFlags.EthTypeChainEnabled {
+			return cosmoserrors.Wrapf(
+				types.ErrBlockHeaderVerificationDisabled,
+				"proof verification not enabled for evm ,chain id: %d",
+				chainID,
+			)
+		}
+	} else {
+		return cosmoserrors.Wrapf(
+			types.ErrChainNotSupported,
+			"chain ID %d doesn't support block header verification",
+			chainID,
+		)
+	}
+
+	return nil
 }

@@ -50,6 +50,7 @@ func EmissionKeeperWithMockOptions(
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
 		initAuthorityKeeper(cdc, db, stateStore),
+		initLightclientKeeper(cdc, db, stateStore),
 	)
 
 	zetaKeepers := ZetaKeepers{

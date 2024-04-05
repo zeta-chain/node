@@ -3,15 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"strings"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	eth "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -60,11 +55,29 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 	isProven := false
 	if msg.Proof != nil { // verify proof when it is provided
-		txBytes, err := k.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
+		txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 		if err != nil {
 			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
 		}
-		err = k.VerifyOutTxBody(ctx, msg, txBytes)
+
+		// get tss address
+		var bitcoinChainID int64
+		if chains.IsBitcoinChain(msg.ChainId) {
+			bitcoinChainID = msg.ChainId
+		}
+
+		tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+			BitcoinChainId: bitcoinChainID,
+		})
+		if err != nil || tss == nil {
+			reason := "tss response is nil"
+			if err != nil {
+				reason = err.Error()
+			}
+			return nil, observertypes.ErrTssNotFound.Wrapf("tss address not found %s", reason)
+		}
+
+		err = types.VerifyOutTxBody(*msg, txBytes, *tss)
 		if err != nil {
 			return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 		}
@@ -111,105 +124,4 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		k.SetOutTxTracker(ctx, tracker)
 	}
 	return &types.MsgAddToOutTxTrackerResponse{}, nil
-}
-
-func (k Keeper) VerifyOutTxBody(ctx sdk.Context, msg *types.MsgAddToOutTxTracker, txBytes []byte) error {
-	// get tss address
-	var bitcoinChainID int64
-	if chains.IsBitcoinChain(msg.ChainId) {
-		bitcoinChainID = msg.ChainId
-	}
-	tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
-		BitcoinChainId: bitcoinChainID,
-	})
-	if err != nil {
-		return err
-	}
-
-	// verify message against transaction body
-	if chains.IsEVMChain(msg.ChainId) {
-		err = VerifyEVMOutTxBody(msg, txBytes, tss.Eth)
-	} else if chains.IsBitcoinChain(msg.ChainId) {
-		err = VerifyBTCOutTxBody(msg, txBytes, tss.Btc)
-	} else {
-		return fmt.Errorf("cannot verify outTx body for chain %d", msg.ChainId)
-	}
-	return err
-}
-
-// VerifyEVMOutTxBody validates the sender address, nonce, chain id and tx hash.
-// Note: 'msg' may contain fabricated information
-func VerifyEVMOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssEth string) error {
-	var txx ethtypes.Transaction
-	err := txx.UnmarshalBinary(txBytes)
-	if err != nil {
-		return err
-	}
-	signer := ethtypes.NewLondonSigner(txx.ChainId())
-	sender, err := ethtypes.Sender(signer, &txx)
-	if err != nil {
-		return err
-	}
-	tssAddr := eth.HexToAddress(tssEth)
-	if tssAddr == (eth.Address{}) {
-		return fmt.Errorf("tss address not found")
-	}
-	if sender != tssAddr {
-		return fmt.Errorf("sender %s is not tss address", sender)
-	}
-	if txx.ChainId().Cmp(big.NewInt(msg.ChainId)) != 0 {
-		return fmt.Errorf("want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
-	}
-	if txx.Nonce() != msg.Nonce {
-		return fmt.Errorf("want nonce %d, got %d", txx.Nonce(), msg.Nonce)
-	}
-	if txx.Hash().Hex() != msg.TxHash {
-		return fmt.Errorf("want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
-	}
-	return nil
-}
-
-// VerifyBTCOutTxBody validates the SegWit sender address, nonce and chain id and tx hash
-// Note: 'msg' may contain fabricated information
-func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
-	if !chains.IsBitcoinChain(msg.ChainId) {
-		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
-	}
-	tx, err := btcutil.NewTxFromBytes(txBytes)
-	if err != nil {
-		return err
-	}
-	for _, vin := range tx.MsgTx().TxIn {
-		if len(vin.Witness) != 2 { // outTx is SegWit transaction for now
-			return fmt.Errorf("not a SegWit transaction")
-		}
-		pubKey, err := btcec.ParsePubKey(vin.Witness[1], btcec.S256())
-		if err != nil {
-			return fmt.Errorf("failed to parse public key")
-		}
-		bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(msg.ChainId)
-		if err != nil {
-			return fmt.Errorf("failed to get Bitcoin net params, error %s", err.Error())
-		}
-		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(
-			btcutil.Hash160(pubKey.SerializeCompressed()),
-			bitcoinNetParams,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to create P2WPKH address")
-		}
-		if addrP2WPKH.EncodeAddress() != tssBtc {
-			return fmt.Errorf("sender %s is not tss address", addrP2WPKH.EncodeAddress())
-		}
-	}
-	if len(tx.MsgTx().TxOut) < 1 {
-		return fmt.Errorf("outTx should have at least one output")
-	}
-	if tx.MsgTx().TxOut[0].Value != chains.NonceMarkAmount(msg.Nonce) {
-		return fmt.Errorf("want nonce mark %d, got %d", tx.MsgTx().TxOut[0].Value, chains.NonceMarkAmount(msg.Nonce))
-	}
-	if tx.MsgTx().TxHash().String() != msg.TxHash {
-		return fmt.Errorf("want tx hash %s, got %s", tx.MsgTx().TxHash(), msg.TxHash)
-	}
-	return nil
 }

@@ -3,6 +3,8 @@ package keeper
 import (
 	"testing"
 
+	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -46,6 +48,7 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 	observerKeeper := keeper.Keeper{}
 	fungibleKeeper := fungiblekeeper.Keeper{}
 	authorityKeeper := authoritykeeper.Keeper{}
+	lightclientKeeper := lightclientkeeper.Keeper{}
 
 	k := NewKeeper(
 		codec.NewProtoCodec(registry),
@@ -58,6 +61,7 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		observerKeeper,
 		&fungibleKeeper,
 		authorityKeeper,
+		lightclientKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

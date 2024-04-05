@@ -167,3 +167,7 @@ type FungibleKeeper interface {
 type AuthorityKeeper interface {
 	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
 }
+
+type LightclientKeeper interface {
+	VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error)
+}

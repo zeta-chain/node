@@ -452,6 +452,7 @@ func New(
 		app.ObserverKeeper,
 		&app.FungibleKeeper,
 		app.AuthorityKeeper,
+		app.LighclientKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.

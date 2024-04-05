@@ -23,22 +23,24 @@ import (
 )
 
 type CrosschainMockOptions struct {
-	UseBankMock      bool
-	UseAccountMock   bool
-	UseStakingMock   bool
-	UseObserverMock  bool
-	UseFungibleMock  bool
-	UseAuthorityMock bool
+	UseBankMock        bool
+	UseAccountMock     bool
+	UseStakingMock     bool
+	UseObserverMock    bool
+	UseFungibleMock    bool
+	UseAuthorityMock   bool
+	UseLightclientMock bool
 }
 
 var (
 	CrosschainMocksAll = CrosschainMockOptions{
-		UseBankMock:      true,
-		UseAccountMock:   true,
-		UseStakingMock:   true,
-		UseObserverMock:  true,
-		UseFungibleMock:  true,
-		UseAuthorityMock: true,
+		UseBankMock:        true,
+		UseAccountMock:     true,
+		UseStakingMock:     true,
+		UseObserverMock:    true,
+		UseFungibleMock:    true,
+		UseAuthorityMock:   true,
+		UseLightclientMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
@@ -62,6 +64,7 @@ func CrosschainKeeperWithMocks(
 
 	// Create zeta keepers
 	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
+	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore)
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
 		db,
@@ -70,6 +73,7 @@ func CrosschainKeeperWithMocks(
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
 		authorityKeeperTmp,
+		lightclientKeeperTmp,
 	)
 	fungibleKeeperTmp := initFungibleKeeper(
 		cdc,
@@ -87,6 +91,7 @@ func CrosschainKeeperWithMocks(
 		FungibleKeeper:  fungibleKeeperTmp,
 		AuthorityKeeper: &authorityKeeperTmp,
 	}
+	var lightclientKeeper types.LightclientKeeper = lightclientKeeperTmp
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
@@ -128,6 +133,9 @@ func CrosschainKeeperWithMocks(
 	if mockOptions.UseFungibleMock {
 		fungibleKeeper = crosschainmocks.NewCrosschainFungibleKeeper(t)
 	}
+	if mockOptions.UseLightclientMock {
+		lightclientKeeper = crosschainmocks.NewCrosschainLightclientKeeper(t)
+	}
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -140,6 +148,7 @@ func CrosschainKeeperWithMocks(
 		observerKeeper,
 		fungibleKeeper,
 		authorityKeeper,
+		lightclientKeeper,
 	)
 
 	return k, ctx, sdkKeepers, zetaKeepers
