@@ -12,9 +12,10 @@ import (
 
 // Keeper maintains the link to data storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
-	cdc      codec.Codec
-	storeKey storetypes.StoreKey
-	memKey   storetypes.StoreKey
+	cdc             codec.Codec
+	storeKey        storetypes.StoreKey
+	memKey          storetypes.StoreKey
+	authorityKeeper types.AuthorityKeeper
 }
 
 // NewKeeper creates new instances of the lightclient Keeper
@@ -22,11 +23,13 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey,
 	memKey storetypes.StoreKey,
+	authorityKeeper types.AuthorityKeeper,
 ) Keeper {
 	return Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		memKey:   memKey,
+		cdc:             cdc,
+		storeKey:        storeKey,
+		memKey:          memKey,
+		authorityKeeper: authorityKeeper,
 	}
 }
 
@@ -48,4 +51,9 @@ func (k Keeper) GetMemKey() storetypes.StoreKey {
 // GetCodec returns the codec for lightclient
 func (k Keeper) GetCodec() codec.Codec {
 	return k.cdc
+}
+
+// GetAuthorityKeeper returns the authority keeper
+func (k Keeper) GetAuthorityKeeper() types.AuthorityKeeper {
+	return k.authorityKeeper
 }

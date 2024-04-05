@@ -375,6 +375,7 @@ func New(
 		appCodec,
 		keys[lightclienttypes.StoreKey],
 		keys[lightclienttypes.MemStoreKey],
+		app.AuthorityKeeper,
 	)
 
 	app.ObserverKeeper = observerkeeper.NewKeeper(

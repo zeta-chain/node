@@ -75,7 +75,7 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	cdc := NewCodec()
 
 	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
-	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore)
+	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore, authorityKeeperTmp)
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
