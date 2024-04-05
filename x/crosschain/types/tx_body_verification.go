@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"math/big"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -9,7 +11,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
 
 // VerifyInTxBody validates the tx body for a inbound tx

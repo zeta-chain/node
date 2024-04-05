@@ -24,8 +24,6 @@ message MsgAddToOutTxTracker {
 
 AddToInTxTracker adds a new record to the inbound transaction tracker.
 
-Authorized: admin policy group 1, observer.
-
 ```proto
 message MsgAddToInTxTracker {
 	string creator = 1;
