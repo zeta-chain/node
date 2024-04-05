@@ -1,18 +1,23 @@
 package keeper_test
 
 import (
+	"errors"
 	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -134,7 +139,7 @@ func setupZRC20Pool(
 
 func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 	t.Run("can setup a new chain gas coin", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
@@ -148,5 +153,297 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 		require.NoError(t, err)
 		require.Equal(t, zrc20, found)
+	})
+
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if mint coins fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseBankMock: true,
+		})
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+		bankMock.On("MintCoins", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("err"))
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if set gas coin fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin fail
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if deposit zrc20 fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin success
+		mockEVMKeeper.MockEVMSuccessCallOnce()
+
+		// depositZrc20 fails
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if set gas pool call fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin success
+		// depositZrc20 success
+		mockEVMKeeper.MockEVMSuccessCallTimes(2)
+
+		// set gas pool call fail
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if get uniswap router fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin success
+		// depositZrc20 success
+		// set gas pool call success
+		mockEVMKeeper.MockEVMSuccessCallTimes(3)
+
+		// get uniswap router fails
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if approve fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin success
+		// depositZrc20 success
+		// set gas pool call success
+		mockEVMKeeper.MockEVMSuccessCallTimes(3)
+
+		// get uniswap router success
+		sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
+		require.NoError(t, err)
+		routerAddr, err := sysABI.Methods["uniswapv2Router02Address"].Outputs.Pack(sample.EthAddress())
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: routerAddr})
+
+		// get approve fails
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if add liquidity fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin success
+		// depositZrc20 success
+		// set gas pool call success
+		mockEVMKeeper.MockEVMSuccessCallTimes(3)
+
+		// get uniswap router success
+		sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
+		require.NoError(t, err)
+		routerAddr, err := sysABI.Methods["uniswapv2Router02Address"].Outputs.Pack(sample.EthAddress())
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: routerAddr})
+
+		// get approve success
+		mockEVMKeeper.MockEVMSuccessCallOnce()
+
+		// add liquidity fails
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if add liquidity fails to unpack", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+		// deployZrc20 success
+		mockSuccessfulContractDeployment(ctx, t, k)
+
+		// setGasCoin success
+		// depositZrc20 success
+		// set gas pool call success
+		mockEVMKeeper.MockEVMSuccessCallTimes(3)
+
+		// get uniswap router success
+		sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
+		require.NoError(t, err)
+		routerAddr, err := sysABI.Methods["uniswapv2Router02Address"].Outputs.Pack(sample.EthAddress())
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: routerAddr})
+
+		// get approve success
+		mockEVMKeeper.MockEVMSuccessCallOnce()
+
+		// add liquidity success
+		mockEVMKeeper.MockEVMSuccessCallOnce()
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
 	})
 }

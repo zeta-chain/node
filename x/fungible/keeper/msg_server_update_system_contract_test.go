@@ -53,6 +53,11 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		wzeta, factory, router, _, oldSystemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		gas1 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID1, "foo", "foo")
 		gas2 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID2, "bar", "bar")
+		// this one should be skipped and not impact update
+		fc := types.ForeignCoins{
+			Zrc20ContractAddress: "0x",
+		}
+		k.SetForeignCoins(ctx, fc)
 
 		// deploy a new system contracts
 		newSystemContract, err := k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
