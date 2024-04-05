@@ -13,7 +13,12 @@ import (
 )
 
 // VerifyInTxBody validates the tx body for a inbound tx
-func VerifyInTxBody(msg MsgAddToInTxTracker, txBytes []byte, chainParams observertypes.ChainParams, tss observertypes.QueryGetTssAddressResponse) error {
+func VerifyInTxBody(
+	msg MsgAddToInTxTracker,
+	txBytes []byte,
+	chainParams observertypes.ChainParams,
+	tss observertypes.QueryGetTssAddressResponse,
+) error {
 	// verify message against transaction body
 	if chains.IsEVMChain(msg.ChainId) {
 		return VerifyInTxBodyEVM(msg, txBytes, chainParams, tss)
