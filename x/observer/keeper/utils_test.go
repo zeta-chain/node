@@ -44,13 +44,13 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 
 func TestKeeper_IsAuthorized(t *testing.T) {
 	t.Run("authorized observer", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -71,13 +71,13 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 	})
 
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -144,11 +144,11 @@ func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 	})
 
 	t.Run("should error if delegation not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
@@ -157,16 +157,16 @@ func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 	})
 
 	t.Run("should remove from observer list if tokens less than min del", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.DelegatorShares = sdk.NewDec(100)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
-		k.GetStakingKeeper().SetDelegation(ctx, stakingtypes.Delegation{
+		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
 			ValidatorAddress: validator.GetOperator().String(),
 			Shares:           sdk.NewDec(10),
@@ -184,20 +184,20 @@ func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 	})
 
 	t.Run("should not remove from observer list if tokens gte than min del", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 
 		validator.DelegatorShares = sdk.NewDec(1)
 		validator.Tokens = sdk.NewInt(1)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
 		minDelegation, err := types.GetMinObserverDelegationDec()
 		require.NoError(t, err)
-		k.GetStakingKeeper().SetDelegation(ctx, stakingtypes.Delegation{
+		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
 			ValidatorAddress: validator.GetOperator().String(),
 			Shares:           minDelegation,
@@ -235,11 +235,11 @@ func TestKeeper_IsOpeartorTombstoned(t *testing.T) {
 	})
 
 	t.Run("should not error if validator found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
@@ -266,11 +266,11 @@ func TestKeeper_IsValidator(t *testing.T) {
 	})
 
 	t.Run("should err if validator not bonded", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
@@ -279,13 +279,13 @@ func TestKeeper_IsValidator(t *testing.T) {
 	})
 
 	t.Run("should err if validator jailed", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.Status = stakingtypes.Bonded
 		validator.Jailed = true
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
@@ -294,13 +294,13 @@ func TestKeeper_IsValidator(t *testing.T) {
 	})
 
 	t.Run("should not err if validator not jailed and bonded", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.Status = stakingtypes.Bonded
 		validator.Jailed = false
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 

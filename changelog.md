@@ -56,6 +56,7 @@
 * [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
 * [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
 * [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
+* [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 
 ### Fixes
 

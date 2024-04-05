@@ -6,16 +6,20 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -169,6 +173,71 @@ func assertExampleBarValue(
 }
 
 func TestKeeper_DeployZRC20Contract(t *testing.T) {
+	t.Run("should error if chain not found", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			987,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if deploy contract fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+		chainID := getValidChainID(t)
+		mockFailedContractDeployment(ctx, t, k)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
 	t.Run("can deploy the zrc20 contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -225,7 +294,61 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 	})
 }
 
-func TestKeeper_DeploySystemContract(t *testing.T) {
+func TestKeeper_DeploySystemContracts(t *testing.T) {
+	t.Run("system contract deployment should error if deploy contract fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		wzeta, uniswapV2Factory, uniswapV2Router, _, _ := deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+		mockFailedContractDeployment(ctx, t, k)
+
+		res, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("router deployment should error if deploy contract fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockFailedContractDeployment(ctx, t, k)
+
+		res, err := k.DeployUniswapV2Router02(ctx, sample.EthAddress(), sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("wzeta deployment should error if deploy contract fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockFailedContractDeployment(ctx, t, k)
+
+		res, err := k.DeployWZETA(ctx)
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("connector deployment should error if deploy contract fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockFailedContractDeployment(ctx, t, k)
+
+		res, err := k.DeployConnectorZEVM(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
 	t.Run("can deploy the system contracts", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -280,6 +403,32 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 }
 
 func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			sample.EthAddress(),
+			example,
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
 	t.Run("should deposit and call the contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -683,5 +832,497 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			nil,
 		)
 		require.ErrorIs(t, err, sample.ErrSample)
+	})
+}
+
+func TestKeeper_DeployContract(t *testing.T) {
+	t.Run("should error if pack ctor args fails", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		addr, err := k.DeployContract(ctx, zrc20.ZRC20MetaData, "")
+		require.ErrorIs(t, err, types.ErrABIGet)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if metadata bin empty", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		metadata := &bind.MetaData{
+			ABI: wzeta.WETH9MetaData.ABI,
+			Bin: "",
+		}
+		addr, err := k.DeployContract(ctx, metadata)
+		require.ErrorIs(t, err, types.ErrABIGet)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if metadata cant be decoded", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		metadata := &bind.MetaData{
+			ABI: wzeta.WETH9MetaData.ABI,
+			Bin: "0x1",
+		}
+		addr, err := k.DeployContract(ctx, metadata)
+		require.ErrorIs(t, err, types.ErrABIPack)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if module acc not set up", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		addr, err := k.DeployContract(ctx, wzeta.WETH9MetaData)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+}
+
+func TestKeeper_QueryProtocolFlatFee(t *testing.T) {
+	t.Run("should error if evm call fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.QueryProtocolFlatFee(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if unpack fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.QueryProtocolFlatFee(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return fee", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		fee := big.NewInt(42)
+		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(fee)
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
+
+		res, err := k.QueryProtocolFlatFee(ctx, sample.EthAddress())
+		require.NoError(t, err)
+		require.Equal(t, fee, res)
+	})
+}
+
+func TestKeeper_QueryGasLimit(t *testing.T) {
+	t.Run("should error if evm call fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.QueryGasLimit(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if unpack fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.QueryGasLimit(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return gas limit", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		limit := big.NewInt(42)
+		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(limit)
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
+
+		res, err := k.QueryGasLimit(ctx, sample.EthAddress())
+		require.NoError(t, err)
+		require.Equal(t, limit, res)
+	})
+}
+
+func TestKeeper_QueryChainIDFromContract(t *testing.T) {
+	t.Run("should error if evm call fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.QueryChainIDFromContract(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if unpack fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.QueryChainIDFromContract(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return chain id", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		chainId := big.NewInt(42)
+		chainIdFromContract, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(chainId)
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: chainIdFromContract})
+
+		res, err := k.QueryChainIDFromContract(ctx, sample.EthAddress())
+		require.NoError(t, err)
+		require.Equal(t, chainId, res)
+	})
+}
+
+func TestKeeper_TotalSupplyZRC4(t *testing.T) {
+	t.Run("should error if evm call fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.TotalSupplyZRC4(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if unpack fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.TotalSupplyZRC4(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return total supply", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		supply := big.NewInt(42)
+		supplyFromContract, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(supply)
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: supplyFromContract})
+
+		res, err := k.TotalSupplyZRC4(ctx, sample.EthAddress())
+		require.NoError(t, err)
+		require.Equal(t, supply, res)
+	})
+}
+
+func TestKeeper_BalanceOfZRC4(t *testing.T) {
+	t.Run("should error if evm call fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.BalanceOfZRC4(ctx, sample.EthAddress(), sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if unpack fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.BalanceOfZRC4(ctx, sample.EthAddress(), sample.EthAddress())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return balance", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		balance := big.NewInt(42)
+		balanceFromContract, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(balance)
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: balanceFromContract})
+
+		res, err := k.BalanceOfZRC4(ctx, sample.EthAddress(), sample.EthAddress())
+		require.NoError(t, err)
+		require.Equal(t, balance, res)
+	})
+}
+
+func TestKeeper_QueryZRC20Data(t *testing.T) {
+	t.Run("should error if evm call fails for name", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should error if unpack fails for name", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should error if evm call fails for symbol", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		name, err := zrc4ABI.Methods["name"].Outputs.Pack("name")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: name})
+
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should error if unpack for symbol", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		name, err := zrc4ABI.Methods["name"].Outputs.Pack("name")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: name})
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should error if evm call fails for decimals", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		name, err := zrc4ABI.Methods["name"].Outputs.Pack("name")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: name})
+
+		symbol, err := zrc4ABI.Methods["symbol"].Outputs.Pack("symbol")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: symbol})
+
+		mockEVMKeeper.MockEVMFailCallOnce()
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should error if unpack fails for decimals", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		name, err := zrc4ABI.Methods["name"].Outputs.Pack("name")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: name})
+
+		symbol, err := zrc4ABI.Methods["symbol"].Outputs.Pack("symbol")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: symbol})
+
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: []byte{}})
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.Error(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should return zrc20 data", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
+		require.NoError(t, err)
+		name, err := zrc4ABI.Methods["name"].Outputs.Pack("name")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: name})
+
+		symbol, err := zrc4ABI.Methods["symbol"].Outputs.Pack("symbol")
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: symbol})
+
+		decimals, err := zrc4ABI.Methods["decimals"].Outputs.Pack(uint8(8))
+		require.NoError(t, err)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: decimals})
+
+		res, err := k.QueryZRC20Data(ctx, sample.EthAddress())
+		require.NoError(t, err)
+		require.Equal(t, uint8(8), res.Decimals)
+		require.Equal(t, "name", res.Name)
+		require.Equal(t, "symbol", res.Symbol)
 	})
 }
