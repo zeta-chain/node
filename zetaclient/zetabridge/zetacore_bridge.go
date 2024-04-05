@@ -195,7 +195,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 
 // UpdateZetaCoreContext updates core context
 // zetacore stores core context for all clients
-func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCoreContext, init bool) error {
+func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCoreContext, init bool, sampledLogger zerolog.Logger) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err
@@ -220,7 +220,6 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	var newBTCParams *observertypes.ChainParams
 
 	// check and update chain params for each chain
-	sampledLogger := b.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for _, chainParam := range chainParams {
 		if !chainParam.GetIsSupported() {
 			sampledLogger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
