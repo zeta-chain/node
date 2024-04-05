@@ -11,6 +11,13 @@ import (
 )
 
 func TestKeeper_CodeHash(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		res, err := k.CodeHash(ctx, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
 	t.Run("should return code hash", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
