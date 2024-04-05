@@ -19,48 +19,58 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 		return nil, observertypes.ErrSupportedChains
 	}
 
-	isAdmin := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
-	isObserver := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator)
+	// emergency or observer group can submit tracker without proof
+	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
+	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 
-	isProven := false
-	if !(isAdmin || isObserver) && msg.Proof != nil {
-		txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
-		if err != nil {
-			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
+	if !(isEmergencyGroup || isObserver) {
+		// if not directly authorized, check the proof, if not provided, return unauthorized
+		if msg.Proof == nil {
+			return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 		}
 
-		// get chain params and tss addresses to verify the inTx body
-		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
-		if !found || chainParams == nil {
-			return nil, types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
+		// verify the proof and tx body
+		if err := verifyProofAndInTxBody(ctx, k, msg); err != nil {
+			return nil, err
 		}
-		tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
-			BitcoinChainId: msg.ChainId,
-		})
-		if err != nil || tss == nil {
-			reason := "tss response is nil"
-			if err != nil {
-				reason = err.Error()
-			}
-			return nil, observertypes.ErrTssNotFound.Wrapf("tss address not found %s", reason)
-		}
-
-		if err := types.VerifyInTxBody(*msg, txBytes, *chainParams, *tss); err != nil {
-			return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
-		}
-
-		isProven = true
 	}
 
-	// Sender needs to be either the admin policy account or an observer
-	if !(isAdmin || isObserver || isProven) {
-		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
-	}
-
+	// add the inTx tracker
 	k.SetInTxTracker(ctx, types.InTxTracker{
 		ChainId:  msg.ChainId,
 		TxHash:   msg.TxHash,
 		CoinType: msg.CoinType,
 	})
+
 	return &types.MsgAddToInTxTrackerResponse{}, nil
+}
+
+// verifyProofAndInTxBody verifies the proof and inbound tx body
+func verifyProofAndInTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToInTxTracker) error {
+	txBytes, err := k.GetLightclientKeeper().VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
+	if err != nil {
+		return types.ErrProofVerificationFail.Wrapf(err.Error())
+	}
+
+	// get chain params and tss addresses to verify the inTx body
+	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, msg.ChainId)
+	if !found || chainParams == nil {
+		return types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
+	}
+	tss, err := k.GetObserverKeeper().GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+		BitcoinChainId: msg.ChainId,
+	})
+	if err != nil || tss == nil {
+		reason := "tss response is nil"
+		if err != nil {
+			reason = err.Error()
+		}
+		return observertypes.ErrTssNotFound.Wrapf("tss address not found %s", reason)
+	}
+
+	if err := types.VerifyInTxBody(*msg, txBytes, *chainParams, *tss); err != nil {
+		return types.ErrTxBodyVerificationFail.Wrapf(err.Error())
+	}
+
+	return nil
 }
