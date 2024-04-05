@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"strconv"
@@ -6,11 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // Keeper Tests
-func createNGasPrice(keeper *Keeper, ctx sdk.Context, n int) []types.GasPrice {
+func createNGasPrice(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.GasPrice {
 	items := make([]types.GasPrice, n)
 	for i := range items {
 		items[i].Creator = "any"
@@ -22,26 +24,27 @@ func createNGasPrice(keeper *Keeper, ctx sdk.Context, n int) []types.GasPrice {
 }
 
 func TestGasPriceGet(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNGasPrice(keeper, ctx, 10)
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	items := createNGasPrice(k, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetGasPrice(ctx, item.ChainId)
+		rst, found := k.GetGasPrice(ctx, item.ChainId)
 		require.True(t, found)
 		require.Equal(t, item, rst)
 	}
 }
+
 func TestGasPriceRemove(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNGasPrice(keeper, ctx, 10)
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	items := createNGasPrice(k, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveGasPrice(ctx, item.Index)
-		_, found := keeper.GetGasPrice(ctx, item.ChainId)
+		k.RemoveGasPrice(ctx, item.Index)
+		_, found := k.GetGasPrice(ctx, item.ChainId)
 		require.False(t, found)
 	}
 }
 
 func TestGasPriceGetAll(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNGasPrice(keeper, ctx, 10)
-	require.Equal(t, items, keeper.GetAllGasPrice(ctx))
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	items := createNGasPrice(k, ctx, 10)
+	require.Equal(t, items, k.GetAllGasPrice(ctx))
 }
