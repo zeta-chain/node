@@ -25,4 +25,5 @@ zetacored tx lightclient [flags]
 ### SEE ALSO
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
+* [zetacored tx lightclient update-verification-flags](zetacored_tx_lightclient_update-verification-flags.md)	 - Update verification flags
 

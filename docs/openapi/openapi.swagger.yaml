@@ -54361,6 +54361,8 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
+  lightclientMsgUpdateVerificationFlagsResponse:
+    type: object
   lightclientQueryAllChainStateResponse:
     type: object
     properties:
