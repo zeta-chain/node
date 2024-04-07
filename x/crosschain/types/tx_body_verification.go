@@ -23,9 +23,8 @@ func VerifyInTxBody(
 	// verify message against transaction body
 	if chains.IsEVMChain(msg.ChainId) {
 		return VerifyInTxBodyEVM(msg, txBytes, chainParams, tss)
-	} else {
-		return fmt.Errorf("cannot verify inTx body for chain %d", msg.ChainId)
 	}
+	return fmt.Errorf("cannot verify inTx body for chain %d", msg.ChainId)
 }
 
 // VerifyInTxBodyEVM validates the chain id and connector contract address for Zeta, ERC20 custody contract address for ERC20 and TSS address for Gas.
@@ -81,9 +80,8 @@ func VerifyOutTxBody(msg MsgAddToOutTxTracker, txBytes []byte, tss observertypes
 		return VerifyOutTxBodyEVM(msg, txBytes, tss.Eth)
 	} else if chains.IsBitcoinChain(msg.ChainId) {
 		return VerifyOutTxBodyBTC(msg, txBytes, tss.Btc)
-	} else {
-		return fmt.Errorf("cannot verify outTx body for chain %d", msg.ChainId)
 	}
+	return fmt.Errorf("cannot verify outTx body for chain %d", msg.ChainId)
 }
 
 // VerifyOutTxBodyEVM validates the sender address, nonce, chain id and tx hash.

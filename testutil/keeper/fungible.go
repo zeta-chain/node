@@ -94,6 +94,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		cdc,
 		db,
 		stateStore,
+		authorityKeeperTmp,
 	)
 
 	// Create observer keeper
