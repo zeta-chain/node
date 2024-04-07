@@ -30,7 +30,7 @@ func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBloc
 	}
 
 	// add vote to ballot
-	ballot, _, err := k.FindBallot(ctx, msg.Digest(), chain, types.ObservationType_InBoundTx)
+	ballot, isNew, err := k.FindBallot(ctx, msg.Digest(), chain, types.ObservationType_InBoundTx)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(err, "failed to find ballot")
 	}
@@ -40,11 +40,17 @@ func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBloc
 	}
 	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
-		return &types.MsgVoteBlockHeaderResponse{}, nil
+		return &types.MsgVoteBlockHeaderResponse{
+			BallotCreated: isNew,
+			VoteFinalized: false,
+		}, nil
 	}
 
 	// add the new block header to the store
 	k.lightclientKeeper.AddBlockHeader(ctx, msg.ChainId, msg.Height, msg.BlockHash, msg.Header, parentHash)
 
-	return &types.MsgVoteBlockHeaderResponse{}, nil
+	return &types.MsgVoteBlockHeaderResponse{
+		BallotCreated: isNew,
+		VoteFinalized: true,
+	}, nil
 }

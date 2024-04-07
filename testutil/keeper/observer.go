@@ -134,6 +134,13 @@ func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Zeta
 	return ObserverKeeperWithMocks(t, ObserverNoMocks)
 }
 
+// GetObserverLightclientMock returns a new observer lightclient keeper mock
+func GetObserverLightclientMock(t testing.TB, keeper *keeper.Keeper) *observermocks.ObserverLightclientKeeper {
+	cok, ok := keeper.GetLightclientKeeper().(*observermocks.ObserverLightclientKeeper)
+	require.True(t, ok)
+	return cok
+}
+
 // GetObserverAuthorityMock returns a new observer authority keeper mock
 func GetObserverAuthorityMock(t testing.TB, keeper *keeper.Keeper) *observermocks.ObserverAuthorityKeeper {
 	cok, ok := keeper.GetAuthorityKeeper().(*observermocks.ObserverAuthorityKeeper)

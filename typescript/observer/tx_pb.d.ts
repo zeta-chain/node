@@ -118,6 +118,16 @@ export declare class MsgVoteBlockHeader extends Message<MsgVoteBlockHeader> {
  * @generated from message zetachain.zetacore.observer.MsgVoteBlockHeaderResponse
  */
 export declare class MsgVoteBlockHeaderResponse extends Message<MsgVoteBlockHeaderResponse> {
+  /**
+   * @generated from field: bool ballot_created = 1;
+   */
+  ballotCreated: boolean;
+
+  /**
+   * @generated from field: bool vote_finalized = 2;
+   */
+  voteFinalized: boolean;
+
   constructor(data?: PartialMessage<MsgVoteBlockHeaderResponse>);
 
   static readonly runtime: typeof proto3;

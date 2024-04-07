@@ -53,12 +53,12 @@ func (msg *MsgVoteBlockHeader) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
-	if chains.IsHeaderSupportedEvmChain(msg.ChainId) || chains.IsBitcoinChain(msg.ChainId) {
-		if len(msg.BlockHash) != 32 {
-			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block hash length (%d)", len(msg.BlockHash))
-		}
-	} else {
+	if !chains.IsHeaderSupportedEvmChain(msg.ChainId) && !chains.IsBitcoinChain(msg.ChainId) {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
+	}
+
+	if len(msg.BlockHash) != 32 {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block hash length (%d)", len(msg.BlockHash))
 	}
 
 	if err := msg.Header.Validate(msg.BlockHash, msg.ChainId, msg.Height); err != nil {

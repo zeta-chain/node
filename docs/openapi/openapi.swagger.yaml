@@ -54592,6 +54592,11 @@ definitions:
     type: object
   observerMsgVoteBlockHeaderResponse:
     type: object
+    properties:
+      ballot_created:
+        type: boolean
+      vote_finalized:
+        type: boolean
   observerMsgVoteTSSResponse:
     type: object
     properties:

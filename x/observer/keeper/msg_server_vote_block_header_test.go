@@ -1,218 +1,293 @@
 package keeper_test
 
 import (
-	"encoding/json"
-	"math/rand"
-	"os"
+	"errors"
 	"testing"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	mocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func mockCheckNewBlockHeader(m *mocks.ObserverLightclientKeeper, err error) {
+	m.On(
+		"CheckNewBlockHeader",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(sample.Hash().Bytes(), err)
+}
+
+func mockAddBlockHeader(m *mocks.ObserverLightclientKeeper) {
+	m.On(
+		"AddBlockHeader",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	)
+}
+
 func TestMsgServer_VoteBlockHeader(t *testing.T) {
-	header, header2, header3, err := ethHeaders()
-	require.NoError(t, err)
-	header1RLP, err := rlp.EncodeToBytes(header)
-	require.NoError(t, err)
-	header2RLP, err := rlp.EncodeToBytes(header2)
-	require.NoError(t, err)
-	header3RLP, err := rlp.EncodeToBytes(header3)
+	one, err := sdk.NewDecFromStr("1.0")
 	require.NoError(t, err)
 
-	r := rand.New(rand.NewSource(9))
-	validator := sample.Validator(t, r)
-	observerAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-	require.NoError(t, err)
-	// Add tests for btc headers : https://github.com/zeta-chain/node/issues/1336
-	tt := []struct {
-		name                  string
-		msg                   *types.MsgVoteBlockHeader
-		IsEthTypeChainEnabled bool
-		IsBtcTypeChainEnabled bool
-		validator             stakingtypes.Validator
-		wantErr               require.ErrorAssertionFunc
-	}{
-		{
-			name: "success submit eth header",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header.Hash().Bytes(),
-				Height:    1,
-				Header:    proofs.NewEthereumHeader(header1RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr:               require.NoError,
-		},
-		{
-			name: "failure submit eth header eth disabled",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header.Hash().Bytes(),
-				Height:    1,
-				Header:    proofs.NewEthereumHeader(header1RLP),
-			},
-			IsEthTypeChainEnabled: false,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
-			},
-		},
-		{
-			name: "failure submit eth header eth disabled",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   sample.AccAddress(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header.Hash().Bytes(),
-				Height:    1,
-				Header:    proofs.NewEthereumHeader(header1RLP),
-			},
-			IsEthTypeChainEnabled: false,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrNotObserver)
-			},
-		},
-		{
-			name: "should succeed if block header parent does exist",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header2.Hash().Bytes(),
-				Height:    2,
-				Header:    proofs.NewEthereumHeader(header2RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr:               require.NoError,
-		},
-		// These tests don't work when using the static headers, the previous sample were also not correct (header3 used to be nil)
-		// The second test mention it should success but assert an error
-		// TODO: fix these tests
-		// https://github.com/zeta-chain/node/issues/1875
-		//{
-		//	name: "should fail if block header parent does not exist",
-		//	msg: &types.MsgVoteBlockHeader{
-		//		Creator:   observerAddress.String(),
-		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
-		//		BlockHash: header3.Hash().Bytes(),
-		//		Height:    3,
-		//		Header:    chains.NewEthereumHeader(header3RLP),
-		//	},
-		//	IsEthTypeChainEnabled: true,
-		//	IsBtcTypeChainEnabled: true,
-		//	validator:             validator,
-		//	wantErr: func(t require.TestingT, err error, i ...interface{}) {
-		//		require.Error(t, err)
-		//	},
-		//},
-		//{
-		//	name: "should succeed to post 3rd header if 2nd header is posted",
-		//	msg: &types.MsgVoteBlockHeader{
-		//		Creator:   observerAddress.String(),
-		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
-		//		BlockHash: header3.Hash().Bytes(),
-		//		Height:    3,
-		//		Header:    chains.NewEthereumHeader(header3RLP),
-		//	},
-		//	IsEthTypeChainEnabled: true,
-		//	IsBtcTypeChainEnabled: true,
-		//	validator:             validator,
-		//	wantErr: func(t require.TestingT, err error, i ...interface{}) {
-		//		require.Error(t, err)
-		//	},
-		//},
-		{
-			name: "should fail if chain is not supported",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   9999,
-				BlockHash: header3.Hash().Bytes(),
-				Height:    3,
-				Header:    proofs.NewEthereumHeader(header3RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrSupportedChains)
-			},
-		},
-	}
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			k, ctx, _, _ := keepertest.ObserverKeeper(t)
-			srv := keeper.NewMsgServerImpl(*k)
-			k.SetObserverSet(ctx, types.ObserverSet{
-				ObserverList: []string{observerAddress.String()},
-			})
-			k.GetStakingKeeper().SetValidator(ctx, tc.validator)
-			k.SetCrosschainFlags(ctx, types.CrosschainFlags{
-				IsInboundEnabled:      true,
-				IsOutboundEnabled:     true,
-				GasPriceIncreaseFlags: nil,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: tc.IsEthTypeChainEnabled,
-					IsBtcTypeChainEnabled: tc.IsBtcTypeChainEnabled,
-				},
-			})
+	t.Run("fails if the chain is not supported", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		srv := keeper.NewMsgServerImpl(*k)
 
-			setSupportedChain(ctx, *k, chains.GoerliLocalnetChain().ChainId)
-
-			_, err := srv.VoteBlockHeader(ctx, tc.msg)
-			tc.wantErr(t, err)
-			if err == nil {
-				bhs, found := k.GetBlockHeaderState(ctx, tc.msg.ChainId)
-				require.True(t, found)
-				require.Equal(t, tc.msg.Height, bhs.LatestHeight)
-			}
+		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   sample.AccAddress(),
+			ChainId:   9999,
+			BlockHash: sample.Hash().Bytes(),
+			Height:    42,
+			Header:    proofs.HeaderData{},
 		})
-	}
-}
 
-func ethHeaders() (*ethtypes.Header, *ethtypes.Header, *ethtypes.Header, error) {
-	header1, err := readHeader("./testdata/header_sepolia_5000000.json")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	header2, err := readHeader("./testdata/header_sepolia_5000001.json")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	header3, err := readHeader("./testdata/header_sepolia_5000002.json")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return header1, header2, header3, nil
-}
+		require.ErrorIs(t, err, types.ErrSupportedChains)
+	})
 
-// readReceipt reads a receipt from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readHeader(filename string) (*ethtypes.Header, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+	t.Run("fails if the observer is not in the observer set", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		srv := keeper.NewMsgServerImpl(*k)
 
-	decoder := json.NewDecoder(file)
-	var NewHeader ethtypes.Header
-	err = decoder.Decode(&NewHeader)
-	return &NewHeader, err
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         chains.GoerliLocalnetChain().ChainId,
+					IsSupported:     true,
+					BallotThreshold: one,
+				},
+			},
+		})
+
+		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   sample.AccAddress(),
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: sample.Hash().Bytes(),
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+
+		require.ErrorIs(t, err, types.ErrNotObserver)
+	})
+
+	t.Run("fails if the new block header is invalid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		srv := keeper.NewMsgServerImpl(*k)
+		observer := sample.AccAddress()
+
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         chains.GoerliLocalnetChain().ChainId,
+					IsSupported:     true,
+					BallotThreshold: one,
+				},
+			},
+		})
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, errors.New("foo"))
+
+		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: sample.Hash().Bytes(),
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+
+		require.ErrorIs(t, err, types.ErrInvalidBlockHeader)
+	})
+
+	t.Run("can create a new ballot, vote and finalize", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		srv := keeper.NewMsgServerImpl(*k)
+		observer := sample.AccAddress()
+
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         chains.GoerliLocalnetChain().ChainId,
+					IsSupported:     true,
+					BallotThreshold: one,
+				},
+			},
+		})
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, nil)
+		mockAddBlockHeader(lightclientMock)
+
+		// there is a single node account, so the ballot will be created and finalized in a single vote
+		res, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: sample.Hash().Bytes(),
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+
+		require.NoError(t, err)
+		require.True(t, res.VoteFinalized)
+		require.True(t, res.BallotCreated)
+	})
+
+	t.Run("can create a new ballot, vote without finalizing, then add vote and finalizing", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		srv := keeper.NewMsgServerImpl(*k)
+		observer1 := sample.AccAddress()
+		observer2 := sample.AccAddress()
+		observer3 := sample.AccAddress()
+		blockHash := sample.Hash().Bytes()
+
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         chains.GoerliLocalnetChain().ChainId,
+					IsSupported:     true,
+					BallotThreshold: one,
+				},
+			},
+		})
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer1, observer2, observer3},
+		})
+
+		// first observer, created, not finalized
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, nil)
+		res, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer1,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: blockHash,
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+
+		require.NoError(t, err)
+		require.False(t, res.VoteFinalized)
+		require.True(t, res.BallotCreated)
+
+		// second observer, found, not finalized
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, nil)
+		res, err = srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer2,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: blockHash,
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+
+		require.NoError(t, err)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.BallotCreated)
+
+		// third observer, found, finalized, add block header called
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, nil)
+		mockAddBlockHeader(lightclientMock)
+		res, err = srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer3,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: blockHash,
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+
+		require.NoError(t, err)
+		require.True(t, res.VoteFinalized)
+		require.False(t, res.BallotCreated)
+	})
+
+	t.Run("fail if voting fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		srv := keeper.NewMsgServerImpl(*k)
+		observer := sample.AccAddress()
+		blockHash := sample.Hash().Bytes()
+
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         chains.GoerliLocalnetChain().ChainId,
+					IsSupported:     true,
+					BallotThreshold: one,
+				},
+			},
+		})
+
+		// add multiple observers to not finalize the vote
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer, sample.AccAddress()},
+		})
+
+		// vote once
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, nil)
+		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: blockHash,
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+		require.NoError(t, err)
+
+		// vote a second time should make voting fail
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+		mockCheckNewBlockHeader(lightclientMock, nil)
+		_, err = srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
+			Creator:   observer,
+			ChainId:   chains.GoerliLocalnetChain().ChainId,
+			BlockHash: blockHash,
+			Height:    42,
+			Header:    proofs.HeaderData{},
+		})
+		require.ErrorIs(t, err, types.ErrUnableToAddVote)
+	})
 }

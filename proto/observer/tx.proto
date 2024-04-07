@@ -43,7 +43,10 @@ message MsgVoteBlockHeader {
   proofs.HeaderData header = 5 [(gogoproto.nullable) = false];
 }
 
-message MsgVoteBlockHeaderResponse {}
+message MsgVoteBlockHeaderResponse {
+  bool ballot_created = 1;
+  bool vote_finalized = 2;
+}
 
 message MsgUpdateChainParams {
   string creator = 1;
