@@ -17,6 +17,7 @@ const (
 	KeyringBackendFile      KeyringBackend = "file"
 )
 
+// ClientConfiguration is a subset of zetaclient config that is used by zetabridge
 type ClientConfiguration struct {
 	ChainHost       string `json:"chain_host" mapstructure:"chain_host"`
 	ChainRPC        string `json:"chain_rpc" mapstructure:"chain_rpc"`

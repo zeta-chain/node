@@ -61,7 +61,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain chains.Chain, gasPrice uint64, suppl
 	}
 
 	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(PostGasPriceGasLimit, authzMsg, authzSigner)
+		zetaTxHash, err := zetaBridgeBroadcast(b, PostGasPriceGasLimit, authzMsg, authzSigner)
 		if err == nil {
 			return zetaTxHash, nil
 		}
@@ -97,7 +97,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 		return "", err
 	}
 
-	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
+	zetaTxHash, err := zetaBridgeBroadcast(b, AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
 		return "", err
 	}
@@ -115,7 +115,7 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 
 	zetaTxHash := ""
 	for i := 0; i <= DefaultRetryCount; i++ {
-		zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
+		zetaTxHash, err = zetaBridgeBroadcast(b, DefaultGasLimit, authzMsg, authzSigner)
 		if err == nil {
 			return zetaTxHash, nil
 		}
@@ -162,7 +162,7 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 	var gasLimit uint64 = PostBlameDataGasLimit
 
 	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		zetaTxHash, err := zetaBridgeBroadcast(b, gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			return zetaTxHash, nil
 		}
@@ -184,7 +184,7 @@ func (b *ZetaCoreBridge) PostVoteBlockHeader(chainID int64, blockHash []byte, he
 
 	var gasLimit uint64 = DefaultGasLimit
 	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		zetaTxHash, err := zetaBridgeBroadcast(b, gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			return zetaTxHash, nil
 		}
@@ -214,7 +214,7 @@ func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *ty
 	}
 
 	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		zetaTxHash, err := zetaBridgeBroadcast(b, gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			// monitor the result of the transaction and resend if necessary
 			go b.MonitorVoteInboundTxResult(zetaTxHash, retryGasLimit, msg)
@@ -338,7 +338,7 @@ func (b *ZetaCoreBridge) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64,
 		return "", ballotIndex, nil
 	}
 	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		zetaTxHash, err := zetaBridgeBroadcast(b, gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			// monitor the result of the transaction and resend if necessary
 			go b.MonitorVoteOutboundTxResult(zetaTxHash, retryGasLimit, msg)

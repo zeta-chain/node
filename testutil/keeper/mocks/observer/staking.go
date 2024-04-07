@@ -71,11 +71,6 @@ func (_m *ObserverStakingKeeper) GetValidator(ctx types.Context, addr types.ValA
 	return r0, r1
 }
 
-// SetDelegation provides a mock function with given fields: ctx, delegation
-func (_m *ObserverStakingKeeper) SetDelegation(ctx types.Context, delegation stakingtypes.Delegation) {
-	_m.Called(ctx, delegation)
-}
-
 // SetValidator provides a mock function with given fields: ctx, validator
 func (_m *ObserverStakingKeeper) SetValidator(ctx types.Context, validator stakingtypes.Validator) {
 	_m.Called(ctx, validator)

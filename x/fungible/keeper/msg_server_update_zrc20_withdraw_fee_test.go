@@ -227,7 +227,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		mockEVMKeeper.AssertExpectations(t)
 	})
 
-	t.Run("should fail if contract call for setting new protocol fee fails", func(t *testing.T) {
+	t.Run("should fail if query gas limit fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock:       true,
 			UseAuthorityMock: true,
@@ -259,11 +259,8 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
 
-		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
+		_, err = zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
-
-		// this is the update call (commit == true)
 		mockEVMKeeper.MockEVMFailCallOnce()
 
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
