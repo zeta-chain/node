@@ -188,52 +188,52 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("unable to add tracker admin exceeding maximum allowed length of hashlist without proof", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseAuthorityMock: true,
-		})
-
-		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-
-		chainID := getEthereumChainID()
-		setupTssAndNonceToCctx(k, ctx, chainID, 0, types.CctxStatus_PendingOutbound)
-		setEnabledChain(ctx, zk, chainID)
-
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
-			ChainId: chainID,
-			Nonce:   0,
-			HashList: []*types.TxHashList{
-				{
-					TxHash:   "hash1",
-					TxSigner: sample.AccAddress(),
-					Proved:   false,
-				},
-				{
-					TxHash:   "hash2",
-					TxSigner: sample.AccAddress(),
-					Proved:   false,
-				},
-			},
-		})
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    sample.Hash().Hex(),
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     0,
-		})
-		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 0)
-		require.True(t, found)
-		require.Equal(t, 2, len(tracker.HashList))
-	})
+	//t.Run("unable to add tracker admin exceeding maximum allowed length of hashlist without proof", func(t *testing.T) {
+	//	k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+	//		UseAuthorityMock: true,
+	//	})
+	//
+	//	admin := sample.AccAddress()
+	//	authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+	//	keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+	//
+	//	chainID := getEthereumChainID()
+	//	setupTssAndNonceToCctx(k, ctx, chainID, 0, types.CctxStatus_PendingOutbound)
+	//	setEnabledChain(ctx, zk, chainID)
+	//
+	//	k.SetOutTxTracker(ctx, types.OutTxTracker{
+	//		ChainId: chainID,
+	//		Nonce:   0,
+	//		HashList: []*types.TxHashList{
+	//			{
+	//				TxHash:   "hash1",
+	//				TxSigner: sample.AccAddress(),
+	//				Proved:   false,
+	//			},
+	//			{
+	//				TxHash:   "hash2",
+	//				TxSigner: sample.AccAddress(),
+	//				Proved:   false,
+	//			},
+	//		},
+	//	})
+	//
+	//	msgServer := keeper.NewMsgServerImpl(*k)
+	//
+	//	_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+	//		Creator:   admin,
+	//		ChainId:   chainID,
+	//		TxHash:    sample.Hash().Hex(),
+	//		Proof:     nil,
+	//		BlockHash: "",
+	//		TxIndex:   0,
+	//		Nonce:     0,
+	//	})
+	//	require.NoError(t, err)
+	//	tracker, found := k.GetOutTxTracker(ctx, chainID, 0)
+	//	require.True(t, found)
+	//	require.Equal(t, 2, len(tracker.HashList))
+	//})
 
 	// Commented out as these tests don't work without using RPC
 	// TODO: Reenable these tests

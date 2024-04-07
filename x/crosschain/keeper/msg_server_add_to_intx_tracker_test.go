@@ -128,7 +128,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
-		tx_hash := "string"
+		txHash := "string"
 		chainID := getValidEthChainID(t)
 		setSupportedChain(ctx, zk, chainID)
 
@@ -146,7 +146,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		_, found := k.GetInTxTracker(ctx, chainID, "Malicious TX HASH")
 		require.True(t, found)
-		_, found = k.GetInTxTracker(ctx, chainID, tx_hash)
+		_, found = k.GetInTxTracker(ctx, chainID, txHash)
 		require.False(t, found)
 	})
 
