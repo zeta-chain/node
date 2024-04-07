@@ -1,9 +1,10 @@
 package types_test
 
 import (
+	"testing"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"

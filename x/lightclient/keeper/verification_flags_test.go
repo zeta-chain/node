@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
-	"testing"
 )
 
 func TestKeeper_GetVerificationFlags(t *testing.T) {
