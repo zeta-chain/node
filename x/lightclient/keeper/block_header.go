@@ -88,16 +88,16 @@ func (k Keeper) CheckNewBlockHeader(
 	// validate block height as it's not part of the header itself
 	chainState, found := k.GetChainState(ctx, chainID)
 	if found && chainState.EarliestHeight > 0 && chainState.EarliestHeight < height {
-		_, found = k.GetBlockHeader(ctx, parentHash)
-		if !found {
-			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, "parent block header not found")
-		}
 		if height != chainState.LatestHeight+1 {
-			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, fmt.Sprintf(
+			return nil, cosmoserrors.Wrap(types.ErrInvalidHeight, fmt.Sprintf(
 				"invalid block height: wanted %d, got %d",
 				chainState.LatestHeight+1,
 				height,
 			))
+		}
+		_, found = k.GetBlockHeader(ctx, parentHash)
+		if !found {
+			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, "parent block header not found")
 		}
 	}
 
@@ -130,6 +130,9 @@ func (k Keeper) AddBlockHeader(
 		}
 	} else {
 		// update the chain state with the latest block header
+		// TODO: these checks would need to be more sophisticated for production
+		// We should investigate and implement the correct assumptions for adding new block header
+		// https://github.com/zeta-chain/node/issues/1997
 		if height > chainState.LatestHeight {
 			chainState.LatestHeight = height
 			chainState.LatestBlockHash = blockHash

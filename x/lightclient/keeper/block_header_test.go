@@ -138,6 +138,21 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		require.Equal(t, bh.ParentHash, parentHash)
 	})
 
+	t.Run("should fail if verification flag not enabled", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: false,
+		})
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+
+		_, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+		require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
+	})
+
+	// TODO: Fix the Sepolia sample headers to enable this test:
+	// https://github.com/zeta-chain/node/issues/1996
 	//t.Run("should succeed if block header is valid with chain state existing", func(t *testing.T) {
 	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
 	//
@@ -159,558 +174,157 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	//	require.Equal(t, bh2.ParentHash, parentHash)
 	//})
 
-	//t.Run("fail if block already exist", func(t *testing.T) {
-	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
-	//
-	//	k.SetVerificationFlags(ctx, types.VerificationFlags{
-	//		EthTypeChainEnabled: true,
-	//	})
-	//
-	//	bh, _, _ := sepoliaBlockHeaders(t)
-	//	k.SetBlockHeader(ctx, bh)
-	//
-	//	_, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
-	//	require.ErrorIs(t, err, types.ErrBlockAlreadyExist)
-	//})
-	//
-	//t.Run("fail if chain state and no parent", func(t *testing.T) {
-	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
-	//
-	//	k.SetVerificationFlags(ctx, types.VerificationFlags{
-	//		EthTypeChainEnabled: true,
-	//	})
-	//
-	//	bh, _, _ := sepoliaBlockHeaders(t)
-	//	bh.ParentHash = []byte("")
-	//
-	//	parentHash, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
-	//	require.NoError(t, err)
-	//	require.Equal(t, bh.ParentHash, parentHash)
-	//})
+	t.Run("fail if block already exist", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-	//k, ctx, _, _ := keepertest.LightclientKeeper(t)
-	//header := sample.BlockHeader(sample.Hash().Bytes())
-	//k.SetBlockHeader(ctx, header)
-	//
-	//t.Run("should error if parent block header does not exist", func(t *testing.T) {
-	//	header2 := sample.BlockHeader(sample.Hash().Bytes())
-	//	header2.ParentHash = sample.Hash().Bytes()
-	//	err := k.CheckNewBlockHeader(ctx, header2)
-	//	require.Error(t, err)
-	//})
-	//
-	//t.Run("should error if block header already exists", func(t *testing.T) {
-	//	err := k.CheckNewBlockHeader(ctx, header1)
-	//	require.Error(t, err)
-	//})
-}
-
-/*
-func TestMsgServer_VoteBlockHeader(t *testing.T) {
-	header, header2, header3, err := ethHeaders()
-	require.NoError(t, err)
-	header1RLP, err := rlp.EncodeToBytes(header)
-	require.NoError(t, err)
-	header2RLP, err := rlp.EncodeToBytes(header2)
-	require.NoError(t, err)
-	header3RLP, err := rlp.EncodeToBytes(header3)
-	require.NoError(t, err)
-
-	r := rand.New(rand.NewSource(9))
-	validator := sample.Validator(t, r)
-	observerAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-	require.NoError(t, err)
-	// Add tests for btc headers : https://github.com/zeta-chain/node/issues/1336
-	tt := []struct {
-		name                  string
-		msg                   *types.MsgVoteBlockHeader
-		IsEthTypeChainEnabled bool
-		IsBtcTypeChainEnabled bool
-		validator             stakingtypes.Validator
-		wantErr               require.ErrorAssertionFunc
-	}{
-		{
-			name: "success submit eth header",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header.Hash().Bytes(),
-				Height:    1,
-				Header:    proofs.NewEthereumHeader(header1RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr:               require.NoError,
-		},
-		{
-			name: "failure submit eth header eth disabled",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header.Hash().Bytes(),
-				Height:    1,
-				Header:    proofs.NewEthereumHeader(header1RLP),
-			},
-			IsEthTypeChainEnabled: false,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
-			},
-		},
-		{
-			name: "failure submit eth header eth disabled",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   sample.AccAddress(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header.Hash().Bytes(),
-				Height:    1,
-				Header:    proofs.NewEthereumHeader(header1RLP),
-			},
-			IsEthTypeChainEnabled: false,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrNotObserver)
-			},
-		},
-		{
-			name: "should succeed if block header parent does exist",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   chains.GoerliLocalnetChain().ChainId,
-				BlockHash: header2.Hash().Bytes(),
-				Height:    2,
-				Header:    proofs.NewEthereumHeader(header2RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr:               require.NoError,
-		},
-		// These tests don't work when using the static headers, the previous sample were also not correct (header3 used to be nil)
-		// The second test mention it should success but assert an error
-		// TODO: fix these tests
-		// https://github.com/zeta-chain/node/issues/1875
-		//{
-		//	name: "should fail if block header parent does not exist",
-		//	msg: &types.MsgVoteBlockHeader{
-		//		Creator:   observerAddress.String(),
-		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
-		//		BlockHash: header3.Hash().Bytes(),
-		//		Height:    3,
-		//		Header:    chains.NewEthereumHeader(header3RLP),
-		//	},
-		//	IsEthTypeChainEnabled: true,
-		//	IsBtcTypeChainEnabled: true,
-		//	validator:             validator,
-		//	wantErr: func(t require.TestingT, err error, i ...interface{}) {
-		//		require.Error(t, err)
-		//	},
-		//},
-		//{
-		//	name: "should succeed to post 3rd header if 2nd header is posted",
-		//	msg: &types.MsgVoteBlockHeader{
-		//		Creator:   observerAddress.String(),
-		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
-		//		BlockHash: header3.Hash().Bytes(),
-		//		Height:    3,
-		//		Header:    chains.NewEthereumHeader(header3RLP),
-		//	},
-		//	IsEthTypeChainEnabled: true,
-		//	IsBtcTypeChainEnabled: true,
-		//	validator:             validator,
-		//	wantErr: func(t require.TestingT, err error, i ...interface{}) {
-		//		require.Error(t, err)
-		//	},
-		//},
-		{
-			name: "should fail if chain is not supported",
-			msg: &types.MsgVoteBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   9999,
-				BlockHash: header3.Hash().Bytes(),
-				Height:    3,
-				Header:    proofs.NewEthereumHeader(header3RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrSupportedChains)
-			},
-		},
-	}
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			k, ctx, _, _ := keepertest.ObserverKeeper(t)
-			srv := keeper.NewMsgServerImpl(*k)
-			k.SetObserverSet(ctx, types.ObserverSet{
-				ObserverList: []string{observerAddress.String()},
-			})
-			k.GetStakingKeeper().SetValidator(ctx, tc.validator)
-			k.SetCrosschainFlags(ctx, types.CrosschainFlags{
-				IsInboundEnabled:      true,
-				IsOutboundEnabled:     true,
-				GasPriceIncreaseFlags: nil,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: tc.IsEthTypeChainEnabled,
-					IsBtcTypeChainEnabled: tc.IsBtcTypeChainEnabled,
-				},
-			})
-
-			setSupportedChain(ctx, *k, chains.GoerliLocalnetChain().ChainId)
-
-			_, err := srv.VoteBlockHeader(ctx, tc.msg)
-			tc.wantErr(t, err)
-			if err == nil {
-				bhs, found := k.GetBlockHeaderState(ctx, tc.msg.ChainId)
-				require.True(t, found)
-				require.Equal(t, tc.msg.Height, bhs.LatestHeight)
-			}
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
 		})
-	}
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+		k.SetBlockHeader(ctx, bh)
+
+		_, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+		require.ErrorIs(t, err, types.ErrBlockAlreadyExist)
+	})
+
+	t.Run("fail if chain state and invalid height", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
+		})
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+
+		k.SetChainState(ctx, types.ChainState{
+			ChainId:         bh.ChainId,
+			LatestHeight:    bh.Height - 2,
+			EarliestHeight:  bh.Height - 100,
+			LatestBlockHash: bh.Hash,
+		})
+
+		_, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+		require.ErrorIs(t, err, types.ErrInvalidHeight)
+	})
+
+	t.Run("fail if chain state and no parent", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
+		})
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+
+		k.SetChainState(ctx, types.ChainState{
+			ChainId:         bh.ChainId,
+			LatestHeight:    bh.Height - 1,
+			EarliestHeight:  bh.Height - 100,
+			LatestBlockHash: bh.Hash,
+		})
+
+		_, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+		require.ErrorIs(t, err, types.ErrNoParentHash)
+	})
 }
 
-*/
+func TestKeeper_AddBlockHeader(t *testing.T) {
+	t.Run("should add a block header and create chain state if doesn't exist", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-// Commented out as these tests don't work without using RPC
-// TODO: Reenable these tests
-// https://github.com/zeta-chain/node/issues/1875
-//t.Run("add proof based tracker with correct proof", func(t *testing.T) {
-//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-//
-//	chainID := int64(5)
-//
-//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-//	require.NoError(t, err)
-//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-//	msgServer := keeper.NewMsgServerImpl(*k)
-//
-//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-//		Creator:   sample.AccAddress(),
-//		ChainId:   chainID,
-//		TxHash:    tx.Hash().Hex(),
-//		CoinType:  pkg.CoinType_Zeta,
-//		Proof:     proof,
-//		BlockHash: block.Hash().Hex(),
-//		TxIndex:   txIndex,
-//	})
-//	require.NoError(t, err)
-//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-//	require.True(t, found)
-//})
-//t.Run("fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
-//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-//
-//	chainID := getValidEthChainID(t)
-//
-//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-//	require.NoError(t, err)
-//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-//	msgServer := keeper.NewMsgServerImpl(*k)
-//
-//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-//		Creator:   sample.AccAddress(),
-//		ChainId:   chainID,
-//		TxHash:    "fake_hash",
-//		CoinType:  pkg.CoinType_Zeta,
-//		Proof:     proof,
-//		BlockHash: block.Hash().Hex(),
-//		TxIndex:   txIndex,
-//	})
-//	require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
-//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-//	require.False(t, found)
-//})
-//t.Run("fail to add proof based tracker with wrong chain id", func(t *testing.T) {
-//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-//
-//	chainID := getValidEthChainID(t)
-//
-//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-//	require.NoError(t, err)
-//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-//
-//	msgServer := keeper.NewMsgServerImpl(*k)
-//
-//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-//		Creator:   sample.AccAddress(),
-//		ChainId:   97,
-//		TxHash:    tx.Hash().Hex(),
-//		CoinType:  pkg.CoinType_Zeta,
-//		Proof:     proof,
-//		BlockHash: block.Hash().Hex(),
-//		TxIndex:   txIndex,
-//	})
-//	require.ErrorIs(t, err, observertypes.ErrSupportedChains)
-//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-//	require.False(t, found)
-//})
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
+		})
 
-//func TestKeeper_VerifyEVMInTxBody(t *testing.T) {
-//to := sample.EthAddress()
-//tx := ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-//	ChainID:   big.NewInt(5),
-//	Nonce:     1,
-//	GasTipCap: nil,
-//	GasFeeCap: nil,
-//	Gas:       21000,
-//	To:        &to,
-//	Value:     big.NewInt(5),
-//	Data:      nil,
-//})
-//
-//t.Run("should error if msg tx hash not correct", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash: "0x0",
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
+		bh, _, _ := sepoliaBlockHeaders(t)
 
-//t.Run("should error if msg chain id not correct", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:  tx.Hash().Hex(),
-//		ChainId: 1,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should error if not supported coin type", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Cmd,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should error for cointype_zeta if chain params not found", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{}, false)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Zeta,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should error for cointype_zeta if tx.to wrong", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
-//		ConnectorContractAddress: sample.EthAddress().Hex(),
-//	}, true)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Zeta,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should not error for cointype_zeta", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
-//		ConnectorContractAddress: to.Hex(),
-//	}, true)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Zeta,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.NoError(t, err)
-//})
-//
-//t.Run("should error for cointype_erc20 if chain params not found", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{}, false)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_ERC20,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should error for cointype_erc20 if tx.to wrong", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
-//		Erc20CustodyContractAddress: sample.EthAddress().Hex(),
-//	}, true)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_ERC20,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should not error for cointype_erc20", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
-//		Erc20CustodyContractAddress: to.Hex(),
-//	}, true)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_ERC20,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.NoError(t, err)
-//})
-//
-//t.Run("should error for cointype_gas if tss address not found", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{}, errors.New("err"))
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Gas,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should error for cointype_gas if tss eth address is empty", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
-//		Eth: "0x",
-//	}, nil)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Gas,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should error for cointype_gas if tss eth address is wrong", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
-//		Eth: sample.EthAddress().Hex(),
-//	}, nil)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Gas,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.Error(t, err)
-//})
-//
-//t.Run("should not error for cointype_gas", func(t *testing.T) {
-//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-//		UseObserverMock: true,
-//	})
-//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
-//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
-//		Eth: to.Hex(),
-//	}, nil)
-//
-//	txBytes, err := tx.MarshalBinary()
-//	require.NoError(t, err)
-//	msg := &types.MsgAddToInTxTracker{
-//		TxHash:   tx.Hash().Hex(),
-//		ChainId:  tx.ChainId().Int64(),
-//		CoinType: coin.CoinType_Gas,
-//	}
-//
-//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-//	require.NoError(t, err)
-//})
-//}
+		k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
+
+		retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
+		require.True(t, found)
+		require.EqualValues(t, bh.Header, retrieved.Header)
+		require.EqualValues(t, bh.Height, retrieved.Height)
+		require.EqualValues(t, bh.Hash, retrieved.Hash)
+		require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
+		require.EqualValues(t, bh.ChainId, retrieved.ChainId)
+
+		// Check chain state
+		chainState, found := k.GetChainState(ctx, bh.ChainId)
+		require.True(t, found)
+		require.EqualValues(t, bh.Height, chainState.LatestHeight)
+		require.EqualValues(t, bh.Height, chainState.EarliestHeight)
+		require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
+		require.EqualValues(t, bh.ChainId, chainState.ChainId)
+	})
+
+	t.Run("should add a block header and update chain state if exists", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
+		})
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+
+		k.SetChainState(ctx, types.ChainState{
+			ChainId:         bh.ChainId,
+			LatestHeight:    bh.Height - 1,
+			EarliestHeight:  bh.Height - 100,
+			LatestBlockHash: bh.ParentHash,
+		})
+
+		k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
+
+		retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
+		require.True(t, found)
+		require.EqualValues(t, bh.Header, retrieved.Header)
+		require.EqualValues(t, bh.Height, retrieved.Height)
+		require.EqualValues(t, bh.Hash, retrieved.Hash)
+		require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
+		require.EqualValues(t, bh.ChainId, retrieved.ChainId)
+
+		// Check chain state
+		chainState, found := k.GetChainState(ctx, bh.ChainId)
+		require.True(t, found)
+		require.EqualValues(t, bh.Height, chainState.LatestHeight)
+		require.EqualValues(t, bh.Height-100, chainState.EarliestHeight)
+		require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
+		require.EqualValues(t, bh.ChainId, chainState.ChainId)
+	})
+
+	t.Run("should add a block header and update chain state if exists and set earliest height if 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
+		})
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+
+		k.SetChainState(ctx, types.ChainState{
+			ChainId:         bh.ChainId,
+			LatestHeight:    bh.Height - 1,
+			EarliestHeight:  0,
+			LatestBlockHash: bh.ParentHash,
+		})
+
+		k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
+
+		retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
+		require.True(t, found)
+		require.EqualValues(t, bh.Header, retrieved.Header)
+		require.EqualValues(t, bh.Height, retrieved.Height)
+		require.EqualValues(t, bh.Hash, retrieved.Hash)
+		require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
+		require.EqualValues(t, bh.ChainId, retrieved.ChainId)
+
+		// Check chain state
+		chainState, found := k.GetChainState(ctx, bh.ChainId)
+		require.True(t, found)
+		require.EqualValues(t, bh.Height, chainState.LatestHeight)
+		require.EqualValues(t, bh.Height, chainState.EarliestHeight)
+		require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
+		require.EqualValues(t, bh.ChainId, chainState.ChainId)
+	})
+}
