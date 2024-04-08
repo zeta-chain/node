@@ -104,7 +104,7 @@ func DebugCmd() *cobra.Command {
 				coinType := coin.CoinType_Cmd
 				for chain, evmConfig := range cfg.GetAllEVMConfigs() {
 					if chainID == chain {
-						client, err = evm.NewEthClientFallback(&evmConfig, chainLogger)
+						client, err = evm.NewEthClientFallback(evmConfig, chainLogger)
 						if err != nil {
 							return err
 						}

@@ -70,8 +70,7 @@ func CreateSignerMap(
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
 		signer, err := evm.NewEVMSigner(
-			evmConfig.Chain,
-			evmConfig.Endpoint,
+			evmConfig,
 			tss,
 			config.GetConnectorABI(),
 			config.GetERC20CustodyABI(),

@@ -11,12 +11,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
@@ -38,7 +39,7 @@ import (
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
-	client      interfaces.EVMRPCClient
+	client      interfaces.EthClientFallback
 	chain       *chains.Chain
 	tssSigner   interfaces.TSSSigner
 	ethSigner   ethtypes.Signer
@@ -58,8 +59,7 @@ type Signer struct {
 var _ interfaces.ChainSigner = &Signer{}
 
 func NewEVMSigner(
-	chain chains.Chain,
-	endpoint string,
+	evmCfg config.EVMConfig,
 	tssSigner interfaces.TSSSigner,
 	zetaConnectorABI string,
 	erc20CustodyABI string,
@@ -69,7 +69,11 @@ func NewEVMSigner(
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
-	client, ethSigner, err := getEVMRPC(endpoint)
+	logger := clientcommon.ClientLogger{
+		Std:        loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
+		Compliance: loggers.Compliance,
+	}
+	client, ethSigner, err := getEVMRPC(evmCfg, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -83,19 +87,16 @@ func NewEVMSigner(
 	}
 
 	return &Signer{
-		client:               client,
-		chain:                &chain,
-		tssSigner:            tssSigner,
-		ethSigner:            ethSigner,
-		zetaConnectorABI:     connectorABI,
-		erc20CustodyABI:      custodyABI,
-		zetaConnectorAddress: zetaConnectorAddress,
-		er20CustodyAddress:   erc20CustodyAddress,
-		coreContext:          coreContext,
-		logger: clientcommon.ClientLogger{
-			Std:        loggers.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
-			Compliance: loggers.Compliance,
-		},
+		client:                 client,
+		chain:                  &evmCfg.Chain,
+		tssSigner:              tssSigner,
+		ethSigner:              ethSigner,
+		zetaConnectorABI:       connectorABI,
+		erc20CustodyABI:        custodyABI,
+		zetaConnectorAddress:   zetaConnectorAddress,
+		er20CustodyAddress:     erc20CustodyAddress,
+		coreContext:            coreContext,
+		logger:                 logger,
 		ts:                     ts,
 		mu:                     &sync.Mutex{},
 		outTxHashBeingReported: make(map[string]bool),
@@ -643,7 +644,7 @@ func (signer *Signer) SignWhitelistTx(
 func (signer *Signer) GetReportedTxList() *map[string]bool {
 	return &signer.outTxHashBeingReported
 }
-func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
+func (signer *Signer) EvmClient() interfaces.EthClientFallback {
 	return signer.client
 }
 func (signer *Signer) EvmSigner() ethtypes.Signer {
@@ -653,15 +654,15 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 // ________________________
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
-func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
-	if endpoint == stub.EVMRPCEnabled {
+func getEVMRPC(cfg config.EVMConfig, logger clientcommon.ClientLogger) (interfaces.EthClientFallback, ethtypes.Signer, error) {
+	if cfg.Endpoint[0] == stub.EVMRPCEnabled {
 		chainID := big.NewInt(chains.BscMainnetChain().ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
 		client := &stub.MockEvmClient{}
 		return client, ethSigner, nil
 	}
 
-	client, err := ethclient.Dial(endpoint)
+	client, err := NewEthClientFallback(cfg, logger.Std)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -54,7 +54,8 @@ func NewZetaSupplyChecker(appContext *appcontext.AppContext, zetaClient *zetabri
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		client, err := ethclient.Dial(evmConfig.Endpoint)
+		// This function doesn't seem to be used, defaulting to first endpoint
+		client, err := ethclient.Dial(evmConfig.Endpoint[0])
 		if err != nil {
 			return zetaSupplyChecker, err
 		}

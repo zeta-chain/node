@@ -69,7 +69,7 @@ var _ interfaces.ChainClient = &ChainClient{}
 // Filled with above constants depending on chain
 type ChainClient struct {
 	chain                      chains.Chain
-	evmClient                  EthClientFallbackInterface
+	evmClient                  interfaces.EthClientFallback
 	zetaClient                 interfaces.ZetaCoreBridger
 	Tss                        interfaces.TSSSigner
 	lastBlockScanned           uint64
@@ -129,7 +129,7 @@ func NewEVMChainClient(
 	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
 
 	// Initialize evm client
-	client, err := NewEthClientFallback(&evmCfg, chainLogger)
+	client, err := NewEthClientFallback(evmCfg, chainLogger)
 	if err != nil {
 		return nil, err
 	}

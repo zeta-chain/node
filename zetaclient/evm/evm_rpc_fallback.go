@@ -3,6 +3,8 @@ package evm
 import (
 	"context"
 	"errors"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -12,35 +14,27 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"math/big"
 )
 
-// EthClientFallbackInterface consolidates interfaces to external chain clients
-type EthClientFallbackInterface interface {
-	// EVMRPCClient EVMJSONRPCClient - Need to implement both interfaces to support newer data types
-	interfaces.EVMRPCClient
-	interfaces.EVMJSONRPCClient
-}
-
-var _ EthClientFallbackInterface = &EthClientFallback{}
+var _ interfaces.EthClientFallback = &EthClientFallback{}
 
 // EthClientFallback is a decorator combining client interfaces used by evm chains. Also encapsulates list of clients
 // defined by endpoints from the config.
 type EthClientFallback struct {
-	evmCfg         *config.EVMConfig
+	evmCfg         config.EVMConfig
 	ethClients     *common.ClientQueue
-	jsonRpcClients *common.ClientQueue
+	jsonRPCClients *common.ClientQueue
 	logger         zerolog.Logger
 }
 
 // NewEthClientFallback creates new instance of eth client used by evm chain client.
-func NewEthClientFallback(evmCfg *config.EVMConfig, logger zerolog.Logger) (*EthClientFallback, error) {
+func NewEthClientFallback(evmCfg config.EVMConfig, logger zerolog.Logger) (*EthClientFallback, error) {
 	if len(evmCfg.Endpoint) == 0 {
 		return nil, errors.New("invalid endpoints")
 	}
 	ethClientFallback := EthClientFallback{}
 	ethClientFallback.ethClients = common.NewClientQueue()
-	ethClientFallback.jsonRpcClients = common.NewClientQueue()
+	ethClientFallback.jsonRPCClients = common.NewClientQueue()
 
 	// Initialize clients
 	for _, endpoint := range evmCfg.Endpoint {
@@ -53,8 +47,8 @@ func NewEthClientFallback(evmCfg *config.EVMConfig, logger zerolog.Logger) (*Eth
 		ethClientFallback.ethClients.Append(client)
 
 		//Initialize jsonRPC clients from https://github.com/onrik/ethrpc
-		jsonRpcClient := ethrpc.NewEthRPC(endpoint)
-		ethClientFallback.jsonRpcClients.Append(jsonRpcClient)
+		jsonRPCClient := ethrpc.NewEthRPC(endpoint)
+		ethClientFallback.jsonRPCClients.Append(jsonRPCClient)
 	}
 
 	ethClientFallback.evmCfg = evmCfg
@@ -346,6 +340,21 @@ func (e *EthClientFallback) TransactionSender(ctx context.Context, tx *ethtypes.
 	return res, err
 }
 
+func (e *EthClientFallback) ChainID(ctx context.Context) (res *big.Int, err error) {
+	for i := 0; i < e.ethClients.Length(); i++ {
+		if client := e.ethClients.First(); client != nil {
+			rpcClient := client.(ethclient.Client)
+			res, err = rpcClient.ChainID(ctx)
+		}
+		if err != nil {
+			e.ethClients.Next()
+			continue
+		}
+		break
+	}
+	return
+}
+
 // Implementation of interface for jsonRPC eth client - https://github.com/onrik/ethrpc
 
 // EthGetBlockByNumber implementation of interfaces.EVMJSONRPCClient
@@ -353,13 +362,13 @@ func (e *EthClientFallback) EthGetBlockByNumber(number int, withTransactions boo
 	var res *ethrpc.Block
 	var err error
 
-	for i := 0; i < e.jsonRpcClients.Length(); i++ {
-		if client := e.jsonRpcClients.First(); client != nil {
+	for i := 0; i < e.jsonRPCClients.Length(); i++ {
+		if client := e.jsonRPCClients.First(); client != nil {
 			res, err = client.(interfaces.EVMJSONRPCClient).EthGetBlockByNumber(number, withTransactions)
 		}
 		if err != nil {
 			e.logger.Debug().Err(err).Msg("client endpoint failed attempting fallback client")
-			e.jsonRpcClients.Next()
+			e.jsonRPCClients.Next()
 			continue
 		}
 		break
@@ -372,13 +381,13 @@ func (e *EthClientFallback) EthGetTransactionByHash(hash string) (*ethrpc.Transa
 	var res *ethrpc.Transaction
 	var err error
 
-	for i := 0; i < e.jsonRpcClients.Length(); i++ {
-		if client := e.jsonRpcClients.First(); client != nil {
+	for i := 0; i < e.jsonRPCClients.Length(); i++ {
+		if client := e.jsonRPCClients.First(); client != nil {
 			res, err = client.(interfaces.EVMJSONRPCClient).EthGetTransactionByHash(hash)
 		}
 		if err != nil {
 			e.logger.Debug().Err(err).Msg("client endpoint failed attempting fallback client")
-			e.jsonRpcClients.Next()
+			e.jsonRPCClients.Next()
 			continue
 		}
 		break

@@ -4,10 +4,12 @@ import (
 	"errors"
 	"math/big"
 
+	"github.com/onrik/ethrpc"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"golang.org/x/net/context"
 )
 
@@ -27,10 +29,18 @@ func (s subscription) Err() <-chan error {
 }
 
 // EvmClient interface
-var _ interfaces.EVMRPCClient = &MockEvmClient{}
+var _ interfaces.EthClientFallback = &MockEvmClient{}
 
 type MockEvmClient struct {
 	Receipts []*ethtypes.Receipt
+}
+
+func (e *MockEvmClient) EthGetBlockByNumber(_ int, _ bool) (*ethrpc.Block, error) {
+	return nil, nil
+}
+
+func (e *MockEvmClient) EthGetTransactionByHash(_ string) (*ethrpc.Transaction, error) {
+	return nil, nil
 }
 
 func NewMockEvmClient() *MockEvmClient {

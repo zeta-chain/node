@@ -73,14 +73,16 @@ func maskCfg(cfg config.Config) string {
 
 	// Mask Sensitive data
 	for _, chain := range maskedCfg.EVMChainConfigs {
-		if chain.Endpoint == "" {
+		if len(chain.Endpoint) == 0 {
 			continue
 		}
-		endpointURL, err := url.Parse(chain.Endpoint)
-		if err != nil {
-			continue
+		for i, endpoint := range chain.Endpoint {
+			endpointURL, err := url.Parse(endpoint)
+			if err != nil {
+				continue
+			}
+			chain.Endpoint[i] = endpointURL.Hostname()
 		}
-		chain.Endpoint = endpointURL.Hostname()
 	}
 
 	maskedCfg.BitcoinConfig.RPCUsername = ""

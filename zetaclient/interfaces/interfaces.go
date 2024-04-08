@@ -151,3 +151,10 @@ type EVMJSONRPCClient interface {
 	EthGetBlockByNumber(number int, withTransactions bool) (*ethrpc.Block, error)
 	EthGetTransactionByHash(hash string) (*ethrpc.Transaction, error)
 }
+
+// EthClientFallback consolidates interfaces to external chain clients
+type EthClientFallback interface {
+	// EVMRPCClient EVMJSONRPCClient - Need to implement both interfaces to support newer data types
+	EVMRPCClient
+	EVMJSONRPCClient
+}
