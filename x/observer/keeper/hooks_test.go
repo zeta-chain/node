@@ -48,16 +48,16 @@ func TestKeeper_AfterValidatorRemoved(t *testing.T) {
 }
 
 func TestKeeper_AfterValidatorBeginUnbonding(t *testing.T) {
-	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 	r := rand.New(rand.NewSource(9))
 	validator := sample.Validator(t, r)
 	validator.DelegatorShares = sdk.NewDec(100)
-	k.GetStakingKeeper().SetValidator(ctx, validator)
+	sdkk.StakingKeeper.SetValidator(ctx, validator)
 	accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 	require.NoError(t, err)
 
-	k.GetStakingKeeper().SetDelegation(ctx, stakingtypes.Delegation{
+	sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 		DelegatorAddress: accAddressOfValidator.String(),
 		ValidatorAddress: validator.GetOperator().String(),
 		Shares:           sdk.NewDec(10),
@@ -78,16 +78,16 @@ func TestKeeper_AfterValidatorBeginUnbonding(t *testing.T) {
 
 func TestKeeper_AfterDelegationModified(t *testing.T) {
 	t.Run("should not clean observer if not self delegation", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.DelegatorShares = sdk.NewDec(100)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
-		k.GetStakingKeeper().SetDelegation(ctx, stakingtypes.Delegation{
+		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
 			ValidatorAddress: validator.GetOperator().String(),
 			Shares:           sdk.NewDec(10),
@@ -108,16 +108,16 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 	})
 
 	t.Run("should clean observer if self delegation", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.DelegatorShares = sdk.NewDec(100)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
-		k.GetStakingKeeper().SetDelegation(ctx, stakingtypes.Delegation{
+		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
 			ValidatorAddress: validator.GetOperator().String(),
 			Shares:           sdk.NewDec(10),
@@ -150,12 +150,12 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 	})
 
 	t.Run("should not error if observer set not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.DelegatorShares = sdk.NewDec(100)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 
 		hooks := k.Hooks()
 		err := hooks.BeforeValidatorSlashed(ctx, validator.GetOperator(), sdk.NewDec(1))
@@ -163,13 +163,13 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 	})
 
 	t.Run("should remove from observer set", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.DelegatorShares = sdk.NewDec(100)
 		validator.Tokens = sdk.NewInt(100)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
@@ -187,13 +187,13 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 	})
 
 	t.Run("should not remove from observer set", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 		validator.DelegatorShares = sdk.NewDec(100)
 		validator.Tokens = sdk.NewInt(1000000000000000000)
-		k.GetStakingKeeper().SetValidator(ctx, validator)
+		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 

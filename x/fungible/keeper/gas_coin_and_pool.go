@@ -125,7 +125,6 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	err = routerABI.UnpackIntoInterface(&[]interface{}{AmountToken, AmountETH, Liquidity}, "addLiquidityETH", res.Ret)
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to UnpackIntoInterface addLiquidityETH")
-
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
