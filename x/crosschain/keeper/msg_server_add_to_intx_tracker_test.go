@@ -20,16 +20,26 @@ import (
 
 func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+			UseObserverMock:  true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		txHash := "string"
+		nonAdmin := sample.AccAddress()
 
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, nonAdmin, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+
+		txHash := "string"
 		chainID := getValidEthChainID(t)
-		setSupportedChain(ctx, zk, chainID)
 
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-			Creator:   sample.AccAddress(),
+			Creator:   nonAdmin,
 			ChainId:   chainID,
 			TxHash:    txHash,
 			CoinType:  coin.CoinType_Zeta,
@@ -43,13 +53,17 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	})
 
 	t.Run("fail for unsupported chain id", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+			UseObserverMock:  true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		txHash := "string"
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
 
+		txHash := "string"
 		chainID := getValidEthChainID(t)
-		setSupportedChain(ctx, zk, chainID)
 
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -68,12 +82,17 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	t.Run("admin add tx tracker", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
+			UseObserverMock:  true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 
 		txHash := "string"
 		chainID := getValidEthChainID(t)
@@ -94,7 +113,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	})
 
 	t.Run("observer add tx tracker", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 			UseObserverMock:  true,
 		})
@@ -110,7 +129,6 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 		txHash := "string"
 		chainID := getValidEthChainID(t)
-		setSupportedChain(ctx, zk, chainID)
 
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -127,7 +145,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	})
 
 	t.Run("fail if proof is provided but not verified", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock:   true,
 			UseLightclientMock: true,
 			UseObserverMock:    true,
@@ -146,7 +164,6 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 		txHash := "string"
 		chainID := getValidEthChainID(t)
-		setSupportedChain(ctx, zk, chainID)
 
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -161,7 +178,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	})
 
 	t.Run("fail if proof is provided but can't find chain params to verify body", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock:   true,
 			UseLightclientMock: true,
 			UseObserverMock:    true,
@@ -181,7 +198,6 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 		txHash := "string"
 		chainID := getValidEthChainID(t)
-		setSupportedChain(ctx, zk, chainID)
 
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,

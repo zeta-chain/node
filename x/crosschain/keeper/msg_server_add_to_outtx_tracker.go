@@ -23,7 +23,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check the chain is supported
-	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}
@@ -34,7 +34,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		Nonce:   msg.Nonce,
 	})
 	if err != nil {
-		return nil, cosmoserrors.Wrap(err, "CcxtByNonce failed")
+		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, err.Error())
 	}
 	if cctx == nil || cctx.CrossChainTx == nil {
 		return nil, cosmoserrors.Wrapf(types.ErrCannotFindCctx, "no corresponding cctx found for chain %d, nonce %d", msg.ChainId, msg.Nonce)
@@ -49,7 +49,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 
 	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
-	isObserver := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator)
+	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 	isProven := false
 
 	if !(isEmergencyGroup || isObserver) {
@@ -70,15 +70,29 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	hash := types.TxHashList{
 		TxHash:   msg.TxHash,
 		TxSigner: msg.Creator,
+		Proved:   isProven,
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
 			Index:    "",
-			ChainId:  chain.ChainId,
+			ChainId:  msg.ChainId,
 			Nonce:    msg.Nonce,
 			HashList: []*types.TxHashList{&hash},
 		})
 		return &types.MsgAddToOutTxTrackerResponse{}, nil
+	}
+
+	// check if the hash is already in the tracker
+	for i, hash := range tracker.HashList {
+		hash := hash
+		if strings.EqualFold(hash.TxHash, msg.TxHash) {
+			// if the hash is already in the tracker but we have a proof, mark it as proven and only keep this one in the list
+			if isProven {
+				tracker.HashList[i].Proved = true
+				k.SetOutTxTracker(ctx, tracker)
+			}
+			return &types.MsgAddToOutTxTrackerResponse{}, nil
+		}
 	}
 
 	// check if max hashes are reached
@@ -89,19 +103,6 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			msg.Nonce,
 			len(tracker.HashList),
 		)
-	}
-
-	// check if the hash is already in the tracker
-	for _, hash := range tracker.HashList {
-		if strings.EqualFold(hash.TxHash, msg.TxHash) {
-			// if the hash is already in the tracker but we have a proof, mark it as proven and only keep this one in the list
-			if isProven {
-				hash.Proved = true
-				tracker.HashList = []*types.TxHashList{hash}
-				k.SetOutTxTracker(ctx, tracker)
-			}
-			return &types.MsgAddToOutTxTrackerResponse{}, nil
-		}
 	}
 
 	// add the tracker to the list
@@ -123,7 +124,7 @@ func verifyProofAndOutTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToOu
 		bitcoinChainID = msg.ChainId
 	}
 
-	tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+	tss, err := k.GetObserverKeeper().GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
 		BitcoinChainId: bitcoinChainID,
 	})
 	if err != nil || tss == nil {
