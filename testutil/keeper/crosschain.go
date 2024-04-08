@@ -165,6 +165,13 @@ func CrosschainKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Ze
 	return CrosschainKeeperWithMocks(t, CrosschainNoMocks)
 }
 
+// GetCrosschainLightclientMock returns a new crosschain lightclient keeper mock
+func GetCrosschainLightclientMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainLightclientKeeper {
+	lk, ok := keeper.GetLightclientKeeper().(*crosschainmocks.CrosschainLightclientKeeper)
+	require.True(t, ok)
+	return lk
+}
+
 // GetCrosschainAuthorityMock returns a new crosschain authority keeper mock
 func GetCrosschainAuthorityMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainAuthorityKeeper {
 	cok, ok := keeper.GetAuthorityKeeper().(*crosschainmocks.CrosschainAuthorityKeeper)

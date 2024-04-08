@@ -246,3 +246,343 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 }
 
 */
+
+// Commented out as these tests don't work without using RPC
+// TODO: Reenable these tests
+// https://github.com/zeta-chain/node/issues/1875
+//t.Run("add proof based tracker with correct proof", func(t *testing.T) {
+//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+//
+//	chainID := int64(5)
+//
+//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
+//	require.NoError(t, err)
+//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+//	msgServer := keeper.NewMsgServerImpl(*k)
+//
+//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+//		Creator:   sample.AccAddress(),
+//		ChainId:   chainID,
+//		TxHash:    tx.Hash().Hex(),
+//		CoinType:  pkg.CoinType_Zeta,
+//		Proof:     proof,
+//		BlockHash: block.Hash().Hex(),
+//		TxIndex:   txIndex,
+//	})
+//	require.NoError(t, err)
+//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
+//	require.True(t, found)
+//})
+//t.Run("fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
+//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+//
+//	chainID := getValidEthChainID(t)
+//
+//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
+//	require.NoError(t, err)
+//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+//	msgServer := keeper.NewMsgServerImpl(*k)
+//
+//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+//		Creator:   sample.AccAddress(),
+//		ChainId:   chainID,
+//		TxHash:    "fake_hash",
+//		CoinType:  pkg.CoinType_Zeta,
+//		Proof:     proof,
+//		BlockHash: block.Hash().Hex(),
+//		TxIndex:   txIndex,
+//	})
+//	require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
+//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
+//	require.False(t, found)
+//})
+//t.Run("fail to add proof based tracker with wrong chain id", func(t *testing.T) {
+//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+//
+//	chainID := getValidEthChainID(t)
+//
+//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
+//	require.NoError(t, err)
+//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+//
+//	msgServer := keeper.NewMsgServerImpl(*k)
+//
+//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+//		Creator:   sample.AccAddress(),
+//		ChainId:   97,
+//		TxHash:    tx.Hash().Hex(),
+//		CoinType:  pkg.CoinType_Zeta,
+//		Proof:     proof,
+//		BlockHash: block.Hash().Hex(),
+//		TxIndex:   txIndex,
+//	})
+//	require.ErrorIs(t, err, observertypes.ErrSupportedChains)
+//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
+//	require.False(t, found)
+//})
+
+//func TestKeeper_VerifyEVMInTxBody(t *testing.T) {
+//to := sample.EthAddress()
+//tx := ethtypes.NewTx(&ethtypes.DynamicFeeTx{
+//	ChainID:   big.NewInt(5),
+//	Nonce:     1,
+//	GasTipCap: nil,
+//	GasFeeCap: nil,
+//	Gas:       21000,
+//	To:        &to,
+//	Value:     big.NewInt(5),
+//	Data:      nil,
+//})
+//
+//t.Run("should error if msg tx hash not correct", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash: "0x0",
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+
+//t.Run("should error if msg chain id not correct", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:  tx.Hash().Hex(),
+//		ChainId: 1,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should error if not supported coin type", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Cmd,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should error for cointype_zeta if chain params not found", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{}, false)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Zeta,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should error for cointype_zeta if tx.to wrong", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
+//		ConnectorContractAddress: sample.EthAddress().Hex(),
+//	}, true)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Zeta,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should not error for cointype_zeta", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
+//		ConnectorContractAddress: to.Hex(),
+//	}, true)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Zeta,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.NoError(t, err)
+//})
+//
+//t.Run("should error for cointype_erc20 if chain params not found", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{}, false)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_ERC20,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should error for cointype_erc20 if tx.to wrong", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
+//		Erc20CustodyContractAddress: sample.EthAddress().Hex(),
+//	}, true)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_ERC20,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should not error for cointype_erc20", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(&observertypes.ChainParams{
+//		Erc20CustodyContractAddress: to.Hex(),
+//	}, true)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_ERC20,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.NoError(t, err)
+//})
+//
+//t.Run("should error for cointype_gas if tss address not found", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{}, errors.New("err"))
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Gas,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should error for cointype_gas if tss eth address is empty", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
+//		Eth: "0x",
+//	}, nil)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Gas,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should error for cointype_gas if tss eth address is wrong", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
+//		Eth: sample.EthAddress().Hex(),
+//	}, nil)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Gas,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.Error(t, err)
+//})
+//
+//t.Run("should not error for cointype_gas", func(t *testing.T) {
+//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+//		UseObserverMock: true,
+//	})
+//	observerMock := keepertest.GetCrosschainObserverMock(t, k)
+//	observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
+//		Eth: to.Hex(),
+//	}, nil)
+//
+//	txBytes, err := tx.MarshalBinary()
+//	require.NoError(t, err)
+//	msg := &types.MsgAddToInTxTracker{
+//		TxHash:   tx.Hash().Hex(),
+//		ChainId:  tx.ChainId().Int64(),
+//		CoinType: coin.CoinType_Gas,
+//	}
+//
+//	err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+//	require.NoError(t, err)
+//})
+//}

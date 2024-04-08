@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"errors"
+	"github.com/stretchr/testify/mock"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,47 +49,47 @@ func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_inde
 func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		tx_hash := "string"
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		txHash := "string"
 
 		chainID := getValidEthChainID(t)
 		setSupportedChain(ctx, zk, chainID)
 
-		msgServer := keeper.NewMsgServerImpl(*k)
-
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
-			TxHash:    tx_hash,
+			TxHash:    txHash,
 			CoinType:  coin.CoinType_Zeta,
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
 		})
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
-		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
+		_, found := k.GetInTxTracker(ctx, chainID, txHash)
 		require.False(t, found)
 	})
 
 	t.Run("fail for unsupported chain id", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		tx_hash := "string"
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		txHash := "string"
 
 		chainID := getValidEthChainID(t)
 		setSupportedChain(ctx, zk, chainID)
 
-		msgServer := keeper.NewMsgServerImpl(*k)
-
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID + 1,
-			TxHash:    tx_hash,
+			TxHash:    txHash,
 			CoinType:  coin.CoinType_Zeta,
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
 		})
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
-		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
+		_, found := k.GetInTxTracker(ctx, chainID, txHash)
 		require.False(t, found)
 	})
 
@@ -94,35 +97,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
-
-		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-
-		tx_hash := "string"
-		chainID := getValidEthChainID(t)
-		setSupportedChain(ctx, zk, chainID)
-
 		msgServer := keeper.NewMsgServerImpl(*k)
-
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    tx_hash,
-			CoinType:  coin.CoinType_Zeta,
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
-		})
-		require.NoError(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
-		require.True(t, found)
-	})
-
-	t.Run("admin submit fake tracker", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseAuthorityMock: true,
-		})
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
@@ -132,95 +107,237 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		setSupportedChain(ctx, zk, chainID)
 
-		msgServer := keeper.NewMsgServerImpl(*k)
-
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
 			ChainId:   chainID,
-			TxHash:    "Malicious TX HASH",
+			TxHash:    txHash,
 			CoinType:  coin.CoinType_Zeta,
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
 		})
 		require.NoError(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, "Malicious TX HASH")
+		_, found := k.GetInTxTracker(ctx, chainID, txHash)
 		require.True(t, found)
-		_, found = k.GetInTxTracker(ctx, chainID, txHash)
-		require.False(t, found)
 	})
 
-	// Commented out as these tests don't work without using RPC
-	// TODO: Reenable these tests
-	// https://github.com/zeta-chain/node/issues/1875
-	//t.Run("add proof based tracker with correct proof", func(t *testing.T) {
-	//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-	//
-	//	chainID := int64(5)
-	//
-	//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-	//	require.NoError(t, err)
-	//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-	//	msgServer := keeper.NewMsgServerImpl(*k)
-	//
-	//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-	//		Creator:   sample.AccAddress(),
-	//		ChainId:   chainID,
-	//		TxHash:    tx.Hash().Hex(),
-	//		CoinType:  pkg.CoinType_Zeta,
-	//		Proof:     proof,
-	//		BlockHash: block.Hash().Hex(),
-	//		TxIndex:   txIndex,
-	//	})
-	//	require.NoError(t, err)
-	//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-	//	require.True(t, found)
-	//})
-	//t.Run("fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
-	//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-	//
-	//	chainID := getValidEthChainID(t)
-	//
-	//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-	//	require.NoError(t, err)
-	//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-	//	msgServer := keeper.NewMsgServerImpl(*k)
-	//
-	//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-	//		Creator:   sample.AccAddress(),
-	//		ChainId:   chainID,
-	//		TxHash:    "fake_hash",
-	//		CoinType:  pkg.CoinType_Zeta,
-	//		Proof:     proof,
-	//		BlockHash: block.Hash().Hex(),
-	//		TxIndex:   txIndex,
-	//	})
-	//	require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
-	//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-	//	require.False(t, found)
-	//})
-	//t.Run("fail to add proof based tracker with wrong chain id", func(t *testing.T) {
-	//	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-	//
-	//	chainID := getValidEthChainID(t)
-	//
-	//	txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-	//	require.NoError(t, err)
-	//	setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-	//
-	//	msgServer := keeper.NewMsgServerImpl(*k)
-	//
-	//	_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-	//		Creator:   sample.AccAddress(),
-	//		ChainId:   97,
-	//		TxHash:    tx.Hash().Hex(),
-	//		CoinType:  pkg.CoinType_Zeta,
-	//		Proof:     proof,
-	//		BlockHash: block.Hash().Hex(),
-	//		TxIndex:   txIndex,
-	//	})
-	//	require.ErrorIs(t, err, observertypes.ErrSupportedChains)
-	//	_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-	//	require.False(t, found)
-	//})
+	t.Run("observer add tx tracker", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+			UseObserverMock:  true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+
+		txHash := "string"
+		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			CoinType:  coin.CoinType_Zeta,
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.NoError(t, err)
+		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		require.True(t, found)
+	})
+
+	t.Run("fail if proof is provided but not verified", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock:   true,
+			UseLightclientMock: true,
+			UseObserverMock:    true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("error"))
+
+		txHash := "string"
+		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			CoinType:  coin.CoinType_Zeta,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.ErrorIs(t, err, types.ErrProofVerificationFail)
+	})
+
+	t.Run("fail if proof is provided but can't find chain params to verify body", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock:   true,
+			UseLightclientMock: true,
+			UseObserverMock:    true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(sample.Bytes(), nil)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(nil, false)
+
+		txHash := "string"
+		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			CoinType:  coin.CoinType_Zeta,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.ErrorIs(t, err, types.ErrUnsupportedChain)
+	})
+
+	t.Run("fail if proof is provided but can't find tss to verify body", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock:   true,
+			UseLightclientMock: true,
+			UseObserverMock:    true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(sample.Bytes(), nil)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(sample.ChainParams(chains.EthChain().ChainId), true)
+		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(nil, errors.New("error"))
+
+		txHash := "string"
+		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			CoinType:  coin.CoinType_Zeta,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.ErrorIs(t, err, observertypes.ErrTssNotFound)
+	})
+
+	t.Run("fail if proof is provided but error while verifying tx body", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock:   true,
+			UseLightclientMock: true,
+			UseObserverMock:    true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(sample.ChainParams(chains.EthChain().ChainId), true)
+		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
+			Eth: sample.EthAddress().Hex(),
+		}, nil)
+
+		// verifying the body will fail because the bytes are tried to be unmarshaled but they are not valid
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]byte("invalid"), nil)
+
+		txHash := "string"
+		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			CoinType:  coin.CoinType_Zeta,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
+	})
+
+	t.Run("can add a in tx tracker with a proof", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock:   true,
+			UseLightclientMock: true,
+			UseObserverMock:    true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+
+		chainID := chains.EthChain().ChainId
+		tssAddress := sample.EthAddress()
+		ethTx, ethTxBytes := sample.EthTx(t, chainID, tssAddress, 42)
+		txHash := ethTx.Hash().Hex()
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(sample.ChainParams(chains.EthChain().ChainId), true)
+		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
+			Eth: tssAddress.Hex(),
+		}, nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			CoinType:  coin.CoinType_Gas, // use coin types gas: the receiver must be the tss address
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.NoError(t, err)
+		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		require.True(t, found)
+	})
 }
