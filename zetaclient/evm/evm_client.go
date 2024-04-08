@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
@@ -70,8 +69,7 @@ var _ interfaces.ChainClient = &ChainClient{}
 // Filled with above constants depending on chain
 type ChainClient struct {
 	chain                      chains.Chain
-	evmClient                  interfaces.EVMRPCClient
-	evmJSONRPC                 interfaces.EVMJSONRPCClient
+	evmClient                  EthClientFallbackInterface
 	zetaClient                 interfaces.ZetaCoreBridger
 	Tss                        interfaces.TSSSigner
 	lastBlockScanned           uint64
@@ -130,14 +128,12 @@ func NewEVMChainClient(
 	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
 	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
 
-	ob.logger.Chain.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
-	client, err := ethclient.Dial(evmCfg.Endpoint)
+	// Initialize evm client
+	client, err := NewEthClientFallback(&evmCfg, chainLogger)
 	if err != nil {
-		ob.logger.Chain.Error().Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
 	ob.evmClient = client
-	ob.evmJSONRPC = ethrpc.NewEthRPC(evmCfg.Endpoint)
 
 	// create block header and block caches
 	ob.blockCache, err = lru.New(1000)
@@ -176,16 +172,10 @@ func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-func (ob *ChainClient) WithEvmClient(client interfaces.EVMRPCClient) {
+func (ob *ChainClient) WithEvmClient(client *EthClientFallback) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmClient = client
-}
-
-func (ob *ChainClient) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
-	ob.evmJSONRPC = client
 }
 
 func (ob *ChainClient) WithZetaClient(bridge interfaces.ZetaCoreBridger) {
@@ -1329,7 +1319,7 @@ func (ob *ChainClient) GetTxID(nonce uint64) string {
 
 // BlockByNumber query block by number via JSON-RPC
 func (ob *ChainClient) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
-	block, err := ob.evmJSONRPC.EthGetBlockByNumber(blockNumber, true)
+	block, err := ob.evmClient.EthGetBlockByNumber(blockNumber, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1344,7 +1334,7 @@ func (ob *ChainClient) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 
 // TransactionByHash query transaction by hash via JSON-RPC
 func (ob *ChainClient) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
-	tx, err := ob.evmJSONRPC.EthGetTransactionByHash(txHash)
+	tx, err := ob.evmClient.EthGetTransactionByHash(txHash)
 	if err != nil {
 		return nil, false, err
 	}

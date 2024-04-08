@@ -29,7 +29,7 @@ type ClientConfiguration struct {
 
 type EVMConfig struct {
 	Chain    chains.Chain
-	Endpoint string
+	Endpoint []string
 }
 
 type BTCConfig struct {
