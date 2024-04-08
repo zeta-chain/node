@@ -156,12 +156,17 @@ func ModifyObserverState(appState map[string]json.RawMessage, importAppState map
 	importedObserverGenState := observertypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedObserverGenState.Ballots = importedObserverGenState.Ballots[:math.Min(10, len(importedObserverGenState.Ballots))]
 	importedObserverGenState.NonceToCctx = importedObserverGenState.NonceToCctx[:math.Min(10, len(importedObserverGenState.NonceToCctx))]
-	importedObserverStateBz, err := cdc.MarshalJSON(&importedObserverGenState)
+
+	currentGenState := observertypes.GetGenesisStateFromAppState(cdc, appState)
+	currentGenState.Ballots = importedObserverGenState.Ballots
+	currentGenState.NonceToCctx = importedObserverGenState.NonceToCctx
+
+	currentGenStateBz, err := cdc.MarshalJSON(&currentGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal observer genesis state: %w", err)
 	}
 
-	appState[observertypes.ModuleName] = importedObserverStateBz
+	appState[observertypes.ModuleName] = currentGenStateBz
 	return nil
 }
 
