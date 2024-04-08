@@ -24,6 +24,7 @@ func getEthereumChainID() int64 {
 
 // TODO: Add a test case with proof and Bitcoin chain
 // https://github.com/zeta-chain/node/issues/1994
+
 func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 
 	// mockCctxByNonce mocks the methods called by CctxByNonce to directly return the given cctx or error
@@ -216,9 +217,6 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
-
-		// set cctx status to outbound mined
-		mockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_OutboundMined, false)
 
 		chainID := getEthereumChainID()
 

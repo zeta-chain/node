@@ -6,11 +6,86 @@ import (
 	"testing"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
+
+// readReceipt reads a receipt from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readHeader(filename string) (*ethtypes.Header, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	var NewHeader ethtypes.Header
+	err = decoder.Decode(&NewHeader)
+	return &NewHeader, err
+}
+
+func ethHeaders() (*ethtypes.Header, *ethtypes.Header, *ethtypes.Header, error) {
+	header1, err := readHeader("./testdata/header_sepolia_5000000.json")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	header2, err := readHeader("./testdata/header_sepolia_5000001.json")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	header3, err := readHeader("./testdata/header_sepolia_5000002.json")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return header1, header2, header3, nil
+}
+
+// sepoliaBlockHeaders returns three block headers for the Sepolia chain.
+func sepoliaBlockHeaders(t *testing.T) (proofs.BlockHeader, proofs.BlockHeader, proofs.BlockHeader) {
+	header1, header2, header3, err := ethHeaders()
+	if err != nil {
+		panic(err)
+	}
+
+	headerRLP1, err := rlp.EncodeToBytes(header1)
+	require.NoError(t, err)
+	headerRLP2, err := rlp.EncodeToBytes(header1)
+	require.NoError(t, err)
+	headerRLP3, err := rlp.EncodeToBytes(header1)
+	require.NoError(t, err)
+
+	hex := header1.Hash().Hex()
+	hex = hex
+
+	return proofs.BlockHeader{
+			Height:     5000000,
+			Hash:       header1.Hash().Bytes(),
+			ParentHash: header1.ParentHash.Bytes(),
+			ChainId:    chains.SepoliaChain().ChainId,
+			Header:     proofs.NewEthereumHeader(headerRLP1),
+		},
+		proofs.BlockHeader{
+			Height:     5000001,
+			Hash:       header2.Hash().Bytes(),
+			ParentHash: header2.ParentHash.Bytes(),
+			ChainId:    chains.SepoliaChain().ChainId,
+			Header:     proofs.NewEthereumHeader(headerRLP2),
+		},
+		proofs.BlockHeader{
+			Height:     5000002,
+			Hash:       header3.Hash().Bytes(),
+			ParentHash: header3.ParentHash.Bytes(),
+			ChainId:    chains.SepoliaChain().ChainId,
+			Header:     proofs.NewEthereumHeader(headerRLP3),
+		}
+}
 
 // TestKeeper_GetBlockHeader tests get, set, and remove block header
 func TestKeeper_GetBlockHeader(t *testing.T) {
@@ -45,36 +120,89 @@ func TestKeeper_GetAllBlockHeaders(t *testing.T) {
 	require.Contains(t, list, b3)
 }
 
-func ethHeaders() (*ethtypes.Header, *ethtypes.Header, *ethtypes.Header, error) {
-	header1, err := readHeader("./testdata/header_sepolia_5000000.json")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	header2, err := readHeader("./testdata/header_sepolia_5000001.json")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	header3, err := readHeader("./testdata/header_sepolia_5000002.json")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return header1, header2, header3, nil
-}
+// TODO: Test with bitcoin headers
+// https://github.com/zeta-chain/node/issues/1994
 
-// readReceipt reads a receipt from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readHeader(filename string) (*ethtypes.Header, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+func TestKeeper_CheckNewBlockHeader(t *testing.T) {
+	t.Run("should succeed if block header is valid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-	decoder := json.NewDecoder(file)
-	var NewHeader ethtypes.Header
-	err = decoder.Decode(&NewHeader)
-	return &NewHeader, err
+		k.SetVerificationFlags(ctx, types.VerificationFlags{
+			EthTypeChainEnabled: true,
+		})
+
+		bh, _, _ := sepoliaBlockHeaders(t)
+
+		parentHash, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+		require.NoError(t, err)
+		require.Equal(t, bh.ParentHash, parentHash)
+	})
+
+	//t.Run("should succeed if block header is valid with chain state existing", func(t *testing.T) {
+	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
+	//
+	//	k.SetVerificationFlags(ctx, types.VerificationFlags{
+	//		EthTypeChainEnabled: true,
+	//	})
+	//
+	//	bh1, bh2, _ := sepoliaBlockHeaders(t)
+	//	k.SetChainState(ctx, types.ChainState{
+	//		ChainId:         bh1.ChainId,
+	//		LatestHeight:    bh1.Height,
+	//		EarliestHeight:  bh1.Height - 100,
+	//		LatestBlockHash: bh1.Hash,
+	//	})
+	//	k.SetBlockHeader(ctx, bh1)
+	//
+	//	parentHash, err := k.CheckNewBlockHeader(ctx, bh2.ChainId, bh2.Hash, bh2.Height, bh2.Header)
+	//	require.NoError(t, err)
+	//	require.Equal(t, bh2.ParentHash, parentHash)
+	//})
+
+	//t.Run("fail if block already exist", func(t *testing.T) {
+	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
+	//
+	//	k.SetVerificationFlags(ctx, types.VerificationFlags{
+	//		EthTypeChainEnabled: true,
+	//	})
+	//
+	//	bh, _, _ := sepoliaBlockHeaders(t)
+	//	k.SetBlockHeader(ctx, bh)
+	//
+	//	_, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+	//	require.ErrorIs(t, err, types.ErrBlockAlreadyExist)
+	//})
+	//
+	//t.Run("fail if chain state and no parent", func(t *testing.T) {
+	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
+	//
+	//	k.SetVerificationFlags(ctx, types.VerificationFlags{
+	//		EthTypeChainEnabled: true,
+	//	})
+	//
+	//	bh, _, _ := sepoliaBlockHeaders(t)
+	//	bh.ParentHash = []byte("")
+	//
+	//	parentHash, err := k.CheckNewBlockHeader(ctx, bh.ChainId, bh.Hash, bh.Height, bh.Header)
+	//	require.NoError(t, err)
+	//	require.Equal(t, bh.ParentHash, parentHash)
+	//})
+
+	//k, ctx, _, _ := keepertest.LightclientKeeper(t)
+	//header := sample.BlockHeader(sample.Hash().Bytes())
+	//k.SetBlockHeader(ctx, header)
+	//
+	//t.Run("should error if parent block header does not exist", func(t *testing.T) {
+	//	header2 := sample.BlockHeader(sample.Hash().Bytes())
+	//	header2.ParentHash = sample.Hash().Bytes()
+	//	err := k.CheckNewBlockHeader(ctx, header2)
+	//	require.Error(t, err)
+	//})
+	//
+	//t.Run("should error if block header already exists", func(t *testing.T) {
+	//	err := k.CheckNewBlockHeader(ctx, header1)
+	//	require.Error(t, err)
+	//})
 }
 
 /*

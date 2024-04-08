@@ -76,17 +76,19 @@ func (k Keeper) CheckNewBlockHeader(
 		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, fmt.Sprintf("block hash: %x", blockHash))
 	}
 
+	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
+	parentHash, err := header.ParentHash()
+	if err != nil {
+		return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
+	}
+
 	// if the chain state exists and parent block header is not found, returns error
 	// the Earliest/Latest height with this block header (after voting, not here)
-	// if BlockHeaderState is found, check if the block height is valid
+	// if ChainState is found, check if the block height is valid
 	// validate block height as it's not part of the header itself
 	chainState, found := k.GetChainState(ctx, chainID)
 	if found && chainState.EarliestHeight > 0 && chainState.EarliestHeight < height {
-		pHash, err := header.ParentHash()
-		if err != nil {
-			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
-		}
-		_, found = k.GetBlockHeader(ctx, pHash)
+		_, found = k.GetBlockHeader(ctx, parentHash)
 		if !found {
 			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, "parent block header not found")
 		}
@@ -104,13 +106,7 @@ func (k Keeper) CheckNewBlockHeader(
 		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
 	}
 
-	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
-	pHash, err := header.ParentHash()
-	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
-	}
-
-	return pHash, nil
+	return parentHash, nil
 }
 
 // AddBlockHeader adds a new block header to the store and updates the chain state
