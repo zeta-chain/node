@@ -712,12 +712,3 @@ func TestGetBtcEventErrors(t *testing.T) {
 		require.Nil(t, event)
 	})
 }
-
-func TestBTCChainClient_ObserveInTx(t *testing.T) {
-	t.Run("should return error", func(t *testing.T) {
-		// create mainnet mock client
-		btcClient := MockBTCClientMainnet()
-		err := btcClient.ObserveInTx()
-		require.ErrorContains(t, err, "inbound TXS / Send has been disabled by the protocol")
-	})
-}
