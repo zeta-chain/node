@@ -53,7 +53,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.BlockHeader(duplicatedHash),
 				},
 			},
-			valid: true,
+			valid: false,
 		},
 		{
 			desc: "duplicate chain state is invalid",
@@ -64,7 +64,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.ChainState(chains.BscMainnetChain().ChainId),
 				},
 			},
-			valid: true,
+			valid: false,
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
