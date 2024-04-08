@@ -41,7 +41,6 @@ var Copy = map[string]bool{
 	crisistypes.ModuleName:          true,
 	feemarkettypes.ModuleName:       true,
 	paramstypes.ModuleName:          true,
-	group.ModuleName:                true,
 	upgradetypes.ModuleName:         true,
 	evidencetypes.ModuleName:        true,
 	vestingtypes.ModuleName:         true,
@@ -56,6 +55,7 @@ var Skip = map[string]bool{
 	authtypes.ModuleName:         true,
 	banktypes.ModuleName:         true,
 	distributiontypes.ModuleName: true,
+	group.ModuleName:             true,
 }
 
 var Modify = map[string]bool{
