@@ -58,6 +58,7 @@
 * [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
 * [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
+* [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 
 ### Fixes
 
@@ -66,6 +67,8 @@
 * [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
+* [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags
+* [1970](https://github.com/zeta-chain/node/issues/1970) - remove the timeout in the evm outtx tracker processing thread
 
 ### Chores
 

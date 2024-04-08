@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"fmt"
@@ -6,10 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func createNLastBlockHeight(keeper *Keeper, ctx sdk.Context, n int) []types.LastBlockHeight {
+func createNLastBlockHeight(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.LastBlockHeight {
 	items := make([]types.LastBlockHeight, n)
 	for i := range items {
 		items[i].Creator = "any"
@@ -20,26 +22,26 @@ func createNLastBlockHeight(keeper *Keeper, ctx sdk.Context, n int) []types.Last
 }
 
 func TestLastBlockHeightGet(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNLastBlockHeight(keeper, ctx, 10)
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	items := createNLastBlockHeight(k, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetLastBlockHeight(ctx, item.Index)
+		rst, found := k.GetLastBlockHeight(ctx, item.Index)
 		require.True(t, found)
 		require.Equal(t, item, rst)
 	}
 }
 func TestLastBlockHeightRemove(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNLastBlockHeight(keeper, ctx, 10)
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	items := createNLastBlockHeight(k, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveLastBlockHeight(ctx, item.Index)
-		_, found := keeper.GetLastBlockHeight(ctx, item.Index)
+		k.RemoveLastBlockHeight(ctx, item.Index)
+		_, found := k.GetLastBlockHeight(ctx, item.Index)
 		require.False(t, found)
 	}
 }
 
 func TestLastBlockHeightGetAll(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNLastBlockHeight(keeper, ctx, 10)
-	require.Equal(t, items, keeper.GetAllLastBlockHeight(ctx))
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	items := createNLastBlockHeight(k, ctx, 10)
+	require.Equal(t, items, k.GetAllLastBlockHeight(ctx))
 }
