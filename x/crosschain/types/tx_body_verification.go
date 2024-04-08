@@ -22,13 +22,17 @@ func VerifyInTxBody(
 ) error {
 	// verify message against transaction body
 	if chains.IsEVMChain(msg.ChainId) {
-		return VerifyInTxBodyEVM(msg, txBytes, chainParams, tss)
+		return verifyInTxBodyEVM(msg, txBytes, chainParams, tss)
 	}
+
+	// TODO: implement verifyInTxBodyBTC
+	// https://github.com/zeta-chain/node/issues/1993
+
 	return fmt.Errorf("cannot verify inTx body for chain %d", msg.ChainId)
 }
 
-// VerifyInTxBodyEVM validates the chain id and connector contract address for Zeta, ERC20 custody contract address for ERC20 and TSS address for Gas.
-func VerifyInTxBodyEVM(
+// verifyInTxBodyEVM validates the chain id and connector contract address for Zeta, ERC20 custody contract address for ERC20 and TSS address for Gas.
+func verifyInTxBodyEVM(
 	msg MsgAddToInTxTracker,
 	txBytes []byte,
 	chainParams observertypes.ChainParams,
@@ -37,13 +41,13 @@ func VerifyInTxBodyEVM(
 	var txx ethtypes.Transaction
 	err := txx.UnmarshalBinary(txBytes)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal transaction %s", err.Error())
 	}
 	if txx.Hash().Hex() != msg.TxHash {
-		return fmt.Errorf("want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
+		return fmt.Errorf("invalid hash, want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
 	}
 	if txx.ChainId().Cmp(big.NewInt(msg.ChainId)) != 0 {
-		return fmt.Errorf("want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
+		return fmt.Errorf("invalid chain id, want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
 	}
 	switch msg.CoinType {
 	case coin.CoinType_Zeta:
@@ -51,13 +55,11 @@ func VerifyInTxBodyEVM(
 		if txx.To().Hex() != chainParams.ConnectorContractAddress {
 			return fmt.Errorf("receiver is not connector contract for coin type %s", msg.CoinType)
 		}
-		return nil
 	case coin.CoinType_ERC20:
 		// Inbound depositing ERC20 interacts with ERC20 custody contract
 		if txx.To().Hex() != chainParams.Erc20CustodyContractAddress {
 			return fmt.Errorf("receiver is not erc20Custory contract for coin type %s", msg.CoinType)
 		}
-		return nil
 	case coin.CoinType_Gas:
 		// Inbound depositing Gas interacts with TSS address
 		tssAddr := eth.HexToAddress(tss.Eth)
@@ -67,56 +69,56 @@ func VerifyInTxBodyEVM(
 		if txx.To().Hex() != tssAddr.Hex() {
 			return fmt.Errorf("receiver is not tssAddress contract for coin type %s", msg.CoinType)
 		}
-		return nil
 	default:
-		return fmt.Errorf("coin type %s not supported", msg.CoinType)
+		return fmt.Errorf("coin type not supported %s", msg.CoinType)
 	}
+	return nil
 }
 
 // VerifyOutTxBody verifies the tx body for a outbound tx
 func VerifyOutTxBody(msg MsgAddToOutTxTracker, txBytes []byte, tss observertypes.QueryGetTssAddressResponse) error {
 	// verify message against transaction body
 	if chains.IsEVMChain(msg.ChainId) {
-		return VerifyOutTxBodyEVM(msg, txBytes, tss.Eth)
+		return verifyOutTxBodyEVM(msg, txBytes, tss.Eth)
 	} else if chains.IsBitcoinChain(msg.ChainId) {
-		return VerifyOutTxBodyBTC(msg, txBytes, tss.Btc)
+		return verifyOutTxBodyBTC(msg, txBytes, tss.Btc)
 	}
 	return fmt.Errorf("cannot verify outTx body for chain %d", msg.ChainId)
 }
 
-// VerifyOutTxBodyEVM validates the sender address, nonce, chain id and tx hash.
-func VerifyOutTxBodyEVM(msg MsgAddToOutTxTracker, txBytes []byte, tssEth string) error {
+// verifyOutTxBodyEVM validates the sender address, nonce, chain id and tx hash.
+func verifyOutTxBodyEVM(msg MsgAddToOutTxTracker, txBytes []byte, tssEth string) error {
 	var txx ethtypes.Transaction
 	err := txx.UnmarshalBinary(txBytes)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal transaction %s", err.Error())
 	}
 	signer := ethtypes.NewLondonSigner(txx.ChainId())
 	sender, err := ethtypes.Sender(signer, &txx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to recover sender %s", err.Error())
 	}
 	tssAddr := eth.HexToAddress(tssEth)
 	if tssAddr == (eth.Address{}) {
 		return fmt.Errorf("tss address not found")
 	}
 	if sender != tssAddr {
-		return fmt.Errorf("sender %s is not tss address", sender)
+		return fmt.Errorf("sender is not tss address %s", sender)
 	}
 	if txx.ChainId().Cmp(big.NewInt(msg.ChainId)) != 0 {
-		return fmt.Errorf("want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
+		return fmt.Errorf("invalid chain id, want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
 	}
 	if txx.Nonce() != msg.Nonce {
-		return fmt.Errorf("want nonce %d, got %d", txx.Nonce(), msg.Nonce)
+		return fmt.Errorf("invalid nonce, want nonce %d, got %d", txx.Nonce(), msg.Nonce)
 	}
 	if txx.Hash().Hex() != msg.TxHash {
-		return fmt.Errorf("want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
+		return fmt.Errorf("invalid tx hash, want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
 	}
 	return nil
 }
 
-// VerifyOutTxBodyBTC validates the SegWit sender address, nonce and chain id and tx hash
-func VerifyOutTxBodyBTC(msg MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
+// verifyOutTxBodyBTC validates the SegWit sender address, nonce and chain id and tx hash
+func verifyOutTxBodyBTC(msg MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
 	if !chains.IsBitcoinChain(msg.ChainId) {
 		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
 	}
