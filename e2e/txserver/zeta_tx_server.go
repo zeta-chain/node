@@ -2,12 +2,14 @@ package txserver
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -33,6 +35,7 @@ import (
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -188,8 +191,56 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		return nil, err
 	}
 
-	// Broadcast tx
-	return zts.clientCtx.BroadcastTx(txBytes)
+	// Broadcast tx and wait 10 mins to be included in block
+	res, err := zts.clientCtx.BroadcastTx(txBytes)
+	if err != nil {
+		if res == nil {
+			return nil, err
+		}
+		return &sdktypes.TxResponse{
+			Code:      res.Code,
+			Codespace: res.Codespace,
+			TxHash:    res.TxHash,
+		}, err
+	}
+
+	var blockTimeout time.Duration = 10 * time.Minute
+	exitAfter := time.After(blockTimeout)
+	hash, err := hex.DecodeString(res.TxHash)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		select {
+		case <-exitAfter:
+			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", blockTimeout)
+		case <-time.After(time.Millisecond * 100):
+			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
+			if err == nil {
+				resBlock, err := zts.clientCtx.Client.Block(context.TODO(), &resTx.Height)
+				if err == nil {
+					return mkTxResult(zts.clientCtx.TxConfig, resTx, resBlock)
+				}
+			}
+		}
+	}
+}
+
+func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdktypes.TxResponse, error) {
+	txb, err := txConfig.TxDecoder()(resTx.Tx)
+	if err != nil {
+		return nil, err
+	}
+	p, ok := txb.(intoAny)
+	if !ok {
+		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
+	}
+	any := p.AsAny()
+	return sdktypes.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
+}
+
+type intoAny interface {
+	AsAny() *codectypes.Any
 }
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
@@ -373,7 +424,7 @@ func newContext(
 		WithLegacyAmino(codec.NewLegacyAmino()).
 		WithInput(os.Stdin).
 		WithOutput(os.Stdout).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync).
 		WithClient(rpc).
 		WithSkipConfirmation(true).
 		WithFromName("creator").
