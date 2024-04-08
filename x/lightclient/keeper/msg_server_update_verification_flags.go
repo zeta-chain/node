@@ -18,7 +18,7 @@ func (k msgServer) UpdateVerificationFlags(goCtx context.Context, msg *types.Msg
 
 	requiredGroup := authoritytypes.PolicyType_groupEmergency
 	if msg.VerificationFlags.EthTypeChainEnabled || msg.VerificationFlags.BtcTypeChainEnabled {
-		requiredGroup = authoritytypes.PolicyType_groupEmergency
+		requiredGroup = authoritytypes.PolicyType_groupOperational
 	}
 
 	// check permission

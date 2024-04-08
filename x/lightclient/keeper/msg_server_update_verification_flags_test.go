@@ -119,7 +119,7 @@ func TestMsgServer_UpdateVerificationFlags(t *testing.T) {
 			BtcTypeChainEnabled: false,
 		})
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 		_, err := srv.UpdateVerificationFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateVerificationFlags{
 			Creator: admin,
 			VerificationFlags: types.VerificationFlags{
@@ -129,7 +129,7 @@ func TestMsgServer_UpdateVerificationFlags(t *testing.T) {
 		})
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
 		_, err = srv.UpdateVerificationFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateVerificationFlags{
 			Creator: admin,
 			VerificationFlags: types.VerificationFlags{

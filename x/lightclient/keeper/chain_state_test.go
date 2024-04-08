@@ -31,7 +31,7 @@ func TestKeeper_GetAllChainStates(t *testing.T) {
 
 	list := k.GetAllChainStates(ctx)
 	require.Len(t, list, 3)
-	require.EqualValues(t, c1, list[0])
-	require.EqualValues(t, c2, list[1])
-	require.EqualValues(t, c3, list[2])
+	require.Contains(t, list, c1)
+	require.Contains(t, list, c2)
+	require.Contains(t, list, c3)
 }

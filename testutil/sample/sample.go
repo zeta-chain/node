@@ -2,11 +2,12 @@ package sample
 
 import (
 	"errors"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"hash/fnv"
 	"math/rand"
 	"strconv"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	sdkmath "cosmossdk.io/math"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"

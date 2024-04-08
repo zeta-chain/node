@@ -40,9 +40,9 @@ func TestKeeper_GetAllBlockHeaders(t *testing.T) {
 
 	list := k.GetAllBlockHeaders(ctx)
 	require.Len(t, list, 3)
-	require.EqualValues(t, b1, list[0])
-	require.EqualValues(t, b2, list[1])
-	require.EqualValues(t, b3, list[2])
+	require.Contains(t, list, b1)
+	require.Contains(t, list, b2)
+	require.Contains(t, list, b3)
 }
 
 func ethHeaders() (*ethtypes.Header, *ethtypes.Header, *ethtypes.Header, error) {

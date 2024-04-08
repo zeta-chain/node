@@ -39,7 +39,7 @@ func TestKeeper_VerificationFlags(t *testing.T) {
 
 		res, err := k.VerificationFlags(wctx, &types.QueryVerificationFlagsRequest{})
 		require.NoError(t, err)
-		require.Equal(t, &types.VerificationFlags{
+		require.Equal(t, types.VerificationFlags{
 			EthTypeChainEnabled: false,
 			BtcTypeChainEnabled: true,
 		}, res.VerificationFlags)

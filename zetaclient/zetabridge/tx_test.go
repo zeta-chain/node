@@ -329,7 +329,7 @@ func TestZetaCoreBridge_PostBlameData(t *testing.T) {
 	})
 }
 
-func TestZetaCoreBridge_PostAddBlockHeader(t *testing.T) {
+func TestZetaCoreBridge_PostVoteBlockHeader(t *testing.T) {
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
@@ -339,7 +339,7 @@ func TestZetaCoreBridge_PostAddBlockHeader(t *testing.T) {
 
 	t.Run("post add block header success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		hash, err := zetabridge.PostAddBlockHeader(
+		hash, err := zetabridge.PostVoteBlockHeader(
 			chains.EthChain().ChainId,
 			blockHash,
 			18495266,

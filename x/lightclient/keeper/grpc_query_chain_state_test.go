@@ -28,7 +28,7 @@ func TestKeeper_ChainStateAll(t *testing.T) {
 
 		res, err := k.ChainStateAll(wctx, &types.QueryAllChainStateRequest{})
 		require.NoError(t, err)
-		require.Equal(t, &chainState, res.ChainState[0])
+		require.Equal(t, chainState, res.ChainState[0])
 	})
 }
 

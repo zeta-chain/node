@@ -28,7 +28,7 @@ func TestKeeper_BlockHeaderAll(t *testing.T) {
 
 		res, err := k.BlockHeaderAll(wctx, &types.QueryAllBlockHeaderRequest{})
 		require.NoError(t, err)
-		require.Equal(t, &bh, res.BlockHeaders[0])
+		require.Equal(t, bh, res.BlockHeaders[0])
 	})
 }
 
