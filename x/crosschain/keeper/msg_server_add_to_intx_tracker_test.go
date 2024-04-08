@@ -2,12 +2,11 @@ package keeper_test
 
 import (
 	"errors"
-	"github.com/stretchr/testify/mock"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/mock"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -18,33 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
-	params := zk.ObserverKeeper.GetParamsIfExists(ctx)
-	zk.ObserverKeeper.SetParams(ctx, params)
-	zk.ObserverKeeper.SetBlockHeader(ctx, proofs.BlockHeader{
-		Height:     block.Number().Int64(),
-		Hash:       block.Hash().Bytes(),
-		ParentHash: header.ParentHash.Bytes(),
-		ChainId:    chainID,
-		Header:     proofs.NewEthereumHeader(headerRLP),
-	})
-	zk.ObserverKeeper.SetChainParamsList(ctx, observertypes.ChainParamsList{ChainParams: []*observertypes.ChainParams{
-		{
-			ChainId:                  chainID,
-			ConnectorContractAddress: block.Transactions()[tx_index].To().Hex(),
-			BallotThreshold:          sdk.OneDec(),
-			MinObserverDelegation:    sdk.OneDec(),
-			IsSupported:              true,
-		},
-	}})
-	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{
-		BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: false,
-		},
-	})
-}
 
 func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
