@@ -240,12 +240,11 @@ func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.
 	if !ok {
 		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
 	}
-	any := p.AsAny()
 	resBlock, err := clientCtx.Client.Block(context.TODO(), &resTx.Height)
 	if err != nil {
 		return nil, err
 	}
-	return sdktypes.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
+	return sdktypes.NewResponseResultTx(resTx, p.AsAny(), resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
 type intoAny interface {
