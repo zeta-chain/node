@@ -75,7 +75,6 @@ func CrosschainKeeperWithMocks(
 		cdc,
 		db,
 		stateStore,
-		sdkKeepers.ParamsKeeper,
 		sdkKeepers.AuthKeeper,
 		sdkKeepers.BankKeeper,
 		sdkKeepers.EvmKeeper,

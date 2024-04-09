@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
@@ -44,7 +43,6 @@ func initFungibleKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-	paramKeeper paramskeeper.Keeper,
 	authKeeper types.AccountKeeper,
 	bankKeepr types.BankKeeper,
 	evmKeeper types.EVMKeeper,
