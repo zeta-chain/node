@@ -5,7 +5,6 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Params } from "./params_pb.js";
 import type { ForeignCoins } from "./foreign_coins_pb.js";
 import type { SystemContract } from "./system_contract_pb.js";
 
@@ -16,17 +15,12 @@ import type { SystemContract } from "./system_contract_pb.js";
  */
 export declare class GenesisState extends Message<GenesisState> {
   /**
-   * @generated from field: zetachain.zetacore.fungible.Params params = 1;
-   */
-  params?: Params;
-
-  /**
-   * @generated from field: repeated zetachain.zetacore.fungible.ForeignCoins foreignCoinsList = 2;
+   * @generated from field: repeated zetachain.zetacore.fungible.ForeignCoins foreignCoinsList = 1;
    */
   foreignCoinsList: ForeignCoins[];
 
   /**
-   * @generated from field: zetachain.zetacore.fungible.SystemContract systemContract = 3;
+   * @generated from field: zetachain.zetacore.fungible.SystemContract systemContract = 2;
    */
   systemContract?: SystemContract;
 
