@@ -102,6 +102,25 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 	require.Equal(t, expectedOutput.CrosschainFlags, resp)
 }
 
+func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
+	expectedOutput := lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: lightclienttypes.VerificationFlags{
+		EthTypeChainEnabled: true,
+		BtcTypeChainEnabled: false,
+	}}
+	input := lightclienttypes.QueryVerificationFlagsRequest{}
+	method := "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCoreBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetVerificationFlags()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.VerificationFlags, resp)
+}
+
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsForChainResponse{ChainParams: &observertypes.ChainParams{
 		ChainId: 123,

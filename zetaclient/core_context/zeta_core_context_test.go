@@ -127,6 +127,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		tssPubKeyToUpdate := "tsspubkeytest"
 		loggers := clientcommon.DefaultLoggers()
 		crosschainFlags := sample.CrosschainFlags()
+		verificationFlags := sample.VerificationFlags()
+
 		require.NotNil(t, crosschainFlags)
 		zetaContext.Update(
 			&keyGenToUpdate,
@@ -135,6 +137,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
 			*crosschainFlags,
+			verificationFlags,
 			false,
 			loggers.Std,
 		)
@@ -161,6 +164,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, *crosschainFlags, ccFlags)
+
+		verFlags := zetaContext.GetVerificationFlags()
+		require.Equal(t, verificationFlags, verFlags)
 	})
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
@@ -218,6 +224,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
 		crosschainFlags := sample.CrosschainFlags()
+		verificationFlags := sample.VerificationFlags()
 		require.NotNil(t, crosschainFlags)
 		loggers := clientcommon.DefaultLoggers()
 		zetaContext.Update(
@@ -227,6 +234,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
 			*crosschainFlags,
+			verificationFlags,
 			false,
 			loggers.Std,
 		)
@@ -261,6 +269,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, ccFlags, *crosschainFlags)
+
+		verFlags := zetaContext.GetVerificationFlags()
+		require.Equal(t, verFlags, verificationFlags)
 	})
 }
 

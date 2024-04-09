@@ -33,6 +33,15 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 	return resp.CrosschainFlags, nil
 }
 
+func (b *ZetaCoreBridge) GetVerificationFlags() (lightclienttypes.VerificationFlags, error) {
+	client := lightclienttypes.NewQueryClient(b.grpcConn)
+	resp, err := client.VerificationFlags(context.Background(), &lightclienttypes.QueryVerificationFlagsRequest{})
+	if err != nil {
+		return lightclienttypes.VerificationFlags{}, err
+	}
+	return resp.VerificationFlags, nil
+}
+
 func (b *ZetaCoreBridge) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.GetChainParamsForChain(context.Background(), &observertypes.QueryGetChainParamsForChainRequest{ChainId: externalChainID})

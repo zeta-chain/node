@@ -23,3 +23,10 @@ func ChainState(chainID int64) lightclienttypes.ChainState {
 		LatestBlockHash: Hash().Bytes(),
 	}
 }
+
+func VerificationFlags() lightclienttypes.VerificationFlags {
+	return lightclienttypes.VerificationFlags{
+		EthTypeChainEnabled: true,
+		BtcTypeChainEnabled: true,
+	}
+}
