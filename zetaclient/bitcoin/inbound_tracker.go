@@ -6,6 +6,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
@@ -22,7 +23,7 @@ func (ob *BTCChainClient) WatchIntxTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ObserveTrackerSuggestions()

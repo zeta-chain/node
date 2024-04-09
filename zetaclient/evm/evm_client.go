@@ -405,61 +405,48 @@ func (ob *ChainClient) PostVoteOutbound(
 
 // WatchOutTx watches evm chain for outgoing txs status
 func (ob *ChainClient) WatchOutTx() {
-	// read env variables if set
-	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
-	if err != nil || timeoutNonce <= 0 {
-		timeoutNonce = 100 * 3 // process up to 100 hashes
-	}
-	ob.logger.OutTx.Info().Msgf("WatchOutTx: using timeoutNonce %d seconds", timeoutNonce)
-
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.OutTx.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 
+	ob.logger.OutTx.Info().Msgf("WatchOutTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.OutTx.Sample(&zerolog.BasicSampler{N: 10})
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
-			//FIXME: remove this timeout here to ensure that all trackers are queried
-			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
-		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 				if ob.isTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
 					continue
 				}
 				txCount := 0
-				var receipt *ethtypes.Receipt
-				var transaction *ethtypes.Transaction
+				var outtxReceipt *ethtypes.Receipt
+				var outtx *ethtypes.Transaction
 				for _, txHash := range tracker.HashList {
-					select {
-					case <-outTimeout:
-						ob.logger.OutTx.Warn().Msgf("WatchOutTx: timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
-						break TRACKERLOOP
-					default:
-						if recpt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
-							txCount++
-							receipt = recpt
-							transaction = tx
-							ob.logger.OutTx.Info().Msgf("WatchOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
-							if txCount > 1 {
-								ob.logger.OutTx.Error().Msgf(
-									"WatchOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, receipt, transaction)
-							}
+					if receipt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
+						txCount++
+						outtxReceipt = receipt
+						outtx = tx
+						ob.logger.OutTx.Info().Msgf("WatchOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
+						if txCount > 1 {
+							ob.logger.OutTx.Error().Msgf(
+								"WatchOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outtxReceipt, outtx)
 						}
 					}
 				}
 				if txCount == 1 { // should be only one txHash confirmed for each nonce.
-					ob.SetTxNReceipt(nonceInt, receipt, transaction)
+					ob.SetTxNReceipt(nonceInt, outtxReceipt, outtx)
 				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
 					ob.logger.OutTx.Error().Msgf("WatchOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				}
@@ -646,8 +633,8 @@ func (ob *ChainClient) WatchInTx() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
-				sampledLogger.Info().Msgf("WatchInTx: chain %d is not supported", ob.chain.ChainId)
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			err := ob.observeInTX(sampledLogger)
@@ -710,12 +697,6 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 }
 
 func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
-	// make sure inbound TXS / Send is enabled by the protocol
-	flags := ob.coreContext.GetCrossChainFlags()
-	if !flags.IsInboundEnabled {
-		return errors.New("inbound TXS / Send has been disabled by the protocol")
-	}
-
 	// get and update latest block height
 	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
@@ -753,7 +734,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	lastScannedDeposited := ob.ObserveERC20Deposited(startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock, flags)
+	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock)
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -930,11 +911,13 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 
 // ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetabridge and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
+		// https://github.com/zeta-chain/node/issues/1847
+		flags := ob.coreContext.GetCrossChainFlags()
 		if flags.BlockHeaderVerificationFlags != nil &&
 			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
 			chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
@@ -957,23 +940,20 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags obse
 
 // WatchGasPrice watches evm chain for gas prices and post to zetacore
 func (ob *ChainClient) WatchGasPrice() {
-	ob.logger.GasPrice.Info().Msg("WatchGasPrice starting...")
+	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
 	if err != nil {
-		height, err := ob.zetaClient.GetBlockHeight()
-		if err != nil {
-			ob.logger.GasPrice.Error().Err(err).Msg("GetBlockHeight error")
-		} else {
-			ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
-		}
+		ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
 	}
 
+	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
 	}
-	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started with interval %d", ob.GetChainParams().GasPriceTicker)
+	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
+		ob.chain.ChainId, ob.GetChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
@@ -984,12 +964,7 @@ func (ob *ChainClient) WatchGasPrice() {
 			}
 			err = ob.PostGasPrice()
 			if err != nil {
-				height, err := ob.zetaClient.GetBlockHeight()
-				if err != nil {
-					ob.logger.GasPrice.Error().Err(err).Msg("GetBlockHeight error")
-				} else {
-					ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
-				}
+				ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
 			}
 			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.GasPrice)
 		case <-ob.stop:

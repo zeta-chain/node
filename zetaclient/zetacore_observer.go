@@ -5,21 +5,18 @@ import (
 	"math"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
-
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
-	sdkmath "cosmossdk.io/math"
-
-	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 )
 
 const (
@@ -154,8 +151,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
 							continue
 						}
-						if !ob.GetChainParams().IsSupported {
-							co.logger.ZetaChainWatcher.Info().Msgf("startCctxScheduler: chain %d is not supported", c.ChainId)
+						if !corecontext.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
 							continue
 						}
 
@@ -178,6 +174,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 							continue
 						}
 					}
+
 					// update last processed block number
 					lastBlockNum = bn
 					metrics.LastCoreBlockNumber.Set(float64(lastBlockNum))
