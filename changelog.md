@@ -11,6 +11,14 @@
 * `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
   * The structure of the message remains the same.
 
+* A new module called `lightclient` has been created for the blocker header and proof functionality to add inbound and outbound trackers in a permissionless manner (currently deactivated on live networks)
+  * The list of block headers are now stored in the `lightclient` module instead of the `observer` module.
+    * The message to vote on new block headers is still in the `observer` module but has been renamed to `MsgVoteBlockHeader` instead of `MsgAddBlockHeader`.
+    * The `GetAllBlockHeaders` query has been moved to the `lightclient` module and renamed to `BlockHeaderAll`.
+    * The `GetBlockHeaderByHash` query has been moved to the `lightclient` module and renamed to `BlockHeader`.
+    * The `GetBlockHeaderStateByChain` query has been moved to the `lightclient` module and renamed to `ChainState`.
+    * The `Prove` query has been moved to the `lightclient` module.
+
 ### Refactor
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
