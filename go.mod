@@ -10,7 +10,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/multiformats/go-multiaddr v0.9.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.1
@@ -44,7 +43,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/zeta-chain/go-tss v0.1.1-0.20240208222330-f3be0d4a0d98
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240409202853-ee53ce11c29f
 	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -59,6 +58,7 @@ require (
 
 require (
 	github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/onrik/ethrpc v1.2.0
 	go.nhat.io/grpcmock v0.25.0
@@ -68,7 +68,6 @@ require (
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/agl/ed25519 v0.0.0-20200225211852-fd4d107ace12 // indirect
 	github.com/bool64/shared v0.1.5 // indirect
-	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -156,7 +155,7 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
-	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.7
@@ -294,7 +293,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/afero v1.11.0 // indirect
+	github.com/spf13/afero v1.11.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.15.0
 	github.com/status-im/keycard-go v0.2.0 // indirect
@@ -315,7 +314,7 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.17.0
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.19.0

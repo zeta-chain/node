@@ -1326,3 +1326,86 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		require.Equal(t, "symbol", res.Symbol)
 	})
 }
+
+func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
+	t.Run("should call on receive on connector which calls onZetaMessage on sample DAPP", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		example, err := k.DeployContract(ctx, contracts.DappMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+		senderAddress := sample.EthAddress().Bytes()
+		sourceChainID := big.NewInt(1)
+		destinationAddress := example
+		zetaValue := big.NewInt(45)
+		data := []byte("message")
+		internalSendHash := [32]byte{}
+		_, err = k.CallOnReceiveZevmConnector(ctx, senderAddress, sourceChainID, destinationAddress, zetaValue, data, internalSendHash)
+		require.NoError(t, err)
+
+		dappAbi, err := contracts.DappMetaData.GetAbi()
+		require.NoError(t, err)
+		res, err := k.CallEVM(
+			ctx,
+			*dappAbi,
+			types.ModuleAddressEVM,
+			example,
+			big.NewInt(0),
+			nil,
+			false,
+			false,
+			"zetaTxSenderAddress",
+		)
+		require.NoError(t, err)
+		unpacked, err := dappAbi.Unpack("zetaTxSenderAddress", res.Ret)
+		require.NoError(t, err)
+		require.NotZero(t, len(unpacked))
+		valSenderAddress, ok := unpacked[0].([]byte)
+		require.True(t, ok)
+		require.Equal(t, senderAddress, valSenderAddress)
+	})
+}
+
+func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
+	t.Run("should call on revert on connector which calls onZetaRevert on sample DAPP", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		example, err := k.DeployContract(ctx, contracts.DappMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+		senderAddress := example
+		sourceChainID := big.NewInt(1)
+		destinationAddress := sample.EthAddress().Bytes()
+		destinationChainID := big.NewInt(1)
+		zetaValue := big.NewInt(45)
+		data := []byte("message")
+		internalSendHash := [32]byte{}
+		_, err = k.CallOnRevertZevmConnector(ctx, senderAddress, sourceChainID, destinationAddress, destinationChainID, zetaValue, data, internalSendHash)
+		require.NoError(t, err)
+
+		dappAbi, err := contracts.DappMetaData.GetAbi()
+		require.NoError(t, err)
+		res, err := k.CallEVM(
+			ctx,
+			*dappAbi,
+			types.ModuleAddressEVM,
+			example,
+			big.NewInt(0),
+			nil,
+			false,
+			false,
+			"zetaTxSenderAddress",
+		)
+		require.NoError(t, err)
+		unpacked, err := dappAbi.Unpack("zetaTxSenderAddress", res.Ret)
+		require.NoError(t, err)
+		require.NotZero(t, len(unpacked))
+		valSenderAddress, ok := unpacked[0].([]byte)
+		require.True(t, ok)
+		require.Equal(t, senderAddress.Bytes(), valSenderAddress)
+	})
+}

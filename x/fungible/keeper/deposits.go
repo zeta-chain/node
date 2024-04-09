@@ -89,3 +89,14 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	res, err := k.DepositZRC20(ctx, ZRC20Contract, to, amount)
 	return res, false, err
 }
+
+func (k Keeper) zEVMOnReceive(ctx sdk.Context,
+	from []byte,
+	to eth.Address,
+	senderChainID int64,
+	data []byte) {
+	acc := k.evmKeeper.GetAccount(ctx, to)
+	if !acc.IsContract() {
+		return
+	}
+}
