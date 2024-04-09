@@ -12,8 +12,6 @@ import (
 
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
-	proofs "github.com/zeta-chain/zetacore/pkg/proofs"
-
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -297,34 +295,6 @@ func (_m *CrosschainObserverKeeper) GetBallot(ctx types.Context, index string) (
 
 	if rf, ok := ret.Get(1).(func(types.Context, string) bool); ok {
 		r1 = rf(ctx, index)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
-// GetBlockHeader provides a mock function with given fields: ctx, hash
-func (_m *CrosschainObserverKeeper) GetBlockHeader(ctx types.Context, hash []byte) (proofs.BlockHeader, bool) {
-	ret := _m.Called(ctx, hash)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetBlockHeader")
-	}
-
-	var r0 proofs.BlockHeader
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, []byte) (proofs.BlockHeader, bool)); ok {
-		return rf(ctx, hash)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, []byte) proofs.BlockHeader); ok {
-		r0 = rf(ctx, hash)
-	} else {
-		r0 = ret.Get(0).(proofs.BlockHeader)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, []byte) bool); ok {
-		r1 = rf(ctx, hash)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}

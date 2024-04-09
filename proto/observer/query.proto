@@ -6,7 +6,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
-import "observer/block_header.proto";
 import "observer/chain_nonces.proto";
 import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
