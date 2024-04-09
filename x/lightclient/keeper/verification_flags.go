@@ -29,6 +29,7 @@ func (k Keeper) GetVerificationFlags(ctx sdk.Context) (val types.VerificationFla
 }
 
 // CheckVerificationFlagsEnabled checks for a specific chain if the verification flags are enabled
+// It returns an error if the chain is not enabled
 func (k Keeper) CheckVerificationFlagsEnabled(ctx sdk.Context, chainID int64) error {
 	verificationFlags, found := k.GetVerificationFlags(ctx)
 	if !found {

@@ -16,15 +16,6 @@ func (k Keeper) VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64,
 		return nil, err
 	}
 
-	// chain must support header-based merkle proof verification
-	senderChain := chains.GetChainFromChainID(chainID)
-	if senderChain == nil {
-		return nil, cosmoserror.Wrapf(types.ErrChainNotSupported, "chain id %d doesn't exist", chainID)
-	}
-	if !senderChain.SupportMerkleProof() {
-		return nil, cosmoserror.Wrapf(types.ErrChainNotSupported, "chain id %d doesn't support merkle proof", chainID)
-	}
-
 	// get block header from the store
 	hashBytes, err := chains.StringToHash(chainID, blockHash)
 	if err != nil {

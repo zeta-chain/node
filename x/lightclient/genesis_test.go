@@ -43,4 +43,24 @@ func TestGenesis(t *testing.T) {
 		nullify.Fill(got)
 		require.Equal(t, genesisState, *got)
 	})
+
+	t.Run("can export genesis with empty state", func(t *testing.T) {
+		// Export genesis with empty state
+		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+		got := lightclient.ExportGenesis(ctx, *k)
+		require.NotNil(t, got)
+
+		// Compare genesis after export
+		expected := types.GenesisState{
+			VerificationFlags: types.VerificationFlags{
+				EthTypeChainEnabled: false,
+				BtcTypeChainEnabled: false,
+			},
+			BlockHeaders: []proofs.BlockHeader{},
+			ChainStates:  []types.ChainState{},
+		}
+		nullify.Fill(got)
+		nullify.Fill(expected)
+		require.Equal(t, expected, *got)
+	})
 }
