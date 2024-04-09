@@ -59,6 +59,7 @@
 * [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
+* [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync
 
 ### Fixes
 
