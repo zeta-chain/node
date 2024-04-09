@@ -26,6 +26,7 @@
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
 * [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
+* [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync
 
 ### Features
 
@@ -59,7 +60,6 @@
 * [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
-* [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync
 
 ### Fixes
 

@@ -51,11 +51,12 @@ const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
 
 // ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
-	clientCtx client.Context
-	txFactory tx.Factory
-	name      []string
-	mnemonic  []string
-	address   []string
+	clientCtx    client.Context
+	txFactory    tx.Factory
+	name         []string
+	mnemonic     []string
+	address      []string
+	blockTimeout time.Duration
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -105,11 +106,12 @@ func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string, chainID
 	txf := newFactory(clientCtx)
 
 	return ZetaTxServer{
-		clientCtx: clientCtx,
-		txFactory: txf,
-		name:      names,
-		mnemonic:  mnemonics,
-		address:   addresses,
+		clientCtx:    clientCtx,
+		txFactory:    txf,
+		name:         names,
+		mnemonic:     mnemonics,
+		address:      addresses,
+		blockTimeout: 1 * time.Minute,
 	}, nil
 }
 
@@ -160,6 +162,7 @@ func (zts ZetaTxServer) GetAccountMnemonic(index int) string {
 }
 
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
+// and waiting for blockTime for tx to be included in the block
 func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes.TxResponse, error) {
 	// Find number and sequence and set it
 	acc, err := zts.clientCtx.Keyring.Key(account)
@@ -191,7 +194,10 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		return nil, err
 	}
 
-	// Broadcast tx and wait 10 mins to be included in block
+	return broadcastWithBlockTimeout(zts, txBytes)
+}
+
+func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
 	res, err := zts.clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		if res == nil {
@@ -204,8 +210,7 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		}, err
 	}
 
-	var blockTimeout time.Duration = 10 * time.Minute
-	exitAfter := time.After(blockTimeout)
+	exitAfter := time.After(zts.blockTimeout)
 	hash, err := hex.DecodeString(res.TxHash)
 	if err != nil {
 		return nil, err
@@ -213,7 +218,7 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 	for {
 		select {
 		case <-exitAfter:
-			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", blockTimeout)
+			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", zts.blockTimeout)
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
 			if err == nil {
