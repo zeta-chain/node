@@ -93,23 +93,6 @@ service Query {
     option (google.api.http).get = "/zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}";
   }
 
-  rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_all_block_headers";
-  }
-
-  rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_block_header_by_hash/{block_hash}";
-  }
-
-  rpc GetBlockHeaderStateByChain(QueryGetBlockHeaderStateRequest) returns (QueryGetBlockHeaderStateResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_block_header_state_by_chain_id/{chain_id}";
-  }
-
-  // merkle proof verification
-  rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/prove";
-  }
-
   // Queries a list of GetTssAddress items.
   rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_tss_address/{bitcoin_chain_id}";
@@ -213,18 +196,6 @@ message QueryTssHistoryRequest {
 message QueryTssHistoryResponse {
   repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryProveRequest {
-  int64 chain_id = 1;
-  string tx_hash = 2;
-  proofs.Proof proof = 3;
-  string block_hash = 4;
-  int64 tx_index = 5;
-}
-
-message QueryProveResponse {
-  bool valid = 1;
 }
 
 message QueryParamsRequest {}
@@ -344,29 +315,4 @@ message QueryBlameByChainAndNonceRequest {
 
 message QueryBlameByChainAndNonceResponse {
   repeated Blame blame_info = 1;
-}
-
-message QueryAllBlockHeaderRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllBlockHeaderResponse {
-  repeated proofs.BlockHeader block_headers = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryGetBlockHeaderByHashRequest {
-  bytes block_hash = 1;
-}
-
-message QueryGetBlockHeaderByHashResponse {
-  proofs.BlockHeader block_header = 1;
-}
-
-message QueryGetBlockHeaderStateRequest {
-  int64 chain_id = 1;
-}
-
-message QueryGetBlockHeaderStateResponse {
-  BlockHeaderState block_header_state = 1;
 }
