@@ -18,6 +18,7 @@
     * The `GetBlockHeaderByHash` query has been moved to the `lightclient` module and renamed to `BlockHeader`.
     * The `GetBlockHeaderStateByChain` query has been moved to the `lightclient` module and renamed to `ChainState`.
     * The `Prove` query has been moved to the `lightclient` module.
+    * The `BlockHeaderVerificationFlags` has been deprecated in `CrosschainFlags`, `VerificationFlags` should be used instead.
 
 ### Refactor
 
