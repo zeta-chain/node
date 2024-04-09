@@ -134,7 +134,6 @@ func CrosschainKeeperWithMocks(
 		storeKey,
 		memStoreKey,
 		stakingKeeper,
-		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
 		authKeeper,
 		bankKeeper,
 		observerKeeper,

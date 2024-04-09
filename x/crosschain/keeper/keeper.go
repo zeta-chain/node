@@ -32,7 +32,6 @@ func NewKeeper(
 	storeKey,
 	memKey storetypes.StoreKey,
 	stakingKeeper types.StakingKeeper, // custom
-	paramstore paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	zetaObserverKeeper types.ObserverKeeper,
@@ -50,7 +49,6 @@ func NewKeeper(
 		storeKey:           storeKey,
 		memKey:             memKey,
 		stakingKeeper:      stakingKeeper,
-		paramstore:         paramstore,
 		authKeeper:         authKeeper,
 		bankKeeper:         bankKeeper,
 		zetaObserverKeeper: zetaObserverKeeper,
