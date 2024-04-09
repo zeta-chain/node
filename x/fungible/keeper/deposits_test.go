@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
-	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -21,7 +21,7 @@ import (
 func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	t.Run("can deposit gas coin for transfers", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -52,7 +52,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("can deposit non-gas coin for transfers", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -84,7 +84,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("should fail if trying to call a contract with data to a EOC", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -112,7 +112,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("can deposit coin for transfers with liquidity cap not reached", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -158,7 +158,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if coin paused", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -190,7 +190,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if liquidity cap reached", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -231,7 +231,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if gas coin not found", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -256,7 +256,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("should fail if zrc20 not found", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -283,7 +283,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should return contract call if receiver is a contract", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -321,7 +321,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if call contract fails", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -356,7 +356,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 }
 
 func TestKeeper_DepositCoinZeta(t *testing.T) {
-	k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 	to := sample.EthAddress()
 	amount := big.NewInt(1)
 	zetaToAddress := sdk.AccAddress(to.Bytes())

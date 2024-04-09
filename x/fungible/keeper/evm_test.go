@@ -1333,15 +1333,17 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		example, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
 		require.NoError(t, err)
-		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
 		senderAddress := sample.EthAddress().Bytes()
 		sourceChainID := big.NewInt(1)
-		destinationAddress := example
+		destinationAddress := dAppContract
 		zetaValue := big.NewInt(45)
 		data := []byte("message")
 		internalSendHash := [32]byte{}
+
 		_, err = k.CallOnReceiveZevmConnector(ctx, senderAddress, sourceChainID, destinationAddress, zetaValue, data, internalSendHash)
 		require.NoError(t, err)
 
@@ -1351,7 +1353,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 			ctx,
 			*dappAbi,
 			types.ModuleAddressEVM,
-			example,
+			dAppContract,
 			big.NewInt(0),
 			nil,
 			false,
@@ -1374,10 +1376,10 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		example, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
 		require.NoError(t, err)
-		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
-		senderAddress := example
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+		senderAddress := dAppContract
 		sourceChainID := big.NewInt(1)
 		destinationAddress := sample.EthAddress().Bytes()
 		destinationChainID := big.NewInt(1)
@@ -1393,7 +1395,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 			ctx,
 			*dappAbi,
 			types.ModuleAddressEVM,
-			example,
+			dAppContract,
 			big.NewInt(0),
 			nil,
 			false,

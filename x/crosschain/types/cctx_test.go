@@ -15,6 +15,13 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
+	cctx := sample.CrossChainTx(t, "sample")
+	indexBytes, err := cctx.GetCCTXIndexBytes()
+	require.NoError(t, err)
+	require.Equal(t, cctx.Index, types.GetCctxIndexFromBytes(indexBytes))
+}
+
 func Test_InitializeCCTX(t *testing.T) {
 	t.Run("should return a cctx with correct values", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -138,6 +139,20 @@ func (m CrossChainTx) SetOutBoundMined(message string) {
 // SetReverted sets the CCTX status to Reverted with the given error message.
 func (m CrossChainTx) SetReverted(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
+}
+
+func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
+	sendHash := [32]byte{}
+	decodedIndex, err := hex.DecodeString(m.Index[2:]) // remove the leading 0x
+	if err != nil || len(decodedIndex) != 32 {
+		return [32]byte{}, fmt.Errorf("decode CCTX %s error", m.Index)
+	}
+	copy(sendHash[:32], decodedIndex[:32])
+	return sendHash, nil
+}
+
+func GetCctxIndexFromBytes(sendHash [32]byte) string {
+	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
 
 // NewCCTX creates a new CCTX.From a MsgVoteOnObservedInboundTx message and a TSS pubkey.
