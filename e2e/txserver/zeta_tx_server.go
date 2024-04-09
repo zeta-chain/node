@@ -217,17 +217,17 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
 			if err == nil {
-				resBlock, err := zts.clientCtx.Client.Block(context.TODO(), &resTx.Height)
+				txRes, err := mkTxResult(zts.clientCtx, resTx)
 				if err == nil {
-					return mkTxResult(zts.clientCtx.TxConfig, resTx, resBlock)
+					return txRes, nil
 				}
 			}
 		}
 	}
 }
 
-func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdktypes.TxResponse, error) {
-	txb, err := txConfig.TxDecoder()(resTx.Tx)
+func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.TxResponse, error) {
+	txb, err := clientCtx.TxConfig.TxDecoder()(resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
@@ -236,6 +236,10 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
 	}
 	any := p.AsAny()
+	resBlock, err := clientCtx.Client.Block(context.TODO(), &resTx.Height)
+	if err != nil {
+		return nil, err
+	}
 	return sdktypes.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
