@@ -351,9 +351,9 @@ func (ob *BTCChainClient) WatchInTx() {
 func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
-	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
-		bn = res.BlockHeaderState.LatestHeight + 1
+	res, err := ob.zetaClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
+		bn = res.ChainState.LatestHeight + 1
 	}
 	if bn > tip {
 		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)

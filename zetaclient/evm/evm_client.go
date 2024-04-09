@@ -883,10 +883,10 @@ func (ob *ChainClient) calcBlockRangeToScan(latestConfirmed, lastScanned, batchS
 func (ob *ChainClient) postBlockHeader(tip uint64) error {
 	bn := tip
 
-	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
+	res, err := ob.zetaClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
 		// #nosec G701 always positive
-		bn = uint64(res.BlockHeaderState.LatestHeight) + 1 // the next header to post
+		bn = uint64(res.ChainState.LatestHeight) + 1 // the next header to post
 	}
 
 	if bn > tip {

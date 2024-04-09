@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+
 	"github.com/onrik/ethrpc"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -80,7 +82,7 @@ type ZetaCoreBridger interface {
 	) (string, string, error)
 	PostGasPrice(chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
 	PostVoteBlockHeader(chainID int64, txhash []byte, height int64, header proofs.HeaderData) (string, error)
-	GetBlockHeaderStateByChain(chainID int64) (observertypes.QueryGetBlockHeaderStateResponse, error)
+	GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error)
 
 	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
 	AddTxHashToOutTxTracker(
