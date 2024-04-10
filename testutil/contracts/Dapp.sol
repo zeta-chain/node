@@ -44,7 +44,6 @@ interface ZetaInterfaces {
         uint256 remainingZetaValue;
         bytes message;
     }
-
 }
 
 contract Dapp {

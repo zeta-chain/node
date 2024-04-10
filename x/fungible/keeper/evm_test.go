@@ -1368,6 +1368,39 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, senderAddress, valSenderAddress)
 	})
+
+	t.Run("should error if system contract not found", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
+		_, err = k.CallOnReceiveZevmConnector(ctx,
+			sample.EthAddress().Bytes(),
+			big.NewInt(1),
+			dAppContract,
+			big.NewInt(45), []byte("message"), [32]byte{})
+		require.ErrorIs(t, err, types.ErrContractNotFound)
+	})
+
+	t.Run("should error in contract call reverts", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
+		_, err = k.CallOnReceiveZevmConnector(ctx,
+			sample.EthAddress().Bytes(),
+			big.NewInt(1),
+			dAppContract,
+			big.NewInt(45), []byte("message"), [32]byte{})
+		require.ErrorContains(t, err, "execution reverted")
+	})
 }
 
 func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
@@ -1409,5 +1442,40 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		valSenderAddress, ok := unpacked[0].([]byte)
 		require.True(t, ok)
 		require.Equal(t, senderAddress.Bytes(), valSenderAddress)
+	})
+
+	t.Run("should error if system contract not found", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
+		_, err = k.CallOnRevertZevmConnector(ctx,
+			dAppContract,
+			big.NewInt(1),
+			sample.EthAddress().Bytes(),
+			big.NewInt(1),
+			big.NewInt(45), []byte("message"), [32]byte{})
+		require.ErrorIs(t, err, types.ErrContractNotFound)
+	})
+
+	t.Run("should error in contract call reverts", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
+		_, err = k.CallOnRevertZevmConnector(ctx,
+			dAppContract,
+			big.NewInt(1),
+			sample.EthAddress().Bytes(),
+			big.NewInt(1),
+			big.NewInt(45), []byte("message"), [32]byte{})
+		require.ErrorContains(t, err, "execution reverted")
 	})
 }
