@@ -70,6 +70,10 @@ func FileNameEVMOuttx(chainID int64, txHash string, coinType coin.CoinType) stri
 }
 
 // FileNameEVMOuttxReceipt returns unified archive file name for outbound tx receipt
-func FileNameEVMOuttxReceipt(chainID int64, txHash string, coinType coin.CoinType) string {
-	return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s.json", chainID, coinType, txHash)
+func FileNameEVMOuttxReceipt(chainID int64, txHash string, coinType coin.CoinType, eventName string) string {
+	// empty eventName is for regular transfer receipt, no event
+	if eventName == "" {
+		return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s.json", chainID, coinType, txHash)
+	}
+	return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s_%s.json", chainID, coinType, eventName, txHash)
 }

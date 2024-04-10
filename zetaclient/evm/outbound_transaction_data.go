@@ -135,9 +135,9 @@ func NewOutBoundTransactionData(
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	included, confirmed, err := evmClient.IsSendOutTxProcessed(cctx, logger)
+	included, confirmed, err := evmClient.IsCctxOutTxProcessed(cctx, logger)
 	if err != nil {
-		return nil, true, errors.New("IsSendOutTxProcessed failed")
+		return nil, true, errors.New("IsCctxOutTxProcessed failed")
 	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")

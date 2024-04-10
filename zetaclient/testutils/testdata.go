@@ -226,9 +226,9 @@ func LoadEVMIntxNReceiptNCctx(
 func LoadEVMOuttx(
 	t *testing.T,
 	chainID int64,
-	intxHash string,
+	txHash string,
 	coinType coin.CoinType) *ethtypes.Transaction {
-	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMOuttx(chainID, intxHash, coinType))
+	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMOuttx(chainID, txHash, coinType))
 
 	tx := &ethtypes.Transaction{}
 	LoadObjectFromJSONFile(t, &tx, nameTx)
@@ -239,9 +239,10 @@ func LoadEVMOuttx(
 func LoadEVMOuttxReceipt(
 	t *testing.T,
 	chainID int64,
-	intxHash string,
-	coinType coin.CoinType) *ethtypes.Receipt {
-	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMOuttxReceipt(chainID, intxHash, coinType))
+	txHash string,
+	coinType coin.CoinType,
+	eventName string) *ethtypes.Receipt {
+	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMOuttxReceipt(chainID, txHash, coinType, eventName))
 
 	receipt := &ethtypes.Receipt{}
 	LoadObjectFromJSONFile(t, &receipt, nameReceipt)
@@ -252,11 +253,25 @@ func LoadEVMOuttxReceipt(
 func LoadEVMOuttxNReceipt(
 	t *testing.T,
 	chainID int64,
-	intxHash string,
+	txHash string,
 	coinType coin.CoinType) (*ethtypes.Transaction, *ethtypes.Receipt) {
 	// load archived evm outtx and receipt
-	tx := LoadEVMOuttx(t, chainID, intxHash, coinType)
-	receipt := LoadEVMOuttxReceipt(t, chainID, intxHash, coinType)
+	tx := LoadEVMOuttx(t, chainID, txHash, coinType)
+	receipt := LoadEVMOuttxReceipt(t, chainID, txHash, coinType, "")
 
 	return tx, receipt
+}
+
+// LoadEVMOuttxNReceiptNEvent loads archived cctx, outtx and receipt from file
+func LoadEVMCctxNOuttxNReceipt(
+	t *testing.T,
+	chainID int64,
+	nonce uint64,
+	eventName string) (*crosschaintypes.CrossChainTx, *ethtypes.Transaction, *ethtypes.Receipt) {
+	cctx := LoadCctxByNonce(t, chainID, nonce)
+	coinType := cctx.GetCurrentOutTxParam().CoinType
+	txHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	outtx := LoadEVMOuttx(t, chainID, txHash, coinType)
+	receipt := LoadEVMOuttxReceipt(t, chainID, txHash, coinType, eventName)
+	return cctx, outtx, receipt
 }

@@ -283,7 +283,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 
 // PostVoteOutbound posts a vote on an observed outbound tx
 func (b *ZetaCoreBridge) PostVoteOutbound(
-	sendHash string,
+	cctxIndex string,
 	outTxHash string,
 	outBlockHeight uint64,
 	outTxGasUsed uint64,
@@ -298,7 +298,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedOutboundTx(
 		signerAddress,
-		sendHash,
+		cctxIndex,
 		outTxHash,
 		outBlockHeight,
 		outTxGasUsed,

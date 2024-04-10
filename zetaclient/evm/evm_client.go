@@ -31,11 +31,9 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -72,7 +70,7 @@ type ChainClient struct {
 	chain                      chains.Chain
 	evmClient                  interfaces.EVMRPCClient
 	evmJSONRPC                 interfaces.EVMJSONRPCClient
-	zetaClient                 interfaces.ZetaCoreBridger
+	zetaBridge                 interfaces.ZetaCoreBridger
 	Tss                        interfaces.TSSSigner
 	lastBlockScanned           uint64
 	lastBlock                  uint64
@@ -123,7 +121,7 @@ func NewEVMChainClient(
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}
-	ob.zetaClient = bridge
+	ob.zetaBridge = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
 	ob.outTxPendingTransactions = make(map[string]*ethtypes.Transaction)
@@ -188,10 +186,10 @@ func (ob *ChainClient) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 	ob.evmJSONRPC = client
 }
 
-func (ob *ChainClient) WithZetaClient(bridge interfaces.ZetaCoreBridger) {
+func (ob *ChainClient) WithZetaBridge(bridge interfaces.ZetaCoreBridger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.zetaClient = bridge
+	ob.zetaBridge = bridge
 }
 
 func (ob *ChainClient) WithBlockCache(cache *lru.Cache) {
@@ -317,92 +315,6 @@ func (ob *ChainClient) Stop() {
 	ob.logger.Chain.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-// IsSendOutTxProcessed checks outtx status and returns (isIncluded, isConfirmed, error)
-// It also posts vote to zetacore if the tx is confirmed
-func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
-	sendHash := cctx.Index
-	cointype := cctx.InboundTxParams.CoinType
-	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-
-	// skip if outtx is not confirmed
-	if !ob.isTxConfirmed(nonce) {
-		return false, false, nil
-	}
-	receipt, transaction := ob.GetTxNReceipt(nonce)
-	sendID := fmt.Sprintf("%d-%d", ob.chain.ChainId, nonce)
-	logger = logger.With().Str("sendID", sendID).Logger()
-
-	// get connector and erce20Custody contracts
-	connectorAddr, connector, err := ob.GetConnectorContract()
-	if err != nil {
-		return false, false, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.chain.ChainId)
-	}
-	custodyAddr, custody, err := ob.GetERC20CustodyContract()
-	if err != nil {
-		return false, false, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.chain.ChainId)
-	}
-
-	// define a few common variables
-	txHash := receipt.TxHash.Hex()
-	var receiveValue *big.Int
-	var receiveStatus chains.ReceiveStatus
-
-	// compliance check, special handling the cancelled cctx
-	if compliance.IsCctxRestricted(cctx) {
-		// use cctx's amount to bypass the amount check in zetacore
-		receiveValue = cctx.GetCurrentOutTxParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_Failed
-		if receipt.Status == 1 {
-			receiveStatus = chains.ReceiveStatus_Success
-		}
-		ob.PostVoteOutbound(sendHash, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
-		return true, true, nil
-	}
-
-	// parse the received value from the outtx receipt
-	receiveStatus, receiveValue, err = ParseOuttxReceivedValue(receipt, transaction, cointype, connectorAddr, connector, custodyAddr, custody, sendHash, txHash)
-	if err != nil {
-		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error parsing outtx event for chain %d txhash %s", ob.chain.ChainId, txHash)
-		return false, false, err
-	}
-
-	// post vote to zetacore
-	ob.PostVoteOutbound(sendHash, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
-	return true, true, nil
-}
-
-// PostVoteOutbound posts vote to zetacore for the confirmed outtx
-func (ob *ChainClient) PostVoteOutbound(
-	sendHash string,
-	receipt *ethtypes.Receipt,
-	transaction *ethtypes.Transaction,
-	receiveValue *big.Int,
-	receiveStatus chains.ReceiveStatus,
-	nonce uint64,
-	cointype coin.CoinType,
-	logger zerolog.Logger,
-) {
-	chainID := ob.chain.ChainId
-	zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
-		sendHash,
-		receipt.TxHash.Hex(),
-		receipt.BlockNumber.Uint64(),
-		receipt.GasUsed,
-		transaction.GasPrice(),
-		transaction.Gas(),
-		receiveValue,
-		receiveStatus,
-		ob.chain,
-		nonce,
-		cointype,
-	)
-	if err != nil {
-		logger.Error().Err(err).Msgf("PostVoteOutbound: error posting vote for chain %d nonce %d outtx %s ", chainID, nonce, receipt.TxHash)
-	} else if zetaTxHash != "" {
-		logger.Info().Msgf("PostVoteOutbound: posted vote for chain %d nonce %d outtx %s vote %s ballot %s", chainID, nonce, receipt.TxHash, zetaTxHash, ballot)
-	}
-}
-
 // WatchOutTx watches evm chain for outgoing txs status
 func (ob *ChainClient) WatchOutTx() {
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
@@ -421,7 +333,7 @@ func (ob *ChainClient) WatchOutTx() {
 				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
+			trackers, err := ob.zetaBridge.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
@@ -662,7 +574,7 @@ func (ob *ChainClient) calcBlockRangeToScan(latestConfirmed, lastScanned, batchS
 func (ob *ChainClient) postBlockHeader(tip uint64) error {
 	bn := tip
 
-	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
+	res, err := ob.zetaBridge.GetBlockHeaderStateByChain(ob.chain.ChainId)
 	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
 		// #nosec G701 always positive
 		bn = uint64(res.BlockHeaderState.LatestHeight) + 1 // the next header to post
@@ -683,7 +595,7 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 		return err
 	}
 
-	_, err = ob.zetaClient.PostAddBlockHeader(
+	_, err = ob.zetaBridge.PostAddBlockHeader(
 		ob.chain.ChainId,
 		header.Hash().Bytes(),
 		header.Number.Int64(),
@@ -991,7 +903,7 @@ func (ob *ChainClient) PostGasPrice() error {
 	// SUPPLY
 	supply := "100" // lockedAmount on ETH, totalSupply on other chains
 
-	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
+	zetaHash, err := ob.zetaBridge.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("PostGasPrice to zetabridge failed")
 		return err
