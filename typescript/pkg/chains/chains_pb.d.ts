@@ -113,12 +113,17 @@ export declare enum ChainName {
   goerli_localnet = 14,
 
   /**
-   * Athens
-   *  zeta_athensnet=15;
-   *
    * @generated from enum value: btc_regtest = 15;
    */
   btc_regtest = 15,
+
+  /**
+   * Athens
+   *  zeta_athensnet=15;
+   *
+   * @generated from enum value: amoy_testnet = 16;
+   */
+  amoy_testnet = 16,
 }
 
 /**
