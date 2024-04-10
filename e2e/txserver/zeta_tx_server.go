@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"math/big"
 	"os"
 	"strings"
@@ -190,6 +191,27 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 
 	// Broadcast tx
 	return zts.clientCtx.BroadcastTx(txBytes)
+}
+
+// EnableVerificationFlags enables the verification flags for the lightclient module
+func (zts ZetaTxServer) EnableVerificationFlags(account string) error {
+	// retrieve account
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgUpdateVerificationFlags(
+		addr.String(),
+		true,
+		true,
+	))
+
+	return err
 }
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
