@@ -2,9 +2,10 @@ package corecontext
 
 import (
 	"fmt"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"sort"
 	"sync"
+
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/pkg/chains"

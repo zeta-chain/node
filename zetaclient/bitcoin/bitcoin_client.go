@@ -385,8 +385,8 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 
 func (ob *BTCChainClient) ObserveInTx() error {
 	// make sure inbound TXS / Send is enabled by the protocol
-	flags := ob.coreContext.GetCrossChainFlags()
-	if !flags.IsInboundEnabled {
+	crosschainFlags := ob.coreContext.GetCrossChainFlags()
+	if !crosschainFlags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
@@ -438,7 +438,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		}
 
 		// add block header to zetabridge
-		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+		verificationFlags := ob.coreContext.GetVerificationFlags()
+		if verificationFlags.BtcTypeChainEnabled {
 			err = ob.postBlockHeader(bn)
 			if err != nil {
 				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)

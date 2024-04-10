@@ -919,8 +919,8 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 
 func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	// make sure inbound TXS / Send is enabled by the protocol
-	flags := ob.coreContext.GetCrossChainFlags()
-	if !flags.IsInboundEnabled {
+	crosschainFlags := ob.coreContext.GetCrossChainFlags()
+	if !crosschainFlags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
@@ -961,7 +961,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	lastScannedDeposited := ob.ObserveERC20Deposited(startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock, flags)
+	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock)
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -1138,14 +1138,14 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 
 // ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetabridge and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
-		if flags.BlockHeaderVerificationFlags != nil &&
-			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
-			chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+		verificationFlags := ob.coreContext.GetVerificationFlags()
+		if verificationFlags.EthTypeChainEnabled && chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) {
+			// post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {
 				ob.logger.InTx.Error().Err(err).Msg("error posting block header")
