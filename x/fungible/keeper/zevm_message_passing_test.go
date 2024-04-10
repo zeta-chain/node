@@ -30,8 +30,9 @@ func TestKeeper_ZevmOnReceive(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZevmOnReceive(ctx, zetaTxSender, zetaTxReceiver, senderChainID, amount, data, cctxIndexBytes)
+		_, isContract, err := k.ZevmOnReceive(ctx, zetaTxSender, zetaTxReceiver, senderChainID, amount, data, cctxIndexBytes)
 		require.NoError(t, err)
+		require.True(t, isContract)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
 		require.NoError(t, err)
@@ -61,13 +62,14 @@ func TestKeeper_ZevmOnReceive(t *testing.T) {
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
-		_, err := k.ZevmOnReceive(ctx, sample.EthAddress().Bytes(),
+		_, isContract, err := k.ZevmOnReceive(ctx, sample.EthAddress().Bytes(),
 			sample.EthAddress(),
 			big.NewInt(1),
 			big.NewInt(45),
 			[]byte("message"),
 			[32]byte{})
 		require.ErrorIs(t, err, types.ErrAccountNotFound)
+		require.False(t, isContract)
 	})
 
 	t.Run("fail to call ZevmOnReceive if account is not a contract", func(t *testing.T) {
@@ -84,13 +86,14 @@ func TestKeeper_ZevmOnReceive(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZevmOnReceive(ctx, sample.EthAddress().Bytes(),
+		_, isContract, err := k.ZevmOnReceive(ctx, sample.EthAddress().Bytes(),
 			zetaTxReceiver,
 			big.NewInt(1),
 			big.NewInt(45),
 			[]byte("message"),
 			[32]byte{})
 		require.ErrorIs(t, err, types.ErrCallNonContract)
+		require.False(t, isContract)
 	})
 
 	t.Run("fail to call ZevmOnReceive if CallOnReceiveZevmConnector fails", func(t *testing.T) {
@@ -108,9 +111,10 @@ func TestKeeper_ZevmOnReceive(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZevmOnReceive(ctx, zetaTxSender, zetaTxReceiver, senderChainID, amount, data, cctxIndexBytes)
+		_, isContract, err := k.ZevmOnReceive(ctx, zetaTxSender, zetaTxReceiver, senderChainID, amount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 		require.ErrorContains(t, err, "GetSystemContract address not found")
+		require.True(t, isContract)
 	})
 }
 
@@ -132,8 +136,9 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
+		_, isContract, err := k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
 		require.NoError(t, err)
+		require.True(t, isContract)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
 		require.NoError(t, err)
@@ -171,13 +176,14 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZevmOnRevert(ctx, zetaTxSender, sample.EthAddress().Bytes(),
+		_, isContract, err := k.ZevmOnRevert(ctx, zetaTxSender, sample.EthAddress().Bytes(),
 			big.NewInt(1),
 			big.NewInt(2),
 			big.NewInt(45),
 			[]byte("message"),
 			[32]byte{})
 		require.ErrorIs(t, err, types.ErrCallNonContract)
+		require.False(t, isContract)
 	})
 
 	t.Run("fail to call ZevmOnRevert if CallOnRevertZevmConnector fails", func(t *testing.T) {
@@ -196,9 +202,10 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
+		_, isContract, err := k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 		require.ErrorContains(t, err, "GetSystemContract address not found")
+		require.True(t, isContract)
 	})
 
 	t.Run("fail to call ZevmOnRevert if account not found for sender address", func(t *testing.T) {
@@ -207,7 +214,7 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
-		_, err := k.ZevmOnRevert(ctx, sample.EthAddress(),
+		_, isContract, err := k.ZevmOnRevert(ctx, sample.EthAddress(),
 			sample.EthAddress().Bytes(),
 			big.NewInt(1),
 			big.NewInt(2),
@@ -215,6 +222,7 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 			[]byte("message"),
 			[32]byte{})
 		require.ErrorIs(t, err, types.ErrAccountNotFound)
+		require.False(t, isContract)
 	})
 
 }

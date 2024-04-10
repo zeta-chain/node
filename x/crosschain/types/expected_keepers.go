@@ -162,6 +162,22 @@ type FungibleKeeper interface {
 	) (eth.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
+	ZevmOnReceive(ctx sdk.Context,
+		zetaTxSender []byte,
+		zetaTxReceiver eth.Address,
+		senderChainID *big.Int,
+		amount *big.Int,
+		data []byte,
+		cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error)
+
+	ZevmOnRevert(ctx sdk.Context,
+		zetaTxSender eth.Address,
+		zetaTxReceiver []byte,
+		senderChainID *big.Int,
+		destinationChainID *big.Int,
+		amount *big.Int,
+		data []byte,
+		cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error)
 }
 
 type AuthorityKeeper interface {

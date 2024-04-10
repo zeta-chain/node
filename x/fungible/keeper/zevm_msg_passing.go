@@ -17,19 +17,19 @@ func (k Keeper) ZevmOnReceive(ctx sdk.Context,
 	senderChainID *big.Int,
 	amount *big.Int,
 	data []byte,
-	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	acc := k.evmKeeper.GetAccount(ctx, zetaTxReceiver)
 	if acc == nil {
-		return nil, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", zetaTxReceiver.String()))
+		return nil, false, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", zetaTxReceiver.String()))
 	}
 	if !acc.IsContract() {
-		return nil, errors.Wrap(types.ErrCallNonContract, fmt.Sprintf("address is not a contract: %s", zetaTxReceiver.String()))
+		return nil, false, errors.Wrap(types.ErrCallNonContract, fmt.Sprintf("address is not a contract: %s", zetaTxReceiver.String()))
 	}
 	evmCallResponse, err := k.CallOnReceiveZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, amount, data, cctxIndexBytes)
 	if err != nil {
-		return nil, err
+		return nil, true, err
 	}
-	return evmCallResponse, nil
+	return evmCallResponse, true, nil
 }
 
 func (k Keeper) ZevmOnRevert(ctx sdk.Context,
@@ -39,19 +39,19 @@ func (k Keeper) ZevmOnRevert(ctx sdk.Context,
 	destinationChainID *big.Int,
 	amount *big.Int,
 	data []byte,
-	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	acc := k.evmKeeper.GetAccount(ctx, zetaTxSender)
 	if acc == nil {
-		return nil, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", zetaTxSender.String()))
+		return nil, false, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", zetaTxSender.String()))
 
 	}
 	if !acc.IsContract() {
-		return nil, errors.Wrap(types.ErrCallNonContract, fmt.Sprintf("to address is not a contract: %s", zetaTxSender.String()))
+		return nil, false, errors.Wrap(types.ErrCallNonContract, fmt.Sprintf("to address is not a contract: %s", zetaTxSender.String()))
 	}
 
 	evmCallResponse, err := k.CallOnRevertZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, destinationChainID, amount, data, cctxIndexBytes)
 	if err != nil {
-		return nil, err
+		return nil, true, err
 	}
-	return evmCallResponse, nil
+	return evmCallResponse, true, nil
 }
