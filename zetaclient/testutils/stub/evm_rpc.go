@@ -32,15 +32,29 @@ func (s subscription) Err() <-chan error {
 var _ interfaces.EthClientFallback = &MockEvmClient{}
 
 type MockEvmClient struct {
-	Receipts []*ethtypes.Receipt
+	Receipts     []*ethtypes.Receipt
+	Blocks       []*ethrpc.Block
+	Transactions []*ethrpc.Transaction
 }
 
 func (e *MockEvmClient) EthGetBlockByNumber(_ int, _ bool) (*ethrpc.Block, error) {
-	return nil, nil
+	// pop a block from the list
+	if len(e.Blocks) > 0 {
+		block := e.Blocks[len(e.Blocks)-1]
+		e.Blocks = e.Blocks[:len(e.Blocks)-1]
+		return block, nil
+	}
+	return nil, errors.New("no block found")
 }
 
 func (e *MockEvmClient) EthGetTransactionByHash(_ string) (*ethrpc.Transaction, error) {
-	return nil, nil
+	// pop a transaction from the list
+	if len(e.Transactions) > 0 {
+		tx := e.Transactions[len(e.Transactions)-1]
+		e.Transactions = e.Transactions[:len(e.Transactions)-1]
+		return tx, nil
+	}
+	return nil, errors.New("no transaction found")
 }
 
 func NewMockEvmClient() *MockEvmClient {
@@ -122,6 +136,8 @@ func (e *MockEvmClient) TransactionSender(_ context.Context, _ *ethtypes.Transac
 
 func (e *MockEvmClient) Reset() *MockEvmClient {
 	e.Receipts = []*ethtypes.Receipt{}
+	e.Blocks = []*ethrpc.Block{}
+	e.Transactions = []*ethrpc.Transaction{}
 	return e
 }
 
@@ -135,5 +151,25 @@ func (e *MockEvmClient) WithReceipt(receipt *ethtypes.Receipt) *MockEvmClient {
 
 func (e *MockEvmClient) WithReceipts(receipts []*ethtypes.Receipt) *MockEvmClient {
 	e.Receipts = append(e.Receipts, receipts...)
+	return e
+}
+
+func (e *MockEvmClient) WithBlock(block *ethrpc.Block) *MockEvmClient {
+	e.Blocks = append(e.Blocks, block)
+	return e
+}
+
+func (e *MockEvmClient) WithBlocks(blocks []*ethrpc.Block) *MockEvmClient {
+	e.Blocks = append(e.Blocks, blocks...)
+	return e
+}
+
+func (e *MockEvmClient) WithTransaction(tx *ethrpc.Transaction) *MockEvmClient {
+	e.Transactions = append(e.Transactions, tx)
+	return e
+}
+
+func (e *MockEvmClient) WithTransactions(txs []*ethrpc.Transaction) *MockEvmClient {
+	e.Transactions = append(e.Transactions, txs...)
 	return e
 }

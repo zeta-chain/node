@@ -343,7 +343,7 @@ func (e *EthClientFallback) TransactionSender(ctx context.Context, tx *ethtypes.
 func (e *EthClientFallback) ChainID(ctx context.Context) (res *big.Int, err error) {
 	for i := 0; i < e.ethClients.Length(); i++ {
 		if client := e.ethClients.First(); client != nil {
-			rpcClient := client.(ethclient.Client)
+			rpcClient := client.(*ethclient.Client)
 			res, err = rpcClient.ChainID(ctx)
 		}
 		if err != nil {

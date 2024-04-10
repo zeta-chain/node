@@ -172,7 +172,7 @@ func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-func (ob *ChainClient) WithEvmClient(client *EthClientFallback) {
+func (ob *ChainClient) WithEvmClient(client interfaces.EthClientFallback) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmClient = client

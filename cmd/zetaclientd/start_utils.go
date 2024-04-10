@@ -55,7 +55,28 @@ func validatePeer(seedPeer string) error {
 //
 //	other fields can be added.
 func maskCfg(cfg config.Config) string {
-	maskedCfg := cfg
+	//Perform deep copy to avoid modifying original config
+	maskedCfg := config.Config{
+		Peer:                cfg.Peer,
+		PublicIP:            cfg.PublicIP,
+		LogFormat:           cfg.LogFormat,
+		LogLevel:            cfg.LogLevel,
+		LogSampler:          cfg.LogSampler,
+		PreParamsPath:       cfg.PreParamsPath,
+		ZetaCoreHome:        cfg.ZetaCoreHome,
+		ChainID:             cfg.ChainID,
+		ZetaCoreURL:         cfg.ZetaCoreURL,
+		AuthzGranter:        cfg.AuthzGranter,
+		AuthzHotkey:         cfg.AuthzHotkey,
+		P2PDiagnostic:       cfg.P2PDiagnostic,
+		ConfigUpdateTicker:  cfg.ConfigUpdateTicker,
+		P2PDiagnosticTicker: cfg.P2PDiagnosticTicker,
+		TssPath:             cfg.TssPath,
+		TestTssKeysign:      cfg.TestTssKeysign,
+		KeyringBackend:      cfg.KeyringBackend,
+		HsmMode:             cfg.HsmMode,
+		HsmHotKey:           cfg.HsmHotKey,
+	}
 
 	maskedCfg.BitcoinConfig = config.BTCConfig{
 		RPCUsername: cfg.BitcoinConfig.RPCUsername,
@@ -63,11 +84,22 @@ func maskCfg(cfg config.Config) string {
 		RPCHost:     cfg.BitcoinConfig.RPCHost,
 		RPCParams:   cfg.BitcoinConfig.RPCParams,
 	}
+
+	restrictedAddresses := make([]string, len(cfg.ComplianceConfig.RestrictedAddresses))
+	copy(restrictedAddresses, cfg.ComplianceConfig.RestrictedAddresses)
+	maskedCfg.ComplianceConfig = config.ComplianceConfig{
+		LogPath:             cfg.ComplianceConfig.LogPath,
+		RestrictedAddresses: restrictedAddresses,
+	}
+
 	maskedCfg.EVMChainConfigs = map[int64]config.EVMConfig{}
 	for key, val := range cfg.EVMChainConfigs {
+		endpoints := make([]string, len(val.Endpoint))
+		copy(endpoints, val.Endpoint)
+
 		maskedCfg.EVMChainConfigs[key] = config.EVMConfig{
 			Chain:    val.Chain,
-			Endpoint: val.Endpoint,
+			Endpoint: endpoints,
 		}
 	}
 
@@ -84,7 +116,6 @@ func maskCfg(cfg config.Config) string {
 			chain.Endpoint[i] = endpointURL.Hostname()
 		}
 	}
-
 	maskedCfg.BitcoinConfig.RPCUsername = ""
 	maskedCfg.BitcoinConfig.RPCPassword = ""
 
