@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -204,6 +205,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
 		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
 		grpcmock.RegisterService(observertypes.RegisterQueryServer),
+		grpcmock.RegisterService(lightclienttypes.RegisterQueryServer),
 		grpcmock.WithPlanner(planner.FirstMatch()),
 		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
@@ -285,6 +287,15 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					IsOutboundEnabled:            false,
 					GasPriceIncreaseFlags:        nil,
 					BlockHeaderVerificationFlags: nil,
+				}})
+
+			method = "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(lightclienttypes.QueryVerificationFlagsRequest{}).
+				Return(lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: lightclienttypes.VerificationFlags{
+					EthTypeChainEnabled: true,
+					BtcTypeChainEnabled: false,
 				}})
 		},
 	)(t)

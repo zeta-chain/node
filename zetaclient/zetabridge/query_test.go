@@ -768,7 +768,7 @@ func TestZetaCoreBridge_GetBlockHeaderChainState(t *testing.T) {
 	}}
 	input := lightclienttypes.QueryGetChainStateRequest{ChainId: chainID}
 	method := "/zetachain.zetacore.lightclient.Query/ChainState"
-	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
 
@@ -846,7 +846,7 @@ func TestZetaCoreBridge_Prove(t *testing.T) {
 		TxIndex:   int64(txIndex),
 	}
 	method := "/zetachain.zetacore.lightclient.Query/Prove"
-	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
 
