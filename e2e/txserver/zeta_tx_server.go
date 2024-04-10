@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"math/big"
 	"os"
 	"strings"
+
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
