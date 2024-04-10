@@ -366,4 +366,10 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestMigrateChainSupport,
 	),
+	runner.NewE2ETest(
+		TestUpdateBytecodeConnectorName,
+		"update zevm connector bytecode",
+		[]runner.ArgDefinition{},
+		TestUpdateBytecodeConnector,
+	),
 }

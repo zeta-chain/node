@@ -1,0 +1,59 @@
+package e2etests
+
+import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testconnectorzevm"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+)
+
+// TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it
+func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
+	// Deploy the test contract
+	newTestConnectorAddr, tx, _, err := testconnectorzevm.DeployTestZetaConnectorZEVM(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		r.WZetaAddr,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Wait for the contract to be deployed
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic("contract deployment failed")
+	}
+
+	// Get the code hash of the new contract
+	codeHashRes, err := r.FungibleClient.CodeHash(r.Ctx, &fungibletypes.QueryCodeHashRequest{
+		Address: newTestConnectorAddr.String(),
+	})
+	if err != nil {
+		panic(err)
+	}
+	r.Logger.Info("New contract code hash: %s", codeHashRes.CodeHash)
+
+	r.Logger.Info("Updating the bytecode of the Connector")
+	msg := fungibletypes.NewMsgUpdateContractBytecode(
+		r.ZetaTxServer.GetAccountAddress(0),
+		r.ConnectorZEVMAddr.Hex(),
+		codeHashRes.CodeHash,
+	)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	if err != nil {
+		panic(err)
+	}
+	r.Logger.Info("Update connector bytecode tx hash: %s", res.TxHash)
+
+	r.Logger.Info("Can interact with the new code of the contract")
+	testConnectorContract, err := testconnectorzevm.NewTestZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
+	if err != nil {
+		panic(err)
+	}
+	_, err = testConnectorContract.Foo(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+}
