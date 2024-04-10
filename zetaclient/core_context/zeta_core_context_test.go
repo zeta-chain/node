@@ -3,6 +3,7 @@ package corecontext_test
 import (
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -11,6 +12,44 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 )
+
+func assertPanic(t *testing.T, f func(), errorLog string) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			require.Contains(t, r, errorLog)
+		}
+	}()
+	f()
+}
+
+func getTestCoreContext(
+	evmChain chains.Chain,
+	evmChainParams *observertypes.ChainParams,
+	ccFlags observertypes.CrosschainFlags) *corecontext.ZetaCoreContext {
+	// create config
+	cfg := config.NewConfig()
+	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
+		Chain: evmChain,
+	}
+	// create core context
+	coreContext := corecontext.NewZetaCoreContext(cfg)
+	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
+	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+
+	// feed chain params
+	coreContext.Update(
+		&observertypes.Keygen{},
+		[]chains.Chain{evmChain},
+		evmChainParamsMap,
+		nil,
+		"",
+		ccFlags,
+		true,
+		zerolog.Logger{},
+	)
+	return coreContext
+}
 
 func TestNewZetaCoreContext(t *testing.T) {
 	t.Run("should create new zeta core context with empty config", func(t *testing.T) {
@@ -275,12 +314,60 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 	})
 }
 
-func assertPanic(t *testing.T, f func(), errorLog string) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			require.Contains(t, r, errorLog)
+func TestIsOutboundObservationEnabled(t *testing.T) {
+	// create test chain params and flags
+	evmChain := chains.EthChain()
+	ccFlags := *sample.CrosschainFlags()
+	chainParams := &observertypes.ChainParams{
+		ChainId:     evmChain.ChainId,
+		IsSupported: true,
+	}
+
+	t.Run("should return true if chain is supported and outbound flag is enabled", func(t *testing.T) {
+		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags)
+		require.True(t, corecontext.IsOutboundObservationEnabled(coreCTX, *chainParams))
+	})
+	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
+		paramsUnsupported := &observertypes.ChainParams{
+			ChainId:     evmChain.ChainId,
+			IsSupported: false,
 		}
-	}()
-	f()
+		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags)
+		require.False(t, corecontext.IsOutboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
+	})
+	t.Run("should return false if outbound flag is disabled", func(t *testing.T) {
+		flagsDisabled := ccFlags
+		flagsDisabled.IsOutboundEnabled = false
+		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled)
+		require.False(t, corecontext.IsOutboundObservationEnabled(coreCTXDisabled, *chainParams))
+	})
+}
+
+func TestIsInboundObservationEnabled(t *testing.T) {
+	// create test chain params and flags
+	evmChain := chains.EthChain()
+	ccFlags := *sample.CrosschainFlags()
+	chainParams := &observertypes.ChainParams{
+		ChainId:     evmChain.ChainId,
+		IsSupported: true,
+	}
+
+	t.Run("should return true if chain is supported and inbound flag is enabled", func(t *testing.T) {
+		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags)
+		require.True(t, corecontext.IsInboundObservationEnabled(coreCTX, *chainParams))
+	})
+	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
+		paramsUnsupported := &observertypes.ChainParams{
+			ChainId:     evmChain.ChainId,
+			IsSupported: false,
+		}
+		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags)
+		require.False(t, corecontext.IsInboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
+	})
+	t.Run("should return false if inbound flag is disabled", func(t *testing.T) {
+		flagsDisabled := ccFlags
+		flagsDisabled.IsInboundEnabled = false
+		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled)
+		require.False(t, corecontext.IsInboundObservationEnabled(coreCTXDisabled, *chainParams))
+	})
 }

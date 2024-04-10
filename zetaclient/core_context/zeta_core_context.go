@@ -193,3 +193,15 @@ func (c *ZetaCoreContext) Update(
 		c.currentTssPubkey = tssPubKey
 	}
 }
+
+// IsOutboundObservationEnabled returns true if the chain is supported and outbound flag is enabled
+func IsOutboundObservationEnabled(c *ZetaCoreContext, chainParams observertypes.ChainParams) bool {
+	flags := c.GetCrossChainFlags()
+	return chainParams.IsSupported && flags.IsOutboundEnabled
+}
+
+// IsInboundObservationEnabled returns true if the chain is supported and inbound flag is enabled
+func IsInboundObservationEnabled(c *ZetaCoreContext, chainParams observertypes.ChainParams) bool {
+	flags := c.GetCrossChainFlags()
+	return chainParams.IsSupported && flags.IsInboundEnabled
+}

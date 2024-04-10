@@ -330,10 +330,12 @@ func (ob *BTCChainClient) WatchInTx() {
 
 	defer ticker.Stop()
 	ob.logger.InTx.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.InTx.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			err := ob.ObserveInTx()
@@ -384,12 +386,6 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 }
 
 func (ob *BTCChainClient) ObserveInTx() error {
-	// make sure inbound TXS / Send is enabled by the protocol
-	crosschainFlags := ob.coreContext.GetCrossChainFlags()
-	if !crosschainFlags.IsInboundEnabled {
-		return errors.New("inbound TXS / Send has been disabled by the protocol")
-	}
-
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -438,6 +434,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		}
 
 		// add block header to zetabridge
+		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
+		// https://github.com/zeta-chain/node/issues/1847
 		verificationFlags := ob.coreContext.GetVerificationFlags()
 		if verificationFlags.BtcTypeChainEnabled {
 			err = ob.postBlockHeader(bn)
@@ -584,11 +582,20 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
 func (ob *BTCChainClient) WatchGasPrice() {
+	// report gas price right away as the ticker takes time to kick in
+	err := ob.PostGasPrice()
+	if err != nil {
+		ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
+	}
+
+	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.GasPrice.Error().Err(err).Msg("error creating ticker")
 		return
 	}
+	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
+		ob.chain.ChainId, ob.GetChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
@@ -1123,10 +1130,13 @@ func (ob *BTCChainClient) WatchOutTx() {
 	}
 
 	defer ticker.Stop()
+	ob.logger.OutTx.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.OutTx.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)

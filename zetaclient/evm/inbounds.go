@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
@@ -15,13 +16,12 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"golang.org/x/net/context"
 )
@@ -43,7 +43,7 @@ func (ob *ChainClient) WatchIntxTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ObserveIntxTrackers()
