@@ -1,11 +1,9 @@
 package types
 
 import (
-	"reflect"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
@@ -42,38 +40,6 @@ func TestDefaultParams(t *testing.T) {
 
 	// The default parameters should match those set in NewParams
 	require.Equal(t, NewParams(), params)
-}
-
-func TestParamSetPairs(t *testing.T) {
-	params := DefaultParams()
-	pairs := params.ParamSetPairs()
-
-	require.Equal(t, 8, len(pairs), "The number of param set pairs should match the expected count")
-
-	assertParamSetPair(t, pairs, KeyPrefix(ParamMaxBondFactor), "1.25", validateMaxBondFactor)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamMinBondFactor), "0.75", validateMinBondFactor)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamAvgBlockTime), "6.00", validateAvgBlockTime)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamTargetBondRatio), "00.67", validateTargetBondRatio)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamValidatorEmissionPercentage), "00.50", validateValidatorEmissionPercentage)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamObserverEmissionPercentage), "00.25", validateObserverEmissionPercentage)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamTssSignerEmissionPercentage), "00.25", validateTssEmissionPercentage)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamDurationFactorConstant), "0.001877876953694702", validateDurationFactorConstant)
-}
-
-func assertParamSetPair(t *testing.T, pairs paramtypes.ParamSetPairs, key []byte, expectedValue string, valFunc paramtypes.ValueValidatorFn) {
-	for _, pair := range pairs {
-		if string(pair.Key) == string(key) {
-			actualValue, ok := pair.Value.(*string)
-			require.True(t, ok, "Expected value to be of type *string for key %s", string(key))
-			require.Equal(t, expectedValue, *actualValue, "Value does not match for key %s", string(key))
-
-			actualValFunc := pair.ValidatorFn
-			require.Equal(t, reflect.ValueOf(valFunc).Pointer(), reflect.ValueOf(actualValFunc).Pointer(), "Val func doesnt match for key %s", string(key))
-			return
-		}
-	}
-
-	t.Errorf("Key %s not found in ParamSetPairs", string(key))
 }
 
 func TestValidateDurationFactorConstant(t *testing.T) {

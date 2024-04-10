@@ -391,12 +391,12 @@ func New(
 		appCodec,
 		keys[emissionstypes.StoreKey],
 		keys[emissionstypes.MemStoreKey],
-		app.GetSubspace(emissionstypes.ModuleName),
 		authtypes.FeeCollectorName,
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.ObserverKeeper,
 		app.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Create Ethermint keepers
@@ -510,7 +510,7 @@ func New(
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
-		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper),
+		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 

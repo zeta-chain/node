@@ -35,6 +35,8 @@ const (
 	// TODO: replace this with a parameter
 	// https://github.com/zeta-chain/node/pull/1861
 	ObserverSlashAmount = "100000000000000000"
+
+	ParamsKey = "Params-value-"
 )
 
 func KeyPrefix(p string) []byte {

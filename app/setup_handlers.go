@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -19,6 +20,7 @@ func SetupHandlers(app *App) {
 			vm[m] = mb.ConsensusVersion()
 		}
 		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})

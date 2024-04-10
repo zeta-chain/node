@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
 	emissionsmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/emissions"
@@ -88,26 +89,16 @@ func EmissionKeeperWithMockOptions(
 		observerKeeper = emissionsmocks.NewEmissionObserverKeeper(t)
 	}
 
-	var paramStore types.ParamStore
-	if mockOptions.UseParamStoreMock {
-		mock := emissionsmocks.NewEmissionParamStore(t)
-		// mock this method for the keeper constructor
-		mock.On("HasKeyTable").Maybe().Return(true)
-		paramStore = mock
-	} else {
-		paramStore = sdkKeepers.ParamsKeeper.Subspace(types.ModuleName)
-	}
-
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
 		memStoreKey,
-		paramStore,
 		authtypes.FeeCollectorName,
 		bankKeeper,
 		stakingKeeper,
 		observerKeeper,
 		authKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	if !mockOptions.UseParamStoreMock {
@@ -121,12 +112,6 @@ func GetEmissionsBankMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.E
 	cbk, ok := keeper.GetBankKeeper().(*emissionsmocks.EmissionBankKeeper)
 	require.True(t, ok)
 	return cbk
-}
-
-func GetEmissionsParamStoreMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.EmissionParamStore {
-	m, ok := keeper.GetParamStore().(*emissionsmocks.EmissionParamStore)
-	require.True(t, ok)
-	return m
 }
 
 func GetEmissionsStakingMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.EmissionStakingKeeper {

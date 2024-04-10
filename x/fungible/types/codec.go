@@ -16,6 +16,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateContractBytecode{}, "fungible/UpdateContractBytecode", nil)
 	cdc.RegisterConcrete(&MsgUpdateZRC20PausedStatus{}, "fungible/UpdateZRC20PausedStatus", nil)
 	cdc.RegisterConcrete(&MsgUpdateZRC20LiquidityCap{}, "fungible/UpdateZRC20LiquidityCap", nil)
+
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
