@@ -81,7 +81,8 @@ func TestMigrateObserverParams(t *testing.T) {
 			},
 		},
 	}
-	k.SetParams(ctx, params)
+	err = k.SetParams(ctx, params)
+	require.NoError(t, err)
 
 	// perform migration
 	err = v5.MigrateObserverParams(ctx, *k)

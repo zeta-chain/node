@@ -13,7 +13,8 @@ func TestParamsQuery(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	params := types.DefaultParams()
-	k.SetParams(ctx, params)
+	err := k.SetParams(ctx, params)
+	require.NoError(t, err)
 
 	response, err := k.Params(wctx, &types.QueryParamsRequest{})
 	require.NoError(t, err)

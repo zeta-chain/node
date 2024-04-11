@@ -16,8 +16,10 @@ func TestMigrateStore(t *testing.T) {
 	// nothing if no admin policy
 	params := types.DefaultParams()
 	params.AdminPolicy = []*types.Admin_Policy{}
-	k.SetParams(ctx, params)
-	err := v3.MigrateStore(ctx, k)
+	err := k.SetParams(ctx, params)
+	require.NoError(t, err)
+
+	err = v3.MigrateStore(ctx, k)
 	require.NoError(t, err)
 	params = k.GetParams(ctx)
 	require.Len(t, params.AdminPolicy, 0)
@@ -39,7 +41,8 @@ func TestMigrateStore(t *testing.T) {
 			PolicyType: 10,
 		},
 	}
-	k.SetParams(ctx, params)
+	err = k.SetParams(ctx, params)
+	require.NoError(t, err)
 	err = v3.MigrateStore(ctx, k)
 	require.NoError(t, err)
 	params = k.GetParams(ctx)

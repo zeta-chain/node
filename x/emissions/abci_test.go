@@ -357,7 +357,8 @@ func TestDistributeObserverRewards(t *testing.T) {
 			// Set the params
 			params := emissionstypes.DefaultParams()
 			params.ObserverSlashAmount = tc.slashAmount
-			k.SetParams(ctx, params)
+			err = k.SetParams(ctx, params)
+			require.NoError(t, err)
 
 			// Set the ballot list
 			ballotIdentifiers := []string{}

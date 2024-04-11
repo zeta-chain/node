@@ -102,7 +102,8 @@ func EmissionKeeperWithMockOptions(
 	)
 
 	if !mockOptions.UseParamStoreMock {
-		k.SetParams(ctx, types.DefaultParams())
+		err := k.SetParams(ctx, types.DefaultParams())
+		require.NoError(t, err)
 	}
 
 	return k, ctx, sdkKeepers, zetaKeepers

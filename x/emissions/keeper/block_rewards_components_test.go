@@ -125,7 +125,8 @@ func TestKeeper_GetBondFactor(t *testing.T) {
 		params.TargetBondRatio = "0.5"
 		params.MaxBondFactor = "1.1"
 		params.MinBondFactor = "0.9"
-		k.SetParams(ctx, params)
+		err := k.SetParams(ctx, params)
+		require.NoError(t, err)
 
 		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
 		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.25"))
@@ -142,7 +143,8 @@ func TestKeeper_GetBondFactor(t *testing.T) {
 		params.TargetBondRatio = "0.5"
 		params.MaxBondFactor = "1.1"
 		params.MinBondFactor = "0.9"
-		k.SetParams(ctx, params)
+		err := k.SetParams(ctx, params)
+		require.NoError(t, err)
 
 		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
 		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.75"))
@@ -159,7 +161,8 @@ func TestKeeper_GetBondFactor(t *testing.T) {
 		params.TargetBondRatio = "0.5"
 		params.MaxBondFactor = "1.1"
 		params.MinBondFactor = "0.9"
-		k.SetParams(ctx, params)
+		err := k.SetParams(ctx, params)
+		require.NoError(t, err)
 
 		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
 		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.5"))
@@ -173,7 +176,9 @@ func TestKeeper_GetDurationFactor(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		params := emissionstypes.DefaultParams()
 		params.DurationFactorConstant = "0"
-		k.SetParams(ctx, params)
+		err := k.SetParams(ctx, params)
+		require.NoError(t, err)
+
 		duractionFactor := k.GetDurationFactor(ctx)
 		require.Equal(t, sdk.ZeroDec(), duractionFactor)
 	})

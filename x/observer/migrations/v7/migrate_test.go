@@ -18,7 +18,7 @@ func TestMigrateStore(t *testing.T) {
 		addr1 := sample.AccAddress()
 		addr2 := sample.AccAddress()
 
-		k.SetParams(ctx, types.Params{
+		err := k.SetParams(ctx, types.Params{
 			AdminPolicy: []*types.Admin_Policy{
 				{
 					PolicyType: types.Policy_Type_group1,
@@ -30,9 +30,10 @@ func TestMigrateStore(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		// Migrate store
-		err := v7.MigrateStore(ctx, k)
+		err = v7.MigrateStore(ctx, k)
 
 		// Check if store is migrated
 		require.NoError(t, err)
@@ -46,7 +47,7 @@ func TestMigratePolicies(t *testing.T) {
 		addr1 := sample.AccAddress()
 		addr2 := sample.AccAddress()
 
-		k.SetParams(ctx, types.Params{
+		err := k.SetParams(ctx, types.Params{
 			AdminPolicy: []*types.Admin_Policy{
 				{
 					PolicyType: types.Policy_Type_group1,
@@ -58,9 +59,10 @@ func TestMigratePolicies(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		// Migrate policies
-		err := v7.MigratePolicies(ctx, k)
+		err = v7.MigratePolicies(ctx, k)
 
 		// Check if policies are migrated
 		require.NoError(t, err)
@@ -81,7 +83,7 @@ func TestMigratePolicies(t *testing.T) {
 
 		addr := sample.AccAddress()
 
-		k.SetParams(ctx, types.Params{
+		err := k.SetParams(ctx, types.Params{
 			AdminPolicy: []*types.Admin_Policy{
 				{
 					PolicyType: types.Policy_Type_group1,
@@ -89,9 +91,10 @@ func TestMigratePolicies(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		// Migrate policies
-		err := v7.MigratePolicies(ctx, k)
+		err = v7.MigratePolicies(ctx, k)
 
 		// Check if policies are migrated
 		require.NoError(t, err)
@@ -108,7 +111,7 @@ func TestMigratePolicies(t *testing.T) {
 
 		addr := sample.AccAddress()
 
-		k.SetParams(ctx, types.Params{
+		err := k.SetParams(ctx, types.Params{
 			AdminPolicy: []*types.Admin_Policy{
 				{
 					PolicyType: types.Policy_Type_group2,
@@ -116,9 +119,10 @@ func TestMigratePolicies(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		// Migrate policies
-		err := v7.MigratePolicies(ctx, k)
+		err = v7.MigratePolicies(ctx, k)
 
 		// Check if policies are migrated
 		require.NoError(t, err)
@@ -135,10 +139,11 @@ func TestMigratePolicies(t *testing.T) {
 	t.Run("Can migrate with no policies", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.ObserverKeeper(t)
 
-		k.SetParams(ctx, types.Params{})
+		err := k.SetParams(ctx, types.Params{})
+		require.NoError(t, err)
 
 		// Migrate policies
-		err := v7.MigratePolicies(ctx, k)
+		err = v7.MigratePolicies(ctx, k)
 
 		// Check if policies are migrated
 		require.NoError(t, err)
@@ -151,7 +156,7 @@ func TestMigratePolicies(t *testing.T) {
 	t.Run("Fail to migrate if invalid policy", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		k.SetParams(ctx, types.Params{
+		err := k.SetParams(ctx, types.Params{
 			AdminPolicy: []*types.Admin_Policy{
 				{
 					PolicyType: types.Policy_Type_group1,
@@ -159,9 +164,10 @@ func TestMigratePolicies(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		// Migrate policies
-		err := v7.MigratePolicies(ctx, k)
+		err = v7.MigratePolicies(ctx, k)
 		require.Error(t, err)
 	})
 }

@@ -30,7 +30,5 @@ func MigrateStore(ctx sdk.Context, k ObserverKeeper) error {
 			PolicyType: types.Policy_Type_group2,
 		},
 	}
-	k.SetParams(ctx, p)
-
-	return nil
+	return k.SetParams(ctx, p)
 }

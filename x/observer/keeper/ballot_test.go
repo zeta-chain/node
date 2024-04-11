@@ -130,9 +130,10 @@ func TestKeeper_GetMaturedBallotList(t *testing.T) {
 			BallotStatus:         0,
 			BallotCreationHeight: 1,
 		}
-		k.SetParams(ctx, types.Params{
+		err := k.SetParams(ctx, types.Params{
 			BallotMaturityBlocks: math.MaxInt64,
 		})
+		require.NoError(t, err)
 		list := k.GetMaturedBallotList(ctx)
 		require.Empty(t, list)
 		k.AddBallotToList(ctx, *b)
