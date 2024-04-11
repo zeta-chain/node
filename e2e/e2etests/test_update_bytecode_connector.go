@@ -10,6 +10,9 @@ import (
 
 // TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
+	// Can withdraw 0.1ZETA
+	TestZetaWithdraw(r, []string{"10000000000000000000"})
+
 	// Deploy the test contract
 	newTestConnectorAddr, tx, _, err := testconnectorzevm.DeployTestZetaConnectorZEVM(
 		r.ZEVMAuth,
@@ -52,8 +55,16 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = testConnectorContract.Foo(&bind.CallOpts{})
+
+	response, err := testConnectorContract.Foo(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
+
+	if response != "foo" {
+		panic("unexpected response")
+	}
+
+	// Can continue to interact with the connector: withdraw 0.1ZETA
+	TestZetaWithdraw(r, []string{"10000000000000000000"})
 }
