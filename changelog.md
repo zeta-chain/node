@@ -27,6 +27,7 @@
 * [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
 * [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync
+* [2004](https://github.com/zeta-chain/node/pull/2004) - remove fungible params
 
 ### Features
 
