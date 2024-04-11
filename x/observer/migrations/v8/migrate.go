@@ -23,9 +23,8 @@ func MigrateStore(
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
-	legacySubspace.GetParamSet(ctx, &currParams)
-
-	if err := currParams.Validate(); err != nil {
+	err := currParams.Validate()
+	if err != nil {
 		return err
 	}
 
