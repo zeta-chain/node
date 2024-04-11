@@ -44,7 +44,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 		[]string{r.ETHZRC20Addr.Hex()},
 		fungibletypes.UpdatePausedStatusAction_PAUSE,
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -134,7 +134,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 		[]string{r.ETHZRC20Addr.Hex()},
 		fungibletypes.UpdatePausedStatusAction_UNPAUSE,
 	)
-	res, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err = r.ZetaTxServer.BroadcastTx(utils.AdminName, msg)
 	if err != nil {
 		panic(err)
 	}

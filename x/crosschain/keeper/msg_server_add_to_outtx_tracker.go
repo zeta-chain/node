@@ -52,6 +52,8 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 	isProven := false
 
+	// only emergency group and observer can submit tracker without proof
+	// if the sender is not from the emergency group or observer, the outbound proof must be provided
 	if !(isEmergencyGroup || isObserver) {
 		if msg.Proof == nil {
 			return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
@@ -112,6 +114,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 }
 
 // verifyProofAndOutTxBody verifies the proof and outbound tx body
+// Precondition: the proof must be non-nil
 func verifyProofAndOutTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToOutTxTracker) error {
 	txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 	if err != nil {

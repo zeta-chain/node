@@ -57,11 +57,11 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
-	adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
+	adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.AdminName)
 	if err != nil {
 		panic(err)
 	}
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.AdminName, observertypes.NewMsgUpdateChainParams(
 		adminAddr,
 		chainParams,
 	))
@@ -73,7 +73,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.AdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		adminAddr,
 		"",
 		chainParams.ChainId,
@@ -103,7 +103,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.ETHZRC20 = ethZRC20
 
 	// set the chain nonces for the new chain
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgResetChainNonces(
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminName, observertypes.NewMsgResetChainNonces(
 		adminAddr,
 		chainParams.ChainId,
 		0,
@@ -116,7 +116,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deactivate the previous chain
 	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
 	chainParams.IsSupported = false
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.AdminName, observertypes.NewMsgUpdateChainParams(
 		adminAddr,
 		chainParams,
 	))
@@ -167,7 +167,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	newRunner.Logger.Info("whitelisting ERC20 on new network")
-	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.AdminName, crosschaintypes.NewMsgWhitelistERC20(
 		adminAddr,
 		newRunner.ERC20Addr.Hex(),
 		chains.SepoliaChain().ChainId,
@@ -221,7 +221,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.CtxCancel,
 		r.DeployerAddress,
 		r.DeployerPrivateKey,
-		r.FungibleAdminMnemonic,
+		r.AdminMnemonic,
 		r.EVMClient,
 		r.ZEVMClient,
 		r.CctxClient,

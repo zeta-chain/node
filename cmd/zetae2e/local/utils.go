@@ -62,8 +62,8 @@ func initTestRunner(
 		conf,
 		userAddress,
 		userPrivKey,
-		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
+		utils.AdminName,
+		AdminMnemonic,
 		logger,
 	)
 	if err != nil {

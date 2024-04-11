@@ -85,7 +85,7 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 		r.ETHZRC20Addr.Hex(),
 		codeHashRes.CodeHash,
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminName, msg)
 	if err != nil {
 		panic(err)
 	}

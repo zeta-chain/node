@@ -46,7 +46,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 		r.ZetaTxServer.GetAccountAddress(0),
 		cctx.Index,
 		r.DeployerAddress.String())
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminName, msg)
 	if err != nil {
 		panic(err)
 	}

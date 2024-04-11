@@ -74,7 +74,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
 	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := runner.ZetaTxServer.DeploySystemContractsAndZRC20(
-		e2eutils.FungibleAdminName,
+		e2eutils.AdminName,
 		runner.ERC20Addr.Hex(),
 	)
 	if err != nil {
@@ -208,12 +208,12 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 func (runner *E2ERunner) EnableVerificationFlags() error {
 	runner.Logger.Print("⚙️ enabling verification flags for block headers")
 
-	return runner.ZetaTxServer.EnableVerificationFlags(e2eutils.FungibleAdminName)
+	return runner.ZetaTxServer.EnableVerificationFlags(e2eutils.AdminName)
 }
 
 // FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)
 func (runner *E2ERunner) FundEmissionsPool() error {
 	runner.Logger.Print("⚙️ funding the emissions pool on ZetaChain with 20M ZETA (%s)", txserver.EmissionsPoolAddress)
 
-	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.FungibleAdminName, EmissionsPoolFunding)
+	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.AdminName, EmissionsPoolFunding)
 }

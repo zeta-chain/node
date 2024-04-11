@@ -2,7 +2,8 @@
 
 ## MsgUpdateVerificationFlags
 
-UpdateVerificationFlags updates the crosschain related flags.
+UpdateVerificationFlags updates the light client verification flags.
+This disables/enables blocks verification of the light client for the specified chain.
 Emergency group can disable flags while operation group can enable/disable
 
 ```proto

@@ -20,7 +20,7 @@ import (
 const flagVerbose = "verbose"
 const flagConfig = "config"
 
-const FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
+const AdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -93,8 +93,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf,
 		ethcommon.HexToAddress(evmAddr),
 		conf.Accounts.EVMPrivKey,
-		utils.FungibleAdminName, // placeholder value, not used
-		FungibleAdminMnemonic,   // placeholder value, not used
+		utils.AdminName, // placeholder value, not used
+		AdminMnemonic,   // placeholder value, not used
 		logger,
 	)
 	if err != nil {

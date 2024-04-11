@@ -56,8 +56,8 @@ func runSetupBitcoin(_ *cobra.Command, args []string) error {
 		conf,
 		ethcommon.HexToAddress(evmAddr),
 		conf.Accounts.EVMPrivKey,
-		utils.FungibleAdminName, // placeholder value, not used
-		FungibleAdminMnemonic,   // placeholder value, not used
+		utils.AdminName, // placeholder value, not used
+		AdminMnemonic,   // placeholder value, not used
 		logger,
 	)
 	if err != nil {

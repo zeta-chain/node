@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	FungibleAdminName = "fungibleadmin"
+	AdminName = "fadmin"
 
 	DefaultCctxTimeout = 4 * time.Minute
 )

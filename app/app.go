@@ -260,12 +260,12 @@ type App struct {
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// zetachain keepers
-	AuthorityKeeper  authoritykeeper.Keeper
-	LighclientKeeper lightclientkeeper.Keeper
-	CrosschainKeeper crosschainkeeper.Keeper
-	ObserverKeeper   *observerkeeper.Keeper
-	FungibleKeeper   fungiblekeeper.Keeper
-	EmissionsKeeper  emissionskeeper.Keeper
+	AuthorityKeeper   authoritykeeper.Keeper
+	LightclientKeeper lightclientkeeper.Keeper
+	CrosschainKeeper  crosschainkeeper.Keeper
+	ObserverKeeper    *observerkeeper.Keeper
+	FungibleKeeper    fungiblekeeper.Keeper
+	EmissionsKeeper   emissionskeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -371,7 +371,7 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 	)
 
-	app.LighclientKeeper = lightclientkeeper.NewKeeper(
+	app.LightclientKeeper = lightclientkeeper.NewKeeper(
 		appCodec,
 		keys[lightclienttypes.StoreKey],
 		keys[lightclienttypes.MemStoreKey],
@@ -386,7 +386,7 @@ func New(
 		&stakingKeeper,
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
-		app.LighclientKeeper,
+		app.LightclientKeeper,
 	)
 
 	// register the staking hooks
@@ -453,7 +453,7 @@ func New(
 		app.ObserverKeeper,
 		&app.FungibleKeeper,
 		app.AuthorityKeeper,
-		app.LighclientKeeper,
+		app.LightclientKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.
@@ -525,7 +525,7 @@ func New(
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
-		lightclientmodule.NewAppModule(appCodec, app.LighclientKeeper),
+		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
