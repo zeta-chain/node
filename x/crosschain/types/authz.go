@@ -8,7 +8,7 @@ import (
 // GetAllAuthzZetaclientTxTypes returns all the authz types for required for zetaclient
 func GetAllAuthzZetaclientTxTypes() []string {
 	return []string{
-		sdk.MsgTypeURL(&MsgGasPriceVoter{}),
+		sdk.MsgTypeURL(&MsgVoteGasPrice{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedInboundTx{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedOutboundTx{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),

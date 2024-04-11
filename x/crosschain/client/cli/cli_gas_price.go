@@ -74,10 +74,10 @@ func CmdShowGasPrice() *cobra.Command {
 
 // Transaction CLI /////////////////////////
 
-func CmdGasPriceVoter() *cobra.Command {
+func CmdVoteGasPrice() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gas-price-voter [chain] [price] [supply] [blockNumber]",
-		Short: "Broadcast message gasPriceVoter",
+		Use:   "vote-gas-price [chain] [price] [supply] [blockNumber]",
+		Short: "Broadcast message to vote gas price",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsChain, err := strconv.ParseInt(args[0], 10, 64)
@@ -99,7 +99,7 @@ func CmdGasPriceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), argsChain, argsPrice, argsSupply, argsBlockNumber)
+			msg := types.NewMsgVoteGasPrice(clientCtx.GetFromAddress().String(), argsChain, argsPrice, argsSupply, argsBlockNumber)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
