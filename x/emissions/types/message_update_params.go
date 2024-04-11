@@ -26,9 +26,5 @@ func (m *MsgUpdateParams) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid authority address (%s)", err)
 	}
 
-	if err := m.Params.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return m.Params.Validate()
 }

@@ -30,7 +30,7 @@ func TestMigrate(t *testing.T) {
 
 	legacyParams := types.Params{
 		MaxBondFactor:               "1",
-		MinBondFactor:               "0.50",
+		MinBondFactor:               "0.75",
 		AvgBlockTime:                "5.00",
 		TargetBondRatio:             "00.50",
 		ValidatorEmissionPercentage: "00.50",
