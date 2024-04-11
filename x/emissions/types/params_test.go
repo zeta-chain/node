@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
@@ -21,7 +21,7 @@ func TestNewParams(t *testing.T) {
 	require.Equal(t, "00.25", params.TssSignerEmissionPercentage, "TssSignerEmissionPercentage should be set to 00.25")
 	require.Equal(t, "0.001877876953694702", params.DurationFactorConstant, "DurationFactorConstant should be set to 0.001877876953694702")
 
-	require.Equal(t, sdk.Int{}, params.ObserverSlashAmount, "ObserverSlashAmount should be initialized but is currently disabled")
+	require.Equal(t, sdkmath.NewInt(100000000000000000), params.ObserverSlashAmount, "ObserverSlashAmount should be set to 100000000000000000")
 }
 
 func TestParamKeyTable(t *testing.T) {

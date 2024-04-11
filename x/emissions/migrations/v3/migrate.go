@@ -1,6 +1,7 @@
 package v3
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/emissions/exported"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
@@ -23,6 +24,7 @@ func MigrateStore(
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
+	currParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 	if err := currParams.Validate(); err != nil {
 		return err
 	}

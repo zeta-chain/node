@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gopkg.in/yaml.v2"
 )
@@ -19,11 +20,7 @@ func NewParams() Params {
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",
 		DurationFactorConstant:      "0.001877876953694702",
-
-		// ObserverSlashAmount is currently disabled
-		// TODO: enable this param
-		// https://github.com/zeta-chain/node/issues/1862
-		ObserverSlashAmount: sdk.Int{},
+		ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 	}
 }
 

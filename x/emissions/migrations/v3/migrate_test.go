@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/exported"
@@ -36,12 +37,13 @@ func TestMigrate(t *testing.T) {
 		ObserverEmissionPercentage:  "00.35",
 		TssSignerEmissionPercentage: "00.15",
 		DurationFactorConstant:      "0.001877876953694702",
-		ObserverSlashAmount:         sdk.NewInt(10),
+		ObserverSlashAmount:         sdk.ZeroInt(),
 	}
 	legacySubspace := newMockSubspace(legacyParams)
 
 	require.NoError(t, v3.MigrateStore(ctx, k, legacySubspace))
 
 	params := k.GetParams(ctx)
+	legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 	require.Equal(t, legacyParams, params)
 }
