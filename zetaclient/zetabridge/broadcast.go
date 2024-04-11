@@ -6,22 +6,23 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
-
-	"github.com/zeta-chain/zetacore/zetaclient/authz"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
+
+// BroadcastInterface defines the signature of the broadcast function used by zetabridge transactions
+type BroadcastInterface = func(bridge *ZetaCoreBridge, gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error)
 
 const (
 	// DefaultBaseGasPrice is the default base gas price
@@ -32,7 +33,16 @@ var (
 	// paying 50% more than the current base gas price to buffer for potential block-by-block
 	// gas price increase due to EIP1559 feemarket on ZetaChain
 	bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
+
+	// Variable function used by transactions to broadcast a message to ZetaCore. This will create enough flexibility
+	// in the implementation to allow for more comprehensive unit testing.
+	zetaBridgeBroadcast BroadcastInterface = BroadcastToZetaCore
 )
+
+// BroadcastToZetaCore is the default broadcast function used to send transactions to Zeta Core
+func BroadcastToZetaCore(bridge *ZetaCoreBridge, gasLimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
+	return bridge.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
+}
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
 func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
@@ -49,7 +59,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 		return "", err
 	}
 	if baseGasPrice == 0 {
-		baseGasPrice = DefaultBaseGasPrice // shoudn't happen, but just in case
+		baseGasPrice = DefaultBaseGasPrice // shouldn't happen, but just in case
 	}
 	reductionRate := sdktypes.MustNewDecFromStr(ante.GasPriceReductionRate)
 	// multiply gas price by the system tx reduction rate
@@ -163,17 +173,23 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	ctx = ctx.WithLegacyAmino(b.encodingCfg.Amino)
 	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
 
-	remote := b.cfg.ChainRPC
-	if !strings.HasPrefix(b.cfg.ChainHost, "http") {
-		remote = fmt.Sprintf("tcp://%s", remote)
+	if b.enableMockSDKClient {
+		ctx = ctx.WithClient(b.mockSDKClient)
+	} else {
+		remote := b.cfg.ChainRPC
+		if !strings.HasPrefix(b.cfg.ChainHost, "http") {
+			remote = fmt.Sprintf("tcp://%s", remote)
+		}
+
+		ctx = ctx.WithNodeURI(remote)
+		wsClient, err := rpchttp.New(remote, "/websocket")
+		if err != nil {
+			return ctx, err
+		}
+
+		ctx = ctx.WithClient(wsClient)
 	}
 
-	ctx = ctx.WithNodeURI(remote)
-	wsClient, err := rpchttp.New(remote, "/websocket")
-	if err != nil {
-		return ctx, err
-	}
-	ctx = ctx.WithClient(wsClient)
 	return ctx, nil
 }
 
@@ -200,6 +216,7 @@ func (b *ZetaCoreBridge) QueryTxResult(hash string) (*sdktypes.TxResponse, error
 }
 
 // HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
+// returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")

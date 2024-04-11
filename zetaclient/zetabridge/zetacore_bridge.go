@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -35,7 +35,6 @@ type ZetaCoreBridge struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 	grpcConn      *grpc.ClientConn
-	httpClient    *retryablehttp.Client
 	cfg           config.ClientConfiguration
 	encodingCfg   params.EncodingConfig
 	keys          *keys.Keys
@@ -45,6 +44,11 @@ type ZetaCoreBridge struct {
 	stop          chan struct{}
 	pause         chan struct{}
 	Telemetry     *metrics.TelemetryServer
+
+	// enableMockSDKClient is a flag that determines whether the mock cosmos sdk client should be used, primarily for
+	// unit testing
+	enableMockSDKClient bool
+	mockSDKClient       rpcclient.Client
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -67,9 +71,6 @@ func NewZetaCoreBridge(
 		HsmMode:      hsmMode,
 	}
 
-	httpClient := retryablehttp.NewClient()
-	httpClient.Logger = nil
-
 	grpcConn, err := grpc.Dial(
 		fmt.Sprintf("%s:9090", chainIP),
 		grpc.WithInsecure(),
@@ -91,20 +92,21 @@ func NewZetaCoreBridge(
 	}
 
 	return &ZetaCoreBridge{
-		logger:        logger,
-		grpcConn:      grpcConn,
-		httpClient:    httpClient,
-		accountNumber: accountsMap,
-		seqNumber:     seqMap,
-		cfg:           cfg,
-		encodingCfg:   app.MakeEncodingConfig(),
-		keys:          k,
-		broadcastLock: &sync.RWMutex{},
-		stop:          make(chan struct{}),
-		zetaChainID:   chainID,
-		zetaChain:     zetaChain,
-		pause:         make(chan struct{}),
-		Telemetry:     telemetry,
+		logger:              logger,
+		grpcConn:            grpcConn,
+		accountNumber:       accountsMap,
+		seqNumber:           seqMap,
+		cfg:                 cfg,
+		encodingCfg:         app.MakeEncodingConfig(),
+		keys:                k,
+		broadcastLock:       &sync.RWMutex{},
+		stop:                make(chan struct{}),
+		zetaChainID:         chainID,
+		zetaChain:           zetaChain,
+		pause:               make(chan struct{}),
+		Telemetry:           telemetry,
+		enableMockSDKClient: false,
+		mockSDKClient:       nil,
 	}, nil
 }
 
@@ -220,14 +222,15 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	var newBTCParams *observertypes.ChainParams
 
 	// check and update chain params for each chain
+	sampledLogger := b.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for _, chainParam := range chainParams {
-		err := observertypes.ValidateChainParams(chainParam)
-		if err != nil {
-			b.logger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
+		if !chainParam.GetIsSupported() {
+			sampledLogger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
 			continue
 		}
-		if !chainParam.GetIsSupported() {
-			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
+		err := observertypes.ValidateChainParams(chainParam)
+		if err != nil {
+			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
 		if chains.IsBitcoinChain(chainParam.ChainId) {
@@ -237,12 +240,12 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		}
 	}
 
-	supporteChains, err := b.GetSupportedChains()
+	supportedChains, err := b.GetSupportedChains()
 	if err != nil {
 		return err
 	}
-	newChains := make([]chains.Chain, len(supporteChains))
-	for i, chain := range supporteChains {
+	newChains := make([]chains.Chain, len(supportedChains))
+	for i, chain := range supportedChains {
 		newChains[i] = *chain
 	}
 	keyGen, err := b.GetKeyGen()
@@ -274,4 +277,9 @@ func (b *ZetaCoreBridge) Pause() {
 
 func (b *ZetaCoreBridge) Unpause() {
 	b.pause <- struct{}{}
+}
+
+func (b *ZetaCoreBridge) EnableMockSDKClient(client rpcclient.Client) {
+	b.mockSDKClient = client
+	b.enableMockSDKClient = true
 }

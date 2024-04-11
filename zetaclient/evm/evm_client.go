@@ -13,20 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
-
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-
 	"github.com/ethereum/go-ethereum"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -38,13 +25,23 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -60,11 +57,11 @@ type OutTx struct {
 	Nonce    int64
 }
 type Log struct {
-	ChainLogger          zerolog.Logger // Parent logger
-	ExternalChainWatcher zerolog.Logger // Observes external Chains for incoming trasnactions
-	WatchGasPrice        zerolog.Logger // Observes external Chains for Gas prices and posts to core
-	ObserveOutTx         zerolog.Logger // Observes external Chains for outgoing transactions
-	Compliance           zerolog.Logger // Compliance logger
+	Chain      zerolog.Logger // The parent logger for the chain
+	InTx       zerolog.Logger // Logger for incoming trasnactions
+	OutTx      zerolog.Logger // Logger for outgoing transactions
+	GasPrice   zerolog.Logger // Logger for gas prices
+	Compliance zerolog.Logger // Logger for compliance checks
 }
 
 var _ interfaces.ChainClient = &ChainClient{}
@@ -111,11 +108,11 @@ func NewEVMChainClient(
 	}
 	chainLogger := loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Log{
-		ChainLogger:          chainLogger,
-		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
-		WatchGasPrice:        chainLogger.With().Str("module", "WatchGasPrice").Logger(),
-		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
-		Compliance:           loggers.Compliance,
+		Chain:      chainLogger,
+		InTx:       chainLogger.With().Str("module", "WatchInTx").Logger(),
+		OutTx:      chainLogger.With().Str("module", "WatchOutTx").Logger(),
+		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
+		Compliance: loggers.Compliance,
 	}
 	ob.coreContext = appContext.ZetaCoreContext()
 	chainParams, found := ob.coreContext.GetEVMChainParams(evmCfg.Chain.ChainId)
@@ -133,10 +130,10 @@ func NewEVMChainClient(
 	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
 	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
 
-	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
+	ob.logger.Chain.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
 	client, err := ethclient.Dial(evmCfg.Endpoint)
 	if err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("eth Client Dial")
+		ob.logger.Chain.Error().Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
 	ob.evmClient = client
@@ -145,12 +142,12 @@ func NewEVMChainClient(
 	// create block header and block caches
 	ob.blockCache, err = lru.New(1000)
 	if err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache")
+		ob.logger.Chain.Error().Err(err).Msg("failed to create block cache")
 		return nil, err
 	}
 	ob.headerCache, err = lru.New(1000)
 	if err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create header cache")
+		ob.logger.Chain.Error().Err(err).Msg("failed to create header cache")
 		return nil, err
 	}
 
@@ -159,7 +156,7 @@ func NewEVMChainClient(
 		return nil, err
 	}
 
-	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
 
 	return &ob, nil
 }
@@ -172,10 +169,10 @@ func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.logger = Log{
-		ChainLogger:          logger,
-		ExternalChainWatcher: logger.With().Str("module", "ExternalChainWatcher").Logger(),
-		WatchGasPrice:        logger.With().Str("module", "WatchGasPrice").Logger(),
-		ObserveOutTx:         logger.With().Str("module", "ObserveOutTx").Logger(),
+		Chain:    logger,
+		InTx:     logger.With().Str("module", "WatchInTx").Logger(),
+		OutTx:    logger.With().Str("module", "WatchOutTx").Logger(),
+		GasPrice: logger.With().Str("module", "WatchGasPrice").Logger(),
 	}
 }
 
@@ -255,43 +252,48 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 	return erc20custody.NewERC20Custody(addr, client)
 }
 
+// Start all observation routines for the evm chain
 func (ob *ChainClient) Start() {
-	go ob.ExternalChainWatcherForNewInboundTrackerSuggestions()
-	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
-	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
-	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
-	go ob.ExternalChainRPCStatus()
+	go ob.WatchInTx()        // watch evm chain for incoming txs and post votes to zetacore
+	go ob.WatchOutTx()       // watch evm chain for outgoing txs status
+	go ob.WatchGasPrice()    // watch evm chain for gas prices and post to zetacore
+	go ob.WatchIntxTracker() // watch zetacore for intx trackers
+	go ob.WatchRPCStatus()   // watch the RPC status of the evm chain
 }
 
-func (ob *ChainClient) ExternalChainRPCStatus() {
-	ob.logger.ChainLogger.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
+// WatchRPCStatus watches the RPC status of the evm chain
+func (ob *ChainClient) WatchRPCStatus() {
+	ob.logger.Chain.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
+			if !ob.GetChainParams().IsSupported {
+				continue
+			}
 			bn, err := ob.evmClient.BlockNumber(context.Background())
 			if err != nil {
-				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				ob.logger.Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
 			gasPrice, err := ob.evmClient.SuggestGasPrice(context.Background())
 			if err != nil {
-				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				ob.logger.Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(bn))
 			if err != nil {
-				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				ob.logger.Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
 			// #nosec G701 always in range
 			blockTime := time.Unix(int64(header.Time), 0).UTC()
 			elapsedSeconds := time.Since(blockTime).Seconds()
 			if elapsedSeconds > 100 {
-				ob.logger.ChainLogger.Warn().Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
+				ob.logger.Chain.Warn().Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
 				continue
 			}
-			ob.logger.ChainLogger.Info().Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
+			ob.logger.Chain.Info().Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
 		case <-ob.stop:
 			return
 		}
@@ -299,20 +301,20 @@ func (ob *ChainClient) ExternalChainRPCStatus() {
 }
 
 func (ob *ChainClient) Stop() {
-	ob.logger.ChainLogger.Info().Msgf("ob %s is stopping", ob.chain.String())
+	ob.logger.Chain.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 
-	ob.logger.ChainLogger.Info().Msg("closing ob.db")
+	ob.logger.Chain.Info().Msg("closing ob.db")
 	dbInst, err := ob.db.DB()
 	if err != nil {
-		ob.logger.ChainLogger.Info().Msg("error getting database instance")
+		ob.logger.Chain.Info().Msg("error getting database instance")
 	}
 	err = dbInst.Close()
 	if err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("error closing database")
+		ob.logger.Chain.Error().Err(err).Msg("error closing database")
 	}
 
-	ob.logger.ChainLogger.Info().Msgf("%s observer stopped", ob.chain.String())
+	ob.logger.Chain.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
 // returns: isIncluded, isConfirmed, Error
@@ -609,68 +611,57 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 	return false, false, nil
 }
 
-// FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
-// observeOutTx periodically checks all the txhash in potential outbound txs
-func (ob *ChainClient) observeOutTx() {
-	// read env variables if set
-	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
-	if err != nil || timeoutNonce <= 0 {
-		timeoutNonce = 100 * 3 // process up to 100 hashes
-	}
-	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: using timeoutNonce %d seconds", timeoutNonce)
-
-	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
+// WatchOutTx watches evm chain for outgoing txs status
+func (ob *ChainClient) WatchOutTx() {
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
 	if err != nil {
-		ob.logger.ObserveOutTx.Error().Err(err).Msg("failed to create ticker")
+		ob.logger.OutTx.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 
+	ob.logger.OutTx.Info().Msgf("WatchOutTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.OutTx.Sample(&zerolog.BasicSampler{N: 10})
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
+			if !corecontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
+				continue
+			}
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
-			//FIXME: remove this timeout here to ensure that all trackers are queried
-			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
-		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 				if ob.isTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
 					continue
 				}
 				txCount := 0
-				var receipt *ethtypes.Receipt
-				var transaction *ethtypes.Transaction
+				var outtxReceipt *ethtypes.Receipt
+				var outtx *ethtypes.Transaction
 				for _, txHash := range tracker.HashList {
-					select {
-					case <-outTimeout:
-						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx: timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
-						break TRACKERLOOP
-					default:
-						if recpt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
-							txCount++
-							receipt = recpt
-							transaction = tx
-							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
-							if txCount > 1 {
-								ob.logger.ObserveOutTx.Error().Msgf(
-									"observeOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, receipt, transaction)
-							}
+					if receipt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
+						txCount++
+						outtxReceipt = receipt
+						outtx = tx
+						ob.logger.OutTx.Info().Msgf("WatchOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
+						if txCount > 1 {
+							ob.logger.OutTx.Error().Msgf(
+								"WatchOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outtxReceipt, outtx)
 						}
 					}
 				}
 				if txCount == 1 { // should be only one txHash confirmed for each nonce.
-					ob.SetTxNReceipt(nonceInt, receipt, transaction)
+					ob.SetTxNReceipt(nonceInt, outtxReceipt, outtx)
 				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
-					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
+					ob.logger.OutTx.Error().Msgf("WatchOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.ObserveOutTx)
+			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.OutTx)
 		case <-ob.stop:
-			ob.logger.ObserveOutTx.Info().Msg("observeOutTx: stopped")
+			ob.logger.OutTx.Info().Msg("WatchOutTx: stopped")
 			return
 		}
 	}
@@ -836,26 +827,31 @@ func (ob *ChainClient) GetLastBlockHeight() uint64 {
 	return height
 }
 
-func (ob *ChainClient) ExternalChainWatcher() {
-	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
+// WatchInTx watches evm chain for incoming txs and post votes to zetacore
+func (ob *ChainClient) WatchInTx() {
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchInTx_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("NewDynamicTicker error")
+		ob.logger.InTx.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 
 	defer ticker.Stop()
-	ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher started")
-	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
+	ob.logger.InTx.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.InTx.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C():
+			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
+				continue
+			}
 			err := ob.observeInTX(sampledLogger)
 			if err != nil {
-				ob.logger.ExternalChainWatcher.Err(err).Msg("observeInTX error")
+				ob.logger.InTx.Err(err).Msg("WatchInTx: observeInTX error")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.ExternalChainWatcher)
+			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.InTx)
 		case <-ob.stop:
-			ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher stopped")
+			ob.logger.InTx.Info().Msgf("WatchInTx stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}
@@ -886,12 +882,12 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 
 	header, err := ob.GetBlockHeaderCached(bn)
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
+		ob.logger.InTx.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
 		return err
 	}
 	headerRLP, err := rlp.EncodeToBytes(header)
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("postBlockHeader: error encoding block header: %d", bn)
+		ob.logger.InTx.Error().Err(err).Msgf("postBlockHeader: error encoding block header: %d", bn)
 		return err
 	}
 
@@ -902,19 +898,13 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 		proofs.NewEthereumHeader(headerRLP),
 	)
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("postBlockHeader: error posting block header: %d", bn)
+		ob.logger.InTx.Error().Err(err).Msgf("postBlockHeader: error posting block header: %d", bn)
 		return err
 	}
 	return nil
 }
 
 func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
-	// make sure inbound TXS / Send is enabled by the protocol
-	flags := ob.coreContext.GetCrossChainFlags()
-	if !flags.IsInboundEnabled {
-		return errors.New("inbound TXS / Send has been disabled by the protocol")
-	}
-
 	// get and update latest block height
 	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
@@ -952,7 +942,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	lastScannedDeposited := ob.ObserveERC20Deposited(startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock, flags)
+	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock)
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -969,7 +959,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 			ob.chain.ChainId, lastScannedZetaSent, lastScannedDeposited, lastScannedTssRecvd)
 		ob.SetLastBlockHeightScanned(lastScannedLowest)
 		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(lastScannedLowest)).Error; err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observeInTX: error writing lastScannedLowest %d to db", lastScannedLowest)
+			ob.logger.InTx.Error().Err(err).Msgf("observeInTX: error writing lastScannedLowest %d to db", lastScannedLowest)
 		}
 	}
 	return nil
@@ -981,7 +971,7 @@ func (ob *ChainClient) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 	// filter ZetaSent logs
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
-		ob.logger.ChainLogger.Warn().Err(err).Msgf("ObserveZetaSent: GetConnectorContract error:")
+		ob.logger.Chain.Warn().Err(err).Msgf("ObserveZetaSent: GetConnectorContract error:")
 		return startBlock - 1 // lastScanned
 	}
 	iter, err := connector.FilterZetaSent(&bind.FilterOpts{
@@ -990,7 +980,7 @@ func (ob *ChainClient) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 		Context: context.TODO(),
 	}, []ethcommon.Address{}, []*big.Int{})
 	if err != nil {
-		ob.logger.ChainLogger.Warn().Err(err).Msgf(
+		ob.logger.Chain.Warn().Err(err).Msgf(
 			"ObserveZetaSent: FilterZetaSent error from block %d to %d for chain %d", startBlock, toBlock, ob.chain.ChainId)
 		return startBlock - 1 // lastScanned
 	}
@@ -1004,7 +994,7 @@ func (ob *ChainClient) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 			events = append(events, iter.Event)
 			continue
 		}
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("ObserveZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
+		ob.logger.InTx.Warn().Err(err).Msgf("ObserveZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
 			iter.Event.Raw.TxHash.Hex(), ob.chain.ChainId, iter.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
@@ -1030,7 +1020,7 @@ func (ob *ChainClient) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 		}
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("ObserveZetaSent: multiple remote call events detected in tx %s", event.Raw.TxHash)
+			ob.logger.InTx.Warn().Msgf("ObserveZetaSent: multiple remote call events detected in tx %s", event.Raw.TxHash)
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -1053,7 +1043,7 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("ObserveERC20Deposited: GetERC20CustodyContract error:")
+		ob.logger.InTx.Warn().Err(err).Msgf("ObserveERC20Deposited: GetERC20CustodyContract error:")
 		return startBlock - 1 // lastScanned
 	}
 	iter, err := erc20custodyContract.FilterDeposited(&bind.FilterOpts{
@@ -1062,7 +1052,7 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 		Context: context.TODO(),
 	}, []ethcommon.Address{})
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf(
+		ob.logger.InTx.Warn().Err(err).Msgf(
 			"ObserveERC20Deposited: FilterDeposited error from block %d to %d for chain %d", startBlock, toBlock, ob.chain.ChainId)
 		return startBlock - 1 // lastScanned
 	}
@@ -1076,7 +1066,7 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 			events = append(events, iter.Event)
 			continue
 		}
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("ObserveERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
+		ob.logger.InTx.Warn().Err(err).Msgf("ObserveERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
 			iter.Event.Raw.TxHash.Hex(), ob.chain.ChainId, iter.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
@@ -1102,7 +1092,7 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 		}
 		tx, _, err := ob.TransactionByHash(event.Raw.TxHash.Hex())
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
+			ob.logger.InTx.Error().Err(err).Msgf(
 				"ObserveERC20Deposited: error getting transaction for intx %s chain %d", event.Raw.TxHash, ob.chain.ChainId)
 			return beingScanned - 1 // we have to re-scan from this block next time
 		}
@@ -1110,7 +1100,7 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("ObserveERC20Deposited: multiple remote call events detected in tx %s", event.Raw.TxHash)
+			ob.logger.InTx.Warn().Msgf("ObserveERC20Deposited: multiple remote call events detected in tx %s", event.Raw.TxHash)
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -1129,28 +1119,26 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 
 // ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
-	if !ob.GetChainParams().IsSupported {
-		return startBlock - 1 // lastScanned
-	}
-
+func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetabridge and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
+		// https://github.com/zeta-chain/node/issues/1847
+		flags := ob.coreContext.GetCrossChainFlags()
 		if flags.BlockHeaderVerificationFlags != nil &&
 			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
 			chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+				ob.logger.InTx.Error().Err(err).Msg("error posting block header")
 			}
 		}
 
 		// observe TSS received gas token in block 'bn'
 		err := ob.ObserveTSSReceiveInBlock(bn)
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("ObserverTSSReceive: error observing TSS received token in block %d for chain %d", bn, ob.chain.ChainId)
+			ob.logger.InTx.Error().Err(err).Msgf("ObserverTSSReceive: error observing TSS received token in block %d for chain %d", bn, ob.chain.ChainId)
 			return bn - 1 // we have to re-scan from this block next time
 		}
 	}
@@ -1158,41 +1146,37 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags obse
 	return toBlock
 }
 
+// WatchGasPrice watches evm chain for gas prices and post to zetacore
 func (ob *ChainClient) WatchGasPrice() {
-	ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice starting...")
+	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
 	if err != nil {
-		height, err := ob.zetaClient.GetBlockHeight()
-		if err != nil {
-			ob.logger.WatchGasPrice.Error().Err(err).Msg("GetBlockHeight error")
-		} else {
-			ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
-		}
+		ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
 	}
 
+	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetChainParams().GasPriceTicker)
 	if err != nil {
-		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
+		ob.logger.GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
 	}
-	ob.logger.WatchGasPrice.Info().Msgf("WatchGasPrice started with interval %d", ob.GetChainParams().GasPriceTicker)
+	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
+		ob.chain.ChainId, ob.GetChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
+			if !ob.GetChainParams().IsSupported {
+				continue
+			}
 			err = ob.PostGasPrice()
 			if err != nil {
-				height, err := ob.zetaClient.GetBlockHeight()
-				if err != nil {
-					ob.logger.WatchGasPrice.Error().Err(err).Msg("GetBlockHeight error")
-				} else {
-					ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
-				}
+				ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.WatchGasPrice)
+			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.GasPrice)
 		case <-ob.stop:
-			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
+			ob.logger.GasPrice.Info().Msg("WatchGasPrice stopped")
 			return
 		}
 	}
@@ -1203,12 +1187,12 @@ func (ob *ChainClient) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
-		ob.logger.WatchGasPrice.Err(err).Msg("Err SuggestGasPrice:")
+		ob.logger.GasPrice.Err(err).Msg("Err SuggestGasPrice:")
 		return err
 	}
 	blockNum, err := ob.evmClient.BlockNumber(context.TODO())
 	if err != nil {
-		ob.logger.WatchGasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
+		ob.logger.GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
 		return err
 	}
 
@@ -1217,7 +1201,7 @@ func (ob *ChainClient) PostGasPrice() error {
 
 	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
-		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice to zetabridge failed")
+		ob.logger.GasPrice.Err(err).Msg("PostGasPrice to zetabridge failed")
 		return err
 	}
 	_ = zetaHash
@@ -1226,7 +1210,7 @@ func (ob *ChainClient) PostGasPrice() error {
 }
 
 func (ob *ChainClient) BuildLastBlock() error {
-	logger := ob.logger.ChainLogger.With().Str("module", "BuildBlockIndex").Logger()
+	logger := ob.logger.Chain.With().Str("module", "BuildBlockIndex").Logger()
 	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
@@ -1267,7 +1251,7 @@ func (ob *ChainClient) BuildReceiptsMap() error {
 	logger := ob.logger
 	var receipts []clienttypes.ReceiptSQLType
 	if err := ob.db.Find(&receipts).Error; err != nil {
-		logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		logger.Chain.Error().Err(err).Msg("error iterating over db")
 		return err
 	}
 	for _, receipt := range receipts {
@@ -1300,7 +1284,7 @@ func (ob *ChainClient) LoadDB(dbPath string, chain chains.Chain) error {
 			&clienttypes.TransactionSQLType{},
 			&clienttypes.LastBlockSQLType{})
 		if err != nil {
-			ob.logger.ChainLogger.Error().Err(err).Msg("error migrating db")
+			ob.logger.Chain.Error().Err(err).Msg("error migrating db")
 			return err
 		}
 

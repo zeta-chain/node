@@ -5,67 +5,9 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
- */
-export declare class MsgCreateTSSVoter extends Message<MsgCreateTSSVoter> {
-  /**
-   * @generated from field: string creator = 1;
-   */
-  creator: string;
-
-  /**
-   * @generated from field: string tss_pubkey = 2;
-   */
-  tssPubkey: string;
-
-  /**
-   * @generated from field: int64 keyGenZetaHeight = 3;
-   */
-  keyGenZetaHeight: bigint;
-
-  /**
-   * @generated from field: chains.ReceiveStatus status = 4;
-   */
-  status: ReceiveStatus;
-
-  constructor(data?: PartialMessage<MsgCreateTSSVoter>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoter";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoter;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
-
-  static equals(a: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined, b: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse
- */
-export declare class MsgCreateTSSVoterResponse extends Message<MsgCreateTSSVoterResponse> {
-  constructor(data?: PartialMessage<MsgCreateTSSVoterResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoterResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
-
-  static equals(a: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined, b: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined): boolean;
-}
+import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds

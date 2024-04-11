@@ -34,7 +34,6 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		}
 	}
 
-	crossChainGenesis.Params.Enabled = true
 	require.NoError(t, crossChainGenesis.Validate())
 	crossChainGenesisBz, err := codec.MarshalJSON(&crossChainGenesis)
 	require.NoError(t, err)
