@@ -68,7 +68,6 @@ func CrosschainKeeperWithMocks(
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
-		sdkKeepers.ParamsKeeper,
 		authorityKeeperTmp,
 	)
 	fungibleKeeperTmp := initFungibleKeeper(

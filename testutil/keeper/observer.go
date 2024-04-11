@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -43,7 +42,6 @@ func initObserverKeeper(
 	ss store.CommitMultiStore,
 	stakingKeeper stakingkeeper.Keeper,
 	slashingKeeper slashingkeeper.Keeper,
-	paramKeeper paramskeeper.Keeper,
 	authorityKeeper types.AuthorityKeeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)

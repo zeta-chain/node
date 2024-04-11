@@ -49,7 +49,6 @@ func EmissionKeeperWithMockOptions(
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
-		sdkKeepers.ParamsKeeper,
 		initAuthorityKeeper(cdc, db, stateStore),
 	)
 
