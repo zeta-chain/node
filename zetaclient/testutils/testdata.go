@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	testcctx "github.com/zeta-chain/zetacore/zetaclient/testdata/cctx"
 )
 
 const (
@@ -23,6 +24,16 @@ const (
 	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
 	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
 )
+
+// cloneCctx returns a deep copy of the cctx
+func cloneCctx(t *testing.T, cctx *crosschaintypes.CrossChainTx) *crosschaintypes.CrossChainTx {
+	data, err := cctx.Marshal()
+	require.NoError(t, err)
+	cloned := &crosschaintypes.CrossChainTx{}
+	err = cloned.Unmarshal(data)
+	require.NoError(t, err)
+	return cloned
+}
 
 // SaveObjectToJSONFile saves an object to a file in JSON format
 func SaveObjectToJSONFile(obj interface{}, filename string) error {
@@ -76,6 +87,48 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 	return SaveObjectToJSONFile(blockVb, filename)
 }
 
+// LoadCctxByIntx loads archived cctx by intx
+func LoadCctxByIntx(
+	t *testing.T,
+	chainID int64,
+	coinType coin.CoinType,
+	intxHash string,
+) *crosschaintypes.CrossChainTx {
+	// nameCctx := path.Join("../", TestDataPathCctx, FileNameCctxByIntx(chainID, intxHash, coinType))
+
+	// cctx := &crosschaintypes.CrossChainTx{}
+	// LoadObjectFromJSONFile(t, &cctx, nameCctx)
+	// return cctx
+
+	// get cctx
+	cctx, found := testcctx.CctxByIntxMap[chainID][coinType][intxHash]
+	require.True(t, found)
+
+	// clone cctx for each individual test
+	cloned := cloneCctx(t, cctx)
+	return cloned
+}
+
+// LoadCctxByNonce loads archived cctx by nonce
+func LoadCctxByNonce(
+	t *testing.T,
+	chainID int64,
+	nonce uint64,
+) *crosschaintypes.CrossChainTx {
+	// nameCctx := path.Join("../", TestDataPathCctx, FileNameCctxByNonce(chainID, nonce))
+
+	// cctx := &crosschaintypes.CrossChainTx{}
+	// LoadObjectFromJSONFile(t, &cctx, nameCctx)
+
+	// get cctx
+	cctx, found := testcctx.CCtxByNonceMap[chainID][nonce]
+	require.True(t, found)
+
+	// clone cctx for each individual test
+	cloned := cloneCctx(t, cctx)
+	return cloned
+}
+
 // LoadEVMBlock loads archived evm block from file
 func LoadEVMBlock(t *testing.T, chainID int64, blockNumber uint64, trimmed bool) *ethrpc.Block {
 	name := path.Join("../", TestDataPathEVM, FileNameEVMBlock(chainID, blockNumber, trimmed))
@@ -99,9 +152,7 @@ func LoadBTCTxRawResultNCctx(t *testing.T, chainID int64, nonce uint64) (*btcjso
 	rawResult := &btcjson.TxRawResult{}
 	LoadObjectFromJSONFile(t, rawResult, nameTx)
 
-	nameCctx := path.Join("../", TestDataPathCctx, FileNameCctxByNonce(chainID, nonce))
-	cctx := &crosschaintypes.CrossChainTx{}
-	LoadObjectFromJSONFile(t, cctx, nameCctx)
+	cctx := LoadCctxByNonce(t, chainID, nonce)
 	return rawResult, cctx
 }
 
@@ -129,31 +180,6 @@ func LoadEVMIntxReceipt(
 	receipt := &ethtypes.Receipt{}
 	LoadObjectFromJSONFile(t, &receipt, nameReceipt)
 	return receipt
-}
-
-// LoadEVMIntxCctx loads archived intx cctx from file
-func LoadEVMIntxCctx(
-	t *testing.T,
-	chainID int64,
-	intxHash string,
-	coinType coin.CoinType) *crosschaintypes.CrossChainTx {
-	nameCctx := path.Join("../", TestDataPathCctx, FileNameEVMIntxCctx(chainID, intxHash, coinType))
-
-	cctx := &crosschaintypes.CrossChainTx{}
-	LoadObjectFromJSONFile(t, &cctx, nameCctx)
-	return cctx
-}
-
-// LoadCctxByNonce loads archived cctx by nonce from file
-func LoadCctxByNonce(
-	t *testing.T,
-	chainID int64,
-	nonce uint64) *crosschaintypes.CrossChainTx {
-	nameCctx := path.Join("../", TestDataPathCctx, FileNameCctxByNonce(chainID, nonce))
-
-	cctx := &crosschaintypes.CrossChainTx{}
-	LoadObjectFromJSONFile(t, &cctx, nameCctx)
-	return cctx
 }
 
 // LoadEVMIntxNReceipt loads archived intx and receipt from file
@@ -217,7 +243,7 @@ func LoadEVMIntxNReceiptNCctx(
 	// load archived intx, receipt and cctx
 	tx := LoadEVMIntx(t, chainID, intxHash, coinType)
 	receipt := LoadEVMIntxReceipt(t, chainID, intxHash, coinType)
-	cctx := LoadEVMIntxCctx(t, chainID, intxHash, coinType)
+	cctx := LoadCctxByIntx(t, chainID, coinType, intxHash)
 
 	return tx, receipt, cctx
 }

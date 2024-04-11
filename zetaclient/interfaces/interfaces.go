@@ -39,7 +39,7 @@ const (
 type ChainClient interface {
 	Start()
 	Stop()
-	IsCctxOutTxProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
+	IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetTxID(nonce uint64) string

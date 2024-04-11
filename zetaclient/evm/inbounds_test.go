@@ -190,7 +190,7 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	chain := chains.EthChain()
 	intxHash := "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76"
 	receipt := testutils.LoadEVMIntxReceipt(t, chainID, intxHash, coin.CoinType_Zeta)
-	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, coin.CoinType_Zeta)
+	cctx := testutils.LoadCctxByIntx(t, chainID, coin.CoinType_Zeta, intxHash)
 
 	// parse ZetaSent event
 	ob := MockEVMClient(t, chain, nil, nil, nil, nil, 1, stub.MockChainParams(1, 1))
@@ -237,7 +237,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	chainID := chain.ChainId
 	intxHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
 	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, coin.CoinType_ERC20)
-	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, coin.CoinType_ERC20)
+	cctx := testutils.LoadCctxByIntx(t, chainID, coin.CoinType_ERC20, intxHash)
 
 	// parse Deposited event
 	ob := MockEVMClient(t, chain, nil, nil, nil, nil, 1, stub.MockChainParams(1, 1))
@@ -283,7 +283,7 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
 	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, coin.CoinType_Gas)
 	require.NoError(t, evm.ValidateEvmTransaction(tx))
-	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, coin.CoinType_Gas)
+	cctx := testutils.LoadCctxByIntx(t, chainID, coin.CoinType_Gas, intxHash)
 
 	// load archived gas token donation to TSS
 	// https://etherscan.io/tx/0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155

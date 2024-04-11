@@ -14,6 +14,16 @@ func FileNameEVMBlock(chainID int64, blockNumber uint64, trimmed bool) string {
 	return fmt.Sprintf("chain_%d_block_ethrpc_trimmed_%d.json", chainID, blockNumber)
 }
 
+// FileNameCctxByIntx returns unified archive cctx file name by intx
+func FileNameCctxByIntx(chainID int64, intxHash string, coinType coin.CoinType) string {
+	return fmt.Sprintf("cctx_intx_%d_%s_%s.json", chainID, coinType, intxHash)
+}
+
+// FileNameCctxByNonce returns unified archive cctx file name by nonce
+func FileNameCctxByNonce(chainID int64, nonce uint64) string {
+	return fmt.Sprintf("chain_%d_cctx_%d.json", chainID, nonce)
+}
+
 // FileNameEVMIntx returns unified archive file name for inbound tx
 func FileNameEVMIntx(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
 	if !donation {
@@ -28,11 +38,6 @@ func FileNameEVMIntxReceipt(chainID int64, intxHash string, coinType coin.CoinTy
 		return fmt.Sprintf("chain_%d_intx_receipt_%s_%s.json", chainID, coinType, intxHash)
 	}
 	return fmt.Sprintf("chain_%d_intx_receipt_donation_%s_%s.json", chainID, coinType, intxHash)
-}
-
-// FileNameEVMIntxCctx returns unified archive file name for inbound cctx
-func FileNameEVMIntxCctx(chainID int64, intxHash string, coinType coin.CoinType) string {
-	return fmt.Sprintf("cctx_intx_%d_%s_%s.json", chainID, coinType, intxHash)
 }
 
 // FileNameBTCIntx returns unified archive file name for inbound tx
@@ -57,11 +62,6 @@ func FileNameBTCTxByType(chainID int64, txType string, txHash string) string {
 // FileNameBTCMsgTx returns unified archive file name for btc MsgTx
 func FileNameBTCMsgTx(chainID int64, txHash string) string {
 	return fmt.Sprintf("chain_%d_msgtx_%s.json", chainID, txHash)
-}
-
-// FileNameCctxByNonce returns unified archive file name for cctx by nonce
-func FileNameCctxByNonce(chainID int64, nonce uint64) string {
-	return fmt.Sprintf("cctx_%d_%d.json", chainID, nonce)
 }
 
 // FileNameEVMOuttx returns unified archive file name for outbound tx

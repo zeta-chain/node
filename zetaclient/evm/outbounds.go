@@ -50,12 +50,12 @@ func (ob *ChainClient) PostVoteOutbound(
 	}
 }
 
-// IsCctxOutTxProcessed checks outtx status and returns (isIncluded, isConfirmed, error)
+// IsOutboundProcessed checks outtx status and returns (isIncluded, isConfirmed, error)
 // It also posts vote to zetacore if the tx is confirmed
-func (ob *ChainClient) IsCctxOutTxProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+func (ob *ChainClient) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	// skip if outtx is not confirmed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	if !ob.isTxConfirmed(nonce) {
+	if !ob.IsTxConfirmed(nonce) {
 		return false, false, nil
 	}
 	receipt, transaction := ob.GetTxNReceipt(nonce)
@@ -92,7 +92,7 @@ func (ob *ChainClient) IsCctxOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 	// parse the received value from the outtx receipt
 	receiveValue, receiveStatus, err = ParseOuttxReceivedValue(cctx, receipt, transaction, cointype, connectorAddr, connector, custodyAddr, custody)
 	if err != nil {
-		logger.Error().Err(err).Msgf("IsCctxOutTxProcessed: error parsing outtx event for chain %d txhash %s", ob.chain.ChainId, receipt.TxHash)
+		logger.Error().Err(err).Msgf("IsOutboundProcessed: error parsing outtx event for chain %d txhash %s", ob.chain.ChainId, receipt.TxHash)
 		return false, false, err
 	}
 
@@ -189,7 +189,8 @@ func ParseAndCheckWithdrawnEvent(
 	return nil, errors.New("no ERC20 Withdrawn event found")
 }
 
-// ParseOuttxReceivedValue parses the received value from the outtx receipt
+// ParseOuttxReceivedValue parses the received value and status from the outtx receipt
+// The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
 func ParseOuttxReceivedValue(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
@@ -198,7 +199,8 @@ func ParseOuttxReceivedValue(
 	connectorAddress ethcommon.Address,
 	connector *zetaconnector.ZetaConnectorNonEth,
 	custodyAddress ethcommon.Address,
-	custody *erc20custody.ERC20Custody) (*big.Int, chains.ReceiveStatus, error) {
+	custody *erc20custody.ERC20Custody,
+) (*big.Int, chains.ReceiveStatus, error) {
 	// determine the receive status and value
 	// https://docs.nethereum.com/en/latest/nethereum-receipt-status/
 	receiveValue := big.NewInt(0)

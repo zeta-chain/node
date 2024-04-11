@@ -158,11 +158,15 @@ func NewEVMChainClient(
 
 	return &ob, nil
 }
+
+// WithChain attaches a new chain to the chain client
 func (ob *ChainClient) WithChain(chain chains.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
 }
+
+// WithLogger attaches a new logger to the chain client
 func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
@@ -174,36 +178,42 @@ func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	}
 }
 
+// WithEvmClient attaches a new evm client to the chain client
 func (ob *ChainClient) WithEvmClient(client interfaces.EVMRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmClient = client
 }
 
+// WithEvmJSONRPC attaches a new evm json rpc client to the chain client
 func (ob *ChainClient) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmJSONRPC = client
 }
 
+// WithZetaBridge attaches a new bridge to interact with ZetaCore to the chain client
 func (ob *ChainClient) WithZetaBridge(bridge interfaces.ZetaCoreBridger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.zetaBridge = bridge
 }
 
+// WithBlockCache attaches a new block cache to the chain client
 func (ob *ChainClient) WithBlockCache(cache *lru.Cache) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.blockCache = cache
 }
 
+// SetChainParams sets the chain params for the chain client
 func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chainParams = params
 }
 
+// GetChainParams returns the chain params for the chain client
 func (ob *ChainClient) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
@@ -339,7 +349,7 @@ func (ob *ChainClient) WatchOutTx() {
 			}
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
-				if ob.isTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
+				if ob.IsTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
 					continue
 				}
 				txCount := 0
@@ -403,8 +413,8 @@ func (ob *ChainClient) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes
 	return receipt, transaction
 }
 
-// isTxConfirmed returns true if there is a confirmed tx for 'nonce'
-func (ob *ChainClient) isTxConfirmed(nonce uint64) bool {
+// IsTxConfirmed returns true if there is a confirmed tx for 'nonce'
+func (ob *ChainClient) IsTxConfirmed(nonce uint64) bool {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
