@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { Params } from "./params_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.emissions.MsgWithdrawEmission
@@ -52,5 +53,53 @@ export declare class MsgWithdrawEmissionResponse extends Message<MsgWithdrawEmis
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgWithdrawEmissionResponse;
 
   static equals(a: MsgWithdrawEmissionResponse | PlainMessage<MsgWithdrawEmissionResponse> | undefined, b: MsgWithdrawEmissionResponse | PlainMessage<MsgWithdrawEmissionResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.emissions.MsgUpdateParams
+ */
+export declare class MsgUpdateParams extends Message<MsgUpdateParams> {
+  /**
+   * @generated from field: string authority = 1;
+   */
+  authority: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.emissions.Params params = 2;
+   */
+  params?: Params;
+
+  constructor(data?: PartialMessage<MsgUpdateParams>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.emissions.MsgUpdateParams";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateParams;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateParams;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateParams;
+
+  static equals(a: MsgUpdateParams | PlainMessage<MsgUpdateParams> | undefined, b: MsgUpdateParams | PlainMessage<MsgUpdateParams> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.emissions.MsgUpdateParamsResponse
+ */
+export declare class MsgUpdateParamsResponse extends Message<MsgUpdateParamsResponse> {
+  constructor(data?: PartialMessage<MsgUpdateParamsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.emissions.MsgUpdateParamsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateParamsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateParamsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateParamsResponse;
+
+  static equals(a: MsgUpdateParamsResponse | PlainMessage<MsgUpdateParamsResponse> | undefined, b: MsgUpdateParamsResponse | PlainMessage<MsgUpdateParamsResponse> | undefined): boolean;
 }
 

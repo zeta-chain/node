@@ -1,5 +1,14 @@
 # Messages
 
+## MsgUpdateParams
+
+```proto
+message MsgUpdateParams {
+	string authority = 1;
+	Params params = 2;
+}
+```
+
 ## MsgWithdrawEmission
 
 WithdrawEmission allows the user to withdraw from their withdrawable emissions.
