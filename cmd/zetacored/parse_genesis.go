@@ -35,6 +35,8 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+const Max_items_for_list = 10
+
 var Copy = map[string]bool{
 	slashingtypes.ModuleName:        true,
 	govtypes.ModuleName:             true,
@@ -141,9 +143,9 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 
 func ModifyCrossChainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importAppState)
-	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(10, len(importedCrossChainGenState.CrossChainTxs))]
-	importedCrossChainGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(10, len(importedCrossChainGenState.InTxHashToCctxList))]
-	importedCrossChainGenState.FinalizedInbounds = importedCrossChainGenState.FinalizedInbounds[:math.Min(10, len(importedCrossChainGenState.FinalizedInbounds))]
+	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(Max_items_for_list, len(importedCrossChainGenState.CrossChainTxs))]
+	importedCrossChainGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(Max_items_for_list, len(importedCrossChainGenState.InTxHashToCctxList))]
+	importedCrossChainGenState.FinalizedInbounds = importedCrossChainGenState.FinalizedInbounds[:math.Min(Max_items_for_list, len(importedCrossChainGenState.FinalizedInbounds))]
 	importedCrossChainStateBz, err := json.Marshal(importedCrossChainGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal zetacrosschain genesis state: %w", err)
@@ -154,8 +156,8 @@ func ModifyCrossChainState(appState map[string]json.RawMessage, importAppState m
 
 func ModifyObserverState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedObserverGenState := observertypes.GetGenesisStateFromAppState(cdc, importAppState)
-	importedObserverGenState.Ballots = importedObserverGenState.Ballots[:math.Min(10, len(importedObserverGenState.Ballots))]
-	importedObserverGenState.NonceToCctx = importedObserverGenState.NonceToCctx[:math.Min(10, len(importedObserverGenState.NonceToCctx))]
+	importedObserverGenState.Ballots = importedObserverGenState.Ballots[:math.Min(Max_items_for_list, len(importedObserverGenState.Ballots))]
+	importedObserverGenState.NonceToCctx = importedObserverGenState.NonceToCctx[:math.Min(Max_items_for_list, len(importedObserverGenState.NonceToCctx))]
 
 	currentGenState := observertypes.GetGenesisStateFromAppState(cdc, appState)
 	currentGenState.Ballots = importedObserverGenState.Ballots

@@ -72,8 +72,8 @@ func Test_ModifyObserverState(t *testing.T) {
 		require.NoError(t, err)
 
 		modifiedObserverAppState := observertypes.GetGenesisStateFromAppState(cdc, appState)
-		require.Len(t, modifiedObserverAppState.Ballots, 10)
-		require.Len(t, modifiedObserverAppState.NonceToCctx, 10)
+		require.Len(t, modifiedObserverAppState.Ballots, zetacored.Max_items_for_list)
+		require.Len(t, modifiedObserverAppState.NonceToCctx, zetacored.Max_items_for_list)
 	})
 
 	t.Run("successfully modify observer state without changing data when not needed", func(t *testing.T) {
@@ -104,9 +104,9 @@ func Test_ImportDataIntoFile(t *testing.T) {
 
 	// Crosschain module is in Modify list
 	crosschainStateAfterImport := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
-	require.Len(t, crosschainStateAfterImport.CrossChainTxs, 10)
-	require.Len(t, crosschainStateAfterImport.InTxHashToCctxList, 10)
-	require.Len(t, crosschainStateAfterImport.FinalizedInbounds, 10)
+	require.Len(t, crosschainStateAfterImport.CrossChainTxs, zetacored.Max_items_for_list)
+	require.Len(t, crosschainStateAfterImport.InTxHashToCctxList, zetacored.Max_items_for_list)
+	require.Len(t, crosschainStateAfterImport.FinalizedInbounds, zetacored.Max_items_for_list)
 
 	// Bank module is in Skip list
 	var bankStateAfterImport banktypes.GenesisState
