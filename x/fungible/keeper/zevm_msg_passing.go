@@ -6,34 +6,44 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	eth "github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+func (k Keeper) ZEVMDepositAndCallContract(ctx sdk.Context,
+	sender ethcommon.Address,
+	to ethcommon.Address,
+	inboundSenderChainID int64,
+	inboundAmount *big.Int,
+	data []byte,
+	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	acc := k.evmKeeper.GetAccount(ctx, to)
+	if acc == nil {
+		return nil, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", to.String()))
+	}
+	if !acc.IsContract() {
+		err := k.DepositCoinZeta(ctx, to, inboundAmount)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	return k.ZevmOnReceive(ctx, sender.Bytes(), to, big.NewInt(inboundSenderChainID), inboundAmount, data, indexBytes)
+
+}
 func (k Keeper) ZevmOnReceive(ctx sdk.Context,
 	zetaTxSender []byte,
-	zetaTxReceiver eth.Address,
+	zetaTxReceiver ethcommon.Address,
 	senderChainID *big.Int,
 	amount *big.Int,
 	data []byte,
-	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	acc := k.evmKeeper.GetAccount(ctx, zetaTxReceiver)
-	if acc == nil {
-		return nil, false, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", zetaTxReceiver.String()))
-	}
-	if !acc.IsContract() {
-		return nil, false, errors.Wrap(types.ErrCallNonContract, fmt.Sprintf("address is not a contract: %s", zetaTxReceiver.String()))
-	}
-	evmCallResponse, err := k.CallOnReceiveZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, amount, data, cctxIndexBytes)
-	if err != nil {
-		return nil, true, err
-	}
-	return evmCallResponse, true, nil
+	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	return k.CallOnReceiveZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, amount, data, cctxIndexBytes)
 }
 
 func (k Keeper) ZevmOnRevert(ctx sdk.Context,
-	zetaTxSender eth.Address,
+	zetaTxSender ethcommon.Address,
 	zetaTxReceiver []byte,
 	senderChainID *big.Int,
 	destinationChainID *big.Int,

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -368,4 +369,17 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 	require.NoError(t, err)
 	b = sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
 	require.Equal(t, amount.Int64(), b.Amount.Int64())
+}
+
+func Test_AddressConvertion(t *testing.T) {
+	addressCosmosString := sample.AccAddress()
+	addressCosmsosAccAddress := sdk.MustAccAddressFromBech32(addressCosmosString)
+	// Logic used in depositCoins function
+	addressEth := ethcommon.HexToAddress(addressCosmosString)
+	//https://github.com/zeta-chain/zeta-node/blob/zevm-message-passing/x/fungible/keeper/deposits.go#L17-L17
+	depositAddress := sdk.AccAddress(addressEth.Bytes())
+	depositAddressString := depositAddress.String()
+
+	require.Equal(t, addressCosmsosAccAddress, depositAddress)
+	require.Equal(t, addressCosmosString, depositAddressString)
 }

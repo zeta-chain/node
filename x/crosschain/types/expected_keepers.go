@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	eth "github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -162,22 +163,13 @@ type FungibleKeeper interface {
 	) (eth.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
-	ZevmOnReceive(ctx sdk.Context,
-		zetaTxSender []byte,
-		zetaTxReceiver eth.Address,
-		senderChainID *big.Int,
-		amount *big.Int,
+	ZEVMDepositAndCallContract(ctx sdk.Context,
+		sender ethcommon.Address,
+		to ethcommon.Address,
+		inboundSenderChainID int64,
+		inboundAmount *big.Int,
 		data []byte,
-		cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error)
-
-	ZevmOnRevert(ctx sdk.Context,
-		zetaTxSender eth.Address,
-		zetaTxReceiver []byte,
-		senderChainID *big.Int,
-		destinationChainID *big.Int,
-		amount *big.Int,
-		data []byte,
-		cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error)
+		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
 }
 
 type AuthorityKeeper interface {

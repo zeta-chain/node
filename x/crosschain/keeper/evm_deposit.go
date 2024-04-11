@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
-	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -39,22 +38,16 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 	}
 
 	if inboundCoinType == coin.CoinType_Zeta {
-		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, inboundAmount)
-		if err != nil {
-			// Return !isContractReverted, err. This will set the cctx status to Aborted.
-			return false, err
-		}
 		indexBytes, err := cctx.GetCCTXIndexBytes()
 		if err != nil {
-			// Return !isContractReverted, err. This will set the cctx status to Aborted.
 			return false, err
 		}
-		_, isContract, err := k.fungibleKeeper.ZevmOnReceive(ctx, sender.Bytes(), to, big.NewInt(inboundSenderChainID), inboundAmount, data, indexBytes)
-		// Use error message only for a contract call , if to address is not a contract we do not need handle the error
-		if isContract && err != nil {
-			// Return !isContractReverted, err. This will set the cctx status to Aborted.
-			return false, err
+		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
+		evmTxResponse, err := k.fungibleKeeper.ZEVMDepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
+			return true, err // contract reverted; should refund
+		} else if err != nil {
+			return false, err // internal error; should abort
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.

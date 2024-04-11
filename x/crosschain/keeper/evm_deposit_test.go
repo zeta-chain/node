@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -26,16 +27,19 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
+		sender := sample.EthAddress()
+		senderChainId := int64(0)
 
 		// expect DepositCoinZeta to be called
-		fungibleMock.On("DepositCoinZeta", ctx, receiver, amount).Return(nil)
+		fungibleMock.On("ZEVMDepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).Return(nil, nil)
 
 		// call HandleEVMDeposit
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
 		cctx.GetInboundTxParams().CoinType = coin.CoinType_Zeta
-		cctx.GetInboundTxParams().SenderChainId = 0
+		cctx.GetInboundTxParams().SenderChainId = senderChainId
+		cctx.InboundTxParams.Sender = sender.String()
 		reverted, err := k.HandleEVMDeposit(
 			ctx,
 			cctx,
@@ -52,19 +56,20 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
+		sender := sample.EthAddress()
+		senderChainId := int64(0)
 		amount := big.NewInt(42)
-
+		cctx := sample.CrossChainTx(t, "foo")
 		// expect DepositCoinZeta to be called
 		errDeposit := errors.New("deposit failed")
-		fungibleMock.On("DepositCoinZeta", ctx, receiver, amount).Return(errDeposit)
-
+		fungibleMock.On("ZEVMDepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).Return(nil, errDeposit)
 		// call HandleEVMDeposit
 
-		cctx := sample.CrossChainTx(t, "foo")
+		cctx.InboundTxParams.Sender = sender.String()
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
 		cctx.GetInboundTxParams().CoinType = coin.CoinType_Zeta
-		cctx.GetInboundTxParams().SenderChainId = 0
+		cctx.GetInboundTxParams().SenderChainId = senderChainId
 		reverted, err := k.HandleEVMDeposit(
 			ctx,
 			cctx,
