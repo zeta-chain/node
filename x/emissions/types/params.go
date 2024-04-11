@@ -90,7 +90,7 @@ func validateMaxBondFactor(i interface{}) error {
 	}
 	decMaxBond := sdk.MustNewDecFromStr(v)
 	if decMaxBond.GT(sdk.MustNewDecFromStr("1.25")) {
-		return fmt.Errorf("max bond factor cannot be higher that 0.25")
+		return fmt.Errorf("max bond factor cannot be higher that 1.25")
 	}
 	return nil
 }

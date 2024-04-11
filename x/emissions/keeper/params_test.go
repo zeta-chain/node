@@ -239,13 +239,3 @@ func TestKeeper_GetParams(t *testing.T) {
 		})
 	}
 }
-
-func assertPanic(t *testing.T, f func(), errorLog string) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			require.Contains(t, r, errorLog)
-		}
-	}()
-	f()
-}

@@ -26,24 +26,45 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 }
 
 func TestMigrate(t *testing.T) {
-	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+	t.Run("should migrate for valid params", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
-	legacyParams := types.Params{
-		MaxBondFactor:               "1",
-		MinBondFactor:               "0.75",
-		AvgBlockTime:                "5.00",
-		TargetBondRatio:             "00.50",
-		ValidatorEmissionPercentage: "00.50",
-		ObserverEmissionPercentage:  "00.35",
-		TssSignerEmissionPercentage: "00.15",
-		DurationFactorConstant:      "0.001877876953694702",
-		ObserverSlashAmount:         sdk.ZeroInt(),
-	}
-	legacySubspace := newMockSubspace(legacyParams)
+		legacyParams := types.Params{
+			MaxBondFactor:               "1",
+			MinBondFactor:               "0.75",
+			AvgBlockTime:                "5.00",
+			TargetBondRatio:             "00.50",
+			ValidatorEmissionPercentage: "00.50",
+			ObserverEmissionPercentage:  "00.35",
+			TssSignerEmissionPercentage: "00.15",
+			DurationFactorConstant:      "0.001877876953694702",
+			ObserverSlashAmount:         sdk.ZeroInt(),
+		}
+		legacySubspace := newMockSubspace(legacyParams)
 
-	require.NoError(t, v3.MigrateStore(ctx, k, legacySubspace))
+		require.NoError(t, v3.MigrateStore(ctx, k, legacySubspace))
 
-	params := k.GetParams(ctx)
-	legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
-	require.Equal(t, legacyParams, params)
+		params := k.GetParams(ctx)
+		legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
+		require.Equal(t, legacyParams, params)
+	})
+
+	t.Run("should fail to migrate for invalid params", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+
+		legacyParams := types.Params{
+			MaxBondFactor:               "1",
+			MinBondFactor:               "0.50",
+			AvgBlockTime:                "5.00",
+			TargetBondRatio:             "00.50",
+			ValidatorEmissionPercentage: "00.50",
+			ObserverEmissionPercentage:  "00.35",
+			TssSignerEmissionPercentage: "00.15",
+			DurationFactorConstant:      "0.001877876953694702",
+			ObserverSlashAmount:         sdk.ZeroInt(),
+		}
+		legacySubspace := newMockSubspace(legacyParams)
+
+		require.Error(t, v3.MigrateStore(ctx, k, legacySubspace))
+	})
 }

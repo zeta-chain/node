@@ -25,7 +25,8 @@ func MigrateStore(
 	legacySubspace.GetParamSet(ctx, &currParams)
 
 	currParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
-	if err := currParams.Validate(); err != nil {
+	err := currParams.Validate()
+	if err != nil {
 		return err
 	}
 

@@ -85,6 +85,62 @@ func TestValidateTssEmissionPercentage(t *testing.T) {
 	require.Error(t, validateTssEmissionPercentage("1.01"))  // More than 100 percent should fail
 }
 
+func TestValidateObserverSlashAmount(t *testing.T) {
+	require.Error(t, validateObserverSlashAmount(10))
+	require.Error(t, validateObserverSlashAmount("10"))
+	require.Error(t, validateObserverSlashAmount(sdkmath.NewInt(-10))) // Less than 0
+	require.NoError(t, validateObserverSlashAmount(sdkmath.NewInt(10)))
+}
+
+func TestValidate(t *testing.T) {
+	t.Run("should validate", func(t *testing.T) {
+		params := NewParams()
+		require.NoError(t, params.Validate())
+	})
+
+	t.Run("should error for invalid max bond factor", func(t *testing.T) {
+		params := NewParams()
+		params.MaxBondFactor = "1.30"
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid avg block time", func(t *testing.T) {
+		params := NewParams()
+		params.AvgBlockTime = "-1.30"
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid target bond ratio", func(t *testing.T) {
+		params := NewParams()
+		params.TargetBondRatio = "-1.30"
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid validator emissions percentage", func(t *testing.T) {
+		params := NewParams()
+		params.ValidatorEmissionPercentage = "-1.30"
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid observer emissions percentage", func(t *testing.T) {
+		params := NewParams()
+		params.ObserverEmissionPercentage = "-1.30"
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid tss emissions percentage", func(t *testing.T) {
+		params := NewParams()
+		params.TssSignerEmissionPercentage = "-1.30"
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid observer slash amount", func(t *testing.T) {
+		params := NewParams()
+		params.ObserverSlashAmount = sdkmath.NewInt(-10)
+		require.Error(t, params.Validate())
+	})
+}
+
 func TestParamsString(t *testing.T) {
 	params := DefaultParams()
 	out, err := yaml.Marshal(params)
