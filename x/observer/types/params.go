@@ -48,13 +48,11 @@ func DefaultAdminPolicy() []*Admin_Policy {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
-	if err := validateAdminPolicy(p.AdminPolicy); err != nil {
+	err := validateAdminPolicy(p.AdminPolicy)
+	if err != nil {
 		return err
 	}
-	if err := validateBallotMaturityBlocks(p.BallotMaturityBlocks); err != nil {
-		return err
-	}
-	return nil
+	return validateBallotMaturityBlocks(p.BallotMaturityBlocks)
 }
 
 // String implements the Stringer interface.
