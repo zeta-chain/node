@@ -143,6 +143,9 @@ func (m CrossChainTx) SetReverted(message string) {
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
 	sendHash := [32]byte{}
+	if len(m.Index) < 2 {
+		return [32]byte{}, fmt.Errorf("decode CCTX %s index too short", m.Index)
+	}
 	decodedIndex, err := hex.DecodeString(m.Index[2:]) // remove the leading 0x
 	if err != nil || len(decodedIndex) != 32 {
 		return [32]byte{}, fmt.Errorf("decode CCTX %s error", m.Index)

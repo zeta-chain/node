@@ -42,6 +42,28 @@ func (k Keeper) ZevmOnReceive(ctx sdk.Context,
 	return k.CallOnReceiveZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, amount, data, cctxIndexBytes)
 }
 
+func (k Keeper) ZEVMRevertAndCallContract(ctx sdk.Context,
+	sender ethcommon.Address,
+	to ethcommon.Address,
+	inboundSenderChainID int64,
+	destinationChainID int64,
+	remainingAmount *big.Int,
+	data []byte,
+	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	acc := k.evmKeeper.GetAccount(ctx, sender)
+	if acc == nil {
+		return nil, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", to.String()))
+	}
+	if !acc.IsContract() {
+		err := k.DepositCoinZeta(ctx, sender, remainingAmount)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	return k.ZevmOnRevert(ctx, sender, to.Bytes(), big.NewInt(inboundSenderChainID), big.NewInt(destinationChainID), remainingAmount, data, indexBytes)
+
+}
 func (k Keeper) ZevmOnRevert(ctx sdk.Context,
 	zetaTxSender ethcommon.Address,
 	zetaTxReceiver []byte,
@@ -49,19 +71,6 @@ func (k Keeper) ZevmOnRevert(ctx sdk.Context,
 	destinationChainID *big.Int,
 	amount *big.Int,
 	data []byte,
-	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	acc := k.evmKeeper.GetAccount(ctx, zetaTxSender)
-	if acc == nil {
-		return nil, false, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", zetaTxSender.String()))
-
-	}
-	if !acc.IsContract() {
-		return nil, false, errors.Wrap(types.ErrCallNonContract, fmt.Sprintf("to address is not a contract: %s", zetaTxSender.String()))
-	}
-
-	evmCallResponse, err := k.CallOnRevertZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, destinationChainID, amount, data, cctxIndexBytes)
-	if err != nil {
-		return nil, true, err
-	}
-	return evmCallResponse, true, nil
+	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	return k.CallOnRevertZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, destinationChainID, amount, data, cctxIndexBytes)
 }

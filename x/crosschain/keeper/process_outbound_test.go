@@ -4,10 +4,12 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/testutil/contracts"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -42,14 +44,86 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 
-	t.Run("successfully process failed outbound set to aborted for withdraw tx", func(t *testing.T) {
+	t.Run("successfully process failed outbound if original sender is a address", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
+		receiver := sample.EthAddress()
+		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
+
+		err := sdkk.EvmKeeper.SetAccount(ctx, receiver, *statedb.NewEmptyAccount())
+		require.NoError(t, err)
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		err = k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
+		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+	})
+	t.Run("unable to  process failed outbound if GetCCTXIndexBytes fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		receiver := sample.EthAddress()
+		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
+		cctx.Index = ""
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.ErrorContains(t, err, "failed reverting GetCCTXIndexBytes")
+	})
+
+	t.Run("unable to  process failed outbound if Adding Revert fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.ErrorContains(t, err, "failed AddRevertOutbound")
+	})
+
+	t.Run("unable to  process failed outbound if ZEVMRevertAndCallContract fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		receiver := sample.EthAddress()
+		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.ErrorContains(t, err, "failed ZEVMRevertAndCallContract")
+	})
+
+	t.Run("successfully revert failed outbound if original sender is a contract", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		// TODO check why dapp values are not set if message is empty
+		cctx.RelayedMessage = "message"
+
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		dAppContract, err := zk.FungibleKeeper.DeployContract(ctx, contracts.DappMetaData)
 		require.NoError(t, err)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+		cctx.InboundTxParams.Sender = dAppContract.String()
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+
+		err = k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+
+		dappAbi, err := contracts.DappMetaData.GetAbi()
+		require.NoError(t, err)
+		res, err := zk.FungibleKeeper.CallEVM(
+			ctx,
+			*dappAbi,
+			fungibletypes.ModuleAddressEVM,
+			dAppContract,
+			big.NewInt(0),
+			nil,
+			false,
+			false,
+			"zetaTxSenderAddress",
+		)
+		require.NoError(t, err)
+		unpacked, err := dappAbi.Unpack("zetaTxSenderAddress", res.Ret)
+		require.NoError(t, err)
+		require.NotZero(t, len(unpacked))
+		valSenderAddress, ok := unpacked[0].([]byte)
+		require.True(t, ok)
+		require.Equal(t, dAppContract.Bytes(), valSenderAddress)
 	})
 
 	t.Run("successfully process failed outbound set to pending revert", func(t *testing.T) {

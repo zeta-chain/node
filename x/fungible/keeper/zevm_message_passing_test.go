@@ -189,8 +189,8 @@ func TestKeeper_ZevmOnReceive(t *testing.T) {
 	})
 }
 
-func TestKeeper_ZevmOnRevert(t *testing.T) {
-	t.Run("successfully call ZevmOnRevert on connector contract ", func(t *testing.T) {
+func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
+	t.Run("successfully call ZEVMRevertAndCallContract if receiver is a contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -202,14 +202,13 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 		zetaTxSender := dAppContract
 		senderChainID := big.NewInt(1)
 		destinationChainID := big.NewInt(2)
-		zetaTxReceiver := sample.EthAddress().Bytes()
+		zetaTxReceiver := sample.EthAddress()
 		amount := big.NewInt(45)
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, isContract, err := k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
+		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
 		require.NoError(t, err)
-		require.True(t, isContract)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
 		require.NoError(t, err)
@@ -233,28 +232,139 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 		require.Equal(t, zetaTxSender.Bytes(), valSenderAddress)
 	})
 
-	t.Run("fail to call ZevmOnRevert if account is not a contract", func(t *testing.T) {
+	t.Run("successfully deposit coin if account is not a contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-
 		zetaTxSender := sample.EthAddress()
+		zetaTxReceiver := sample.EthAddress()
+		senderChainID := big.NewInt(1)
+		destinationChainID := big.NewInt(2)
+		amount := big.NewInt(45)
+		data := []byte("message")
+		cctxIndexBytes := [32]byte{}
+
 		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxSender, statedb.Account{
 			Nonce:    0,
-			Balance:  big.NewInt(100),
+			Balance:  big.NewInt(0),
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
 
-		_, isContract, err := k.ZevmOnRevert(ctx, zetaTxSender, sample.EthAddress().Bytes(),
-			big.NewInt(1),
-			big.NewInt(2),
-			big.NewInt(45),
-			[]byte("message"),
-			[32]byte{})
-		require.ErrorIs(t, err, types.ErrCallNonContract)
-		require.False(t, isContract)
+		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		require.NoError(t, err)
+		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxSender.Bytes()), config.BaseDenom)
+		require.Equal(t, amount.Int64(), b.Amount.Int64())
+	})
+
+	t.Run("fail ZEVMRevertAndCallContract if account not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		zetaTxSender := sample.EthAddress()
+		zetaTxReceiver := sample.EthAddress()
+		senderChainID := big.NewInt(1)
+		destinationChainID := big.NewInt(2)
+		amount := big.NewInt(45)
+		data := []byte("message")
+		cctxIndexBytes := [32]byte{}
+
+		_, err := k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		require.ErrorIs(t, err, types.ErrAccountNotFound)
+		require.ErrorContains(t, err, "account not found")
+	})
+
+	t.Run("fail ZEVMRevertAndCallContract if Deposit Fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zetaTxSender := sample.EthAddress()
+		zetaTxReceiver := sample.EthAddress()
+		senderChainID := big.NewInt(1)
+		destinationChainID := big.NewInt(2)
+		amount := big.NewInt(45)
+		data := []byte("message")
+		cctxIndexBytes := [32]byte{}
+
+		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxSender, statedb.Account{
+			Nonce:    0,
+			Balance:  big.NewInt(0),
+			CodeHash: crypto.Keccak256(nil),
+		})
+		require.NoError(t, err)
+		errorMint := errors.New("", 10, "error minting coins")
+		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
+
+		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		require.ErrorIs(t, err, errorMint)
+	})
+
+	t.Run("fail ZEVMRevertAndCallContract if ZevmOnRevert fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
+		zetaTxSender := dAppContract
+		zetaTxReceiver := sample.EthAddress()
+		senderChainID := big.NewInt(1)
+		destinationChainID := big.NewInt(2)
+		amount := big.NewInt(45)
+		data := []byte("message")
+		cctxIndexBytes := [32]byte{}
+
+		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		require.ErrorIs(t, err, types.ErrContractNotFound)
+		require.ErrorContains(t, err, "GetSystemContract address not found")
+	})
+}
+
+func TestKeeper_ZevmOnRevert(t *testing.T) {
+	t.Run("successfully call ZevmOnRevert on connector contract ", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
+
+		zetaTxSender := dAppContract
+		senderChainID := big.NewInt(1)
+		destinationChainID := big.NewInt(2)
+		zetaTxReceiver := sample.EthAddress().Bytes()
+		amount := big.NewInt(45)
+		data := []byte("message")
+		cctxIndexBytes := [32]byte{}
+
+		_, err = k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
+		require.NoError(t, err)
+
+		dappAbi, err := contracts.DappMetaData.GetAbi()
+		require.NoError(t, err)
+		res, err := k.CallEVM(
+			ctx,
+			*dappAbi,
+			types.ModuleAddressEVM,
+			dAppContract,
+			big.NewInt(0),
+			nil,
+			false,
+			false,
+			"zetaTxSenderAddress",
+		)
+		require.NoError(t, err)
+		unpacked, err := dappAbi.Unpack("zetaTxSenderAddress", res.Ret)
+		require.NoError(t, err)
+		require.NotZero(t, len(unpacked))
+		valSenderAddress, ok := unpacked[0].([]byte)
+		require.True(t, ok)
+		require.Equal(t, zetaTxSender.Bytes(), valSenderAddress)
 	})
 
 	t.Run("fail to call ZevmOnRevert if CallOnRevertZevmConnector fails", func(t *testing.T) {
@@ -273,27 +383,8 @@ func TestKeeper_ZevmOnRevert(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, isContract, err := k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
+		_, err = k.ZevmOnRevert(ctx, zetaTxSender, zetaTxReceiver, senderChainID, destinationChainID, amount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 		require.ErrorContains(t, err, "GetSystemContract address not found")
-		require.True(t, isContract)
 	})
-
-	t.Run("fail to call ZevmOnRevert if account not found for sender address", func(t *testing.T) {
-		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-
-		_, isContract, err := k.ZevmOnRevert(ctx, sample.EthAddress(),
-			sample.EthAddress().Bytes(),
-			big.NewInt(1),
-			big.NewInt(2),
-			big.NewInt(45),
-			[]byte("message"),
-			[32]byte{})
-		require.ErrorIs(t, err, types.ErrAccountNotFound)
-		require.False(t, isContract)
-	})
-
 }

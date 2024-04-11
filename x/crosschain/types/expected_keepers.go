@@ -170,6 +170,14 @@ type FungibleKeeper interface {
 		inboundAmount *big.Int,
 		data []byte,
 		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
+	ZEVMRevertAndCallContract(ctx sdk.Context,
+		sender ethcommon.Address,
+		to ethcommon.Address,
+		inboundSenderChainID int64,
+		destinationChainID int64,
+		remainingAmount *big.Int,
+		data []byte,
+		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
 }
 
 type AuthorityKeeper interface {
