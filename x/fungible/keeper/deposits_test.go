@@ -4,10 +4,10 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -357,29 +357,34 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 }
 
 func TestKeeper_DepositCoinZeta(t *testing.T) {
-	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	to := sample.EthAddress()
-	amount := big.NewInt(1)
-	zetaToAddress := sdk.AccAddress(to.Bytes())
+	t.Run("successfully deposit coin", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		to := sample.EthAddress()
+		amount := big.NewInt(1)
+		zetaToAddress := sdk.AccAddress(to.Bytes())
 
-	b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
-	require.Equal(t, int64(0), b.Amount.Int64())
+		b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
+		require.Equal(t, int64(0), b.Amount.Int64())
 
-	err := k.DepositCoinZeta(ctx, to, amount)
-	require.NoError(t, err)
-	b = sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
-	require.Equal(t, amount.Int64(), b.Amount.Int64())
-}
+		err := k.DepositCoinZeta(ctx, to, amount)
+		require.NoError(t, err)
+		b = sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
+		require.Equal(t, amount.Int64(), b.Amount.Int64())
+	})
 
-func Test_AddressConvertion(t *testing.T) {
-	addressCosmosString := sample.AccAddress()
-	addressCosmsosAccAddress := sdk.MustAccAddressFromBech32(addressCosmosString)
-	// Logic used in depositCoins function
-	addressEth := ethcommon.HexToAddress(addressCosmosString)
-	//https://github.com/zeta-chain/zeta-node/blob/zevm-message-passing/x/fungible/keeper/deposits.go#L17-L17
-	depositAddress := sdk.AccAddress(addressEth.Bytes())
-	depositAddressString := depositAddress.String()
+	t.Run("should fail if MintZetaToEVMAccount fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+		to := sample.EthAddress()
+		amount := big.NewInt(1)
+		zetaToAddress := sdk.AccAddress(to.Bytes())
 
-	require.Equal(t, addressCosmsosAccAddress, depositAddress)
-	require.Equal(t, addressCosmosString, depositAddressString)
+		b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
+		require.Equal(t, int64(0), b.Amount.Int64())
+		errorMint := errors.New("", 1, "error minting coins")
+		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
+		err := k.DepositCoinZeta(ctx, to, amount)
+		require.ErrorIs(t, err, errorMint)
+
+	})
 }

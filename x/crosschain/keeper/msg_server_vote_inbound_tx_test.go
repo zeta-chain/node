@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -10,6 +11,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -45,7 +48,7 @@ func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest
 // https://github.com/zeta-chain/node/issues/1542
 func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 	t.Run("successfully vote on evm deposit", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
 		to, from := int64(1337), int64(101)
@@ -61,6 +64,13 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		msg := sample.InboundVote(0, from, to)
+
+		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(msg.Receiver), statedb.Account{
+			Nonce:    0,
+			Balance:  big.NewInt(0),
+			CodeHash: crypto.Keccak256(nil),
+		})
+		require.NoError(t, err)
 		for _, validatorAddr := range validatorList {
 			msg.Creator = validatorAddr
 			_, err := msgServer.VoteOnObservedInboundTx(
@@ -78,7 +88,8 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
 		require.True(t, found)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
+		fmt.Println(cctx.CctxStatus.StatusMessage)
+		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 

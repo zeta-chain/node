@@ -4,9 +4,11 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/x/evm/statedb"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
@@ -96,6 +98,32 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		_, err := k.ZEVMDepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrAccountNotFound)
 		require.ErrorContains(t, err, "account not found")
+	})
+
+	t.Run("fail ZEVMDepositAndCallContract id Deposit Fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zetaTxSender := sample.EthAddress()
+		zetaTxReceiver := sample.EthAddress()
+		inboundSenderChainID := int64(1)
+		inboundAmount := big.NewInt(45)
+		data := []byte("message")
+		cctxIndexBytes := [32]byte{}
+
+		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxReceiver, statedb.Account{
+			Nonce:    0,
+			Balance:  big.NewInt(0),
+			CodeHash: crypto.Keccak256(nil),
+		})
+		require.NoError(t, err)
+		errorMint := errors.New("", 10, "error minting coins")
+		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
+
+		_, err = k.ZEVMDepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		require.ErrorIs(t, err, errorMint)
 	})
 }
 func TestKeeper_ZevmOnReceive(t *testing.T) {
