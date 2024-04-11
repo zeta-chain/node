@@ -1,6 +1,6 @@
 # parse-genesis-file
 
-Parse the genesis file
+Parse the provided genesis file and import the required data into the optionally provided genesis file
 
 ```
 zetacored parse-genesis-file [import-genesis-file] [optional-genesis-file] [flags]
