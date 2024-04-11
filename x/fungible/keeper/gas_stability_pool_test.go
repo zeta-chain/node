@@ -34,6 +34,23 @@ func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 }
 
 func TestKeeper_FundGasStabilityPool(t *testing.T) {
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		balance, err := k.GetGasStabilityPoolBalance(ctx, chainID)
+		require.Error(t, err)
+		require.Nil(t, balance)
+
+		err = k.FundGasStabilityPool(ctx, chainID, big.NewInt(100))
+		require.Error(t, err)
+
+		err = k.WithdrawFromGasStabilityPool(ctx, chainID, big.NewInt(50))
+		require.Error(t, err)
+	})
+
 	t.Run("can fund the gas stability pool and withdraw", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)

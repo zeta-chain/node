@@ -10,15 +10,22 @@ import (
 )
 
 func TestValidateAddressForChain(t *testing.T) {
+	// test for eth chain
 	require.Error(t, types.ValidateAddressForChain("0x123", chains.GoerliChain().ChainId))
 	require.Error(t, types.ValidateAddressForChain("", chains.GoerliChain().ChainId))
 	require.Error(t, types.ValidateAddressForChain("%%%%", chains.GoerliChain().ChainId))
 	require.NoError(t, types.ValidateAddressForChain("0x792c127Fa3AC1D52F904056Baf1D9257391e7D78", chains.GoerliChain().ChainId))
-	require.Error(t, types.ValidateAddressForChain("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", chains.BtcMainnetChain().ChainId))
+
+	// test for btc chain
+	require.NoError(t, types.ValidateAddressForChain("bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9", chains.BtcMainnetChain().ChainId))
+	require.NoError(t, types.ValidateAddressForChain("327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE", chains.BtcMainnetChain().ChainId))
+	require.NoError(t, types.ValidateAddressForChain("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", chains.BtcMainnetChain().ChainId))
 	require.Error(t, types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", chains.BtcMainnetChain().ChainId))
 	require.Error(t, types.ValidateAddressForChain("", chains.BtcRegtestChain().ChainId))
 	require.NoError(t, types.ValidateAddressForChain("bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", chains.BtcMainnetChain().ChainId))
 	require.NoError(t, types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", chains.BtcRegtestChain().ChainId))
+
+	// test for zeta chain
 	require.NoError(t, types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", chains.ZetaChainMainnet().ChainId))
 	require.NoError(t, types.ValidateAddressForChain("0x792c127Fa3AC1D52F904056Baf1D9257391e7D78", chains.ZetaChainMainnet().ChainId))
 }

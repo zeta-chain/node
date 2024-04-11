@@ -20,6 +20,7 @@ enum BallotStatus {
   BallotInProgress = 2;
 }
 
+// https://github.com/zeta-chain/node/issues/939
 message Ballot {
   string index = 1;
   string ballot_identifier = 2;

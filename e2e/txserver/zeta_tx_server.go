@@ -128,6 +128,20 @@ func (zts ZetaTxServer) GetAccountAddress(index int) string {
 	return zts.address[index]
 }
 
+// GetAccountAddressFromName returns the account address from the given name
+func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
+	acc, err := zts.clientCtx.Keyring.Key(name)
+	if err != nil {
+		return "", err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return "", err
+	}
+	return addr.String(), nil
+}
+
+// GetAllAccountAddress returns all account addresses
 func (zts ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
 
@@ -197,7 +211,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 		return "", "", "", "", "", fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
 
-	systemContractAddress, err := fetchAttribute(res, "system_contract")
+	systemContractAddress, err := FetchAttributeFromTxResponse(res, "system_contract")
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to fetch system contract address: %s; rawlog %s", err.Error(), res.RawLog)
 	}
@@ -209,23 +223,23 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	}
 
 	// get uniswap contract addresses
-	uniswapV2FactoryAddr, err := fetchAttribute(res, "uniswap_v2_factory")
+	uniswapV2FactoryAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_factory")
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
 	}
-	uniswapV2RouterAddr, err := fetchAttribute(res, "uniswap_v2_router")
+	uniswapV2RouterAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_router")
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
 	}
 
 	// get zevm connector address
-	zevmConnectorAddr, err := fetchAttribute(res, "connector_zevm")
+	zevmConnectorAddr, err := FetchAttributeFromTxResponse(res, "connector_zevm")
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to fetch zevm connector address: %s, txResponse: %s", err.Error(), res.String())
 	}
 
 	// get wzeta address
-	wzetaAddr, err := fetchAttribute(res, "wzeta")
+	wzetaAddr, err := FetchAttributeFromTxResponse(res, "wzeta")
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to fetch wzeta address: %s, txResponse: %s", err.Error(), res.String())
 	}
@@ -276,7 +290,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	}
 
 	// fetch the erc20 zrc20 contract address and remove the quotes
-	erc20zrc20Addr, err := fetchAttribute(res, "Contract")
+	erc20zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s", err.Error())
 	}
@@ -395,8 +409,8 @@ type attribute struct {
 	Value string `json:"value"`
 }
 
-// fetchAttribute fetches the attribute from the tx response
-func fetchAttribute(res *sdktypes.TxResponse, key string) (string, error) {
+// FetchAttributeFromTxResponse fetches the attribute from the tx response
+func FetchAttributeFromTxResponse(res *sdktypes.TxResponse, key string) (string, error) {
 	var logs []messageLog
 	err := json.Unmarshal([]byte(res.RawLog), &logs)
 	if err != nil {

@@ -54,7 +54,7 @@ func (k Keeper) DeployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArg
 	}
 
 	if len(metadata.Bin) <= 2 {
-		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "metadata Bin field too short: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "metadata Bin field too short")
 	}
 
 	bin, err := hex.DecodeString(metadata.Bin[2:])
@@ -97,10 +97,6 @@ func (k Keeper) DeployZRC20Contract(
 	chain := chains.GetChainFromChainID(chainID)
 	if chain == nil {
 		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
-	}
-	chainStr := chain.ChainName.String()
-	if chain == nil {
-		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
 	}
 	// Check if Contract has already been deployed for Asset
 	_, found := k.GetForeignCoinFromAsset(ctx, erc20Contract, chainID)
@@ -307,43 +303,6 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		targetContract,
 		message,
 	)
-}
-
-// QueryWithdrawGasFee returns the gas fee for a withdrawal transaction associated with a given zrc20
-func (k Keeper) QueryWithdrawGasFee(ctx sdk.Context, contract common.Address) (*big.Int, error) {
-	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-	res, err := k.CallEVM(
-		ctx,
-		*zrc20ABI,
-		types.ModuleAddressEVM,
-		contract,
-		BigIntZero,
-		nil,
-		false,
-		false,
-		"withdrawGasFee",
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	unpacked, err := zrc20ABI.Unpack("withdrawGasFee", res.Ret)
-	if err != nil {
-		return nil, err
-	}
-	if len(unpacked) < 2 {
-		return nil, fmt.Errorf("expect 2 returned values, got %d", len(unpacked))
-	}
-
-	GasFee, ok := unpacked[1].(*big.Int)
-	if !ok {
-		return nil, errors.New("can't read returned value as big.Int")
-	}
-
-	return GasFee, nil
 }
 
 // QueryProtocolFlatFee returns the protocol flat fee associated with a given zrc20

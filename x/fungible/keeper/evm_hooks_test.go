@@ -123,7 +123,8 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 			assertPaused(addrPausedZRC20.Hex())
 
 			// process test
-			err := k.CheckPausedZRC20(ctx, tc.receipt)
+			h := k.EVMHooks()
+			err := h.PostTxProcessing(ctx, nil, tc.receipt)
 			if tc.wantErr {
 				require.ErrorIs(t, err, types.ErrPausedZRC20)
 			} else {

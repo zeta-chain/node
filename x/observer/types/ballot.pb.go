@@ -81,6 +81,7 @@ func (BallotStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_9eac86b249c97b5b, []int{1}
 }
 
+// https://github.com/zeta-chain/node/issues/939
 type Ballot struct {
 	Index                string                                 `protobuf:"bytes,1,opt,name=index,proto3" json:"index,omitempty"`
 	BallotIdentifier     string                                 `protobuf:"bytes,2,opt,name=ballot_identifier,json=ballotIdentifier,proto3" json:"ballot_identifier,omitempty"`

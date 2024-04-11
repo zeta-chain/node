@@ -11,7 +11,6 @@ import (
 )
 
 func TestKeeper_AddZetaAccounting(t *testing.T) {
-
 	t.Run("should add aborted zeta amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		originalAmount := sdkmath.NewUint(rand.Uint64())
@@ -24,6 +23,18 @@ func TestKeeper_AddZetaAccounting(t *testing.T) {
 		addAmount := sdkmath.NewUint(rand.Uint64())
 		k.AddZetaAbortedAmount(ctx, addAmount)
 		val, found = k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
+	})
+
+	t.Run("should add aborted zeta amount if accounting not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		originalAmount := sdkmath.NewUint(0)
+		_, found := k.GetZetaAccounting(ctx)
+		require.False(t, found)
+		addAmount := sdkmath.NewUint(rand.Uint64())
+		k.AddZetaAbortedAmount(ctx, addAmount)
+		val, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
 		require.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
 	})

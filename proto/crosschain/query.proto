@@ -8,7 +8,6 @@ import "crosschain/in_tx_hash_to_cctx.proto";
 import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
-import "crosschain/params.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -16,11 +15,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Parameters queries the parameters of the module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/params";
-  }
-
   // Queries a OutTxTracker by index.
   rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}";
@@ -118,15 +112,6 @@ message QueryZetaAccountingRequest {}
 
 message QueryZetaAccountingResponse {
   string aborted_zeta_amount = 1;
-}
-
-// QueryParamsRequest is request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  // params holds all the parameters of this module.
-  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetOutTxTrackerRequest {

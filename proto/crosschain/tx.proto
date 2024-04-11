@@ -20,20 +20,10 @@ service Msg {
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
-  rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
 
   rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
   rpc RefundAbortedCCTX(MsgRefundAbortedCCTX) returns (MsgRefundAbortedCCTXResponse);
 }
-
-message MsgCreateTSSVoter {
-  string creator = 1;
-  string tss_pubkey = 2;
-  int64 keyGenZetaHeight = 3;
-  chains.ReceiveStatus status = 4;
-}
-
-message MsgCreateTSSVoterResponse {}
 
 message MsgMigrateTssFunds {
   string creator = 1;
@@ -43,6 +33,7 @@ message MsgMigrateTssFunds {
     (gogoproto.nullable) = false
   ];
 }
+
 message MsgMigrateTssFundsResponse {}
 
 message MsgUpdateTssAddress {

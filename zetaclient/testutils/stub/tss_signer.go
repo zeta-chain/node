@@ -26,23 +26,25 @@ func init() {
 
 // TSS is a mock of TSS signer for testing
 type TSS struct {
+	chain      chains.Chain
 	evmAddress string
 	btcAddress string
 }
 
-func NewMockTSS(evmAddress string, btcAddress string) *TSS {
+func NewMockTSS(chain chains.Chain, evmAddress string, btcAddress string) *TSS {
 	return &TSS{
+		chain:      chain,
 		evmAddress: evmAddress,
 		btcAddress: btcAddress,
 	}
 }
 
 func NewTSSMainnet() *TSS {
-	return NewMockTSS(testutils.TSSAddressEVMMainnet, testutils.TSSAddressBTCMainnet)
+	return NewMockTSS(chains.BtcMainnetChain(), testutils.TSSAddressEVMMainnet, testutils.TSSAddressBTCMainnet)
 }
 
 func NewTSSAthens3() *TSS {
-	return NewMockTSS(testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
+	return NewMockTSS(chains.BscTestnetChain(), testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
 }
 
 // Sign uses test key unrelated to any tss key in production
@@ -76,7 +78,16 @@ func (s *TSS) BTCAddress() string {
 }
 
 func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
-	return nil
+	net, err := chains.GetBTCChainParams(s.chain.ChainId)
+	if err != nil {
+		panic(err)
+	}
+	tssAddress := s.BTCAddress()
+	addr, err := btcutil.DecodeAddress(tssAddress, net)
+	if err != nil {
+		return nil
+	}
+	return addr.(*btcutil.AddressWitnessPubKeyHash)
 }
 
 func (s *TSS) PubKeyCompressedBytes() []byte {
