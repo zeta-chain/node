@@ -24,17 +24,6 @@ func TestNewParams(t *testing.T) {
 	require.Equal(t, sdkmath.NewInt(100000000000000000), params.ObserverSlashAmount, "ObserverSlashAmount should be set to 100000000000000000")
 }
 
-func TestParamKeyTable(t *testing.T) {
-	kt := ParamKeyTable()
-
-	ps := Params{}
-	for _, psp := range ps.ParamSetPairs() {
-		require.PanicsWithValue(t, "duplicate parameter key", func() {
-			kt.RegisterType(psp)
-		})
-	}
-}
-
 func TestDefaultParams(t *testing.T) {
 	params := DefaultParams()
 

@@ -31,6 +31,33 @@ func DefaultParams() Params {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	if err := validateMaxBondFactor(p.MaxBondFactor); err != nil {
+		return err
+	}
+	if err := validateMinBondFactor(p.MinBondFactor); err != nil {
+		return err
+	}
+	if err := validateAvgBlockTime(p.AvgBlockTime); err != nil {
+		return err
+	}
+	if err := validateTargetBondRatio(p.TargetBondRatio); err != nil {
+		return err
+	}
+	if err := validateValidatorEmissionPercentage(p.ValidatorEmissionPercentage); err != nil {
+		return err
+	}
+	if err := validateObserverEmissionPercentage(p.ObserverEmissionPercentage); err != nil {
+		return err
+	}
+	if err := validateTssEmissionPercentage(p.TssSignerEmissionPercentage); err != nil {
+		return err
+	}
+	if err := validateDurationFactorConstant(p.DurationFactorConstant); err != nil {
+		return err
+	}
+	if err := validateObserverSlashAmount(p.ObserverSlashAmount); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -146,6 +173,17 @@ func validateTssEmissionPercentage(i interface{}) error {
 	}
 	if dec.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("tss emission percentage cannot be less than 0 percent")
+	}
+	return nil
+}
+
+func validateObserverSlashAmount(i interface{}) error {
+	v, ok := i.(sdkmath.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.LT(sdk.ZeroInt()) {
+		return fmt.Errorf("slash amount cannot be less than 0")
 	}
 	return nil
 }

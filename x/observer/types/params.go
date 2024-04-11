@@ -48,6 +48,12 @@ func DefaultAdminPolicy() []*Admin_Policy {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	if err := validateAdminPolicy(p.AdminPolicy); err != nil {
+		return err
+	}
+	if err := validateBallotMaturityBlocks(p.BallotMaturityBlocks); err != nil {
+		return err
+	}
 	return nil
 }
 
