@@ -66,7 +66,7 @@ var Modify = map[string]bool{
 func CmdParseGenesisFile() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parse-genesis-file [import-genesis-file] [optional-genesis-file]",
-		Short: "Parse the genesis file",
+		Short: "Parse the provided genesis file and import the required data into the optionally provided genesis file",
 		Args:  cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

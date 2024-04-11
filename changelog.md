@@ -32,6 +32,7 @@
 * [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
+* [1979](https://github.com/zeta-chain/node/pull/1979) - add script to import genesis data into an existing genesis file
 
 ### Tests
 
