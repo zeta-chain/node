@@ -25,6 +25,7 @@ service Msg {
   rpc AddBlockHeader(MsgAddBlockHeader) returns (MsgAddBlockHeaderResponse);
   rpc ResetChainNonces(MsgResetChainNonces) returns (MsgResetChainNoncesResponse);
   rpc VoteTSS(MsgVoteTSS) returns (MsgVoteTSSResponse);
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 message MsgUpdateObserver {
@@ -113,3 +114,10 @@ message MsgVoteTSSResponse {
   bool vote_finalized = 2;
   bool keygen_success = 3;
 }
+
+message MsgUpdateParams {
+  string authority = 1;
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateParamsResponse {}

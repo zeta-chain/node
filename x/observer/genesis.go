@@ -1,6 +1,8 @@
 package observer
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -47,7 +49,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Params != nil {
 		params = *genState.Params
 	}
-	k.SetParams(ctx, params)
+	if err := k.SetParams(ctx, params); err != nil {
+		panic(fmt.Sprintf("invalid observer module params: %v\n", params))
+	}
 
 	// Set if defined
 
@@ -141,7 +145,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the observer module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	params := k.GetParamsIfExists(ctx)
+	params := k.GetParams(ctx)
 
 	chainParams, found := k.GetChainParamsList(ctx)
 	if !found {

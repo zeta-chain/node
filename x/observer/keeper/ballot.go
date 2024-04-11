@@ -63,7 +63,7 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 
 // GetMaturedBallotList Returns a list of ballots which are matured at current height
 func (k Keeper) GetMaturedBallotList(ctx sdk.Context) []string {
-	maturityBlocks := k.GetParamsIfExists(ctx).BallotMaturityBlocks
+	maturityBlocks := k.GetParams(ctx).BallotMaturityBlocks
 	list, found := k.GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)
 	if !found {
 		return []string{}

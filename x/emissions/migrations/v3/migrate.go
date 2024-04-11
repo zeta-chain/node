@@ -7,15 +7,15 @@ import (
 )
 
 type EmissionsKeeper interface {
-	GetParamsIfExists(ctx sdk.Context) types.Params
+	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params) error
 }
 
-// Migrate migrates the x/emissions module state from the consensus version 1 to
-// version 2. Specifically, it takes the parameters that are currently stored
+// Migrate migrates the x/emissions module state from the consensus version 2 to
+// version 3. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/emissions
 // module state.
-func Migrate(
+func MigrateStore(
 	ctx sdk.Context,
 	emissionsKeeper EmissionsKeeper,
 	legacySubspace exported.Subspace,
@@ -26,7 +26,6 @@ func Migrate(
 	if err := currParams.Validate(); err != nil {
 		return err
 	}
-	emissionsKeeper.SetParams(ctx, currParams)
 
-	return nil
+	return emissionsKeeper.SetParams(ctx, currParams)
 }

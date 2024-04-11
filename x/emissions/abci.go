@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	}
 
 	// Get the distribution of rewards
-	params := keeper.GetParamsIfExists(ctx)
+	params := keeper.GetParams(ctx)
 	validatorRewards, observerRewards, tssSignerRewards := types.GetRewardsDistributions(params)
 
 	// TODO : Replace hardcoded slash amount with a parameter

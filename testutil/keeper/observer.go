@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -53,10 +55,10 @@ func initObserverKeeper(
 		cdc,
 		storeKey,
 		memKey,
-		paramKeeper.Subspace(types.ModuleName),
 		stakingKeeper,
 		slashingKeeper,
 		authorityKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 
@@ -106,10 +108,10 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 		cdc,
 		storeKey,
 		memStoreKey,
-		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
 		stakingKeeper,
 		slashingKeeper,
 		authorityKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	k.SetParams(ctx, types.DefaultParams())

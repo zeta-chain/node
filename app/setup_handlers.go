@@ -13,6 +13,18 @@ import (
 const releaseVersion = "v15"
 
 func SetupHandlers(app *App) {
+	// Set param key table for params module migration
+	for _, subspace := range app.ParamsKeeper.GetSubspaces() {
+		subspace := subspace
+
+		switch subspace.Name() {
+		// TODO: add all modules when cosmos-sdk is updated
+		case emissionstypes.ModuleName:
+			subspace.WithKeyTable(emissionstypes.ParamKeyTable())
+		case observertypes.ModuleName:
+			subspace.WithKeyTable(observertypes.ParamKeyTable())
+		}
+	}
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
 		// Updated version map to the latest consensus versions from each module

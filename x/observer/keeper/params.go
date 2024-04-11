@@ -5,12 +5,25 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) GetParamsIfExists(ctx sdk.Context) (params types.Params) {
-	k.paramstore.GetParamSetIfExists(ctx, &params)
-	return
+// GetParams get all parameters
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.KeyPrefix(types.ParamsKey))
+	if bz == nil {
+		return params
+	}
+	k.cdc.MustUnmarshal(bz, &params)
+	return params
 }
 
 // SetParams set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&params)
+	store.Set(types.KeyPrefix(types.ParamsKey), bz)
+	return nil
 }

@@ -10,8 +10,8 @@ import (
 
 // observerKeeper prevents circular dependency
 type observerKeeper interface {
-	GetParamsIfExists(ctx sdk.Context) types.Params
-	SetParams(ctx sdk.Context, params types.Params)
+	GetParams(ctx sdk.Context) types.Params
+	SetParams(ctx sdk.Context, params types.Params) error
 	GetChainParamsList(ctx sdk.Context) (params types.ChainParamsList, found bool)
 	SetChainParamsList(ctx sdk.Context, params types.ChainParamsList)
 	StoreKey() storetypes.StoreKey
@@ -64,7 +64,7 @@ func MigrateObserverParams(ctx sdk.Context, observerKeeper observerKeeper) error
 	}
 
 	// search for the observer params with chain params entry
-	observerParams := observerKeeper.GetParamsIfExists(ctx).ObserverParams
+	observerParams := observerKeeper.GetParams(ctx).ObserverParams
 	for _, observerParam := range observerParams {
 		for i := range chainParamsList.ChainParams {
 			// if the chain is found, update the chain params with the observer params

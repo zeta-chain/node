@@ -40,8 +40,8 @@ func TestMigrate(t *testing.T) {
 	}
 	legacySubspace := newMockSubspace(legacyParams)
 
-	require.NoError(t, v3.Migrate(ctx, k, legacySubspace))
+	require.NoError(t, v3.MigrateStore(ctx, k, legacySubspace))
 
-	params := k.GetParamsIfExists(ctx)
+	params := k.GetParams(ctx)
 	require.Equal(t, legacyParams, params)
 }

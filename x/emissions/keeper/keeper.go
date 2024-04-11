@@ -79,7 +79,6 @@ func (k Keeper) GetAuthKeeper() types.AccountKeeper {
 	return k.authKeeper
 }
 
-// GetAuthority returns the x/cronos module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }

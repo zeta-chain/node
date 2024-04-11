@@ -368,10 +368,10 @@ func New(
 		appCodec,
 		keys[observertypes.StoreKey],
 		keys[observertypes.MemStoreKey],
-		app.GetSubspace(observertypes.ModuleName),
 		&stakingKeeper,
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// register the staking hooks
@@ -508,7 +508,7 @@ func New(
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
-		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
+		observermodule.NewAppModule(appCodec, *app.ObserverKeeper, app.GetSubspace(observertypes.ModuleName)),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
 		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -801,9 +801,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	paramsKeeper.Subspace(group.ModuleName)
-	paramsKeeper.Subspace(crosschaintypes.ModuleName)
 	paramsKeeper.Subspace(observertypes.ModuleName)
-	paramsKeeper.Subspace(fungibletypes.ModuleName)
 	paramsKeeper.Subspace(emissionstypes.ModuleName)
 	return paramsKeeper
 }
