@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 
-	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	appparams "cosmossdk.io/simapp/params"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/evmos/ethermint/crypto/hd"
 	tmcfg "github.com/tendermint/tendermint/config"

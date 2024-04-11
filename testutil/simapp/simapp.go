@@ -7,7 +7,8 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -51,7 +52,7 @@ func Setup(isCheckTx bool) *app.App {
 func setup(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) {
 	db := tmdb.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
-	a := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, invCheckPeriod, encCdc, simapp.EmptyAppOptions{})
+	a := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{})
 	if withGenesis {
 		return a, app.NewDefaultGenesisState(encCdc.Codec)
 	}
