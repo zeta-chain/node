@@ -35,8 +35,8 @@ func getNewEvmSigner() (*Signer, error) {
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 	evmCfg := config.EVMConfig{
-		Chain:    chains.BscMainnetChain(),
-		Endpoint: []string{stub.EVMRPCEnabled},
+		Chain:     chains.BscMainnetChain(),
+		Endpoints: []string{stub.EVMRPCEnabled},
 	}
 	cfg.EVMChainConfigs[chains.BscMainnetChain().ChainId] = evmCfg
 	return NewEVMSigner(
@@ -57,7 +57,7 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	cfg := config.NewConfig()
 	tss := stub.NewTSSMainnet()
 
-	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain(), Endpoint: []string{"http://localhost:8545"}}
+	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain(), Endpoints: []string{"http://localhost:8545"}}
 	cfg.EVMChainConfigs[chains.BscMainnetChain().ChainId] = evmcfg
 	coreCTX := corecontext.NewZetaCoreContext(cfg)
 	appCTX := appcontext.NewAppContext(coreCTX, cfg)
@@ -314,8 +314,8 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 func TestSigner_getEVMRPC(t *testing.T) {
 	t.Run("getEVMRPC error dialing", func(t *testing.T) {
 		evmCfg := config.EVMConfig{
-			Chain:    chains.BscMainnetChain(),
-			Endpoint: []string{"invalidEndpoint"},
+			Chain:     chains.BscMainnetChain(),
+			Endpoints: []string{"invalidEndpoint"},
 		}
 		clientLogger := common.ClientLogger{
 			Std:        zerolog.Logger{},

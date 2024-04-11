@@ -29,7 +29,7 @@ type EthClientFallback struct {
 
 // NewEthClientFallback creates new instance of eth client used by evm chain client.
 func NewEthClientFallback(evmCfg config.EVMConfig, logger zerolog.Logger) (*EthClientFallback, error) {
-	if len(evmCfg.Endpoint) == 0 {
+	if len(evmCfg.Endpoints) == 0 {
 		return nil, errors.New("invalid endpoints")
 	}
 	ethClientFallback := EthClientFallback{}
@@ -37,7 +37,7 @@ func NewEthClientFallback(evmCfg config.EVMConfig, logger zerolog.Logger) (*EthC
 	ethClientFallback.jsonRPCClients = common.NewClientQueue()
 
 	// Initialize clients
-	for _, endpoint := range evmCfg.Endpoint {
+	for _, endpoint := range evmCfg.Endpoints {
 		//Initialize go-ethereum clients
 		client, err := ethclient.Dial(endpoint)
 		if err != nil {

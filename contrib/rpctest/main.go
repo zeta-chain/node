@@ -356,7 +356,7 @@ func (c *EthClient) EthGetLogs() {
 	//	panic(err)
 	//}
 	//// Create a new HTTP request
-	//httpReq, err := http.NewRequest("POST", c.Endpoint, buf)
+	//httpReq, err := http.NewRequest("POST", c.Endpoints, buf)
 	//if err != nil {
 	//	panic(err)
 	//}

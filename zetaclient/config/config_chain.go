@@ -51,23 +51,23 @@ var evmChainsConfigs = map[int64]EVMConfig{
 		Chain: chains.BscMainnetChain(),
 	},
 	chains.GoerliChain().ChainId: {
-		Chain:    chains.GoerliChain(),
-		Endpoint: []string{},
+		Chain:     chains.GoerliChain(),
+		Endpoints: []string{},
 	},
 	chains.SepoliaChain().ChainId: {
-		Chain:    chains.SepoliaChain(),
-		Endpoint: []string{},
+		Chain:     chains.SepoliaChain(),
+		Endpoints: []string{},
 	},
 	chains.BscTestnetChain().ChainId: {
-		Chain:    chains.BscTestnetChain(),
-		Endpoint: []string{},
+		Chain:     chains.BscTestnetChain(),
+		Endpoints: []string{},
 	},
 	chains.MumbaiChain().ChainId: {
-		Chain:    chains.MumbaiChain(),
-		Endpoint: []string{},
+		Chain:     chains.MumbaiChain(),
+		Endpoints: []string{},
 	},
 	chains.GoerliLocalnetChain().ChainId: {
-		Chain:    chains.GoerliLocalnetChain(),
-		Endpoint: []string{"http://eth:8545"},
+		Chain:     chains.GoerliLocalnetChain(),
+		Endpoints: []string{"http://eth:8545"},
 	},
 }

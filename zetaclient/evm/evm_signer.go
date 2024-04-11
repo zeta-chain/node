@@ -656,7 +656,7 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
 func getEVMRPC(cfg config.EVMConfig, logger clientcommon.ClientLogger) (interfaces.EthClientFallback, ethtypes.Signer, error) {
 	// Test RPC setup
-	if len(cfg.Endpoint) > 0 && cfg.Endpoint[0] == stub.EVMRPCEnabled {
+	if len(cfg.Endpoints) > 0 && cfg.Endpoints[0] == stub.EVMRPCEnabled {
 		chainID := big.NewInt(chains.BscMainnetChain().ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
 		client := &stub.MockEvmClient{}
