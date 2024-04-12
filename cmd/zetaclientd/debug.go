@@ -47,7 +47,7 @@ func DebugCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-ballot-from-intx [txHash] [chainID]",
 		Short: "provide txHash and chainID to get the ballot status for the txHash",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			cobra.ExactArgs(2)
 			cfg, err := config.Load(debugArgs.zetaCoreHome)
 			if err != nil {

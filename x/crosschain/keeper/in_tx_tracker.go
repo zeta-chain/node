@@ -44,7 +44,7 @@ func (k Keeper) GetAllInTxTrackerPaginated(ctx sdk.Context, pagination *query.Pa
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
-	pageRes, err = query.Paginate(store, pagination, func(key []byte, value []byte) error {
+	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var inTxTracker types.InTxTracker
 		if err := k.cdc.Unmarshal(value, &inTxTracker); err != nil {
 			return err
@@ -82,7 +82,7 @@ func (k Keeper) GetAllInTxTrackerForChain(ctx sdk.Context, chainID int64) (list 
 func (k Keeper) GetAllInTxTrackerForChainPaginated(ctx sdk.Context, chainID int64, pagination *query.PageRequest) (inTxTrackers []types.InTxTracker, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.InTxTrackerKeyPrefix)))
 	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", chainID)))
-	pageRes, err = query.Paginate(chainStore, pagination, func(key []byte, value []byte) error {
+	pageRes, err = query.Paginate(chainStore, pagination, func(_ []byte, value []byte) error {
 		var inTxTracker types.InTxTracker
 		if err := k.cdc.Unmarshal(value, &inTxTracker); err != nil {
 			return err

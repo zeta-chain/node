@@ -86,7 +86,7 @@ func CmdListInTxTrackers() *cobra.Command {
 		Use:   "list-all-in-tx-trackers",
 		Short: "shows all inTxTrackers",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
 			params := &types.QueryAllInTxTrackersRequest{}

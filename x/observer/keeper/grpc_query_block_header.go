@@ -23,7 +23,7 @@ func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHe
 	blockHeaderStore := prefix.NewStore(store, types.KeyPrefix(types.BlockHeaderKey))
 
 	var blockHeaders []*proofs.BlockHeader
-	pageRes, err := query.Paginate(blockHeaderStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(blockHeaderStore, req.Pagination, func(_ []byte, value []byte) error {
 		var blockHeader proofs.BlockHeader
 		if err := k.cdc.Unmarshal(value, &blockHeader); err != nil {
 			return err

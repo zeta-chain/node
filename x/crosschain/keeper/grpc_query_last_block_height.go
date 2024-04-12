@@ -23,7 +23,7 @@ func (k Keeper) LastBlockHeightAll(c context.Context, req *types.QueryAllLastBlo
 	store := ctx.KVStore(k.storeKey)
 	lastBlockHeightStore := prefix.NewStore(store, types.KeyPrefix(types.LastBlockHeightKey))
 
-	pageRes, err := query.Paginate(lastBlockHeightStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(lastBlockHeightStore, req.Pagination, func(_ []byte, value []byte) error {
 		var lastBlockHeight types.LastBlockHeight
 		if err := k.cdc.Unmarshal(value, &lastBlockHeight); err != nil {
 			return err

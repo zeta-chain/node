@@ -18,7 +18,7 @@ it always outputs three lines; the first line is the zeta1xxx address, the secon
 and the third line is the ethereum address.
 			`,
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err == nil {
 				valAddr := sdk.ValAddress(addr.Bytes())
