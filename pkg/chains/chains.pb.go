@@ -61,7 +61,6 @@ const (
 	ChainName_btc_mainnet     ChainName = 3
 	ChainName_polygon_mainnet ChainName = 4
 	ChainName_bsc_mainnet     ChainName = 5
-	//  Testnet
 	ChainName_goerli_testnet  ChainName = 6
 	ChainName_mumbai_testnet  ChainName = 7
 	ChainName_ganache_testnet ChainName = 8
@@ -70,13 +69,9 @@ const (
 	ChainName_zeta_testnet    ChainName = 11
 	ChainName_btc_testnet     ChainName = 12
 	ChainName_sepolia_testnet ChainName = 13
-	//  LocalNet
-	//  zeta_localnet = 13;
 	ChainName_goerli_localnet ChainName = 14
 	ChainName_btc_regtest     ChainName = 15
-	// Athens
-	//  zeta_athensnet=15;
-	ChainName_amoy_testnet ChainName = 16
+	ChainName_amoy_testnet    ChainName = 16
 )
 
 var ChainName_name = map[int32]string{

@@ -21,7 +21,6 @@ enum ChainName {
   btc_mainnet = 3;
   polygon_mainnet = 4;
   bsc_mainnet = 5;
-  //  Testnet
   goerli_testnet = 6;
   mumbai_testnet = 7;
   ganache_testnet = 8;
@@ -30,12 +29,8 @@ enum ChainName {
   zeta_testnet = 11;
   btc_testnet = 12;
   sepolia_testnet = 13;
-  //  LocalNet
-  //  zeta_localnet = 13;
   goerli_localnet = 14;
   btc_regtest = 15;
-  // Athens
-  //  zeta_athensnet=15;
   amoy_testnet = 16;
 }
 

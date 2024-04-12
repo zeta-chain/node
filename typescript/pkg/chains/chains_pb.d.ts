@@ -63,8 +63,6 @@ export declare enum ChainName {
   bsc_mainnet = 5,
 
   /**
-   *  Testnet
-   *
    * @generated from enum value: goerli_testnet = 6;
    */
   goerli_testnet = 6,
@@ -105,9 +103,6 @@ export declare enum ChainName {
   sepolia_testnet = 13,
 
   /**
-   *  LocalNet
-   *  zeta_localnet = 13;
-   *
    * @generated from enum value: goerli_localnet = 14;
    */
   goerli_localnet = 14,
@@ -118,9 +113,6 @@ export declare enum ChainName {
   btc_regtest = 15,
 
   /**
-   * Athens
-   *  zeta_athensnet=15;
-   *
    * @generated from enum value: amoy_testnet = 16;
    */
   amoy_testnet = 16,

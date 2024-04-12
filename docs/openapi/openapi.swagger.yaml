@@ -53521,12 +53521,6 @@ definitions:
       - btc_regtest
       - amoy_testnet
     default: empty
-    title: |-
-      - goerli_testnet: Testnet
-       - goerli_localnet: LocalNet
-       zeta_localnet = 13;
-       - amoy_testnet: Athens
-       zeta_athensnet=15;
   chainsReceiveStatus:
     type: string
     enum:
