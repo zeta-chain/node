@@ -49,7 +49,11 @@ func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChain
 		Chain: evmChain,
 	}
 	cfg.BitcoinConfig = config.BTCConfig{
-		RPCHost: "localhost",
+		Endpoints: []config.BTCEndpoint{
+			{
+				RPCHost: "localhost",
+			},
+		},
 	}
 	// new core context
 	coreContext := corecontext.NewZetaCoreContext(cfg)

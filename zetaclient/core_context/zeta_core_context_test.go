@@ -116,10 +116,14 @@ func TestNewZetaCoreContext(t *testing.T) {
 	t.Run("should create new zeta core context with config containing btc config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 		testCfg.BitcoinConfig = config.BTCConfig{
-			RPCUsername: "test username",
-			RPCPassword: "test password",
-			RPCHost:     "test host",
-			RPCParams:   "test params",
+			Endpoints: []config.BTCEndpoint{
+				{
+					RPCUsername: "test username",
+					RPCPassword: "test password",
+					RPCHost:     "test host",
+					RPCParams:   "test params",
+				},
+			},
 		}
 		zetaContext := corecontext.NewZetaCoreContext(testCfg)
 		require.NotNil(t, zetaContext)
@@ -219,10 +223,14 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			},
 		}
 		testCfg.BitcoinConfig = config.BTCConfig{
-			RPCUsername: "test username",
-			RPCPassword: "test password",
-			RPCHost:     "test host",
-			RPCParams:   "test params",
+			Endpoints: []config.BTCEndpoint{
+				{
+					RPCUsername: "test username",
+					RPCPassword: "test password",
+					RPCHost:     "test host",
+					RPCParams:   "test params",
+				},
+			},
 		}
 
 		zetaContext := corecontext.NewZetaCoreContext(testCfg)
