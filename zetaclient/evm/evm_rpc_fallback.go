@@ -57,7 +57,9 @@ func NewEthClientFallback(evmCfg config.EVMConfig, logger zerolog.Logger) (*EthC
 	return &ethClientFallback, nil
 }
 
-// The following functions are wrappers for EVMRPCClient interface
+// The following functions are wrappers for EVMRPCClient interface. The logic is similar for all functions, the first client
+// in the queue is used to attempt the rpc call. If this fails then it will attempt to call the next client in the list
+// until it is successful or returns an error when the list of clients have been exhausted.
 
 func (e *EthClientFallback) CodeAt(ctx context.Context, contract ethcommon.Address, blockNumber *big.Int) ([]byte, error) {
 	var res []byte

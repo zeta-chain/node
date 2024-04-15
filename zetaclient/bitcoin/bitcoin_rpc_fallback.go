@@ -17,12 +17,14 @@ import (
 
 var _ interfaces.BTCRPCClient = &RPCClientFallback{}
 
+// RPCClientFallback - a decorator type for adding fallback capability to bitcoin rpc client
 type RPCClientFallback struct {
 	btcConfig  config.BTCConfig
 	rpcClients *common.ClientQueue
 	logger     zerolog.Logger
 }
 
+// NewRPCClientFallback - Constructor, reads config and connects to each client in the endpoint list
 func NewRPCClientFallback(cfg config.BTCConfig, logger zerolog.Logger) (*RPCClientFallback, error) {
 	if len(cfg.Endpoints) == 0 {
 		return nil, errors.New("invalid endpoints")
@@ -55,6 +57,10 @@ func NewRPCClientFallback(cfg config.BTCConfig, logger zerolog.Logger) (*RPCClie
 	}
 	return &rpcClientFallback, nil
 }
+
+// Below is an implementation of the BTCRPCClient interface. The logic is similar for all functions, the first client
+// in the queue is used to attempt the rpc call. If this fails then it will attempt to call the next client in the list
+// until it has tried them all.
 
 func (R *RPCClientFallback) GetNetworkInfo() (*btcjson.GetNetworkInfoResult, error) {
 	var res *btcjson.GetNetworkInfoResult
