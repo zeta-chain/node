@@ -26,6 +26,7 @@ const (
 	TestMessagePassingRevertFailName      = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName   = "message_passing_revert_success"
 	TestMessagePassingZEVMName            = "message_passing_zevm"
+	TestMessagePassingZEVMRevertName      = "message_passing_revert_zevm"
 	TestERC20DepositAndCallRefundName     = "erc20_deposit_and_call_refund"
 	TestEtherDepositAndCallName           = "eth_deposit_and_call"
 	TestDepositEtherLiquidityCapName      = "deposit_eth_liquidity_cap"
@@ -214,11 +215,19 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMessagePassingZEVMName,
-		"evm->zevm message passing",
+		"evm -> zevm message passing contract call ",
 		[]runner.ArgDefinition{
 			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
 		TestMessagePassingZEVM,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMRevertName,
+		"evm -> zevm message passing and revert back to evm",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		TestMessagePassingZEVMRevert,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingName,

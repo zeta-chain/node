@@ -242,6 +242,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaTests := []string{
 			e2etests.TestMessagePassingZEVMName,
+			e2etests.TestMessagePassingZEVMRevertName,
 			e2etests.TestZetaWithdrawName,
 			e2etests.TestMessagePassingName,
 			e2etests.TestMessagePassingRevertFailName,
