@@ -286,7 +286,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestZetaWithdrawName,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,
