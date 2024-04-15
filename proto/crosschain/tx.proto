@@ -14,7 +14,7 @@ service Msg {
   rpc AddToInTxTracker(MsgAddToInTxTracker) returns (MsgAddToInTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
 
-  rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
+  rpc VoteGasPrice(MsgVoteGasPrice) returns (MsgVoteGasPriceResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
@@ -91,7 +91,7 @@ message MsgRemoveFromOutTxTracker {
 
 message MsgRemoveFromOutTxTrackerResponse {}
 
-message MsgGasPriceVoter {
+message MsgVoteGasPrice {
   string creator = 1;
   int64 chain_id = 2;
   uint64 price = 3;
@@ -99,7 +99,7 @@ message MsgGasPriceVoter {
   string supply = 5;
 }
 
-message MsgGasPriceVoterResponse {}
+message MsgVoteGasPriceResponse {}
 
 message MsgVoteOnObservedOutboundTx {
   string creator = 1;
