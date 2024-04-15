@@ -181,7 +181,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		if !ethcommon.IsHexAddress(c) {
 			return fmt.Errorf("invalid TestDappAddr: %s", c)
 		}
-		r.TestDAppAddr = ethcommon.HexToAddress(c)
+		r.EvmTestDAppAddr = ethcommon.HexToAddress(c)
 	}
 
 	return nil

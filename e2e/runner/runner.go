@@ -71,6 +71,7 @@ type E2ERunner struct {
 	ERC20Custody     *erc20custody.ERC20Custody
 	ERC20Addr        ethcommon.Address
 	ERC20            *erc20.ERC20
+	EvmTestDAppAddr  ethcommon.Address
 
 	// contracts zevm
 	ERC20ZRC20Addr       ethcommon.Address
@@ -87,13 +88,13 @@ type E2ERunner struct {
 	ConnectorZEVM        *connectorzevm.ZetaConnectorZEVM
 	WZetaAddr            ethcommon.Address
 	WZeta                *wzeta.WETH9
-	TestDAppAddr         ethcommon.Address
 	ZEVMSwapAppAddr      ethcommon.Address
 	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
 	ContextAppAddr       ethcommon.Address
 	ContextApp           *contextapp.ContextApp
 	SystemContractAddr   ethcommon.Address
 	SystemContract       *systemcontract.SystemContract
+	ZevmTestDAppAddr     ethcommon.Address
 
 	// config
 	CctxTimeout    time.Duration
@@ -175,10 +176,11 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	runner.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	runner.ConnectorZEVMAddr = other.ConnectorZEVMAddr
 	runner.WZetaAddr = other.WZetaAddr
-	runner.TestDAppAddr = other.TestDAppAddr
+	runner.EvmTestDAppAddr = other.EvmTestDAppAddr
 	runner.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
 	runner.ContextAppAddr = other.ContextAppAddr
 	runner.SystemContractAddr = other.SystemContractAddr
+	runner.ZevmTestDAppAddr = other.ZevmTestDAppAddr
 
 	// create instances of contracts
 	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.EVMClient)
@@ -268,7 +270,7 @@ func (runner *E2ERunner) PrintContractAddresses() {
 
 	runner.Logger.Print("ZEVMSwapApp:    %s", runner.ZEVMSwapAppAddr.Hex())
 	runner.Logger.Print("ContextApp:     %s", runner.ContextAppAddr.Hex())
-	runner.Logger.Print("TestDapp:       %s", runner.TestDAppAddr.Hex())
+	runner.Logger.Print("TestDappZEVM:       %s", runner.ZevmTestDAppAddr.Hex())
 
 	// evm contracts
 	runner.Logger.Print(" --- 📜EVM contracts ---")
@@ -276,4 +278,5 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print("ConnectorEth:   %s", runner.ConnectorEthAddr.Hex())
 	runner.Logger.Print("ERC20Custody:   %s", runner.ERC20CustodyAddr.Hex())
 	runner.Logger.Print("ERC20:      %s", runner.ERC20Addr.Hex())
+	runner.Logger.Print("TestDappEVM:       %s", runner.EvmTestDAppAddr.Hex())
 }

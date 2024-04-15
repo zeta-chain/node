@@ -224,7 +224,8 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
-
+	// TODO : check encoding and decoding of message
+	messageString := string(event.Message[:])
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
@@ -233,7 +234,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		txOrigin, toAddr,
 		receiverChain.ChainId,
 		amount,
-		"",
+		messageString,
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
 		90000,
