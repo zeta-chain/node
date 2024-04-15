@@ -102,6 +102,7 @@ func (ob *ChainClient) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, l
 }
 
 // ParseAndCheckZetaEvent parses and checks ZetaReceived/ZetaReverted event from the outtx receipt
+// It either returns an ZetaReceived or an ZetaReverted event, or an error if no event found
 func ParseAndCheckZetaEvent(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
