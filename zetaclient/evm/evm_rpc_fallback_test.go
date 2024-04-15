@@ -54,9 +54,6 @@ func TestEthClientFallback_BlockNumber(t *testing.T) {
 	require.Equal(t, uint64(88), resp)
 }
 
-func TestEthClientFallback_ChainID(t *testing.T) {
-}
-
 func TestEthClientFallback_CodeAt(t *testing.T) {
 	client := setupTestEVMClient()
 	resp, err := client.CodeAt(context.Background(), sample.EthAddress(), big.NewInt(88))
