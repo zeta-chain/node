@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -224,8 +225,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
-	// TODO : check encoding and decoding of message
-	messageString := string(event.Message[:])
+	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 
@@ -27,7 +28,10 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 	inboundSender := cctx.GetInboundTxParams().Sender
 	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
 	inboundCoinType := cctx.InboundTxParams.CoinType
-	data := []byte(cctx.RelayedMessage)
+	data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+	if err != nil {
+		return false, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
+	}
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())

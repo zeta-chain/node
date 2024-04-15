@@ -241,9 +241,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestERC20DepositRestrictedName,
 		}
 		zetaTests := []string{
+			e2etests.TestMessagePassingZEVMName,
 			e2etests.TestZetaWithdrawName,
 			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingZEVMName,
 			e2etests.TestMessagePassingRevertFailName,
 			e2etests.TestMessagePassingRevertSuccessName,
 		}
