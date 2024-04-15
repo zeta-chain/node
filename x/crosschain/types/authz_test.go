@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetAllAuthzZetaclientTxTypes(t *testing.T) {
-	require.Equal(t, []string{"/zetachain.zetacore.crosschain.MsgGasPriceVoter",
+	require.Equal(t, []string{"/zetachain.zetacore.crosschain.MsgVoteGasPrice",
 		"/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx",
 		"/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx",
 		"/zetachain.zetacore.crosschain.MsgAddToOutTxTracker",
