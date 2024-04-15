@@ -29,9 +29,7 @@ type BTCSignTestSuite struct {
 
 const (
 	prevOut = "07a84f4bd45a633e93871be5c98d958afd13a37f3cf5010f40eec0840d19f5fa"
-	// tb1q7r6lnqjhvdjuw9uf4ehx7fs0euc6cxnqz7jj50
-	pk        = "cQkjdfeMU8vHvE6jErnFVqZYYZnGGYy64jH6zovbSXdfTjte6QgY"
-	utxoCount = 5
+	pk      = "cQkjdfeMU8vHvE6jErnFVqZYYZnGGYy64jH6zovbSXdfTjte6QgY"
 )
 
 func (suite *BTCSignTestSuite) SetupTest() {
@@ -70,7 +68,6 @@ func (suite *BTCSignTestSuite) TestSign() {
 	suite.T().Logf("wallet signed tx : %v\n", walletSignedTX)
 
 	// sign tx using tss signature
-
 	tssSignedTX, err := getTSSTX(suite.testSigner, tx, txSigHashes, idx, amt, subscript, txscript.SigHashAll)
 	suite.Require().NoError(err)
 	suite.T().Logf("tss signed tx :    %v\n", tssSignedTX)

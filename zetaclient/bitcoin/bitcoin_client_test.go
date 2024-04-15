@@ -512,7 +512,7 @@ func TestGetBtcEvent(t *testing.T) {
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
 	require.NoError(t, err)
-	eventExpected := &BTCInTxEvnet{
+	eventExpected := &BTCInTxEvent{
 		FromAddress: "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 		ToAddress:   tssAddress,
 		Value:       tx.Vout[0].Value - depositorFee, // 7008 sataoshis
