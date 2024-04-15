@@ -39,32 +39,35 @@ func NewTelemetryServer() *TelemetryServer {
 	return hs
 }
 
-// setter/getter for p2pid
+// SetP2PID sets p2pid
 func (t *TelemetryServer) SetP2PID(p2pid string) {
 	t.mu.Lock()
 	t.p2pid = p2pid
 	t.mu.Unlock()
 }
 
+// GetP2PID gets p2pid
 func (t *TelemetryServer) GetP2PID() string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.p2pid
 }
 
-// setter/getter for p2pid
+// SetIPAddress sets p2pid
 func (t *TelemetryServer) SetIPAddress(ip string) {
 	t.mu.Lock()
 	t.ipAddress = ip
 	t.mu.Unlock()
 }
 
+// GetIPAddress gets p2pid
 func (t *TelemetryServer) GetIPAddress() string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.ipAddress
 }
 
+// AddFeeEntry adds fee entry
 func (t *TelemetryServer) AddFeeEntry(block int64, amount int64) {
 	t.mu.Lock()
 	err := t.HotKeyBurnRate.AddFee(amount, block)
@@ -74,7 +77,7 @@ func (t *TelemetryServer) AddFeeEntry(block int64, amount int64) {
 	t.mu.Unlock()
 }
 
-// NewHandler registers the API routes and returns a new HTTP handler
+// Handlers registers the API routes and returns a new HTTP handler
 func (t *TelemetryServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
@@ -82,13 +85,8 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
 	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
 
-	// router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-	// router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
-	// router.HandleFunc("/debug/pprof/", pprof.Index)
-	// router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-
-	//router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
+
 	return router
 }
 
@@ -97,26 +95,12 @@ func (t *TelemetryServer) Start() error {
 		return errors.New("invalid http server instance")
 	}
 	if err := t.s.ListenAndServe(); err != nil {
-		if err != http.ErrServerClosed {
+		if !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("fail to start http server: %w", err)
 		}
 	}
 
 	return nil
-}
-
-func logMiddleware() mux.MiddlewareFunc {
-	return func(handler http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Debug().
-				Str("route", r.URL.Path).
-				Str("port", r.URL.Port()).
-				Str("method", r.Method).
-				Msg("HTTP request received")
-
-			handler.ServeHTTP(w, r)
-		})
-	}
 }
 
 func (t *TelemetryServer) Stop() error {
@@ -152,4 +136,18 @@ func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Reque
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%v", t.HotKeyBurnRate.GetBurnRate())
+}
+
+func logMiddleware() mux.MiddlewareFunc {
+	return func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Debug().
+				Str("route", r.URL.Path).
+				Str("port", r.URL.Port()).
+				Str("method", r.Method).
+				Msg("HTTP request received")
+
+			handler.ServeHTTP(w, r)
+		})
+	}
 }

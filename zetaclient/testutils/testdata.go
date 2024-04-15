@@ -24,19 +24,6 @@ const (
 	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
 )
 
-// SaveObjectToJSONFile saves an object to a file in JSON format
-func SaveObjectToJSONFile(obj interface{}, filename string) error {
-	file, err := os.Create(filepath.Clean(filename))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// write the struct to the file
-	encoder := json.NewEncoder(file)
-	return encoder.Encode(obj)
-}
-
 // LoadObjectFromJSONFile loads an object from a file in JSON format
 func LoadObjectFromJSONFile(t *testing.T, obj interface{}, filename string) {
 	file, err := os.Open(filepath.Clean(filename))
@@ -53,27 +40,6 @@ func ComplianceConfigTest() config.ComplianceConfig {
 	return config.ComplianceConfig{
 		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},
 	}
-}
-
-// SaveTrimedEVMBlockTrimTxInput trims tx input data from a block and saves it to a file
-func SaveEVMBlockTrimTxInput(block *ethrpc.Block, filename string) error {
-	for i := range block.Transactions {
-		block.Transactions[i].Input = "0x"
-	}
-	return SaveObjectToJSONFile(block, filename)
-}
-
-// SaveTrimedBTCBlockTrimTx trims tx data from a block and saves it to a file
-func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename string) error {
-	for i := range blockVb.Tx {
-		// reserve one coinbase tx and one non-coinbase tx
-		if i >= 2 {
-			blockVb.Tx[i].Hex = ""
-			blockVb.Tx[i].Vin = nil
-			blockVb.Tx[i].Vout = nil
-		}
-	}
-	return SaveObjectToJSONFile(blockVb, filename)
 }
 
 // LoadEVMBlock loads archived evm block from file
@@ -208,7 +174,7 @@ func LoadEVMIntxNReceiptDonation(
 	return tx, receipt
 }
 
-// LoadTxNReceiptNCctx loads archived intx, receipt and corresponding cctx from file
+// LoadEVMIntxNReceiptNCctx loads archived intx, receipt and corresponding cctx from file
 func LoadEVMIntxNReceiptNCctx(
 	t *testing.T,
 	chainID int64,

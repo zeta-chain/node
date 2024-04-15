@@ -16,8 +16,11 @@ import (
 
 type TSSSigner interface {
 	Pubkey() []byte
-	// Sign: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
+
+	// Sign signs the data
+	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
 	Sign(data []byte, height uint64, nonce uint64, chain *chains.Chain, optionalPubkey string) ([65]byte, error)
+
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
 	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
@@ -90,6 +93,7 @@ func (s TestSigner) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyH
 		fmt.Printf("error parsing pubkey: %v", err)
 		return nil
 	}
+
 	// witness program: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Witness_program
 	// The HASH160 of the public key must match the 20-byte witness program.
 	addrWPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pk.SerializeCompressed()), &chaincfg.TestNet3Params)
