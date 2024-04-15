@@ -5,6 +5,10 @@ import (
 	"testing"
 	"time"
 
+	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -32,10 +36,6 @@ import (
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -157,10 +157,10 @@ func AccountKeeper(
 	return authkeeper.NewAccountKeeper(
 		cdc,
 		storeKey,
-		paramKeeper.Subspace(authtypes.ModuleName),
 		ethermint.ProtoAccount,
 		moduleAccountPerms,
 		"zeta",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 
@@ -180,8 +180,8 @@ func BankKeeper(
 		cdc,
 		storeKey,
 		authKeeper,
-		paramKeeper.Subspace(banktypes.ModuleName),
 		blockedAddrs,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 
@@ -197,12 +197,12 @@ func StakingKeeper(
 	storeKey := sdk.NewKVStoreKey(stakingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	return stakingkeeper.NewKeeper(
+	return *stakingkeeper.NewKeeper(
 		cdc,
 		storeKey,
 		authKeeper,
 		bankKeeper,
-		paramKeeper.Subspace(stakingtypes.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 
@@ -210,7 +210,7 @@ func StakingKeeper(
 func SlashingKeeper(cdc codec.Codec, db *tmdb.MemDB, ss store.CommitMultiStore, stakingKeeper stakingkeeper.Keeper, paramKeeper paramskeeper.Keeper) slashingkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(slashingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	return slashingkeeper.NewKeeper(cdc, storeKey, stakingKeeper, paramKeeper.Subspace(slashingtypes.ModuleName))
+	return slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), storeKey, stakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 }
 
 // DistributionKeeper instantiates a distribution keeper for testing purposes
@@ -229,11 +229,11 @@ func DistributionKeeper(
 	return distrkeeper.NewKeeper(
 		cdc,
 		storeKey,
-		paramKeeper.Subspace(stakingtypes.ModuleName),
 		authKeeper,
 		bankKeeper,
 		stakingKeeper,
 		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 
@@ -254,7 +254,7 @@ func UpgradeKeeper(
 	skipUpgradeHeights := make(map[int64]bool)
 	vs := ProtocolVersionSetter{}
 
-	return upgradekeeper.NewKeeper(
+	return *upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		storeKey,
 		cdc,

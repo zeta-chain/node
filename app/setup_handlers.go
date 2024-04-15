@@ -29,7 +29,9 @@ func SetupHandlers(app *App) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
 		// Updated version map to the latest consensus versions from each module
 		for m, mb := range app.mm.Modules {
-			vm[m] = mb.ConsensusVersion()
+			if module, ok := mb.(module.HasConsensusVersion); ok {
+				vm[m] = module.ConsensusVersion()
+			}
 		}
 		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
