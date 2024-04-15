@@ -32,12 +32,16 @@ type EVMConfig struct {
 	Endpoints []string
 }
 
-type BTCConfig struct {
+type BTCEndpoint struct {
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
 	RPCPassword string
 	RPCHost     string
 	RPCParams   string // "regtest", "mainnet", "testnet3"
+}
+
+type BTCConfig struct {
+	Endpoints []BTCEndpoint
 }
 
 type ComplianceConfig struct {
@@ -108,7 +112,7 @@ func (c Config) GetBTCConfig() (BTCConfig, bool) {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
 
-	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
+	return c.BitcoinConfig, c.BitcoinConfig.Endpoints != nil
 }
 
 func (c Config) String() string {

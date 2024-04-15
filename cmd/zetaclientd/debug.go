@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -177,16 +176,7 @@ func DebugCmd() *cobra.Command {
 				obBtc.WithZetaClient(bridge)
 				obBtc.WithLogger(chainLogger)
 				obBtc.WithChain(*chains.GetChainFromChainID(chainID))
-				connCfg := &rpcclient.ConnConfig{
-					Host:         cfg.BitcoinConfig.RPCHost,
-					User:         cfg.BitcoinConfig.RPCUsername,
-					Pass:         cfg.BitcoinConfig.RPCPassword,
-					HTTPPostMode: true,
-					DisableTLS:   true,
-					Params:       cfg.BitcoinConfig.RPCParams,
-				}
-
-				btcClient, err := rpcclient.New(connCfg, nil)
+				btcClient, err := bitcoin.NewRPCClientFallback(cfg.BitcoinConfig, chainLogger)
 				if err != nil {
 					return err
 				}

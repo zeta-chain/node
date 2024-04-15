@@ -16,7 +16,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -108,7 +107,7 @@ func (ob *BTCChainClient) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-func (ob *BTCChainClient) WithBtcClient(client *rpcclient.Client) {
+func (ob *BTCChainClient) WithBtcClient(client interfaces.BTCRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.rpcClient = client
@@ -175,24 +174,11 @@ func NewBitcoinClient(
 		return nil, fmt.Errorf("btc chains params not initialized")
 	}
 	ob.params = *chainParams
+
 	// initialize the Client
-	ob.logger.Chain.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
-	connCfg := &rpcclient.ConnConfig{
-		Host:         btcCfg.RPCHost,
-		User:         btcCfg.RPCUsername,
-		Pass:         btcCfg.RPCPassword,
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       btcCfg.RPCParams,
-	}
-	client, err := rpcclient.New(connCfg, nil)
+	ob.rpcClient, err = NewRPCClientFallback(btcCfg, ob.logger.Chain)
 	if err != nil {
-		return nil, fmt.Errorf("error creating rpc client: %s", err)
-	}
-	ob.rpcClient = client
-	err = client.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
+		return nil, err
 	}
 
 	ob.BlockCache, err = lru.New(btcBlocksPerDay)

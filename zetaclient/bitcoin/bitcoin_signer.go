@@ -10,7 +10,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
@@ -56,15 +55,7 @@ func NewBTCSigner(
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 	coreContext *corecontext.ZetaCoreContext) (*BTCSigner, error) {
-	connCfg := &rpcclient.ConnConfig{
-		Host:         cfg.RPCHost,
-		User:         cfg.RPCUsername,
-		Pass:         cfg.RPCPassword,
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       cfg.RPCParams,
-	}
-	client, err := rpcclient.New(connCfg, nil)
+	client, err := NewRPCClientFallback(cfg, loggers.Std)
 	if err != nil {
 		return nil, fmt.Errorf("error creating bitcoin rpc client: %s", err)
 	}

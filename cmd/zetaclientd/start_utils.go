@@ -78,11 +78,10 @@ func maskCfg(cfg config.Config) string {
 		HsmHotKey:           cfg.HsmHotKey,
 	}
 
+	endpoints := make([]config.BTCEndpoint, len(cfg.BitcoinConfig.Endpoints))
+	copy(endpoints, cfg.BitcoinConfig.Endpoints)
 	maskedCfg.BitcoinConfig = config.BTCConfig{
-		RPCUsername: cfg.BitcoinConfig.RPCUsername,
-		RPCPassword: cfg.BitcoinConfig.RPCPassword,
-		RPCHost:     cfg.BitcoinConfig.RPCHost,
-		RPCParams:   cfg.BitcoinConfig.RPCParams,
+		Endpoints: endpoints,
 	}
 
 	restrictedAddresses := make([]string, len(cfg.ComplianceConfig.RestrictedAddresses))
@@ -116,8 +115,11 @@ func maskCfg(cfg config.Config) string {
 			chain.Endpoints[i] = endpointURL.Hostname()
 		}
 	}
-	maskedCfg.BitcoinConfig.RPCUsername = ""
-	maskedCfg.BitcoinConfig.RPCPassword = ""
+
+	for i := range maskedCfg.BitcoinConfig.Endpoints {
+		maskedCfg.BitcoinConfig.Endpoints[i].RPCUsername = ""
+		maskedCfg.BitcoinConfig.Endpoints[i].RPCPassword = ""
+	}
 
 	return maskedCfg.String()
 }
