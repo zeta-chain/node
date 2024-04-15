@@ -99,6 +99,13 @@ func MumbaiChain() Chain {
 	}
 }
 
+func AmoyChain() Chain {
+	return Chain{
+		ChainName: ChainName_amoy_testnet,
+		ChainId:   80002,
+	}
+}
+
 // Privnet chains
 
 func BtcRegtestChain() Chain {
@@ -127,6 +134,7 @@ func DefaultChainsList() []*Chain {
 		EthChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
+		AmoyChain(),
 		BscTestnetChain(),
 		GoerliChain(),
 		SepoliaChain(),
@@ -155,6 +163,7 @@ func TestnetChainList() []*Chain {
 		ZetaTestnetChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
+		AmoyChain(),
 		BscTestnetChain(),
 		GoerliChain(),
 		SepoliaChain(),
@@ -178,6 +187,7 @@ func ExternalChainList() []*Chain {
 		EthChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
+		AmoyChain(),
 		BscTestnetChain(),
 		GoerliChain(),
 		SepoliaChain(),

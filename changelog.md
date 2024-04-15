@@ -11,6 +11,9 @@
 * `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
   * The structure of the message remains the same.
 
+* `MsgGasPriceVoter` message in the `crosschain` module has been renamed to `MsgVoteGasPrice`.
+  * The structure of the message remains the same.
+
 ### Refactor
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
@@ -26,6 +29,7 @@
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
 * [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
+* [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 
 ### Features
 
@@ -36,6 +40,7 @@
 * [1942](https://github.com/zeta-chain/node/pull/1982) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
+* [2006](https://github.com/zeta-chain/node/pull/2006) - add Amoy testnet static chain information
 * [1998](https://github.com/zeta-chain/node/pull/1998) - zetaclient multiple rpc endpoint support
 
 ### Tests
