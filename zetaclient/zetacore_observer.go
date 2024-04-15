@@ -20,7 +20,10 @@ import (
 )
 
 const (
-	MaxLookaheadNonce = 120
+	// EVMOutboundTxLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
+	// For example, give OutboundTxScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
+	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
+	EVMOutboundTxLookbackFactor = 1.0 // 1.0 means look back the same number of cctxs as we look ahead
 )
 
 type ZetaCoreLog struct {
@@ -28,7 +31,7 @@ type ZetaCoreLog struct {
 	ZetaChainWatcher zerolog.Logger
 }
 
-// CoreObserver wraps the zetabridge bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
+// CoreObserver wraps the zetabridge, chain clients and signers. This is the high level object used for CCTX scheduling
 type CoreObserver struct {
 	bridge              interfaces.ZetaCoreBridger
 	signerMap           map[int64]interfaces.ChainSigner
@@ -201,6 +204,11 @@ func (co *CoreObserver) scheduleCctxEVM(
 	for _, v := range res {
 		trackerMap[v.Nonce] = true
 	}
+	lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
+	// #nosec G701 always in range
+	lookback := uint64(float64(lookahead) * EVMOutboundTxLookbackFactor)
+	// #nosec G701 positive
+	interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
 
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutTxParam()
@@ -211,7 +219,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
-		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+MaxLookaheadNonce {
+		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+lookback {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
 				params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce, chainID)
 			break
@@ -227,10 +235,6 @@ func (co *CoreObserver) scheduleCctxEVM(
 			co.logger.ZetaChainWatcher.Info().Msgf("scheduleCctxEVM: outtx %s already included; do not schedule keysign", outTxID)
 			continue
 		}
-
-		// #nosec G701 positive
-		interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
-		lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
 
 		// determining critical outtx; if it satisfies following criteria
 		// 1. it's the first pending outtx for this chain
