@@ -3,7 +3,6 @@ package bitcoin
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/rs/zerolog"
 	"math"
 	"math/big"
 	"reflect"
@@ -19,6 +18,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
