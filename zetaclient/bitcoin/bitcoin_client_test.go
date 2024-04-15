@@ -707,6 +707,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
 		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		rpcClient := stub.NewMockBTCRPCClient()
+		rpcClient.WithError(errors.New("error getting raw tx"))
 
 		// get BTC event
 		event, err := GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)

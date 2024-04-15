@@ -3,6 +3,7 @@ package bitcoin
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/rs/zerolog"
 	"math"
 	"math/big"
 	"reflect"
@@ -247,8 +248,14 @@ func createTestClientWithUTXOs(t *testing.T) *BTCChainClient {
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer, err := NewBTCSigner(config.BTCConfig{}, stub.NewTSSMainnet(), clientcommon.DefaultLoggers(), &metrics.TelemetryServer{}, nil)
-	require.NoError(t, err)
+	signer := BTCSigner{
+		tssSigner:        stub.NewTSSMainnet(),
+		rpcClient:        setupBTCFallbackClient(),
+		logger:           zerolog.Logger{},
+		loggerCompliance: zerolog.Logger{},
+		ts:               &metrics.TelemetryServer{},
+		coreContext:      nil,
+	}
 
 	// tss address and script
 	tssAddr := signer.tssSigner.BTCAddressWitnessPubkeyHash()
@@ -626,6 +633,6 @@ func TestNewBTCSigner(t *testing.T) {
 		clientcommon.DefaultLoggers(),
 		&metrics.TelemetryServer{},
 		corecontext.NewZetaCoreContext(cfg))
-	require.NoError(t, err)
-	require.NotNil(t, btcSigner)
+	require.ErrorContains(t, err, "invalid endpoints")
+	require.Nil(t, btcSigner)
 }
