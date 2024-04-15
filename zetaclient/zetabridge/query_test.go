@@ -418,12 +418,6 @@ func TestZetaCoreBridge_GetZetaBlockHeight(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expectedOutput.Height, resp)
 	})
-
-	t.Run("get block height success", func(t *testing.T) {
-		resp, err := zetabridge.GetBlockHeight()
-		require.NoError(t, err)
-		require.Equal(t, expectedOutput.Height, resp)
-	})
 }
 
 func TestZetaCoreBridge_GetBaseGasPrice(t *testing.T) {
