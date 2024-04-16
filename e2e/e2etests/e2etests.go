@@ -49,9 +49,10 @@ const (
 	TestStressBTCDepositName    = "stress_btc_deposit"
 
 	// Admin test
-	TestMigrateChainSupportName = "migrate_chain_support"
-	TestPauseZRC20Name          = "pause_zrc20"
-	TestUpdateBytecodeName      = "update_bytecode"
+	TestMigrateChainSupportName     = "migrate_chain_support"
+	TestPauseZRC20Name              = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name     = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName = "update_bytecode_connector"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -224,10 +225,10 @@ var AllE2ETests = []runner.E2ETest{
 		TestERC20DepositAndCallRefund,
 	),
 	runner.NewE2ETest(
-		TestUpdateBytecodeName,
+		TestUpdateBytecodeZRC20Name,
 		"update ZRC20 bytecode swap",
 		[]runner.ArgDefinition{},
-		TestUpdateBytecode,
+		TestUpdateBytecodeZRC20,
 	),
 	runner.NewE2ETest(
 		TestEtherDepositAndCallName,
@@ -364,5 +365,11 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate the evm chain from goerli to sepolia",
 		[]runner.ArgDefinition{},
 		TestMigrateChainSupport,
+	),
+	runner.NewE2ETest(
+		TestUpdateBytecodeConnectorName,
+		"update zevm connector bytecode",
+		[]runner.ArgDefinition{},
+		TestUpdateBytecodeConnector,
 	),
 }

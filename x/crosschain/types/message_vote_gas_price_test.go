@@ -11,15 +11,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
+func TestMsgVoteGasPrice_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgGasPriceVoter
+		msg  *types.MsgVoteGasPrice
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.NewMsgGasPriceVoter(
+			msg: types.NewMsgVoteGasPrice(
 				"invalid",
 				1,
 				1,
@@ -30,7 +30,7 @@ func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain id",
-			msg: types.NewMsgGasPriceVoter(
+			msg: types.NewMsgVoteGasPrice(
 				sample.AccAddress(),
 				-1,
 				1,
@@ -41,7 +41,7 @@ func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid address",
-			msg: types.NewMsgGasPriceVoter(
+			msg: types.NewMsgVoteGasPrice(
 				sample.AccAddress(),
 				1,
 				1,
@@ -62,23 +62,23 @@ func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgGasPriceVoter_GetSigners(t *testing.T) {
+func TestMsgVoteGasPrice_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgGasPriceVoter
+		msg    types.MsgVoteGasPrice
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgGasPriceVoter{
+			msg: types.MsgVoteGasPrice{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgGasPriceVoter{
+			msg: types.MsgVoteGasPrice{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -99,22 +99,22 @@ func TestMsgGasPriceVoter_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgGasPriceVoter_Type(t *testing.T) {
-	msg := types.MsgGasPriceVoter{
+func TestMsgVoteGasPricer_Type(t *testing.T) {
+	msg := types.MsgVoteGasPrice{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, authz.GasPriceVoter.String(), msg.Type())
 }
 
-func TestMsgGasPriceVoter_Route(t *testing.T) {
-	msg := types.MsgGasPriceVoter{
+func TestMsgVoteGasPrice_Route(t *testing.T) {
+	msg := types.MsgVoteGasPrice{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgGasPriceVoter_GetSignBytes(t *testing.T) {
-	msg := types.MsgGasPriceVoter{
+func TestMsgVoteGasPrice_GetSignBytes(t *testing.T) {
+	msg := types.MsgVoteGasPrice{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

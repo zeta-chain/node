@@ -1,0 +1,202 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wzeta_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "FailedZetaSent",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyFungibleModule",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyWZETA",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WZETATransferFailed",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "wzeta_",
+        "type": "address"
+      }
+    ],
+    "name": "SetWZETA",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sourceTxOriginAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "zetaTxSenderAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "destinationAddress",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "zetaValueAndGas",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationGasLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "message",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "zetaParams",
+        "type": "bytes"
+      }
+    ],
+    "name": "ZetaSent",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "FUNGIBLE_MODULE_ADDRESS",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "foo",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "destinationAddress",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationGasLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "message",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint256",
+            "name": "zetaValueAndGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "zetaParams",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct ZetaInterfaces.SendInput",
+        "name": "input",
+        "type": "tuple"
+      }
+    ],
+    "name": "send",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wzeta_",
+        "type": "address"
+      }
+    ],
+    "name": "setWzetaAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "wzeta",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]

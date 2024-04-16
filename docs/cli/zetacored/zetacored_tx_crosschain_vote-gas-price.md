@@ -1,9 +1,9 @@
-# tx crosschain gas-price-voter
+# tx crosschain vote-gas-price
 
-Broadcast message gasPriceVoter
+Broadcast message to vote gas price
 
 ```
-zetacored tx crosschain gas-price-voter [chain] [price] [supply] [blockNumber] [flags]
+zetacored tx crosschain vote-gas-price [chain] [price] [supply] [blockNumber] [flags]
 ```
 
 ### Options
@@ -21,7 +21,7 @@ zetacored tx crosschain gas-price-voter [chain] [price] [supply] [blockNumber] [
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for gas-price-voter
+  -h, --help                     help for vote-gas-price
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
