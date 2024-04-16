@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgServer_GasPriceVoter(t *testing.T) {
+func TestMsgServer_VoteGasPrice(t *testing.T) {
 	t.Run("should error if unsupported chain", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,
@@ -24,7 +24,7 @@ func TestMsgServer_GasPriceVoter(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.GasPriceVoter(ctx, &types.MsgGasPriceVoter{
+		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
 			ChainId: 5,
 		})
 		require.Error(t, err)
@@ -42,7 +42,7 @@ func TestMsgServer_GasPriceVoter(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.GasPriceVoter(ctx, &types.MsgGasPriceVoter{
+		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
 			ChainId: 5,
 		})
 		require.Error(t, err)
@@ -65,7 +65,7 @@ func TestMsgServer_GasPriceVoter(t *testing.T) {
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(0), errors.New("err"))
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.GasPriceVoter(ctx, &types.MsgGasPriceVoter{
+		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
 			ChainId: 5,
 		})
 		require.Error(t, err)
@@ -90,7 +90,7 @@ func TestMsgServer_GasPriceVoter(t *testing.T) {
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		creator := sample.AccAddress()
-		res, err := msgServer.GasPriceVoter(ctx, &types.MsgGasPriceVoter{
+		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
 			Creator:     creator,
 			ChainId:     5,
 			Price:       1,
@@ -136,7 +136,7 @@ func TestMsgServer_GasPriceVoter(t *testing.T) {
 			Prices:    []uint64{1},
 		})
 
-		res, err := msgServer.GasPriceVoter(ctx, &types.MsgGasPriceVoter{
+		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
 			Creator:     creator,
 			ChainId:     5,
 			BlockNumber: 2,
@@ -181,7 +181,7 @@ func TestMsgServer_GasPriceVoter(t *testing.T) {
 			Prices:    []uint64{1},
 		})
 
-		res, err := msgServer.GasPriceVoter(ctx, &types.MsgGasPriceVoter{
+		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
 			Creator:     creator,
 			ChainId:     5,
 			BlockNumber: 2,

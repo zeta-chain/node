@@ -53519,13 +53519,8 @@ definitions:
       - sepolia_testnet
       - goerli_localnet
       - btc_regtest
+      - amoy_testnet
     default: empty
-    title: |-
-      - goerli_testnet: Testnet
-       - goerli_localnet: LocalNet
-       zeta_localnet = 13;
-       - btc_regtest: Athens
-        zeta_athensnet=15;
   chainsReceiveStatus:
     type: string
     enum:
@@ -53686,8 +53681,6 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgGasPriceVoterResponse:
-    type: object
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
@@ -53695,6 +53688,8 @@ definitions:
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
+    type: object
+  crosschainMsgVoteGasPriceResponse:
     type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object

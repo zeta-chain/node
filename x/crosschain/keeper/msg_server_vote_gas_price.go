@@ -15,12 +15,12 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// GasPriceVoter submits information about the connected chain's gas price at a specific block
+// VoteGasPrice submits information about the connected chain's gas price at a specific block
 // height. Gas price submitted by each validator is recorded separately and a
 // median index is updated.
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVoter) (*types.MsgGasPriceVoterResponse, error) {
+func (k msgServer) VoteGasPrice(goCtx context.Context, msg *types.MsgVoteGasPrice) (*types.MsgVoteGasPriceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
@@ -78,7 +78,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	// reset the gas count
 	k.ResetGasMeterAndConsumeGas(ctx, gasUsed)
 
-	return &types.MsgGasPriceVoterResponse{}, nil
+	return &types.MsgVoteGasPriceResponse{}, nil
 }
 
 type indexValue struct {

@@ -53,7 +53,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain chains.Chain, gasPrice uint64, suppl
 	// #nosec G701 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
+	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {

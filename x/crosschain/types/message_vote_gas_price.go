@@ -7,10 +7,10 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/authz"
 )
 
-var _ sdk.Msg = &MsgGasPriceVoter{}
+var _ sdk.Msg = &MsgVoteGasPrice{}
 
-func NewMsgGasPriceVoter(creator string, chain int64, price uint64, supply string, blockNumber uint64) *MsgGasPriceVoter {
-	return &MsgGasPriceVoter{
+func NewMsgVoteGasPrice(creator string, chain int64, price uint64, supply string, blockNumber uint64) *MsgVoteGasPrice {
+	return &MsgVoteGasPrice{
 		Creator:     creator,
 		ChainId:     chain,
 		Price:       price,
@@ -19,15 +19,15 @@ func NewMsgGasPriceVoter(creator string, chain int64, price uint64, supply strin
 	}
 }
 
-func (msg *MsgGasPriceVoter) Route() string {
+func (msg *MsgVoteGasPrice) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgGasPriceVoter) Type() string {
+func (msg *MsgVoteGasPrice) Type() string {
 	return authz.GasPriceVoter.String()
 }
 
-func (msg *MsgGasPriceVoter) GetSigners() []sdk.AccAddress {
+func (msg *MsgVoteGasPrice) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -35,12 +35,12 @@ func (msg *MsgGasPriceVoter) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgGasPriceVoter) GetSignBytes() []byte {
+func (msg *MsgVoteGasPrice) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgGasPriceVoter) ValidateBasic() error {
+func (msg *MsgVoteGasPrice) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
