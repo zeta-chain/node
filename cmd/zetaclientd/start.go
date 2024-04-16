@@ -124,7 +124,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Initialize core parameters from zetacore
 	appContext := appcontext.NewAppContext(corecontext.NewZetaCoreContext(cfg), cfg)
-	err = zetaBridge.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true)
+	err = zetaBridge.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
