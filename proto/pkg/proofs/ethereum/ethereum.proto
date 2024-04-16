@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ethereum;
+package pkg.proofs.ethereum;
 
 option go_package = "github.com/zeta-chain/zetacore/pkg/proofs/ethereum";
 

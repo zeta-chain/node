@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.crosschain;
+package crosschain;
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.crosschain;
+package crosschain;
 
 import "gogoproto/gogo.proto";
 import "pkg/coin/coin.proto";
@@ -28,7 +28,7 @@ message InboundTxParams {
   string sender = 1; // this address is the immediate contract/EOA that calls the Connector.send()
   int64 sender_chain_id = 2;
   string tx_origin = 3; // this address is the EOA that signs the inbound tx
-  coin.CoinType coin_type = 4;
+  pkg.coin.CoinType coin_type = 4;
   string asset = 5; // for ERC20 coin type, the asset is an address of the ERC20 contract
   string amount = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
@@ -52,7 +52,7 @@ message ZetaAccounting {
 message OutboundTxParams {
   string receiver = 1;
   int64 receiver_chainId = 2;
-  coin.CoinType coin_type = 3;
+  pkg.coin.CoinType coin_type = 3;
   string amount = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.observer;
+package observer;
 
 import "gogoproto/gogo.proto";
 import "observer/blame.proto";
@@ -41,7 +41,7 @@ message MsgAddBlockHeader {
   int64 chain_id = 2;
   bytes block_hash = 3;
   int64 height = 4;
-  proofs.HeaderData header = 5 [(gogoproto.nullable) = false];
+  pkg.proofs.HeaderData header = 5 [(gogoproto.nullable) = false];
 }
 
 message MsgAddBlockHeaderResponse {}
@@ -106,7 +106,7 @@ message MsgVoteTSS {
   string creator = 1;
   string tss_pubkey = 2;
   int64 keygen_zeta_height = 3;
-  chains.ReceiveStatus status = 4;
+  pkg.chains.ReceiveStatus status = 4;
 }
 
 message MsgVoteTSSResponse {

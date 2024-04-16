@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.crosschain;
+package crosschain;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crosschain/cross_chain_tx.proto";

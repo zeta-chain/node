@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.crosschain;
+package crosschain;
 
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/gas_price.proto";

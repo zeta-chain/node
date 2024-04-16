@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.emissions;
+package emissions;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "emissions/params.proto";

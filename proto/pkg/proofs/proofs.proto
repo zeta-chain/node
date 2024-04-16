@@ -1,5 +1,5 @@
 syntax = "proto3";
-package proofs;
+package pkg.proofs;
 
 import "gogoproto/gogo.proto";
 import "pkg/proofs/bitcoin/bitcoin.proto";
@@ -25,7 +25,7 @@ message HeaderData {
 
 message Proof {
   oneof proof {
-    ethereum.Proof ethereum_proof = 1;
-    bitcoin.Proof bitcoin_proof = 2;
+    pkg.proofs.ethereum.Proof ethereum_proof = 1;
+    pkg.proofs.bitcoin.Proof bitcoin_proof = 2;
   }
 }

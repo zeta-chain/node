@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.fungible;
+package fungible;
 
 import "gogoproto/gogo.proto";
 import "pkg/coin/coin.proto";
@@ -14,7 +14,7 @@ message ForeignCoins {
   uint32 decimals = 5;
   string name = 6;
   string symbol = 7;
-  coin.CoinType coin_type = 8;
+  pkg.coin.CoinType coin_type = 8;
   uint64 gas_limit = 9;
   bool paused = 10;
   string liquidity_cap = 11 [

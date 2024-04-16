@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.observer;
+package observer;
 
 import "gogoproto/gogo.proto";
 import "pkg/crypto/crypto.proto";
@@ -19,6 +19,6 @@ enum NodeStatus {
 message NodeAccount {
   string operator = 1;
   string granteeAddress = 2;
-  crypto.PubKeySet granteePubkey = 3;
+  pkg.crypto.PubKeySet granteePubkey = 3;
   NodeStatus nodeStatus = 4;
 }

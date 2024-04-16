@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.fungible;
+package fungible;
 
 import "fungible/tx.proto";
 import "gogoproto/gogo.proto";
@@ -21,7 +21,7 @@ message EventZRC20Deployed {
   string name = 4;
   string symbol = 5;
   int64 decimals = 6;
-  coin.CoinType coin_type = 7;
+  pkg.coin.CoinType coin_type = 7;
   string erc20 = 8;
   int64 gas_limit = 9;
 }
@@ -29,7 +29,7 @@ message EventZRC20Deployed {
 message EventZRC20WithdrawFeeUpdated {
   string msg_type_url = 1;
   int64 chain_id = 2;
-  coin.CoinType coin_type = 3;
+  pkg.coin.CoinType coin_type = 3;
   string zrc20_address = 4;
   string old_withdraw_fee = 5;
   string new_withdraw_fee = 6;

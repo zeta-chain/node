@@ -1,5 +1,5 @@
 syntax = "proto3";
-package chains;
+package pkg.chains;
 
 import "gogoproto/gogo.proto";
 

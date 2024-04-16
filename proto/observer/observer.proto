@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.observer;
+package observer;
 
 import "gogoproto/gogo.proto";
 import "pkg/chains/chains.proto";
@@ -24,7 +24,7 @@ enum ObserverUpdateReason {
 
 message ObserverMapper {
   string index = 1;
-  chains.Chain observer_chain = 2;
+  pkg.chains.Chain observer_chain = 2;
   repeated string observer_list = 4;
 }
 

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package coin;
+package pkg.coin;
 
 import "gogoproto/gogo.proto";
 

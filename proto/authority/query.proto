@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.authority;
+package authority;
 
 import "authority/policies.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";

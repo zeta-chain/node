@@ -304,6 +304,8 @@ func New(
 		observertypes.StoreKey,
 		fungibletypes.StoreKey,
 		emissionstypes.StoreKey,
+		consensusparamtypes.StoreKey,
+		crisistypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys()

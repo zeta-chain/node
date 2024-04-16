@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.observer;
+package observer;
 
 import "gogoproto/gogo.proto";
 
