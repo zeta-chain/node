@@ -155,6 +155,14 @@ typescript:
 	@bash ./scripts/protoc-gen-typescript.sh
 .PHONY: typescript
 
+protoVer=0.13.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+
+proto-gen:
+	@echo "Generating Protobuf files"
+	@$(protoImage) sh ./scripts/protocgen.sh
+
 proto-format:
 	@bash ./scripts/proto-format.sh
 

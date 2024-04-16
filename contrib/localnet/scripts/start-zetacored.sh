@@ -164,7 +164,7 @@ then
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
    pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
    pps=${pp:1:58}
-   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
+   sed -i -e 's/^persistent_peers =.*/persistent_peers = "'$pps'"/' "$HOME"/.zetacored/config/config.toml
 fi
 # End of genesis creation steps . The steps below are common to all the nodes
 

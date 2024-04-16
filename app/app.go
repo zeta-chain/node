@@ -44,6 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -168,7 +169,7 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 var (
 	ModuleBasics = module.NewBasicManager(
 		auth.AppModuleBasic{},
-		genutil.AppModuleBasic{},
+		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -179,6 +180,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		consensus.AppModuleBasic{},
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
 		authoritymodule.AppModuleBasic{},
@@ -243,7 +245,7 @@ type App struct {
 	// sdk keepers
 	AccountKeeper         authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
-	StakingKeeper         stakingkeeper.Keeper
+	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             govkeeper.Keeper
@@ -348,17 +350,17 @@ func New(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.BlockedAddrs(), authAddr,
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(
+	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, authAddr,
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec, keys[distrtypes.StoreKey], app.AccountKeeper, app.BankKeeper,
-		stakingKeeper, authtypes.FeeCollectorName, authAddr,
+		app.StakingKeeper, authtypes.FeeCollectorName, authAddr,
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, app.LegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authAddr,
+		appCodec, app.LegacyAmino(), keys[slashingtypes.StoreKey], app.StakingKeeper, authAddr,
 	)
 
 	app.CrisisKeeper = *crisiskeeper.NewKeeper(
@@ -378,7 +380,7 @@ func New(
 		appCodec,
 		keys[observertypes.StoreKey],
 		keys[observertypes.MemStoreKey],
-		stakingKeeper,
+		app.StakingKeeper,
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -419,7 +421,7 @@ func New(
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey], authtypes.NewModuleAddress(govtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, stakingKeeper,
+		app.AccountKeeper, app.BankKeeper, app.StakingKeeper,
 		&app.FeeMarketKeeper, nil, geth.NewEVM,
 		tracer, evmSs,
 	)
@@ -439,7 +441,7 @@ func New(
 		appCodec,
 		keys[crosschaintypes.StoreKey],
 		keys[crosschaintypes.MemStoreKey],
-		stakingKeeper,
+		app.StakingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ObserverKeeper,
@@ -475,7 +477,7 @@ func New(
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
+		appCodec, keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
@@ -506,7 +508,7 @@ func New(
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
-		staking.NewAppModule(appCodec, &app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(&app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
@@ -519,6 +521,7 @@ func New(
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
 		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -548,6 +551,7 @@ func New(
 		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName,
@@ -571,6 +575,7 @@ func New(
 		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -586,7 +591,6 @@ func New(
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
-		crisistypes.ModuleName,
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		paramstypes.ModuleName,
@@ -601,6 +605,9 @@ func New(
 		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
+		consensusparamtypes.ModuleName,
+		// NOTE: crisis module must go at the end to check for invariants on each module
+		crisistypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
