@@ -46,32 +46,19 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		}
 		gasLimit, err := k.GetRevertGasLimit(ctx, *cctx)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract Error in GetRevertGasLimit: %s", cctx.Index))
 			cctx.SetAbort(fmt.Sprintf("revert gas limit error: %s", err.Error()))
 			return
 		}
 		if gasLimit == 0 {
-			// use same gas limit of outbound as a fallback -- should not happen
+			// use same gas limit of outbound as a fallback -- should not be required
 			gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
 		}
-
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract Before Adding Revert: %d", len(cctx.OutboundTxParams)))
 
 		err = cctx.AddRevertOutbound(gasLimit)
 		if err != nil {
 			cctx.SetAbort(fmt.Sprintf("revert outbound error: %s", err.Error()))
 			return
 		}
-
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract Add revert: %s", cctx.Index))
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract After Adding Revert: %d", len(cctx.OutboundTxParams)))
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract Receiver: %s", cctx.GetCurrentOutTxParam().Receiver))
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract ReceiverChainId: %d", cctx.GetCurrentOutTxParam().ReceiverChainId))
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract Amount: %s", cctx.GetCurrentOutTxParam().Amount.String()))
-
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract Receiver Original: %s", cctx.OutboundTxParams[0].Receiver))
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract ReceiverChainId Original: %d", cctx.OutboundTxParams[0].ReceiverChainId))
-
 		// we create a new cached context, and we don't commit the previous one with EVM deposit
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		err = func() error {
@@ -83,7 +70,6 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 				false,
 			)
 			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract error in PayGasAndUpdateCctx: %s", cctx.Index))
 				return err
 			}
 			// Update nonce using senderchain id as this is a revert tx and would go back to the original sender
@@ -95,7 +81,6 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		}
 		commitRevert()
 		cctx.SetPendingRevert(revertMessage)
-		ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract set to pending revert: %s", cctx.Index))
 		return
 	}
 	// successful HandleEVMDeposit;

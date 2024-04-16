@@ -31,28 +31,30 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 		})
 	}
 	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Error(fmt.Sprintf("set mapping nonce => cctxIndex: cctx: %s", cctx.Index))
+		ctx.Logger().Error(fmt.Sprintf("SetNonceToCctx: cctx: %s", cctx.Index))
 	}
 
 	k.SetCrossChainTx(ctx, cctx)
 	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Error(fmt.Sprintf("set cctx: cctx: %s", cctx.Index))
+		ctx.Logger().Error(fmt.Sprintf("SetCrossChainTx: cctx: %s", cctx.Index))
 	}
-	// set mapping inTxHash -> cctxIndex
-	//in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
-	//in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
-	//found = false
-	//for _, cctxIndex := range in.CctxIndex {
-	//	if cctxIndex == cctx.Index {
-	//		found = true
-	//		break
-	//	}
-	//}
-	//if !found {
-	//	in.CctxIndex = append(in.CctxIndex, cctx.Index)
-	//}
-	//k.SetInTxHashToCctx(ctx, in)
-	//
+	//set mapping inTxHash -> cctxIndex
+	in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
+	in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
+	found = false
+	for _, cctxIndex := range in.CctxIndex {
+		if cctxIndex == cctx.Index {
+			found = true
+			break
+		}
+	}
+	if !found {
+		in.CctxIndex = append(in.CctxIndex, cctx.Index)
+	}
+	k.SetInTxHashToCctx(ctx, in)
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		ctx.Logger().Error(fmt.Sprintf("SetInTxHashToCctx: cctx: %s", cctx.Index))
+	}
 	//if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 	//	ctx.Logger().Error(fmt.Sprintf("found tss: cctx: %s", cctx.Index))
 	//	ctx.Logger().Error(fmt.Sprintf("found tss: tss: %s", tss.TssPubkey))

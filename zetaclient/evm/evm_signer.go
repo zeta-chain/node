@@ -410,6 +410,11 @@ func (signer *Signer) TryProcessOutTx(
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundTxParams[0].ReceiverChainId == zetaBridge.ZetaChain().ChainId {
 		switch cctx.InboundTxParams.CoinType {
+		case coin.CoinType_Zeta:
+			logger.Info().Msgf("SignRevertTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
+			txData.srcChainID = big.NewInt(cctx.OutboundTxParams[0].ReceiverChainId)
+			txData.toChainID = big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId)
+			tx, err = signer.SignRevertTx(txData)
 		case coin.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignWithdrawTx(txData)
@@ -456,7 +461,9 @@ func (signer *Signer) BroadcastOutTx(
 	txData *OutBoundTransactionData) {
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
-
+	if tx == nil {
+		logger.Warn().Msgf("BroadcastOutTx: no tx to broadcast", cctx.Index)
+	}
 	// Try to broadcast transaction
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()

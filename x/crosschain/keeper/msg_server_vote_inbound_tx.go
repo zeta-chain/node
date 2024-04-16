@@ -116,19 +116,23 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("SaveInbound: cctx: %s", cctx.Index))
+		ctx.Logger().Info(fmt.Sprintf("SaveInbound Before: cctx: %s", cctx.Index))
 	}
+
+	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
+	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		ctx.Logger().Info(fmt.Sprintf("SaveInbound After: cctx: %s", cctx.Index))
+	}
+
 	EmitEventInboundFinalized(ctx, cctx)
 	k.AddFinalizedInbound(ctx,
 		cctx.GetInboundTxParams().InboundTxObservedHash,
 		cctx.GetInboundTxParams().SenderChainId,
 		eventIndex)
 	// #nosec G701 always positive
-	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
-	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
+
 	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("SaveInbound: cctx: %s", cctx.Index))
-	}
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 }
