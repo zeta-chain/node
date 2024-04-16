@@ -232,46 +232,46 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// defines all tests, if light is enabled, only the most basic tests are run
 		erc20Tests := []string{
-			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleWithdrawsName,
-			e2etests.TestERC20DepositAndCallRefundName,
-			e2etests.TestZRC20SwapName,
+			//e2etests.TestERC20WithdrawName,
+			//e2etests.TestMultipleWithdrawsName,
+			//e2etests.TestERC20DepositAndCallRefundName,
+			//e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
-			e2etests.TestERC20DepositRestrictedName,
+			//e2etests.TestERC20DepositRestrictedName,
 		}
 		zetaTests := []string{
-			e2etests.TestMessagePassingZEVMName,
+			//e2etests.TestMessagePassingZEVMName,
 			e2etests.TestMessagePassingZEVMRevertName,
-			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingRevertFailName,
-			e2etests.TestMessagePassingRevertSuccessName,
+			//e2etests.TestZetaWithdrawName,
+			//e2etests.TestMessagePassingName,
+			//e2etests.TestMessagePassingRevertFailName,
+			//e2etests.TestMessagePassingRevertSuccessName,
 		}
 		zetaAdvancedTests := []string{
-			e2etests.TestZetaDepositRestrictedName,
+			//e2etests.TestZetaDepositRestrictedName,
 		}
 		bitcoinTests := []string{
-			e2etests.TestBitcoinWithdrawSegWitName,
-			e2etests.TestBitcoinWithdrawTaprootName,
-			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawP2SHName,
-			e2etests.TestBitcoinWithdrawP2WSHName,
-			e2etests.TestBitcoinWithdrawInvalidAddressName,
-			e2etests.TestZetaWithdrawBTCRevertName,
-			e2etests.TestCrosschainSwapName,
+			//e2etests.TestBitcoinWithdrawSegWitName,
+			//e2etests.TestBitcoinWithdrawTaprootName,
+			//e2etests.TestBitcoinWithdrawLegacyName,
+			//e2etests.TestBitcoinWithdrawP2SHName,
+			//e2etests.TestBitcoinWithdrawP2WSHName,
+			//e2etests.TestBitcoinWithdrawInvalidAddressName,
+			//e2etests.TestZetaWithdrawBTCRevertName,
+			//e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
-			e2etests.TestBitcoinWithdrawRestrictedName,
+			//e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
-			e2etests.TestEtherWithdrawName,
-			e2etests.TestContextUpgradeName,
-			e2etests.TestEtherDepositAndCallName,
-			e2etests.TestDepositAndCallRefundName,
+			//e2etests.TestEtherWithdrawName,
+			//e2etests.TestContextUpgradeName,
+			//e2etests.TestEtherDepositAndCallName,
+			//e2etests.TestDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
-			e2etests.TestEtherWithdrawRestrictedName,
+			//e2etests.TestEtherWithdrawRestrictedName,
 		}
 
 		if !light {

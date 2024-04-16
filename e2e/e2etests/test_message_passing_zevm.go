@@ -105,7 +105,7 @@ func TestMessagePassingZEVMRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	r.Logger.Print(fmt.Sprintf("🔄 Revert tx intx : %d", receipt.TxHash.String()))
+	r.Logger.Print(fmt.Sprintf("🔄 Revert tx intx : %s", receipt.TxHash.String()))
 
 	// New inbound message picked up by zeta-clients and voted on by observers to initiate a contract call on zEVM
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)

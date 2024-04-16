@@ -217,7 +217,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestMessagePassingZEVMName,
 		"evm -> zevm message passing contract call ",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
 		},
 		TestMessagePassingZEVM,
 	),
@@ -225,7 +225,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestMessagePassingZEVMRevertName,
 		"evm -> zevm message passing and revert back to evm",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
 		},
 		TestMessagePassingZEVMRevert,
 	),

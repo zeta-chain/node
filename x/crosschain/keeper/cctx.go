@@ -16,23 +16,6 @@ import (
 // 3. set the mapping nonce => cctx
 // 4. update the zeta accounting
 func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx types.CrossChainTx) {
-	k.SetCrossChainTx(ctx, cctx)
-
-	// set mapping inTxHash -> cctxIndex
-	in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
-	in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
-	found := false
-	for _, cctxIndex := range in.CctxIndex {
-		if cctxIndex == cctx.Index {
-			found = true
-			break
-		}
-	}
-	if !found {
-		in.CctxIndex = append(in.CctxIndex, cctx.Index)
-	}
-	k.SetInTxHashToCctx(ctx, in)
-
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return
@@ -47,9 +30,42 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 			Tss:       tss.TssPubkey,
 		})
 	}
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
-		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		ctx.Logger().Error(fmt.Sprintf("set mapping nonce => cctxIndex: cctx: %s", cctx.Index))
 	}
+
+	k.SetCrossChainTx(ctx, cctx)
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		ctx.Logger().Error(fmt.Sprintf("set cctx: cctx: %s", cctx.Index))
+	}
+	// set mapping inTxHash -> cctxIndex
+	//in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
+	//in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
+	//found = false
+	//for _, cctxIndex := range in.CctxIndex {
+	//	if cctxIndex == cctx.Index {
+	//		found = true
+	//		break
+	//	}
+	//}
+	//if !found {
+	//	in.CctxIndex = append(in.CctxIndex, cctx.Index)
+	//}
+	//k.SetInTxHashToCctx(ctx, in)
+	//
+	//if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+	//	ctx.Logger().Error(fmt.Sprintf("found tss: cctx: %s", cctx.Index))
+	//	ctx.Logger().Error(fmt.Sprintf("found tss: tss: %s", tss.TssPubkey))
+	//	ctx.Logger().Error(fmt.Sprintf("Nonce: %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
+	//	ctx.Logger().Error(fmt.Sprintf("ChainId: %d", cctx.GetCurrentOutTxParam().ReceiverChainId))
+	//}
+	//
+	//if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
+	//	k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
+	//}
+	//if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+	//	ctx.Logger().Error(fmt.Sprintf("SaveInbound completed: cctx: %s", cctx.Index))
+	//}
 }
 
 // SetCrossChainTx set a specific send in the store from its index

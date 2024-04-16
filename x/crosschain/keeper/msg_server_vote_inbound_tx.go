@@ -6,6 +6,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -114,6 +115,9 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 */
 
 func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		ctx.Logger().Info(fmt.Sprintf("SaveInbound: cctx: %s", cctx.Index))
+	}
 	EmitEventInboundFinalized(ctx, cctx)
 	k.AddFinalizedInbound(ctx,
 		cctx.GetInboundTxParams().InboundTxObservedHash,
@@ -123,5 +127,8 @@ func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventInde
 	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
 	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		ctx.Logger().Info(fmt.Sprintf("SaveInbound: cctx: %s", cctx.Index))
+	}
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 }

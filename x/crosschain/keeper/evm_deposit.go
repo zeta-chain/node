@@ -28,10 +28,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 	inboundSender := cctx.GetInboundTxParams().Sender
 	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
 	inboundCoinType := cctx.InboundTxParams.CoinType
-	data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-	if err != nil {
-		return false, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
-	}
+
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
@@ -46,11 +43,26 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		if err != nil {
 			return false, err
 		}
+		data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return false, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
+		}
+		ctx.Logger().Info(fmt.Sprintf("HandleEVMDeposit: Zeta deposit to ZEVM cctx: %s ", cctx.Index))
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		evmTxResponse, err := k.fungibleKeeper.ZEVMDepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+		if evmTxResponse != nil {
+			ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract response: %s ", evmTxResponse.String()))
+			ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract response: %s", evmTxResponse.Logs))
+		}
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract error: %s", err.Error()))
+		}
+
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
+			ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract reverted and error: %s", err.Error()))
 			return true, err // contract reverted; should refunding automatically
 		} else if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("HandleEVMDeposit: ZEVMDepositAndCallContract not reverted but has error: %s", err.Error()))
 			return false, err // internal error; should abort
 		}
 	} else {

@@ -17,9 +17,12 @@ func (k Keeper) RemoveNonceToCctx(ctx sdk.Context, nonceToCctx types.NonceToCctx
 }
 
 func (k Keeper) SetNonceToCctx(ctx sdk.Context, nonceToCctx types.NonceToCctx) {
+	ctx.Logger().Error(fmt.Sprintf("set nonce to cctx start: %s", nonceToCctx.Tss))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NonceToCctxKeyPrefix))
+	ctx.Logger().Error(fmt.Sprintf("set nonce to cctx before marshal: %s", fmt.Sprintf("%s-%d-%d", nonceToCctx.Tss, nonceToCctx.ChainId, nonceToCctx.Nonce)))
 	b := k.cdc.MustMarshal(&nonceToCctx)
 	store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonceToCctx.Tss, nonceToCctx.ChainId, nonceToCctx.Nonce)), b)
+	ctx.Logger().Error(fmt.Sprintf("set nonce to cctx complete: %s", fmt.Sprintf("%s-%d-%d", nonceToCctx.Tss, nonceToCctx.ChainId, nonceToCctx.Nonce)))
 }
 
 func (k Keeper) GetNonceToCctx(ctx sdk.Context, tss string, chainID int64, nonce int64) (val types.NonceToCctx, found bool) {
