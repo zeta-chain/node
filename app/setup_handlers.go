@@ -1,10 +1,23 @@
 package app
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -15,18 +28,42 @@ const releaseVersion = "v15"
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
 	for _, subspace := range app.ParamsKeeper.GetSubspaces() {
-		subspace := subspace
-
+		var keyTable paramstypes.KeyTable
 		switch subspace.Name() {
-		// TODO: add all modules when cosmos-sdk is updated
+		case authtypes.ModuleName:
+			keyTable = authtypes.ParamKeyTable() //nolint:staticcheck
+		case banktypes.ModuleName:
+			keyTable = banktypes.ParamKeyTable() //nolint:staticcheck
+		case stakingtypes.ModuleName:
+			keyTable = stakingtypes.ParamKeyTable()
+		case distrtypes.ModuleName:
+			keyTable = distrtypes.ParamKeyTable() //nolint:staticcheck
+		case slashingtypes.ModuleName:
+			keyTable = slashingtypes.ParamKeyTable() //nolint:staticcheck
+		case govtypes.ModuleName:
+			keyTable = govv1.ParamKeyTable() //nolint:staticcheck
+		case crisistypes.ModuleName:
+			keyTable = crisistypes.ParamKeyTable() //nolint:staticcheck
+		case evmtypes.ModuleName:
+			keyTable = evmtypes.ParamKeyTable() //nolint:staticcheck
+		case feemarkettypes.ModuleName:
+			keyTable = feemarkettypes.ParamKeyTable()
 		case emissionstypes.ModuleName:
-			subspace.WithKeyTable(emissionstypes.ParamKeyTable())
+			keyTable = emissionstypes.ParamKeyTable()
 		case observertypes.ModuleName:
-			subspace.WithKeyTable(observertypes.ParamKeyTable())
+			keyTable = observertypes.ParamKeyTable()
+		default:
+			continue
+		}
+		if !subspace.HasKeyTable() {
+			subspace.WithKeyTable(keyTable)
 		}
 	}
+	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
+		// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
+		baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 		// Updated version map to the latest consensus versions from each module
 		for m, mb := range app.mm.Modules {
 			if module, ok := mb.(module.HasConsensusVersion); ok {
@@ -45,7 +82,7 @@ func SetupHandlers(app *App) {
 	}
 	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{authoritytypes.ModuleName},
+			Added: []string{authoritytypes.ModuleName, crisistypes.ModuleName, consensustypes.ModuleName},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
