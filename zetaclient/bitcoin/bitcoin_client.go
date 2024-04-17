@@ -519,15 +519,15 @@ func (ob *BTCChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
-// IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
-func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+// IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
+func (ob *BTCChainClient) IsOutboundProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	params := *cctx.GetCurrentOutTxParam()
 	sendHash := cctx.Index
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
 
 	// get broadcasted outtx and tx result
 	outTxID := ob.GetTxID(nonce)
-	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
+	logger.Info().Msgf("IsOutboundProcessed %s", outTxID)
 
 	ob.Mu.Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outTxID]
@@ -552,7 +552,7 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		if txResult == nil { // check failed, try again next time
 			return false, false, nil
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
-			ob.logger.OutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
+			ob.logger.OutTx.Info().Msgf("IsOutboundProcessed: outTx %s is still in mempool", outTxID)
 			return true, false, nil
 		}
 		// included
@@ -563,7 +563,7 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		if res == nil {
 			return false, false, nil
 		}
-		ob.logger.OutTx.Info().Msgf("IsSendOutTxProcessed: setIncludedTx succeeded for outTx %s", outTxID)
+		ob.logger.OutTx.Info().Msgf("IsOutboundProcessed: setIncludedTx succeeded for outTx %s", outTxID)
 	}
 
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutTx()
@@ -588,9 +588,9 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		coin.CoinType_Gas,
 	)
 	if err != nil {
-		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
+		logger.Error().Err(err).Msgf("IsOutboundProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
 	} else if zetaHash != "" {
-		logger.Info().Msgf("IsSendOutTxProcessed: confirmed Bitcoin outTx %s, zeta tx hash %s nonce %d ballot %s", res.TxID, zetaHash, nonce, ballot)
+		logger.Info().Msgf("IsOutboundProcessed: confirmed Bitcoin outTx %s, zeta tx hash %s nonce %d ballot %s", res.TxID, zetaHash, nonce, ballot)
 	}
 
 	return true, true, nil

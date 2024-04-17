@@ -60,7 +60,7 @@ func (ob *ChainClient) WatchIntxTracker() {
 
 // ObserveIntxTrackers observes the inbound trackers for the chain
 func (ob *ChainClient) ObserveIntxTrackers() error {
-	trackers, err := ob.zetaClient.GetInboundTrackersForChain(ob.chain.ChainId)
+	trackers, err := ob.zetaBridge.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, recei
 func (ob *ChainClient) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinType coin.CoinType, retryGasLimit uint64) (string, error) {
 	txHash := msg.InTxHash
 	chainID := ob.chain.ChainId
-	zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, retryGasLimit, msg)
+	zetaHash, ballot, err := ob.zetaBridge.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, retryGasLimit, msg)
 	if err != nil {
 		ob.logger.InTx.Err(err).Msgf("intx detected: error posting vote for chain %d token %s intx %s", chainID, coinType, txHash)
 		return "", err
@@ -259,7 +259,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 		ob.chain.ChainId,
 		"",
 		clienttypes.BytesToEthHex(event.Recipient),
-		ob.zetaClient.ZetaChain().ChainId,
+		ob.zetaBridge.ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.Hex(),
@@ -267,7 +267,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 		1_500_000,
 		coin.CoinType_ERC20,
 		event.Asset.String(),
-		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		ob.zetaBridge.GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
 	)
 }
@@ -318,7 +318,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.
 		event.DestinationGasLimit.Uint64(),
 		coin.CoinType_Zeta,
 		"",
-		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		ob.zetaBridge.GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
 	)
 }
@@ -354,7 +354,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 		ob.chain.ChainId,
 		sender.Hex(),
 		sender.Hex(),
-		ob.zetaClient.ZetaChain().ChainId,
+		ob.zetaBridge.ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(&tx.Value),
 		message,
 		tx.Hash,
@@ -362,7 +362,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 		90_000,
 		coin.CoinType_Gas,
 		"",
-		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		ob.zetaBridge.GetKeys().GetOperatorAddress().String(),
 		0, // not a smart contract call
 	)
 }

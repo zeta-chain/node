@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -130,11 +131,12 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
 	b.logger.Info().Msg("CoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
+	sampledLogger := b.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false)
+			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false, sampledLogger)
 			if err != nil {
 				b.logger.Err(err).Msg("CoreContextUpdater failed to update config")
 			}
@@ -281,7 +283,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 
 // PostVoteOutbound posts a vote on an observed outbound tx
 func (b *ZetaCoreBridge) PostVoteOutbound(
-	sendHash string,
+	cctxIndex string,
 	outTxHash string,
 	outBlockHeight uint64,
 	outTxGasUsed uint64,
@@ -296,7 +298,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedOutboundTx(
 		signerAddress,
-		sendHash,
+		cctxIndex,
 		outTxHash,
 		outBlockHeight,
 		outTxGasUsed,
