@@ -6,7 +6,6 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -115,39 +114,17 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 */
 
 func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
-	ctx.GasMeter().RefundGas(ctx.GasMeter().GasConsumed(), "reset the gas count")
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("Remaining %d , Limit :%d, cctx: %s", ctx.GasMeter().GasRemaining(), ctx.GasMeter().Limit(), cctx.Index))
-		ctx.Logger().Info(fmt.Sprintf("1 .SaveInbound Starting: cctx: %s", cctx.Index))
-	}
-
+	EmitEventInboundFinalized(ctx, cctx)
 	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
 	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("Remaining %d , Limit :%d, cctx: %s", ctx.GasMeter().GasRemaining(), ctx.GasMeter().Limit(), cctx.Index))
-		ctx.Logger().Info(fmt.Sprintf("2 . SetCctxAndNonceToCctxAndInTxHashToCctx : cctx: %s", cctx.Index))
-	}
-
-	EmitEventInboundFinalized(ctx, cctx)
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("Remaining %d , Limit :%d, cctx: %s", ctx.GasMeter().GasRemaining(), ctx.GasMeter().Limit(), cctx.Index))
-		ctx.Logger().Info(fmt.Sprintf("3 . EmitEventInboundFinalized: cctx: %s", cctx.Index))
-	}
+	// #nosec G701 always positive
 	k.AddFinalizedInbound(ctx,
 		cctx.GetInboundTxParams().InboundTxObservedHash,
 		cctx.GetInboundTxParams().SenderChainId,
 		eventIndex)
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("Remaining %d , Limit :%d, cctx: %s", ctx.GasMeter().GasRemaining(), ctx.GasMeter().Limit(), cctx.Index))
-		ctx.Logger().Info(fmt.Sprintf("4 . AddFinalizedInbound: cctx: %s", cctx.Index))
-	}
-	// #nosec G701 always positive
-
 	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Info(fmt.Sprintf("Remaining %d , Limit :%d, cctx: %s", ctx.GasMeter().GasRemaining(), ctx.GasMeter().Limit(), cctx.Index))
-		ctx.Logger().Info(fmt.Sprintf("5 . SaveInbound Finished: cctx: %s", cctx.Index))
-	}
+
+	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+
 }
