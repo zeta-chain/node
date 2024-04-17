@@ -11,6 +11,9 @@
 * `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
   * The structure of the message remains the same.
 
+* `MsgGasPriceVoter` message in the `crosschain` module has been renamed to `MsgVoteGasPrice`.
+  * The structure of the message remains the same.
+
 ### Refactor
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
@@ -28,6 +31,8 @@
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
 * [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync and remove fungible params
 * [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
+* [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
+* [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 
 ### Features
 
@@ -38,6 +43,7 @@
 * [1942](https://github.com/zeta-chain/node/pull/1982) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
+* [2006](https://github.com/zeta-chain/node/pull/2006) - add Amoy testnet static chain information
 
 ### Tests
 
@@ -61,6 +67,7 @@
 * [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
+* [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
 
 ### Fixes
 
