@@ -533,7 +533,6 @@ func New(
 
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
-		feemarkettypes.ModuleName,
 		evmtypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -547,6 +546,7 @@ func New(
 		paramstypes.ModuleName,
 		group.ModuleName,
 		vestingtypes.ModuleName,
+		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
 		observertypes.ModuleName,
 		fungibletypes.ModuleName,
