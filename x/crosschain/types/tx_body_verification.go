@@ -118,6 +118,8 @@ func verifyOutTxBodyEVM(msg MsgAddToOutTxTracker, txBytes []byte, tssEth string)
 }
 
 // verifyOutTxBodyBTC validates the SegWit sender address, nonce and chain id and tx hash
+// TODO: Implement tests for the function
+// https://github.com/zeta-chain/node/issues/1994
 func verifyOutTxBodyBTC(msg MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
 	if !chains.IsBitcoinChain(msg.ChainId) {
 		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
