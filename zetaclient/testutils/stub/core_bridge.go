@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -50,7 +51,7 @@ func (z *MockZetaCoreBridge) PostVoteOutbound(_ string, _ string, _ uint64, _ ui
 	if z.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
-	return "", "", nil
+	return sample.Hash().Hex(), "", nil
 }
 
 func (z *MockZetaCoreBridge) PostGasPrice(_ chains.Chain, _ uint64, _ string, _ uint64) (string, error) {

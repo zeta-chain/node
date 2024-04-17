@@ -13,6 +13,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -313,7 +314,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 		cfg := config.NewConfig()
 		coreCtx := corecontext.NewZetaCoreContext(cfg)
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		err := zetabridge.UpdateZetaCoreContext(coreCtx, false)
+		err := zetabridge.UpdateZetaCoreContext(coreCtx, false, zerolog.Logger{})
 		require.NoError(t, err)
 	})
 }

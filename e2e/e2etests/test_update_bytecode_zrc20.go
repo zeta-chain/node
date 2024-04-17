@@ -12,8 +12,8 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// TestUpdateBytecode tests updating the bytecode of a zrc20 and interact with it
-func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
+// TestUpdateBytecodeZRC20 tests updating the bytecode of a zrc20 and interact with it
+func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	// Random approval
 	approved := sample.EthAddress()
 	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, approved, big.NewInt(1e10))
