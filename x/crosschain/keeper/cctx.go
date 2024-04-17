@@ -32,9 +32,6 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 	}
 
 	k.SetCrossChainTx(ctx, cctx)
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Error(fmt.Sprintf("SetCrossChainTx: cctx: %s", cctx.Index))
-	}
 	//set mapping inTxHash -> cctxIndex
 	in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
 	in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
@@ -49,9 +46,6 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 		in.CctxIndex = append(in.CctxIndex, cctx.Index)
 	}
 	k.SetInTxHashToCctx(ctx, in)
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Error(fmt.Sprintf("SetInTxHashToCctx: cctx: %s", cctx.Index))
-	}
 
 	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
