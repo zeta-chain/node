@@ -110,7 +110,7 @@ func TestMessagePassingZEVMRevert(r *runner.E2ERunner, args []string) {
 	// New inbound message picked up by zeta-clients and voted on by observers to initiate a contract call on zEVM
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
-		panic("expected cctx to be outbound_mined")
+		panic("expected cctx to be reverted")
 	}
 	r.Logger.Print(fmt.Sprintf("🔄 Cctx mined for revert contract call chain zevm %s", cctx.Index))
 }

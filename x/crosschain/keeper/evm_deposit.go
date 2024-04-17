@@ -50,7 +50,6 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		evmTxResponse, err := k.fungibleKeeper.ZEVMDepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
-			ctx.Logger().Error(fmt.Sprintf("####HandleEVMDeposit: ZEVMDepositAndCallContract reverted and error: %s", err.Error()))
 			return true, err // contract reverted; should refunding automatically
 		} else if err != nil {
 			return false, err // internal error; should abort

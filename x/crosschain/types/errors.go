@@ -41,5 +41,5 @@ var (
 	ErrUnableProcessRefund           = errorsmod.Register(ModuleName, 1148, "unable to process refund")
 	ErrUnableToFindZetaAccounting    = errorsmod.Register(ModuleName, 1149, "unable to find zeta accounting")
 	ErrInsufficientZetaAmount        = errorsmod.Register(ModuleName, 1150, "insufficient zeta amount")
-	ErrUnableToDecodeMessageString   = errorsmod.Register(ModuleName, 1151, "unable to decode message bytes")
+	ErrUnableToDecodeMessageString   = errorsmod.Register(ModuleName, 1151, "unable to decode message string")
 )

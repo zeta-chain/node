@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -533,7 +534,8 @@ func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut
 		[]ethcommon.Address{wzetaAddr, outZRC4},
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method getAmountsIn (%s)", err.Error())
+		fmt.Println(err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrContractCall, fmt.Sprintf("failed to CallEVM method getAmountsIn (%s)", err.Error()))
 	}
 
 	amounts := new([2]*big.Int)
