@@ -12,6 +12,7 @@ import (
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	mocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -118,7 +119,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 			Header:    proofs.HeaderData{},
 		})
 
-		require.ErrorIs(t, err, types.ErrInvalidBlockHeader)
+		require.ErrorIs(t, err, lightclienttypes.ErrInvalidBlockHeader)
 	})
 
 	t.Run("can create a new ballot, vote and finalize", func(t *testing.T) {

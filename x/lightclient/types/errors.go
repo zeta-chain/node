@@ -13,4 +13,5 @@ var (
 	ErrBlockHeaderNotFound             = errorsmod.Register(ModuleName, 1108, "block header not found")
 	ErrProofVerificationFailed         = errorsmod.Register(ModuleName, 1109, "proof verification failed")
 	ErrInvalidHeight                   = errorsmod.Register(ModuleName, 1110, "invalid height")
+	ErrInvalidBlockHeader              = errorsmod.Register(ModuleName, 1111, "invalid block header")
 )

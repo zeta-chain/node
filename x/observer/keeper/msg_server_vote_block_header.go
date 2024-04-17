@@ -5,6 +5,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -26,7 +27,7 @@ func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBloc
 	// check the new block header is valid
 	parentHash, err := k.lightclientKeeper.CheckNewBlockHeader(ctx, msg.ChainId, msg.BlockHash, msg.Height, msg.Header)
 	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrInvalidBlockHeader, err.Error())
+		return nil, cosmoserrors.Wrap(lightclienttypes.ErrInvalidBlockHeader, err.Error())
 	}
 
 	// add vote to ballot
