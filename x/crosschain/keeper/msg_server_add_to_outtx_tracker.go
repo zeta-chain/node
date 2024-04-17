@@ -130,12 +130,10 @@ func verifyProofAndOutTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToOu
 	tss, err := k.GetObserverKeeper().GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
 		BitcoinChainId: bitcoinChainID,
 	})
-	if err != nil || tss == nil {
-		reason := "tss response is nil"
-		if err != nil {
-			reason = err.Error()
-		}
-		return observertypes.ErrTssNotFound.Wrapf("tss address not found %s", reason)
+	if err != nil {
+		return observertypes.ErrTssNotFound.Wrapf(err.Error())
+	} else if tss == nil {
+		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
 	}
 
 	if err := types.VerifyOutTxBody(*msg, txBytes, *tss); err != nil {
