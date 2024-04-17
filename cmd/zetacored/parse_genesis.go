@@ -121,7 +121,7 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 		if Modify[m] {
 			switch m {
 			case crosschaintypes.ModuleName:
-				err := ModifyCrossChainState(appState, importAppState, cdc)
+				err := ModifyCrosschainState(appState, importAppState, cdc)
 				if err != nil {
 					return err
 				}
@@ -145,9 +145,9 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 	return nil
 }
 
-// ModifyCrossChainState modifies the crosschain state before importing
+// ModifyCrosschainState modifies the crosschain state before importing
 // It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
-func ModifyCrossChainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
+func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
 	importedCrossChainGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InTxHashToCctxList))]
