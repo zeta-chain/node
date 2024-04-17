@@ -30,9 +30,6 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 			Tss:       tss.TssPubkey,
 		})
 	}
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		ctx.Logger().Error(fmt.Sprintf("SetNonceToCctx: cctx: %s", cctx.Index))
-	}
 
 	k.SetCrossChainTx(ctx, cctx)
 	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
@@ -55,19 +52,10 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		ctx.Logger().Error(fmt.Sprintf("SetInTxHashToCctx: cctx: %s", cctx.Index))
 	}
-	//if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-	//	ctx.Logger().Error(fmt.Sprintf("found tss: cctx: %s", cctx.Index))
-	//	ctx.Logger().Error(fmt.Sprintf("found tss: tss: %s", tss.TssPubkey))
-	//	ctx.Logger().Error(fmt.Sprintf("Nonce: %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
-	//	ctx.Logger().Error(fmt.Sprintf("ChainId: %d", cctx.GetCurrentOutTxParam().ReceiverChainId))
-	//}
-	//
-	//if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
-	//	k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
-	//}
-	//if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-	//	ctx.Logger().Error(fmt.Sprintf("SaveInbound completed: cctx: %s", cctx.Index))
-	//}
+
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
+		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
+	}
 }
 
 // SetCrossChainTx set a specific send in the store from its index
