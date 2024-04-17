@@ -17,13 +17,8 @@ func (k msgServer) UpdateVerificationFlags(goCtx context.Context, msg *types.Msg
 ) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	requiredGroup := authoritytypes.PolicyType_groupEmergency
-	if msg.VerificationFlags.EthTypeChainEnabled || msg.VerificationFlags.BtcTypeChainEnabled {
-		requiredGroup = authoritytypes.PolicyType_groupOperational
-	}
-
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, requiredGroup) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, msg.GetRequireGroup()) {
 		return &types.MsgUpdateVerificationFlagsResponse{}, authoritytypes.ErrUnauthorized
 	}
 

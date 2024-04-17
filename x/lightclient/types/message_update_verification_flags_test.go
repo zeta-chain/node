@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
@@ -114,4 +115,59 @@ func TestMsgUpdateVerificationFlags_GetSignBytes(t *testing.T) {
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
+}
+
+func TestMsgUpdateVerificationFlags_GetRequireGroup(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  types.MsgUpdateVerificationFlags
+		want authoritytypes.PolicyType
+	}{
+		{
+			name: "groupEmergency",
+			msg: types.MsgUpdateVerificationFlags{
+				VerificationFlags: types.VerificationFlags{
+					EthTypeChainEnabled: false,
+					BtcTypeChainEnabled: false,
+				},
+			},
+			want: authoritytypes.PolicyType_groupEmergency,
+		},
+		{
+			name: "groupOperational",
+			msg: types.MsgUpdateVerificationFlags{
+				VerificationFlags: types.VerificationFlags{
+					EthTypeChainEnabled: true,
+					BtcTypeChainEnabled: false,
+				},
+			},
+			want: authoritytypes.PolicyType_groupOperational,
+		},
+		{
+			name: "groupOperational",
+			msg: types.MsgUpdateVerificationFlags{
+				VerificationFlags: types.VerificationFlags{
+					EthTypeChainEnabled: false,
+					BtcTypeChainEnabled: true,
+				},
+			},
+			want: authoritytypes.PolicyType_groupOperational,
+		},
+		{
+			name: "groupOperational",
+			msg: types.MsgUpdateVerificationFlags{
+				VerificationFlags: types.VerificationFlags{
+					EthTypeChainEnabled: true,
+					BtcTypeChainEnabled: true,
+				},
+			},
+			want: authoritytypes.PolicyType_groupOperational,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.msg.GetRequireGroup()
+			require.Equal(t, tt.want, got)
+		})
+	}
 }

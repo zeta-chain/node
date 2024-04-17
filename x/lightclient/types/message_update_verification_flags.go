@@ -4,6 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 const (
@@ -48,4 +49,14 @@ func (msg *MsgUpdateVerificationFlags) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	return nil
+}
+
+// GetRequireGroup returns the required group to execute the message
+func (msg *MsgUpdateVerificationFlags) GetRequireGroup() authoritytypes.PolicyType {
+	requiredGroup := authoritytypes.PolicyType_groupEmergency
+	if msg.VerificationFlags.EthTypeChainEnabled || msg.VerificationFlags.BtcTypeChainEnabled {
+		requiredGroup = authoritytypes.PolicyType_groupOperational
+	}
+
+	return requiredGroup
 }
