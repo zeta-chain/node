@@ -13,12 +13,12 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-  repeated OutTxTracker outTxTrackerList = 1 [(gogoproto.nullable) = false];
-  repeated GasPrice gasPriceList = 2;
-  repeated CrossChainTx CrossChainTxs = 3;
-  repeated LastBlockHeight lastBlockHeightList = 4;
-  repeated InTxHashToCctx inTxHashToCctxList = 5 [(gogoproto.nullable) = false];
-  repeated InTxTracker in_tx_tracker_list = 6 [(gogoproto.nullable) = false];
-  ZetaAccounting zeta_accounting = 7 [(gogoproto.nullable) = false];
-  repeated string FinalizedInbounds = 8;
+  repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
+  repeated GasPrice gasPriceList = 5;
+  repeated CrossChainTx CrossChainTxs = 7;
+  repeated LastBlockHeight lastBlockHeightList = 8;
+  repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
+  repeated InTxTracker in_tx_tracker_list = 11 [(gogoproto.nullable) = false];
+  ZetaAccounting zeta_accounting = 12 [(gogoproto.nullable) = false];
+  repeated string FinalizedInbounds = 16;
 }
