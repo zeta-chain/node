@@ -214,7 +214,7 @@ func NewBitcoinClient(
 	}
 	ob.params = *chainParams
 
-	// connect to the Client
+	// create the RPC client
 	ob.logger.Chain.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         btcCfg.RPCHost,
