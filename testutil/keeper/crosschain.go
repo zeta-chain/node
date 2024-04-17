@@ -315,3 +315,31 @@ func MockSaveOutBoundNewRevertCreated(m *crosschainmocks.CrosschainObserverKeepe
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()
 }
+
+// MockCctxByNonce is a utility function using observer mock to returns a cctx of the given status from crosschain keeper
+// mocks the methods called by CctxByNonce to directly return the given cctx or error
+func MockCctxByNonce(
+	t *testing.T,
+	ctx sdk.Context,
+	k keeper.Keeper,
+	observerKeeper *crosschainmocks.CrosschainObserverKeeper,
+	cctxStatus types.CctxStatus,
+	isErr bool,
+) {
+	if isErr {
+		// return error on GetTSS to make CctxByNonce return error
+		observerKeeper.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false).Once()
+		return
+	}
+
+	cctx := sample.CrossChainTx(t, sample.StringRandom(sample.Rand(), 10))
+	cctx.CctxStatus = &types.Status{
+		Status: cctxStatus,
+	}
+	k.SetCrossChainTx(ctx, *cctx)
+
+	observerKeeper.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true).Once()
+	observerKeeper.On("GetNonceToCctx", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(observertypes.NonceToCctx{
+		CctxIndex: cctx.Index,
+	}, true).Once()
+}
