@@ -27,7 +27,7 @@ func TestKeeper_Prove(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		proof, _, _, txIndex, _, hash := generateProof(t)
+		proof, _, _, txIndex, _, hash := sample.Proof(t)
 
 		_, err := k.Prove(wctx, &types.QueryProveRequest{
 			ChainId:   1000,
@@ -43,7 +43,7 @@ func TestKeeper_Prove(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		proof, _, blockHash, txIndex, chainID, hash := generateProof(t)
+		proof, _, blockHash, txIndex, chainID, hash := sample.Proof(t)
 
 		_, err := k.Prove(wctx, &types.QueryProveRequest{
 			ChainId:   chainID,
@@ -59,7 +59,7 @@ func TestKeeper_Prove(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		proof, blockHeader, blockHash, txIndex, chainID, hash := generateProof(t)
+		proof, blockHeader, blockHash, txIndex, chainID, hash := sample.Proof(t)
 
 		k.SetBlockHeader(ctx, blockHeader)
 
@@ -78,7 +78,7 @@ func TestKeeper_Prove(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		proof, blockHeader, blockHash, txIndex, chainID, hash := generateProof(t)
+		proof, blockHeader, blockHash, txIndex, chainID, hash := sample.Proof(t)
 
 		k.SetBlockHeader(ctx, blockHeader)
 
@@ -97,7 +97,7 @@ func TestKeeper_Prove(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		proof, blockHeader, blockHash, txIndex, chainID, hash := generateProof(t)
+		proof, blockHeader, blockHash, txIndex, chainID, hash := sample.Proof(t)
 
 		// corrupt the block header
 		blockHeader.Header = proofs.HeaderData{}
@@ -118,7 +118,7 @@ func TestKeeper_Prove(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		proof, blockHeader, blockHash, txIndex, chainID, _ := generateProof(t)
+		proof, blockHeader, blockHash, txIndex, chainID, _ := sample.Proof(t)
 
 		k.SetBlockHeader(ctx, blockHeader)
 
