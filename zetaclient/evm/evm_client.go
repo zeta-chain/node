@@ -317,7 +317,7 @@ func (ob *ChainClient) Stop() {
 }
 
 // IsSendOutTxProcessed returns isIncluded, isConfirmed, Error
-// ff isConfirmed, it also post to ZetaCore
+// if isConfirmed, it also post to ZetaCore
 func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	sendHash := cctx.Index
 	cointype := cctx.InboundTxParams.CoinType
