@@ -165,8 +165,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf,
 		DeployerAddress,
 		DeployerPrivateKey,
-		utils.AdminName,
-		AdminMnemonic,
+		utils.FungibleAdminName,
+		FungibleAdminMnemonic,
 		logger,
 	)
 	if err != nil {

@@ -274,7 +274,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		r.ETHZRC20Addr.Hex(),
 		liquidityCap,
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -326,7 +326,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		r.ETHZRC20Addr.Hex(),
 		math.ZeroUint(),
 	)
-	res, err = r.ZetaTxServer.BroadcastTx(utils.AdminName, msg)
+	res, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}

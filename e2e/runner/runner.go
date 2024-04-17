@@ -37,12 +37,12 @@ import (
 // It also provides some helper functions
 type E2ERunner struct {
 	// accounts
-	DeployerAddress    ethcommon.Address
-	DeployerPrivateKey string
-	TSSAddress         ethcommon.Address
-	BTCTSSAddress      btcutil.Address
-	BTCDeployerAddress *btcutil.AddressWitnessPubKeyHash
-	AdminMnemonic      string
+	DeployerAddress       ethcommon.Address
+	DeployerPrivateKey    string
+	TSSAddress            ethcommon.Address
+	BTCTSSAddress         btcutil.Address
+	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
+	FungibleAdminMnemonic string
 
 	// rpc clients
 	ZEVMClient   *ethclient.Client
@@ -117,7 +117,7 @@ func NewE2ERunner(
 	ctxCancel context.CancelFunc,
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
-	adminMnemonic string,
+	fungibleAdminMnemonic string,
 	evmClient *ethclient.Client,
 	zevmClient *ethclient.Client,
 	cctxClient crosschaintypes.QueryClient,
@@ -137,9 +137,9 @@ func NewE2ERunner(
 		Ctx:       ctx,
 		CtxCancel: ctxCancel,
 
-		DeployerAddress:    deployerAddress,
-		DeployerPrivateKey: deployerPrivateKey,
-		AdminMnemonic:      adminMnemonic,
+		DeployerAddress:       deployerAddress,
+		DeployerPrivateKey:    deployerPrivateKey,
+		FungibleAdminMnemonic: fungibleAdminMnemonic,
 
 		ZEVMClient:        zevmClient,
 		EVMClient:         evmClient,
