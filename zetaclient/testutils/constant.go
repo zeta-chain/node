@@ -16,6 +16,13 @@ const (
 	OtherAddress1 = "0x21248Decd0B7EcB0F30186297766b8AB6496265b"
 	OtherAddress2 = "0x33A351C90aF486AebC35042Bb0544123cAed26AB"
 	OtherAddress3 = "0x86B77E4fBd07CFdCc486cAe4F2787fB5C5a62cd3"
+
+	// evm event names for test data naming
+	EventZetaSent      = "ZetaSent"
+	EventZetaReceived  = "ZetaReceived"
+	EventZetaReverted  = "ZetaReverted"
+	EventERC20Deposit  = "Deposited"
+	EventERC20Withdraw = "Withdrawn"
 )
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing
@@ -25,8 +32,12 @@ var ConnectorAddresses = map[int64]ethcommon.Address{
 	56: ethcommon.HexToAddress("0x000063A6e758D9e2f438d430108377564cf4077D"),
 
 	// testnet
-	5:  ethcommon.HexToAddress("0x00005E3125aBA53C5652f9F0CE1a4Cf91D8B15eA"),
-	97: ethcommon.HexToAddress("0x0000ecb8cdd25a18F12DAA23f6422e07fBf8B9E1"),
+	5:        ethcommon.HexToAddress("0x00005E3125aBA53C5652f9F0CE1a4Cf91D8B15eA"),
+	97:       ethcommon.HexToAddress("0x0000ecb8cdd25a18F12DAA23f6422e07fBf8B9E1"),
+	11155111: ethcommon.HexToAddress("0x3963341dad121c9CD33046089395D66eBF20Fb03"),
+
+	// localnet
+	1337: ethcommon.HexToAddress("0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"),
 }
 
 // CustodyAddresses contains constants ERC20 custody addresses for testing
@@ -36,6 +47,7 @@ var CustodyAddresses = map[int64]ethcommon.Address{
 	56: ethcommon.HexToAddress("0x00000fF8fA992424957F97688015814e707A0115"),
 
 	// testnet
-	5:  ethcommon.HexToAddress("0x000047f11C6E42293F433C82473532E869Ce4Ec5"),
-	97: ethcommon.HexToAddress("0x0000a7Db254145767262C6A81a7eE1650684258e"),
+	5:        ethcommon.HexToAddress("0x000047f11C6E42293F433C82473532E869Ce4Ec5"),
+	97:       ethcommon.HexToAddress("0x0000a7Db254145767262C6A81a7eE1650684258e"),
+	11155111: ethcommon.HexToAddress("0x84725b70a239d3Faa7C6EF0C6C8E8b6c8e28338b"),
 }

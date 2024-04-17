@@ -29,7 +29,7 @@ func (s *EVMClient) Start() {
 func (s *EVMClient) Stop() {
 }
 
-func (s *EVMClient) IsSendOutTxProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+func (s *EVMClient) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
 	return false, false, nil
 }
 
@@ -70,7 +70,7 @@ func (s *BTCClient) Start() {
 func (s *BTCClient) Stop() {
 }
 
-func (s *BTCClient) IsSendOutTxProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+func (s *BTCClient) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
 	return false, false, nil
 }
 

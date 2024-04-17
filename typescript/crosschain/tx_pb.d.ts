@@ -400,9 +400,9 @@ export declare class MsgRemoveFromOutTxTrackerResponse extends Message<MsgRemove
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgGasPriceVoter
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteGasPrice
  */
-export declare class MsgGasPriceVoter extends Message<MsgGasPriceVoter> {
+export declare class MsgVoteGasPrice extends Message<MsgVoteGasPrice> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -428,38 +428,38 @@ export declare class MsgGasPriceVoter extends Message<MsgGasPriceVoter> {
    */
   supply: string;
 
-  constructor(data?: PartialMessage<MsgGasPriceVoter>);
+  constructor(data?: PartialMessage<MsgVoteGasPrice>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgGasPriceVoter";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteGasPrice";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgGasPriceVoter;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteGasPrice;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgGasPriceVoter;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteGasPrice;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgGasPriceVoter;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteGasPrice;
 
-  static equals(a: MsgGasPriceVoter | PlainMessage<MsgGasPriceVoter> | undefined, b: MsgGasPriceVoter | PlainMessage<MsgGasPriceVoter> | undefined): boolean;
+  static equals(a: MsgVoteGasPrice | PlainMessage<MsgVoteGasPrice> | undefined, b: MsgVoteGasPrice | PlainMessage<MsgVoteGasPrice> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgGasPriceVoterResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteGasPriceResponse
  */
-export declare class MsgGasPriceVoterResponse extends Message<MsgGasPriceVoterResponse> {
-  constructor(data?: PartialMessage<MsgGasPriceVoterResponse>);
+export declare class MsgVoteGasPriceResponse extends Message<MsgVoteGasPriceResponse> {
+  constructor(data?: PartialMessage<MsgVoteGasPriceResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgGasPriceVoterResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteGasPriceResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgGasPriceVoterResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteGasPriceResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgGasPriceVoterResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteGasPriceResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgGasPriceVoterResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteGasPriceResponse;
 
-  static equals(a: MsgGasPriceVoterResponse | PlainMessage<MsgGasPriceVoterResponse> | undefined, b: MsgGasPriceVoterResponse | PlainMessage<MsgGasPriceVoterResponse> | undefined): boolean;
+  static equals(a: MsgVoteGasPriceResponse | PlainMessage<MsgVoteGasPriceResponse> | undefined, b: MsgVoteGasPriceResponse | PlainMessage<MsgVoteGasPriceResponse> | undefined): boolean;
 }
 
 /**
