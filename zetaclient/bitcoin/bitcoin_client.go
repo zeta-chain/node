@@ -109,10 +109,10 @@ type BTCChainClient struct {
 	// includedTxHashes indexes included tx with tx hash
 	includedTxHashes map[string]bool
 
-	// includedTxResults indexes tx resullts with the oubound nonce
+	// includedTxResults indexes tx results with the outbound tx identifier
 	includedTxResults map[string]*btcjson.GetTransactionResult
 
-	// broadcastedTx indexes the outbound hash with the TSS nonce
+	// broadcastedTx indexes the outbound hash with the outbound tx identifier
 	broadcastedTx map[string]string
 
 	db     *gorm.DB
