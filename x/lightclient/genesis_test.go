@@ -52,12 +52,9 @@ func TestGenesis(t *testing.T) {
 
 		// Compare genesis after export
 		expected := types.GenesisState{
-			VerificationFlags: types.VerificationFlags{
-				EthTypeChainEnabled: false,
-				BtcTypeChainEnabled: false,
-			},
-			BlockHeaders: []proofs.BlockHeader{},
-			ChainStates:  []types.ChainState{},
+			VerificationFlags: types.DefaultVerificationFlags(),
+			BlockHeaders:      []proofs.BlockHeader{},
+			ChainStates:       []types.ChainState{},
 		}
 		nullify.Fill(got)
 		nullify.Fill(expected)
