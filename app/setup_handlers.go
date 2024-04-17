@@ -16,8 +16,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -44,10 +42,6 @@ func SetupHandlers(app *App) {
 			keyTable = govv1.ParamKeyTable() //nolint:staticcheck
 		case crisistypes.ModuleName:
 			keyTable = crisistypes.ParamKeyTable() //nolint:staticcheck
-		case evmtypes.ModuleName:
-			keyTable = evmtypes.ParamKeyTable() //nolint:staticcheck
-		case feemarkettypes.ModuleName:
-			keyTable = feemarkettypes.ParamKeyTable()
 		case emissionstypes.ModuleName:
 			keyTable = emissionstypes.ParamKeyTable()
 		case observertypes.ModuleName:
@@ -70,6 +64,15 @@ func SetupHandlers(app *App) {
 				vm[m] = module.ConsensusVersion()
 			}
 		}
+
+		VersionMigrator{v: vm}.TriggerMigration(authtypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(banktypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(stakingtypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(distrtypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(slashingtypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(govtypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(crisistypes.ModuleName)
+
 		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
 
@@ -82,7 +85,7 @@ func SetupHandlers(app *App) {
 	}
 	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{authoritytypes.ModuleName, crisistypes.ModuleName, consensustypes.ModuleName},
+			Added: []string{authoritytypes.ModuleName, consensustypes.ModuleName, crisistypes.ModuleName},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,

@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.10
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/ethereum/go-ethereum v1.10.26
-	github.com/gogo/protobuf v1.3.3
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -356,4 +356,4 @@ replace (
 
 replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db v0.0.0-20230321185329-6dc7c0ca6345
 
-replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.6.1-0.20240415175715-f14c208b35e3
+replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.6.1-0.20240416184712-d8c69a42b319

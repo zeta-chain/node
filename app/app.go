@@ -250,7 +250,7 @@ type App struct {
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             govkeeper.Keeper
 	CrisisKeeper          crisiskeeper.Keeper
-	UpgradeKeeper         upgradekeeper.Keeper
+	UpgradeKeeper         *upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	GroupKeeper           groupkeeper.Keeper
@@ -331,7 +331,7 @@ func New(
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 	// set the BaseApp's parameter store
-	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
 	// add keepers
@@ -367,7 +367,7 @@ func New(
 		appCodec, keys[crisistypes.StoreKey], invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName, authAddr,
 	)
 
-	app.UpgradeKeeper = *upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authAddr)
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authAddr)
 
 	app.AuthorityKeeper = authoritykeeper.NewKeeper(
 		appCodec,
@@ -417,6 +417,7 @@ func New(
 		appCodec, authtypes.NewModuleAddress(govtypes.ModuleName),
 		keys[feemarkettypes.StoreKey], tkeys[feemarkettypes.TransientKey],
 		feeSs,
+		app.ConsensusParamsKeeper,
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 	app.EvmKeeper = evmkeeper.NewKeeper(
@@ -424,6 +425,7 @@ func New(
 		app.AccountKeeper, app.BankKeeper, app.StakingKeeper,
 		&app.FeeMarketKeeper, nil, geth.NewEVM,
 		tracer, evmSs,
+		app.ConsensusParamsKeeper,
 	)
 
 	app.FungibleKeeper = *fungiblekeeper.NewKeeper(
@@ -457,7 +459,7 @@ func New(
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.UpgradeKeeper))
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
 		appCodec,
@@ -509,19 +511,19 @@ func New(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-		upgrade.NewAppModule(&app.UpgradeKeeper),
+		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
+		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
-		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
+		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper, app.GetSubspace(observertypes.ModuleName)),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
 		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -531,6 +533,7 @@ func New(
 
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
+		feemarkettypes.ModuleName,
 		evmtypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -544,7 +547,6 @@ func New(
 		paramstypes.ModuleName,
 		group.ModuleName,
 		vestingtypes.ModuleName,
-		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
 		observertypes.ModuleName,
 		fungibletypes.ModuleName,

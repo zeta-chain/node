@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	appparams "cosmossdk.io/simapp/params"
 	tmcfg "github.com/cometbft/cometbft/config"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/zeta-chain/zetacore/app"
 	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	zevmserver "github.com/zeta-chain/zetacore/server"
 	servercfg "github.com/zeta-chain/zetacore/server/config"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -26,8 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -233,52 +230,22 @@ func (ac appCreator) newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
-
-	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
-		cache = store.NewCommitKVStoreCacheManager()
-	}
-
+	baseappOptions := server.DefaultBaseappOptions(appOpts)
+	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
+		app.SetMempool(mempool.NoOpMempool{})
+	})
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
-	if err != nil {
-		panic(err)
-	}
-
-	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := dbm.NewDB("metadata", dbm.GoLevelDBBackend, snapshotDir)
-	if err != nil {
-		panic(err)
-	}
-	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
-	if err != nil {
-		panic(err)
-	}
-	snapshotOptions := snapshottypes.NewSnapshotOptions(
-		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
-		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
-	)
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		//cosmoscmd.EncodingConfig(ac.encCfg),
 		ac.encCfg,
 		appOpts,
-		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
-		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
-		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
-		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
-		baseapp.SetInterBlockCache(cache),
-		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
-		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
-		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
-		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
+		baseappOptions...,
 	)
 }
 
