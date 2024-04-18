@@ -1,0 +1,32 @@
+syntax = "proto3";
+package zetachain.zetacore.crosschain;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+
+message RateLimiterFlags {
+  bool enabled = 1;
+
+  // window in blocks
+  int64 window = 2;
+
+  // rate in azeta per block
+  string rate = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+
+  // conversion in azeta per token
+  repeated Conversion conversions = 4 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Conversion {
+  string zrc20 = 1;
+  string rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
