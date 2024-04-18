@@ -77,6 +77,7 @@
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
+* [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
 
 ### Fixes
 
