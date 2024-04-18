@@ -959,10 +959,9 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 		// post new block header (if any) to zetabridge and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		flags := ob.coreContext.GetCrossChainFlags()
-		if flags.BlockHeaderVerificationFlags != nil &&
-			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
-			chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+		verificationFlags := ob.coreContext.GetVerificationFlags()
+		if verificationFlags.EthTypeChainEnabled && chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) {
+			// post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {
 				ob.logger.InTx.Error().Err(err).Msg("error posting block header")
@@ -1272,10 +1271,10 @@ func (ob *ChainClient) calcBlockRangeToScan(latestConfirmed, lastScanned, batchS
 func (ob *ChainClient) postBlockHeader(tip uint64) error {
 	bn := tip
 
-	res, err := ob.zetaBridge.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
+	res, err := ob.zetaBridge.GetBlockHeaderChainState(ob.chain.ChainId)
+	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
 		// #nosec G701 always positive
-		bn = uint64(res.BlockHeaderState.LatestHeight) + 1 // the next header to post
+		bn = uint64(res.ChainState.LatestHeight) + 1 // the next header to post
 	}
 
 	if bn > tip {
@@ -1293,7 +1292,7 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 		return err
 	}
 
-	_, err = ob.zetaBridge.PostAddBlockHeader(
+	_, err = ob.zetaBridge.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		header.Hash().Bytes(),
 		header.Number.Int64(),

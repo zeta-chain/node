@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
@@ -44,7 +43,6 @@ func initFungibleKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-	paramKeeper paramskeeper.Keeper,
 	authKeeper types.AccountKeeper,
 	bankKeepr types.BankKeeper,
 	evmKeeper types.EVMKeeper,
@@ -60,7 +58,6 @@ func initFungibleKeeper(
 		cdc,
 		storeKey,
 		memKey,
-		paramKeeper.Subspace(types.ModuleName),
 		authKeeper,
 		evmKeeper,
 		bankKeepr,
@@ -89,6 +86,14 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		stateStore,
 	)
 
+	// Create lightclient keeper
+	lightclientKeeperTmp := initLightclientKeeper(
+		cdc,
+		db,
+		stateStore,
+		authorityKeeperTmp,
+	)
+
 	// Create observer keeper
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
@@ -98,10 +103,12 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
 		authorityKeeperTmp,
+		lightclientKeeperTmp,
 	)
 	zetaKeepers := ZetaKeepers{
-		ObserverKeeper:  observerKeeperTmp,
-		AuthorityKeeper: &authorityKeeperTmp,
+		ObserverKeeper:    observerKeeperTmp,
+		AuthorityKeeper:   &authorityKeeperTmp,
+		LightclientKeeper: &lightclientKeeperTmp,
 	}
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
@@ -145,7 +152,6 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		cdc,
 		storeKey,
 		memStoreKey,
-		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
 		authKeeper,
 		evmKeeper,
 		bankKeeper,

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
@@ -36,7 +37,6 @@ func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainPar
 	coreCtx := corecontext.NewZetaCoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
-	ccFlags := *sample.CrosschainFlags()
 
 	// feed chain params
 	coreCtx.Update(
@@ -45,7 +45,8 @@ func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainPar
 		evmChainParamsMap,
 		nil,
 		"",
-		ccFlags,
+		*sample.CrosschainFlags(),
+		sample.VerificationFlags(),
 		true,
 		zerolog.Logger{},
 	)

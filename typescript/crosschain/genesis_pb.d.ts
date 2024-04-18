@@ -19,42 +19,42 @@ import type { InTxTracker } from "./in_tx_tracker_pb.js";
  */
 export declare class GenesisState extends Message<GenesisState> {
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 1;
+   * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 2;
    */
   outTxTrackerList: OutTxTracker[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 2;
+   * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 5;
    */
   gasPriceList: GasPrice[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTxs = 3;
+   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTxs = 7;
    */
   CrossChainTxs: CrossChainTx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.LastBlockHeight lastBlockHeightList = 4;
+   * @generated from field: repeated zetachain.zetacore.crosschain.LastBlockHeight lastBlockHeightList = 8;
    */
   lastBlockHeightList: LastBlockHeight[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 5;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 9;
    */
   inTxHashToCctxList: InTxHashToCctx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 6;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 11;
    */
   inTxTrackerList: InTxTracker[];
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 7;
+   * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 12;
    */
   zetaAccounting?: ZetaAccounting;
 
   /**
-   * @generated from field: repeated string FinalizedInbounds = 8;
+   * @generated from field: repeated string FinalizedInbounds = 16;
    */
   FinalizedInbounds: string[];
 

@@ -464,6 +464,58 @@ func (ob *BTCChainClient) ObserveInTx() error {
 
 		// filter incoming txs to TSS address
 		tssAddress := ob.Tss.BTCAddress()
+
+		// add block header to zetabridge
+		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
+		// https://github.com/zeta-chain/node/issues/1847
+		verificationFlags := ob.coreContext.GetVerificationFlags()
+		if verificationFlags.BtcTypeChainEnabled {
+			err = ob.postBlockHeader(blockNumber)
+			if err != nil {
+				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)
+			}
+		}
+
+		if len(res.Block.Tx) > 1 {
+			// get depositor fee
+			depositorFee := CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+
+			// filter incoming txs to TSS address
+			tssAddress := ob.Tss.BTCAddress()
+			// #nosec G701 always positive
+			inTxs, err := FilterAndParseIncomingTx(
+				ob.rpcClient,
+				res.Block.Tx,
+				uint64(res.Block.Height),
+				tssAddress,
+				ob.logger.InTx,
+				ob.netParams,
+				depositorFee,
+			)
+			if err != nil {
+				ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error filtering incoming txs for block %d", blockNumber)
+				return err // we have to re-scan this block next time
+			}
+
+			// post inbound vote message to zetacore
+			for _, inTx := range inTxs {
+				msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
+				if msg != nil {
+					zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, zetabridge.PostVoteInboundExecutionGasLimit, msg)
+					if err != nil {
+						ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
+						return err // we have to re-scan this block next time
+					} else if zetaHash != "" {
+						ob.logger.InTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+							zetaHash, inTx.TxHash, ballot, depositorFee)
+					}
+				}
+			}
+		}
+
+		// Save LastBlockHeight
+		ob.SetLastBlockHeightScanned(blockNumber)
+
 		// #nosec G701 always positive
 		inTxs, err := FilterAndParseIncomingTx(
 			ob.rpcClient,
@@ -1261,41 +1313,36 @@ func (ob *BTCChainClient) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNH
 
 func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
-
-	blockNumber := tip
-	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
-		blockNumber = res.BlockHeaderState.LatestHeight + 1
+	bn := tip
+	res, err := ob.zetaClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
+		bn = res.ChainState.LatestHeight + 1
 	}
-	if blockNumber > tip {
-		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", blockNumber, tip)
+	if bn > tip {
+		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
 	}
-
-	blockNumberCached, err := ob.GetBlockByNumberCached(blockNumber)
+	res2, err := ob.GetBlockByNumberCached(bn)
 	if err != nil {
-		return fmt.Errorf("error getting bitcoin block %d: %s", blockNumber, err)
+		return fmt.Errorf("error getting bitcoin block %d: %s", bn, err)
 	}
 
 	var headerBuf bytes.Buffer
-	err = blockNumberCached.Header.Serialize(&headerBuf)
+	err = res2.Header.Serialize(&headerBuf)
 	if err != nil { // should never happen
-		ob.logger.InTx.Error().Err(err).Msgf("error serializing bitcoin block header: %d", blockNumber)
+		ob.logger.InTx.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
 		return err
 	}
-
-	blockHash := blockNumberCached.Header.BlockHash()
-	_, err = ob.zetaClient.PostAddBlockHeader(
+	blockHash := res2.Header.BlockHash()
+	_, err = ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
-		blockNumberCached.Block.Height,
+		res2.Block.Height,
 		proofs.NewBitcoinHeader(headerBuf.Bytes()),
 	)
-
-	ob.logger.InTx.Info().Msgf("posted block header %d: %s", blockNumber, blockHash)
+	ob.logger.InTx.Info().Msgf("posted block header %d: %s", bn, blockHash)
 	if err != nil { // error shouldn't block the process
-		ob.logger.InTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", blockNumber)
+		ob.logger.InTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 	}
-
 	return err
 }
 
