@@ -224,10 +224,7 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
 			if err == nil {
-				txRes, err := mkTxResult(zts.clientCtx, resTx)
-				if err == nil {
-					return txRes, nil
-				}
+				return mkTxResult(zts.clientCtx, resTx)
 			}
 		}
 	}
