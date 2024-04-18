@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"encoding/base64"
 	"math/big"
 	"testing"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -48,8 +50,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
-
-		err := sdkk.EvmKeeper.SetAccount(ctx, receiver, *statedb.NewEmptyAccount())
+		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(cctx.InboundTxParams.Sender), *statedb.NewEmptyAccount())
 		require.NoError(t, err)
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
 		err = k.ProcessFailedOutbound(ctx, cctx, sample.String())
@@ -89,8 +90,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
-		// TODO check why dapp values are not set if message is empty
-		cctx.RelayedMessage = "message"
+		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		dAppContract, err := zk.FungibleKeeper.DeployContract(ctx, contracts.DappMetaData)

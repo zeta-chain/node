@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"math/rand"
 	"testing"
@@ -174,7 +175,7 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteOnObserved
 		Receiver:      EthAddress().String(),
 		ReceiverChain: Chain(to).GetChainId(),
 		Amount:        UintInRange(10000000, 1000000000),
-		Message:       String(),
+		Message:       base64.StdEncoding.EncodeToString(Bytes()),
 		InBlockHeight: Uint64InRange(1, 10000),
 		GasLimit:      1000000000,
 		InTxHash:      Hash().String(),

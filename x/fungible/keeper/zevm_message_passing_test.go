@@ -295,7 +295,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
-		errorMint := errors.New("", 10, "error minting coins")
+		errorMint := errors.New("", 101, "error minting coins")
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
 		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)

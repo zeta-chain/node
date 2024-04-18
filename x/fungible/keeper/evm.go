@@ -40,7 +40,7 @@ var (
 	BigIntZero                 = big.NewInt(0)
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 
-	ZEVMGasLimitConnectorCall = big.NewInt(100_000)
+	ZEVMGasLimitConnectorCall = big.NewInt(1_000_000)
 )
 
 // DeployContract deploys a new contract in the ZEVM

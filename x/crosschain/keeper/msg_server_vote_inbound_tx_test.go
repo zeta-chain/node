@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -88,7 +87,6 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
 		require.True(t, found)
-		fmt.Println(cctx.CctxStatus.StatusMessage)
 		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
@@ -310,7 +308,8 @@ func TestStatus_ChangeStatus(t *testing.T) {
 
 func TestKeeper_SaveInbound(t *testing.T) {
 	t.Run("should save the cctx", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain(t)
@@ -324,7 +323,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 	})
 
 	t.Run("should save the cctx and remove tracker", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain(t)
@@ -337,6 +336,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 			CoinType: 0,
 		})
 		eventIndex := sample.Uint64InRange(1, 100)
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		k.SaveInbound(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundTxParams.TxFinalizationStatus)

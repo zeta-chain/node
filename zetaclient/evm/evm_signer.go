@@ -462,7 +462,7 @@ func (signer *Signer) BroadcastOutTx(
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 	if tx == nil {
-		logger.Warn().Msgf("BroadcastOutTx: no tx to broadcast", cctx.Index)
+		logger.Warn().Msgf("BroadcastOutTx: no tx to broadcast %s", cctx.Index)
 	}
 	// Try to broadcast transaction
 	if tx != nil {

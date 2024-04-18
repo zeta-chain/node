@@ -1347,6 +1347,8 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		_, err = k.CallOnReceiveZevmConnector(ctx, senderAddress, sourceChainID, destinationAddress, zetaValue, data, internalSendHash)
 		require.NoError(t, err)
 
+		require.NoError(t, err)
+
 		dappAbi, err := contracts.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
