@@ -188,6 +188,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
+
+		if err := deployerRunner.EnableVerificationFlags(); err != nil {
+			panic(err)
+		}
+
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
 

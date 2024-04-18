@@ -42,4 +42,5 @@ var (
 	ErrUnableToFindZetaAccounting    = errorsmod.Register(ModuleName, 1149, "unable to find zeta accounting")
 	ErrInsufficientZetaAmount        = errorsmod.Register(ModuleName, 1150, "insufficient zeta amount")
 	ErrInvalidRateLimiterFlags       = errorsmod.Register(ModuleName, 1151, "invalid rate limiter flags")
+	ErrMaxTxOutTrackerHashesReached  = errorsmod.Register(ModuleName, 1152, "max tx out tracker hashes reached")
 )

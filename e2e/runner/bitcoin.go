@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 )
 
@@ -379,7 +379,7 @@ func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 			panic("timed out waiting for block header to show up in observer")
 		}
 
-		_, err := runner.ObserverClient.GetBlockHeaderByHash(runner.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
+		_, err := runner.LightclientClient.BlockHeader(runner.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
 			BlockHash: hash.CloneBytes(),
 		})
 		if err != nil {
@@ -392,7 +392,7 @@ func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	}
 
 	// verify merkle proof through RPC
-	res, err := runner.ObserverClient.Prove(runner.Ctx, &observertypes.QueryProveRequest{
+	res, err := runner.LightclientClient.Prove(runner.Ctx, &lightclienttypes.QueryProveRequest{
 		ChainId:   chains.BtcRegtestChain().ChainId,
 		TxHash:    txHash.String(),
 		BlockHash: blockHash.String(),

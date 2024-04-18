@@ -23,7 +23,7 @@ var ethFiles embed.FS
 //go:embed *
 var testDataFiles embed.FS
 
-// readHeader reads a header from a file.
+// ReadEthHeader reads a header from a file.
 // TODO: centralize test data
 // https://github.com/zeta-chain/node/issues/1874
 func ReadEthHeader() (header types.Header, err error) {
@@ -38,7 +38,7 @@ func ReadEthHeader() (header types.Header, err error) {
 	return header, err
 }
 
-// readReceipt reads a receipt from a file.
+// ReadEthReceipt reads a receipt from a file.
 // TODO: centralize test data
 // https://github.com/zeta-chain/node/issues/1874
 func ReadEthReceipt(index int) (receipt types.Receipt, err error) {
@@ -55,7 +55,7 @@ func ReadEthReceipt(index int) (receipt types.Receipt, err error) {
 	return receipt, err
 }
 
-// readTx reads a tx from a file.
+// ReadEthTx reads a tx from a file.
 // TODO: centralize test data
 // https://github.com/zeta-chain/node/issues/1874
 func ReadEthTx(index int) (tx types.Transaction, err error) {
@@ -85,6 +85,7 @@ type Blocks struct {
 	Blocks []Block `json:"blocks"`
 }
 
+// LoadTestBlocks loads test blocks from a file.
 // TODO: centralize test data
 // https://github.com/zeta-chain/node/issues/1874
 func LoadTestBlocks(t *testing.T) Blocks {

@@ -53,6 +53,8 @@ ignore:
   - "x/**/migrator.go"
   - "x/**/module_simulation.go"
   - "x/**/simulation/**/*"
+  - "zetaclient/testdata/**/*"
+  - "zetaclient/testutils/**/*"
   - "**/*.proto"
   - "**/*.md"
   - "**/*.yml"
