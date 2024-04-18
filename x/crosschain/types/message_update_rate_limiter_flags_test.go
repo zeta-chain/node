@@ -55,7 +55,7 @@ func TestMsgUpdateRateLimiterFlags_GetSigners(t *testing.T) {
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgUpdateRateLimiterFlags(sample.AccAddress(), sample.RateLimiterFlags()),
+			msg:    types.NewMsgUpdateRateLimiterFlags(signer, sample.RateLimiterFlags()),
 			panics: false,
 		},
 		{
