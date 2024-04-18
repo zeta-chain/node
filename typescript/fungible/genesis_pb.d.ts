@@ -20,7 +20,7 @@ export declare class GenesisState extends Message<GenesisState> {
   foreignCoinsList: ForeignCoins[];
 
   /**
-   * @generated from field: zetachain.zetacore.fungible.SystemContract systemContract = 2;
+   * @generated from field: zetachain.zetacore.fungible.SystemContract systemContract = 3;
    */
   systemContract?: SystemContract;
 
