@@ -1,11 +1,14 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -70,7 +73,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		// Fetch the original sender and receiver from the CCTX , since this is a revert the sender with be the receiver in the new tx
 		originalSender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 		originalReceiver := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-		data := []byte(cctx.RelayedMessage)
+
 		indexBytes, err := cctx.GetCCTXIndexBytes()
 		if err != nil {
 			// Return err to save the failed outbound ad set to aborted
@@ -88,6 +91,10 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 
 		// Trying to revert the transaction this would get set to a finalized status in the same block as this does not need a TSS singing
 		cctx.SetPendingRevert("Outbound failed, trying revert")
+		data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return fmt.Errorf("failed decoding relayed message: %s", err.Error())
+		}
 
 		// Call evm to revert the transaction
 		_, err = k.fungibleKeeper.ZEVMRevertAndCallContract(ctx,
@@ -101,6 +108,14 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			return fmt.Errorf("failed ZEVMRevertAndCallContract: %s", err.Error())
 		}
 		cctx.SetReverted("Outbound failed, revert executed")
+		if len(ctx.TxBytes()) > 0 {
+			// add event for tendermint transaction hash format
+			hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+			ethTxHash := ethcommon.BytesToHash(hash)
+			cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+			// #nosec G701 always positive
+			cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
+		}
 		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	} else {
 		switch oldStatus {

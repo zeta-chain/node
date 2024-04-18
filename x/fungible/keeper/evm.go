@@ -328,6 +328,11 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		return nil, err
 	}
 
+	err = k.DepositCoinZeta(ctx, connectorAddress, zetaValue)
+	if err != nil {
+		return nil, err
+	}
+
 	return k.CallEVM(
 		ctx,
 		*zevmConnecterAbi,
@@ -366,13 +371,17 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
+	err = k.DepositCoinZeta(ctx, connectorAddress, remainingZetaValue)
+	if err != nil {
+		return nil, err
+	}
 	return k.CallEVM(
 		ctx,
 		*zevmConnecterAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
 		BigIntZero,
-		ZEVMGasLimitDepositAndCall,
+		ZEVMGasLimitConnectorCall,
 		true,
 		false,
 		"onRevert",

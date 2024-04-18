@@ -43,7 +43,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/zeta-chain/go-tss v0.1.1-0.20240208222330-f3be0d4a0d98
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240415192848-ad076a028d30
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240417132824-4be6fd4cb877
 	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
 	gopkg.in/yaml.v2 v2.4.0
 )

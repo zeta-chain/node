@@ -70,7 +70,6 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
-
 	}
 
 	r.Logger.Info("  Logs:")

@@ -39,7 +39,6 @@ func (k Keeper) ZevmOnReceive(ctx sdk.Context,
 	amount *big.Int,
 	data []byte,
 	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
-	ctx.Logger().Info(fmt.Sprintf("ZevmOnReceive: zetaTxSender: %s, zetaTxReceiver: %s, senderChainID: %s, amount: %s, data: %s, cctxIndexBytes: %s", zetaTxSender, zetaTxReceiver.String(), senderChainID.String(), amount.String(), data, cctxIndexBytes))
 	return k.CallOnReceiveZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, amount, data, cctxIndexBytes)
 }
 
@@ -73,5 +72,6 @@ func (k Keeper) ZevmOnRevert(ctx sdk.Context,
 	amount *big.Int,
 	data []byte,
 	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	ctx.Logger().Info("ZevmOnRevert", "zetaTxSender", zetaTxSender, "zetaTxReceiver", zetaTxReceiver, "senderChainID", senderChainID, "destinationChainID", destinationChainID, "amount", amount, "data", data, "cctxIndexBytes", cctxIndexBytes)
 	return k.CallOnRevertZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, destinationChainID, amount, data, cctxIndexBytes)
 }
