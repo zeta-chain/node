@@ -252,6 +252,16 @@ message QueryListCctxPendingResponse {
   uint64 totalPending = 2;
 }
 
+message QueryListCctxPendingWithRateLimitRequest {
+  uint32 limit = 2;
+}
+
+message QueryListCctxPendingWithRateLimitResponse {
+  repeated CrossChainTx cross_chain_tx = 1;
+  uint64 total_pending = 2;
+  bool rate_limit_exceeded = 3;
+}
+
 message QueryLastZetaHeightRequest {}
 
 message QueryLastZetaHeightResponse {
