@@ -50,7 +50,6 @@ type ObserverKeeper interface {
 	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
 	FindBallot(ctx sdk.Context, index string, chain *chains.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
-	GetBlockHeader(ctx sdk.Context, hash []byte) (val proofs.BlockHeader, found bool)
 	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (observertypes.TSS, bool)
 	GetAllTSS(ctx sdk.Context) (list []observertypes.TSS)
 	GetTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
@@ -166,4 +165,8 @@ type FungibleKeeper interface {
 
 type AuthorityKeeper interface {
 	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
+}
+
+type LightclientKeeper interface {
+	VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error)
 }

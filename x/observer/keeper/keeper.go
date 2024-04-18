@@ -12,13 +12,14 @@ import (
 
 type (
 	Keeper struct {
-		cdc             codec.BinaryCodec
-		storeKey        storetypes.StoreKey
-		memKey          storetypes.StoreKey
-		stakingKeeper   types.StakingKeeper
-		slashingKeeper  types.SlashingKeeper
-		authorityKeeper types.AuthorityKeeper
-		authority       string
+		cdc               codec.BinaryCodec
+		storeKey          storetypes.StoreKey
+		memKey            storetypes.StoreKey
+		stakingKeeper     types.StakingKeeper
+		slashingKeeper    types.SlashingKeeper
+		authorityKeeper   types.AuthorityKeeper
+		lightclientKeeper types.LightclientKeeper
+		authority         string
 	}
 )
 
@@ -29,6 +30,7 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	slashinKeeper types.SlashingKeeper,
 	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
 	authority string,
 ) *Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
@@ -36,14 +38,16 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:             cdc,
-		storeKey:        storeKey,
-		memKey:          memKey,
-		stakingKeeper:   stakingKeeper,
-		slashingKeeper:  slashinKeeper,
-		authorityKeeper: authorityKeeper,
-		authority:       authority,
+		cdc:               cdc,
+		storeKey:          storeKey,
+		memKey:            memKey,
+		stakingKeeper:     stakingKeeper,
+		slashingKeeper:    slashinKeeper,
+		authorityKeeper:   authorityKeeper,
+		lightclientKeeper: lightclientKeeper,
+		authority:         authority,
 	}
+
 }
 
 func (k Keeper) GetSlashingKeeper() types.SlashingKeeper {
@@ -56,6 +60,10 @@ func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 
 func (k Keeper) GetAuthorityKeeper() types.AuthorityKeeper {
 	return k.authorityKeeper
+}
+
+func (k Keeper) GetLightclientKeeper() types.LightclientKeeper {
+	return k.lightclientKeeper
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

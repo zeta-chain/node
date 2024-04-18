@@ -39,9 +39,11 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -222,10 +224,7 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
 			if err == nil {
-				txRes, err := mkTxResult(zts.clientCtx, resTx)
-				if err == nil {
-					return txRes, nil
-				}
+				return mkTxResult(zts.clientCtx, resTx)
 			}
 		}
 	}
@@ -249,6 +248,27 @@ func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.
 
 type intoAny interface {
 	AsAny() *codectypes.Any
+}
+
+// EnableVerificationFlags enables the verification flags for the lightclient module
+func (zts ZetaTxServer) EnableVerificationFlags(account string) error {
+	// retrieve account
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgUpdateVerificationFlags(
+		addr.String(),
+		true,
+		true,
+	))
+
+	return err
 }
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
@@ -411,6 +431,8 @@ func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	emissionstypes.RegisterInterfaces(interfaceRegistry)
 	fungibletypes.RegisterInterfaces(interfaceRegistry)
 	observertypes.RegisterInterfaces(interfaceRegistry)
+	lightclienttypes.RegisterInterfaces(interfaceRegistry)
+	authoritytypes.RegisterInterfaces(interfaceRegistry)
 
 	return cdc, interfaceRegistry
 }

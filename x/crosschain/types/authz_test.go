@@ -14,6 +14,6 @@ func TestGetAllAuthzZetaclientTxTypes(t *testing.T) {
 		"/zetachain.zetacore.crosschain.MsgAddToOutTxTracker",
 		"/zetachain.zetacore.observer.MsgVoteTSS",
 		"/zetachain.zetacore.observer.MsgAddBlameVote",
-		"/zetachain.zetacore.observer.MsgAddBlockHeader"},
+		"/zetachain.zetacore.observer.MsgVoteBlockHeader"},
 		crosschaintypes.GetAllAuthzZetaclientTxTypes())
 }

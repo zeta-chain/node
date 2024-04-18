@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math/big"
 
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+
 	"cosmossdk.io/math"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
@@ -59,18 +61,18 @@ func (z *MockZetaCoreBridge) PostGasPrice(_ chains.Chain, _ uint64, _ string, _ 
 	return "", nil
 }
 
-func (z *MockZetaCoreBridge) PostAddBlockHeader(_ int64, _ []byte, _ int64, _ proofs.HeaderData) (string, error) {
+func (z *MockZetaCoreBridge) PostVoteBlockHeader(_ int64, _ []byte, _ int64, _ proofs.HeaderData) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
 	return "", nil
 }
 
-func (z *MockZetaCoreBridge) GetBlockHeaderStateByChain(_ int64) (observerTypes.QueryGetBlockHeaderStateResponse, error) {
+func (z *MockZetaCoreBridge) GetBlockHeaderChainState(_ int64) (lightclienttypes.QueryGetChainStateResponse, error) {
 	if z.paused {
-		return observerTypes.QueryGetBlockHeaderStateResponse{}, errors.New(ErrMsgPaused)
+		return lightclienttypes.QueryGetChainStateResponse{}, errors.New(ErrMsgPaused)
 	}
-	return observerTypes.QueryGetBlockHeaderStateResponse{}, nil
+	return lightclienttypes.QueryGetChainStateResponse{}, nil
 }
 
 func (z *MockZetaCoreBridge) PostBlameData(_ *blame.Blame, _ int64, _ string) (string, error) {

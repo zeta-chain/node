@@ -1,6 +1,5 @@
 export * from "./ballot_pb";
 export * from "./blame_pb";
-export * from "./block_header_pb";
 export * from "./chain_nonces_pb";
 export * from "./crosschain_flags_pb";
 export * from "./events_pb";

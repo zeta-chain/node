@@ -45,6 +45,8 @@ func (k Keeper) IsNonTombstonedObserver(ctx sdk.Context, address string) bool {
 	return true
 }
 
+// FindBallot finds the ballot for the given index
+// If the ballot is not found, it creates a new ballot and returns it
 func (k Keeper) FindBallot(
 	ctx sdk.Context,
 	index string,
@@ -58,8 +60,7 @@ func (k Keeper) FindBallot(
 
 		cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
 		if !found || cp == nil || !cp.IsSupported {
-			err = types.ErrSupportedChains
-			return
+			return types.Ballot{}, false, types.ErrSupportedChains
 		}
 
 		ballot = types.Ballot{
