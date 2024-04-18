@@ -8,6 +8,11 @@ import (
 
 // Validate checks that the RateLimiterFlags is valid
 func (r RateLimiterFlags) Validate() error {
+	// window must not be negative
+	if r.Window < 0 {
+		return fmt.Errorf("window must be positive: %d", r.Window)
+	}
+
 	seen := make(map[string]bool)
 	for _, conversion := range r.Conversions {
 		// check no duplicated conversion

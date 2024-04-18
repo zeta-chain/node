@@ -78,6 +78,14 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 			},
 			isErr: true,
 		},
+		{
+			name: "negative window",
+			flags: types.RateLimiterFlags{
+				Enabled: true,
+				Window:  -1,
+			},
+			isErr: true,
+		},
 	}
 
 	for _, tc := range tt {

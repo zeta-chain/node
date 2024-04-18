@@ -7,9 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// DefaultIndex is the default crosschain global index
-const DefaultIndex uint64 = 1
-
 // DefaultGenesis returns the default crosschain genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
@@ -44,7 +41,6 @@ func (gs GenesisState) Validate() error {
 		}
 		inTxHashToCctxIndexMap[index] = struct{}{}
 	}
-	// TODO add migrate for TSS
 
 	// Check for duplicated index in gasPrice
 	gasPriceIndexMap := make(map[string]bool)
@@ -56,15 +52,9 @@ func (gs GenesisState) Validate() error {
 		gasPriceIndexMap[elem.Index] = true
 	}
 
-	// Check for duplicated index in send
-	//sendIndexMap := make(map[string]bool)
-
-	//for _, elem := range gs.SendList {
-	//	if _, ok := sendIndexMap[elem.Index]; ok {
-	//		return fmt.Errorf("duplicated index for send")
-	//	}
-	//	sendIndexMap[elem.Index] = true
-	//}
+	if err := gs.RateLimiterFlags.Validate(); err != nil {
+		return err
+	}
 
 	return nil
 }
