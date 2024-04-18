@@ -27187,6 +27187,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/rateLimiterFlags:
+    get:
+      summary: Queries the rate limiter flags
+      operationId: Query_RateLimiterFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryRateLimiterFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/zetaAccounting:
     get:
       operationId: Query_ZetaAccounting
@@ -53543,6 +53558,13 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
+  crosschainConversion:
+    type: object
+    properties:
+      zrc20:
+        type: string
+      rate:
+        type: string
   crosschainCrossChainTx:
     type: object
     properties:
@@ -53671,6 +53693,8 @@ definitions:
   crosschainMsgRefundAbortedCCTXResponse:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
+    type: object
+  crosschainMsgUpdateRateLimiterFlagsResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
     type: object
@@ -53891,11 +53915,34 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryRateLimiterFlagsResponse:
+    type: object
+    properties:
+      rateLimiterFlags:
+        $ref: '#/definitions/crosschainRateLimiterFlags'
   crosschainQueryZetaAccountingResponse:
     type: object
     properties:
       aborted_zeta_amount:
         type: string
+  crosschainRateLimiterFlags:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      window:
+        type: string
+        format: int64
+        title: window in blocks
+      rate:
+        type: string
+        title: rate in azeta per block
+      conversions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainConversion'
+        title: conversion in azeta per token
   crosschainTxFinalizationStatus:
     type: string
     enum:
