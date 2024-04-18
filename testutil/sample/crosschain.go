@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"cosmossdk.io/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -13,6 +15,38 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+func RateLimiterFlags() types.RateLimiterFlags {
+	r := Rand()
+
+	return types.RateLimiterFlags{
+		Enabled: true,
+		Window:  r.Int63(),
+		Rate:    sdk.NewUint(r.Uint64()),
+		Conversions: []types.Conversion{
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+		},
+	}
+}
 
 func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
 	r := newRandFromStringSeed(t, index)
