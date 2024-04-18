@@ -168,7 +168,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		}
 	}
 	switch innerMsg.(type) {
-	case *cctxtypes.MsgGasPriceVoter,
+	case *cctxtypes.MsgVoteGasPrice,
 		*cctxtypes.MsgVoteOnObservedInboundTx,
 		*cctxtypes.MsgVoteOnObservedOutboundTx,
 		*cctxtypes.MsgAddToOutTxTracker,

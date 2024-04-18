@@ -9,7 +9,6 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ForeignCoinsList: []ForeignCoins{},
 		SystemContract:   nil,
-		Params:           DefaultParams(),
 	}
 }
 
@@ -27,5 +26,5 @@ func (gs GenesisState) Validate() error {
 		foreignCoinsIndexMap[index] = struct{}{}
 	}
 
-	return gs.Params.Validate()
+	return nil
 }

@@ -27401,21 +27401,6 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/fungible/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: Query_Params
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetacorefungibleQueryParamsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/fungible/system_contract:
     get:
       summary: Queries SystemContract
@@ -53681,8 +53666,6 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgGasPriceVoterResponse:
-    type: object
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
@@ -53690,6 +53673,8 @@ definitions:
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
+    type: object
+  crosschainMsgVoteGasPriceResponse:
     type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
@@ -54757,16 +54742,6 @@ definitions:
     properties:
       params:
         $ref: '#/definitions/zetacoreemissionsParams'
-        description: params holds all the parameters of this module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetacorefungibleParams:
-    type: object
-    description: Params defines the parameters for the module.
-  zetacorefungibleQueryParamsResponse:
-    type: object
-    properties:
-      params:
-        $ref: '#/definitions/zetacorefungibleParams'
         description: params holds all the parameters of this module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetacoreobserverParams:

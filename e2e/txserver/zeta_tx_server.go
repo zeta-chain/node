@@ -2,12 +2,14 @@ package txserver
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -33,6 +35,7 @@ import (
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -48,11 +51,12 @@ const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
 
 // ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
-	clientCtx client.Context
-	txFactory tx.Factory
-	name      []string
-	mnemonic  []string
-	address   []string
+	clientCtx    client.Context
+	txFactory    tx.Factory
+	name         []string
+	mnemonic     []string
+	address      []string
+	blockTimeout time.Duration
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -102,11 +106,12 @@ func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string, chainID
 	txf := newFactory(clientCtx)
 
 	return ZetaTxServer{
-		clientCtx: clientCtx,
-		txFactory: txf,
-		name:      names,
-		mnemonic:  mnemonics,
-		address:   addresses,
+		clientCtx:    clientCtx,
+		txFactory:    txf,
+		name:         names,
+		mnemonic:     mnemonics,
+		address:      addresses,
+		blockTimeout: 1 * time.Minute,
 	}, nil
 }
 
@@ -157,6 +162,7 @@ func (zts ZetaTxServer) GetAccountMnemonic(index int) string {
 }
 
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
+// and waiting for blockTime for tx to be included in the block
 func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes.TxResponse, error) {
 	// Find number and sequence and set it
 	acc, err := zts.clientCtx.Keyring.Key(account)
@@ -188,8 +194,61 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		return nil, err
 	}
 
-	// Broadcast tx
-	return zts.clientCtx.BroadcastTx(txBytes)
+	return broadcastWithBlockTimeout(zts, txBytes)
+}
+
+func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
+	res, err := zts.clientCtx.BroadcastTx(txBytes)
+	if err != nil {
+		if res == nil {
+			return nil, err
+		}
+		return &sdktypes.TxResponse{
+			Code:      res.Code,
+			Codespace: res.Codespace,
+			TxHash:    res.TxHash,
+		}, err
+	}
+
+	exitAfter := time.After(zts.blockTimeout)
+	hash, err := hex.DecodeString(res.TxHash)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		select {
+		case <-exitAfter:
+			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", zts.blockTimeout)
+		case <-time.After(time.Millisecond * 100):
+			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
+			if err == nil {
+				txRes, err := mkTxResult(zts.clientCtx, resTx)
+				if err == nil {
+					return txRes, nil
+				}
+			}
+		}
+	}
+}
+
+func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.TxResponse, error) {
+	txb, err := clientCtx.TxConfig.TxDecoder()(resTx.Tx)
+	if err != nil {
+		return nil, err
+	}
+	p, ok := txb.(intoAny)
+	if !ok {
+		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
+	}
+	resBlock, err := clientCtx.Client.Block(context.TODO(), &resTx.Height)
+	if err != nil {
+		return nil, err
+	}
+	return sdktypes.NewResponseResultTx(resTx, p.AsAny(), resBlock.Block.Time.Format(time.RFC3339)), nil
+}
+
+type intoAny interface {
+	AsAny() *codectypes.Any
 }
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
@@ -373,7 +432,7 @@ func newContext(
 		WithLegacyAmino(codec.NewLegacyAmino()).
 		WithInput(os.Stdin).
 		WithOutput(os.Stdout).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync).
 		WithClient(rpc).
 		WithSkipConfirmation(true).
 		WithFromName("creator").
