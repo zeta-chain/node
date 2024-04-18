@@ -30,7 +30,13 @@ func (ms *MetricsSuite) TestMetrics(c *C) {
 	time.Sleep(1 * time.Second)
 	res, err := http.Get("http://127.0.0.1:8886/metrics")
 	c.Assert(err, IsNil)
+	c.Assert(res.StatusCode, Equals, http.StatusOK)
 	defer res.Body.Close()
 	//out, err := ioutil.ReadAll(res.Body)
 	//fmt.Println(string(out))
+
+	res, err = http.Get("http://127.0.0.1:8886")
+	c.Assert(err, IsNil)
+	c.Assert(res.StatusCode, Equals, http.StatusOK)
+	defer res.Body.Close()
 }

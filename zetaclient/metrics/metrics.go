@@ -87,20 +87,16 @@ var (
 )
 
 func NewMetrics() (*Metrics, error) {
-	server := http.NewServeMux()
-
-	server.Handle("/metrics",
-		promhttp.InstrumentMetricHandler(
-			prometheus.DefaultRegisterer,
-			promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{
-				Timeout: 30 * time.Second,
-			}),
-		),
+	handler := promhttp.InstrumentMetricHandler(
+		prometheus.DefaultRegisterer,
+		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{
+			Timeout: 30 * time.Second,
+		}),
 	)
 
 	s := &http.Server{
 		Addr:              ":8886",
-		Handler:           server,
+		Handler:           handler,
 		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
