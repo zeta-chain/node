@@ -63,7 +63,8 @@ func verifyProofAndInTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToInT
 	})
 	if err != nil {
 		return observertypes.ErrTssNotFound.Wrapf(err.Error())
-	} else if tss == nil {
+	}
+	if tss == nil {
 		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
 	}
 
