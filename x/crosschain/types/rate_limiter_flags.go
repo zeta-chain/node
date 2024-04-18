@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // Validate checks that the RateLimiterFlags is valid
@@ -25,13 +26,18 @@ func (r RateLimiterFlags) Validate() error {
 		if conversion.Rate.IsNil() {
 			return fmt.Errorf("rate is nil for conversion: %s", conversion.Zrc20)
 		}
+
+		// check address is valid
+		if !ethcommon.IsHexAddress(conversion.Zrc20) {
+			return fmt.Errorf("invalid zrc20 address (%s)", conversion.Zrc20)
+		}
 	}
 
 	return nil
 }
 
-// GetConversion returns the conversion for the given zrc20
-func (r RateLimiterFlags) GetConversion(zrc20 string) (sdk.Dec, bool) {
+// GetConversionRate returns the conversion rate for the given zrc20
+func (r RateLimiterFlags) GetConversionRate(zrc20 string) (sdk.Dec, bool) {
 	for _, conversion := range r.Conversions {
 		if conversion.Zrc20 == zrc20 {
 			return conversion.Rate, true

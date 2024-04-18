@@ -37,7 +37,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListInTxTrackers(),
 		CmdGetZetaAccounting(),
 
-		CmdUpdateRateLimiterFlags(),
+		CmdShowUpdateRateLimiterFlags(),
 	)
 
 	return cmd

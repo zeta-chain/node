@@ -42,6 +42,25 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 			flags: types.RateLimiterFlags{},
 		},
 		{
+			name: "invalid zrc20 address",
+			flags: types.RateLimiterFlags{
+				Enabled: true,
+				Window:  42,
+				Rate:    sdk.NewUint(42),
+				Conversions: []types.Conversion{
+					{
+						Zrc20: "invalid",
+						Rate:  sdk.NewDec(42),
+					},
+					{
+						Zrc20: sample.EthAddress().String(),
+						Rate:  dec,
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
 			name: "duplicated conversion",
 			flags: types.RateLimiterFlags{
 				Enabled: true,
@@ -101,7 +120,7 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 
 }
 
-func TestRateLimiterFlags_GetConversion(t *testing.T) {
+func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
 	dec, err := sdk.NewDecFromStr("0.00042")
 	require.NoError(t, err)
 	address := sample.EthAddress().String()
@@ -159,7 +178,7 @@ func TestRateLimiterFlags_GetConversion(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, found := tc.flags.GetConversion(tc.zrc20)
+			actual, found := tc.flags.GetConversionRate(tc.zrc20)
 			require.Equal(t, tc.expected, actual)
 			require.Equal(t, tc.shouldFind, found)
 		})

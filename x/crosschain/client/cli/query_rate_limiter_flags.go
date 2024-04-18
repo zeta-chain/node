@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func CmdUpdateRateLimiterFlags() *cobra.Command {
+func CmdShowUpdateRateLimiterFlags() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update_rate_limit_flags",
 		Short: "shows the rate limiter flags",
