@@ -52,11 +52,7 @@ func (gs GenesisState) Validate() error {
 		gasPriceIndexMap[elem.Index] = true
 	}
 
-	if err := gs.RateLimiterFlags.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return gs.RateLimiterFlags.Validate()
 }
 
 func GetGenesisStateFromAppState(marshaler codec.JSONCodec, appState map[string]json.RawMessage) GenesisState {
