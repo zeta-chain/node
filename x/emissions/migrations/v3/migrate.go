@@ -29,6 +29,7 @@ func MigrateStore(
 	if err != nil {
 		return err
 	}
+	currParams.BallotMaturityBlocks = 100
 
 	return emissionsKeeper.SetParams(ctx, currParams)
 }

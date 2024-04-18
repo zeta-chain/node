@@ -11,7 +11,6 @@ import (
 // observerKeeper prevents circular dependency
 type observerKeeper interface {
 	GetParams(ctx sdk.Context) (types.Params, bool)
-	SetParams(ctx sdk.Context, params types.Params) error
 	GetChainParamsList(ctx sdk.Context) (params types.ChainParamsList, found bool)
 	SetChainParamsList(ctx sdk.Context, params types.ChainParamsList)
 	StoreKey() storetypes.StoreKey

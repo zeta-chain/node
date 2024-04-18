@@ -83,7 +83,12 @@ func DistributeObserverRewards(
 	if err != nil {
 		return err
 	}
-	ballotIdentifiers := keeper.GetObserverKeeper().GetMaturedBallotList(ctx)
+	maturityBlocks := params.BallotMaturityBlocks
+	list, found := keeper.GetObserverKeeper().GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)
+	ballotIdentifiers := []string{}
+	if found {
+		ballotIdentifiers = list.BallotsIndexList
+	}
 	// do not distribute rewards if no ballots are matured, the rewards can accumulate in the undistributed pool
 	if len(ballotIdentifiers) == 0 {
 		return nil

@@ -343,8 +343,9 @@ type Params struct {
 	// Deprecated(v13): Use ChainParamsList
 	ObserverParams []*ObserverParams `protobuf:"bytes,1,rep,name=observer_params,json=observerParams,proto3" json:"observer_params,omitempty"`
 	// Deprecated(v14):Moved into the authority module
-	AdminPolicy          []*Admin_Policy `protobuf:"bytes,2,rep,name=admin_policy,json=adminPolicy,proto3" json:"admin_policy,omitempty"`
-	BallotMaturityBlocks int64           `protobuf:"varint,3,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3" json:"ballot_maturity_blocks,omitempty"`
+	AdminPolicy []*Admin_Policy `protobuf:"bytes,2,rep,name=admin_policy,json=adminPolicy,proto3" json:"admin_policy,omitempty"`
+	// Deprecated(v15): Moved into emissions module
+	BallotMaturityBlocks int64 `protobuf:"varint,3,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3" json:"ballot_maturity_blocks,omitempty"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }

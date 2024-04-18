@@ -21,6 +21,7 @@ func NewParams() Params {
 		TssSignerEmissionPercentage: "00.25",
 		DurationFactorConstant:      "0.001877876953694702",
 		ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
+		BallotMaturityBlocks:        100,
 	}
 }
 
@@ -60,6 +61,10 @@ func (p Params) Validate() error {
 		return err
 	}
 	err = validateDurationFactorConstant(p.DurationFactorConstant)
+	if err != nil {
+		return err
+	}
+	err = validateBallotMaturityBlocks(p.BallotMaturityBlocks)
 	if err != nil {
 		return err
 	}
@@ -190,5 +195,18 @@ func validateObserverSlashAmount(i interface{}) error {
 	if v.LT(sdk.ZeroInt()) {
 		return fmt.Errorf("slash amount cannot be less than 0")
 	}
+	return nil
+}
+
+func validateBallotMaturityBlocks(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("ballot maturity types must be gte 0")
+	}
+
 	return nil
 }

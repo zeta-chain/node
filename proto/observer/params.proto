@@ -71,5 +71,6 @@ message Params {
   // Deprecated(v14):Moved into the authority module
   repeated Admin_Policy admin_policy = 2;
 
+  // Deprecated(v15): Moved into emissions module
   int64 ballot_maturity_blocks = 3;
 }

@@ -89,9 +89,13 @@ func validateAdminPolicy(i interface{}) error {
 
 // https://github.com/zeta-chain/node/issues/1983
 func validateBallotMaturityBlocks(i interface{}) error {
-	_, ok := i.(int64)
+	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("ballot maturity types must be gte 0")
 	}
 
 	return nil
