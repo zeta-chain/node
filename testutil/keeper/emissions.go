@@ -50,7 +50,6 @@ func EmissionKeeperWithMockOptions(
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
-		sdkKeepers.ParamsKeeper,
 		authorityKeeper,
 		initLightclientKeeper(cdc, db, stateStore, authorityKeeper),
 	)

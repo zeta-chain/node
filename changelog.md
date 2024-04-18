@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## Unreleased
+
+### Refactor
+* [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
+
+## Unreleased
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
@@ -41,7 +46,6 @@
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 * [1976](https://github.com/zeta-chain/node/pull/1976) - add lightclient module for header and proof functionality
 * [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync and remove fungible params
-* [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
 * [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 
