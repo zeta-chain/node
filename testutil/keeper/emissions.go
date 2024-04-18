@@ -41,6 +41,8 @@ func EmissionKeeperWithMockOptions(
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
+	authorityKeeper := initAuthorityKeeper(cdc, db, stateStore)
+
 	// Create zeta keepers
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
@@ -49,7 +51,8 @@ func EmissionKeeperWithMockOptions(
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
-		initAuthorityKeeper(cdc, db, stateStore),
+		authorityKeeper,
+		initLightclientKeeper(cdc, db, stateStore, authorityKeeper),
 	)
 
 	zetaKeepers := ZetaKeepers{

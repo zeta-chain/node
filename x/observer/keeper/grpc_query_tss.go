@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Tss returns the tss address for the current tss only
+// TSS returns the tss address for the current tss only
 func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.QueryGetTSSResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

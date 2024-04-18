@@ -15,7 +15,7 @@ import type { SystemContract } from "./system_contract_pb.js";
  */
 export declare class GenesisState extends Message<GenesisState> {
   /**
-   * @generated from field: repeated zetachain.zetacore.fungible.ForeignCoins foreignCoinsList = 1;
+   * @generated from field: repeated zetachain.zetacore.fungible.ForeignCoins foreignCoinsList = 2;
    */
   foreignCoinsList: ForeignCoins[];
 

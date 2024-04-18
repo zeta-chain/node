@@ -27,7 +27,6 @@ func (k Keeper) GetOutTxTracker(
 	ctx sdk.Context,
 	chainID int64,
 	nonce uint64,
-
 ) (val types.OutTxTracker, found bool) {
 	index := getOutTrackerIndex(chainID, nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))

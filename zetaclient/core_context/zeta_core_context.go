@@ -5,6 +5,8 @@ import (
 	"sort"
 	"sync"
 
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -21,6 +23,9 @@ type ZetaCoreContext struct {
 	bitcoinChainParams *observertypes.ChainParams
 	currentTssPubkey   string
 	crossChainFlags    observertypes.CrosschainFlags
+
+	// verificationFlags is used to store the verification flags for the lightclient module to enable header/proof verification
+	verificationFlags lightclienttypes.VerificationFlags
 }
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
@@ -41,6 +46,7 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 		evmChainParams:     evmChainParams,
 		bitcoinChainParams: bitcoinChainParams,
 		crossChainFlags:    observertypes.CrosschainFlags{},
+		verificationFlags:  lightclienttypes.VerificationFlags{},
 	}
 }
 
@@ -114,6 +120,12 @@ func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return c.crossChainFlags
 }
 
+func (c *ZetaCoreContext) GetVerificationFlags() lightclienttypes.VerificationFlags {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	return c.verificationFlags
+}
+
 // Update updates core context and params for all chains
 // this must be the ONLY function that writes to core context
 func (c *ZetaCoreContext) Update(
@@ -123,6 +135,7 @@ func (c *ZetaCoreContext) Update(
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
+	verificationFlags lightclienttypes.VerificationFlags,
 	init bool,
 	logger zerolog.Logger,
 ) {
@@ -162,6 +175,7 @@ func (c *ZetaCoreContext) Update(
 	}
 	c.chainsEnabled = newChains
 	c.crossChainFlags = crosschainFlags
+	c.verificationFlags = verificationFlags
 	// update chain params for bitcoin if it has config in file
 	if c.bitcoinChainParams != nil && btcChainParams != nil {
 		c.bitcoinChainParams = btcChainParams

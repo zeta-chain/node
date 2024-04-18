@@ -98,6 +98,10 @@ import (
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
+	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
+	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+
 	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -181,6 +185,7 @@ var (
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
 		authoritymodule.AppModuleBasic{},
+		lightclientmodule.AppModuleBasic{},
 		crosschainmodule.AppModuleBasic{},
 		observermodule.AppModuleBasic{},
 		fungiblemodule.AppModuleBasic{},
@@ -255,11 +260,12 @@ type App struct {
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// zetachain keepers
-	AuthorityKeeper  authoritykeeper.Keeper
-	CrosschainKeeper crosschainkeeper.Keeper
-	ObserverKeeper   *observerkeeper.Keeper
-	FungibleKeeper   fungiblekeeper.Keeper
-	EmissionsKeeper  emissionskeeper.Keeper
+	AuthorityKeeper   authoritykeeper.Keeper
+	LightclientKeeper lightclientkeeper.Keeper
+	CrosschainKeeper  crosschainkeeper.Keeper
+	ObserverKeeper    *observerkeeper.Keeper
+	FungibleKeeper    fungiblekeeper.Keeper
+	EmissionsKeeper   emissionskeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -295,6 +301,7 @@ func New(
 		evmtypes.StoreKey,
 		feemarkettypes.StoreKey,
 		authoritytypes.StoreKey,
+		lightclienttypes.StoreKey,
 		crosschaintypes.StoreKey,
 		observertypes.StoreKey,
 		fungibletypes.StoreKey,
@@ -364,6 +371,13 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 	)
 
+	app.LightclientKeeper = lightclientkeeper.NewKeeper(
+		appCodec,
+		keys[lightclienttypes.StoreKey],
+		keys[lightclienttypes.MemStoreKey],
+		app.AuthorityKeeper,
+	)
+
 	app.ObserverKeeper = observerkeeper.NewKeeper(
 		appCodec,
 		keys[observertypes.StoreKey],
@@ -372,6 +386,7 @@ func New(
 		&stakingKeeper,
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
+		app.LightclientKeeper,
 	)
 
 	// register the staking hooks
@@ -436,6 +451,7 @@ func New(
 		app.ObserverKeeper,
 		&app.FungibleKeeper,
 		app.AuthorityKeeper,
+		app.LightclientKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.
@@ -507,6 +523,7 @@ func New(
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
+		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
@@ -541,6 +558,7 @@ func New(
 		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
+		lightclienttypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName,
@@ -564,6 +582,7 @@ func New(
 		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
+		lightclienttypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -594,6 +613,7 @@ func New(
 		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
+		lightclienttypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

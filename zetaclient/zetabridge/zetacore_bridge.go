@@ -266,7 +266,24 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		return err
 	}
 
-	coreContext.Update(keyGen, newChains, newEVMParams, newBTCParams, tssPubKey, crosschainFlags, init, b.logger)
+	verificationFlags, err := b.GetVerificationFlags()
+	if err != nil {
+		b.logger.Info().Msg("Unable to fetch verification flags from zetabridge")
+		return err
+	}
+
+	coreContext.Update(
+		keyGen,
+		newChains,
+		newEVMParams,
+		newBTCParams,
+		tssPubKey,
+		crosschainFlags,
+		verificationFlags,
+		init,
+		b.logger,
+	)
+
 	return nil
 }
 

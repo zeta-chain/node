@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
 )
@@ -27,25 +28,26 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	authtypes.QueryClient,
 	banktypes.QueryClient,
 	observertypes.QueryClient,
+	lightclienttypes.QueryClient,
 	*ethclient.Client,
 	*bind.TransactOpts,
 	error,
 ) {
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
 	}
 	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	cctxClient, fungibleClient, authClient, bankClient, observerClient, err := getZetaClients(conf.RPCs.ZetaCoreGRPC)
+	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(conf.RPCs.ZetaCoreGRPC)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, evmPrivKey)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
 	}
 	return btcRPCClient,
 		evmClient,
@@ -55,6 +57,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 		authClient,
 		bankClient,
 		observerClient,
+		lightclientClient,
 		zevmClient,
 		zevmAuth,
 		nil
@@ -114,11 +117,12 @@ func getZetaClients(rpc string) (
 	authtypes.QueryClient,
 	banktypes.QueryClient,
 	observertypes.QueryClient,
+	lightclienttypes.QueryClient,
 	error,
 ) {
 	grpcConn, err := grpc.Dial(rpc, grpc.WithInsecure())
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
 	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
@@ -126,6 +130,7 @@ func getZetaClients(rpc string) (
 	authClient := authtypes.NewQueryClient(grpcConn)
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
+	lightclientClient := lightclienttypes.NewQueryClient(grpcConn)
 
-	return cctxClient, fungibleClient, authClient, bankClient, observerClient, nil
+	return cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, nil
 }
