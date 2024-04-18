@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -226,7 +227,6 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 	if applyLimit {
 		gasCoinRates, erc20CoinRates = k.GetRatelimiterRates(ctx)
 		erc20Coins = k.fungibleKeeper.GetAllForeignERC20CoinMap(ctx)
-		//rateLimitInZeta = new(big.Float).SetInt(rateLimitFlags.RateLimitInZeta.BigInt())
 		rateLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
 	}
 
@@ -235,31 +235,39 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 	totalPending := uint64(0)
 	totalCctxValueInZeta := sdk.NewDec(0)
 	cctxs := make([]*types.CrossChainTx, 0)
+	pendingNoncesMap := make(map[int64]*observertypes.PendingNonces)
 
-	// the criteria to stop adding cctxs to the result
+	// the criteria to stop adding cctxs to the rpc response
 	maxCCTXsReached := func() bool {
 		// #nosec G701 len always positive
 		return uint32(len(cctxs)) >= limit
 	}
 
-	// query pending cctxs for each supported chain
+	// query pending nonces for each supported chain
+	// Note: The pending nonces could change during the RPC call, so query them beforehand
 	chains := k.zetaObserverKeeper.GetSupportedChains(ctx)
-ChainLoop:
 	for _, chain := range chains {
-		// skip zeta chain
 		if chain.IsZetaChain() {
 			continue
 		}
-
-		// get pending nonces for this chain
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			return nil, status.Error(codes.Internal, "pending nonces not found")
+		}
+		pendingNoncesMap[chain.ChainId] = &pendingNonces
+	}
+
+	// query backwards for potential missed pending cctxs for each supported chain
+LoopBackwards:
+	for _, chain := range chains {
+		if chain.IsZetaChain() {
+			continue
 		}
 
 		// we should at least query 1000 prior to find any pending cctx that we might have missed
 		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
 		// therefore might mask some lower nonce cctx that is still pending.
+		pendingNonces := pendingNoncesMap[chain.ChainId]
 		startNonce := pendingNonces.NonceLow - 1
 		endNonce := pendingNonces.NonceLow - 1000
 		if endNonce < 0 {
@@ -293,7 +301,7 @@ ChainLoop:
 				// criteria #3: if rate limiter is enabled, we should finish the RPC call if the rate limit is exceeded
 				if rateLimitExceeded(chain.ChainId, &cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
 					limitExceeded = true
-					break ChainLoop
+					break LoopBackwards
 				}
 			}
 
@@ -307,10 +315,21 @@ ChainLoop:
 		}
 
 		// add the pending nonces to the total pending
+		// Note: the `totalPending` may not be accurate only if the rate limiter triggers early exit
+		// `totalPending` is now used for metrics only and it's okay to trade off accuracy for performance
 		// #nosec G701 always in range
 		totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
+	}
 
-		// now query the pending nonces that we know are pending
+	// query forwards for pending cctxs for each supported chain
+LoopForwards:
+	for _, chain := range chains {
+		if chain.IsZetaChain() {
+			continue
+		}
+
+		// query the pending cctxs in range [NonceLow, NonceHigh)
+		pendingNonces := pendingNoncesMap[chain.ChainId]
 		for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh; i++ {
 			nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chain.ChainId, i)
 			if !found {
@@ -323,12 +342,12 @@ ChainLoop:
 
 			// only take a `limit` number of pending cctxs as result
 			if maxCCTXsReached() {
-				break ChainLoop
+				break LoopForwards
 			}
 			// criteria #3: if rate limiter is enabled, we should finish the RPC call if the rate limit is exceeded
 			if applyLimit && rateLimitExceeded(chain.ChainId, &cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
-				break ChainLoop
+				break LoopForwards
 			}
 			cctxs = append(cctxs, &cctx)
 		}
@@ -389,10 +408,9 @@ func convertCctxValue(
 		return sdk.NewDec(0)
 	}
 
-	// calculate the reciprocal of `rate` as the amount of zrc20 needed to buy 1 ZETA
+	// the reciprocal of `rate` is the amount of zrc20 needed to buy 1 ZETA
 	// for example, given rate = 0.8, the reciprocal is 1.25, which means 1.25 ZRC20 can buy 1 ZETA
-	// given decimals = 6, below calculation is equivalent to 1,000,000 / 1.25 = 800,000
-	// which means 800,000 ZRC20 can buy 1 ZETA
+	// given decimals = 6, the `oneZeta` amount will be 1.25 * 10^6 = 1250000
 	oneZrc20 := sdk.NewDec(1).Power(decimals)
 	oneZeta := oneZrc20.Quo(rate)
 
