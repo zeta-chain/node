@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -41,9 +39,11 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -434,6 +434,8 @@ func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	emissionstypes.RegisterInterfaces(interfaceRegistry)
 	fungibletypes.RegisterInterfaces(interfaceRegistry)
 	observertypes.RegisterInterfaces(interfaceRegistry)
+	lightclienttypes.RegisterInterfaces(interfaceRegistry)
+	authoritytypes.RegisterInterfaces(interfaceRegistry)
 
 	return cdc, interfaceRegistry
 }
