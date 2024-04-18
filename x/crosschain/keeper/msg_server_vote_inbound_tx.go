@@ -115,16 +115,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	EmitEventInboundFinalized(ctx, cctx)
-	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
-	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
-
-	// #nosec G701 always positive
 	k.AddFinalizedInbound(ctx,
 		cctx.GetInboundTxParams().InboundTxObservedHash,
 		cctx.GetInboundTxParams().SenderChainId,
 		eventIndex)
+	// #nosec G701 always positive
+	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
+	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
-
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
-
 }

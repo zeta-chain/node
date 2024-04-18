@@ -29,17 +29,8 @@ func (k Keeper) ZEVMDepositAndCallContract(ctx sdk.Context,
 		}
 		return nil, nil
 	}
-	return k.ZevmOnReceive(ctx, sender.Bytes(), to, big.NewInt(inboundSenderChainID), inboundAmount, data, indexBytes)
+	return k.CallOnReceiveZevmConnector(ctx, sender.Bytes(), big.NewInt(inboundSenderChainID), to, inboundAmount, data, indexBytes)
 
-}
-func (k Keeper) ZevmOnReceive(ctx sdk.Context,
-	zetaTxSender []byte,
-	zetaTxReceiver ethcommon.Address,
-	senderChainID *big.Int,
-	amount *big.Int,
-	data []byte,
-	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
-	return k.CallOnReceiveZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, amount, data, cctxIndexBytes)
 }
 
 func (k Keeper) ZEVMRevertAndCallContract(ctx sdk.Context,
@@ -61,17 +52,5 @@ func (k Keeper) ZEVMRevertAndCallContract(ctx sdk.Context,
 		}
 		return nil, nil
 	}
-	return k.ZevmOnRevert(ctx, sender, to.Bytes(), big.NewInt(inboundSenderChainID), big.NewInt(destinationChainID), remainingAmount, data, indexBytes)
-
-}
-func (k Keeper) ZevmOnRevert(ctx sdk.Context,
-	zetaTxSender ethcommon.Address,
-	zetaTxReceiver []byte,
-	senderChainID *big.Int,
-	destinationChainID *big.Int,
-	amount *big.Int,
-	data []byte,
-	cctxIndexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
-	ctx.Logger().Info("ZevmOnRevert", "zetaTxSender", zetaTxSender, "zetaTxReceiver", zetaTxReceiver, "senderChainID", senderChainID, "destinationChainID", destinationChainID, "amount", amount, "data", data, "cctxIndexBytes", cctxIndexBytes)
-	return k.CallOnRevertZevmConnector(ctx, zetaTxSender, senderChainID, zetaTxReceiver, destinationChainID, amount, data, cctxIndexBytes)
+	return k.CallOnRevertZevmConnector(ctx, sender, big.NewInt(inboundSenderChainID), to.Bytes(), big.NewInt(destinationChainID), remainingAmount, data, indexBytes)
 }
