@@ -5,74 +5,36 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType } from "../pkg/coin/coin_pb.js";
 
 /**
- * ZRC20Rate defines the conversion rate of ZRC20 to ZETA
- *
- * @generated from message zetachain.zetacore.crosschain.ZRC20Rate
- */
-export declare class ZRC20Rate extends Message<ZRC20Rate> {
-  /**
-   * @generated from field: int64 chain_id = 1;
-   */
-  chainId: bigint;
-
-  /**
-   * @generated from field: coin.CoinType coin_type = 2;
-   */
-  coinType: CoinType;
-
-  /**
-   * @generated from field: string asset = 3;
-   */
-  asset: string;
-
-  /**
-   * @generated from field: double conversion_rate = 4;
-   */
-  conversionRate: number;
-
-  constructor(data?: PartialMessage<ZRC20Rate>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.ZRC20Rate";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ZRC20Rate;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ZRC20Rate;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ZRC20Rate;
-
-  static equals(a: ZRC20Rate | PlainMessage<ZRC20Rate> | undefined, b: ZRC20Rate | PlainMessage<ZRC20Rate> | undefined): boolean;
-}
-
-/**
- * RateLimiterFlags defines the outbound rate limiter flags
- *
  * @generated from message zetachain.zetacore.crosschain.RateLimiterFlags
  */
 export declare class RateLimiterFlags extends Message<RateLimiterFlags> {
   /**
-   * @generated from field: bool is_enabled = 1;
+   * @generated from field: bool enabled = 1;
    */
-  isEnabled: boolean;
+  enabled: boolean;
 
   /**
-   * @generated from field: int64 rate_limit_window = 2;
+   * window in blocks
+   *
+   * @generated from field: int64 window = 2;
    */
-  rateLimitWindow: bigint;
+  window: bigint;
 
   /**
-   * @generated from field: string rate_limit_in_zeta = 3;
+   * rate in azeta per block
+   *
+   * @generated from field: string rate = 3;
    */
-  rateLimitInZeta: string;
+  rate: string;
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.ZRC20Rate zrc20_rates = 4;
+   * conversion in azeta per token
+   *
+   * @generated from field: repeated zetachain.zetacore.crosschain.Conversion conversions = 4;
    */
-  zrc20Rates: ZRC20Rate[];
+  conversions: Conversion[];
 
   constructor(data?: PartialMessage<RateLimiterFlags>);
 
@@ -87,5 +49,34 @@ export declare class RateLimiterFlags extends Message<RateLimiterFlags> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RateLimiterFlags;
 
   static equals(a: RateLimiterFlags | PlainMessage<RateLimiterFlags> | undefined, b: RateLimiterFlags | PlainMessage<RateLimiterFlags> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.Conversion
+ */
+export declare class Conversion extends Message<Conversion> {
+  /**
+   * @generated from field: string zrc20 = 1;
+   */
+  zrc20: string;
+
+  /**
+   * @generated from field: string rate = 2;
+   */
+  rate: string;
+
+  constructor(data?: PartialMessage<Conversion>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.Conversion";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Conversion;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Conversion;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Conversion;
+
+  static equals(a: Conversion | PlainMessage<Conversion> | undefined, b: Conversion | PlainMessage<Conversion> | undefined): boolean;
 }
 

@@ -98,6 +98,11 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
   }
 
+  // Queries a list of pending cctxs with rate limit.
+  rpc CctxListPendingWithinRateLimit(QueryListCctxPendingWithRateLimitRequest) returns (QueryListCctxPendingWithRateLimitResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/cctxPendingWithRateLimit";
+  }
+
   rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/zetaAccounting";
   }

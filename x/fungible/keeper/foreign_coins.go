@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -77,6 +79,22 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) 
 		list = append(list, val)
 	}
 	return
+}
+
+// GetAllForeignERC20CoinMap returns all foreign ERC20 coins in a map of chainID -> asset -> coin
+func (k Keeper) GetAllForeignERC20CoinMap(ctx sdk.Context) map[int64]map[string]types.ForeignCoins {
+	allForeignCoins := k.GetAllForeignCoins(ctx)
+
+	erc20CoinMap := make(map[int64]map[string]types.ForeignCoins)
+	for _, c := range allForeignCoins {
+		if c.CoinType == coin.CoinType_ERC20 {
+			if _, found := erc20CoinMap[c.ForeignChainId]; !found {
+				erc20CoinMap[c.ForeignChainId] = make(map[string]types.ForeignCoins)
+			}
+			erc20CoinMap[c.ForeignChainId][strings.ToLower(c.Asset)] = c
+		}
+	}
+	return erc20CoinMap
 }
 
 // GetGasCoinForForeignCoin returns the gas coin for a given chain

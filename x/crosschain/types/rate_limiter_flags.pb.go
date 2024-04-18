@@ -4,7 +4,6 @@
 package types
 
 import (
-	encoding_binary "encoding/binary"
 	fmt "fmt"
 	io "io"
 	math "math"
@@ -13,7 +12,6 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	coin "github.com/zeta-chain/zetacore/pkg/coin"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,88 +25,21 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ZRC20Rate defines the conversion rate of ZRC20 to ZETA
-type ZRC20Rate struct {
-	ChainId        int64         `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	CoinType       coin.CoinType `protobuf:"varint,2,opt,name=coin_type,json=coinType,proto3,enum=coin.CoinType" json:"coin_type,omitempty"`
-	Asset          string        `protobuf:"bytes,3,opt,name=asset,proto3" json:"asset,omitempty"`
-	ConversionRate float64       `protobuf:"fixed64,4,opt,name=conversion_rate,json=conversionRate,proto3" json:"conversion_rate,omitempty"`
-}
-
-func (m *ZRC20Rate) Reset()         { *m = ZRC20Rate{} }
-func (m *ZRC20Rate) String() string { return proto.CompactTextString(m) }
-func (*ZRC20Rate) ProtoMessage()    {}
-func (*ZRC20Rate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b17ae80d5af4e97e, []int{0}
-}
-func (m *ZRC20Rate) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ZRC20Rate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ZRC20Rate.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ZRC20Rate) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ZRC20Rate.Merge(m, src)
-}
-func (m *ZRC20Rate) XXX_Size() int {
-	return m.Size()
-}
-func (m *ZRC20Rate) XXX_DiscardUnknown() {
-	xxx_messageInfo_ZRC20Rate.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ZRC20Rate proto.InternalMessageInfo
-
-func (m *ZRC20Rate) GetChainId() int64 {
-	if m != nil {
-		return m.ChainId
-	}
-	return 0
-}
-
-func (m *ZRC20Rate) GetCoinType() coin.CoinType {
-	if m != nil {
-		return m.CoinType
-	}
-	return coin.CoinType_Zeta
-}
-
-func (m *ZRC20Rate) GetAsset() string {
-	if m != nil {
-		return m.Asset
-	}
-	return ""
-}
-
-func (m *ZRC20Rate) GetConversionRate() float64 {
-	if m != nil {
-		return m.ConversionRate
-	}
-	return 0
-}
-
-// RateLimiterFlags defines the outbound rate limiter flags
 type RateLimiterFlags struct {
-	IsEnabled       bool                                    `protobuf:"varint,1,opt,name=is_enabled,json=isEnabled,proto3" json:"is_enabled,omitempty"`
-	RateLimitWindow int64                                   `protobuf:"varint,2,opt,name=rate_limit_window,json=rateLimitWindow,proto3" json:"rate_limit_window,omitempty"`
-	RateLimitInZeta github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,3,opt,name=rate_limit_in_zeta,json=rateLimitInZeta,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"rate_limit_in_zeta"`
-	Zrc20Rates      []*ZRC20Rate                            `protobuf:"bytes,4,rep,name=zrc20_rates,json=zrc20Rates,proto3" json:"zrc20_rates,omitempty"`
+	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	// window in blocks
+	Window int64 `protobuf:"varint,2,opt,name=window,proto3" json:"window,omitempty"`
+	// rate in azeta per block
+	Rate github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,3,opt,name=rate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"rate"`
+	// conversion in azeta per token
+	Conversions []Conversion `protobuf:"bytes,4,rep,name=conversions,proto3" json:"conversions"`
 }
 
 func (m *RateLimiterFlags) Reset()         { *m = RateLimiterFlags{} }
 func (m *RateLimiterFlags) String() string { return proto.CompactTextString(m) }
 func (*RateLimiterFlags) ProtoMessage()    {}
 func (*RateLimiterFlags) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b17ae80d5af4e97e, []int{1}
+	return fileDescriptor_b17ae80d5af4e97e, []int{0}
 }
 func (m *RateLimiterFlags) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -137,30 +68,75 @@ func (m *RateLimiterFlags) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RateLimiterFlags proto.InternalMessageInfo
 
-func (m *RateLimiterFlags) GetIsEnabled() bool {
+func (m *RateLimiterFlags) GetEnabled() bool {
 	if m != nil {
-		return m.IsEnabled
+		return m.Enabled
 	}
 	return false
 }
 
-func (m *RateLimiterFlags) GetRateLimitWindow() int64 {
+func (m *RateLimiterFlags) GetWindow() int64 {
 	if m != nil {
-		return m.RateLimitWindow
+		return m.Window
 	}
 	return 0
 }
 
-func (m *RateLimiterFlags) GetZrc20Rates() []*ZRC20Rate {
+func (m *RateLimiterFlags) GetConversions() []Conversion {
 	if m != nil {
-		return m.Zrc20Rates
+		return m.Conversions
 	}
 	return nil
 }
 
+type Conversion struct {
+	Zrc20 string                                 `protobuf:"bytes,1,opt,name=zrc20,proto3" json:"zrc20,omitempty"`
+	Rate  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=rate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate"`
+}
+
+func (m *Conversion) Reset()         { *m = Conversion{} }
+func (m *Conversion) String() string { return proto.CompactTextString(m) }
+func (*Conversion) ProtoMessage()    {}
+func (*Conversion) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b17ae80d5af4e97e, []int{1}
+}
+func (m *Conversion) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Conversion) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Conversion.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Conversion) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Conversion.Merge(m, src)
+}
+func (m *Conversion) XXX_Size() int {
+	return m.Size()
+}
+func (m *Conversion) XXX_DiscardUnknown() {
+	xxx_messageInfo_Conversion.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Conversion proto.InternalMessageInfo
+
+func (m *Conversion) GetZrc20() string {
+	if m != nil {
+		return m.Zrc20
+	}
+	return ""
+}
+
 func init() {
-	proto.RegisterType((*ZRC20Rate)(nil), "zetachain.zetacore.crosschain.ZRC20Rate")
 	proto.RegisterType((*RateLimiterFlags)(nil), "zetachain.zetacore.crosschain.RateLimiterFlags")
+	proto.RegisterType((*Conversion)(nil), "zetachain.zetacore.crosschain.Conversion")
 }
 
 func init() {
@@ -168,79 +144,28 @@ func init() {
 }
 
 var fileDescriptor_b17ae80d5af4e97e = []byte{
-	// 416 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x52, 0x41, 0x6b, 0x14, 0x31,
-	0x14, 0xde, 0x74, 0xab, 0xee, 0xa6, 0xb0, 0xd5, 0xd8, 0xc3, 0x58, 0xe8, 0x74, 0xa8, 0x87, 0x0e,
-	0x4a, 0x93, 0x3a, 0xfe, 0x83, 0x16, 0x85, 0x45, 0x4f, 0x41, 0x11, 0x16, 0x21, 0x64, 0x33, 0x71,
-	0x1a, 0xba, 0x9b, 0x0c, 0x49, 0xb4, 0xb6, 0x3f, 0xc0, 0xb3, 0xf8, 0xab, 0x7a, 0xec, 0x51, 0x3c,
-	0x14, 0xd9, 0xfd, 0x23, 0x92, 0xa4, 0xeb, 0xce, 0xa9, 0x97, 0x99, 0x2f, 0x8f, 0xf7, 0x7d, 0x7c,
-	0xdf, 0x7b, 0x0f, 0x3e, 0x17, 0xd6, 0x38, 0x27, 0xce, 0xb8, 0xd2, 0xc4, 0x72, 0x2f, 0xd9, 0x4c,
-	0xcd, 0x95, 0x97, 0x96, 0x7d, 0x99, 0xf1, 0xc6, 0xe1, 0xd6, 0x1a, 0x6f, 0xd0, 0xde, 0x95, 0xf4,
-	0x3c, 0xf6, 0xe0, 0x88, 0x8c, 0x95, 0x78, 0xcd, 0xdb, 0xdd, 0x69, 0x4c, 0x63, 0x62, 0x27, 0x09,
-	0x28, 0x91, 0x76, 0x9f, 0xb6, 0xe7, 0x0d, 0x11, 0x46, 0xe9, 0xf8, 0x49, 0xc5, 0x83, 0x5f, 0x00,
-	0x0e, 0x27, 0xf4, 0xb4, 0x3a, 0xa6, 0xdc, 0x4b, 0xf4, 0x0c, 0x0e, 0xa2, 0x02, 0x53, 0x75, 0x06,
-	0x0a, 0x50, 0xf6, 0xe9, 0xa3, 0xf8, 0x1e, 0xd7, 0xe8, 0x25, 0x1c, 0x06, 0x1a, 0xf3, 0x97, 0xad,
-	0xcc, 0x36, 0x0a, 0x50, 0x8e, 0xaa, 0x11, 0x8e, 0x42, 0xa7, 0x46, 0xe9, 0x0f, 0x97, 0xad, 0xa4,
-	0x03, 0x71, 0x87, 0xd0, 0x0e, 0x7c, 0xc0, 0x9d, 0x93, 0x3e, 0xeb, 0x17, 0xa0, 0x1c, 0xd2, 0xf4,
-	0x40, 0x87, 0x70, 0x5b, 0x18, 0xfd, 0x4d, 0x5a, 0xa7, 0x8c, 0x66, 0x21, 0x5c, 0xb6, 0x59, 0x80,
-	0x12, 0xd0, 0xd1, 0xba, 0x1c, 0x6c, 0x1c, 0xfc, 0xd8, 0x80, 0x8f, 0x03, 0x78, 0x9f, 0xa2, 0xbf,
-	0x0d, 0xc9, 0xd1, 0x1e, 0x84, 0xca, 0x31, 0xa9, 0xf9, 0x74, 0x26, 0x93, 0xbb, 0x01, 0x1d, 0x2a,
-	0xf7, 0x26, 0x15, 0xd0, 0x0b, 0xf8, 0x64, 0x3d, 0x2e, 0x76, 0xa1, 0x74, 0x6d, 0x2e, 0xa2, 0xcf,
-	0x3e, 0xdd, 0xb6, 0x2b, 0xad, 0x4f, 0xb1, 0x8c, 0x3e, 0x43, 0xd4, 0xe9, 0x55, 0x9a, 0x85, 0x21,
-	0x26, 0xaf, 0x27, 0xe4, 0xfa, 0x76, 0xbf, 0xf7, 0xe7, 0x76, 0xff, 0xb0, 0x51, 0xfe, 0xec, 0xeb,
-	0x14, 0x0b, 0x33, 0x27, 0xc2, 0xb8, 0xb9, 0x71, 0x77, 0xbf, 0x23, 0x57, 0x9f, 0x93, 0x30, 0x05,
-	0x87, 0x3f, 0x2a, 0xed, 0x3b, 0xea, 0x63, 0x3d, 0x91, 0x9e, 0xa3, 0x31, 0xdc, 0xba, 0xb2, 0xa2,
-	0x3a, 0x8e, 0x09, 0x5d, 0xb6, 0x59, 0xf4, 0xcb, 0xad, 0xaa, 0xc4, 0xf7, 0xae, 0x0c, 0xff, 0xdf,
-	0x01, 0x85, 0x91, 0x1c, 0xa0, 0x3b, 0x79, 0x77, 0xbd, 0xc8, 0xc1, 0xcd, 0x22, 0x07, 0x7f, 0x17,
-	0x39, 0xf8, 0xb9, 0xcc, 0x7b, 0x37, 0xcb, 0xbc, 0xf7, 0x7b, 0x99, 0xf7, 0x26, 0xaf, 0x3a, 0xf6,
-	0x82, 0xde, 0x51, 0xba, 0x98, 0x95, 0x34, 0xf9, 0x4e, 0x3a, 0x77, 0x14, 0xdd, 0x4e, 0x1f, 0xc6,
-	0x8d, 0xbf, 0xfe, 0x17, 0x00, 0x00, 0xff, 0xff, 0xba, 0xde, 0xfb, 0xd3, 0x62, 0x02, 0x00, 0x00,
-}
-
-func (m *ZRC20Rate) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ZRC20Rate) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ZRC20Rate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.ConversionRate != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.ConversionRate))))
-		i--
-		dAtA[i] = 0x21
-	}
-	if len(m.Asset) > 0 {
-		i -= len(m.Asset)
-		copy(dAtA[i:], m.Asset)
-		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(len(m.Asset)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.CoinType != 0 {
-		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(m.CoinType))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.ChainId != 0 {
-		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(m.ChainId))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
+	// 331 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x91, 0xc1, 0x4e, 0x32, 0x31,
+	0x14, 0x85, 0xa7, 0xc0, 0xcf, 0x2f, 0x65, 0x63, 0x1a, 0x62, 0x26, 0x26, 0x0e, 0x13, 0x4c, 0x74,
+	0x5c, 0xd0, 0x2a, 0xbe, 0xc1, 0x60, 0xdc, 0xe8, 0xc6, 0x49, 0xdc, 0xb8, 0x21, 0x43, 0x29, 0x43,
+	0x23, 0xb4, 0xa4, 0xad, 0xa2, 0x3c, 0x85, 0x8f, 0xc5, 0x92, 0xa5, 0x31, 0x86, 0x18, 0x78, 0x11,
+	0x33, 0x9d, 0x41, 0x66, 0x65, 0x5c, 0xf5, 0xde, 0xe4, 0x9e, 0xd3, 0xef, 0xe4, 0xc0, 0x63, 0xaa,
+	0xa4, 0xd6, 0x74, 0x14, 0x73, 0x41, 0x54, 0x6c, 0x58, 0x6f, 0xcc, 0x27, 0xdc, 0x30, 0xd5, 0x1b,
+	0x8e, 0xe3, 0x44, 0xe3, 0xa9, 0x92, 0x46, 0xa2, 0xa3, 0x39, 0x33, 0xb1, 0xbd, 0xc1, 0x76, 0x92,
+	0x8a, 0xe1, 0x9d, 0xee, 0xb0, 0x91, 0xc8, 0x44, 0xda, 0x4b, 0x92, 0x4e, 0x99, 0xa8, 0xf5, 0x09,
+	0xe0, 0x7e, 0x14, 0x1b, 0x76, 0x9b, 0x19, 0x5e, 0xa7, 0x7e, 0xc8, 0x85, 0xff, 0x99, 0x88, 0xfb,
+	0x63, 0x36, 0x70, 0x81, 0x0f, 0x82, 0xbd, 0x68, 0xbb, 0xa2, 0x03, 0x58, 0x9d, 0x71, 0x31, 0x90,
+	0x33, 0xb7, 0xe4, 0x83, 0xa0, 0x1c, 0xe5, 0x1b, 0xea, 0xc2, 0x4a, 0xca, 0xe5, 0x96, 0x7d, 0x10,
+	0xd4, 0x42, 0xb2, 0x58, 0x35, 0x9d, 0x8f, 0x55, 0xf3, 0x34, 0xe1, 0x66, 0xf4, 0xd4, 0xc7, 0x54,
+	0x4e, 0x08, 0x95, 0x7a, 0x22, 0x75, 0xfe, 0xb4, 0xf5, 0xe0, 0x91, 0x98, 0xd7, 0x29, 0xd3, 0xf8,
+	0x9e, 0x0b, 0x13, 0x59, 0x31, 0xba, 0x83, 0x75, 0x2a, 0xc5, 0x33, 0x53, 0x9a, 0x4b, 0xa1, 0xdd,
+	0x8a, 0x5f, 0x0e, 0xea, 0x9d, 0x33, 0xfc, 0x6b, 0x2c, 0xdc, 0xfd, 0x51, 0x84, 0x95, 0xf4, 0xdb,
+	0xa8, 0xe8, 0xd1, 0x1a, 0x42, 0xb8, 0x3b, 0x40, 0x0d, 0xf8, 0x6f, 0xae, 0x68, 0xe7, 0xdc, 0xa6,
+	0xaa, 0x45, 0xd9, 0x82, 0xc2, 0x9c, 0xbd, 0x64, 0xd9, 0x71, 0xce, 0x7e, 0xf2, 0x07, 0xf6, 0x2b,
+	0x46, 0x33, 0xf4, 0xf0, 0x66, 0xb1, 0xf6, 0xc0, 0x72, 0xed, 0x81, 0xaf, 0xb5, 0x07, 0xde, 0x36,
+	0x9e, 0xb3, 0xdc, 0x78, 0xce, 0xfb, 0xc6, 0x73, 0x1e, 0x2e, 0x0a, 0x3e, 0x29, 0x7f, 0x3b, 0x6b,
+	0x71, 0x1b, 0x85, 0xbc, 0x90, 0x42, 0xb7, 0xd6, 0xb6, 0x5f, 0xb5, 0xd5, 0x5c, 0x7e, 0x07, 0x00,
+	0x00, 0xff, 0xff, 0xd2, 0x2c, 0x21, 0x90, 0xf6, 0x01, 0x00, 0x00,
 }
 
 func (m *RateLimiterFlags) Marshal() (dAtA []byte, err error) {
@@ -263,10 +188,10 @@ func (m *RateLimiterFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Zrc20Rates) > 0 {
-		for iNdEx := len(m.Zrc20Rates) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Conversions) > 0 {
+		for iNdEx := len(m.Conversions) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Zrc20Rates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Conversions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -278,29 +203,69 @@ func (m *RateLimiterFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size := m.RateLimitInZeta.Size()
+		size := m.Rate.Size()
 		i -= size
-		if _, err := m.RateLimitInZeta.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.Rate.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x1a
-	if m.RateLimitWindow != 0 {
-		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(m.RateLimitWindow))
+	if m.Window != 0 {
+		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(m.Window))
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.IsEnabled {
+	if m.Enabled {
 		i--
-		if m.IsEnabled {
+		if m.Enabled {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Conversion) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Conversion) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Conversion) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Rate.Size()
+		i -= size
+		if _, err := m.Rate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Zrc20) > 0 {
+		i -= len(m.Zrc20)
+		copy(dAtA[i:], m.Zrc20)
+		i = encodeVarintRateLimiterFlags(dAtA, i, uint64(len(m.Zrc20)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -316,48 +281,41 @@ func encodeVarintRateLimiterFlags(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *ZRC20Rate) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.ChainId != 0 {
-		n += 1 + sovRateLimiterFlags(uint64(m.ChainId))
-	}
-	if m.CoinType != 0 {
-		n += 1 + sovRateLimiterFlags(uint64(m.CoinType))
-	}
-	l = len(m.Asset)
-	if l > 0 {
-		n += 1 + l + sovRateLimiterFlags(uint64(l))
-	}
-	if m.ConversionRate != 0 {
-		n += 9
-	}
-	return n
-}
-
 func (m *RateLimiterFlags) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.IsEnabled {
+	if m.Enabled {
 		n += 2
 	}
-	if m.RateLimitWindow != 0 {
-		n += 1 + sovRateLimiterFlags(uint64(m.RateLimitWindow))
+	if m.Window != 0 {
+		n += 1 + sovRateLimiterFlags(uint64(m.Window))
 	}
-	l = m.RateLimitInZeta.Size()
+	l = m.Rate.Size()
 	n += 1 + l + sovRateLimiterFlags(uint64(l))
-	if len(m.Zrc20Rates) > 0 {
-		for _, e := range m.Zrc20Rates {
+	if len(m.Conversions) > 0 {
+		for _, e := range m.Conversions {
 			l = e.Size()
 			n += 1 + l + sovRateLimiterFlags(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *Conversion) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Zrc20)
+	if l > 0 {
+		n += 1 + l + sovRateLimiterFlags(uint64(l))
+	}
+	l = m.Rate.Size()
+	n += 1 + l + sovRateLimiterFlags(uint64(l))
 	return n
 }
 
@@ -366,137 +324,6 @@ func sovRateLimiterFlags(x uint64) (n int) {
 }
 func sozRateLimiterFlags(x uint64) (n int) {
 	return sovRateLimiterFlags(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *ZRC20Rate) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRateLimiterFlags
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ZRC20Rate: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ZRC20Rate: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
-			}
-			m.ChainId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRateLimiterFlags
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ChainId |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CoinType", wireType)
-			}
-			m.CoinType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRateLimiterFlags
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.CoinType |= coin.CoinType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Asset", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRateLimiterFlags
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthRateLimiterFlags
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthRateLimiterFlags
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Asset = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConversionRate", wireType)
-			}
-			var v uint64
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.ConversionRate = float64(math.Float64frombits(v))
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRateLimiterFlags(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthRateLimiterFlags
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *RateLimiterFlags) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -529,7 +356,7 @@ func (m *RateLimiterFlags) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsEnabled", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -546,12 +373,12 @@ func (m *RateLimiterFlags) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.IsEnabled = bool(v != 0)
+			m.Enabled = bool(v != 0)
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitWindow", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Window", wireType)
 			}
-			m.RateLimitWindow = 0
+			m.Window = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRateLimiterFlags
@@ -561,14 +388,14 @@ func (m *RateLimiterFlags) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.RateLimitWindow |= int64(b&0x7F) << shift
+				m.Window |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitInZeta", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Rate", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -596,13 +423,13 @@ func (m *RateLimiterFlags) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RateLimitInZeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Rate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Zrc20Rates", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Conversions", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -629,8 +456,124 @@ func (m *RateLimiterFlags) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Zrc20Rates = append(m.Zrc20Rates, &ZRC20Rate{})
-			if err := m.Zrc20Rates[len(m.Zrc20Rates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Conversions = append(m.Conversions, Conversion{})
+			if err := m.Conversions[len(m.Conversions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRateLimiterFlags(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRateLimiterFlags
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Conversion) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRateLimiterFlags
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Conversion: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Conversion: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zrc20", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRateLimiterFlags
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRateLimiterFlags
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRateLimiterFlags
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zrc20 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRateLimiterFlags
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRateLimiterFlags
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRateLimiterFlags
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Rate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

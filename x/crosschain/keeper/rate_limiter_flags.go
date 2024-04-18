@@ -1,43 +1,36 @@
 package keeper
 
 import (
-	"math/big"
 	"strings"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // hardcoded rate limiter flags
 var rateLimitFlags = types.RateLimiterFlags{
-	IsEnabled:       true,
-	RateLimitWindow: 1200,                  // 1200 zeta blocks, 2 hours
-	RateLimitInZeta: math.NewUint(2000000), // 2,000,000 ZETA
-	Zrc20Rates: []*types.ZRC20Rate{
+	Enabled: true,
+	Window:  100,                   // 100 zeta blocks, 10 minutes
+	Rate:    math.NewUint(2000000), // 2000 ZETA
+	Conversions: []types.Conversion{
 		// ETH
 		{
-			ChainId:        chains.GoerliLocalnetChain().ChainId,
-			CoinType:       coin.CoinType_Gas,
-			Asset:          "",
-			ConversionRate: 2500,
+			Zrc20: "0x13A0c5930C028511Dc02665E7285134B6d11A5f4",
+			Rate:  sdk.NewDec(2500),
 		},
 		// USDT
 		{
-			ChainId:        chains.GoerliLocalnetChain().ChainId,
-			CoinType:       coin.CoinType_ERC20,
-			Asset:          "0xbD1e64A22B9F92D9Ce81aA9B4b0fFacd80215564",
-			ConversionRate: 0.8,
+			Zrc20: "0xbD1e64A22B9F92D9Ce81aA9B4b0fFacd80215564",
+			Rate:  sdk.MustNewDecFromStr("0.8"),
+			//sdk.NewDec(0.8),
 		},
 		// BTC
 		{
-			ChainId:        chains.BtcRegtestChain().ChainId,
-			CoinType:       coin.CoinType_ERC20,
-			Asset:          "0x8f56682c2b8b2e3d4f6f7f7d6f3c01b3f6f6a7d6",
-			ConversionRate: 50000,
+			Zrc20: "0x8f56682c2b8b2e3d4f6f7f7d6f3c01b3f6f6a7d6",
+			Rate:  sdk.NewDec(50000),
 		},
 	},
 }
@@ -65,22 +58,30 @@ func (k Keeper) GetRatelimiterFlags(_ sdk.Context) (val types.RateLimiterFlags, 
 
 // GetRatelimiterRates returns two maps of foreign coins and their rates
 // The 1st map: foreign chain id -> gas coin rate
-// The 2nd map: foreign erc20 asset -> erc20 coin rate
-func (k Keeper) GetRatelimiterRates(ctx sdk.Context) (map[int64]*big.Float, map[string]*big.Float) {
+// The 2nd map: foreign chain id -> erc20 asset -> erc20 coin rate
+func (k Keeper) GetRatelimiterRates(ctx sdk.Context) (map[int64]sdk.Dec, map[int64]map[string]sdk.Dec) {
 	rateLimitFlags, _ := k.GetRatelimiterFlags(ctx)
 
 	// the result maps
-	gasCoinRates := make(map[int64]*big.Float)
-	erc20CoinRates := make(map[string]*big.Float)
+	gasCoinRates := make(map[int64]sdk.Dec)
+	erc20CoinRates := make(map[int64]map[string]sdk.Dec)
 
 	// loop through the rate limiter flags to get the rate
-	for _, zrc20Rate := range rateLimitFlags.Zrc20Rates {
-		rate := big.NewFloat(zrc20Rate.ConversionRate)
-		switch zrc20Rate.CoinType {
+	for _, conversion := range rateLimitFlags.Conversions {
+		fCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, conversion.Zrc20)
+		if !found {
+			continue
+		}
+
+		chainID := fCoin.ForeignChainId
+		switch fCoin.CoinType {
 		case coin.CoinType_Gas:
-			gasCoinRates[zrc20Rate.ChainId] = rate
+			gasCoinRates[chainID] = conversion.Rate
 		case coin.CoinType_ERC20:
-			erc20CoinRates[strings.ToLower(zrc20Rate.Asset)] = rate
+			if _, found := erc20CoinRates[chainID]; !found {
+				erc20CoinRates[chainID] = make(map[string]sdk.Dec)
+			}
+			erc20CoinRates[chainID][strings.ToLower(fCoin.Asset)] = conversion.Rate
 		}
 	}
 	return gasCoinRates, erc20CoinRates

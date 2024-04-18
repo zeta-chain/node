@@ -2,25 +2,29 @@ syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
 import "gogoproto/gogo.proto";
-import "pkg/coin/coin.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-// ZRC20Rate defines the conversion rate of ZRC20 to ZETA
-message ZRC20Rate {
-  int64 chain_id = 1;
-  coin.CoinType coin_type = 2;
-  string asset = 3;
-  double conversion_rate = 4;
-}
-
-// RateLimiterFlags defines the outbound rate limiter flags
 message RateLimiterFlags {
-  bool is_enabled = 1;
-  int64 rate_limit_window = 2;
-  string rate_limit_in_zeta = 3 [
+  bool enabled = 1;
+
+  // window in blocks
+  int64 window = 2;
+
+  // rate in azeta per block
+  string rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
-  repeated ZRC20Rate zrc20_rates = 4;
+
+  // conversion in azeta per token
+  repeated Conversion conversions = 4 [(gogoproto.nullable) = false];
+}
+
+message Conversion {
+  string zrc20 = 1;
+  string rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

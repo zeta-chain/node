@@ -26608,6 +26608,27 @@ paths:
           format: int64
       tags:
         - Query
+  /zeta-chain/crosschain/cctxPendingWithRateLimit:
+    get:
+      summary: Queries a list of pending cctxs with rate limit.
+      operationId: Query_CctxListPendingWithinRateLimit
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryListCctxPendingWithRateLimitResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          format: int64
+      tags:
+        - Query
   /zeta-chain/crosschain/convertGasToZeta:
     get:
       operationId: Query_ConvertGasToZeta
@@ -53901,6 +53922,19 @@ definitions:
       totalPending:
         type: string
         format: uint64
+  crosschainQueryListCctxPendingWithRateLimitResponse:
+    type: object
+    properties:
+      cross_chain_tx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
+      total_pending:
+        type: string
+        format: uint64
+      rate_limit_exceeded:
+        type: boolean
   crosschainQueryMessagePassingProtocolFeeResponse:
     type: object
     properties:
