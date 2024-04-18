@@ -26,6 +26,7 @@ const (
 	TestMessagePassingRevertFailName      = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName   = "message_passing_revert_success"
 	TestMessagePassingZEVMName            = "message_passing_zevm"
+	TestMessagePassingZEVMToEVMName       = "message_passing_zevm_to_evm"
 	TestMessagePassingZEVMRevertName      = "message_passing_revert_zevm"
 	TestERC20DepositAndCallRefundName     = "erc20_deposit_and_call_refund"
 	TestEtherDepositAndCallName           = "eth_deposit_and_call"
@@ -390,5 +391,13 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate the evm chain from goerli to sepolia",
 		[]runner.ArgDefinition{},
 		TestMigrateChainSupport,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMToEVMName,
+		"zevm -> evm message passing contract call",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
+		},
+		TestMessagePassingZEVMtoEVM,
 	),
 }
