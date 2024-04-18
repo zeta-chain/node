@@ -86,6 +86,14 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		stateStore,
 	)
 
+	// Create lightclient keeper
+	lightclientKeeperTmp := initLightclientKeeper(
+		cdc,
+		db,
+		stateStore,
+		authorityKeeperTmp,
+	)
+
 	// Create observer keeper
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
@@ -95,10 +103,12 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
 		authorityKeeperTmp,
+		lightclientKeeperTmp,
 	)
 	zetaKeepers := ZetaKeepers{
-		ObserverKeeper:  observerKeeperTmp,
-		AuthorityKeeper: &authorityKeeperTmp,
+		ObserverKeeper:    observerKeeperTmp,
+		AuthorityKeeper:   &authorityKeeperTmp,
+		LightclientKeeper: &lightclientKeeperTmp,
 	}
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp

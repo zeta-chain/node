@@ -23,22 +23,24 @@ import (
 )
 
 type CrosschainMockOptions struct {
-	UseBankMock      bool
-	UseAccountMock   bool
-	UseStakingMock   bool
-	UseObserverMock  bool
-	UseFungibleMock  bool
-	UseAuthorityMock bool
+	UseBankMock        bool
+	UseAccountMock     bool
+	UseStakingMock     bool
+	UseObserverMock    bool
+	UseFungibleMock    bool
+	UseAuthorityMock   bool
+	UseLightclientMock bool
 }
 
 var (
 	CrosschainMocksAll = CrosschainMockOptions{
-		UseBankMock:      true,
-		UseAccountMock:   true,
-		UseStakingMock:   true,
-		UseObserverMock:  true,
-		UseFungibleMock:  true,
-		UseAuthorityMock: true,
+		UseBankMock:        true,
+		UseAccountMock:     true,
+		UseStakingMock:     true,
+		UseObserverMock:    true,
+		UseFungibleMock:    true,
+		UseAuthorityMock:   true,
+		UseLightclientMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
@@ -62,6 +64,7 @@ func CrosschainKeeperWithMocks(
 
 	// Create zeta keepers
 	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
+	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore, authorityKeeperTmp)
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
 		db,
@@ -70,6 +73,7 @@ func CrosschainKeeperWithMocks(
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
 		authorityKeeperTmp,
+		lightclientKeeperTmp,
 	)
 	fungibleKeeperTmp := initFungibleKeeper(
 		cdc,
@@ -86,6 +90,7 @@ func CrosschainKeeperWithMocks(
 		FungibleKeeper:  fungibleKeeperTmp,
 		AuthorityKeeper: &authorityKeeperTmp,
 	}
+	var lightclientKeeper types.LightclientKeeper = lightclientKeeperTmp
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
@@ -127,6 +132,9 @@ func CrosschainKeeperWithMocks(
 	if mockOptions.UseFungibleMock {
 		fungibleKeeper = crosschainmocks.NewCrosschainFungibleKeeper(t)
 	}
+	if mockOptions.UseLightclientMock {
+		lightclientKeeper = crosschainmocks.NewCrosschainLightclientKeeper(t)
+	}
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -138,6 +146,7 @@ func CrosschainKeeperWithMocks(
 		observerKeeper,
 		fungibleKeeper,
 		authorityKeeper,
+		lightclientKeeper,
 	)
 
 	return k, ctx, sdkKeepers, zetaKeepers
@@ -152,6 +161,13 @@ func CrosschainKeeperAllMocks(t testing.TB) (*keeper.Keeper, sdk.Context) {
 // CrosschainKeeper initializes a crosschain keeper for testing purposes
 func CrosschainKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	return CrosschainKeeperWithMocks(t, CrosschainNoMocks)
+}
+
+// GetCrosschainLightclientMock returns a new crosschain lightclient keeper mock
+func GetCrosschainLightclientMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainLightclientKeeper {
+	lk, ok := keeper.GetLightclientKeeper().(*crosschainmocks.CrosschainLightclientKeeper)
+	require.True(t, ok)
+	return lk
 }
 
 // GetCrosschainAuthorityMock returns a new crosschain authority keeper mock
@@ -296,4 +312,32 @@ func MockSaveOutBoundNewRevertCreated(m *crosschainmocks.CrosschainObserverKeepe
 		Return().Once()
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()
+}
+
+// MockCctxByNonce is a utility function using observer mock to returns a cctx of the given status from crosschain keeper
+// mocks the methods called by CctxByNonce to directly return the given cctx or error
+func MockCctxByNonce(
+	t *testing.T,
+	ctx sdk.Context,
+	k keeper.Keeper,
+	observerKeeper *crosschainmocks.CrosschainObserverKeeper,
+	cctxStatus types.CctxStatus,
+	isErr bool,
+) {
+	if isErr {
+		// return error on GetTSS to make CctxByNonce return error
+		observerKeeper.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false).Once()
+		return
+	}
+
+	cctx := sample.CrossChainTx(t, sample.StringRandom(sample.Rand(), 10))
+	cctx.CctxStatus = &types.Status{
+		Status: cctxStatus,
+	}
+	k.SetCrossChainTx(ctx, *cctx)
+
+	observerKeeper.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true).Once()
+	observerKeeper.On("GetNonceToCctx", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(observertypes.NonceToCctx{
+		CctxIndex: cctx.Index,
+	}, true).Once()
 }

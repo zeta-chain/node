@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"math/big"
 	"os"
 	"sort"
@@ -143,7 +142,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		local.DeployerAddress,
 		local.DeployerPrivateKey,
 		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
+		local.FungibleAdminMnemonic,
 		logger,
 	)
 	if err != nil {
