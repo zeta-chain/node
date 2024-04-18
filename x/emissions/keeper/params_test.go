@@ -234,7 +234,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.params, k.GetParams(ctx))
+				params, found := k.GetParams(ctx)
+				require.True(t, found)
+				require.Equal(t, tt.params, params)
 			}
 		})
 	}

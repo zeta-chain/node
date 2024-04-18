@@ -7,7 +7,7 @@ import (
 )
 
 type ObserverKeeper interface {
-	GetParams(ctx sdk.Context) types.Params
+	GetParams(ctx sdk.Context) (types.Params, bool)
 	SetParams(ctx sdk.Context, params types.Params) error
 }
 

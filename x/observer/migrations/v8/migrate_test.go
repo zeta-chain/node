@@ -34,6 +34,7 @@ func TestMigrate(t *testing.T) {
 
 	require.NoError(t, v8.MigrateStore(ctx, k, legacySubspace))
 
-	params := k.GetParams(ctx)
+	params, found := k.GetParams(ctx)
+	require.True(t, found)
 	require.Equal(t, legacyParams, params)
 }

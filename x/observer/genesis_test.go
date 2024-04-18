@@ -140,7 +140,8 @@ func TestGenesis(t *testing.T) {
 		got := observer.ExportGenesis(ctx, *k)
 		require.NotNil(t, got)
 
-		params := k.GetParams(ctx)
+		params, found := k.GetParams(ctx)
+		require.True(t, found)
 		expectedGenesisState := types.GenesisState{
 			Params:            &params,
 			CrosschainFlags:   types.DefaultCrosschainFlags(),

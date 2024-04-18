@@ -20,7 +20,9 @@ func TestGetParams(t *testing.T) {
 	err := k.SetParams(ctx, params)
 	require.NoError(t, err)
 
-	require.EqualValues(t, params, k.GetParams(ctx))
+	p, found := k.GetParams(ctx)
+	require.True(t, found)
+	require.EqualValues(t, params, p)
 }
 
 func TestGenerateAddress(t *testing.T) {

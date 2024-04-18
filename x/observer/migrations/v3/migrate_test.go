@@ -21,7 +21,8 @@ func TestMigrateStore(t *testing.T) {
 
 	err = v3.MigrateStore(ctx, k)
 	require.NoError(t, err)
-	params = k.GetParams(ctx)
+	params, found := k.GetParams(ctx)
+	require.True(t, found)
 	require.Len(t, params.AdminPolicy, 0)
 
 	// update admin policy
@@ -45,7 +46,8 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 	err = v3.MigrateStore(ctx, k)
 	require.NoError(t, err)
-	params = k.GetParams(ctx)
+	params, found = k.GetParams(ctx)
+	require.True(t, found)
 	require.Len(t, params.AdminPolicy, 2)
 	require.Equal(t, params.AdminPolicy[0].PolicyType, types.Policy_Type_group1)
 	require.Equal(t, params.AdminPolicy[1].PolicyType, types.Policy_Type_group2)

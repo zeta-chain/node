@@ -186,10 +186,12 @@ func TestBeginBlocker(t *testing.T) {
 		feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 		emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 
+		params, found := k.GetParams(ctx)
+		require.True(t, found)
 		blockRewards := emissionstypes.BlockReward
-		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParams(ctx).ObserverEmissionPercentage)).TruncateInt()
-		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParams(ctx).ValidatorEmissionPercentage)).TruncateInt()
-		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParams(ctx).TssSignerEmissionPercentage)).TruncateInt()
+		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ObserverEmissionPercentage)).TruncateInt()
+		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ValidatorEmissionPercentage)).TruncateInt()
+		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.TssSignerEmissionPercentage)).TruncateInt()
 		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
 
 		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))

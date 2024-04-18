@@ -22,7 +22,9 @@ func TestMsgServer_UpdateParams(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Empty(t, res)
-		require.Equal(t, types.DefaultParams(), k.GetParams(ctx))
+		params, found := k.GetParams(ctx)
+		require.True(t, found)
+		require.Equal(t, types.DefaultParams(), params)
 	})
 
 	t.Run("fail for wrong authority", func(t *testing.T) {

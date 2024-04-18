@@ -6,7 +6,7 @@ import (
 )
 
 type ObserverKeeper interface {
-	GetParams(ctx sdk.Context) types.Params
+	GetParams(ctx sdk.Context) (types.Params, bool)
 	SetParams(ctx sdk.Context, params types.Params) error
 }
 
@@ -14,7 +14,11 @@ type ObserverKeeper interface {
 // This migration update the policy group
 func MigrateStore(ctx sdk.Context, k ObserverKeeper) error {
 	// Get first admin policy group
-	p := k.GetParams(ctx)
+	p, found := k.GetParams(ctx)
+	if !found {
+		return nil
+	}
+
 	if len(p.AdminPolicy) == 0 || p.AdminPolicy[0] == nil {
 		return nil
 	}
