@@ -54,7 +54,6 @@ const (
 	// ZetaAccountingKey value is used as prefix for storing ZetaAccountingKey
 	ZetaAccountingKey = "ZetaAccounting-value-"
 
-	// RateLimiterFlagsKey is the key for the rate limiter flags
 	RateLimiterFlagsKey = "RateLimiterFlags-value-"
 )
 

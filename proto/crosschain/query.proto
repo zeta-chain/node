@@ -8,6 +8,7 @@ import "crosschain/in_tx_hash_to_cctx.proto";
 import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
+import "crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -110,6 +111,11 @@ service Query {
   // Queries a list of lastMetaHeight items.
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
+  }
+
+  // Queries the rate limiter flags
+  rpc RateLimiterFlags(QueryRateLimiterFlagsRequest) returns (QueryRateLimiterFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/rateLimiterFlags";
   }
 }
 
@@ -288,4 +294,10 @@ message QueryMessagePassingProtocolFeeRequest {}
 
 message QueryMessagePassingProtocolFeeResponse {
   string feeInZeta = 1;
+}
+
+message QueryRateLimiterFlagsRequest {}
+
+message QueryRateLimiterFlagsResponse {
+  RateLimiterFlags rateLimiterFlags = 1 [(gogoproto.nullable) = false];
 }

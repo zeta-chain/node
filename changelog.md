@@ -8,10 +8,19 @@
   * The `Policies` query of the `authority` module must be used to get the current admin policies.
   * `PolicyType_group1` has been renamed into `PolicyType_groupEmergency` and `PolicyType_group2` has been renamed into `PolicyType_groupAdmin`.
 
-* `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
-  * The structure of the message remains the same.
+* A new module called `lightclient` has been created for the blocker header and proof functionality to add inbound and outbound trackers in a permissionless manner (currently deactivated on live networks)
+  * The list of block headers are now stored in the `lightclient` module instead of the `observer` module.
+    * The message to vote on new block headers is still in the `observer` module but has been renamed to `MsgVoteBlockHeader` instead of `MsgAddBlockHeader`.
+    * The `GetAllBlockHeaders` query has been moved to the `lightclient` module and renamed to `BlockHeaderAll`.
+    * The `GetBlockHeaderByHash` query has been moved to the `lightclient` module and renamed to `BlockHeader`.
+    * The `GetBlockHeaderStateByChain` query has been moved to the `lightclient` module and renamed to `ChainState`.
+    * The `Prove` query has been moved to the `lightclient` module.
+    * The `BlockHeaderVerificationFlags` has been deprecated in `CrosschainFlags`, `VerificationFlags` should be used instead.
 
 * `MsgGasPriceVoter` message in the `crosschain` module has been renamed to `MsgVoteGasPrice`.
+  * The structure of the message remains the same.
+
+* `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
   * The structure of the message remains the same.
 
 ### Refactor
@@ -29,6 +38,9 @@
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
 * [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
+* [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
+* [1976](https://github.com/zeta-chain/node/pull/1976) - add lightclient module for header and proof functionality
+* [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync and remove fungible params
 * [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 
@@ -36,12 +48,12 @@
 
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
 * [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
-* [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 * [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
 * [1942](https://github.com/zeta-chain/node/pull/1982) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
 * [2006](https://github.com/zeta-chain/node/pull/2006) - add Amoy testnet static chain information
+* [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 
 ### Tests
 

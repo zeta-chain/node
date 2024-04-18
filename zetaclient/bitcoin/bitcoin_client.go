@@ -353,9 +353,9 @@ func (ob *BTCChainClient) WatchInTx() {
 func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
-	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
-		bn = res.BlockHeaderState.LatestHeight + 1
+	res, err := ob.zetaClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
+		bn = res.ChainState.LatestHeight + 1
 	}
 	if bn > tip {
 		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
@@ -372,7 +372,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
-	_, err = ob.zetaClient.PostAddBlockHeader(
+	_, err = ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,
@@ -436,8 +436,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		// add block header to zetabridge
 		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		flags := ob.coreContext.GetCrossChainFlags()
-		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+		verificationFlags := ob.coreContext.GetVerificationFlags()
+		if verificationFlags.BtcTypeChainEnabled {
 			err = ob.postBlockHeader(bn)
 			if err != nil {
 				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)

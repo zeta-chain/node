@@ -13,7 +13,6 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params: types.DefaultParams(),
 		ForeignCoinsList: []types.ForeignCoins{
 			sample.ForeignCoins(t, sample.EthAddress().String()),
 			sample.ForeignCoins(t, sample.EthAddress().String()),

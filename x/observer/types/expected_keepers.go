@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -30,4 +31,22 @@ type AuthorityKeeper interface {
 
 	// SetPolicies is solely used for the migration of policies from observer to authority
 	SetPolicies(ctx sdk.Context, policies authoritytypes.Policies)
+}
+
+type LightclientKeeper interface {
+	CheckNewBlockHeader(
+		ctx sdk.Context,
+		chainID int64,
+		blockHash []byte,
+		height int64,
+		header proofs.HeaderData,
+	) ([]byte, error)
+	AddBlockHeader(
+		ctx sdk.Context,
+		chainID int64,
+		height int64,
+		blockHash []byte,
+		header proofs.HeaderData,
+		parentHash []byte,
+	)
 }

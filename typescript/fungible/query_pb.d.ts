@@ -5,59 +5,9 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Params } from "./params_pb.js";
 import type { ForeignCoins } from "./foreign_coins_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { SystemContract } from "./system_contract_pb.js";
-
-/**
- * QueryParamsRequest is request type for the Query/Params RPC method.
- *
- * @generated from message zetachain.zetacore.fungible.QueryParamsRequest
- */
-export declare class QueryParamsRequest extends Message<QueryParamsRequest> {
-  constructor(data?: PartialMessage<QueryParamsRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.fungible.QueryParamsRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryParamsRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryParamsRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryParamsRequest;
-
-  static equals(a: QueryParamsRequest | PlainMessage<QueryParamsRequest> | undefined, b: QueryParamsRequest | PlainMessage<QueryParamsRequest> | undefined): boolean;
-}
-
-/**
- * QueryParamsResponse is response type for the Query/Params RPC method.
- *
- * @generated from message zetachain.zetacore.fungible.QueryParamsResponse
- */
-export declare class QueryParamsResponse extends Message<QueryParamsResponse> {
-  /**
-   * params holds all the parameters of this module.
-   *
-   * @generated from field: zetachain.zetacore.fungible.Params params = 1;
-   */
-  params?: Params;
-
-  constructor(data?: PartialMessage<QueryParamsResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.fungible.QueryParamsResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryParamsResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryParamsResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryParamsResponse;
-
-  static equals(a: QueryParamsResponse | PlainMessage<QueryParamsResponse> | undefined, b: QueryParamsResponse | PlainMessage<QueryParamsResponse> | undefined): boolean;
-}
 
 /**
  * @generated from message zetachain.zetacore.fungible.QueryGetForeignCoinsRequest

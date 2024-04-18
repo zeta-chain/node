@@ -77,7 +77,7 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	tss, found := k.GetObserverKeeper().GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
@@ -208,7 +208,7 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 
 	// check rate limit flags to decide if we should apply rate limit
 	applyLimit := true
-	rateLimitFlags, found := k.GetRatelimiterFlags(ctx)
+	rateLimitFlags, found := k.GetRateLimiterFlags(ctx)
 	if !found || !rateLimitFlags.Enabled {
 		applyLimit = false
 	}
@@ -225,7 +225,7 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 	var erc20Coins map[int64]map[string]fungibletypes.ForeignCoins
 	var rateLimitInZeta sdk.Dec
 	if applyLimit {
-		gasCoinRates, erc20CoinRates = k.GetRatelimiterRates(ctx)
+		gasCoinRates, erc20CoinRates = k.GetRateLimiterRates(ctx)
 		erc20Coins = k.fungibleKeeper.GetAllForeignERC20CoinMap(ctx)
 		rateLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
 	}

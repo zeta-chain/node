@@ -56,6 +56,8 @@ export declare class GasPriceIncreaseFlags extends Message<GasPriceIncreaseFlags
 }
 
 /**
+ * Deprecated(v16): Use VerificationFlags in the lightclient module instead
+ *
  * @generated from message zetachain.zetacore.observer.BlockHeaderVerificationFlags
  */
 export declare class BlockHeaderVerificationFlags extends Message<BlockHeaderVerificationFlags> {
@@ -104,6 +106,8 @@ export declare class CrosschainFlags extends Message<CrosschainFlags> {
   gasPriceIncreaseFlags?: GasPriceIncreaseFlags;
 
   /**
+   * Deprecated(v16): Use VerificationFlags in the lightclient module instead
+   *
    * @generated from field: zetachain.zetacore.observer.BlockHeaderVerificationFlags blockHeaderVerificationFlags = 4;
    */
   blockHeaderVerificationFlags?: BlockHeaderVerificationFlags;
