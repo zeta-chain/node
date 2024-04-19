@@ -82,8 +82,13 @@ func CmdParseGenesisFile() *cobra.Command {
 				genesisFilePath = args[1]
 			}
 			genDoc, err := GetGenDoc(genesisFilePath)
+			if err != nil {
+				return err
+			}
 			importData, err := GetGenDoc(args[0])
-
+			if err != nil {
+				return err
+			}
 			err = ImportDataIntoFile(genDoc, importData, cdc)
 			if err != nil {
 				return err
