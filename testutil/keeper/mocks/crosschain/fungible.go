@@ -598,11 +598,11 @@ func (_m *CrosschainFungibleKeeper) WithdrawFromGasStabilityPool(ctx types.Conte
 }
 
 // ZEVMDepositAndCallContract provides a mock function with given fields: ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes
-func (_m *CrosschainFungibleKeeper) ZEVMDepositAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, inboundAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+func (_m *CrosschainFungibleKeeper) ZETADepositAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, inboundAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ZEVMDepositAndCallContract")
+		panic("no return value specified for ZETADepositAndCallContract")
 	}
 
 	var r0 *evmtypes.MsgEthereumTxResponse
@@ -628,11 +628,11 @@ func (_m *CrosschainFungibleKeeper) ZEVMDepositAndCallContract(ctx types.Context
 }
 
 // ZEVMRevertAndCallContract provides a mock function with given fields: ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes
-func (_m *CrosschainFungibleKeeper) ZEVMRevertAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, destinationChainID int64, remainingAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+func (_m *CrosschainFungibleKeeper) ZETARevertAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, destinationChainID int64, remainingAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ZEVMRevertAndCallContract")
+		panic("no return value specified for ZETARevertAndCallContract")
 	}
 
 	var r0 *evmtypes.MsgEthereumTxResponse

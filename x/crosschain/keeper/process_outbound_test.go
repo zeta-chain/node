@@ -76,13 +76,13 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		require.ErrorContains(t, err, "failed AddRevertOutbound")
 	})
 
-	t.Run("unable to  process failed outbound if ZEVMRevertAndCallContract fails", func(t *testing.T) {
+	t.Run("unable to  process failed outbound if ZETARevertAndCallContract fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
-		require.ErrorContains(t, err, "failed ZEVMRevertAndCallContract")
+		require.ErrorContains(t, err, "failed ZETARevertAndCallContract")
 	})
 
 	t.Run("successfully revert failed outbound if original sender is a contract", func(t *testing.T) {

@@ -70,10 +70,6 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort("Outbound failed")
 	} else if chains.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
-		// Fetch the original sender and receiver from the CCTX , since this is a revert the sender with be the receiver in the new tx
-		originalSender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-		originalReceiver := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-
 		indexBytes, err := cctx.GetCCTXIndexBytes()
 		if err != nil {
 			// Return err to save the failed outbound ad set to aborted
@@ -96,16 +92,27 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			return fmt.Errorf("failed decoding relayed message: %s", err.Error())
 		}
 
+		// Fetch the original sender and receiver from the CCTX , since this is a revert the sender with be the receiver in the new tx
+		originalSender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+		// This transaction will always have two outbounds, the following logic is just an added precaution.
+		// The contract call or token deposit would go the original sender.
+		originalReceiver := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
+		orginalReceiverChainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+		if len(cctx.OutboundTxParams) == 2 {
+			// If there are 2 outbound tx, then the original receiver is the receiver in the first outbound tx
+			originalReceiver = ethcommon.HexToAddress(cctx.OutboundTxParams[0].Receiver)
+			orginalReceiverChainID = cctx.OutboundTxParams[0].ReceiverChainId
+		}
 		// Call evm to revert the transaction
-		_, err = k.fungibleKeeper.ZEVMRevertAndCallContract(ctx,
+		_, err = k.fungibleKeeper.ZETARevertAndCallContract(ctx,
 			originalSender,
 			originalReceiver,
 			cctx.InboundTxParams.SenderChainId,
-			cctx.GetCurrentOutTxParam().ReceiverChainId,
+			orginalReceiverChainID,
 			cctx.GetCurrentOutTxParam().Amount.BigInt(), data, indexBytes)
 		// If revert fails, we set it to abort directly there is no way to refund here as the revert failed
 		if err != nil {
-			return fmt.Errorf("failed ZEVMRevertAndCallContract: %s", err.Error())
+			return fmt.Errorf("failed ZETARevertAndCallContract: %s", err.Error())
 		}
 		cctx.SetReverted("Outbound failed, revert executed")
 		if len(ctx.TxBytes()) > 0 {

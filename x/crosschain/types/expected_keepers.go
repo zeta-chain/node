@@ -163,14 +163,14 @@ type FungibleKeeper interface {
 	) (eth.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
-	ZEVMDepositAndCallContract(ctx sdk.Context,
+	ZETADepositAndCallContract(ctx sdk.Context,
 		sender ethcommon.Address,
 		to ethcommon.Address,
 		inboundSenderChainID int64,
 		inboundAmount *big.Int,
 		data []byte,
 		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
-	ZEVMRevertAndCallContract(ctx sdk.Context,
+	ZETARevertAndCallContract(ctx sdk.Context,
 		sender ethcommon.Address,
 		to ethcommon.Address,
 		inboundSenderChainID int64,

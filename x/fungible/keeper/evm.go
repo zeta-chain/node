@@ -309,6 +309,9 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	)
 }
 
+// CallOnReceiveZevmConnector calls the onReceive function of the ZevmConnector contract
+// Before calling it mints the zetaValue tokens to the fungible module , and this amount is then provided as value to the onReceive function
+// The onReceive function will then wrap this native zeta into WZETA and call the onReceive function of the destination contract specified by the destinationAddress
 func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	zetaTxSenderAddress []byte,
 	sourceChainId *big.Int,
@@ -328,7 +331,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		return nil, err
 	}
 
-	err = k.DepositCoinZeta(ctx, connectorAddress, zetaValue)
+	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +341,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		*zevmConnecterAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
-		BigIntZero,
+		zetaValue,
 		ZEVMGasLimitConnectorCall,
 		true,
 		false,
@@ -352,6 +355,10 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	)
 }
 
+// CallOnRevertZevmConnector calls the onRevert function of the ZevmConnector contract
+// Before calling it mints the remainingZetaValue tokens to the fungible module , and this amount is then provided as value to the onRevert function
+// The onRevert function will then wrap this native zeta into WZETA and call the onRevert function of the contract specified by the zetaTxSenderAddress
+// Note the destination address is the original destination address of the transaction and not the current destination .
 func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	zetaTxSenderAddress ethcommon.Address,
 	sourceChainId *big.Int,
@@ -371,7 +378,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-	err = k.DepositCoinZeta(ctx, connectorAddress, remainingZetaValue)
+	err = k.DepositCoinsToFungibleModule(ctx, remainingZetaValue)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +387,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 		*zevmConnecterAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
-		BigIntZero,
+		remainingZetaValue,
 		ZEVMGasLimitConnectorCall,
 		true,
 		false,

@@ -18,7 +18,7 @@ import (
 )
 
 func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
-	t.Run("successfully call ZEVMDepositAndCallContract on connector contract ", func(t *testing.T) {
+	t.Run("successfully call ZETADepositAndCallContract on connector contract ", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -34,7 +34,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZEVMDepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err = k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
 		require.NoError(t, err)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
@@ -78,13 +78,13 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZEVMDepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err = k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
 		require.NoError(t, err)
 		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxReceiver.Bytes()), config.BaseDenom)
 		require.Equal(t, inboundAmount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("fail ZEVMDepositAndCallContract if account not found", func(t *testing.T) {
+	t.Run("fail ZETADepositAndCallContract if account not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -95,12 +95,12 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err := k.ZEVMDepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err := k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrAccountNotFound)
 		require.ErrorContains(t, err, "account not found")
 	})
 
-	t.Run("fail ZEVMDepositAndCallContract id Deposit Fails", func(t *testing.T) {
+	t.Run("fail ZETADepositAndCallContract id Deposit Fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -122,13 +122,13 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		errorMint := errors.New("", 10, "error minting coins")
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
-		_, err = k.ZEVMDepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err = k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, errorMint)
 	})
 }
 
 func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
-	t.Run("successfully call ZEVMRevertAndCallContract if receiver is a contract", func(t *testing.T) {
+	t.Run("successfully call ZETARevertAndCallContract if receiver is a contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -145,7 +145,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
 		require.NoError(t, err)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
@@ -190,13 +190,13 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
 		require.NoError(t, err)
 		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxSender.Bytes()), config.BaseDenom)
 		require.Equal(t, amount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("fail ZEVMRevertAndCallContract if account not found", func(t *testing.T) {
+	t.Run("fail ZETARevertAndCallContract if account not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -208,12 +208,12 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err := k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err := k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrAccountNotFound)
 		require.ErrorContains(t, err, "account not found")
 	})
 
-	t.Run("fail ZEVMRevertAndCallContract if Deposit Fails", func(t *testing.T) {
+	t.Run("fail ZETARevertAndCallContract if Deposit Fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -236,11 +236,11 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		errorMint := errors.New("", 101, "error minting coins")
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
-		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, errorMint)
 	})
 
-	t.Run("fail ZEVMRevertAndCallContract if ZevmOnRevert fails", func(t *testing.T) {
+	t.Run("fail ZETARevertAndCallContract if ZevmOnRevert fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -256,7 +256,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZEVMRevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 		require.ErrorContains(t, err, "GetSystemContract address not found")
 	})

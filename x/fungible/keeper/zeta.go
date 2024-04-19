@@ -20,3 +20,9 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 	// Send minted coins to the receiver
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins)
 }
+
+func (k *Keeper) MintZetaToFungibleModule(ctx sdk.Context, amount *big.Int) error {
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))
+	// Mint coins
+	return k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+}

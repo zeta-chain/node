@@ -11,7 +11,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func (k Keeper) ZEVMDepositAndCallContract(ctx sdk.Context,
+// ZEVMDepositAndCallContract deposits ZETA to the to address if its an account
+// If it's not an account it calls onReceive function of the connector contract and provides the address as the destinationAddress
+func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	inboundSenderChainID int64,
@@ -29,11 +31,13 @@ func (k Keeper) ZEVMDepositAndCallContract(ctx sdk.Context,
 		}
 		return nil, nil
 	}
+	// Call onReceive function of the connector contract. The connector contract will then call the onReceive function of the destination contract which is the to address
 	return k.CallOnReceiveZevmConnector(ctx, sender.Bytes(), big.NewInt(inboundSenderChainID), to, inboundAmount, data, indexBytes)
-
 }
 
-func (k Keeper) ZEVMRevertAndCallContract(ctx sdk.Context,
+// ZEVMRevertAndCallContract deposits ZETA to the sender address if its an account
+// If it's not an account it calls onRevert function of the connector contract and provides the sender address as the zetaTxSenderAddress
+func (k Keeper) ZETARevertAndCallContract(ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	inboundSenderChainID int64,
@@ -52,5 +56,6 @@ func (k Keeper) ZEVMRevertAndCallContract(ctx sdk.Context,
 		}
 		return nil, nil
 	}
+	// Call onRevert function of the connector contract. The connector contract will then call the onRevert function of the zetaTxSender contract which is the sender address
 	return k.CallOnRevertZevmConnector(ctx, sender, big.NewInt(inboundSenderChainID), to.Bytes(), big.NewInt(destinationChainID), remainingAmount, data, indexBytes)
 }

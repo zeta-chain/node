@@ -359,7 +359,7 @@ func (signer *Signer) TryProcessOutTx(
 
 	// Get cross-chain flags
 	crossChainflags := signer.coreContext.GetCrossChainFlags()
-
+	// https://github.com/zeta-chain/node/issues/2050
 	var tx *ethtypes.Transaction
 	// compliance check goes first
 	if compliance.IsCctxRestricted(cctx) {
