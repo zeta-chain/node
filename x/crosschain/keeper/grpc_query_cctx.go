@@ -415,7 +415,7 @@ func convertCctxValue(
 	oneZeta := oneZrc20.Quo(rate)
 
 	// convert asset amount into ZETA
-	amountCctx := sdk.NewDecFromBigInt(cctx.InboundTxParams.Amount.BigInt())
+	amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
 	amountZeta := amountCctx.Quo(oneZeta)
 	return amountZeta
 }
