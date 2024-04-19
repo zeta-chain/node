@@ -39,17 +39,17 @@ const MaxItemsForList = 10
 
 // Copy represents a set of modules for which, the entire state is copied without any modifications
 var Copy = map[string]bool{
-	slashingtypes.ModuleName:        true,
-	govtypes.ModuleName:             true,
-	crisistypes.ModuleName:          true,
-	feemarkettypes.ModuleName:       true,
-	paramstypes.ModuleName:          true,
-	upgradetypes.ModuleName:         true,
-	evidencetypes.ModuleName:        true,
-	vestingtypes.ModuleName:         true,
-	fungibleModuleTypes.ModuleName:  true,
-	emissionsModuleTypes.ModuleName: true,
-	authz.ModuleName:                true,
+	slashingtypes.ModuleName:  true,
+	govtypes.ModuleName:       true,
+	crisistypes.ModuleName:    true,
+	feemarkettypes.ModuleName: true,
+	paramstypes.ModuleName:    true,
+	upgradetypes.ModuleName:   true,
+	evidencetypes.ModuleName:  true,
+	vestingtypes.ModuleName:   true,
+	fungibletypes.ModuleName:  true,
+	emissionstypes.ModuleName: true,
+	authz.ModuleName:          true,
 }
 
 // Skip represents a set of modules for which, the entire state is skipped and nothing gets imported

@@ -40,7 +40,6 @@ zetacored tx [flags]
 * [zetacored tx fungible](zetacored_tx_fungible.md)	 - fungible transactions subcommands
 * [zetacored tx gov](zetacored_tx_gov.md)	 - Governance transactions subcommands
 * [zetacored tx group](zetacored_tx_group.md)	 - Group transaction subcommands
-* [zetacored tx lightclient](zetacored_tx_lightclient.md)	 - lightclient transactions subcommands
 * [zetacored tx multi-sign](zetacored_tx_multi-sign.md)	 - Generate multisig signatures for transactions generated offline
 * [zetacored tx multisign-batch](zetacored_tx_multisign-batch.md)	 - Assemble multisig transactions in batch from batch signatures
 * [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands

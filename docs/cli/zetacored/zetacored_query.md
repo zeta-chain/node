@@ -40,7 +40,6 @@ zetacored query [flags]
 * [zetacored query fungible](zetacored_query_fungible.md)	 - Querying commands for the fungible module
 * [zetacored query gov](zetacored_query_gov.md)	 - Querying commands for the governance module
 * [zetacored query group](zetacored_query_group.md)	 - Querying commands for the group module
-* [zetacored query lightclient](zetacored_query_lightclient.md)	 - Querying commands for the lightclient module
 * [zetacored query observer](zetacored_query_observer.md)	 - Querying commands for the observer module
 * [zetacored query params](zetacored_query_params.md)	 - Querying commands for the params module
 * [zetacored query slashing](zetacored_query_slashing.md)	 - Querying commands for the slashing module

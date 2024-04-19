@@ -29,7 +29,6 @@ Zetacore Daemon (server)
 * [zetacored index-eth-tx](zetacored_index-eth-tx.md)	 - Index historical eth txs
 * [zetacored init](zetacored_init.md)	 - Initialize private validator, p2p, genesis, and application configuration files
 * [zetacored keys](zetacored_keys.md)	 - Manage your application's keys
-* [zetacored parse-genesis-file](zetacored_parse-genesis-file.md)	 - Parse the provided genesis file and import the required data into the optionally provided genesis file
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
 * [zetacored rollback](zetacored_rollback.md)	 - rollback cosmos-sdk and tendermint state by one height
 * [zetacored rosetta](zetacored_rosetta.md)	 - spin up a rosetta server

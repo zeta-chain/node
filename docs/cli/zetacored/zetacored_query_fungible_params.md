@@ -1,9 +1,9 @@
-# query lightclient show-block-header
+# query fungible params
 
-Show a block header from its hash
+shows the parameters of the module
 
 ```
-zetacored query lightclient show-block-header [block-hash] [flags]
+zetacored query fungible params [flags]
 ```
 
 ### Options
@@ -12,7 +12,7 @@ zetacored query lightclient show-block-header [block-hash] [flags]
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for show-block-header
+  -h, --help               help for params
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
@@ -29,5 +29,5 @@ zetacored query lightclient show-block-header [block-hash] [flags]
 
 ### SEE ALSO
 
-* [zetacored query lightclient](zetacored_query_lightclient.md)	 - Querying commands for the lightclient module
+* [zetacored query fungible](zetacored_query_fungible.md)	 - Querying commands for the fungible module
 
