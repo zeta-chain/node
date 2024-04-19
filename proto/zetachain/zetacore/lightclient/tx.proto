@@ -1,0 +1,19 @@
+syntax = "proto3";
+package zetachain.zetacore.lightclient;
+
+import "gogoproto/gogo.proto";
+import "zetachain/zetacore/lightclient/verification_flags.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc UpdateVerificationFlags(MsgUpdateVerificationFlags) returns (MsgUpdateVerificationFlagsResponse);
+}
+
+message MsgUpdateVerificationFlags {
+  string creator = 1;
+  VerificationFlags verification_flags = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateVerificationFlagsResponse {}
