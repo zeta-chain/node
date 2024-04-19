@@ -45,6 +45,7 @@ interface ZetaInterfaces {
         bytes message;
     }
 }
+
 // Dapp is a sample comtract that implements ZetaReceiver and is used for unit testing
 // It sets the values of the ZetaMessage struct to its public variables which can then be queried to check if the function was called correctly
 contract Dapp {
