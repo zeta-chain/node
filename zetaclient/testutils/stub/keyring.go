@@ -86,7 +86,7 @@ func (m Keyring) ImportPrivKey(_, _, _ string) error {
 	return nil
 }
 
-func (m Keyring) ImportPrivKeyHex(uid, privKey, algoStr string) error {
+func (m Keyring) ImportPrivKeyHex(_, _, _ string) error {
 	return nil
 }
 

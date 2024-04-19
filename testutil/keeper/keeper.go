@@ -164,7 +164,6 @@ func AccountKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-	paramKeeper paramskeeper.Keeper,
 ) authkeeper.AccountKeeper {
 	storeKey := sdk.NewKVStoreKey(authtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -184,7 +183,6 @@ func BankKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-	paramKeeper paramskeeper.Keeper,
 	authKeeper authkeeper.AccountKeeper,
 ) bankkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(banktypes.StoreKey)
@@ -207,7 +205,6 @@ func StakingKeeper(
 	ss store.CommitMultiStore,
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
-	paramKeeper paramskeeper.Keeper,
 ) stakingkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(stakingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -222,7 +219,7 @@ func StakingKeeper(
 }
 
 // SlashingKeeper instantiates a slashing keeper for testing purposes
-func SlashingKeeper(cdc codec.Codec, db *tmdb.MemDB, ss store.CommitMultiStore, stakingKeeper stakingkeeper.Keeper, paramKeeper paramskeeper.Keeper) slashingkeeper.Keeper {
+func SlashingKeeper(cdc codec.Codec, db *tmdb.MemDB, ss store.CommitMultiStore, stakingKeeper stakingkeeper.Keeper) slashingkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(slashingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	return slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), storeKey, stakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
@@ -236,7 +233,6 @@ func DistributionKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper *stakingkeeper.Keeper,
-	paramKeeper paramskeeper.Keeper,
 ) distrkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(distrtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -347,13 +343,13 @@ func NewSDKKeepers(
 	ss store.CommitMultiStore,
 ) SDKKeepers {
 	paramsKeeper := ParamsKeeper(cdc, db, ss)
-	authKeeper := AccountKeeper(cdc, db, ss, paramsKeeper)
-	bankKeeper := BankKeeper(cdc, db, ss, paramsKeeper, authKeeper)
-	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper, paramsKeeper)
+	authKeeper := AccountKeeper(cdc, db, ss)
+	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
+	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
 	consensusKeeper := ConsensusKeeper(cdc, db, ss)
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper, consensusKeeper)
 	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper, consensusKeeper)
-	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper, paramsKeeper)
+	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 	return SDKKeepers{
 		ParamsKeeper:    paramsKeeper,
 		AuthKeeper:      authKeeper,
