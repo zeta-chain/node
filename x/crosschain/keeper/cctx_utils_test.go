@@ -215,7 +215,7 @@ func Test_IsPending(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(fmt.Sprintf("status %s", tc.status), func(t *testing.T) {
-			require.Equal(t, tc.expected, crosschainkeeper.IsPending(types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
+			require.Equal(t, tc.expected, crosschainkeeper.IsPending(&types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
 		})
 	}
 }

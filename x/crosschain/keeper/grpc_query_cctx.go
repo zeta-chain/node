@@ -82,16 +82,12 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
 	// #nosec G701 always in range
-	res, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
-	if !found {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", req.Nonce, req.ChainID))
-	}
-	val, found := k.GetCrossChainTx(ctx, res.CctxIndex)
-	if !found {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+	cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
+	if err != nil {
+		return nil, err
 	}
 
-	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
+	return &types.QueryGetCctxResponse{CrossChainTx: cctx}, nil
 }
 
 // CctxListPending returns a list of pending cctxs and the total number of pending cctxs
@@ -138,20 +134,16 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 		startNonce = 0
 	}
 	for i := startNonce; i < pendingNonces.NonceLow; i++ {
-		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
-		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
-		}
-		cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", nonceToCctx.CctxIndex))
+		cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainId, i)
+		if err != nil {
+			return nil, err
 		}
 
 		// only take a `limit` number of pending cctxs as result but still count the total pending cctxs
 		if IsPending(cctx) {
 			totalPending++
 			if !maxCCTXsReached() {
-				cctxs = append(cctxs, &cctx)
+				cctxs = append(cctxs, cctx)
 			}
 		}
 	}
@@ -162,15 +154,11 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 
 	// now query the pending nonces that we know are pending
 	for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh && !maxCCTXsReached(); i++ {
-		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
-		if !found {
-			return nil, status.Error(codes.Internal, "nonceToCctx not found")
+		cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainId, i)
+		if err != nil {
+			return nil, err
 		}
-		cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-		if !found {
-			return nil, status.Error(codes.Internal, "cctxIndex not found")
-		}
-		cctxs = append(cctxs, &cctx)
+		cctxs = append(cctxs, cctx)
 	}
 
 	return &types.QueryListCctxPendingResponse{
@@ -243,13 +231,10 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 		return uint32(len(cctxs)) >= limit
 	}
 
-	// query pending nonces for each supported chain
+	// query pending nonces for each foreign chain
 	// Note: The pending nonces could change during the RPC call, so query them beforehand
-	chains := k.zetaObserverKeeper.GetSupportedChains(ctx)
+	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
 	for _, chain := range chains {
-		if chain.IsZetaChain() {
-			continue
-		}
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			return nil, status.Error(codes.Internal, "pending nonces not found")
@@ -257,13 +242,9 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 		pendingNoncesMap[chain.ChainId] = &pendingNonces
 	}
 
-	// query backwards for potential missed pending cctxs for each supported chain
+	// query backwards for potential missed pending cctxs for each foreign chain
 LoopBackwards:
 	for _, chain := range chains {
-		if chain.IsZetaChain() {
-			continue
-		}
-
 		// we should at least query 1000 prior to find any pending cctx that we might have missed
 		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
 		// therefore might mask some lower nonce cctx that is still pending.
@@ -276,13 +257,9 @@ LoopBackwards:
 
 		// query cctx by nonce backwards to the left boundary of the rate limit sliding window
 		for nonce := startNonce; nonce >= 0; nonce-- {
-			nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chain.ChainId, nonce)
-			if !found {
-				return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: chainid %d, nonce %d", chain.ChainId, nonce))
-			}
-			cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-			if !found {
-				return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", nonceToCctx.CctxIndex))
+			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, nonce)
+			if err != nil {
+				return nil, err
 			}
 
 			// We should at least go backwards by 1000 nonces to pick up missed pending cctxs
@@ -299,7 +276,7 @@ LoopBackwards:
 					break
 				}
 				// criteria #3: if rate limiter is enabled, we should finish the RPC call if the rate limit is exceeded
-				if rateLimitExceeded(chain.ChainId, &cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
+				if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
 					limitExceeded = true
 					break LoopBackwards
 				}
@@ -309,7 +286,7 @@ LoopBackwards:
 			if IsPending(cctx) {
 				totalPending++
 				if !maxCCTXsReached() {
-					cctxs = append(cctxs, &cctx)
+					cctxs = append(cctxs, cctx)
 				}
 			}
 		}
@@ -321,23 +298,15 @@ LoopBackwards:
 		totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
 	}
 
-	// query forwards for pending cctxs for each supported chain
+	// query forwards for pending cctxs for each foreign chain
 LoopForwards:
 	for _, chain := range chains {
-		if chain.IsZetaChain() {
-			continue
-		}
-
 		// query the pending cctxs in range [NonceLow, NonceHigh)
 		pendingNonces := pendingNoncesMap[chain.ChainId]
-		for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh; i++ {
-			nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chain.ChainId, i)
-			if !found {
-				return nil, status.Error(codes.Internal, "nonceToCctx not found")
-			}
-			cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-			if !found {
-				return nil, status.Error(codes.Internal, "cctxIndex not found")
+		for nonce := pendingNonces.NonceLow; nonce < pendingNonces.NonceHigh; nonce++ {
+			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, nonce)
+			if err != nil {
+				return nil, err
 			}
 
 			// only take a `limit` number of pending cctxs as result
@@ -345,11 +314,11 @@ LoopForwards:
 				break LoopForwards
 			}
 			// criteria #3: if rate limiter is enabled, we should finish the RPC call if the rate limit is exceeded
-			if applyLimit && rateLimitExceeded(chain.ChainId, &cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
+			if applyLimit && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
 				break LoopForwards
 			}
-			cctxs = append(cctxs, &cctx)
+			cctxs = append(cctxs, cctx)
 		}
 	}
 
@@ -358,6 +327,19 @@ LoopForwards:
 		TotalPending:      totalPending,
 		RateLimitExceeded: limitExceeded,
 	}, nil
+}
+
+// getCctxByChainIDAndNonce returns the cctx by chainID and nonce
+func getCctxByChainIDAndNonce(k Keeper, ctx sdk.Context, tssPubkey string, chainID int64, nonce int64) (*types.CrossChainTx, error) {
+	nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, nonce)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: chainid %d, nonce %d", chainID, nonce))
+	}
+	cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", nonceToCctx.CctxIndex))
+	}
+	return &cctx, nil
 }
 
 // convertCctxValue converts the value of the cctx in ZETA using given conversion rates

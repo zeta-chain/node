@@ -90,6 +90,7 @@ type ObserverKeeper interface {
 	) (bool, bool, observertypes.Ballot, string, error)
 	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *chains.Chain
 	GetSupportedChains(ctx sdk.Context) []*chains.Chain
+	GetSupportedForeignChains(ctx sdk.Context) []*chains.Chain
 }
 
 type FungibleKeeper interface {

@@ -560,7 +560,7 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 				cctx, err := zetaBridge.GetCctxByNonce(chainID, nonce)
 				if err != nil {
 					logger.Err(err).Msgf("reportToOutTxTracker: error getting cctx for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
-				} else if !crosschainkeeper.IsPending(*cctx) {
+				} else if !crosschainkeeper.IsPending(cctx) {
 					logger.Info().Msgf("reportToOutTxTracker: cctx already finalized for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
 					break
 				}
