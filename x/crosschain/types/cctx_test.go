@@ -15,6 +15,13 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
+	cctx := sample.CrossChainTx(t, "sample")
+	indexBytes, err := cctx.GetCCTXIndexBytes()
+	require.NoError(t, err)
+	require.Equal(t, cctx.Index, types.GetCctxIndexFromBytes(indexBytes))
+}
+
 func Test_InitializeCCTX(t *testing.T) {
 	t.Run("should return a cctx with correct values", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -245,7 +252,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Len(t, cctx.OutboundTxParams, 2)
 		require.Equal(t, cctx.GetCurrentOutTxParam().Receiver, cctx.InboundTxParams.Sender)
 		require.Equal(t, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.InboundTxParams.SenderChainId)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.InboundTxParams.Amount)
+		require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.OutboundTxParams[0].Amount)
 		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasLimit, uint64(100))
 		require.Equal(t, cctx.GetCurrentOutTxParam().TssPubkey, cctx.OutboundTxParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
@@ -255,6 +262,13 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		err := cctx.AddRevertOutbound(100)
 		require.ErrorContains(t, err, "cannot revert a revert tx")
+	})
+
+	t.Run("failed to set revert outbound values if revert outbound already exists", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.OutboundTxParams = make([]*types.OutboundTxParams, 0)
+		err := cctx.AddRevertOutbound(100)
+		require.ErrorContains(t, err, "cannot revert before trying to process an outbound tx")
 	})
 }
 
