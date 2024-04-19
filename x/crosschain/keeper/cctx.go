@@ -32,7 +32,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 	}
 
 	k.SetCrossChainTx(ctx, cctx)
-	//set mapping inTxHash -> cctxIndex
+	// set mapping inTxHash -> cctxIndex
 	in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
 	in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
 	found = false

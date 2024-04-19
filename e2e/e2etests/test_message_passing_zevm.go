@@ -28,15 +28,14 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	destinationAddress := r.ZevmTestDAppAddr
 
 	// Contract call originates from EVM chain
-	auth := r.EVMAuth
-	tx, err := r.ZetaEth.Approve(auth, r.EvmTestDAppAddr, amount)
+	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.EvmTestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
-		panic("tx failed")
+		panic("approve tx failed")
 	}
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	testDAppEVM, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
@@ -45,7 +44,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	}
 	// Call the SendHelloWorld function on the EVM dapp Contract which would in turn create a new send, to be picked up by the zeta-clients
 	// set Do revert to false which adds a message to signal the ZEVM zetaReceiver to not revert the transaction
-	tx, err = testDAppEVM.SendHelloWorld(auth, destinationAddress, zEVMChainID, amount, false)
+	tx, err = testDAppEVM.SendHelloWorld(r.EVMAuth, destinationAddress, zEVMChainID, amount, false)
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +79,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 		}
 	}
 	if !receivedHelloWorldEvent {
-		panic("expected HelloWorld event")
+		panic(fmt.Sprintf("expected HelloWorld event, logs: %+v", receipt.Logs))
 	}
 }
 
@@ -103,8 +102,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	destinationAddress := r.ZevmTestDAppAddr
 
 	// Contract call originates from EVM chain
-	auth := r.EVMAuth
-	tx, err := r.ZetaEth.Approve(auth, r.EvmTestDAppAddr, amount)
+	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.EvmTestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -120,7 +118,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 	// Call the SendHelloWorld function on the EVM dapp Contract which would in turn create a new send, to be picked up by the zeta-clients
 	// set Do revert to true which adds a message to signal the ZEVM zetaReceiver to revert the transaction
-	tx, err = testDAppEVM.SendHelloWorld(auth, destinationAddress, zEVMChainID, amount, true)
+	tx, err = testDAppEVM.SendHelloWorld(r.EVMAuth, destinationAddress, zEVMChainID, amount, true)
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +131,6 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
-	r.Logger.Print(fmt.Sprintf("🔄 Cctx mined for revert contract call chain zevm %s", cctx.Index))
 
 	// On finalization the Tss address calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
@@ -152,7 +149,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 		}
 	}
 	if !receivedHelloWorldEvent {
-		panic("expected HelloWorld event")
+		panic(fmt.Sprintf("expected Reverted HelloWorld event, logs: %+v", receipt.Logs))
 	}
 }
 
@@ -216,7 +213,6 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic("expected cctx to be outbound_mined")
 	}
-	r.Logger.Print(fmt.Sprintf("🔄 Cctx mined for contract call chain zevm %s", cctx.Index))
 
 	// On finalization the Tss calls the onReceive function which in turn calls the onZetaMessage function on the destination contract.
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
@@ -239,7 +235,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 		}
 	}
 	if !receivedHelloWorldEvent {
-		panic("expected HelloWorld event")
+		panic(fmt.Sprintf("expected HelloWorld event, logs: %+v", receipt.Logs))
 	}
 }
 
@@ -293,7 +289,7 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	r.Logger.Print("TestDApp ZEVM address: %s", r.ZevmTestDAppAddr.String())
+
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
@@ -305,7 +301,6 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
-	r.Logger.Print(fmt.Sprintf("🔄 Cctx mined for contract call chain zevm %s", cctx.Index))
 
 	// On finalization the Fungible module calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
 	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
@@ -324,9 +319,6 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 		}
 	}
 	if !receivedHelloWorldEvent {
-		panic("expected HelloWorld event")
+		panic(fmt.Sprintf("expected Reverted HelloWorld event, logs: %+v", receipt.Logs))
 	}
 }
-
-// bgGCGUux3roBhJr9PgNaC3DOfLBp5ILuZjUZx2z1abQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ==
-// bgGCGUux3roBhJr9PgNaC3DOfLBp5ILuZjUZx2z1abQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ==

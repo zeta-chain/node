@@ -92,8 +92,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		r.Logger.Print(fmt.Sprintf("###### expected cctx status to be mined; got %s , %s", cctx.CctxStatus.Status, cctx.Index))
-		//panic(fmt.Sprintf("expected cctx status to be mined; got %s", cctx.CctxStatus.Status))
+		panic(fmt.Sprintf("expected cctx status to be mined; got %s", cctx.CctxStatus.Status))
 	}
 
 	// Checking example contract has been called, bar value should be set to amount
@@ -143,8 +142,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	cctx = utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
-		//panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
-		r.Logger.Print(fmt.Sprintf("##########################expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
+		panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
 	}
 	r.Logger.Info("Cross-chain call to reverter reverted")
 
