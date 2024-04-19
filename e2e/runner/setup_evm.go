@@ -131,7 +131,7 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	if err != nil {
 		panic(err)
 	}
-	runner.TestDAppAddr = appAddr
+	runner.EvmTestDAppAddr = appAddr
 	runner.Logger.Info("TestDApp contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
 
 	// check contract deployment receipt

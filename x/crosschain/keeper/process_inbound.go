@@ -37,21 +37,20 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 	if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 		cctx.SetAbort(err.Error())
 		return
-	} else if err != nil && isContractReverted { // contract call reverted; should refund
+	} else if err != nil && isContractReverted { // contract call reverted; should refund via a revert tx
 		revertMessage := err.Error()
 		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
 		if senderChain == nil {
 			cctx.SetAbort(fmt.Sprintf("invalid sender chain id %d", cctx.InboundTxParams.SenderChainId))
 			return
 		}
-
 		gasLimit, err := k.GetRevertGasLimit(ctx, *cctx)
 		if err != nil {
 			cctx.SetAbort(fmt.Sprintf("revert gas limit error: %s", err.Error()))
 			return
 		}
 		if gasLimit == 0 {
-			// use same gas limit of outbound as a fallback -- should not happen
+			// use same gas limit of outbound as a fallback -- should not be required
 			gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
 		}
 
@@ -60,7 +59,6 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			cctx.SetAbort(fmt.Sprintf("revert outbound error: %s", err.Error()))
 			return
 		}
-
 		// we create a new cached context, and we don't commit the previous one with EVM deposit
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		err = func() error {

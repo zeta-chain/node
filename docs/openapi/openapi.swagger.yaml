@@ -27187,6 +27187,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/rateLimiterFlags:
+    get:
+      summary: Queries the rate limiter flags
+      operationId: Query_RateLimiterFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryRateLimiterFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/zetaAccounting:
     get:
       operationId: Query_ZetaAccounting
@@ -27401,21 +27416,6 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/fungible/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: Query_Params
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetacorefungibleQueryParamsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/fungible/system_contract:
     get:
       summary: Queries SystemContract
@@ -27425,6 +27425,240 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/fungibleQueryGetSystemContractResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/lightclient/block_headers:
+    get:
+      operationId: Query_BlockHeaderAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryAllBlockHeaderResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/lightclient/block_headers/{block_hash}:
+    get:
+      operationId: Query_BlockHeader
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryGetBlockHeaderResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: block_hash
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /zeta-chain/lightclient/chain_state:
+    get:
+      operationId: Query_ChainStateAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryAllChainStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/lightclient/chain_state/{chain_id}:
+    get:
+      operationId: Query_ChainState
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryGetChainStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/lightclient/prove:
+    get:
+      operationId: Query_Prove
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryProveResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: tx_hash
+          in: query
+          required: false
+          type: string
+        - name: proof.ethereum_proof.keys
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: proof.ethereum_proof.values
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: proof.bitcoin_proof.tx_bytes
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.path
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.index
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: block_hash
+          in: query
+          required: false
+          type: string
+        - name: tx_index
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/lightclient/verification_flags:
+    get:
+      operationId: Query_VerificationFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryVerificationFlagsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27662,104 +27896,6 @@ paths:
           in: query
           required: false
           type: boolean
-      tags:
-        - Query
-  /zeta-chain/observer/get_all_block_headers:
-    get:
-      operationId: Query_GetAllBlockHeaders
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryAllBlockHeaderResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /zeta-chain/observer/get_block_header_by_hash/{block_hash}:
-    get:
-      operationId: Query_GetBlockHeaderByHash
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetBlockHeaderByHashResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: block_hash
-          in: path
-          required: true
-          type: string
-          format: byte
-      tags:
-        - Query
-  /zeta-chain/observer/get_block_header_state_by_chain_id/{chain_id}:
-    get:
-      operationId: Query_GetBlockHeaderStateByChain
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetBlockHeaderStateResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: chain_id
-          in: path
-          required: true
-          type: string
-          format: int64
       tags:
         - Query
   /zeta-chain/observer/get_chain_params:
@@ -28066,71 +28202,6 @@ paths:
         - name: chain_id
           in: path
           required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /zeta-chain/observer/prove:
-    get:
-      summary: merkle proof verification
-      operationId: Query_Prove
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryProveResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: chain_id
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: tx_hash
-          in: query
-          required: false
-          type: string
-        - name: proof.ethereum_proof.keys
-          in: query
-          required: false
-          type: array
-          items:
-            type: string
-            format: byte
-          collectionFormat: multi
-        - name: proof.ethereum_proof.values
-          in: query
-          required: false
-          type: array
-          items:
-            type: string
-            format: byte
-          collectionFormat: multi
-        - name: proof.bitcoin_proof.tx_bytes
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: proof.bitcoin_proof.path
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: proof.bitcoin_proof.index
-          in: query
-          required: false
-          type: integer
-          format: int64
-        - name: block_hash
-          in: query
-          required: false
-          type: string
-        - name: tx_index
-          in: query
-          required: false
           type: string
           format: int64
       tags:
@@ -53519,13 +53590,8 @@ definitions:
       - sepolia_testnet
       - goerli_localnet
       - btc_regtest
+      - amoy_testnet
     default: empty
-    title: |-
-      - goerli_testnet: Testnet
-       - goerli_localnet: LocalNet
-       zeta_localnet = 13;
-       - btc_regtest: Athens
-        zeta_athensnet=15;
   chainsReceiveStatus:
     type: string
     enum:
@@ -53563,6 +53629,13 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
+  crosschainConversion:
+    type: object
+    properties:
+      zrc20:
+        type: string
+      rate:
+        type: string
   crosschainCrossChainTx:
     type: object
     properties:
@@ -53686,15 +53759,17 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgGasPriceVoterResponse:
-    type: object
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
+  crosschainMsgUpdateRateLimiterFlagsResponse:
+    type: object
   crosschainMsgUpdateTssAddressResponse:
+    type: object
+  crosschainMsgVoteGasPriceResponse:
     type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
@@ -53911,11 +53986,34 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryRateLimiterFlagsResponse:
+    type: object
+    properties:
+      rateLimiterFlags:
+        $ref: '#/definitions/crosschainRateLimiterFlags'
   crosschainQueryZetaAccountingResponse:
     type: object
     properties:
       aborted_zeta_amount:
         type: string
+  crosschainRateLimiterFlags:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      window:
+        type: string
+        format: int64
+        title: window in blocks
+      rate:
+        type: string
+        title: rate in azeta per block
+      conversions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainConversion'
+        title: conversion in azeta per token
   crosschainTxFinalizationStatus:
     type: string
     enum:
@@ -54111,6 +54209,72 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/protobufAny'
+  lightclientChainState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
+    title: ChainState defines the overall state of the block headers for a given chain
+  lightclientMsgUpdateVerificationFlagsResponse:
+    type: object
+  lightclientQueryAllBlockHeaderResponse:
+    type: object
+    properties:
+      block_headers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/proofsBlockHeader'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  lightclientQueryAllChainStateResponse:
+    type: object
+    properties:
+      chain_state:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientChainState'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  lightclientQueryGetBlockHeaderResponse:
+    type: object
+    properties:
+      block_header:
+        $ref: '#/definitions/proofsBlockHeader'
+  lightclientQueryGetChainStateResponse:
+    type: object
+    properties:
+      chain_state:
+        $ref: '#/definitions/lightclientChainState'
+  lightclientQueryProveResponse:
+    type: object
+    properties:
+      valid:
+        type: boolean
+  lightclientQueryVerificationFlagsResponse:
+    type: object
+    properties:
+      verification_flags:
+        $ref: '#/definitions/lightclientVerificationFlags'
+  lightclientVerificationFlags:
+    type: object
+    properties:
+      ethTypeChainEnabled:
+        type: boolean
+      btcTypeChainEnabled:
+        type: boolean
+    title: VerificationFlags is a structure containing information which chain types are enabled for block header verification
   observerAdmin_Policy:
     type: object
     properties:
@@ -54138,21 +54302,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerBlockHeaderState:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      latest_height:
-        type: string
-        format: int64
-      earliest_height:
-        type: string
-        format: int64
-      latest_block_hash:
-        type: string
-        format: byte
   observerBlockHeaderVerificationFlags:
     type: object
     properties:
@@ -54160,6 +54309,7 @@ definitions:
         type: boolean
       isBtcTypeChainEnabled:
         type: boolean
+    title: 'Deprecated(v16): Use VerificationFlags in the lightclient module instead'
   observerChainNonces:
     type: object
     properties:
@@ -54238,6 +54388,7 @@ definitions:
         $ref: '#/definitions/observerGasPriceIncreaseFlags'
       blockHeaderVerificationFlags:
         $ref: '#/definitions/observerBlockHeaderVerificationFlags'
+        title: 'Deprecated(v16): Use VerificationFlags in the lightclient module instead'
   observerGasPriceIncreaseFlags:
     type: object
     properties:
@@ -54291,8 +54442,6 @@ definitions:
         format: int64
   observerMsgAddBlameVoteResponse:
     type: object
-  observerMsgAddBlockHeaderResponse:
-    type: object
   observerMsgAddObserverResponse:
     type: object
   observerMsgRemoveChainParamsResponse:
@@ -54307,6 +54456,13 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgVoteBlockHeaderResponse:
+    type: object
+    properties:
+      ballot_created:
+        type: boolean
+      vote_finalized:
+        type: boolean
   observerMsgVoteTSSResponse:
     type: object
     properties:
@@ -54408,16 +54564,6 @@ definitions:
           $ref: '#/definitions/observerBlame'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllBlockHeaderResponse:
-    type: object
-    properties:
-      block_headers:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/proofsBlockHeader'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllChainNoncesResponse:
     type: object
     properties:
@@ -54475,16 +54621,6 @@ definitions:
     properties:
       blame_info:
         $ref: '#/definitions/observerBlame'
-  observerQueryGetBlockHeaderByHashResponse:
-    type: object
-    properties:
-      block_header:
-        $ref: '#/definitions/proofsBlockHeader'
-  observerQueryGetBlockHeaderStateResponse:
-    type: object
-    properties:
-      block_header_state:
-        $ref: '#/definitions/observerBlockHeaderState'
   observerQueryGetChainNoncesResponse:
     type: object
     properties:
@@ -54551,11 +54687,6 @@ definitions:
     properties:
       pending_nonces:
         $ref: '#/definitions/observerPendingNonces'
-  observerQueryProveResponse:
-    type: object
-    properties:
-      valid:
-        type: boolean
   observerQueryShowObserverCountResponse:
     type: object
     properties:
@@ -54762,16 +54893,6 @@ definitions:
     properties:
       params:
         $ref: '#/definitions/zetacoreemissionsParams'
-        description: params holds all the parameters of this module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetacorefungibleParams:
-    type: object
-    description: Params defines the parameters for the module.
-  zetacorefungibleQueryParamsResponse:
-    type: object
-    properties:
-      params:
-        $ref: '#/definitions/zetacorefungibleParams'
         description: params holds all the parameters of this module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetacoreobserverParams:

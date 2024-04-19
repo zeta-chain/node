@@ -107,6 +107,7 @@ func (m *GasPriceIncreaseFlags) GetMaxPendingCctxs() uint32 {
 	return 0
 }
 
+// Deprecated(v16): Use VerificationFlags in the lightclient module instead
 type BlockHeaderVerificationFlags struct {
 	IsEthTypeChainEnabled bool `protobuf:"varint,1,opt,name=isEthTypeChainEnabled,proto3" json:"isEthTypeChainEnabled,omitempty"`
 	IsBtcTypeChainEnabled bool `protobuf:"varint,2,opt,name=isBtcTypeChainEnabled,proto3" json:"isBtcTypeChainEnabled,omitempty"`
@@ -160,9 +161,10 @@ func (m *BlockHeaderVerificationFlags) GetIsBtcTypeChainEnabled() bool {
 }
 
 type CrosschainFlags struct {
-	IsInboundEnabled             bool                          `protobuf:"varint,1,opt,name=isInboundEnabled,proto3" json:"isInboundEnabled,omitempty"`
-	IsOutboundEnabled            bool                          `protobuf:"varint,2,opt,name=isOutboundEnabled,proto3" json:"isOutboundEnabled,omitempty"`
-	GasPriceIncreaseFlags        *GasPriceIncreaseFlags        `protobuf:"bytes,3,opt,name=gasPriceIncreaseFlags,proto3" json:"gasPriceIncreaseFlags,omitempty"`
+	IsInboundEnabled      bool                   `protobuf:"varint,1,opt,name=isInboundEnabled,proto3" json:"isInboundEnabled,omitempty"`
+	IsOutboundEnabled     bool                   `protobuf:"varint,2,opt,name=isOutboundEnabled,proto3" json:"isOutboundEnabled,omitempty"`
+	GasPriceIncreaseFlags *GasPriceIncreaseFlags `protobuf:"bytes,3,opt,name=gasPriceIncreaseFlags,proto3" json:"gasPriceIncreaseFlags,omitempty"`
+	// Deprecated(v16): Use VerificationFlags in the lightclient module instead
 	BlockHeaderVerificationFlags *BlockHeaderVerificationFlags `protobuf:"bytes,4,opt,name=blockHeaderVerificationFlags,proto3" json:"blockHeaderVerificationFlags,omitempty"`
 }
 

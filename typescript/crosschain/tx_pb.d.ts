@@ -8,6 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
+import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds
@@ -400,9 +401,9 @@ export declare class MsgRemoveFromOutTxTrackerResponse extends Message<MsgRemove
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgGasPriceVoter
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteGasPrice
  */
-export declare class MsgGasPriceVoter extends Message<MsgGasPriceVoter> {
+export declare class MsgVoteGasPrice extends Message<MsgVoteGasPrice> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -428,38 +429,38 @@ export declare class MsgGasPriceVoter extends Message<MsgGasPriceVoter> {
    */
   supply: string;
 
-  constructor(data?: PartialMessage<MsgGasPriceVoter>);
+  constructor(data?: PartialMessage<MsgVoteGasPrice>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgGasPriceVoter";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteGasPrice";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgGasPriceVoter;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteGasPrice;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgGasPriceVoter;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteGasPrice;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgGasPriceVoter;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteGasPrice;
 
-  static equals(a: MsgGasPriceVoter | PlainMessage<MsgGasPriceVoter> | undefined, b: MsgGasPriceVoter | PlainMessage<MsgGasPriceVoter> | undefined): boolean;
+  static equals(a: MsgVoteGasPrice | PlainMessage<MsgVoteGasPrice> | undefined, b: MsgVoteGasPrice | PlainMessage<MsgVoteGasPrice> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgGasPriceVoterResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteGasPriceResponse
  */
-export declare class MsgGasPriceVoterResponse extends Message<MsgGasPriceVoterResponse> {
-  constructor(data?: PartialMessage<MsgGasPriceVoterResponse>);
+export declare class MsgVoteGasPriceResponse extends Message<MsgVoteGasPriceResponse> {
+  constructor(data?: PartialMessage<MsgVoteGasPriceResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgGasPriceVoterResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteGasPriceResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgGasPriceVoterResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteGasPriceResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgGasPriceVoterResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteGasPriceResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgGasPriceVoterResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteGasPriceResponse;
 
-  static equals(a: MsgGasPriceVoterResponse | PlainMessage<MsgGasPriceVoterResponse> | undefined, b: MsgGasPriceVoterResponse | PlainMessage<MsgGasPriceVoterResponse> | undefined): boolean;
+  static equals(a: MsgVoteGasPriceResponse | PlainMessage<MsgVoteGasPriceResponse> | undefined, b: MsgVoteGasPriceResponse | PlainMessage<MsgVoteGasPriceResponse> | undefined): boolean;
 }
 
 /**
@@ -775,5 +776,53 @@ export declare class MsgRefundAbortedCCTXResponse extends Message<MsgRefundAbort
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRefundAbortedCCTXResponse;
 
   static equals(a: MsgRefundAbortedCCTXResponse | PlainMessage<MsgRefundAbortedCCTXResponse> | undefined, b: MsgRefundAbortedCCTXResponse | PlainMessage<MsgRefundAbortedCCTXResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlags
+ */
+export declare class MsgUpdateRateLimiterFlags extends Message<MsgUpdateRateLimiterFlags> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.RateLimiterFlags rate_limiter_flags = 2;
+   */
+  rateLimiterFlags?: RateLimiterFlags;
+
+  constructor(data?: PartialMessage<MsgUpdateRateLimiterFlags>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlags";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateRateLimiterFlags;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateRateLimiterFlags;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateRateLimiterFlags;
+
+  static equals(a: MsgUpdateRateLimiterFlags | PlainMessage<MsgUpdateRateLimiterFlags> | undefined, b: MsgUpdateRateLimiterFlags | PlainMessage<MsgUpdateRateLimiterFlags> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlagsResponse
+ */
+export declare class MsgUpdateRateLimiterFlagsResponse extends Message<MsgUpdateRateLimiterFlagsResponse> {
+  constructor(data?: PartialMessage<MsgUpdateRateLimiterFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateRateLimiterFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateRateLimiterFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateRateLimiterFlagsResponse;
+
+  static equals(a: MsgUpdateRateLimiterFlagsResponse | PlainMessage<MsgUpdateRateLimiterFlagsResponse> | undefined, b: MsgUpdateRateLimiterFlagsResponse | PlainMessage<MsgUpdateRateLimiterFlagsResponse> | undefined): boolean;
 }
 

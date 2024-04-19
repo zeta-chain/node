@@ -30,26 +30,29 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const MaxItemsForList = 10
 
+// Copy represents a set of modules for which, the entire state is copied without any modifications
 var Copy = map[string]bool{
-	slashingtypes.ModuleName:        true,
-	govtypes.ModuleName:             true,
-	crisistypes.ModuleName:          true,
-	feemarkettypes.ModuleName:       true,
-	paramstypes.ModuleName:          true,
-	upgradetypes.ModuleName:         true,
-	evidencetypes.ModuleName:        true,
-	vestingtypes.ModuleName:         true,
-	fungibleModuleTypes.ModuleName:  true,
-	emissionsModuleTypes.ModuleName: true,
-	authz.ModuleName:                true,
+	slashingtypes.ModuleName:  true,
+	govtypes.ModuleName:       true,
+	crisistypes.ModuleName:    true,
+	feemarkettypes.ModuleName: true,
+	paramstypes.ModuleName:    true,
+	upgradetypes.ModuleName:   true,
+	evidencetypes.ModuleName:  true,
+	vestingtypes.ModuleName:   true,
+	fungibletypes.ModuleName:  true,
+	emissionstypes.ModuleName: true,
+	authz.ModuleName:          true,
 }
+
+// Skip represents a set of modules for which, the entire state is skipped and nothing gets imported
 var Skip = map[string]bool{
 	evmtypes.ModuleName:          true,
 	stakingtypes.ModuleName:      true,
@@ -60,6 +63,7 @@ var Skip = map[string]bool{
 	group.ModuleName:             true,
 }
 
+// Modify represents a set of modules for which, the state is modified before importing. Each Module should have a corresponding Modify function
 var Modify = map[string]bool{
 	crosschaintypes.ModuleName: true,
 	observertypes.ModuleName:   true,
@@ -122,7 +126,7 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 		if Modify[m] {
 			switch m {
 			case crosschaintypes.ModuleName:
-				err := ModifyCrossChainState(appState, importAppState, cdc)
+				err := ModifyCrosschainState(appState, importAppState, cdc)
 				if err != nil {
 					return err
 				}
@@ -146,7 +150,9 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 	return nil
 }
 
-func ModifyCrossChainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
+// ModifyCrosschainState modifies the crosschain state before importing
+// It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
+func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
 	importedCrossChainGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InTxHashToCctxList))]
@@ -159,6 +165,8 @@ func ModifyCrossChainState(appState map[string]json.RawMessage, importAppState m
 	return nil
 }
 
+// ModifyObserverState modifies the observer state before importing
+// It truncates the ballots and nonce to cctx list to MaxItemsForList
 func ModifyObserverState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedObserverGenState := observertypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedObserverGenState.Ballots = importedObserverGenState.Ballots[:math.Min(MaxItemsForList, len(importedObserverGenState.Ballots))]

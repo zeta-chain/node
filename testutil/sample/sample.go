@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
+
 	sdkmath "cosmossdk.io/math"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -15,13 +17,9 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
 var ErrSample = errors.New("sample error")
@@ -43,35 +41,6 @@ func Rand() *rand.Rand {
 	return newRandFromSeed(42)
 }
 
-// PubKey returns a sample account PubKey
-func PubKey(r *rand.Rand) cryptotypes.PubKey {
-	seed := []byte(strconv.Itoa(r.Int()))
-	return ed25519.GenPrivKeyFromSecret(seed).PubKey()
-}
-
-// Bech32AccAddress returns a sample account address
-func Bech32AccAddress() sdk.AccAddress {
-	pk := ed25519.GenPrivKey().PubKey()
-	addr := pk.Address()
-	return sdk.AccAddress(addr)
-}
-
-// AccAddress returns a sample account address in string
-func AccAddress() string {
-	pk := ed25519.GenPrivKey().PubKey()
-	addr := pk.Address()
-	return sdk.AccAddress(addr).String()
-}
-
-func ConsAddress() sdk.ConsAddress {
-	return sdk.ConsAddress(PubKey(newRandFromSeed(1)).Address())
-}
-
-// ValAddress returns a sample validator operator address
-func ValAddress(r *rand.Rand) sdk.ValAddress {
-	return sdk.ValAddress(PubKey(r).Address())
-}
-
 // Validator returns a sample staking validator
 func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 	seed := []byte(strconv.Itoa(r.Int()))
@@ -81,38 +50,6 @@ func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 		stakingtypes.Description{})
 	require.NoError(t, err)
 	return val
-}
-
-// PubKeyString returns a sample public key string
-func PubKeyString() string {
-	priKey := ed25519.GenPrivKey()
-	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
-	if err != nil {
-		panic(err)
-	}
-	pubkey, err := crypto.NewPubKey(s)
-	if err != nil {
-		panic(err)
-	}
-	return pubkey.String()
-}
-
-// PrivKeyAddressPair returns a private key, address pair
-func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
-	privKey := ed25519.GenPrivKey()
-	addr := privKey.PubKey().Address()
-
-	return privKey, sdk.AccAddress(addr)
-}
-
-// EthAddress returns a sample ethereum address
-func EthAddress() ethcommon.Address {
-	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
-}
-
-// Hash returns a sample hash
-func Hash() ethcommon.Hash {
-	return EthAddress().Hash()
 }
 
 func ZetaIndex(t *testing.T) string {
@@ -178,4 +115,18 @@ func GenDoc(t *testing.T) *types.GenesisDoc {
 	genDoc, err := types.GenesisDocFromJSON(jsonBlob)
 	require.NoError(t, err)
 	return genDoc
+}
+
+func Chain(chainID int64) *chains.Chain {
+	r := newRandFromSeed(chainID)
+
+	return &chains.Chain{
+		ChainName: chains.ChainName(r.Intn(4)),
+		ChainId:   chainID,
+	}
+}
+
+func EventIndex() uint64 {
+	r := newRandFromSeed(1)
+	return r.Uint64()
 }

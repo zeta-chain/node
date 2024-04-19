@@ -31,6 +31,7 @@ func RunnerFromConfig(
 		authClient,
 		bankClient,
 		observerClient,
+		lightClient,
 		zevmClient,
 		zevmAuth,
 		err := getClientsFromConfig(ctx, conf, evmUserPrivKey)
@@ -64,6 +65,7 @@ func RunnerFromConfig(
 		authClient,
 		bankClient,
 		observerClient,
+		lightClient,
 		evmAuth,
 		zevmAuth,
 		btcRPCClient,
@@ -104,7 +106,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.WZetaAddr = r.WZetaAddr.Hex()
 	conf.Contracts.ZEVM.ZEVMSwapAppAddr = r.ZEVMSwapAppAddr.Hex()
 	conf.Contracts.ZEVM.ContextAppAddr = r.ContextAppAddr.Hex()
-	conf.Contracts.ZEVM.TestDappAddr = r.TestDAppAddr.Hex()
+	conf.Contracts.ZEVM.TestDappAddr = r.EvmTestDAppAddr.Hex()
 
 	return conf
 }

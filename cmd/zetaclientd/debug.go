@@ -100,7 +100,7 @@ func DebugCmd() *cobra.Command {
 				ob := evm.ChainClient{
 					Mu: &sync.Mutex{},
 				}
-				ob.WithZetaClient(bridge)
+				ob.WithZetaBridge(bridge)
 				ob.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 
@@ -21,11 +22,13 @@ import (
 // (true, non-nil) means CallEVM() reverted
 func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (bool, error) {
 	to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
+	sender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 	var ethTxHash ethcommon.Hash
 	inboundAmount := cctx.GetInboundTxParams().Amount.BigInt()
 	inboundSender := cctx.GetInboundTxParams().Sender
 	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
 	inboundCoinType := cctx.InboundTxParams.CoinType
+
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
@@ -36,9 +39,22 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 	}
 
 	if inboundCoinType == coin.CoinType_Zeta {
-		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, inboundAmount)
+		// In case of an error
+		// 	- Return true will revert the cctx and create a revert cctx with status PendingRevert
+		// 	- Return false will abort the cctx
+		indexBytes, err := cctx.GetCCTXIndexBytes()
 		if err != nil {
+			return false, err
+		}
+		data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
+		}
+		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
+		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
+			return true, err
+		} else if err != nil {
 			return false, err
 		}
 	} else {

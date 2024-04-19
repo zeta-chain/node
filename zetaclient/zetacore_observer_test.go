@@ -56,6 +56,7 @@ func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChain
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 	ccFlags := sample.CrosschainFlags()
+	verificationFlags := sample.VerificationFlags()
 
 	// feed chain params
 	coreContext.Update(
@@ -65,6 +66,7 @@ func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChain
 		btcChainParams,
 		"",
 		*ccFlags,
+		verificationFlags,
 		true,
 		zerolog.Logger{},
 	)

@@ -39,7 +39,7 @@ func Test_ModifyCrossChainState(t *testing.T) {
 		cdc := keepertest.NewCodec()
 		appState := sample.AppState(t)
 		importData := GetImportData(t, cdc, 100)
-		err := zetacored.ModifyCrossChainState(appState, importData, cdc)
+		err := zetacored.ModifyCrosschainState(appState, importData, cdc)
 		require.NoError(t, err)
 
 		modifiedCrosschainAppState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
@@ -52,7 +52,7 @@ func Test_ModifyCrossChainState(t *testing.T) {
 		cdc := keepertest.NewCodec()
 		appState := sample.AppState(t)
 		importData := GetImportData(t, cdc, 8)
-		err := zetacored.ModifyCrossChainState(appState, importData, cdc)
+		err := zetacored.ModifyCrosschainState(appState, importData, cdc)
 		require.NoError(t, err)
 
 		modifiedCrosschainAppState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)

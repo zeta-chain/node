@@ -1,0 +1,170 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "destinationAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "destinationChainId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "message",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "zetaTxSenderAddress",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "zetaValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "message",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct ZetaInterfaces.ZetaMessage",
+        "name": "zetaMessage",
+        "type": "tuple"
+      }
+    ],
+    "name": "onZetaMessage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "zetaTxSenderAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "destinationAddress",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingZetaValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "message",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct ZetaInterfaces.ZetaRevert",
+        "name": "zetaRevert",
+        "type": "tuple"
+      }
+    ],
+    "name": "onZetaRevert",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sourceChainId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zetaTxSenderAddress",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zetaValue",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

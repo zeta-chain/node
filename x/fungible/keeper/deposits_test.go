@@ -4,15 +4,16 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
-	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -21,7 +22,7 @@ import (
 func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	t.Run("can deposit gas coin for transfers", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -52,7 +53,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("can deposit non-gas coin for transfers", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -84,7 +85,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("should fail if trying to call a contract with data to a EOC", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -112,7 +113,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("can deposit coin for transfers with liquidity cap not reached", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -158,7 +159,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if coin paused", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -190,7 +191,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if liquidity cap reached", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -231,7 +232,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if gas coin not found", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -256,7 +257,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("should fail if zrc20 not found", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -283,7 +284,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should return contract call if receiver is a contract", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -321,7 +322,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 	t.Run("should fail if call contract fails", func(t *testing.T) {
 		// setup gas coin
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := chains.DefaultChainsList()
@@ -356,16 +357,34 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 }
 
 func TestKeeper_DepositCoinZeta(t *testing.T) {
-	k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
-	to := sample.EthAddress()
-	amount := big.NewInt(1)
-	zetaToAddress := sdk.AccAddress(to.Bytes())
+	t.Run("successfully deposit coin", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		to := sample.EthAddress()
+		amount := big.NewInt(1)
+		zetaToAddress := sdk.AccAddress(to.Bytes())
 
-	b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
-	require.Equal(t, int64(0), b.Amount.Int64())
+		b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
+		require.Equal(t, int64(0), b.Amount.Int64())
 
-	err := k.DepositCoinZeta(ctx, to, amount)
-	require.NoError(t, err)
-	b = sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
-	require.Equal(t, amount.Int64(), b.Amount.Int64())
+		err := k.DepositCoinZeta(ctx, to, amount)
+		require.NoError(t, err)
+		b = sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
+		require.Equal(t, amount.Int64(), b.Amount.Int64())
+	})
+
+	t.Run("should fail if MintZetaToEVMAccount fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+		to := sample.EthAddress()
+		amount := big.NewInt(1)
+		zetaToAddress := sdk.AccAddress(to.Bytes())
+
+		b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
+		require.Equal(t, int64(0), b.Amount.Int64())
+		errorMint := errors.New("", 1, "error minting coins")
+		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
+		err := k.DepositCoinZeta(ctx, to, amount)
+		require.ErrorIs(t, err, errorMint)
+
+	})
 }

@@ -20,7 +20,6 @@ func GetQueryCmd(_ string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdQueryParams(),
 		CmdListForeignCoins(),
 		CmdShowForeignCoins(),
 		CmdGasStabilityPoolAddress(),

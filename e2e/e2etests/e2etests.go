@@ -25,6 +25,11 @@ const (
 	TestCrosschainSwapName                = "crosschain_swap"
 	TestMessagePassingRevertFailName      = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName   = "message_passing_revert_success"
+	TestMessagePassingEVMtoZEVMName       = "message_passing_zevm"
+	TestMessagePassingZEVMToEVMName       = "message_passing_zevm_to_evm"
+
+	TestMessagePassingZEVMtoEVMRevertName = "message_passing_zevm_to_evm_revert"
+	TestMessagePassingEVMtoZEVMRevertName = "message_passing_revert_zevm"
 	TestERC20DepositAndCallRefundName     = "erc20_deposit_and_call_refund"
 	TestEtherDepositAndCallName           = "eth_deposit_and_call"
 	TestDepositEtherLiquidityCapName      = "deposit_eth_liquidity_cap"
@@ -49,9 +54,10 @@ const (
 	TestStressBTCDepositName    = "stress_btc_deposit"
 
 	// Admin test
-	TestMigrateChainSupportName = "migrate_chain_support"
-	TestPauseZRC20Name          = "pause_zrc20"
-	TestUpdateBytecodeName      = "update_bytecode"
+	TestMigrateChainSupportName     = "migrate_chain_support"
+	TestPauseZRC20Name              = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name     = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName = "update_bytecode_connector"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -224,10 +230,10 @@ var AllE2ETests = []runner.E2ETest{
 		TestERC20DepositAndCallRefund,
 	),
 	runner.NewE2ETest(
-		TestUpdateBytecodeName,
+		TestUpdateBytecodeZRC20Name,
 		"update ZRC20 bytecode swap",
 		[]runner.ArgDefinition{},
-		TestUpdateBytecode,
+		TestUpdateBytecodeZRC20,
 	),
 	runner.NewE2ETest(
 		TestEtherDepositAndCallName,
@@ -364,5 +370,43 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate the evm chain from goerli to sepolia",
 		[]runner.ArgDefinition{},
 		TestMigrateChainSupport,
+	),
+	runner.NewE2ETest(
+		TestUpdateBytecodeConnectorName,
+		"update zevm connector bytecode",
+		[]runner.ArgDefinition{},
+		TestUpdateBytecodeConnector,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMToEVMName,
+		"zevm -> evm message passing contract call",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
+		},
+		TestMessagePassingZEVMtoEVM,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMtoEVMRevertName,
+		"zevm -> evm message passing contract call reverts",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000006"},
+		},
+		TestMessagePassingZEVMtoEVMRevert,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingEVMtoZEVMName,
+		"evm -> zevm message passing contract call ",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
+		},
+		TestMessagePassingEVMtoZEVM,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingEVMtoZEVMRevertName,
+		"evm -> zevm message passing and revert back to evm",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		TestMessagePassingEVMtoZEVMRevert,
 	),
 }

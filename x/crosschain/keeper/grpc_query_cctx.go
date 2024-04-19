@@ -73,7 +73,7 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	tss, found := k.GetObserverKeeper().GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
