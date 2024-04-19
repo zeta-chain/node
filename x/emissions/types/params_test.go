@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
@@ -110,6 +111,12 @@ func TestValidate(t *testing.T) {
 		require.Error(t, params.Validate())
 	})
 
+	t.Run("should error for invalid min bond factor", func(t *testing.T) {
+		params := NewParams()
+		params.MinBondFactor = "0.50"
+		require.Error(t, params.Validate())
+	})
+
 	t.Run("should error for invalid avg block time", func(t *testing.T) {
 		params := NewParams()
 		params.AvgBlockTime = "-1.30"
@@ -158,4 +165,59 @@ func TestParamsString(t *testing.T) {
 	out, err := yaml.Marshal(params)
 	require.NoError(t, err)
 	require.Equal(t, string(out), params.String())
+}
+
+func TestParams_GetDurationFactor(t *testing.T) {
+	t.Run("should return duration factor 0 if duration factor constant is 0", func(t *testing.T) {
+		params := DefaultParams()
+		params.DurationFactorConstant = "0"
+
+		duractionFactor := params.GetDurationFactor(1)
+		require.Equal(t, sdk.ZeroDec(), duractionFactor)
+	})
+
+	t.Run("should return duration factor for default params", func(t *testing.T) {
+		params := DefaultParams()
+		duractionFactor := params.GetDurationFactor(1)
+		// hardcoding actual expected value for default params, it will change if logic changes
+		require.Equal(t, sdk.MustNewDecFromStr("0.000000004346937374"), duractionFactor)
+	})
+}
+
+func TestParams_GetBondFactor(t *testing.T) {
+	t.Run("should return 0 if current bond ratio is 0", func(t *testing.T) {
+		params := DefaultParams()
+		bondFactor := params.GetBondFactor(sdk.ZeroDec())
+		require.Equal(t, sdk.ZeroDec(), bondFactor)
+	})
+
+	t.Run("should return max bond factor if bond factor exceeds max bond factor", func(t *testing.T) {
+		params := DefaultParams()
+		params.TargetBondRatio = "0.5"
+		params.MaxBondFactor = "1.1"
+		params.MinBondFactor = "0.9"
+
+		bondFactor := params.GetBondFactor(sdk.MustNewDecFromStr("0.25"))
+		require.Equal(t, sdk.MustNewDecFromStr(params.MaxBondFactor), bondFactor)
+	})
+
+	t.Run("should return min bond factor if bond factor below min bond factor", func(t *testing.T) {
+		params := DefaultParams()
+		params.TargetBondRatio = "0.5"
+		params.MaxBondFactor = "1.1"
+		params.MinBondFactor = "0.9"
+
+		bondFactor := params.GetBondFactor(sdk.MustNewDecFromStr("0.75"))
+		require.Equal(t, sdk.MustNewDecFromStr(params.MinBondFactor), bondFactor)
+	})
+
+	t.Run("should return calculated bond factor if bond factor in range", func(t *testing.T) {
+		params := DefaultParams()
+		params.TargetBondRatio = "0.5"
+		params.MaxBondFactor = "1.1"
+		params.MinBondFactor = "0.9"
+
+		bondFactor := params.GetBondFactor(sdk.MustNewDecFromStr("0.5"))
+		require.Equal(t, sdk.OneDec(), bondFactor)
+	})
 }
