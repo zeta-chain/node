@@ -31,13 +31,12 @@ func TestMsgServer_UpdateParams(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+		_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
 			Authority: sample.AccAddress(),
 			Params:    types.DefaultParams(),
 		})
 
 		require.Error(t, err)
-		require.Nil(t, res)
 	})
 
 	t.Run("fail for invalid params", func(t *testing.T) {
@@ -45,12 +44,11 @@ func TestMsgServer_UpdateParams(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		params := types.DefaultParams()
 		params.ValidatorEmissionPercentage = "-1.5"
-		res, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+		_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
 			Authority: k.GetAuthority(),
 			Params:    params,
 		})
 
-		require.Error(t, err)
-		require.Nil(t, res)
+		require.ErrorIs(t, err, types.ErrUnableToSetParams)
 	})
 }

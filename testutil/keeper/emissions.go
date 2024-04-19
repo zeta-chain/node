@@ -16,10 +16,11 @@ import (
 )
 
 type EmissionMockOptions struct {
-	UseBankMock     bool
-	UseStakingMock  bool
-	UseObserverMock bool
-	UseAccountMock  bool
+	UseBankMock       bool
+	UseStakingMock    bool
+	UseObserverMock   bool
+	UseAccountMock    bool
+	SkipSettingParams bool
 }
 
 func EmissionsKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
@@ -102,8 +103,10 @@ func EmissionKeeperWithMockOptions(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	err := k.SetParams(ctx, types.DefaultParams())
-	require.NoError(t, err)
+	if !mockOptions.SkipSettingParams {
+		err := k.SetParams(ctx, types.DefaultParams())
+		require.NoError(t, err)
+	}
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }

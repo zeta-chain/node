@@ -60,15 +60,50 @@ func (p Params) Validate() error {
 	if err != nil {
 		return err
 	}
-	err = validateDurationFactorConstant(p.DurationFactorConstant)
-	if err != nil {
-		return err
-	}
 	err = validateBallotMaturityBlocks(p.BallotMaturityBlocks)
 	if err != nil {
 		return err
 	}
 	return validateObserverSlashAmount(p.ObserverSlashAmount)
+}
+
+func (p Params) GetBondFactor(currentBondedRatio sdk.Dec) sdk.Dec {
+	targetBondRatio := sdk.MustNewDecFromStr(p.TargetBondRatio)
+	maxBondFactor := sdk.MustNewDecFromStr(p.MaxBondFactor)
+	minBondFactor := sdk.MustNewDecFromStr(p.MinBondFactor)
+
+	// Bond factor ranges between minBondFactor (0.75) to maxBondFactor (1.25)
+	if currentBondedRatio.IsZero() {
+		return sdk.ZeroDec()
+	}
+	bondFactor := targetBondRatio.Quo(currentBondedRatio)
+	if bondFactor.GT(maxBondFactor) {
+		return maxBondFactor
+	}
+	if bondFactor.LT(minBondFactor) {
+		return minBondFactor
+	}
+	return bondFactor
+}
+
+func (p Params) GetDurationFactor(blockHeight int64) sdk.Dec {
+	avgBlockTime := sdk.MustNewDecFromStr(p.AvgBlockTime)
+	NumberOfBlocksInAMonth := sdk.NewDec(SecsInMonth).Quo(avgBlockTime)
+	monthFactor := sdk.NewDec(blockHeight).Quo(NumberOfBlocksInAMonth)
+	logValueDec := sdk.MustNewDecFromStr(p.DurationFactorConstant)
+	// month * log(1 + 0.02 / 12)
+	fractionNumerator := monthFactor.Mul(logValueDec)
+	// (month * log(1 + 0.02 / 12) ) + 1
+	fractionDenominator := fractionNumerator.Add(sdk.OneDec())
+
+	// (month * log(1 + 0.02 / 12)) / (month * log(1 + 0.02 / 12) ) + 1
+	if fractionDenominator.IsZero() {
+		return sdk.OneDec()
+	}
+	if fractionNumerator.IsZero() {
+		return sdk.ZeroDec()
+	}
+	return fractionNumerator.Quo(fractionDenominator)
 }
 
 // String implements the Stringer interface.

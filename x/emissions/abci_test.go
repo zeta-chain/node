@@ -381,7 +381,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			ctx = ctx.WithBlockHeight(100)
 
 			// Distribute the rewards and check if the rewards are distributed correctly
-			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k)
+			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, params)
 			require.NoError(t, err)
 
 			for i, observer := range observerSet.ObserverList {

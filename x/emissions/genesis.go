@@ -23,7 +23,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 // ExportGenesis returns the emissions module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	var genesis types.GenesisState
-	genesis.Params, _ = k.GetParams(ctx)
+	params, found := k.GetParams(ctx)
+	if !found {
+		params = types.Params{}
+	}
+	genesis.Params = params
 	genesis.WithdrawableEmissions = k.GetAllWithdrawableEmission(ctx)
 
 	return &genesis
