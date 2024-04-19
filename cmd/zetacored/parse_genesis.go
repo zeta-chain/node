@@ -30,8 +30,8 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
