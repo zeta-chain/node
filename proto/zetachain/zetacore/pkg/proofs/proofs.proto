@@ -13,13 +13,13 @@ message BlockHeader {
   bytes parent_hash = 3;
   int64 chain_id = 4;
   // chain specific header
-  HeaderData header = 5 [(gogoproto.nullable) = false];
+  HeaderData header = 5 [ (gogoproto.nullable) = false ];
 }
 
 message HeaderData {
   oneof data {
     bytes ethereum_header = 1; // binary encoded headers; RLP for ethereum
-    bytes bitcoin_header = 2; // 80-byte little-endian encoded binary data
+    bytes bitcoin_header = 2;  // 80-byte little-endian encoded binary data
   }
 }
 

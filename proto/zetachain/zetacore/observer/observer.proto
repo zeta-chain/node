@@ -28,9 +28,7 @@ message ObserverMapper {
   repeated string observer_list = 4;
 }
 
-message ObserverSet {
-  repeated string observer_list = 1;
-}
+message ObserverSet { repeated string observer_list = 1; }
 
 message LastObserverCount {
   uint64 count = 1;

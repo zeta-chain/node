@@ -17,13 +17,17 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Msg {
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateObserver(MsgUpdateObserver) returns (MsgUpdateObserverResponse);
-  rpc UpdateChainParams(MsgUpdateChainParams) returns (MsgUpdateChainParamsResponse);
-  rpc RemoveChainParams(MsgRemoveChainParams) returns (MsgRemoveChainParamsResponse);
+  rpc UpdateChainParams(MsgUpdateChainParams)
+      returns (MsgUpdateChainParamsResponse);
+  rpc RemoveChainParams(MsgRemoveChainParams)
+      returns (MsgRemoveChainParamsResponse);
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
-  rpc UpdateCrosschainFlags(MsgUpdateCrosschainFlags) returns (MsgUpdateCrosschainFlagsResponse);
+  rpc UpdateCrosschainFlags(MsgUpdateCrosschainFlags)
+      returns (MsgUpdateCrosschainFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
   rpc VoteBlockHeader(MsgVoteBlockHeader) returns (MsgVoteBlockHeaderResponse);
-  rpc ResetChainNonces(MsgResetChainNonces) returns (MsgResetChainNoncesResponse);
+  rpc ResetChainNonces(MsgResetChainNonces)
+      returns (MsgResetChainNoncesResponse);
   rpc VoteTSS(MsgVoteTSS) returns (MsgVoteTSSResponse);
 }
 
@@ -40,7 +44,7 @@ message MsgVoteBlockHeader {
   int64 chain_id = 2;
   bytes block_hash = 3;
   int64 height = 4;
-  pkg.proofs.HeaderData header = 5 [(gogoproto.nullable) = false];
+  pkg.proofs.HeaderData header = 5 [ (gogoproto.nullable) = false ];
 }
 
 message MsgVoteBlockHeaderResponse {
@@ -74,7 +78,7 @@ message MsgAddObserverResponse {}
 message MsgAddBlameVote {
   string creator = 1;
   int64 chain_id = 2;
-  Blame blame_info = 3 [(gogoproto.nullable) = false];
+  Blame blame_info = 3 [ (gogoproto.nullable) = false ];
 }
 
 message MsgAddBlameVoteResponse {}

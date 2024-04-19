@@ -14,7 +14,7 @@ service Msg {
 // MsgUpdatePolicies defines the MsgUpdatePolicies service.
 message MsgUpdatePolicies {
   string signer = 1;
-  Policies policies = 2 [(gogoproto.nullable) = false];
+  Policies policies = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.

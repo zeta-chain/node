@@ -8,7 +8,7 @@ option go_package = "github.com/zeta-chain/zetacore/pkg/coin";
 enum CoinType {
   option (gogoproto.goproto_enum_stringer) = true;
   Zeta = 0;
-  Gas = 1; // Ether, BNB, Matic, Klay, BTC, etc
+  Gas = 1;   // Ether, BNB, Matic, Klay, BTC, etc
   ERC20 = 2; // ERC20 token
-  Cmd = 3; // not a real coin, rather a command
+  Cmd = 3;   // not a real coin, rather a command
 }

@@ -7,6 +7,4 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 
 // GenesisState defines the authority module's genesis state.
-message GenesisState {
-  Policies policies = 1 [(gogoproto.nullable) = false];
-}
+message GenesisState { Policies policies = 1 [ (gogoproto.nullable) = false ]; }

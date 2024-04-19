@@ -153,10 +153,10 @@ protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(pro
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@$(protoImage) sh ./scripts/protocgen.sh
+	@$(protoImage) sh ./scripts/protoc-gen-go.sh
 
 proto-format:
-	@bash ./scripts/proto-format.sh
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
 openapi:
 	@echo "--> Generating OpenAPI specs"

@@ -16,10 +16,12 @@ service Query {
   }
 }
 
-// QueryGetPoliciesRequest is the request type for the Query/Policies RPC method.
+// QueryGetPoliciesRequest is the request type for the Query/Policies RPC
+// method.
 message QueryGetPoliciesRequest {}
 
-// QueryGetPoliciesResponse is the response type for the Query/Policies RPC method.
+// QueryGetPoliciesResponse is the response type for the Query/Policies RPC
+// method.
 message QueryGetPoliciesResponse {
-  Policies policies = 1 [(gogoproto.nullable) = false];
+  Policies policies = 1 [ (gogoproto.nullable) = false ];
 }

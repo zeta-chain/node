@@ -8,17 +8,16 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message GasPriceIncreaseFlags {
   int64 epochLength = 1;
-  google.protobuf.Duration retryInterval = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true
-  ];
+  google.protobuf.Duration retryInterval = 2
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
   uint32 gasPriceIncreasePercent = 3;
 
   // Maximum gas price increase in percent of the median gas price
   // Default is used if 0
   uint32 gasPriceIncreaseMax = 4;
 
-  // Maximum number of pending crosschain transactions to check for gas price increase
+  // Maximum number of pending crosschain transactions to check for gas price
+  // increase
   uint32 maxPendingCctxs = 5;
 }
 

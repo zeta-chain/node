@@ -7,9 +7,7 @@ import "zetachain/zetacore/pkg/chains/chains.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
-message ChainParamsList {
-  repeated ChainParams chain_params = 1;
-}
+message ChainParamsList { repeated ChainParams chain_params = 1; }
 
 message ChainParams {
   int64 chain_id = 11;

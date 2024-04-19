@@ -4,32 +4,36 @@ package zetachain.zetacore.crosschain;
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/pkg/coin/coin.proto";
 
-//TODO : fix the descriptor numbers for the fields
-// https://github.com/zeta-chain/node/issues/1951
+// TODO : fix the descriptor numbers for the fields
+//  https://github.com/zeta-chain/node/issues/1951
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 enum CctxStatus {
   option (gogoproto.goproto_enum_stringer) = true;
-  PendingInbound = 0; // some observer sees inbound tx
+  PendingInbound = 0;  // some observer sees inbound tx
   PendingOutbound = 1; // super majority observer see inbound tx
-  OutboundMined = 3; // the corresponding outbound tx is mined
-  PendingRevert = 4; // outbound cannot succeed; should revert inbound
-  Reverted = 5; // inbound reverted.
-  Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
+  OutboundMined = 3;   // the corresponding outbound tx is mined
+  PendingRevert = 4;   // outbound cannot succeed; should revert inbound
+  Reverted = 5;        // inbound reverted.
+  Aborted =
+      6; // inbound tx error or invalid paramters and cannot revert; just abort.
+         // But the amount can be refunded to zetachain using and admin proposal
 }
 
 enum TxFinalizationStatus {
   option (gogoproto.goproto_enum_stringer) = true;
   NotFinalized = 0; // the corresponding tx is not finalized
-  Finalized = 1; // the corresponding tx is finalized but not executed yet
-  Executed = 2; // the corresponding tx is executed
+  Finalized = 1;    // the corresponding tx is finalized but not executed yet
+  Executed = 2;     // the corresponding tx is executed
 }
 message InboundTxParams {
-  string sender = 1; // this address is the immediate contract/EOA that calls the Connector.send()
+  string sender = 1; // this address is the immediate contract/EOA that calls
+                     // the Connector.send()
   int64 sender_chain_id = 2;
   string tx_origin = 3; // this address is the EOA that signs the inbound tx
   pkg.coin.CoinType coin_type = 4;
-  string asset = 5; // for ERC20 coin type, the asset is an address of the ERC20 contract
+  string asset =
+      5; // for ERC20 coin type, the asset is an address of the ERC20 contract
   string amount = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
@@ -42,7 +46,8 @@ message InboundTxParams {
 }
 
 message ZetaAccounting {
-  // aborted_zeta_amount stores the total aborted amount for cctx of coin-type ZETA
+  // aborted_zeta_amount stores the total aborted amount for cctx of coin-type
+  // ZETA
   string aborted_zeta_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false

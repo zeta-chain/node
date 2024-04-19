@@ -23,11 +23,14 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Query {
   // Query if a voter has voted for a ballot
   rpc HasVoted(QueryHasVotedRequest) returns (QueryHasVotedResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}";
+    option (google.api.http).get =
+        "/zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}";
   }
   // Queries a list of VoterByIdentifier items.
-  rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
+  rpc BallotByIdentifier(QueryBallotByIdentifierRequest)
+      returns (QueryBallotByIdentifierResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
   }
 
   // Queries a list of ObserversByChainAndType items.
@@ -35,31 +38,38 @@ service Query {
     option (google.api.http).get = "/zeta-chain/observer/observer_set";
   }
 
-  rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
+  rpc SupportedChains(QuerySupportedChains)
+      returns (QuerySupportedChainsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/supportedChains";
   }
 
   // Queries a list of GetChainParamsForChain items.
-  rpc GetChainParamsForChain(QueryGetChainParamsForChainRequest) returns (QueryGetChainParamsForChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_chain_params_for_chain/{chain_id}";
+  rpc GetChainParamsForChain(QueryGetChainParamsForChainRequest)
+      returns (QueryGetChainParamsForChainResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/get_chain_params_for_chain/{chain_id}";
   }
 
   // Queries a list of GetChainParams items.
-  rpc GetChainParams(QueryGetChainParamsRequest) returns (QueryGetChainParamsResponse) {
+  rpc GetChainParams(QueryGetChainParamsRequest)
+      returns (QueryGetChainParamsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_chain_params";
   }
 
   // Queries a nodeAccount by index.
-  rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
+  rpc NodeAccount(QueryGetNodeAccountRequest)
+      returns (QueryGetNodeAccountResponse) {
     option (google.api.http).get = "/zeta-chain/observer/nodeAccount/{index}";
   }
 
   // Queries a list of nodeAccount items.
-  rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
+  rpc NodeAccountAll(QueryAllNodeAccountRequest)
+      returns (QueryAllNodeAccountResponse) {
     option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
   }
 
-  rpc CrosschainFlags(QueryGetCrosschainFlagsRequest) returns (QueryGetCrosschainFlagsResponse) {
+  rpc CrosschainFlags(QueryGetCrosschainFlagsRequest)
+      returns (QueryGetCrosschainFlagsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/crosschain_flags";
   }
 
@@ -69,32 +79,44 @@ service Query {
   }
 
   // Queries a list of ShowObserverCount items.
-  rpc ShowObserverCount(QueryShowObserverCountRequest) returns (QueryShowObserverCountResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/observer/show_observer_count";
+  rpc ShowObserverCount(QueryShowObserverCountRequest)
+      returns (QueryShowObserverCountResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/zetacore/observer/show_observer_count";
   }
 
   // Queries a list of VoterByIdentifier items.
-  rpc BlameByIdentifier(QueryBlameByIdentifierRequest) returns (QueryBlameByIdentifierResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
+  rpc BlameByIdentifier(QueryBlameByIdentifierRequest)
+      returns (QueryBlameByIdentifierResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
   }
 
   // Queries a list of VoterByIdentifier items.
-  rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
+  rpc GetAllBlameRecords(QueryAllBlameRecordsRequest)
+      returns (QueryAllBlameRecordsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
   }
 
   // Queries a list of VoterByIdentifier items.
-  rpc BlamesByChainAndNonce(QueryBlameByChainAndNonceRequest) returns (QueryBlameByChainAndNonceResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}";
+  rpc BlamesByChainAndNonce(QueryBlameByChainAndNonceRequest)
+      returns (QueryBlameByChainAndNonceResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}";
   }
 
   // Queries a list of GetTssAddress items.
-  rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_tss_address/{bitcoin_chain_id}";
+  rpc GetTssAddress(QueryGetTssAddressRequest)
+      returns (QueryGetTssAddressResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/get_tss_address/{bitcoin_chain_id}";
   }
 
-  rpc GetTssAddressByFinalizedHeight(QueryGetTssAddressByFinalizedHeightRequest) returns (QueryGetTssAddressByFinalizedHeightResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}";
+  rpc GetTssAddressByFinalizedHeight(QueryGetTssAddressByFinalizedHeightRequest)
+      returns (QueryGetTssAddressByFinalizedHeightResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/get_tss_address_historical/"
+        "{finalized_zeta_height}/{bitcoin_chain_id}";
   }
 
   // Queries a tSS by index.
@@ -106,31 +128,34 @@ service Query {
     option (google.api.http).get = "/zeta-chain/observer/tssHistory";
   }
 
-  rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
+  rpc PendingNoncesAll(QueryAllPendingNoncesRequest)
+      returns (QueryAllPendingNoncesResponse) {
     option (google.api.http).get = "/zeta-chain/observer/pendingNonces";
   }
 
-  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/pendingNonces/{chain_id}";
+  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest)
+      returns (QueryPendingNoncesByChainResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/pendingNonces/{chain_id}";
   }
 
   // Queries a chainNonces by index.
-  rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
+  rpc ChainNonces(QueryGetChainNoncesRequest)
+      returns (QueryGetChainNoncesResponse) {
     option (google.api.http).get = "/zeta-chain/observer/chainNonces/{index}";
   }
 
   // Queries a list of chainNonces items.
-  rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
+  rpc ChainNoncesAll(QueryAllChainNoncesRequest)
+      returns (QueryAllChainNoncesResponse) {
     option (google.api.http).get = "/zeta-chain/observer/chainNonces";
   }
 }
 
-message QueryGetChainNoncesRequest {
-  string index = 1;
-}
+message QueryGetChainNoncesRequest { string index = 1; }
 
 message QueryGetChainNoncesResponse {
-  ChainNonces ChainNonces = 1 [(gogoproto.nullable) = false];
+  ChainNonces ChainNonces = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryAllChainNoncesRequest {
@@ -138,7 +163,7 @@ message QueryAllChainNoncesRequest {
 }
 
 message QueryAllChainNoncesResponse {
-  repeated ChainNonces ChainNonces = 1 [(gogoproto.nullable) = false];
+  repeated ChainNonces ChainNonces = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -147,27 +172,21 @@ message QueryAllPendingNoncesRequest {
 }
 
 message QueryAllPendingNoncesResponse {
-  repeated PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
+  repeated PendingNonces pending_nonces = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryPendingNoncesByChainRequest {
-  int64 chain_id = 1;
-}
+message QueryPendingNoncesByChainRequest { int64 chain_id = 1; }
 
 message QueryPendingNoncesByChainResponse {
-  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
+  PendingNonces pending_nonces = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryGetTSSRequest {}
 
-message QueryGetTSSResponse {
-  TSS TSS = 1 [(gogoproto.nullable) = false];
-}
+message QueryGetTSSResponse { TSS TSS = 1 [ (gogoproto.nullable) = false ]; }
 
-message QueryGetTssAddressRequest {
-  int64 bitcoin_chain_id = 2;
-}
+message QueryGetTssAddressRequest { int64 bitcoin_chain_id = 2; }
 
 message QueryGetTssAddressResponse {
   string eth = 1;
@@ -189,7 +208,7 @@ message QueryTssHistoryRequest {
 }
 
 message QueryTssHistoryResponse {
-  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
+  repeated TSS tss_list = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -198,13 +217,9 @@ message QueryHasVotedRequest {
   string voter_address = 2;
 }
 
-message QueryHasVotedResponse {
-  bool has_voted = 1;
-}
+message QueryHasVotedResponse { bool has_voted = 1; }
 
-message QueryBallotByIdentifierRequest {
-  string ballot_identifier = 1;
-}
+message QueryBallotByIdentifierRequest { string ballot_identifier = 1; }
 message VoterList {
   string voter_address = 1;
   VoteType vote_type = 2;
@@ -219,37 +234,23 @@ message QueryBallotByIdentifierResponse {
 
 message QueryObserverSet {}
 
-message QueryObserverSetResponse {
-  repeated string observers = 1;
-}
+message QueryObserverSetResponse { repeated string observers = 1; }
 
 message QuerySupportedChains {}
 
-message QuerySupportedChainsResponse {
-  repeated pkg.chains.Chain chains = 1;
-}
+message QuerySupportedChainsResponse { repeated pkg.chains.Chain chains = 1; }
 
-message QueryGetChainParamsForChainRequest {
-  int64 chain_id = 1;
-}
+message QueryGetChainParamsForChainRequest { int64 chain_id = 1; }
 
-message QueryGetChainParamsForChainResponse {
-  ChainParams chain_params = 1;
-}
+message QueryGetChainParamsForChainResponse { ChainParams chain_params = 1; }
 
 message QueryGetChainParamsRequest {}
 
-message QueryGetChainParamsResponse {
-  ChainParamsList chain_params = 1;
-}
+message QueryGetChainParamsResponse { ChainParamsList chain_params = 1; }
 
-message QueryGetNodeAccountRequest {
-  string index = 1;
-}
+message QueryGetNodeAccountRequest { string index = 1; }
 
-message QueryGetNodeAccountResponse {
-  NodeAccount node_account = 1;
-}
+message QueryGetNodeAccountResponse { NodeAccount node_account = 1; }
 
 message QueryAllNodeAccountRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
@@ -263,14 +264,12 @@ message QueryAllNodeAccountResponse {
 message QueryGetCrosschainFlagsRequest {}
 
 message QueryGetCrosschainFlagsResponse {
-  CrosschainFlags crosschain_flags = 1 [(gogoproto.nullable) = false];
+  CrosschainFlags crosschain_flags = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryGetKeygenRequest {}
 
-message QueryGetKeygenResponse {
-  Keygen keygen = 1;
-}
+message QueryGetKeygenResponse { Keygen keygen = 1; }
 
 message QueryShowObserverCountRequest {}
 
@@ -278,20 +277,16 @@ message QueryShowObserverCountResponse {
   LastObserverCount last_observer_count = 1;
 }
 
-message QueryBlameByIdentifierRequest {
-  string blame_identifier = 1;
-}
+message QueryBlameByIdentifierRequest { string blame_identifier = 1; }
 
-message QueryBlameByIdentifierResponse {
-  Blame blame_info = 1;
-}
+message QueryBlameByIdentifierResponse { Blame blame_info = 1; }
 
 message QueryAllBlameRecordsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 message QueryAllBlameRecordsResponse {
-  repeated Blame blame_info = 1 [(gogoproto.nullable) = false];
+  repeated Blame blame_info = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -300,6 +295,4 @@ message QueryBlameByChainAndNonceRequest {
   int64 nonce = 2;
 }
 
-message QueryBlameByChainAndNonceResponse {
-  repeated Blame blame_info = 1;
-}
+message QueryBlameByChainAndNonceResponse { repeated Blame blame_info = 1; }

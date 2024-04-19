@@ -10,7 +10,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 
 // GenesisState defines the lightclient module's genesis state.
 message GenesisState {
-  repeated pkg.proofs.BlockHeader block_headers = 1 [(gogoproto.nullable) = false];
-  repeated ChainState chain_states = 2 [(gogoproto.nullable) = false];
-  VerificationFlags verification_flags = 3 [(gogoproto.nullable) = false];
+  repeated pkg.proofs.BlockHeader block_headers = 1
+      [ (gogoproto.nullable) = false ];
+  repeated ChainState chain_states = 2 [ (gogoproto.nullable) = false ];
+  VerificationFlags verification_flags = 3 [ (gogoproto.nullable) = false ];
 }

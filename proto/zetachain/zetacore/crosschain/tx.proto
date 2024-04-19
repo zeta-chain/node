@@ -10,19 +10,26 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
-  rpc AddToInTxTracker(MsgAddToInTxTracker) returns (MsgAddToInTxTrackerResponse);
-  rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
+  rpc AddToOutTxTracker(MsgAddToOutTxTracker)
+      returns (MsgAddToOutTxTrackerResponse);
+  rpc AddToInTxTracker(MsgAddToInTxTracker)
+      returns (MsgAddToInTxTrackerResponse);
+  rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker)
+      returns (MsgRemoveFromOutTxTrackerResponse);
 
   rpc VoteGasPrice(MsgVoteGasPrice) returns (MsgVoteGasPriceResponse);
-  rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
-  rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
+  rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx)
+      returns (MsgVoteOnObservedOutboundTxResponse);
+  rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx)
+      returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
-  rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
+  rpc UpdateTssAddress(MsgUpdateTssAddress)
+      returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
 
   rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
-  rpc RefundAbortedCCTX(MsgRefundAbortedCCTX) returns (MsgRefundAbortedCCTXResponse);
+  rpc RefundAbortedCCTX(MsgRefundAbortedCCTX)
+      returns (MsgRefundAbortedCCTXResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -80,7 +87,8 @@ message MsgAddToOutTxTracker {
 }
 
 message MsgAddToOutTxTrackerResponse {
-  bool is_removed = 1; // if the tx was removed from the tracker due to no pending cctx
+  bool is_removed =
+      1; // if the tx was removed from the tracker due to no pending cctx
 }
 
 message MsgRemoveFromOutTxTracker {
@@ -160,7 +168,8 @@ message MsgAbortStuckCCTXResponse {}
 message MsgRefundAbortedCCTX {
   string creator = 1;
   string cctx_index = 2;
-  string refund_address = 3; // if not provided, the refund will be sent to the sender/txOrgin
+  string refund_address =
+      3; // if not provided, the refund will be sent to the sender/txOrgin
 }
 
 message MsgRefundAbortedCCTXResponse {}
