@@ -83,10 +83,14 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	if m.IsCurrentOutTxRevert() {
 		return fmt.Errorf("cannot revert a revert tx")
 	}
+	if len(m.OutboundTxParams) == 0 {
+		return fmt.Errorf("cannot revert before trying to process an outbound tx")
+	}
+
 	revertTxParams := &OutboundTxParams{
 		Receiver:           m.InboundTxParams.Sender,
 		ReceiverChainId:    m.InboundTxParams.SenderChainId,
-		Amount:             m.InboundTxParams.Amount,
+		Amount:             m.GetCurrentOutTxParam().Amount,
 		OutboundTxGasLimit: gasLimit,
 		TssPubkey:          m.GetCurrentOutTxParam().TssPubkey,
 	}
