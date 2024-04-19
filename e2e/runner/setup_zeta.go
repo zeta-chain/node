@@ -7,13 +7,14 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
@@ -141,6 +142,14 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	runner.SetupETHZRC20()
 	runner.SetupBTCZRC20()
 
+	// deploy TestDApp contract on zEVM
+	appAddr, txApp, _, err := testdapp.DeployTestDApp(runner.ZEVMAuth, runner.ZEVMClient, runner.ConnectorZEVMAddr, runner.WZetaAddr)
+	if err != nil {
+		panic(err)
+	}
+	runner.ZevmTestDAppAddr = appAddr
+	runner.Logger.Info("TestDApp Zevm contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
+
 	// deploy ZEVMSwapApp and ContextApp
 	zevmSwapAppAddr, txZEVMSwapApp, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
 		runner.ZEVMAuth,
@@ -170,6 +179,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	}
 	runner.ContextAppAddr = contextAppAddr
 	runner.ContextApp = contextApp
+
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain

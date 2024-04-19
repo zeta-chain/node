@@ -15,7 +15,7 @@ const (
 	PostVoteInboundExecutionGasLimit = 4_000_000
 
 	// PostVoteInboundMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
-	PostVoteInboundMessagePassingExecutionGasLimit = 1_000_000
+	PostVoteInboundMessagePassingExecutionGasLimit = 4_000_000
 )
 
 // GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx

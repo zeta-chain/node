@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -134,6 +135,7 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 		cctxs[i].Index = fmt.Sprintf("0x123%d", i)
 		cctxs[i].ZetaFees = math.OneUint()
 		cctxs[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
+		cctxs[i].CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctxs[i])
 	}
 
@@ -148,9 +150,9 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 }
 
 func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
-	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-
+	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	t.Run("can query all cctxs data with in tx hash", func(t *testing.T) {
 		cctxs, inTxHashToCctx := createInTxHashToCctxWithCctxs(keeper, ctx)
 		req := &types.QueryInTxHashToCctxDataRequest{

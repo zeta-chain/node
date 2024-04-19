@@ -597,6 +597,66 @@ func (_m *CrosschainFungibleKeeper) WithdrawFromGasStabilityPool(ctx types.Conte
 	return r0
 }
 
+// ZEVMDepositAndCallContract provides a mock function with given fields: ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes
+func (_m *CrosschainFungibleKeeper) ZETADepositAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, inboundAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	ret := _m.Called(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ZETADepositAndCallContract")
+	}
+
+	var r0 *evmtypes.MsgEthereumTxResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, int64, *big.Int, []byte, [32]byte) (*evmtypes.MsgEthereumTxResponse, error)); ok {
+		return rf(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, int64, *big.Int, []byte, [32]byte) *evmtypes.MsgEthereumTxResponse); ok {
+		r0 = rf(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*evmtypes.MsgEthereumTxResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, int64, *big.Int, []byte, [32]byte) error); ok {
+		r1 = rf(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ZEVMRevertAndCallContract provides a mock function with given fields: ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes
+func (_m *CrosschainFungibleKeeper) ZETARevertAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, destinationChainID int64, remainingAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	ret := _m.Called(ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ZETARevertAndCallContract")
+	}
+
+	var r0 *evmtypes.MsgEthereumTxResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, int64, int64, *big.Int, []byte, [32]byte) (*evmtypes.MsgEthereumTxResponse, error)); ok {
+		return rf(ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, int64, int64, *big.Int, []byte, [32]byte) *evmtypes.MsgEthereumTxResponse); ok {
+		r0 = rf(ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*evmtypes.MsgEthereumTxResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, int64, int64, *big.Int, []byte, [32]byte) error); ok {
+		r1 = rf(ctx, sender, to, inboundSenderChainID, destinationChainID, remainingAmount, data, indexBytes)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ZRC20DepositAndCallContract provides a mock function with given fields: ctx, from, to, amount, senderChainID, data, coinType, asset
 func (_m *CrosschainFungibleKeeper) ZRC20DepositAndCallContract(ctx types.Context, from []byte, to common.Address, amount *big.Int, senderChainID int64, data []byte, coinType coin.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	ret := _m.Called(ctx, from, to, amount, senderChainID, data, coinType, asset)
