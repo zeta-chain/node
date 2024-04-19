@@ -17,6 +17,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -144,6 +146,13 @@ func ParamsKeeper(
 		storeKey,
 		tkeys,
 	)
+}
+
+func ConsensusKeeper(
+	cdc codec.Codec,
+) consensuskeeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(consensustypes.StoreKey)
+	return consensuskeeper.NewKeeper(cdc, storeKey, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 }
 
 // AccountKeeper instantiates an account keeper for testing purposes
@@ -285,6 +294,7 @@ func FeeMarketKeeper(
 		storeKey,
 		transientKey,
 		paramKeeper.Subspace(feemarkettypes.ModuleName),
+		ConsensusKeeper(cdc),
 	)
 }
 
@@ -318,6 +328,7 @@ func EVMKeeper(
 		geth.NewEVM,
 		"",
 		paramKeeper.Subspace(evmtypes.ModuleName),
+		ConsensusKeeper(cdc),
 	)
 
 	return k
