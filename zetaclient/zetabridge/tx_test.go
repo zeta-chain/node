@@ -210,7 +210,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 		grpcmock.WithPlanner(planner.FirstMatch()),
 		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
-			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+			method := "/crosschain.Query/LastZetaHeight"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
@@ -227,7 +227,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					},
 				})
 
-			method = "/zetachain.zetacore.observer.Query/GetChainParams"
+			method = "/observer.Query/GetChainParams"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(observertypes.QueryGetChainParamsRequest{}).
@@ -239,7 +239,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					},
 				}})
 
-			method = "/zetachain.zetacore.observer.Query/SupportedChains"
+			method = "/observer.Query/SupportedChains"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(observertypes.QuerySupportedChains{}).
@@ -254,7 +254,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					},
 				})
 
-			method = "/zetachain.zetacore.observer.Query/Keygen"
+			method = "/observer.Query/Keygen"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(observertypes.QueryGetKeygenRequest{}).
@@ -265,7 +265,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 						BlockNumber:    5646,
 					}})
 
-			method = "/zetachain.zetacore.observer.Query/TSS"
+			method = "/observer.Query/TSS"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(observertypes.QueryGetTSSRequest{}).
@@ -279,7 +279,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					},
 				})
 
-			method = "/zetachain.zetacore.observer.Query/CrosschainFlags"
+			method = "/observer.Query/CrosschainFlags"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(observertypes.QueryGetCrosschainFlagsRequest{}).
@@ -290,7 +290,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					BlockHeaderVerificationFlags: nil,
 				}})
 
-			method = "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+			method = "/lightclient.Query/VerificationFlags"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(lightclienttypes.QueryVerificationFlagsRequest{}).
@@ -370,7 +370,7 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 		BallotIdentifier: "0x2d10e9b7ce7921fa6b61ada3020d1c797d5ec52424cdcf86ef31cbbbcd45db58",
 		VoterAddress:     address.String(),
 	}
-	method := "/zetachain.zetacore.observer.Query/HasVoted"
+	method := "/observer.Query/HasVoted"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -437,7 +437,7 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 		BallotIdentifier: "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347",
 		VoterAddress:     address.String(),
 	}
-	method := "/zetachain.zetacore.observer.Query/HasVoted"
+	method := "/observer.Query/HasVoted"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
