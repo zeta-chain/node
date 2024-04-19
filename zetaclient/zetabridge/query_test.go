@@ -267,7 +267,7 @@ func TestZetaCoreBridge_GetObserverList(t *testing.T) {
 }
 
 func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
-	expectedOutput := crosschainTypes.QueryListCctxPendingResponse{
+	expectedOutput := crosschainTypes.QueryListPendingCctxResponse{
 		CrossChainTx: []*crosschainTypes.CrossChainTx{
 			{
 				Index: "cross-chain4456",
@@ -275,8 +275,8 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 		},
 		TotalPending: 1,
 	}
-	input := crosschainTypes.QueryListCctxPendingRequest{ChainId: 7000}
-	method := "/zetachain.zetacore.crosschain.Query/CctxListPending"
+	input := crosschainTypes.QueryListPendingCctxRequest{ChainId: 7000}
+	method := "/zetachain.zetacore.crosschain.Query/ListPendingCctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
