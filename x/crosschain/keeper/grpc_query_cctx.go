@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -93,21 +94,17 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	// check limit and use default MaxPendingCctxs if not specified
-	if req.Limit > MaxPendingCctxs {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("limit exceeds max limit of %d", MaxPendingCctxs))
-	}
+	// use default MaxPendingCctxs if not specified or too high
 	limit := req.Limit
-	if limit == 0 {
+	if limit == 0 || limit > MaxPendingCctxs {
 		limit = MaxPendingCctxs
 	}
-
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// query the nonces that are pending
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
-		return nil, status.Error(codes.Internal, "tss not found")
+		return nil, observertypes.ErrTssNotFound
 	}
 	pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
 	if !found {

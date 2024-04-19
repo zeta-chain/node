@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,24 +20,21 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	// check limit and use default MaxPendingCctxs if not specified
-	if req.Limit > MaxPendingCctxs {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("limit exceeds max limit of %d", MaxPendingCctxs))
-	}
+	// use default MaxPendingCctxs if not specified or too high
 	limit := req.Limit
-	if limit == 0 {
+	if limit == 0 || limit > MaxPendingCctxs {
 		limit = MaxPendingCctxs
 	}
+	ctx := sdk.UnwrapSDKContext(c)
 
 	// get current height and tss
-	ctx := sdk.UnwrapSDKContext(c)
 	height := ctx.BlockHeight()
 	if height <= 0 {
 		return nil, status.Error(codes.OutOfRange, "height out of range")
 	}
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
-		return nil, status.Error(codes.Internal, "tss not found")
+		return nil, observertypes.ErrTssNotFound
 	}
 
 	// check rate limit flags to decide if we should apply rate limit

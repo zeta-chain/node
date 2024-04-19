@@ -70,10 +70,10 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		require.ErrorContains(t, err, "invalid request")
 	})
 
-	t.Run("should fail if limit is too high", func(t *testing.T) {
+	t.Run("should use max limit if limit is too high", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		_, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{Limit: keeper.MaxPendingCctxs + 1})
-		require.ErrorContains(t, err, "limit exceeds max limit of")
+		require.ErrorContains(t, err, "tss not found")
 	})
 
 	t.Run("should fail if no TSS", func(t *testing.T) {

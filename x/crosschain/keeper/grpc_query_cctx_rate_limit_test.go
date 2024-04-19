@@ -16,10 +16,10 @@ func TestKeeper_CctxListPendingWithRateLimit(t *testing.T) {
 		_, err := k.CctxListPendingWithinRateLimit(ctx, nil)
 		require.ErrorContains(t, err, "invalid request")
 	})
-	t.Run("should fail if limit is too high", func(t *testing.T) {
+	t.Run("should use max limit if limit is too high", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		_, err := k.CctxListPendingWithinRateLimit(ctx, &types.QueryListCctxPendingWithRateLimitRequest{Limit: keeper.MaxPendingCctxs + 1})
-		require.ErrorContains(t, err, "limit exceeds max limit of")
+		require.ErrorContains(t, err, "tss not found")
 	})
 	t.Run("should fail if no TSS", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
