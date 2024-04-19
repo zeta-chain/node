@@ -19,6 +19,7 @@ zetacored query distribution [flags]
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
@@ -30,5 +31,6 @@ zetacored query distribution [flags]
 * [zetacored query distribution params](zetacored_query_distribution_params.md)	 - Query distribution params
 * [zetacored query distribution rewards](zetacored_query_distribution_rewards.md)	 - Query all distribution delegator rewards or rewards from a particular validator
 * [zetacored query distribution slashes](zetacored_query_distribution_slashes.md)	 - Query distribution validator slashes
+* [zetacored query distribution validator-distribution-info](zetacored_query_distribution_validator-distribution-info.md)	 - Query validator distribution info
 * [zetacored query distribution validator-outstanding-rewards](zetacored_query_distribution_validator-outstanding-rewards.md)	 - Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations
 

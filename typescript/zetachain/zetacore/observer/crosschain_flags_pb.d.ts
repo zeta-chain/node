@@ -34,7 +34,8 @@ export declare class GasPriceIncreaseFlags extends Message<GasPriceIncreaseFlags
   gasPriceIncreaseMax: number;
 
   /**
-   * Maximum number of pending crosschain transactions to check for gas price increase
+   * Maximum number of pending crosschain transactions to check for gas price
+   * increase
    *
    * @generated from field: uint32 maxPendingCctxs = 5;
    */

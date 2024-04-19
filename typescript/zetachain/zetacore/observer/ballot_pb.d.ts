@@ -17,13 +17,16 @@ export declare enum VoteType {
   SuccessObservation = 0,
 
   /**
-   * Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.
+   * Failure observation means , the the message that
    *
    * @generated from enum value: FailureObservation = 1;
    */
   FailureObservation = 1,
 
   /**
+   * this voter is observing failed / reverted . It does
+   * not mean it was unable to observe.
+   *
    * @generated from enum value: NotYetVoted = 2;
    */
   NotYetVoted = 2,

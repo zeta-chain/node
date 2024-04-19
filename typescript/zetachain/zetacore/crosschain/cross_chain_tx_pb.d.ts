@@ -47,7 +47,7 @@ export declare enum CctxStatus {
   Reverted = 5,
 
   /**
-   * inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
+   * inbound tx error or invalid paramters and cannot revert; just abort.
    *
    * @generated from enum value: Aborted = 6;
    */
@@ -85,13 +85,15 @@ export declare enum TxFinalizationStatus {
  */
 export declare class InboundTxParams extends Message<InboundTxParams> {
   /**
-   * this address is the immediate contract/EOA that calls the Connector.send()
+   * this address is the immediate contract/EOA that calls
    *
    * @generated from field: string sender = 1;
    */
   sender: string;
 
   /**
+   * the Connector.send()
+   *
    * @generated from field: int64 sender_chain_id = 2;
    */
   senderChainId: bigint;
@@ -165,7 +167,8 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
  */
 export declare class ZetaAccounting extends Message<ZetaAccounting> {
   /**
-   * aborted_zeta_amount stores the total aborted amount for cctx of coin-type ZETA
+   * aborted_zeta_amount stores the total aborted amount for cctx of coin-type
+   * ZETA
    *
    * @generated from field: string aborted_zeta_amount = 1;
    */

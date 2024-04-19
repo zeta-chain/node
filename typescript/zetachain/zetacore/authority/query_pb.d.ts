@@ -8,7 +8,8 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies } from "./policies_pb.js";
 
 /**
- * QueryGetPoliciesRequest is the request type for the Query/Policies RPC method.
+ * QueryGetPoliciesRequest is the request type for the Query/Policies RPC
+ * method.
  *
  * @generated from message zetachain.zetacore.authority.QueryGetPoliciesRequest
  */
@@ -29,7 +30,8 @@ export declare class QueryGetPoliciesRequest extends Message<QueryGetPoliciesReq
 }
 
 /**
- * QueryGetPoliciesResponse is the response type for the Query/Policies RPC method.
+ * QueryGetPoliciesResponse is the response type for the Query/Policies RPC
+ * method.
  *
  * @generated from message zetachain.zetacore.authority.QueryGetPoliciesResponse
  */

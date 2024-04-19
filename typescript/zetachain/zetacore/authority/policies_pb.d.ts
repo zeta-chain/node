@@ -20,14 +20,16 @@ export declare enum PolicyType {
   groupEmergency = 0,
 
   /**
-   * Used for operational tasks like changing non-sensitive protocol parameters
+   * Used for operational tasks like changing
    *
    * @generated from enum value: groupOperational = 1;
    */
   groupOperational = 1,
 
   /**
-   * Used for administrative tasks like changing sensitive protocol parameters or moving funds
+   * non-sensitive protocol parameters
+   *
+   * Used for administrative tasks like changing sensitive
    *
    * @generated from enum value: groupAdmin = 2;
    */

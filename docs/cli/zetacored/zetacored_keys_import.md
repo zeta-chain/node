@@ -24,6 +24,7 @@ zetacored keys import [name] [keyfile] [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
       --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
 ```
