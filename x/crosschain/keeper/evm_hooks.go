@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -13,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -224,7 +225,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
-
+	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
@@ -233,7 +234,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		txOrigin, toAddr,
 		receiverChain.ChainId,
 		amount,
-		"",
+		messageString,
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
 		90000,

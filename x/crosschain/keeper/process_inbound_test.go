@@ -29,8 +29,9 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
-			Return(nil)
+		fungibleMock.On("ZETADepositAndCallContract", mock.Anything,
+			mock.Anything,
+			receiver, int64(0), amount, mock.Anything, mock.Anything).Return(nil, nil)
 
 		// call ProcessInbound
 		cctx := sample.CrossChainTx(t, "test")
@@ -55,8 +56,8 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// mock unsuccessful HandleEVMDeposit which does not revert
-		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
-			Return(fmt.Errorf("deposit error"), false)
+
+		fungibleMock.On("ZETADepositAndCallContract", mock.Anything, mock.Anything, receiver, int64(0), amount, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("deposit error"))
 
 		// call ProcessInbound
 		cctx := sample.CrossChainTx(t, "test")
