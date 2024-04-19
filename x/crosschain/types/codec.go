@@ -11,13 +11,14 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddToOutTxTracker{}, "crosschain/AddToOutTxTracker", nil)
 	cdc.RegisterConcrete(&MsgAddToInTxTracker{}, "crosschain/AddToInTxTracker", nil)
 	cdc.RegisterConcrete(&MsgRemoveFromOutTxTracker{}, "crosschain/RemoveFromOutTxTracker", nil)
-	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "crosschain/GasPriceVoter", nil)
+	cdc.RegisterConcrete(&MsgVoteGasPrice{}, "crosschain/VoteGasPrice", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTx{}, "crosschain/VoteOnObservedOutboundTx", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/VoteOnObservedInboundTx", nil)
 	cdc.RegisterConcrete(&MsgWhitelistERC20{}, "crosschain/WhitelistERC20", nil)
 	cdc.RegisterConcrete(&MsgMigrateTssFunds{}, "crosschain/MigrateTssFunds", nil)
 	cdc.RegisterConcrete(&MsgUpdateTssAddress{}, "crosschain/UpdateTssAddress", nil)
 	cdc.RegisterConcrete(&MsgAbortStuckCCTX{}, "crosschain/AbortStuckCCTX", nil)
+	cdc.RegisterConcrete(&MsgUpdateRateLimiterFlags{}, "crosschain/UpdateRateLimiterFlags", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -25,13 +26,14 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgAddToOutTxTracker{},
 		&MsgAddToInTxTracker{},
 		&MsgRemoveFromOutTxTracker{},
-		&MsgGasPriceVoter{},
+		&MsgVoteGasPrice{},
 		&MsgVoteOnObservedOutboundTx{},
 		&MsgVoteOnObservedInboundTx{},
 		&MsgWhitelistERC20{},
 		&MsgMigrateTssFunds{},
 		&MsgUpdateTssAddress{},
 		&MsgAbortStuckCCTX{},
+		&MsgUpdateRateLimiterFlags{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

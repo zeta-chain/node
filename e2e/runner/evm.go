@@ -5,16 +5,15 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/rpc"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
 var blockHeaderETHTimeout = 5 * time.Minute
@@ -214,7 +213,7 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 			panic("timeout waiting for block header")
 		}
 
-		_, err := runner.ObserverClient.GetBlockHeaderByHash(runner.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
+		_, err := runner.LightclientClient.BlockHeader(runner.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
 			BlockHash: blockHash.Bytes(),
 		})
 		if err != nil {
@@ -244,7 +243,7 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	if err != nil {
 		panic("error unmarshalling txProof'd tx")
 	}
-	res, err := runner.ObserverClient.Prove(runner.Ctx, &observertypes.QueryProveRequest{
+	res, err := runner.LightclientClient.Prove(runner.Ctx, &lightclienttypes.QueryProveRequest{
 		BlockHash: blockHash.Hex(),
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),

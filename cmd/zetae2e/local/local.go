@@ -188,6 +188,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
+
+		if err := deployerRunner.EnableVerificationFlags(); err != nil {
+			panic(err)
+		}
+
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
 
@@ -291,7 +296,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestPauseZRC20Name,
-			e2etests.TestUpdateBytecodeName,
+			e2etests.TestUpdateBytecodeZRC20Name,
+			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported

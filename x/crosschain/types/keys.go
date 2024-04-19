@@ -53,6 +53,8 @@ const (
 	// #nosec G101: Potential hardcoded credentials (gosec)
 	// ZetaAccountingKey value is used as prefix for storing ZetaAccountingKey
 	ZetaAccountingKey = "ZetaAccounting-value-"
+
+	RateLimiterFlagsKey = "RateLimiterFlags-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields

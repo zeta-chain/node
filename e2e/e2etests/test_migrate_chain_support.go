@@ -230,6 +230,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.AuthClient,
 		r.BankClient,
 		r.ObserverClient,
+		r.LightclientClient,
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,

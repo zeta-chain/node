@@ -94,12 +94,12 @@ message MsgUpdateKeygen {
 }
 ```
 
-## MsgAddBlockHeader
+## MsgVoteBlockHeader
 
-AddBlockHeader handles adding a block header to the store, through majority voting of observers
+VoteBlockHeader vote for a new block header to the storers
 
 ```proto
-message MsgAddBlockHeader {
+message MsgVoteBlockHeader {
 	string creator = 1;
 	int64 chain_id = 2;
 	bytes block_hash = 3;

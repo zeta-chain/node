@@ -31,6 +31,7 @@ func RunnerFromConfig(
 		authClient,
 		bankClient,
 		observerClient,
+		lightClient,
 		zevmClient,
 		zevmAuth,
 		err := getClientsFromConfig(ctx, conf, evmUserPrivKey)
@@ -64,6 +65,7 @@ func RunnerFromConfig(
 		authClient,
 		bankClient,
 		observerClient,
+		lightClient,
 		evmAuth,
 		zevmAuth,
 		btcRPCClient,

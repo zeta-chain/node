@@ -28,6 +28,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -49,11 +50,12 @@ type E2ERunner struct {
 	BtcRPCClient *rpcclient.Client
 
 	// grpc clients
-	CctxClient     crosschaintypes.QueryClient
-	FungibleClient fungibletypes.QueryClient
-	AuthClient     authtypes.QueryClient
-	BankClient     banktypes.QueryClient
-	ObserverClient observertypes.QueryClient
+	CctxClient        crosschaintypes.QueryClient
+	FungibleClient    fungibletypes.QueryClient
+	AuthClient        authtypes.QueryClient
+	BankClient        banktypes.QueryClient
+	ObserverClient    observertypes.QueryClient
+	LightclientClient lightclienttypes.QueryClient
 
 	// zeta client
 	ZetaTxServer txserver.ZetaTxServer
@@ -125,6 +127,7 @@ func NewE2ERunner(
 	authClient authtypes.QueryClient,
 	bankClient banktypes.QueryClient,
 	observerClient observertypes.QueryClient,
+	lightclientClient lightclienttypes.QueryClient,
 	evmAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
@@ -139,14 +142,15 @@ func NewE2ERunner(
 		DeployerPrivateKey:    deployerPrivateKey,
 		FungibleAdminMnemonic: fungibleAdminMnemonic,
 
-		ZEVMClient:     zevmClient,
-		EVMClient:      evmClient,
-		ZetaTxServer:   zetaTxServer,
-		CctxClient:     cctxClient,
-		FungibleClient: fungibleClient,
-		AuthClient:     authClient,
-		BankClient:     bankClient,
-		ObserverClient: observerClient,
+		ZEVMClient:        zevmClient,
+		EVMClient:         evmClient,
+		ZetaTxServer:      zetaTxServer,
+		CctxClient:        cctxClient,
+		FungibleClient:    fungibleClient,
+		AuthClient:        authClient,
+		BankClient:        bankClient,
+		ObserverClient:    observerClient,
+		LightclientClient: lightclientClient,
 
 		EVMAuth:      evmAuth,
 		ZEVMAuth:     zevmAuth,

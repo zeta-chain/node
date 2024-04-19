@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -26,7 +27,9 @@ func assertPanic(t *testing.T, f func(), errorLog string) {
 func getTestCoreContext(
 	evmChain chains.Chain,
 	evmChainParams *observertypes.ChainParams,
-	ccFlags observertypes.CrosschainFlags) *corecontext.ZetaCoreContext {
+	ccFlags observertypes.CrosschainFlags,
+	verificationFlags lightclienttypes.VerificationFlags,
+) *corecontext.ZetaCoreContext {
 	// create config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
@@ -45,6 +48,7 @@ func getTestCoreContext(
 		nil,
 		"",
 		ccFlags,
+		verificationFlags,
 		true,
 		zerolog.Logger{},
 	)
@@ -166,6 +170,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		tssPubKeyToUpdate := "tsspubkeytest"
 		loggers := clientcommon.DefaultLoggers()
 		crosschainFlags := sample.CrosschainFlags()
+		verificationFlags := sample.VerificationFlags()
+
 		require.NotNil(t, crosschainFlags)
 		zetaContext.Update(
 			&keyGenToUpdate,
@@ -174,6 +180,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
 			*crosschainFlags,
+			verificationFlags,
 			false,
 			loggers.Std,
 		)
@@ -200,6 +207,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, *crosschainFlags, ccFlags)
+
+		verFlags := zetaContext.GetVerificationFlags()
+		require.Equal(t, verificationFlags, verFlags)
 	})
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
@@ -257,6 +267,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
 		crosschainFlags := sample.CrosschainFlags()
+		verificationFlags := sample.VerificationFlags()
 		require.NotNil(t, crosschainFlags)
 		loggers := clientcommon.DefaultLoggers()
 		zetaContext.Update(
@@ -266,6 +277,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
 			*crosschainFlags,
+			verificationFlags,
 			false,
 			loggers.Std,
 		)
@@ -300,6 +312,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, ccFlags, *crosschainFlags)
+
+		verFlags := zetaContext.GetVerificationFlags()
+		require.Equal(t, verFlags, verificationFlags)
 	})
 }
 
@@ -307,13 +322,14 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
 	evmChain := chains.EthChain()
 	ccFlags := *sample.CrosschainFlags()
+	verificationFlags := sample.VerificationFlags()
 	chainParams := &observertypes.ChainParams{
 		ChainId:     evmChain.ChainId,
 		IsSupported: true,
 	}
 
 	t.Run("should return true if chain is supported and outbound flag is enabled", func(t *testing.T) {
-		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags)
+		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags, verificationFlags)
 		require.True(t, corecontext.IsOutboundObservationEnabled(coreCTX, *chainParams))
 	})
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
@@ -321,13 +337,13 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 			ChainId:     evmChain.ChainId,
 			IsSupported: false,
 		}
-		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags)
+		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
 		require.False(t, corecontext.IsOutboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
 	})
 	t.Run("should return false if outbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsOutboundEnabled = false
-		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled)
+		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled, verificationFlags)
 		require.False(t, corecontext.IsOutboundObservationEnabled(coreCTXDisabled, *chainParams))
 	})
 }
@@ -336,13 +352,14 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
 	evmChain := chains.EthChain()
 	ccFlags := *sample.CrosschainFlags()
+	verificationFlags := sample.VerificationFlags()
 	chainParams := &observertypes.ChainParams{
 		ChainId:     evmChain.ChainId,
 		IsSupported: true,
 	}
 
 	t.Run("should return true if chain is supported and inbound flag is enabled", func(t *testing.T) {
-		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags)
+		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags, verificationFlags)
 		require.True(t, corecontext.IsInboundObservationEnabled(coreCTX, *chainParams))
 	})
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
@@ -350,13 +367,13 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 			ChainId:     evmChain.ChainId,
 			IsSupported: false,
 		}
-		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags)
+		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
 		require.False(t, corecontext.IsInboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
 	})
 	t.Run("should return false if inbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsInboundEnabled = false
-		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled)
+		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled, verificationFlags)
 		require.False(t, corecontext.IsInboundObservationEnabled(coreCTXDisabled, *chainParams))
 	})
 }
