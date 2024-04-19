@@ -1,8 +1,6 @@
 package observer
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -45,16 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	params := types.DefaultParams()
-	if genState.Params != nil {
-		params = *genState.Params
-	}
-	if err := k.SetParams(ctx, params); err != nil {
-		panic(fmt.Sprintf("invalid observer module params: %v\n", params))
-	}
-
 	// Set if defined
-
 	crosschainFlags := types.DefaultCrosschainFlags()
 	if genState.CrosschainFlags != nil {
 		crosschainFlags.IsOutboundEnabled = genState.CrosschainFlags.IsOutboundEnabled
@@ -145,8 +134,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the observer module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	params, _ := k.GetParams(ctx)
-
 	chainParams, found := k.GetChainParamsList(ctx)
 	if !found {
 		chainParams = types.ChainParamsList{}
@@ -202,7 +189,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		Ballots:           k.GetAllBallots(ctx),
 		ChainParamsList:   chainParams,
 		Observers:         os,
-		Params:            &params,
 		NodeAccountList:   nodeAccounts,
 		CrosschainFlags:   cf,
 		Keygen:            kn,

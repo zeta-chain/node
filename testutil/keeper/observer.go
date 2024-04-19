@@ -122,9 +122,6 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	err := k.SetParams(ctx, types.DefaultParams())
-	require.NoError(t, err)
-
 	return k, ctx, sdkKeepers, ZetaKeepers{
 		AuthorityKeeper: &authorityKeeperTmp,
 	}

@@ -47,30 +47,3 @@ message ObserverParams {
   ];
   bool is_supported = 5;
 }
-
-// Deprecated(v14):Moved into the authority module
-enum Policy_Type {
-  option (gogoproto.goproto_enum_stringer) = true;
-  group1 = 0;
-  group2 = 1;
-}
-
-// Deprecated(v14):Moved into the authority module
-message Admin_Policy {
-  Policy_Type policy_type = 1;
-  string address = 2;
-}
-
-// Params defines the parameters for the module.
-message Params {
-  option (gogoproto.goproto_stringer) = false;
-
-  // Deprecated(v13): Use ChainParamsList
-  repeated ObserverParams observer_params = 1;
-
-  // Deprecated(v14):Moved into the authority module
-  repeated Admin_Policy admin_policy = 2;
-
-  // Deprecated(v15): Moved into emissions module
-  int64 ballot_maturity_blocks = 3;
-}

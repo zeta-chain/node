@@ -9,10 +9,10 @@ import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { PendingNonces } from "./pending_nonces_pb.js";
 import type { TSS } from "./tss_pb.js";
-import type { ChainParams, ChainParamsList, Params } from "./params_pb.js";
 import type { BallotStatus, VoteType } from "./ballot_pb.js";
 import type { LastObserverCount, ObservationType } from "./observer_pb.js";
 import type { Chain } from "../pkg/chains/chains_pb.js";
+import type { ChainParams, ChainParamsList } from "./params_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
@@ -425,53 +425,6 @@ export declare class QueryTssHistoryResponse extends Message<QueryTssHistoryResp
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssHistoryResponse;
 
   static equals(a: QueryTssHistoryResponse | PlainMessage<QueryTssHistoryResponse> | undefined, b: QueryTssHistoryResponse | PlainMessage<QueryTssHistoryResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.QueryParamsRequest
- */
-export declare class QueryParamsRequest extends Message<QueryParamsRequest> {
-  constructor(data?: PartialMessage<QueryParamsRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.QueryParamsRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryParamsRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryParamsRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryParamsRequest;
-
-  static equals(a: QueryParamsRequest | PlainMessage<QueryParamsRequest> | undefined, b: QueryParamsRequest | PlainMessage<QueryParamsRequest> | undefined): boolean;
-}
-
-/**
- * QueryParamsResponse is response type for the Query/Params RPC method.
- *
- * @generated from message zetachain.zetacore.observer.QueryParamsResponse
- */
-export declare class QueryParamsResponse extends Message<QueryParamsResponse> {
-  /**
-   * params holds all the parameters of this module.
-   *
-   * @generated from field: zetachain.zetacore.observer.Params params = 1;
-   */
-  params?: Params;
-
-  constructor(data?: PartialMessage<QueryParamsResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.QueryParamsResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryParamsResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryParamsResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryParamsResponse;
-
-  static equals(a: QueryParamsResponse | PlainMessage<QueryParamsResponse> | undefined, b: QueryParamsResponse | PlainMessage<QueryParamsResponse> | undefined): boolean;
 }
 
 /**

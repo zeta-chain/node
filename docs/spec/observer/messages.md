@@ -143,12 +143,3 @@ message MsgVoteTSS {
 }
 ```
 
-## MsgUpdateParams
-
-```proto
-message MsgUpdateParams {
-	string authority = 1;
-	Params params = 2;
-}
-```
-

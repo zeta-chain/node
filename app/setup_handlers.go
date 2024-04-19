@@ -8,7 +8,6 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const releaseVersion = "v15"
@@ -22,8 +21,6 @@ func SetupHandlers(app *App) {
 		// TODO: add all modules when cosmos-sdk is updated
 		case emissionstypes.ModuleName:
 			subspace.WithKeyTable(emissionstypes.ParamKeyTable())
-		case observertypes.ModuleName:
-			subspace.WithKeyTable(observertypes.ParamKeyTable())
 		}
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -32,7 +29,6 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
