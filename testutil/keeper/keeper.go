@@ -150,8 +150,12 @@ func ParamsKeeper(
 
 func ConsensusKeeper(
 	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
 ) consensuskeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(consensustypes.StoreKey)
+
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	return consensuskeeper.NewKeeper(cdc, storeKey, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 }
 
@@ -281,6 +285,7 @@ func FeeMarketKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	paramKeeper paramskeeper.Keeper,
+	consensusKeeper consensuskeeper.Keeper,
 ) feemarketkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(feemarkettypes.StoreKey)
 	transientKey := sdk.NewTransientStoreKey(feemarkettypes.TransientKey)
@@ -294,7 +299,7 @@ func FeeMarketKeeper(
 		storeKey,
 		transientKey,
 		paramKeeper.Subspace(feemarkettypes.ModuleName),
-		ConsensusKeeper(cdc),
+		consensusKeeper,
 	)
 }
 
@@ -308,6 +313,7 @@ func EVMKeeper(
 	stakingKeeper stakingkeeper.Keeper,
 	feemarketKeeper feemarketkeeper.Keeper,
 	paramKeeper paramskeeper.Keeper,
+	consensusKeeper consensuskeeper.Keeper,
 ) *evmkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(evmtypes.StoreKey)
 	transientKey := sdk.NewTransientStoreKey(evmtypes.TransientKey)
@@ -328,7 +334,7 @@ func EVMKeeper(
 		geth.NewEVM,
 		"",
 		paramKeeper.Subspace(evmtypes.ModuleName),
-		ConsensusKeeper(cdc),
+		consensusKeeper,
 	)
 
 	return k
@@ -344,8 +350,9 @@ func NewSDKKeepers(
 	authKeeper := AccountKeeper(cdc, db, ss, paramsKeeper)
 	bankKeeper := BankKeeper(cdc, db, ss, paramsKeeper, authKeeper)
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper, paramsKeeper)
-	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper)
-	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper)
+	consensusKeeper := ConsensusKeeper(cdc, db, ss)
+	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper, consensusKeeper)
+	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper, consensusKeeper)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper, paramsKeeper)
 	return SDKKeepers{
 		ParamsKeeper:    paramsKeeper,

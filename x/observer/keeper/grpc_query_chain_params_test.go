@@ -38,8 +38,10 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 		list := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:     chains.ZetaPrivnetChain().ChainId,
-					IsSupported: false,
+					ChainId:               chains.ZetaPrivnetChain().ChainId,
+					IsSupported:           false,
+					BallotThreshold:       sdk.ZeroDec(),
+					MinObserverDelegation: sdk.ZeroDec(),
 				},
 			},
 		}
@@ -81,8 +83,10 @@ func TestKeeper_GetChainParams(t *testing.T) {
 		list := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:     chains.ZetaPrivnetChain().ChainId,
-					IsSupported: false,
+					ChainId:               chains.ZetaPrivnetChain().ChainId,
+					IsSupported:           false,
+					BallotThreshold:       sdk.ZeroDec(),
+					MinObserverDelegation: sdk.ZeroDec(),
 				},
 			},
 		}

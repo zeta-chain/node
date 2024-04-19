@@ -41,6 +41,7 @@ func CliTestConfig() network.Config {
 				simtestutil.EmptyAppOptions{},
 				baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+				baseapp.SetChainID("athens_8888-2"),
 			)
 		},
 		GenesisState:    app.ModuleBasics.DefaultGenesis(encoding.Codec),

@@ -50,7 +50,7 @@ func TestBroadcast(t *testing.T) {
 		grpcmock.WithPlanner(planner.FirstMatch()),
 		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
-			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+			method := "/crosschain.Query/LastZetaHeight"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
