@@ -24,6 +24,8 @@ TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger
 HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
+export DOCKER_BUILDKIT := 1
+
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
 clean-binaries:
