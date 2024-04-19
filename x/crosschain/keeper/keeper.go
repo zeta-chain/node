@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -18,12 +17,12 @@ type (
 		memKey   storetypes.StoreKey
 
 		stakingKeeper      types.StakingKeeper
-		paramstore         paramtypes.Subspace
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
 		zetaObserverKeeper types.ObserverKeeper
 		fungibleKeeper     types.FungibleKeeper
 		authorityKeeper    types.AuthorityKeeper
+		lightclientKeeper  types.LightclientKeeper
 	}
 )
 
@@ -32,12 +31,12 @@ func NewKeeper(
 	storeKey,
 	memKey storetypes.StoreKey,
 	stakingKeeper types.StakingKeeper, // custom
-	paramstore paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	zetaObserverKeeper types.ObserverKeeper,
 	fungibleKeeper types.FungibleKeeper,
 	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
 ) *Keeper {
 	// ensure governance module account is set
 	// FIXME: enable this check! (disabled for now to avoid unit test panic)
@@ -50,12 +49,12 @@ func NewKeeper(
 		storeKey:           storeKey,
 		memKey:             memKey,
 		stakingKeeper:      stakingKeeper,
-		paramstore:         paramstore,
 		authKeeper:         authKeeper,
 		bankKeeper:         bankKeeper,
 		zetaObserverKeeper: zetaObserverKeeper,
 		fungibleKeeper:     fungibleKeeper,
 		authorityKeeper:    authorityKeeper,
+		lightclientKeeper:  lightclientKeeper,
 	}
 }
 
@@ -85,6 +84,10 @@ func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 
 func (k Keeper) GetAuthorityKeeper() types.AuthorityKeeper {
 	return k.authorityKeeper
+}
+
+func (k Keeper) GetLightclientKeeper() types.LightclientKeeper {
+	return k.lightclientKeeper
 }
 
 func (k Keeper) GetStoreKey() storetypes.StoreKey {

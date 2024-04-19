@@ -8,7 +8,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// FIXME: make it work
 func TestGenesisState_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		desc     string
@@ -23,15 +22,6 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
-
-				//ZetaConversionRateList: []types.ZetaConversionRate{
-				//	{
-				//		Index: "0",
-				//	},
-				//	{
-				//		Index: "1",
-				//	},
-				//},
 				OutTxTrackerList: []types.OutTxTracker{
 					{
 						Index: "0",
@@ -53,6 +43,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.GasPrice(t, "1"),
 					sample.GasPrice(t, "2"),
 				},
+				RateLimiterFlags: sample.RateLimiterFlags(),
 			},
 			valid: true,
 		},
@@ -66,6 +57,21 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						Index: "0",
 					},
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "duplicated outTxTracker",
+			genState: &types.GenesisState{
+				OutTxTrackerList: []types.OutTxTracker{
+					{
+						Index: "0",
+					},
+				},
+				RateLimiterFlags: types.RateLimiterFlags{
+					Enabled: true,
+					Window:  -1,
 				},
 			},
 			valid: false,

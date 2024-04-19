@@ -1,0 +1,14 @@
+syntax = "proto3";
+package zetachain.zetacore.lightclient;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+
+// ChainState defines the overall state of the block headers for a given chain
+message ChainState {
+  int64 chain_id = 1;
+  int64 latest_height = 2;
+  int64 earliest_height = 3;
+  bytes latest_block_hash = 4;
+}

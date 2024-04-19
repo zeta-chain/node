@@ -1,7 +1,6 @@
 package evm
 
 import (
-	"path"
 	"testing"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -67,15 +66,14 @@ func getNewOutTxProcessor() *outtxprocessor.Processor {
 }
 
 func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
-	var cctx crosschaintypes.CrossChainTx
-	testutils.LoadObjectFromJSONFile(t, &cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270.json"))
-	return &cctx
+	return testutils.LoadCctxByNonce(t, 56, 68270)
 }
 
 func getInvalidCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
-	var cctx crosschaintypes.CrossChainTx
-	testutils.LoadObjectFromJSONFile(t, &cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270_invalidChainID.json"))
-	return &cctx
+	cctx := getCCTX(t)
+	// modify receiver chain id to make it invalid
+	cctx.GetCurrentOutTxParam().ReceiverChainId = 13378337
+	return cctx
 }
 
 func TestSigner_SetGetConnectorAddress(t *testing.T) {

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
+import "crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 import "pkg/chains/chains.proto";
 import "pkg/coin/coin.proto";
@@ -14,7 +15,7 @@ service Msg {
   rpc AddToInTxTracker(MsgAddToInTxTracker) returns (MsgAddToInTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
 
-  rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
+  rpc VoteGasPrice(MsgVoteGasPrice) returns (MsgVoteGasPriceResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
@@ -23,6 +24,8 @@ service Msg {
 
   rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
   rpc RefundAbortedCCTX(MsgRefundAbortedCCTX) returns (MsgRefundAbortedCCTXResponse);
+
+  rpc UpdateRateLimiterFlags(MsgUpdateRateLimiterFlags) returns (MsgUpdateRateLimiterFlagsResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -91,7 +94,7 @@ message MsgRemoveFromOutTxTracker {
 
 message MsgRemoveFromOutTxTrackerResponse {}
 
-message MsgGasPriceVoter {
+message MsgVoteGasPrice {
   string creator = 1;
   int64 chain_id = 2;
   uint64 price = 3;
@@ -99,7 +102,7 @@ message MsgGasPriceVoter {
   string supply = 5;
 }
 
-message MsgGasPriceVoterResponse {}
+message MsgVoteGasPriceResponse {}
 
 message MsgVoteOnObservedOutboundTx {
   string creator = 1;
@@ -164,3 +167,10 @@ message MsgRefundAbortedCCTX {
 }
 
 message MsgRefundAbortedCCTXResponse {}
+
+message MsgUpdateRateLimiterFlags {
+  string creator = 1;
+  RateLimiterFlags rate_limiter_flags = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateRateLimiterFlagsResponse {}

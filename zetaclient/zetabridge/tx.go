@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -53,7 +54,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain chains.Chain, gasPrice uint64, suppl
 	// #nosec G701 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
+	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -130,11 +131,12 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
 	b.logger.Info().Msg("CoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
+	sampledLogger := b.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false)
+			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false, sampledLogger)
 			if err != nil {
 				b.logger.Err(err).Msg("CoreContextUpdater failed to update config")
 			}
@@ -172,10 +174,10 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
-func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, height int64, header proofs.HeaderData) (string, error) {
+func (b *ZetaCoreBridge) PostVoteBlockHeader(chainID int64, blockHash []byte, height int64, header proofs.HeaderData) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 
-	msg := observertypes.NewMsgAddBlockHeader(signerAddress, chainID, blockHash, height, header)
+	msg := observertypes.NewMsgVoteBlockHeader(signerAddress, chainID, blockHash, height, header)
 
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -188,7 +190,7 @@ func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, hei
 		if err == nil {
 			return zetaTxHash, nil
 		}
-		b.logger.Error().Err(err).Msgf("PostAddBlockHeader broadcast fail | Retry count : %d", i+1)
+		b.logger.Error().Err(err).Msgf("PostVoteBlockHeader broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", fmt.Errorf("post add block header failed after %d retries", DefaultRetryCount)
@@ -281,7 +283,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 
 // PostVoteOutbound posts a vote on an observed outbound tx
 func (b *ZetaCoreBridge) PostVoteOutbound(
-	sendHash string,
+	cctxIndex string,
 	outTxHash string,
 	outBlockHeight uint64,
 	outTxGasUsed uint64,
@@ -296,7 +298,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedOutboundTx(
 		signerAddress,
-		sendHash,
+		cctxIndex,
 		outTxHash,
 		outBlockHeight,
 		outTxGasUsed,

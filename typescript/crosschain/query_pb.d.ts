@@ -12,6 +12,7 @@ import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
+import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.QueryZetaAccountingRequest
@@ -1017,5 +1018,48 @@ export declare class QueryMessagePassingProtocolFeeResponse extends Message<Quer
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryMessagePassingProtocolFeeResponse;
 
   static equals(a: QueryMessagePassingProtocolFeeResponse | PlainMessage<QueryMessagePassingProtocolFeeResponse> | undefined, b: QueryMessagePassingProtocolFeeResponse | PlainMessage<QueryMessagePassingProtocolFeeResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryRateLimiterFlagsRequest
+ */
+export declare class QueryRateLimiterFlagsRequest extends Message<QueryRateLimiterFlagsRequest> {
+  constructor(data?: PartialMessage<QueryRateLimiterFlagsRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryRateLimiterFlagsRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryRateLimiterFlagsRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryRateLimiterFlagsRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryRateLimiterFlagsRequest;
+
+  static equals(a: QueryRateLimiterFlagsRequest | PlainMessage<QueryRateLimiterFlagsRequest> | undefined, b: QueryRateLimiterFlagsRequest | PlainMessage<QueryRateLimiterFlagsRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryRateLimiterFlagsResponse
+ */
+export declare class QueryRateLimiterFlagsResponse extends Message<QueryRateLimiterFlagsResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.RateLimiterFlags rateLimiterFlags = 1;
+   */
+  rateLimiterFlags?: RateLimiterFlags;
+
+  constructor(data?: PartialMessage<QueryRateLimiterFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryRateLimiterFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryRateLimiterFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryRateLimiterFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryRateLimiterFlagsResponse;
+
+  static equals(a: QueryRateLimiterFlagsResponse | PlainMessage<QueryRateLimiterFlagsResponse> | undefined, b: QueryRateLimiterFlagsResponse | PlainMessage<QueryRateLimiterFlagsResponse> | undefined): boolean;
 }
 

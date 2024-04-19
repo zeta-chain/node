@@ -18,14 +18,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetSystemContract(ctx, *genState.SystemContract)
 	}
 
-	k.SetParams(ctx, genState.Params)
 }
 
 // ExportGenesis returns the fungible module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	var genesis types.GenesisState
 
-	genesis.Params = k.GetParams(ctx)
 	genesis.ForeignCoinsList = k.GetAllForeignCoins(ctx)
 
 	// Get all zetaDepositAndCallContract
