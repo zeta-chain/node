@@ -12,7 +12,7 @@ message MsgAddToOutTxTracker {
 	int64 chain_id = 2;
 	uint64 nonce = 3;
 	string tx_hash = 4;
-	proofs.Proof proof = 5;
+	pkg.proofs.Proof proof = 5;
 	string block_hash = 6;
 	int64 tx_index = 7;
 }
@@ -27,8 +27,8 @@ message MsgAddToInTxTracker {
 	string creator = 1;
 	int64 chain_id = 2;
 	string tx_hash = 3;
-	coin.CoinType coin_type = 4;
-	proofs.Proof proof = 5;
+	pkg.coin.CoinType coin_type = 4;
+	pkg.proofs.Proof proof = 5;
 	string block_hash = 6;
 	int64 tx_index = 7;
 }
@@ -120,10 +120,10 @@ message MsgVoteOnObservedOutboundTx {
 	string observed_outTx_effective_gas_price = 11;
 	uint64 observed_outTx_effective_gas_limit = 12;
 	string value_received = 5;
-	chains.ReceiveStatus status = 6;
+	pkg.chains.ReceiveStatus status = 6;
 	int64 outTx_chain = 7;
 	uint64 outTx_tss_nonce = 8;
-	coin.CoinType coin_type = 9;
+	pkg.coin.CoinType coin_type = 9;
 }
 ```
 
@@ -183,7 +183,7 @@ message MsgVoteOnObservedInboundTx {
 	string in_tx_hash = 9;
 	uint64 in_block_height = 10;
 	uint64 gas_limit = 11;
-	coin.CoinType coin_type = 12;
+	pkg.coin.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
 	uint64 event_index = 15;
