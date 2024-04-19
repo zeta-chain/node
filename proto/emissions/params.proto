@@ -20,4 +20,5 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  int64 ballot_maturity_blocks = 10;
 }

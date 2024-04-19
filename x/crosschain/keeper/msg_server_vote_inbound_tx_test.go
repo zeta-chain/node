@@ -88,12 +88,6 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		// MsgServer for the crosschain keeper
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		// Set the chain ids we want to use to be valid
-		params := observertypes.DefaultParams()
-		zk.ObserverKeeper.SetParams(
-			ctx, params,
-		)
-
 		// Convert the validator address into a user address.
 		validators := k.GetStakingKeeper().GetAllValidators(ctx)
 		validatorAddress := validators[0].OperatorAddress

@@ -132,7 +132,6 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 	if len(ballots) > 0 {
 		state.Ballots = ballots
 	}
-	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observertypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
 
 	// set tss

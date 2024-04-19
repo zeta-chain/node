@@ -18,9 +18,14 @@ func (k Keeper) GetBlockRewardComponents(ctx sdk.Context) (sdk.Dec, sdk.Dec, sdk
 }
 
 func (k Keeper) GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper) sdk.Dec {
-	targetBondRatio := sdk.MustNewDecFromStr(k.GetParams(ctx).TargetBondRatio)
-	maxBondFactor := sdk.MustNewDecFromStr(k.GetParams(ctx).MaxBondFactor)
-	minBondFactor := sdk.MustNewDecFromStr(k.GetParams(ctx).MinBondFactor)
+	params, found := k.GetParams(ctx)
+	if !found {
+		// TODO: what to return here?
+		return sdk.ZeroDec()
+	}
+	targetBondRatio := sdk.MustNewDecFromStr(params.TargetBondRatio)
+	maxBondFactor := sdk.MustNewDecFromStr(params.MaxBondFactor)
+	minBondFactor := sdk.MustNewDecFromStr(params.MinBondFactor)
 
 	currentBondedRatio := stakingKeeper.BondedRatio(ctx)
 	// Bond factor ranges between minBondFactor (0.75) to maxBondFactor (1.25)
@@ -38,10 +43,15 @@ func (k Keeper) GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper
 }
 
 func (k Keeper) GetDurationFactor(ctx sdk.Context) sdk.Dec {
-	avgBlockTime := sdk.MustNewDecFromStr(k.GetParams(ctx).AvgBlockTime)
+	params, found := k.GetParams(ctx)
+	if !found {
+		// TODO: what to return here?
+		return sdk.ZeroDec()
+	}
+	avgBlockTime := sdk.MustNewDecFromStr(params.AvgBlockTime)
 	NumberOfBlocksInAMonth := sdk.NewDec(types.SecsInMonth).Quo(avgBlockTime)
 	monthFactor := sdk.NewDec(ctx.BlockHeight()).Quo(NumberOfBlocksInAMonth)
-	logValueDec := sdk.MustNewDecFromStr(k.GetParams(ctx).DurationFactorConstant)
+	logValueDec := sdk.MustNewDecFromStr(params.DurationFactorConstant)
 	// month * log(1 + 0.02 / 12)
 	fractionNumerator := monthFactor.Mul(logValueDec)
 	// (month * log(1 + 0.02 / 12) ) + 1

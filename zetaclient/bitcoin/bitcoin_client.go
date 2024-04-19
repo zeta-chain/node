@@ -353,9 +353,9 @@ func (ob *BTCChainClient) WatchInTx() {
 func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
-	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
-		bn = res.BlockHeaderState.LatestHeight + 1
+	res, err := ob.zetaClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
+		bn = res.ChainState.LatestHeight + 1
 	}
 	if bn > tip {
 		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
@@ -372,7 +372,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
-	_, err = ob.zetaClient.PostAddBlockHeader(
+	_, err = ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,
@@ -436,8 +436,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		// add block header to zetabridge
 		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		flags := ob.coreContext.GetCrossChainFlags()
-		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+		verificationFlags := ob.coreContext.GetVerificationFlags()
+		if verificationFlags.BtcTypeChainEnabled {
 			err = ob.postBlockHeader(bn)
 			if err != nil {
 				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
@@ -504,15 +504,15 @@ func (ob *BTCChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
-// IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
-func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+// IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
+func (ob *BTCChainClient) IsOutboundProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	params := *cctx.GetCurrentOutTxParam()
 	sendHash := cctx.Index
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
 
 	// get broadcasted outtx and tx result
 	outTxID := ob.GetTxID(nonce)
-	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
+	logger.Info().Msgf("IsOutboundProcessed %s", outTxID)
 
 	ob.Mu.Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outTxID]
@@ -537,7 +537,7 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		if txResult == nil { // check failed, try again next time
 			return false, false, nil
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
-			ob.logger.OutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
+			ob.logger.OutTx.Info().Msgf("IsOutboundProcessed: outTx %s is still in mempool", outTxID)
 			return true, false, nil
 		}
 		// included
@@ -548,7 +548,7 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		if res == nil {
 			return false, false, nil
 		}
-		ob.logger.OutTx.Info().Msgf("IsSendOutTxProcessed: setIncludedTx succeeded for outTx %s", outTxID)
+		ob.logger.OutTx.Info().Msgf("IsOutboundProcessed: setIncludedTx succeeded for outTx %s", outTxID)
 	}
 
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutTx()
@@ -573,9 +573,9 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		coin.CoinType_Gas,
 	)
 	if err != nil {
-		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
+		logger.Error().Err(err).Msgf("IsOutboundProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
 	} else if zetaHash != "" {
-		logger.Info().Msgf("IsSendOutTxProcessed: confirmed Bitcoin outTx %s, zeta tx hash %s nonce %d ballot %s", res.TxID, zetaHash, nonce, ballot)
+		logger.Info().Msgf("IsOutboundProcessed: confirmed Bitcoin outTx %s, zeta tx hash %s nonce %d ballot %s", res.TxID, zetaHash, nonce, ballot)
 	}
 	return true, true, nil
 }

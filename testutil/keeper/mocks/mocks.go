@@ -4,6 +4,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -39,6 +40,11 @@ type CrosschainFungibleKeeper interface {
 //go:generate mockery --name CrosschainAuthorityKeeper --filename authority.go --case underscore --output ./crosschain
 type CrosschainAuthorityKeeper interface {
 	crosschaintypes.AuthorityKeeper
+}
+
+//go:generate mockery --name CrosschainLightclientKeeper --filename lightclient.go --case underscore --output ./crosschain
+type CrosschainLightclientKeeper interface {
+	crosschaintypes.LightclientKeeper
 }
 
 /**
@@ -111,4 +117,18 @@ type ObserverSlashingKeeper interface {
 //go:generate mockery --name ObserverAuthorityKeeper --filename authority.go --case underscore --output ./observer
 type ObserverAuthorityKeeper interface {
 	observertypes.AuthorityKeeper
+}
+
+//go:generate mockery --name ObserverLightclientKeeper --filename lightclient.go --case underscore --output ./observer
+type ObserverLightclientKeeper interface {
+	observertypes.LightclientKeeper
+}
+
+/**
+ * Lightclient Mocks
+ */
+
+//go:generate mockery --name LightclientAuthorityKeeper --filename authority.go --case underscore --output ./lightclient
+type LightclientAuthorityKeeper interface {
+	lightclienttypes.AuthorityKeeper
 }

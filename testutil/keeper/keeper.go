@@ -49,6 +49,7 @@ import (
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
 	observermodule "github.com/zeta-chain/zetacore/x/observer"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -93,11 +94,12 @@ type SDKKeepers struct {
 
 // ZetaKeepers is a struct containing Zeta module keepers for test purposes
 type ZetaKeepers struct {
-	AuthorityKeeper  *authoritykeeper.Keeper
-	CrosschainKeeper *crosschainkeeper.Keeper
-	EmissionsKeeper  *emissionskeeper.Keeper
-	FungibleKeeper   *fungiblekeeper.Keeper
-	ObserverKeeper   *observerkeeper.Keeper
+	AuthorityKeeper   *authoritykeeper.Keeper
+	CrosschainKeeper  *crosschainkeeper.Keeper
+	EmissionsKeeper   *emissionskeeper.Keeper
+	FungibleKeeper    *fungiblekeeper.Keeper
+	ObserverKeeper    *observerkeeper.Keeper
+	LightclientKeeper *lightclientkeeper.Keeper
 }
 
 var moduleAccountPerms = map[string][]string{

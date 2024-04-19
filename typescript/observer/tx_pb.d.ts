@@ -7,7 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { ObserverUpdateReason } from "./observer_pb.js";
 import type { HeaderData } from "../pkg/proofs/proofs_pb.js";
-import type { ChainParams, Params } from "./params_pb.js";
+import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
@@ -71,9 +71,9 @@ export declare class MsgUpdateObserverResponse extends Message<MsgUpdateObserver
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgAddBlockHeader
+ * @generated from message zetachain.zetacore.observer.MsgVoteBlockHeader
  */
-export declare class MsgAddBlockHeader extends Message<MsgAddBlockHeader> {
+export declare class MsgVoteBlockHeader extends Message<MsgVoteBlockHeader> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -99,38 +99,48 @@ export declare class MsgAddBlockHeader extends Message<MsgAddBlockHeader> {
    */
   header?: HeaderData;
 
-  constructor(data?: PartialMessage<MsgAddBlockHeader>);
+  constructor(data?: PartialMessage<MsgVoteBlockHeader>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgAddBlockHeader";
+  static readonly typeName = "zetachain.zetacore.observer.MsgVoteBlockHeader";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddBlockHeader;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteBlockHeader;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddBlockHeader;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteBlockHeader;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddBlockHeader;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteBlockHeader;
 
-  static equals(a: MsgAddBlockHeader | PlainMessage<MsgAddBlockHeader> | undefined, b: MsgAddBlockHeader | PlainMessage<MsgAddBlockHeader> | undefined): boolean;
+  static equals(a: MsgVoteBlockHeader | PlainMessage<MsgVoteBlockHeader> | undefined, b: MsgVoteBlockHeader | PlainMessage<MsgVoteBlockHeader> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgAddBlockHeaderResponse
+ * @generated from message zetachain.zetacore.observer.MsgVoteBlockHeaderResponse
  */
-export declare class MsgAddBlockHeaderResponse extends Message<MsgAddBlockHeaderResponse> {
-  constructor(data?: PartialMessage<MsgAddBlockHeaderResponse>);
+export declare class MsgVoteBlockHeaderResponse extends Message<MsgVoteBlockHeaderResponse> {
+  /**
+   * @generated from field: bool ballot_created = 1;
+   */
+  ballotCreated: boolean;
+
+  /**
+   * @generated from field: bool vote_finalized = 2;
+   */
+  voteFinalized: boolean;
+
+  constructor(data?: PartialMessage<MsgVoteBlockHeaderResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgAddBlockHeaderResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgVoteBlockHeaderResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddBlockHeaderResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteBlockHeaderResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddBlockHeaderResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteBlockHeaderResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddBlockHeaderResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteBlockHeaderResponse;
 
-  static equals(a: MsgAddBlockHeaderResponse | PlainMessage<MsgAddBlockHeaderResponse> | undefined, b: MsgAddBlockHeaderResponse | PlainMessage<MsgAddBlockHeaderResponse> | undefined): boolean;
+  static equals(a: MsgVoteBlockHeaderResponse | PlainMessage<MsgVoteBlockHeaderResponse> | undefined, b: MsgVoteBlockHeaderResponse | PlainMessage<MsgVoteBlockHeaderResponse> | undefined): boolean;
 }
 
 /**
@@ -580,53 +590,5 @@ export declare class MsgVoteTSSResponse extends Message<MsgVoteTSSResponse> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteTSSResponse;
 
   static equals(a: MsgVoteTSSResponse | PlainMessage<MsgVoteTSSResponse> | undefined, b: MsgVoteTSSResponse | PlainMessage<MsgVoteTSSResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.MsgUpdateParams
- */
-export declare class MsgUpdateParams extends Message<MsgUpdateParams> {
-  /**
-   * @generated from field: string authority = 1;
-   */
-  authority: string;
-
-  /**
-   * @generated from field: zetachain.zetacore.observer.Params params = 2;
-   */
-  params?: Params;
-
-  constructor(data?: PartialMessage<MsgUpdateParams>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateParams";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateParams;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateParams;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateParams;
-
-  static equals(a: MsgUpdateParams | PlainMessage<MsgUpdateParams> | undefined, b: MsgUpdateParams | PlainMessage<MsgUpdateParams> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.MsgUpdateParamsResponse
- */
-export declare class MsgUpdateParamsResponse extends Message<MsgUpdateParamsResponse> {
-  constructor(data?: PartialMessage<MsgUpdateParamsResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateParamsResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateParamsResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateParamsResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateParamsResponse;
-
-  static equals(a: MsgUpdateParamsResponse | PlainMessage<MsgUpdateParamsResponse> | undefined, b: MsgUpdateParamsResponse | PlainMessage<MsgUpdateParamsResponse> | undefined): boolean;
 }
 

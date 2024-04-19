@@ -1,6 +1,7 @@
 package emissions
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 
@@ -20,7 +21,10 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	}
 
 	// Get the distribution of rewards
-	params := keeper.GetParams(ctx)
+	params, found := keeper.GetParams(ctx)
+	if !found {
+		return
+	}
 	validatorRewards, observerRewards, tssSignerRewards := types.GetRewardsDistributions(params)
 
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
@@ -68,14 +72,23 @@ func DistributeObserverRewards(
 	amount sdkmath.Int,
 	keeper keeper.Keeper,
 ) error {
-	slashAmount := keeper.GetParams(ctx).ObserverSlashAmount
+	params, found := keeper.GetParams(ctx)
+	if !found {
+		return errors.New("params not found")
+	}
+	slashAmount := params.ObserverSlashAmount
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)
 	err := keeper.GetBankKeeper().SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
 	if err != nil {
 		return err
 	}
-	ballotIdentifiers := keeper.GetObserverKeeper().GetMaturedBallotList(ctx)
+	maturityBlocks := params.BallotMaturityBlocks
+	list, found := keeper.GetObserverKeeper().GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)
+	ballotIdentifiers := []string{}
+	if found {
+		ballotIdentifiers = list.BallotsIndexList
+	}
 	// do not distribute rewards if no ballots are matured, the rewards can accumulate in the undistributed pool
 	if len(ballotIdentifiers) == 0 {
 		return nil

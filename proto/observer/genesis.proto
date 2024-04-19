@@ -22,7 +22,6 @@ message GenesisState {
   ObserverSet observers = 2 [(gogoproto.nullable) = false];
   repeated NodeAccount nodeAccountList = 3;
   CrosschainFlags crosschain_flags = 4;
-  Params params = 5;
   Keygen keygen = 6;
   LastObserverCount last_observer_count = 7;
   ChainParamsList chain_params_list = 8 [(gogoproto.nullable) = false];

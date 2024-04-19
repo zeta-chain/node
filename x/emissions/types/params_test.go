@@ -92,6 +92,12 @@ func TestValidateObserverSlashAmount(t *testing.T) {
 	require.NoError(t, validateObserverSlashAmount(sdkmath.NewInt(10)))
 }
 
+func TestValidateBallotMaturityBlocks(t *testing.T) {
+	require.Error(t, validateBallotMaturityBlocks("10"))
+	require.Error(t, validateBallotMaturityBlocks(-100))
+	require.NoError(t, validateBallotMaturityBlocks(int64(100)))
+}
+
 func TestValidate(t *testing.T) {
 	t.Run("should validate", func(t *testing.T) {
 		params := NewParams()
@@ -137,6 +143,12 @@ func TestValidate(t *testing.T) {
 	t.Run("should error for invalid observer slash amount", func(t *testing.T) {
 		params := NewParams()
 		params.ObserverSlashAmount = sdkmath.NewInt(-10)
+		require.Error(t, params.Validate())
+	})
+
+	t.Run("should error for invalid ballot maturity blocks", func(t *testing.T) {
+		params := NewParams()
+		params.BallotMaturityBlocks = -100
 		require.Error(t, params.Validate())
 	})
 }

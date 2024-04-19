@@ -5,15 +5,86 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	"github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
+
+// getAppContext creates an app context for unit tests
+func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainParams) (*appcontext.AppContext, config.EVMConfig) {
+	// create config
+	cfg := config.NewConfig()
+	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
+		Chain:    evmChain,
+		Endpoint: "http://localhost:8545",
+	}
+	// create core context
+	coreCtx := corecontext.NewZetaCoreContext(cfg)
+	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
+	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+
+	// feed chain params
+	coreCtx.Update(
+		&observertypes.Keygen{},
+		[]chains.Chain{evmChain},
+		evmChainParamsMap,
+		nil,
+		"",
+		*sample.CrosschainFlags(),
+		sample.VerificationFlags(),
+		true,
+		zerolog.Logger{},
+	)
+	// create app context
+	appCtx := appcontext.NewAppContext(coreCtx, cfg)
+	return appCtx, cfg.EVMChainConfigs[evmChain.ChainId]
+}
+
+// MockEVMClient creates a mock ChainClient with custom chain, TSS, params etc
+func MockEVMClient(
+	t *testing.T,
+	chain chains.Chain,
+	evmClient interfaces.EVMRPCClient,
+	evmJSONRPC interfaces.EVMJSONRPCClient,
+	zetaBridge interfaces.ZetaCoreBridger,
+	tss interfaces.TSSSigner,
+	lastBlock uint64,
+	params observertypes.ChainParams) *evm.ChainClient {
+	// use default mock bridge if not provided
+	if zetaBridge == nil {
+		zetaBridge = stub.NewMockZetaCoreBridge()
+	}
+	// use default mock tss if not provided
+	if tss == nil {
+		tss = stub.NewTSSMainnet()
+	}
+	// create app context
+	appCtx, evmCfg := getAppContext(chain, &params)
+
+	// create chain client
+	client, err := evm.NewEVMChainClient(appCtx, zetaBridge, tss, "", common.ClientLogger{}, evmCfg, nil)
+	require.NoError(t, err)
+	client.WithEvmClient(evmClient)
+	client.WithEvmJSONRPC(evmJSONRPC)
+	client.SetLastBlockHeight(lastBlock)
+
+	return client
+}
 
 func TestEVM_BlockCache(t *testing.T) {
 	// create client

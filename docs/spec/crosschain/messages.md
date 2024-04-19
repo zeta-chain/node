@@ -6,8 +6,6 @@ AddToOutTxTracker adds a new record to the outbound transaction tracker.
 only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
 
-Authorized: admin policy group 1, observer.
-
 ```proto
 message MsgAddToOutTxTracker {
 	string creator = 1;
@@ -23,8 +21,6 @@ message MsgAddToOutTxTracker {
 ## MsgAddToInTxTracker
 
 AddToInTxTracker adds a new record to the inbound transaction tracker.
-
-Authorized: admin policy group 1, observer.
 
 ```proto
 message MsgAddToInTxTracker {
@@ -52,16 +48,16 @@ message MsgRemoveFromOutTxTracker {
 }
 ```
 
-## MsgGasPriceVoter
+## MsgVoteGasPrice
 
-GasPriceVoter submits information about the connected chain's gas price at a specific block
+VoteGasPrice submits information about the connected chain's gas price at a specific block
 height. Gas price submitted by each validator is recorded separately and a
 median index is updated.
 
 Only observer validators are authorized to broadcast this message.
 
 ```proto
-message MsgGasPriceVoter {
+message MsgVoteGasPrice {
 	string creator = 1;
 	int64 chain_id = 2;
 	uint64 price = 3;

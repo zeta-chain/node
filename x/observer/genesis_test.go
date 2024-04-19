@@ -13,10 +13,8 @@ import (
 
 func TestGenesis(t *testing.T) {
 	t.Run("genState fields defined", func(t *testing.T) {
-		params := types.DefaultParams()
 		tss := sample.Tss()
 		genesisState := types.GenesisState{
-			Params:    &params,
 			Tss:       &tss,
 			BlameList: sample.BlameRecordsList(t, 10),
 			Ballots: []*types.Ballot{
@@ -65,7 +63,6 @@ func TestGenesis(t *testing.T) {
 		got := observer.ExportGenesis(ctx, *k)
 		require.NotNil(t, got)
 
-		defaultParams := types.DefaultParams()
 		btcChainParams := types.GetDefaultBtcRegtestChainParams()
 		btcChainParams.IsSupported = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
@@ -80,7 +77,6 @@ func TestGenesis(t *testing.T) {
 			},
 		}
 		expectedGenesisState := types.GenesisState{
-			Params:            &defaultParams,
 			CrosschainFlags:   types.DefaultCrosschainFlags(),
 			ChainParamsList:   localnetChainParams,
 			Tss:               &types.TSS{},
@@ -103,7 +99,6 @@ func TestGenesis(t *testing.T) {
 		got := observer.ExportGenesis(ctx, *k)
 		require.NotNil(t, got)
 
-		defaultParams := types.DefaultParams()
 		btcChainParams := types.GetDefaultBtcRegtestChainParams()
 		btcChainParams.IsSupported = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
@@ -121,7 +116,6 @@ func TestGenesis(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, pendingNonces)
 		expectedGenesisState := types.GenesisState{
-			Params:            &defaultParams,
 			CrosschainFlags:   types.DefaultCrosschainFlags(),
 			ChainParamsList:   localnetChainParams,
 			Tss:               &tss,
@@ -140,9 +134,7 @@ func TestGenesis(t *testing.T) {
 		got := observer.ExportGenesis(ctx, *k)
 		require.NotNil(t, got)
 
-		params := k.GetParams(ctx)
 		expectedGenesisState := types.GenesisState{
-			Params:            &params,
 			CrosschainFlags:   types.DefaultCrosschainFlags(),
 			ChainParamsList:   types.ChainParamsList{},
 			Tss:               &types.TSS{},

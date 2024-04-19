@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
 const releaseVersion = "v15"
@@ -44,8 +44,6 @@ func SetupHandlers(app *App) {
 			keyTable = crisistypes.ParamKeyTable() //nolint:staticcheck
 		case emissionstypes.ModuleName:
 			keyTable = emissionstypes.ParamKeyTable()
-		case observertypes.ModuleName:
-			keyTable = observertypes.ParamKeyTable()
 		default:
 			continue
 		}
@@ -73,7 +71,6 @@ func SetupHandlers(app *App) {
 		VersionMigrator{v: vm}.TriggerMigration(govtypes.ModuleName)
 		VersionMigrator{v: vm}.TriggerMigration(crisistypes.ModuleName)
 
-		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
@@ -85,7 +82,7 @@ func SetupHandlers(app *App) {
 	}
 	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{authoritytypes.ModuleName, consensustypes.ModuleName, crisistypes.ModuleName},
+			Added: []string{authoritytypes.ModuleName, lightclienttypes.ModuleName, consensustypes.ModuleName, crisistypes.ModuleName},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,

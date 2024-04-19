@@ -36,7 +36,6 @@ zetacored query observer [flags]
 * [zetacored query observer list-observer-set](zetacored_query_observer_list-observer-set.md)	 - Query observer set
 * [zetacored query observer list-pending-nonces](zetacored_query_observer_list-pending-nonces.md)	 - shows a chainNonces
 * [zetacored query observer list-tss-history](zetacored_query_observer_list-tss-history.md)	 - show historical list of TSS
-* [zetacored query observer params](zetacored_query_observer_params.md)	 - shows the parameters of the module
 * [zetacored query observer show-ballot](zetacored_query_observer_show-ballot.md)	 - Query BallotByIdentifier
 * [zetacored query observer show-blame](zetacored_query_observer_show-blame.md)	 - Query BlameByIdentifier
 * [zetacored query observer show-chain-nonces](zetacored_query_observer_show-chain-nonces.md)	 - shows a chainNonces

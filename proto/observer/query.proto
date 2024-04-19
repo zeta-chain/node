@@ -6,7 +6,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
-import "observer/block_header.proto";
 import "observer/chain_nonces.proto";
 import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
@@ -22,10 +21,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Parameters queries the parameters of the module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/params";
-  }
   // Query if a voter has voted for a ballot
   rpc HasVoted(QueryHasVotedRequest) returns (QueryHasVotedResponse) {
     option (google.api.http).get = "/zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}";
@@ -91,23 +86,6 @@ service Query {
   // Queries a list of VoterByIdentifier items.
   rpc BlamesByChainAndNonce(QueryBlameByChainAndNonceRequest) returns (QueryBlameByChainAndNonceResponse) {
     option (google.api.http).get = "/zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}";
-  }
-
-  rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_all_block_headers";
-  }
-
-  rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_block_header_by_hash/{block_hash}";
-  }
-
-  rpc GetBlockHeaderStateByChain(QueryGetBlockHeaderStateRequest) returns (QueryGetBlockHeaderStateResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_block_header_state_by_chain_id/{chain_id}";
-  }
-
-  // merkle proof verification
-  rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/prove";
   }
 
   // Queries a list of GetTssAddress items.
@@ -213,26 +191,6 @@ message QueryTssHistoryRequest {
 message QueryTssHistoryResponse {
   repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryProveRequest {
-  int64 chain_id = 1;
-  string tx_hash = 2;
-  pkg.proofs.Proof proof = 3;
-  string block_hash = 4;
-  int64 tx_index = 5;
-}
-
-message QueryProveResponse {
-  bool valid = 1;
-}
-
-message QueryParamsRequest {}
-
-// QueryParamsResponse is response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  // params holds all the parameters of this module.
-  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryHasVotedRequest {
@@ -344,29 +302,4 @@ message QueryBlameByChainAndNonceRequest {
 
 message QueryBlameByChainAndNonceResponse {
   repeated Blame blame_info = 1;
-}
-
-message QueryAllBlockHeaderRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllBlockHeaderResponse {
-  repeated pkg.proofs.BlockHeader block_headers = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryGetBlockHeaderByHashRequest {
-  bytes block_hash = 1;
-}
-
-message QueryGetBlockHeaderByHashResponse {
-  pkg.proofs.BlockHeader block_header = 1;
-}
-
-message QueryGetBlockHeaderStateRequest {
-  int64 chain_id = 1;
-}
-
-message QueryGetBlockHeaderStateResponse {
-  BlockHeaderState block_header_state = 1;
 }

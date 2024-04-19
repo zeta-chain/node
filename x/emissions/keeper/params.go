@@ -6,14 +6,14 @@ import (
 )
 
 // GetParams get all parameters
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.KeyPrefix(types.ParamsKey))
 	if bz == nil {
-		return params
+		return types.Params{}, false
 	}
 	k.cdc.MustUnmarshal(bz, &params)
-	return params
+	return params, true
 }
 
 // SetParams set the params
