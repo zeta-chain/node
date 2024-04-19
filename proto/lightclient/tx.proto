@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.lightclient;
+package lightclient;
 
 import "gogoproto/gogo.proto";
 import "lightclient/verification_flags.proto";

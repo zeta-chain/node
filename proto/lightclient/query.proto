@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.lightclient;
+package lightclient;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
@@ -42,7 +42,7 @@ message QueryAllBlockHeaderRequest {
 }
 
 message QueryAllBlockHeaderResponse {
-  repeated proofs.BlockHeader block_headers = 1 [(gogoproto.nullable) = false];
+  repeated pkg.proofs.BlockHeader block_headers = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -51,7 +51,7 @@ message QueryGetBlockHeaderRequest {
 }
 
 message QueryGetBlockHeaderResponse {
-  proofs.BlockHeader block_header = 1;
+  pkg.proofs.BlockHeader block_header = 1;
 }
 
 message QueryAllChainStateRequest {
@@ -74,7 +74,7 @@ message QueryGetChainStateResponse {
 message QueryProveRequest {
   int64 chain_id = 1;
   string tx_hash = 2;
-  proofs.Proof proof = 3;
+  pkg.proofs.Proof proof = 3;
   string block_hash = 4;
   int64 tx_index = 5;
 }

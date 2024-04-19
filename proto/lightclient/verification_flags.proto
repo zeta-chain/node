@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.lightclient;
+package lightclient;
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 
