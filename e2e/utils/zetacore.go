@@ -49,8 +49,16 @@ func WaitCctxsMinedByInTxHash(
 
 	// fetch cctxs by inTxHash
 	for i := 0; ; i++ {
+		// declare cctxs here so we can print the last fetched one if we reach timeout
+		var cctxs []*crosschaintypes.CrossChainTx
+
 		if time.Since(startTime) > timeout {
-			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s", inTxHash))
+			cctxMessage := ""
+			if len(cctxs) > 0 {
+				cctxMessage = fmt.Sprintf(", last cctx: %v", cctxs[0].String())
+			}
+
+			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s%s", inTxHash, cctxMessage))
 		}
 		time.Sleep(1 * time.Second)
 
@@ -76,7 +84,7 @@ func WaitCctxsMinedByInTxHash(
 			}
 			continue
 		}
-		cctxs := make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
+		cctxs = make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
 			cctx := cctx
