@@ -17,28 +17,28 @@ func NewMigrator(keeper Keeper) Migrator {
 }
 
 // Migrate1to2 migrates the store from consensus version 1 to 2
-func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+func (m Migrator) Migrate1to2(_ sdk.Context) error {
 	return nil
 }
 
 // Migrate2to3 migrates the store from consensus version 2 to 3
-func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+func (m Migrator) Migrate2to3(_ sdk.Context) error {
 	return nil
 }
 
-func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+func (m Migrator) Migrate3to4(_ sdk.Context) error {
 	return nil
 }
 
-func (m Migrator) Migrate4to5(ctx sdk.Context) error {
+func (m Migrator) Migrate4to5(_ sdk.Context) error {
 	return nil
 }
 
-func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+func (m Migrator) Migrate5to6(_ sdk.Context) error {
 	return nil
 }
 
 // Migrate6to7 migrates the store from consensus version 6 to 7
-func (m Migrator) Migrate6to7(ctx sdk.Context) error {
+func (m Migrator) Migrate6to7(_ sdk.Context) error {
 	return nil
 }

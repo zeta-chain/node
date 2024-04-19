@@ -47,6 +47,7 @@ func TestMigrate(t *testing.T) {
 		params, found := k.GetParams(ctx)
 		require.True(t, found)
 		legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
+		legacyParams.BallotMaturityBlocks = 100
 		require.Equal(t, legacyParams, params)
 	})
 
