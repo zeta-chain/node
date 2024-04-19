@@ -37,7 +37,7 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 	if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 		cctx.SetAbort(err.Error())
 		return
-	} else if err != nil && isContractReverted { // contract call reverted; should refund
+	} else if err != nil && isContractReverted { // contract call reverted; should refund via a revert tx
 		revertMessage := err.Error()
 		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
 		if senderChain == nil {

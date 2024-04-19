@@ -39,20 +39,23 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 	}
 
 	if inboundCoinType == coin.CoinType_Zeta {
+		// In case of an error
+		// 	- Return true will revert the cctx and create a revert cctx with status PendingRevert
+		// 	- Return false will abort the cctx
 		indexBytes, err := cctx.GetCCTXIndexBytes()
 		if err != nil {
 			return false, err
 		}
 		data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 		if err != nil {
-			return false, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
+			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
 		}
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
-			return true, err // contract reverted; should refunding automatically
+			return true, err
 		} else if err != nil {
-			return false, err // internal error; should abort
+			return false, err
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
