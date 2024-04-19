@@ -57,7 +57,6 @@
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 * [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
 
-
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
