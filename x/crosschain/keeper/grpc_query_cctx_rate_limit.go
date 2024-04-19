@@ -13,9 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// CctxListPendingWithinRateLimit returns a list of pending cctxs that do not exceed the outbound rate limit
+// ListPendingCctxWithinRateLimit returns a list of pending cctxs that do not exceed the outbound rate limit
 // a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
-func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.QueryListCctxPendingWithRateLimitRequest) (*types.QueryListCctxPendingWithRateLimitResponse, error) {
+func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.QueryListPendingCctxWithinRateLimitRequest) (*types.QueryListPendingCctxWithinRateLimitResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -27,6 +27,36 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
+	// define a few variables to be used in the query loops
+	limitExceeded := false
+	totalPending := uint64(0)
+	totalCctxValueInZeta := sdk.NewDec(0)
+	cctxs := make([]*types.CrossChainTx, 0)
+	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+
+	// check rate limit flags to decide if we should apply rate limit
+	applyLimit := true
+	rateLimitFlags, found := k.GetRateLimiterFlags(ctx)
+	if !found || !rateLimitFlags.Enabled {
+		applyLimit = false
+	}
+
+	// fallback to non-rate-limited query if rate limiter is disabled
+	if !applyLimit {
+		for _, chain := range chains {
+			resp, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chain.ChainId, Limit: limit})
+			if err == nil {
+				cctxs = append(cctxs, resp.CrossChainTx...)
+				totalPending += resp.TotalPending
+			}
+		}
+		return &types.QueryListPendingCctxWithinRateLimitResponse{
+			CrossChainTx:      cctxs,
+			TotalPending:      totalPending,
+			RateLimitExceeded: false,
+		}, nil
+	}
+
 	// get current height and tss
 	height := ctx.BlockHeight()
 	if height <= 0 {
@@ -35,13 +65,6 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return nil, observertypes.ErrTssNotFound
-	}
-
-	// check rate limit flags to decide if we should apply rate limit
-	applyLimit := true
-	rateLimitFlags, found := k.GetRateLimiterFlags(ctx)
-	if !found || !rateLimitFlags.Enabled {
-		applyLimit = false
 	}
 
 	// calculate the rate limiter sliding window left boundary (inclusive)
@@ -61,13 +84,6 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 		rateLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
 	}
 
-	// define a few variables to be used in the below loops
-	limitExceeded := false
-	totalPending := uint64(0)
-	totalCctxValueInZeta := sdk.NewDec(0)
-	cctxs := make([]*types.CrossChainTx, 0)
-	pendingNoncesMap := make(map[int64]*observertypes.PendingNonces)
-
 	// the criteria to stop adding cctxs to the rpc response
 	maxCCTXsReached := func() bool {
 		// #nosec G701 len always positive
@@ -76,7 +92,7 @@ func (k Keeper) CctxListPendingWithinRateLimit(c context.Context, req *types.Que
 
 	// query pending nonces for each foreign chain
 	// Note: The pending nonces could change during the RPC call, so query them beforehand
-	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+	pendingNoncesMap := make(map[int64]*observertypes.PendingNonces)
 	for _, chain := range chains {
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
@@ -107,22 +123,16 @@ LoopBackwards:
 
 			// We should at least go backwards by 1000 nonces to pick up missed pending cctxs
 			// We might go even further back if rate limiter is enabled and the endNonce hasn't hit the left window boundary yet
-			// There are three criteria to stop scanning backwards:
-			// criteria #1: if rate limiter is disabled, we should stop exactly on the `endNonce`
-			if !applyLimit && nonce < endNonce {
+			// There are two criteria to stop scanning backwards:
+			// criteria #1: we'll stop at the left window boundary if the `endNonce` hasn't hit it yet
+			// #nosec G701 always positive
+			if nonce < endNonce && cctx.InboundTxParams.InboundTxObservedExternalHeight < uint64(leftWindowBoundary) {
 				break
 			}
-			if applyLimit {
-				// criteria #2: if rate limiter is enabled, we'll stop at the left window boundary if the `endNonce` hasn't hit it yet
-				// #nosec G701 always positive
-				if nonce < endNonce && cctx.InboundTxParams.InboundTxObservedExternalHeight < uint64(leftWindowBoundary) {
-					break
-				}
-				// criteria #3: if rate limiter is enabled, we should finish the RPC call if the rate limit is exceeded
-				if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
-					limitExceeded = true
-					break LoopBackwards
-				}
+			// criteria #2: we should finish the RPC call if the rate limit is exceeded
+			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
+				limitExceeded = true
+				break LoopBackwards
 			}
 
 			// only take a `limit` number of pending cctxs as result but still count the total pending cctxs
@@ -156,8 +166,8 @@ LoopForwards:
 			if maxCCTXsReached() {
 				break LoopForwards
 			}
-			// criteria #3: if rate limiter is enabled, we should finish the RPC call if the rate limit is exceeded
-			if applyLimit && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
+			// criteria #2: we should finish the RPC call if the rate limit is exceeded
+			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
 				break LoopForwards
 			}
@@ -165,7 +175,7 @@ LoopForwards:
 		}
 	}
 
-	return &types.QueryListCctxPendingWithRateLimitResponse{
+	return &types.QueryListPendingCctxWithinRateLimitResponse{
 		CrossChainTx:      cctxs,
 		TotalPending:      totalPending,
 		RateLimitExceeded: limitExceeded,

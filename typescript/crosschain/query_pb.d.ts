@@ -814,9 +814,9 @@ export declare class QueryAllCctxResponse extends Message<QueryAllCctxResponse> 
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryListCctxPendingRequest
+ * @generated from message zetachain.zetacore.crosschain.QueryListPendingCctxRequest
  */
-export declare class QueryListCctxPendingRequest extends Message<QueryListCctxPendingRequest> {
+export declare class QueryListPendingCctxRequest extends Message<QueryListPendingCctxRequest> {
   /**
    * @generated from field: int64 chain_id = 1;
    */
@@ -827,25 +827,25 @@ export declare class QueryListCctxPendingRequest extends Message<QueryListCctxPe
    */
   limit: number;
 
-  constructor(data?: PartialMessage<QueryListCctxPendingRequest>);
+  constructor(data?: PartialMessage<QueryListPendingCctxRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryListCctxPendingRequest";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryListPendingCctxRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListCctxPendingRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListPendingCctxRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListCctxPendingRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListPendingCctxRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListCctxPendingRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListPendingCctxRequest;
 
-  static equals(a: QueryListCctxPendingRequest | PlainMessage<QueryListCctxPendingRequest> | undefined, b: QueryListCctxPendingRequest | PlainMessage<QueryListCctxPendingRequest> | undefined): boolean;
+  static equals(a: QueryListPendingCctxRequest | PlainMessage<QueryListPendingCctxRequest> | undefined, b: QueryListPendingCctxRequest | PlainMessage<QueryListPendingCctxRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryListCctxPendingResponse
+ * @generated from message zetachain.zetacore.crosschain.QueryListPendingCctxResponse
  */
-export declare class QueryListCctxPendingResponse extends Message<QueryListCctxPendingResponse> {
+export declare class QueryListPendingCctxResponse extends Message<QueryListPendingCctxResponse> {
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTx = 1;
    */
@@ -856,49 +856,49 @@ export declare class QueryListCctxPendingResponse extends Message<QueryListCctxP
    */
   totalPending: bigint;
 
-  constructor(data?: PartialMessage<QueryListCctxPendingResponse>);
+  constructor(data?: PartialMessage<QueryListPendingCctxResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryListCctxPendingResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryListPendingCctxResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListCctxPendingResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListPendingCctxResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListCctxPendingResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListPendingCctxResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListCctxPendingResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListPendingCctxResponse;
 
-  static equals(a: QueryListCctxPendingResponse | PlainMessage<QueryListCctxPendingResponse> | undefined, b: QueryListCctxPendingResponse | PlainMessage<QueryListCctxPendingResponse> | undefined): boolean;
+  static equals(a: QueryListPendingCctxResponse | PlainMessage<QueryListPendingCctxResponse> | undefined, b: QueryListPendingCctxResponse | PlainMessage<QueryListPendingCctxResponse> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryListCctxPendingWithRateLimitRequest
+ * @generated from message zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitRequest
  */
-export declare class QueryListCctxPendingWithRateLimitRequest extends Message<QueryListCctxPendingWithRateLimitRequest> {
+export declare class QueryListPendingCctxWithinRateLimitRequest extends Message<QueryListPendingCctxWithinRateLimitRequest> {
   /**
-   * @generated from field: uint32 limit = 2;
+   * @generated from field: uint32 limit = 1;
    */
   limit: number;
 
-  constructor(data?: PartialMessage<QueryListCctxPendingWithRateLimitRequest>);
+  constructor(data?: PartialMessage<QueryListPendingCctxWithinRateLimitRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryListCctxPendingWithRateLimitRequest";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListCctxPendingWithRateLimitRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListPendingCctxWithinRateLimitRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListCctxPendingWithRateLimitRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListPendingCctxWithinRateLimitRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListCctxPendingWithRateLimitRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListPendingCctxWithinRateLimitRequest;
 
-  static equals(a: QueryListCctxPendingWithRateLimitRequest | PlainMessage<QueryListCctxPendingWithRateLimitRequest> | undefined, b: QueryListCctxPendingWithRateLimitRequest | PlainMessage<QueryListCctxPendingWithRateLimitRequest> | undefined): boolean;
+  static equals(a: QueryListPendingCctxWithinRateLimitRequest | PlainMessage<QueryListPendingCctxWithinRateLimitRequest> | undefined, b: QueryListPendingCctxWithinRateLimitRequest | PlainMessage<QueryListPendingCctxWithinRateLimitRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryListCctxPendingWithRateLimitResponse
+ * @generated from message zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitResponse
  */
-export declare class QueryListCctxPendingWithRateLimitResponse extends Message<QueryListCctxPendingWithRateLimitResponse> {
+export declare class QueryListPendingCctxWithinRateLimitResponse extends Message<QueryListPendingCctxWithinRateLimitResponse> {
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx cross_chain_tx = 1;
    */
@@ -914,19 +914,19 @@ export declare class QueryListCctxPendingWithRateLimitResponse extends Message<Q
    */
   rateLimitExceeded: boolean;
 
-  constructor(data?: PartialMessage<QueryListCctxPendingWithRateLimitResponse>);
+  constructor(data?: PartialMessage<QueryListPendingCctxWithinRateLimitResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryListCctxPendingWithRateLimitResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListCctxPendingWithRateLimitResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListPendingCctxWithinRateLimitResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListCctxPendingWithRateLimitResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListPendingCctxWithinRateLimitResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListCctxPendingWithRateLimitResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListPendingCctxWithinRateLimitResponse;
 
-  static equals(a: QueryListCctxPendingWithRateLimitResponse | PlainMessage<QueryListCctxPendingWithRateLimitResponse> | undefined, b: QueryListCctxPendingWithRateLimitResponse | PlainMessage<QueryListCctxPendingWithRateLimitResponse> | undefined): boolean;
+  static equals(a: QueryListPendingCctxWithinRateLimitResponse | PlainMessage<QueryListPendingCctxWithinRateLimitResponse> | undefined, b: QueryListPendingCctxWithinRateLimitResponse | PlainMessage<QueryListPendingCctxWithinRateLimitResponse> | undefined): boolean;
 }
 
 /**

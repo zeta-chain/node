@@ -121,7 +121,7 @@ func (z *MockZetaCoreBridge) ListPendingCctx(_ int64) ([]*cctxtypes.CrossChainTx
 	return []*cctxtypes.CrossChainTx{}, 0, nil
 }
 
-func (z *MockZetaCoreBridge) ListPendingCctxWithRatelimit() ([]*cctxtypes.CrossChainTx, uint64, bool, error) {
+func (z *MockZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*cctxtypes.CrossChainTx, uint64, bool, error) {
 	if z.paused {
 		return nil, 0, false, errors.New(ErrMsgPaused)
 	}

@@ -66,19 +66,19 @@ func createCctxWithNonceRange(
 func TestKeeper_CctxListPending(t *testing.T) {
 	t.Run("should fail for empty req", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		_, err := k.CctxListPending(ctx, nil)
+		_, err := k.ListPendingCctx(ctx, nil)
 		require.ErrorContains(t, err, "invalid request")
 	})
 
 	t.Run("should use max limit if limit is too high", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		_, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{Limit: keeper.MaxPendingCctxs + 1})
+		_, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{Limit: keeper.MaxPendingCctxs + 1})
 		require.ErrorContains(t, err, "tss not found")
 	})
 
 	t.Run("should fail if no TSS", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		_, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{Limit: 1})
+		_, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{Limit: 1})
 		require.ErrorContains(t, err, "tss not found")
 	})
 
@@ -88,7 +88,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		//  set TSS
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
-		_, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{Limit: 1})
+		_, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{Limit: 1})
 		require.ErrorContains(t, err, "pending nonces not found")
 	})
 
@@ -99,13 +99,13 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
 
-		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID, Limit: 100})
+		res, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chainID, Limit: 100})
 		require.NoError(t, err)
 		require.Equal(t, 100, len(res.CrossChainTx))
 		require.EqualValues(t, cctxs[0:100], res.CrossChainTx)
 		require.EqualValues(t, uint64(1000), res.TotalPending)
 
-		res, err = k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID})
+		res, err = k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chainID})
 		require.NoError(t, err)
 		require.Equal(t, keeper.MaxPendingCctxs, len(res.CrossChainTx))
 		require.EqualValues(t, cctxs[0:keeper.MaxPendingCctxs], res.CrossChainTx)
@@ -119,7 +119,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 1100, chainID, tss, zk)
 
-		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID})
+		res, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chainID})
 		require.NoError(t, err)
 		require.Equal(t, 100, len(res.CrossChainTx))
 		require.EqualValues(t, cctxs, res.CrossChainTx)
@@ -144,7 +144,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		cctx2.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, cctx2)
 
-		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID, Limit: 100})
+		res, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chainID, Limit: 100})
 		require.NoError(t, err)
 		require.Equal(t, 100, len(res.CrossChainTx))
 
@@ -173,7 +173,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		cctx2.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, cctx2)
 
-		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID, Limit: 100})
+		res, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chainID, Limit: 100})
 		require.NoError(t, err)
 		require.Equal(t, 100, len(res.CrossChainTx))
 

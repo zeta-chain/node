@@ -26582,53 +26582,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/cctxPending:
-    get:
-      summary: Queries a list of pending cctxs.
-      operationId: Query_CctxListPending
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryListCctxPendingResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: chain_id
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: limit
-          in: query
-          required: false
-          type: integer
-          format: int64
-      tags:
-        - Query
-  /zeta-chain/crosschain/cctxPendingWithRateLimit:
-    get:
-      summary: Queries a list of pending cctxs with rate limit.
-      operationId: Query_CctxListPendingWithinRateLimit
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryListCctxPendingWithRateLimitResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: limit
-          in: query
-          required: false
-          type: integer
-          format: int64
-      tags:
-        - Query
   /zeta-chain/crosschain/convertGasToZeta:
     get:
       operationId: Query_ConvertGasToZeta
@@ -27192,6 +27145,53 @@ paths:
           in: query
           required: false
           type: boolean
+      tags:
+        - Query
+  /zeta-chain/crosschain/pendingCctx:
+    get:
+      summary: Queries a list of pending cctxs.
+      operationId: Query_ListPendingCctx
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryListPendingCctxResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/crosschain/pendingCctxWithinRateLimit:
+    get:
+      summary: Queries a list of pending cctxs within rate limit.
+      operationId: Query_ListPendingCctxWithinRateLimit
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryListPendingCctxWithinRateLimitResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          format: int64
       tags:
         - Query
   /zeta-chain/crosschain/protocolFee:
@@ -53991,7 +53991,7 @@ definitions:
       Height:
         type: string
         format: int64
-  crosschainQueryListCctxPendingResponse:
+  crosschainQueryListPendingCctxResponse:
     type: object
     properties:
       CrossChainTx:
@@ -54002,7 +54002,7 @@ definitions:
       totalPending:
         type: string
         format: uint64
-  crosschainQueryListCctxPendingWithRateLimitResponse:
+  crosschainQueryListPendingCctxWithinRateLimitResponse:
     type: object
     properties:
       cross_chain_tx:

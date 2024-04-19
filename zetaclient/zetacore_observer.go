@@ -191,7 +191,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 
 // getAllPendingCctxWithRatelimit get pending cctxs across all foreign chains with rate limit
 func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.CrossChainTx, error) {
-	cctxList, totalPending, rateLimitExceeded, err := co.bridge.ListPendingCctxWithRatelimit()
+	cctxList, totalPending, rateLimitExceeded, err := co.bridge.ListPendingCctxWithinRatelimit()
 	if err != nil {
 		return nil, err
 	}

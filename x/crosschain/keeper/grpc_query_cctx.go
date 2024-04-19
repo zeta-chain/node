@@ -87,9 +87,9 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 	return &types.QueryGetCctxResponse{CrossChainTx: cctx}, nil
 }
 
-// CctxListPending returns a list of pending cctxs and the total number of pending cctxs
+// ListPendingCctx returns a list of pending cctxs and the total number of pending cctxs
 // a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
-func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendingRequest) (*types.QueryListCctxPendingResponse, error) {
+func (k Keeper) ListPendingCctx(c context.Context, req *types.QueryListPendingCctxRequest) (*types.QueryListPendingCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -154,7 +154,7 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 		cctxs = append(cctxs, cctx)
 	}
 
-	return &types.QueryListCctxPendingResponse{
+	return &types.QueryListPendingCctxResponse{
 		CrossChainTx: cctxs,
 		TotalPending: totalPending,
 	}, nil
