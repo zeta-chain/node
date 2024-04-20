@@ -41,15 +41,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -331,12 +325,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755) // #nosec G301
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.MkdirAll(clientDir, 0o755)
+		err = os.MkdirAll(clientDir, 0o755) // #nosec G301
 		if err != nil {
 			return nil, err
 		}
@@ -603,40 +597,6 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			}
 		}
 	}
-}
-
-// RetryForBlocks will wait for the next block and execute the function provided.
-// It will do this until the function returns a nil error or until the number of
-// blocks has been reached.
-func (n *Network) RetryForBlocks(retryFunc func() error, blocks int) error {
-	for i := 0; i < blocks; i++ {
-		n.WaitForNextBlock()
-		err := retryFunc()
-		if err == nil {
-			return nil
-		}
-		// we've reached the last block to wait, return the error
-		if i == blocks-1 {
-			return err
-		}
-	}
-	return nil
-}
-
-// WaitForNextBlock waits for the next block to be committed, returning an error
-// upon failure.
-func (n *Network) WaitForNextBlock() error {
-	lastBlock, err := n.LatestHeight()
-	if err != nil {
-		return err
-	}
-
-	_, err = n.WaitForHeight(lastBlock + 1)
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 // Cleanup removes the root testing (temporary) directory and stops both the
