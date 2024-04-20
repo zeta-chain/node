@@ -94,7 +94,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 
 	t.Run("can retrieve pending cctx in range", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
@@ -114,7 +114,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 
 	t.Run("can retrieve pending cctx with range smaller than max", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 1100, chainID, tss, zk)
@@ -128,7 +128,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 
 	t.Run("can retrieve pending cctx with pending cctx below nonce low", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
@@ -157,7 +157,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 
 	t.Run("error if some before low nonce are missing", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
@@ -226,7 +226,7 @@ func TestKeeper_CctxByNonce(t *testing.T) {
 
 	t.Run("should error if nonce to cctx not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 
@@ -239,7 +239,7 @@ func TestKeeper_CctxByNonce(t *testing.T) {
 
 	t.Run("should error if crosschain tx not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		nonce := 1000
@@ -262,7 +262,7 @@ func TestKeeper_CctxByNonce(t *testing.T) {
 
 	t.Run("should return if crosschain tx found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		nonce := 1000

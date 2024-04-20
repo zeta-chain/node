@@ -129,7 +129,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -180,7 +180,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -239,7 +239,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -302,7 +302,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -354,7 +354,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Setup mock data
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -401,7 +401,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Setup mock data
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
