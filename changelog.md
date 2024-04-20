@@ -54,6 +54,7 @@
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
 * [1979](https://github.com/zeta-chain/node/pull/1979) - add script to import genesis data into an existing genesis file
 * [2006](https://github.com/zeta-chain/node/pull/2006) - add Amoy testnet static chain information
+* [2045](https://github.com/zeta-chain/node/pull/2046) - add grpc query with outbound rate limit for zetaclient to use
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 * [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
 

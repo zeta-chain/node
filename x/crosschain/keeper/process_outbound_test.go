@@ -137,7 +137,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
@@ -169,7 +169,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
@@ -201,7 +201,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
@@ -232,7 +232,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
@@ -258,7 +258,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// mock failed GetRevertGasLimit for ERC20
@@ -324,7 +324,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
@@ -353,7 +353,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
@@ -381,7 +381,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)

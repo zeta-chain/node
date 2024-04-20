@@ -69,13 +69,13 @@ func CmdPendingCctx() *cobra.Command {
 				return err
 			}
 
-			params := &types.QueryListCctxPendingRequest{
+			params := &types.QueryListPendingCctxRequest{
 				ChainId: chainID,
 				// #nosec G701 bit size verified
 				Limit: uint32(limit),
 			}
 
-			res, err := queryClient.CctxListPending(context.Background(), params)
+			res, err := queryClient.ListPendingCctx(context.Background(), params)
 			if err != nil {
 				return err
 			}
