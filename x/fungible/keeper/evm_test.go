@@ -537,97 +537,97 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 }
 
 func TestKeeper_CallEVMWithData(t *testing.T) {
-	// 	t.Run("should return a revert error when the contract call revert", func(t *testing.T) {
-	// 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	// 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	t.Run("should return a revert error when the contract call revert", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-	// 		// Deploy example
-	// 		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
-	// 		require.NoError(t, err)
-	// 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, contract)
-	// 		abi, err := contracts.ExampleMetaData.GetAbi()
-	// 		require.NoError(t, err)
+		// Deploy example
+		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, contract)
+		abi, err := contracts.ExampleMetaData.GetAbi()
+		require.NoError(t, err)
 
-	// 		// doRevert make contract reverted
-	// 		res, err := k.CallEVM(
-	// 			ctx,
-	// 			*abi,
-	// 			types.ModuleAddressEVM,
-	// 			contract,
-	// 			big.NewInt(0),
-	// 			nil,
-	// 			true,
-	// 			false,
-	// 			"doRevert",
-	// 		)
-	// 		require.Nil(t, res)
-	// 		require.True(t, types.IsContractReverted(res, err))
+		// doRevert make contract reverted
+		res, err := k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevert",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
 
-	// 		// check reason is included for revert error
-	// 		// 0xbfb4ebcf is the hash of "Foo()"
-	// 		require.Contains(t, err.Error(), "reason: 0xbfb4ebcf")
+		// check reason is included for revert error
+		// 0xbfb4ebcf is the hash of "Foo()"
+		require.Contains(t, err.Error(), "reason: 0xbfb4ebcf")
 
-	// 		res, err = k.CallEVM(
-	// 			ctx,
-	// 			*abi,
-	// 			types.ModuleAddressEVM,
-	// 			contract,
-	// 			big.NewInt(0),
-	// 			nil,
-	// 			true,
-	// 			false,
-	// 			"doRevertWithMessage",
-	// 		)
-	// 		require.Nil(t, res)
-	// 		require.True(t, types.IsContractReverted(res, err))
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevertWithMessage",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
 
-	// 		res, err = k.CallEVM(
-	// 			ctx,
-	// 			*abi,
-	// 			types.ModuleAddressEVM,
-	// 			contract,
-	// 			big.NewInt(0),
-	// 			nil,
-	// 			true,
-	// 			false,
-	// 			"doRevertWithRequire",
-	// 		)
-	// 		require.Nil(t, res)
-	// 		require.True(t, types.IsContractReverted(res, err))
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevertWithRequire",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
 
-	// 		// Not a revert error if another type of error
-	// 		res, err = k.CallEVM(
-	// 			ctx,
-	// 			*abi,
-	// 			types.ModuleAddressEVM,
-	// 			contract,
-	// 			big.NewInt(0),
-	// 			nil,
-	// 			true,
-	// 			false,
-	// 			"doNotExist",
-	// 		)
-	// 		require.Nil(t, res)
-	// 		require.Error(t, err)
-	// 		require.False(t, types.IsContractReverted(res, err))
-	// 		require.NotContains(t, err.Error(), "reason:")
+		// Not a revert error if another type of error
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doNotExist",
+		)
+		require.Nil(t, res)
+		require.Error(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+		require.NotContains(t, err.Error(), "reason:")
 
-	// 		// No revert with successfull call
-	// 		res, err = k.CallEVM(
-	// 			ctx,
-	// 			*abi,
-	// 			types.ModuleAddressEVM,
-	// 			contract,
-	// 			big.NewInt(0),
-	// 			nil,
-	// 			true,
-	// 			false,
-	// 			"doSucceed",
-	// 		)
-	// 		require.NotNil(t, res)
-	// 		require.NoError(t, err)
-	// 		require.False(t, types.IsContractReverted(res, err))
-	// 	})
+		// No revert with successfull call
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doSucceed",
+		)
+		require.NotNil(t, res)
+		require.NoError(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+	})
 
 	t.Run("apply new message without gas limit estimates gas", func(t *testing.T) {
 		k, ctx := keepertest.FungibleKeeperAllMocks(t)
