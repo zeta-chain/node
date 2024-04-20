@@ -2,7 +2,6 @@ package network
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -15,6 +14,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
 
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -227,13 +227,16 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	file := filepath.Join(dir, name)
+	writePath := filepath.Join(dir) //nolint:gocritic
+	file := filepath.Join(writePath, name)
 
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return fmt.Errorf("could not create directory %q: %w", dir, err)
+	err := tmos.EnsureDir(writePath, 0o755) // #nosec G301
+	if err != nil {
+		return err
 	}
 
-	if err := os.WriteFile(file, contents, 0o644); err != nil { //nolint: gosec
+	err = os.WriteFile(file, contents, 0600)
+	if err != nil {
 		return err
 	}
 
