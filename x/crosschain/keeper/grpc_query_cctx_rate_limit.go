@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,6 +91,12 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 		return uint32(len(cctxs)) >= limit
 	}
 
+	// if a cctx falls within the rate limiter window
+	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
+		// #nosec G701 checked positive
+		return cctx.InboundTxParams.InboundTxObservedExternalHeight >= uint64(leftWindowBoundary)
+	}
+
 	// query pending nonces for each foreign chain
 	// Note: The pending nonces could change during the RPC call, so query them beforehand
 	pendingNoncesMap := make(map[int64]*observertypes.PendingNonces)
@@ -114,23 +121,29 @@ LoopBackwards:
 			endNonce = 0
 		}
 
+		// add the pending nonces to the total pending
+		// Note: the `totalPending` may not be accurate only if the rate limiter triggers early exit
+		// `totalPending` is now used for metrics only and it's okay to trade off accuracy for performance
+		// #nosec G701 always in range
+		totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
+
 		// query cctx by nonce backwards to the left boundary of the rate limit sliding window
 		for nonce := startNonce; nonce >= 0; nonce-- {
 			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, nonce)
 			if err != nil {
 				return nil, err
 			}
+			inWindow := isCctxInWindow(cctx)
 
 			// We should at least go backwards by 1000 nonces to pick up missed pending cctxs
 			// We might go even further back if rate limiter is enabled and the endNonce hasn't hit the left window boundary yet
 			// There are two criteria to stop scanning backwards:
 			// criteria #1: we'll stop at the left window boundary if the `endNonce` hasn't hit it yet
-			// #nosec G701 always positive
-			if nonce < endNonce && cctx.InboundTxParams.InboundTxObservedExternalHeight < uint64(leftWindowBoundary) {
+			if nonce < endNonce && !inWindow {
 				break
 			}
 			// criteria #2: we should finish the RPC call if the rate limit is exceeded
-			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
+			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
 				break LoopBackwards
 			}
@@ -143,12 +156,6 @@ LoopBackwards:
 				}
 			}
 		}
-
-		// add the pending nonces to the total pending
-		// Note: the `totalPending` may not be accurate only if the rate limiter triggers early exit
-		// `totalPending` is now used for metrics only and it's okay to trade off accuracy for performance
-		// #nosec G701 always in range
-		totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
 	}
 
 	// query forwards for pending cctxs for each foreign chain
@@ -161,19 +168,28 @@ LoopForwards:
 			if err != nil {
 				return nil, err
 			}
+			inWindow := isCctxInWindow(cctx)
 
 			// only take a `limit` number of pending cctxs as result
 			if maxCCTXsReached() {
 				break LoopForwards
 			}
 			// criteria #2: we should finish the RPC call if the rate limit is exceeded
-			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
+			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
 				break LoopForwards
 			}
 			cctxs = append(cctxs, cctx)
 		}
 	}
+
+	// sort the cctxs by chain ID and nonce (lower nonce holds higher priority for scheduling)
+	sort.Slice(cctxs, func(i, j int) bool {
+		if cctxs[i].GetCurrentOutTxParam().ReceiverChainId == cctxs[j].GetCurrentOutTxParam().ReceiverChainId {
+			return cctxs[i].GetCurrentOutTxParam().OutboundTxTssNonce < cctxs[j].GetCurrentOutTxParam().OutboundTxTssNonce
+		}
+		return cctxs[i].GetCurrentOutTxParam().ReceiverChainId < cctxs[j].GetCurrentOutTxParam().ReceiverChainId
+	})
 
 	return &types.QueryListPendingCctxWithinRateLimitResponse{
 		CrossChainTx:      cctxs,
@@ -229,15 +245,17 @@ func ConvertCctxValue(
 	}
 	decimals = uint64(fCoin.Decimals)
 
-	// the reciprocal of `rate` is the amount of zrc20 needed to buy 1 ZETA
-	// for example, given rate = 0.8, the reciprocal is 1.25, which means 1.25 ZRC20 can buy 1 ZETA
-	// given decimals = 6, the `oneZeta` amount will be 1.25 * 10^6 = 1250000
+	// given decimals = 6, the `oneZrc20` amount will be 10^6 = 1000000
 	oneZrc20 := sdk.NewDec(10).Power(decimals)
-	oneZeta := oneZrc20.Quo(rate)
 
 	// convert asset amount into ZETA
+	// step 1: convert the amount into ZRC20 integer amount
+	// step 2: convert the ZRC20 integer amount into decimal amount
+	// given amountCctx = 2000000, rate = 0.8, decimals = 6
+	// the amountZrc20 = 2000000 * 0.8 = 1600000, the amountZeta = 1600000 / 1000000 = 1.6
 	amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
-	amountZeta := amountCctx.Quo(oneZeta)
+	amountZrc20 := amountCctx.Mul(rate)
+	amountZeta := amountZrc20.Quo(oneZrc20)
 	return amountZeta
 }
 

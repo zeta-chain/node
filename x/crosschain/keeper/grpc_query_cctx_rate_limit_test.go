@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"testing"
 
@@ -28,8 +27,8 @@ func createTestRateLimiterFlags(
 ) types.RateLimiterFlags {
 	var rateLimiterFlags = types.RateLimiterFlags{
 		Enabled: true,
-		Window:  100,                // 100 zeta blocks, 10 minutes
-		Rate:    math.NewUint(1000), // 1000 ZETA
+		Window:  500,                // 500 zeta blocks, 50 minutes
+		Rate:    math.NewUint(5000), // 5000 ZETA
 		Conversions: []types.Conversion{
 			// ETH
 			{
@@ -51,11 +50,11 @@ func createTestRateLimiterFlags(
 	return rateLimiterFlags
 }
 
-// createCctxWithCopyTypeAndBlockRange
+// createCctxsWithCoinTypeAndHeightRange
 //   - create 1 cctx per block from lowBlock to highBlock (inclusive)
 //
 // return created cctxs
-func createCctxWithCopyTypeAndHeightRange(
+func createCctxsWithCoinTypeAndHeightRange(
 	t *testing.T,
 	ctx sdk.Context,
 	k keeper.Keeper,
@@ -78,6 +77,7 @@ func createCctxWithCopyTypeAndHeightRange(
 		cctx.InboundTxParams.CoinType = coinType
 		cctx.InboundTxParams.Asset = asset
 		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
 		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
 		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
 		k.SetCrossChainTx(ctx, *cctx)
@@ -122,6 +122,59 @@ func setupForeignCoins(
 	for _, fc := range fCoins {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fc)
 	}
+}
+
+// createKeeperForRateLimiterTest creates a keeper filled with cctxs for rate limiter test
+func createKeeperForRateLimiterTest(t *testing.T) (k *keeper.Keeper, ctx sdk.Context, cctxsETH, cctxsBTC []*types.CrossChainTx, rateLimiterFlags types.RateLimiterFlags) {
+	// chain IDs
+	ethChainID := getValidEthChainID()
+	btcChainID := getValidBtcChainID()
+
+	// zrc20 addresses for ETH, BTC, USDT and asset for USDT
+	zrc20ETH := sample.EthAddress().Hex()
+	zrc20BTC := sample.EthAddress().Hex()
+	zrc20USDT := sample.EthAddress().Hex()
+	assetUSDT := sample.EthAddress().Hex()
+
+	// create test rate limiter flags
+	rateLimiterFlags = createTestRateLimiterFlags(zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8")
+
+	// define cctx status
+	statusPending := types.CctxStatus_PendingOutbound
+	statusMined := types.CctxStatus_OutboundMined
+
+	// create test keepers
+	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+	// Set TSS
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+
+	// Set foreign coins
+	setupForeignCoins(t, ctx, zk, zrc20ETH, zrc20BTC, zrc20USDT, assetUSDT)
+
+	// Set rate limiter flags
+	k.SetRateLimiterFlags(ctx, rateLimiterFlags)
+
+	// Create cctxs [0~999] and [1000~1199] for Eth chain, 0.001 ETH (2.5 ZETA) per cctx
+	createCctxsWithCoinTypeAndHeightRange(t, ctx, *k, zk, tss, 1, 1000, ethChainID, coin.CoinType_Gas, "", uint64(1e15), statusMined)
+	cctxsETH = createCctxsWithCoinTypeAndHeightRange(t, ctx, *k, zk, tss, 1001, 1200, ethChainID, coin.CoinType_Gas, "", uint64(1e15), statusPending)
+
+	// Set Eth chain pending nonces, [1000~1099] are missed cctxs
+	setPendingNonces(ctx, zk, ethChainID, 1100, 1200, tss.TssPubkey)
+
+	// Create cctxs [0~999] and [1000~1199] for Btc chain, 0.00001 BTC (0.5 ZETA) per cctx
+	createCctxsWithCoinTypeAndHeightRange(t, ctx, *k, zk, tss, 1, 1000, btcChainID, coin.CoinType_Gas, "", 1000, statusMined)
+	cctxsBTC = createCctxsWithCoinTypeAndHeightRange(t, ctx, *k, zk, tss, 1001, 1200, btcChainID, coin.CoinType_Gas, "", 1000, statusPending)
+	require.NotNil(t, cctxsBTC)
+
+	// Set Btc chain pending nonces, [1000~1099] are missed cctxs
+	setPendingNonces(ctx, zk, btcChainID, 1100, 1200, tss.TssPubkey)
+
+	// Set current block height to 1201, the window is now [701, 1201], the nonces [700~1200] fall into the window
+	ctx = ctx.WithBlockHeight(1201)
+
+	return k, ctx, cctxsETH, cctxsBTC, rateLimiterFlags
 }
 
 func Test_ConvertCctxValue(t *testing.T) {
@@ -265,17 +318,45 @@ func Test_ConvertCctxValue(t *testing.T) {
 }
 
 func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
-	// chain IDs
-	ethChainID := getValidEthChainID()
-
-	// define cctx status
-	statusPending := types.CctxStatus_PendingOutbound
-	statusMined := types.CctxStatus_OutboundMined
-
 	t.Run("should fail for empty req", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		_, err := k.ListPendingCctxWithinRateLimit(ctx, nil)
 		require.ErrorContains(t, err, "invalid request")
+	})
+	t.Run("height out of range", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// Set rate limiter flags as disabled
+		rFlags := sample.RateLimiterFlags()
+		k.SetRateLimiterFlags(ctx, rFlags)
+
+		ctx = ctx.WithBlockHeight(0)
+		_, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.ErrorContains(t, err, "height out of range")
+	})
+	t.Run("tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// Set rate limiter flags as disabled
+		rFlags := sample.RateLimiterFlags()
+		k.SetRateLimiterFlags(ctx, rFlags)
+
+		_, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.ErrorContains(t, err, "tss not found")
+	})
+	t.Run("pending nonces not found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+		// Set rate limiter flags as disabled
+		rFlags := sample.RateLimiterFlags()
+		k.SetRateLimiterFlags(ctx, rFlags)
+
+		// Set TSS
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+
+		_, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.ErrorContains(t, err, "pending nonces not found")
 	})
 	t.Run("should use fallback query", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -285,13 +366,14 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 
 		// Set rate limiter flags as disabled
-		rateLimiterFlags := sample.RateLimiterFlags()
-		rateLimiterFlags.Enabled = false
-		k.SetRateLimiterFlags(ctx, rateLimiterFlags)
+		rFlags := sample.RateLimiterFlags()
+		rFlags.Enabled = false
+		k.SetRateLimiterFlags(ctx, rFlags)
 
 		// Create cctxs [0~999] and [1000~1199] for Eth chain, 0.001 ETH per cctx
-		_ = createCctxWithCopyTypeAndHeightRange(t, ctx, *k, zk, tss, 1, 1000, ethChainID, coin.CoinType_Gas, "", uint64(1e15), statusMined)
-		cctxETH := createCctxWithCopyTypeAndHeightRange(t, ctx, *k, zk, tss, 1001, 1200, ethChainID, coin.CoinType_Gas, "", uint64(1e15), statusPending)
+		ethChainID := getValidEthChainID()
+		_ = createCctxsWithCoinTypeAndHeightRange(t, ctx, *k, zk, tss, 1, 1000, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
+		cctxsETH := createCctxsWithCoinTypeAndHeightRange(t, ctx, *k, zk, tss, 1001, 1200, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
 
 		// Set Eth chain pending nonces which contains 100 missing cctxs
 		setPendingNonces(ctx, zk, ethChainID, 1100, 1200, tss.TssPubkey)
@@ -301,11 +383,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 100, len(res.CrossChainTx))
 
-		// sort res.CrossChainTx by outbound nonce ascending so that we can compare with cctxETH
-		sort.Slice(res.CrossChainTx, func(i, j int) bool {
-			return res.CrossChainTx[i].GetCurrentOutTxParam().OutboundTxTssNonce < res.CrossChainTx[j].GetCurrentOutTxParam().OutboundTxTssNonce
-		})
-		require.EqualValues(t, cctxETH[:100], res.CrossChainTx)
+		// check response
+		require.EqualValues(t, cctxsETH[:100], res.CrossChainTx)
 		require.EqualValues(t, uint64(200), res.TotalPending)
 
 		// Query pending cctxs use max limit
@@ -313,11 +392,75 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 200, len(res.CrossChainTx))
 
-		// sort res.CrossChainTx by outbound nonce ascending so that we can compare with cctxETH
-		sort.Slice(res.CrossChainTx, func(i, j int) bool {
-			return res.CrossChainTx[i].GetCurrentOutTxParam().OutboundTxTssNonce < res.CrossChainTx[j].GetCurrentOutTxParam().OutboundTxTssNonce
-		})
-		require.EqualValues(t, cctxETH, res.CrossChainTx)
+		// check response
+		require.EqualValues(t, cctxsETH, res.CrossChainTx)
 		require.EqualValues(t, uint64(200), res.TotalPending)
+	})
+	t.Run("can retrieve pending cctx in range without exceeding rate limit", func(t *testing.T) {
+		k, ctx, cctxsETH, cctxsBTC, _ := createKeeperForRateLimiterTest(t)
+
+		res, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.NoError(t, err)
+		require.Equal(t, 400, len(res.CrossChainTx))
+		require.EqualValues(t, cctxsETH, res.CrossChainTx[0:200])
+		require.EqualValues(t, cctxsBTC, res.CrossChainTx[200:400])
+		require.EqualValues(t, uint64(400), res.TotalPending)
+		require.False(t, res.RateLimitExceeded)
+	})
+	t.Run("Set rate to a lower value (< 1200) to early break the LoopBackwards with criteria #2", func(t *testing.T) {
+		k, ctx, cctxsETH, cctxsBTC, rlFlags := createKeeperForRateLimiterTest(t)
+
+		rlFlags.Rate = math.NewUint(1000) // 1000 ZETA
+		k.SetRateLimiterFlags(ctx, rlFlags)
+
+		res, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.NoError(t, err)
+		require.Equal(t, 200, len(res.CrossChainTx))
+		require.EqualValues(t, cctxsETH[:100], res.CrossChainTx[0:100])
+		require.EqualValues(t, cctxsBTC[:100], res.CrossChainTx[100:200])
+		require.EqualValues(t, uint64(400), res.TotalPending)
+		require.True(t, res.RateLimitExceeded)
+	})
+	t.Run("Set high rate and big window to early to break inner loop with the criteria #1", func(t *testing.T) {
+		k, ctx, cctxsETH, cctxsBTC, rlFlags := createKeeperForRateLimiterTest(t)
+
+		// The left boundary will be 51 (1201-1150), less than the endNonce 100 (1100 - 10000)
+		rlFlags.Rate = math.NewUint(10000)
+		rlFlags.Window = 1150
+		k.SetRateLimiterFlags(ctx, rlFlags)
+
+		res, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.NoError(t, err)
+		require.Equal(t, 400, len(res.CrossChainTx))
+		require.EqualValues(t, cctxsETH, res.CrossChainTx[0:200])
+		require.EqualValues(t, cctxsBTC, res.CrossChainTx[200:400])
+		require.EqualValues(t, uint64(400), res.TotalPending)
+		require.False(t, res.RateLimitExceeded)
+	})
+	t.Run("Set lower request limit to early break the LoopForwards loop", func(t *testing.T) {
+		k, ctx, cctxsETH, cctxsBTC, _ := createKeeperForRateLimiterTest(t)
+
+		res, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{Limit: 300})
+		require.NoError(t, err)
+		require.Equal(t, 300, len(res.CrossChainTx))
+		require.EqualValues(t, cctxsETH[:100], res.CrossChainTx[0:100])
+		require.EqualValues(t, cctxsBTC, res.CrossChainTx[100:300])
+		require.EqualValues(t, uint64(400), res.TotalPending)
+		require.False(t, res.RateLimitExceeded)
+	})
+	t.Run("Set rate to middle value (1200 < rate < 1500) to early break the LoopForwards loop with criteria #2", func(t *testing.T) {
+		k, ctx, cctxsETH, cctxsBTC, rlFlags := createKeeperForRateLimiterTest(t)
+
+		rlFlags.Window = 500
+		rlFlags.Rate = math.NewUint(1300) // 1300 ZETA
+		k.SetRateLimiterFlags(ctx, rlFlags)
+
+		res, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
+		require.NoError(t, err)
+		require.Equal(t, 320, len(res.CrossChainTx)) // 120 ETH cctx + 200 BTC cctx
+		require.EqualValues(t, cctxsETH[:120], res.CrossChainTx[0:120])
+		require.EqualValues(t, cctxsBTC, res.CrossChainTx[120:320])
+		require.EqualValues(t, uint64(400), res.TotalPending)
+		require.True(t, res.RateLimitExceeded)
 	})
 }
