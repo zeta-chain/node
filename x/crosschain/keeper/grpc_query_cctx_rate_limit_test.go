@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -121,6 +122,146 @@ func setupForeignCoins(
 	for _, fc := range fCoins {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fc)
 	}
+}
+
+func Test_ConvertCctxValue(t *testing.T) {
+	// chain IDs
+	ethChainID := getValidEthChainID()
+	btcChainID := getValidBtcChainID()
+
+	// zrc20 addresses for ETH, BTC, USDT and asset for USDT
+	zrc20ETH := sample.EthAddress().Hex()
+	zrc20BTC := sample.EthAddress().Hex()
+	zrc20USDT := sample.EthAddress().Hex()
+	assetUSDT := sample.EthAddress().Hex()
+
+	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+	// Set TSS
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+
+	// Set foreign coins
+	setupForeignCoins(t, ctx, zk, zrc20ETH, zrc20BTC, zrc20USDT, assetUSDT)
+
+	// Set rate limiter flags
+	rateLimiterFlags := createTestRateLimiterFlags(zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8")
+	k.SetRateLimiterFlags(ctx, rateLimiterFlags)
+
+	// get rate limiter rates
+	gasCoinRates, erc20CoinRates := k.GetRateLimiterRates(ctx)
+	foreignCoinMap := zk.FungibleKeeper.GetAllForeignCoinMap(ctx)
+
+	t.Run("should convert cctx ZETA value correctly", func(t *testing.T) {
+		// create cctx with 0.3 ZETA
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundTxParams.Asset = ""
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e17) // 0.3 ZETA
+
+		// convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.MustNewDecFromStr("0.3"), value)
+	})
+	t.Run("should convert cctx ETH value correctly", func(t *testing.T) {
+		// create cctx with 0.003 ETH
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundTxParams.Asset = ""
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e15) // 0.003 ETH
+
+		// convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.MustNewDecFromStr("7.5"), value)
+	})
+	t.Run("should convert cctx BTC value correctly", func(t *testing.T) {
+		// create cctx with 0.0007 BTC
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", btcChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundTxParams.Asset = ""
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(70000) // 0.0007 BTC
+
+		// convert cctx value
+		value := keeper.ConvertCctxValue(btcChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.MustNewDecFromStr("35.0"), value)
+	})
+	t.Run("should convert cctx USDT value correctly", func(t *testing.T) {
+		// create cctx with 3 USDT
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
+		cctx.InboundTxParams.Asset = assetUSDT
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e6) // 3 USDT
+
+		// convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.MustNewDecFromStr("2.4"), value)
+	})
+	t.Run("should return 0 if no rate found for chainID", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+
+		// use nil erc20CoinRates map to convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, nil, foreignCoinMap)
+		require.Equal(t, sdk.NewDec(0), value)
+	})
+	t.Run("should return 0 if coinType is CoinType_Cmd", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+
+		// convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.NewDec(0), value)
+	})
+	t.Run("should return 0 on nil rate or rate <= 0", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+
+		// use nil gasCoinRates map to convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, nil, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.NewDec(0), value)
+
+		// set rate to 0
+		zeroCoinRates, _ := k.GetRateLimiterRates(ctx)
+		zeroCoinRates[ethChainID] = sdk.NewDec(0)
+
+		// convert cctx value
+		value = keeper.ConvertCctxValue(ethChainID, cctx, zeroCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.NewDec(0), value)
+
+		// set rate to -1
+		negativeCoinRates, _ := k.GetRateLimiterRates(ctx)
+		negativeCoinRates[ethChainID] = sdk.NewDec(-1)
+
+		// convert cctx value
+		value = keeper.ConvertCctxValue(ethChainID, cctx, negativeCoinRates, erc20CoinRates, foreignCoinMap)
+		require.Equal(t, sdk.NewDec(0), value)
+	})
+	t.Run("should return 0 if no coin found for chainID", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+
+		// use empty foreignCoinMap to convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, nil)
+		require.Equal(t, sdk.NewDec(0), value)
+	})
+	t.Run("should return 0 if no coin found for asset", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
+		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
+		cctx.InboundTxParams.Asset = assetUSDT
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+
+		// delete assetUSDT from foreignCoinMap for ethChainID
+		tempCoinMap := zk.FungibleKeeper.GetAllForeignCoinMap(ctx)
+		delete(tempCoinMap[ethChainID], strings.ToLower(assetUSDT))
+
+		// convert cctx value
+		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, tempCoinMap)
+		require.Equal(t, sdk.NewDec(0), value)
+	})
 }
 
 func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {

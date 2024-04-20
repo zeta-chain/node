@@ -76,11 +76,11 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// get the conversion rates for all foreign coins
 	var gasCoinRates map[int64]sdk.Dec
 	var erc20CoinRates map[int64]map[string]sdk.Dec
-	var erc20Coins map[int64]map[string]fungibletypes.ForeignCoins
+	var foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins
 	var rateLimitInZeta sdk.Dec
 	if applyLimit {
 		gasCoinRates, erc20CoinRates = k.GetRateLimiterRates(ctx)
-		erc20Coins = k.fungibleKeeper.GetAllForeignERC20CoinMap(ctx)
+		foreignCoinMap = k.fungibleKeeper.GetAllForeignCoinMap(ctx)
 		rateLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
 	}
 
@@ -130,7 +130,7 @@ LoopBackwards:
 				break
 			}
 			// criteria #2: we should finish the RPC call if the rate limit is exceeded
-			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
+			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
 				break LoopBackwards
 			}
@@ -167,7 +167,7 @@ LoopForwards:
 				break LoopForwards
 			}
 			// criteria #2: we should finish the RPC call if the rate limit is exceeded
-			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, erc20Coins, &totalCctxValueInZeta, rateLimitInZeta) {
+			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
 				limitExceeded = true
 				break LoopForwards
 			}
@@ -182,39 +182,26 @@ LoopForwards:
 	}, nil
 }
 
-// convertCctxValue converts the value of the cctx in ZETA using given conversion rates
-func convertCctxValue(
+// ConvertCctxValue converts the value of the cctx in ZETA using given conversion rates
+func ConvertCctxValue(
 	chainID int64,
 	cctx *types.CrossChainTx,
 	gasCoinRates map[int64]sdk.Dec,
 	erc20CoinRates map[int64]map[string]sdk.Dec,
-	erc20Coins map[int64]map[string]fungibletypes.ForeignCoins,
+	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
 ) sdk.Dec {
 	var rate sdk.Dec
 	var decimals uint64
 	switch cctx.InboundTxParams.CoinType {
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
-		rate = sdk.NewDec(1)
+		amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+		return amountCctx.Quo(sdk.NewDec(10).Power(18))
 	case coin.CoinType_Gas:
 		rate = gasCoinRates[chainID]
 	case coin.CoinType_ERC20:
-		// get the ERC20 coin decimals
-		_, found := erc20Coins[chainID]
-		if !found {
-			// skip if no coin found for this chainID
-			return sdk.NewDec(0)
-		}
-		fCoin, found := erc20Coins[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
-		if !found {
-			// skip if no coin found for this Asset
-			return sdk.NewDec(0)
-		}
-		// #nosec G701 always in range
-		decimals = uint64(fCoin.Decimals)
-
 		// get the ERC20 coin rate
-		_, found = erc20CoinRates[chainID]
+		_, found := erc20CoinRates[chainID]
 		if !found {
 			// skip if no rate found for this chainID
 			return sdk.NewDec(0)
@@ -224,16 +211,28 @@ func convertCctxValue(
 		// skip CoinType_Cmd
 		return sdk.NewDec(0)
 	}
-
 	// should not happen, return 0 to skip if it happens
-	if rate.LTE(sdk.NewDec(0)) {
+	if rate.IsNil() || rate.LTE(sdk.NewDec(0)) {
 		return sdk.NewDec(0)
 	}
+
+	// get foreign coin decimals
+	_, found := foreignCoinMap[chainID]
+	if !found {
+		// skip if no coin found for this chainID
+		return sdk.NewDec(0)
+	}
+	fCoin, found := foreignCoinMap[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
+	if !found {
+		// skip if no coin found for this Asset
+		return sdk.NewDec(0)
+	}
+	decimals = uint64(fCoin.Decimals)
 
 	// the reciprocal of `rate` is the amount of zrc20 needed to buy 1 ZETA
 	// for example, given rate = 0.8, the reciprocal is 1.25, which means 1.25 ZRC20 can buy 1 ZETA
 	// given decimals = 6, the `oneZeta` amount will be 1.25 * 10^6 = 1250000
-	oneZrc20 := sdk.NewDec(1).Power(decimals)
+	oneZrc20 := sdk.NewDec(10).Power(decimals)
 	oneZeta := oneZrc20.Quo(rate)
 
 	// convert asset amount into ZETA
@@ -249,11 +248,11 @@ func rateLimitExceeded(
 	cctx *types.CrossChainTx,
 	gasCoinRates map[int64]sdk.Dec,
 	erc20CoinRates map[int64]map[string]sdk.Dec,
-	erc20Coins map[int64]map[string]fungibletypes.ForeignCoins,
+	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
 	currentCctxValue *sdk.Dec,
 	rateLimitValue sdk.Dec,
 ) bool {
-	amountZeta := convertCctxValue(chainID, cctx, gasCoinRates, erc20CoinRates, erc20Coins)
+	amountZeta := ConvertCctxValue(chainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
 	*currentCctxValue = currentCctxValue.Add(amountZeta)
 	return currentCctxValue.GT(rateLimitValue)
 }
