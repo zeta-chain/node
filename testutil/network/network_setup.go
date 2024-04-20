@@ -15,29 +15,41 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/math"
+	tmlog "github.com/cometbft/cometbft/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -46,7 +58,16 @@ var lock = new(sync.Mutex)
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
-type AppConstructor = func(val Validator) servertypes.Application
+type (
+	AppConstructor     = func(val ValidatorI) servertypes.Application
+	TestFixtureFactory = func() TestFixture
+)
+
+type TestFixture struct {
+	AppConstructor AppConstructor
+	GenesisState   map[string]json.RawMessage
+	EncodingConfig moduletestutil.TestEncodingConfig
+}
 
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
@@ -61,7 +82,7 @@ type Config struct {
 	GenesisState     map[string]json.RawMessage // custom genesis state to provide
 	TimeoutCommit    time.Duration              // the consensus commitment timeout
 	ChainID          string                     // the network chain-id
-	NumOfValidators  int                        // the total number of validators to create and bond
+	NumValidators    int                        // the total number of validators to create and bond
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
@@ -77,6 +98,39 @@ type Config struct {
 	APIAddress       string                     // REST API listen address (including port)
 	GRPCAddress      string                     // GRPC server listen address (including port)
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+}
+
+// DefaultConfig returns a sane default configuration suitable for nearly all
+// testing requirements.
+func DefaultConfig(factory TestFixtureFactory) Config {
+	fixture := factory()
+
+	return Config{
+		Codec:             fixture.EncodingConfig.Codec,
+		TxConfig:          fixture.EncodingConfig.TxConfig,
+		LegacyAmino:       fixture.EncodingConfig.Amino,
+		InterfaceRegistry: fixture.EncodingConfig.InterfaceRegistry,
+		AccountRetriever:  authtypes.AccountRetriever{},
+		AppConstructor:    fixture.AppConstructor,
+		GenesisState:      fixture.GenesisState,
+		TimeoutCommit:     2 * time.Second,
+		ChainID:           "athens_8888-2",
+		NumValidators:     2,
+		BondDenom:         config.BaseDenom,
+		MinGasPrices:      fmt.Sprintf("0.000006%s", config.BaseDenom),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
+		PruningStrategy:   pruningtypes.PruningOptionNothing,
+		CleanupDir:        true,
+		SigningAlgo:       string(hd.Secp256k1Type),
+		KeyringOptions:    []keyring.Option{},
+		PrintMnemonic:     false,
+		Mnemonics: []string{
+			"race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow",
+			"hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard",
+		},
+	}
 }
 
 type (
@@ -116,24 +170,40 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
+		app     servertypes.Application
 		tmNode  *node.Node
 		api     *api.Server
 		grpc    *grpc.Server
 		grpcWeb *http.Server
 	}
-)
 
-// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
-// This is not to be confused with logging that may happen at an individual node or validator level
-type Logger interface {
-	Log(args ...interface{})
-	Logf(format string, args ...interface{})
-}
+	// ValidatorI expose a validator's context and configuration
+	ValidatorI interface {
+		GetCtx() *server.Context
+		GetAppConfig() *srvconfig.Config
+	}
+
+	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
+	// This is not to be confused with logging that may happen at an individual node or validator level
+	Logger interface {
+		Log(args ...interface{})
+		Logf(format string, args ...interface{})
+	}
+)
 
 var (
-	_ Logger = (*testing.T)(nil)
-	_ Logger = (*CLILogger)(nil)
+	_ Logger     = (*testing.T)(nil)
+	_ Logger     = (*CLILogger)(nil)
+	_ ValidatorI = Validator{}
 )
+
+func (v Validator) GetCtx() *server.Context {
+	return v.Ctx
+}
+
+func (v Validator) GetAppConfig() *srvconfig.Config {
+	return v.AppConfig
+}
 
 // CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {
@@ -164,15 +234,15 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	network := &Network{
 		Logger:     l,
 		BaseDir:    baseDir,
-		Validators: make([]*Validator, cfg.NumOfValidators),
+		Validators: make([]*Validator, cfg.NumValidators),
 		Config:     cfg,
 	}
 
 	l.Logf("preparing test network with chain-id \"%s\"\n", cfg.ChainID)
 
-	monikers := make([]string, cfg.NumOfValidators)
-	nodeIDs := make([]string, cfg.NumOfValidators)
-	valPubKeys := make([]cryptotypes.PubKey, cfg.NumOfValidators)
+	monikers := make([]string, cfg.NumValidators)
+	nodeIDs := make([]string, cfg.NumValidators)
+	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -183,7 +253,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	buf := bufio.NewReader(os.Stdin)
 
 	// generate private keys, node IDs, and initial transactions
-	for i := 0; i < cfg.NumOfValidators; i++ {
+	for i := 0; i < cfg.NumValidators; i++ {
 		appCfg := srvconfig.DefaultConfig()
 		appCfg.Pruning = cfg.PruningStrategy
 		appCfg.MinGasPrices = cfg.MinGasPrices
@@ -261,12 +331,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755) // #nosec G301
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.MkdirAll(clientDir, 0o755) // #nosec G301
+		err = os.MkdirAll(clientDir, 0o755)
 		if err != nil {
 			return nil, err
 		}
@@ -356,8 +426,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()),
+			math.OneInt(),
 		)
 		if err != nil {
 			return nil, err
@@ -399,7 +469,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 
 		clientCtx := client.Context{}.
@@ -411,7 +480,11 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithCodec(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever)
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithNodeURI(tmCfg.RPC.ListenAddress)
+
+		// Provide ChainID here since we can't modify it in the Comet config.
+		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,
@@ -468,12 +541,27 @@ func (n *Network) LatestHeight() (int64, error) {
 		return 0, errors.New("no validators available")
 	}
 
-	status, err := n.Validators[0].RPCClient.Status(context.Background())
-	if err != nil {
-		return 0, err
-	}
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
-	return status.SyncInfo.LatestBlockHeight, nil
+	timeout := time.NewTimer(time.Second * 5)
+	defer timeout.Stop()
+
+	var latestHeight int64
+	val := n.Validators[0]
+	queryClient := tmservice.NewServiceClient(val.ClientCtx)
+
+	for {
+		select {
+		case <-timeout.C:
+			return latestHeight, errors.New("timeout exceeded waiting for block")
+		case <-ticker.C:
+			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+			if err == nil && res != nil {
+				return res.SdkBlock.Header.Height, nil
+			}
+		}
+	}
 }
 
 // WaitForHeight performs a blocking check where it waits for a block to be
@@ -498,23 +586,41 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 
 	var latestHeight int64
 	val := n.Validators[0]
+	queryClient := tmservice.NewServiceClient(val.ClientCtx)
 
 	for {
 		select {
 		case <-timeout.C:
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			status, err := val.RPCClient.Status(context.Background())
-			if err == nil && status != nil {
-				latestHeight = status.SyncInfo.LatestBlockHeight
+
+			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+			if err == nil && res != nil {
+				latestHeight = res.GetSdkBlock().Header.Height
 				if latestHeight >= h {
 					return latestHeight, nil
 				}
-			} else if err != nil {
-				fmt.Printf("error trying to fetch block height: %v\n", err)
 			}
 		}
 	}
+}
+
+// RetryForBlocks will wait for the next block and execute the function provided.
+// It will do this until the function returns a nil error or until the number of
+// blocks has been reached.
+func (n *Network) RetryForBlocks(retryFunc func() error, blocks int) error {
+	for i := 0; i < blocks; i++ {
+		n.WaitForNextBlock()
+		err := retryFunc()
+		if err == nil {
+			return nil
+		}
+		// we've reached the last block to wait, return the error
+		if i == blocks-1 {
+			return err
+		}
+	}
+	return nil
 }
 
 // WaitForNextBlock waits for the next block to be committed, returning an error
@@ -526,19 +632,6 @@ func (n *Network) WaitForNextBlock() error {
 	}
 
 	_, err = n.WaitForHeight(lastBlock + 1)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func (n *Network) WaitForNBlocks(numberOfBlocks int64) error {
-	lastBlock, err := n.LatestHeight()
-	if err != nil {
-		return err
-	}
-	_, err = n.WaitForHeightWithTimeout(lastBlock+numberOfBlocks, time.Duration(10*numberOfBlocks)*time.Second)
 	if err != nil {
 		return err
 	}
@@ -571,6 +664,12 @@ func (n *Network) Cleanup() {
 			v.grpc.Stop()
 			if v.grpcWeb != nil {
 				_ = v.grpcWeb.Close()
+			}
+		}
+
+		if v.app != nil {
+			if err := v.app.Close(); err != nil {
+				n.Logger.Log("failed to stop validator ABCI application", "err", err)
 			}
 		}
 	}

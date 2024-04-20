@@ -2,17 +2,17 @@ package network
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
-	"github.com/cometbft/cometbft/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -39,9 +39,11 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	app := cfg.AppConstructor(*val)
+	val.app = app
+
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
 
-	tmNode, err := node.NewNode(
+	tmNode, err := node.NewNode( //resleak:notresource
 		tmCfg,
 		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
 		nodeKey,
@@ -58,7 +60,6 @@ func startInProcess(cfg Config, val *Validator) error {
 	if err := tmNode.Start(); err != nil {
 		return err
 	}
-
 	val.tmNode = tmNode
 
 	if val.RPCAddress != "" {
@@ -117,7 +118,7 @@ func startInProcess(cfg Config, val *Validator) error {
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 	genTime := tmtime.Now()
 
-	for i := 0; i < cfg.NumOfValidators; i++ {
+	for i := 0; i < cfg.NumValidators; i++ {
 		tmCfg := vals[i].Ctx.Config
 
 		nodeDir := filepath.Join(outputDir, vals[i].Moniker, "simd")
@@ -129,7 +130,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].NodeID, vals[i].PubKey)
 
 		genFile := tmCfg.GenesisFile()
-		genDoc, err := types.GenesisDocFromFile(genFile)
+		genDoc, err := tmtypes.GenesisDocFromFile(genFile)
 		if err != nil {
 			return err
 		}
@@ -141,12 +142,31 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
+		if err := ExportGenesisFileWithTimeAndConsensusParams(genFile, cfg.ChainID, nil, appState, genTime, *genDoc.ConsensusParams); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func ExportGenesisFileWithTimeAndConsensusParams(
+	genFile, chainID string, validators []tmtypes.GenesisValidator,
+	appState json.RawMessage, genTime time.Time, consensusParams tmtypes.ConsensusParams,
+) error {
+	genDoc := tmtypes.GenesisDoc{
+		GenesisTime:     genTime,
+		ChainID:         chainID,
+		Validators:      validators,
+		AppState:        appState,
+		ConsensusParams: &consensusParams,
+	}
+
+	if err := genDoc.ValidateAndComplete(); err != nil {
+		return err
+	}
+
+	return genDoc.SaveAs(genFile)
 }
 
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
@@ -174,14 +194,30 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 		return err
 	}
 
-	genDoc := types.GenesisDoc{
+	genDoc := tmtypes.GenesisDoc{
+		ConsensusParams: &tmtypes.ConsensusParams{
+			Block: tmtypes.BlockParams{
+				MaxBytes: 200000,
+				MaxGas:   2000000,
+			},
+			Evidence: tmtypes.EvidenceParams{
+				MaxAgeNumBlocks: 302400,
+				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+				MaxBytes:        10000,
+			},
+			Validator: tmtypes.ValidatorParams{
+				PubKeyTypes: []string{
+					tmtypes.ABCIPubKeyTypeEd25519,
+				},
+			},
+		},
 		ChainID:    cfg.ChainID,
 		AppState:   appGenStateJSON,
 		Validators: nil,
 	}
 
 	// generate empty genesis files for each validator and save
-	for i := 0; i < cfg.NumOfValidators; i++ {
+	for i := 0; i < cfg.NumValidators; i++ {
 		if err := genDoc.SaveAs(genFiles[i]); err != nil {
 			return err
 		}
@@ -191,16 +227,13 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir) //nolint:gocritic
-	file := filepath.Join(writePath, name)
+	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(writePath, 0o755)
-	if err != nil {
-		return err
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	err = os.WriteFile(file, contents, 0600)
-	if err != nil {
+	if err := os.WriteFile(file, contents, 0o644); err != nil { //nolint: gosec
 		return err
 	}
 
