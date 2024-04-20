@@ -90,11 +90,13 @@ type ObserverKeeper interface {
 	) (bool, bool, observertypes.Ballot, string, error)
 	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *chains.Chain
 	GetSupportedChains(ctx sdk.Context) []*chains.Chain
+	GetSupportedForeignChains(ctx sdk.Context) []*chains.Chain
 }
 
 type FungibleKeeper interface {
 	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
 	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
+	GetAllForeignERC20CoinMap(ctx sdk.Context) map[int64]map[string]fungibletypes.ForeignCoins
 	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoins)
 	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
 	GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool)

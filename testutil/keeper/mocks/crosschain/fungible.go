@@ -254,6 +254,26 @@ func (_m *CrosschainFungibleKeeper) GetAllForeignCoinsForChain(ctx types.Context
 	return r0
 }
 
+// GetAllForeignERC20CoinMap provides a mock function with given fields: ctx
+func (_m *CrosschainFungibleKeeper) GetAllForeignERC20CoinMap(ctx types.Context) map[int64]map[string]fungibletypes.ForeignCoins {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllForeignERC20CoinMap")
+	}
+
+	var r0 map[int64]map[string]fungibletypes.ForeignCoins
+	if rf, ok := ret.Get(0).(func(types.Context) map[int64]map[string]fungibletypes.ForeignCoins); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[int64]map[string]fungibletypes.ForeignCoins)
+		}
+	}
+
+	return r0
+}
+
 // GetForeignCoinFromAsset provides a mock function with given fields: ctx, asset, chainID
 func (_m *CrosschainFungibleKeeper) GetForeignCoinFromAsset(ctx types.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool) {
 	ret := _m.Called(ctx, asset, chainID)

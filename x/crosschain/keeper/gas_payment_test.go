@@ -30,7 +30,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -72,7 +72,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 
 	t.Run("should fail if not coin type gas", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: coin.CoinType_Zeta,
@@ -98,7 +98,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
@@ -127,7 +127,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
@@ -170,7 +170,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin, erc20 and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		assetAddress := sample.EthAddress().String()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -236,7 +236,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 	t.Run("should fail if not coin type erc20", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: coin.CoinType_Gas,
@@ -262,7 +262,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
@@ -291,7 +291,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin, erc20 and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		assetAddress := sample.EthAddress().String()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -333,7 +333,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin, erc20 and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		assetAddress := sample.EthAddress().String()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -385,7 +385,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin, erc20 and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		assetAddress := sample.EthAddress().String()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -453,7 +453,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
@@ -514,7 +514,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 
 	t.Run("should fail if pay gas in zeta with coin type other than zeta", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: coin.CoinType_Gas,
@@ -540,7 +540,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
@@ -571,7 +571,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// deploy gas coin and set fee params
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
