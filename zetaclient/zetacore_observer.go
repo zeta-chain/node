@@ -134,9 +134,13 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 					metrics.HotKeyBurnRate.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// query pending cctxs across all foreign chains with rate limit
-					cctxMap, err := co.getAllPendingCctxWithRatelimit()
+					cctxMap, valueWithinWindow, err := co.getAllPendingCctxWithRatelimit()
 					if err != nil {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: queryPendingCctxWithRatelimit failed")
+					}
+					// print value within rate limiter window every minute
+					if bn%10 == 0 {
+						co.logger.ZetaChainWatcher.Debug().Msgf("startCctxScheduler: value within rate limiter window is %d ZETA", valueWithinWindow)
 					}
 
 					// schedule keysign for pending cctxs on each chain
@@ -190,10 +194,10 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 }
 
 // getAllPendingCctxWithRatelimit get pending cctxs across all foreign chains with rate limit
-func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.CrossChainTx, error) {
-	cctxList, totalPending, rateLimitExceeded, err := co.bridge.ListPendingCctxWithinRatelimit()
+func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.CrossChainTx, uint64, error) {
+	cctxList, totalPending, valueWithinWindow, rateLimitExceeded, err := co.bridge.ListPendingCctxWithinRatelimit()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if rateLimitExceeded {
 		co.logger.ZetaChainWatcher.Warn().Msgf("rate limit exceeded, fetched %d cctxs out of %d", len(cctxList), totalPending)
@@ -209,7 +213,7 @@ func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.Cro
 		cctxMap[chainID] = append(cctxMap[chainID], cctx)
 	}
 
-	return cctxMap, nil
+	return cctxMap, valueWithinWindow, nil
 }
 
 // scheduleCctxEVM schedules evm outtx keysign on each ZetaChain block (the ticker)

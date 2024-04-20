@@ -406,11 +406,13 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.EqualValues(t, cctxsBTC, res.CrossChainTx[200:400])
 		require.EqualValues(t, uint64(400), res.TotalPending)
 		require.False(t, res.RateLimitExceeded)
+		require.Equal(t, uint64(1500), res.ValueWithinWindow) // 500 * (2.5 + 0.5)
 	})
 	t.Run("Set rate to a lower value (< 1200) to early break the LoopBackwards with criteria #2", func(t *testing.T) {
 		k, ctx, cctxsETH, cctxsBTC, rlFlags := createKeeperForRateLimiterTest(t)
 
-		rlFlags.Rate = math.NewUint(1000) // 1000 ZETA
+		rate := uint64(1000) // 1000 ZETA
+		rlFlags.Rate = math.NewUint(rate)
 		k.SetRateLimiterFlags(ctx, rlFlags)
 
 		res, err := k.ListPendingCctxWithinRateLimit(ctx, &types.QueryListPendingCctxWithinRateLimitRequest{})
@@ -420,6 +422,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.EqualValues(t, cctxsBTC[:100], res.CrossChainTx[100:200])
 		require.EqualValues(t, uint64(400), res.TotalPending)
 		require.True(t, res.RateLimitExceeded)
+		require.True(t, res.ValueWithinWindow >= rate)
 	})
 	t.Run("Set high rate and big window to early to break inner loop with the criteria #1", func(t *testing.T) {
 		k, ctx, cctxsETH, cctxsBTC, rlFlags := createKeeperForRateLimiterTest(t)
@@ -436,6 +439,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.EqualValues(t, cctxsBTC, res.CrossChainTx[200:400])
 		require.EqualValues(t, uint64(400), res.TotalPending)
 		require.False(t, res.RateLimitExceeded)
+		require.EqualValues(t, uint64(3450), res.ValueWithinWindow) // 1150 * (2.5 + 0.5)
 	})
 	t.Run("Set lower request limit to early break the LoopForwards loop", func(t *testing.T) {
 		k, ctx, cctxsETH, cctxsBTC, _ := createKeeperForRateLimiterTest(t)
@@ -447,6 +451,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.EqualValues(t, cctxsBTC, res.CrossChainTx[100:300])
 		require.EqualValues(t, uint64(400), res.TotalPending)
 		require.False(t, res.RateLimitExceeded)
+		require.EqualValues(t, uint64(1250), res.ValueWithinWindow) // 500 * 0.5 + 400 * 2.5
 	})
 	t.Run("Set rate to middle value (1200 < rate < 1500) to early break the LoopForwards loop with criteria #2", func(t *testing.T) {
 		k, ctx, cctxsETH, cctxsBTC, rlFlags := createKeeperForRateLimiterTest(t)
@@ -462,5 +467,6 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		require.EqualValues(t, cctxsBTC, res.CrossChainTx[120:320])
 		require.EqualValues(t, uint64(400), res.TotalPending)
 		require.True(t, res.RateLimitExceeded)
+		require.True(t, res.ValueWithinWindow >= 1300)
 	})
 }

@@ -910,7 +910,12 @@ export declare class QueryListPendingCctxWithinRateLimitResponse extends Message
   totalPending: bigint;
 
   /**
-   * @generated from field: bool rate_limit_exceeded = 3;
+   * @generated from field: uint64 value_within_window = 3;
+   */
+  valueWithinWindow: bigint;
+
+  /**
+   * @generated from field: bool rate_limit_exceeded = 4;
    */
   rateLimitExceeded: boolean;
 

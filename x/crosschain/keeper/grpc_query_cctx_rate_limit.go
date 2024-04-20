@@ -194,6 +194,7 @@ LoopForwards:
 	return &types.QueryListPendingCctxWithinRateLimitResponse{
 		CrossChainTx:      cctxs,
 		TotalPending:      totalPending,
+		ValueWithinWindow: totalCctxValueInZeta.TruncateInt().Uint64(),
 		RateLimitExceeded: limitExceeded,
 	}, nil
 }
