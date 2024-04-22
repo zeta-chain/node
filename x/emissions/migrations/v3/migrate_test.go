@@ -51,6 +51,22 @@ func TestMigrate(t *testing.T) {
 		require.Equal(t, legacyParams, params)
 	})
 
+	t.Run("should migrate if legacy params missing", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+
+		legacyParams := types.Params{}
+		legacySubspace := newMockSubspace(legacyParams)
+
+		require.NoError(t, v3.MigrateStore(ctx, k, legacySubspace))
+
+		params, found := k.GetParams(ctx)
+		require.True(t, found)
+		legacyParams = types.DefaultParams()
+		legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
+		legacyParams.BallotMaturityBlocks = 100
+		require.Equal(t, legacyParams, params)
+	})
+
 	t.Run("should fail to migrate for invalid params", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
@@ -67,6 +83,7 @@ func TestMigrate(t *testing.T) {
 		}
 		legacySubspace := newMockSubspace(legacyParams)
 
-		require.Error(t, v3.MigrateStore(ctx, k, legacySubspace))
+		err := v3.MigrateStore(ctx, k, legacySubspace)
+		require.ErrorContains(t, err, "min bond factor cannot be lower that 0.75")
 	})
 }
