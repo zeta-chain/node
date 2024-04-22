@@ -13,7 +13,7 @@ func CmdSystemContract() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "system-contract",
 		Short: "query system contract",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
 

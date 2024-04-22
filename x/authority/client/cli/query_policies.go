@@ -15,7 +15,7 @@ func CmdShowPolicies() *cobra.Command {
 		Use:   "show-policies",
 		Short: "show the policies",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)

@@ -22,7 +22,7 @@ func (k Keeper) NodeAccountAll(c context.Context, req *types.QueryAllNodeAccount
 	store := ctx.KVStore(k.storeKey)
 	nodeAccountStore := prefix.NewStore(store, types.KeyPrefix(types.NodeAccountKey))
 
-	pageRes, err := query.Paginate(nodeAccountStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(nodeAccountStore, req.Pagination, func(_ []byte, value []byte) error {
 		var nodeAccount types.NodeAccount
 		if err := k.cdc.Unmarshal(value, &nodeAccount); err != nil {
 			return err

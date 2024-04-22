@@ -13,7 +13,7 @@ func CmdShowUpdateRateLimiterFlags() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update_rate_limit_flags",
 		Short: "shows the rate limiter flags",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)

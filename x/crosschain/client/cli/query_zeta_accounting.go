@@ -12,7 +12,7 @@ func CmdGetZetaAccounting() *cobra.Command {
 		Use:   "get-zeta-accounting",
 		Short: "Query zeta accounting",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
