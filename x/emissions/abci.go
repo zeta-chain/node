@@ -81,8 +81,7 @@ func DistributeObserverRewards(
 		return err
 	}
 
-	maturityBlocks := params.BallotMaturityBlocks
-	list, found := keeper.GetObserverKeeper().GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)
+	list, found := keeper.GetObserverKeeper().GetMaturedBallots(ctx, params.BallotMaturityBlocks)
 	ballotIdentifiers := []string{}
 	if found {
 		ballotIdentifiers = list.BallotsIndexList

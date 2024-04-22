@@ -74,6 +74,29 @@ func TestKeeper_GetBallotList(t *testing.T) {
 	require.Equal(t, identifier, list.BallotsIndexList[0])
 }
 
+func TestKeeper_GetMaturedBallots(t *testing.T) {
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	identifier := sample.ZetaIndex(t)
+	b := &types.Ballot{
+		Index:                "",
+		BallotIdentifier:     identifier,
+		VoterList:            nil,
+		ObservationType:      0,
+		BallotThreshold:      sdk.Dec{},
+		BallotStatus:         0,
+		BallotCreationHeight: 1,
+	}
+	ctx = ctx.WithBlockHeight(2)
+	_, found := k.GetMaturedBallots(ctx, 1)
+	require.False(t, found)
+
+	k.AddBallotToList(ctx, *b)
+	list, found := k.GetMaturedBallots(ctx, 1)
+	require.True(t, found)
+	require.Equal(t, 1, len(list.BallotsIndexList))
+	require.Equal(t, identifier, list.BallotsIndexList[0])
+}
+
 func TestKeeper_GetAllBallots(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	identifier := sample.ZetaIndex(t)
