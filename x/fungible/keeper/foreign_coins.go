@@ -85,7 +85,7 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) 
 func (k Keeper) GetAllForeignCoinMap(ctx sdk.Context) map[int64]map[string]types.ForeignCoins {
 	allForeignCoins := k.GetAllForeignCoins(ctx)
 
-	fCoinMap := make(map[int64]map[string]types.ForeignCoins)
+	foreignCoinMap := make(map[int64]map[string]types.ForeignCoins)
 	for _, c := range allForeignCoins {
 		if _, found := fCoinMap[c.ForeignChainId]; !found {
 			fCoinMap[c.ForeignChainId] = make(map[string]types.ForeignCoins)
