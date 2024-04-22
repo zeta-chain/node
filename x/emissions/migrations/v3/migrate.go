@@ -1,7 +1,6 @@
 package v3
 
 import (
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/emissions/exported"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
@@ -11,14 +10,6 @@ type EmissionsKeeper interface {
 	GetParams(ctx sdk.Context) (types.Params, bool)
 	SetParams(ctx sdk.Context, params types.Params) error
 }
-
-// ObserverSlashAmount is the amount of tokens to be slashed from observer in case of incorrect vote
-// by default it is set to 0.1 ZETA
-var observerSlashAmountDefaultValue = sdkmath.NewInt(100000000000000000)
-
-// BallotMaturityBlocks is amount of blocks needed for ballot to mature
-// by default is set to 100
-var ballotMaturityBlocksDefaultValue = 100
 
 // Migrate migrates the x/emissions module state from the consensus version 2 to
 // version 3. Specifically, it takes the parameters that are currently stored
@@ -32,8 +23,36 @@ func MigrateStore(
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
-	currParams.ObserverSlashAmount = observerSlashAmountDefaultValue
-	currParams.BallotMaturityBlocks = int64(ballotMaturityBlocksDefaultValue)
+	defaultParams := types.NewParams()
+
+	// ensure params are set with default values if not present in legacy params
+	if currParams.AvgBlockTime == "" {
+		currParams.AvgBlockTime = defaultParams.AvgBlockTime
+	}
+	if currParams.MaxBondFactor == "" {
+		currParams.MaxBondFactor = defaultParams.MaxBondFactor
+	}
+	if currParams.MinBondFactor == "" {
+		currParams.MinBondFactor = defaultParams.MinBondFactor
+	}
+	if currParams.TargetBondRatio == "" {
+		currParams.TargetBondRatio = defaultParams.TargetBondRatio
+	}
+	if currParams.ValidatorEmissionPercentage == "" {
+		currParams.ValidatorEmissionPercentage = defaultParams.ValidatorEmissionPercentage
+	}
+	if currParams.ObserverEmissionPercentage == "" {
+		currParams.ObserverEmissionPercentage = defaultParams.ObserverEmissionPercentage
+	}
+	if currParams.TssSignerEmissionPercentage == "" {
+		currParams.TssSignerEmissionPercentage = defaultParams.TssSignerEmissionPercentage
+	}
+	if currParams.DurationFactorConstant == "" {
+		currParams.DurationFactorConstant = defaultParams.DurationFactorConstant
+	}
+
+	currParams.ObserverSlashAmount = types.ObserverSlashAmount
+	currParams.BallotMaturityBlocks = int64(types.BallotMaturityBlocks)
 	err := currParams.Validate()
 	if err != nil {
 		return err
