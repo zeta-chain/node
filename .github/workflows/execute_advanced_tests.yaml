@@ -23,10 +23,13 @@ on:
         type: boolean
         required: false
         default: false
+  schedule:
+    # run at midnight UTC daily
+    - cron: "0 0 * * *"
 
 jobs:
   e2e-admin-tests:
-    if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
+    if: ${{ github.event.inputs.e2e-admin-tests == 'true' || github.event_name == 'schedule' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
@@ -65,7 +68,7 @@ jobs:
           done
 
   e2e-upgrade-test:
-    if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
+    if: ${{ github.event.inputs.e2e-upgrade-test == 'true' || github.event_name == 'schedule' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
