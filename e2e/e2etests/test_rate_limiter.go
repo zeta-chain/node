@@ -64,48 +64,6 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	}
 }
 
-// addZetaGasLiquidity adds liquidity to the ZETA/gas pool
-func addZetaGasLiquidity(r *runner.E2ERunner) error {
-	// use 10 ZETA and 10 ETH for the liquidity
-	// this will be sufficient for the tests
-	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
-
-	// approve uniswap router to spend ZETA
-	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, amount)
-	if err != nil {
-		return fmt.Errorf("error approving ZETA: %w", err)
-	}
-
-	// wait for the tx to be mined
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txERC20ZRC20Approve, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		return fmt.Errorf("approve failed")
-	}
-
-	// add liquidity in the pool to prevent high slippage in WZETA/gas pair
-	r.ZEVMAuth.Value = amount
-	txAddLiquidity, err := r.UniswapV2Router.AddLiquidityETH(
-		r.ZEVMAuth,
-		r.ERC20ZRC20Addr,
-		amount,
-		big.NewInt(1e18),
-		big.NewInt(1e18),
-		r.DeployerAddress,
-		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
-	)
-	if err != nil {
-		return fmt.Errorf("error adding liquidity: %w", err)
-	}
-
-	// wait for the tx to be mined
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txAddLiquidity, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		return fmt.Errorf("add liquidity failed")
-	}
-
-	return nil
-}
-
 // setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
 func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimiterFlags) error {
 	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
@@ -185,6 +143,60 @@ func waitForZetaWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *etht
 		return err
 	}
 	r.Logger.Print("cctx %d mined in %vs at block %d", index, duration, block)
+
+	return nil
+}
+
+// addZetaGasLiquidity adds liquidity to the ZETA/gas pool
+func addZetaGasLiquidity(r *runner.E2ERunner) error {
+	// use 10 ZETA and 10 ETH for the liquidity
+	// this will be sufficient for the tests
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
+
+	// approve uniswap router to spend gas
+	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, amount)
+	if err != nil {
+		return fmt.Errorf("error approving ZETA: %w", err)
+	}
+
+	// wait for the tx to be mined
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txERC20ZRC20Approve, r.Logger, r.ReceiptTimeout)
+	if receipt.Status != 1 {
+		return fmt.Errorf("approve failed")
+	}
+
+	// approve uniswap router to spend ZETA
+	txZETAApprove, err := r.WZeta.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, amount)
+	if err != nil {
+		return fmt.Errorf("error approving ZETA: %w", err)
+	}
+
+	// wait for the tx to be mined
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txZETAApprove, r.Logger, r.ReceiptTimeout)
+	if receipt.Status != 1 {
+		return fmt.Errorf("approve failed")
+	}
+
+	// add liquidity in the pool to prevent high slippage in WZETA/gas pair
+	r.ZEVMAuth.Value = amount
+	txAddLiquidity, err := r.UniswapV2Router.AddLiquidityETH(
+		r.ZEVMAuth,
+		r.ERC20ZRC20Addr,
+		amount,
+		big.NewInt(1e18),
+		big.NewInt(1e18),
+		r.DeployerAddress,
+		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
+	)
+	if err != nil {
+		return fmt.Errorf("error adding liquidity: %w", err)
+	}
+
+	// wait for the tx to be mined
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txAddLiquidity, r.Logger, r.ReceiptTimeout)
+	if receipt.Status != 1 {
+		return fmt.Errorf("add liquidity failed")
+	}
 
 	return nil
 }
