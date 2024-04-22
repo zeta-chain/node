@@ -366,7 +366,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 
 		// Set rate limiter flags as disabled
-		rFlags := sample.RateLimiterFlags()
+		rateLimiterFlags := sample.RateLimiterFlags()
 		rFlags.Enabled = false
 		k.SetRateLimiterFlags(ctx, rFlags)
 
