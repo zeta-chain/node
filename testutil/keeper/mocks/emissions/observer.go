@@ -43,27 +43,27 @@ func (_m *EmissionObserverKeeper) GetBallot(ctx types.Context, index string) (ob
 	return r0, r1
 }
 
-// GetBallotList provides a mock function with given fields: ctx, height
-func (_m *EmissionObserverKeeper) GetBallotList(ctx types.Context, height int64) (observertypes.BallotListForHeight, bool) {
-	ret := _m.Called(ctx, height)
+// GetMaturedBallots provides a mock function with given fields: ctx, maturityBlocks
+func (_m *EmissionObserverKeeper) GetMaturedBallots(ctx types.Context, maturityBlocks int64) (observertypes.BallotListForHeight, bool) {
+	ret := _m.Called(ctx, maturityBlocks)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetBallotList")
+		panic("no return value specified for GetMaturedBallots")
 	}
 
 	var r0 observertypes.BallotListForHeight
 	var r1 bool
 	if rf, ok := ret.Get(0).(func(types.Context, int64) (observertypes.BallotListForHeight, bool)); ok {
-		return rf(ctx, height)
+		return rf(ctx, maturityBlocks)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, int64) observertypes.BallotListForHeight); ok {
-		r0 = rf(ctx, height)
+		r0 = rf(ctx, maturityBlocks)
 	} else {
 		r0 = ret.Get(0).(observertypes.BallotListForHeight)
 	}
 
 	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
-		r1 = rf(ctx, height)
+		r1 = rf(ctx, maturityBlocks)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}

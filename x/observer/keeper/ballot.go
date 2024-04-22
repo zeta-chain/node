@@ -39,6 +39,10 @@ func (k Keeper) GetBallotList(ctx sdk.Context, height int64) (val types.BallotLi
 	return val, true
 }
 
+func (k Keeper) GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val types.BallotListForHeight, found bool) {
+	return k.GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)
+}
+
 func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
