@@ -157,7 +157,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
 
 	// perform withdrawals on the new chain
-	tx := newRunner.WithdrawZeta("10000000000000000000", true)
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
+	newRunner.DepositAndApproveWZeta(amount)
+	tx := newRunner.WithdrawZeta(amount, true)
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {

@@ -2,19 +2,21 @@ package e2etests
 
 import (
 	"fmt"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testconnectorzevm"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"math/big"
 )
 
 // TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
-	// Can withdraw 0.1ZETA
-	tx := r.WithdrawZeta("10000000000000000000", true)
+	// Can withdraw 10ZETA
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
+	r.DepositAndApproveWZeta(amount)
+	tx := r.WithdrawZeta(amount, true)
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
@@ -78,8 +80,9 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 		panic("unexpected response")
 	}
 
-	// Can continue to interact with the connector: withdraw 0.1ZETA
-	tx = r.WithdrawZeta("10000000000000000000", true)
+	// Can continue to interact with the connector: withdraw 10ZETA
+	r.DepositAndApproveWZeta(amount)
+	tx = r.WithdrawZeta(amount, true)
 	cctx = utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {

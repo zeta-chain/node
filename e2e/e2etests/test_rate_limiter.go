@@ -3,6 +3,7 @@ package e2etests
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,12 +17,20 @@ import (
 // rateLimiterFlags are the rate limiter flags for the test
 var rateLimiterFlags = crosschaintypes.RateLimiterFlags{
 	Enabled: true,
-	Rate:    sdk.NewUint(110000000000000000), // 0.1 ZETA, this value is used so rate is reached
+	Rate:    sdk.NewUint(110000000000000000), // 0.11 ZETA, this value is used so rate is reached
 	Window:  5,
 }
 
 func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("TestRateLimiter")
+
+	// deposit and approve 50 WZETA for the tests
+	r.DepositAndApproveWZeta(big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50)))
+
+	// add liquidity in the pool to prevent high slippage in WZETA/gas pair
+	if err := addZetaGasLiquidity(r); err != nil {
+		panic(err)
+	}
 
 	// First test without rate limiter
 	r.Logger.Print("rate limiter disabled")
@@ -55,6 +64,48 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	}
 }
 
+// addZetaGasLiquidity adds liquidity to the ZETA/gas pool
+func addZetaGasLiquidity(r *runner.E2ERunner) error {
+	// use 10 ZETA and 10 ETH for the liquidity
+	// this will be sufficient for the tests
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
+
+	// approve uniswap router to spend ZETA
+	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, amount)
+	if err != nil {
+		return fmt.Errorf("error approving ZETA: %w", err)
+	}
+
+	// wait for the tx to be mined
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txERC20ZRC20Approve, r.Logger, r.ReceiptTimeout)
+	if receipt.Status != 1 {
+		return fmt.Errorf("approve failed")
+	}
+
+	// add liquidity in the pool to prevent high slippage in WZETA/gas pair
+	r.ZEVMAuth.Value = amount
+	txAddLiquidity, err := r.UniswapV2Router.AddLiquidityETH(
+		r.ZEVMAuth,
+		r.ERC20ZRC20Addr,
+		amount,
+		big.NewInt(1e18),
+		big.NewInt(1e18),
+		r.DeployerAddress,
+		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
+	)
+	if err != nil {
+		return fmt.Errorf("error adding liquidity: %w", err)
+	}
+
+	// wait for the tx to be mined
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txAddLiquidity, r.Logger, r.ReceiptTimeout)
+	if receipt.Status != 1 {
+		return fmt.Errorf("add liquidity failed")
+	}
+
+	return nil
+}
+
 // setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
 func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimiterFlags) error {
 	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
@@ -81,7 +132,7 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	// Perform 10 withdraws to log time for completion
 	txs := make([]*ethtypes.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		txs[i] = r.WithdrawZeta("100000000000000000", false)
+		txs[i] = r.WithdrawZeta(big.NewInt(100000000000000000), true)
 	}
 
 	// start a error group to wait for all the withdraws to be mined
@@ -115,13 +166,6 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 // we first wait to get the receipt
 // NOTE: this could be a more general function but we define it here for this test because we emit in the function logs specific to this test
 func waitForZetaWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
-	// wait for the tx receipt
-	receipt := utils.MustWaitForTxReceipt(ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.EVMReceipt(*receipt, "zeta withdraw")
-	if receipt.Status == 0 {
-		return fmt.Errorf("zeta withdraw failed, logs: %+v", receipt.Logs)
-	}
-
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")

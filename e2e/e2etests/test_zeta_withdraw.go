@@ -17,7 +17,13 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 		panic("TestZetaWithdraw requires exactly one argument for the withdrawal.")
 	}
 
-	tx := r.WithdrawZeta(args[0], true)
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("invalid amount specified")
+	}
+
+	r.DepositAndApproveWZeta(amount)
+	tx := r.WithdrawZeta(amount, true)
 
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")

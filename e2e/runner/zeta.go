@@ -2,12 +2,12 @@ package runner
 
 import (
 	"fmt"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -140,14 +140,8 @@ func (runner *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big
 	return tx.Hash()
 }
 
-// WithdrawZeta withdraws ZETA from ZetaChain to the ZETA smart contract on EVM
-// waitReceipt specifies whether to wait for the tx receipt and check if the tx was successful
-func (runner *E2ERunner) WithdrawZeta(amountStr string, waitReceipt bool) *ethtypes.Transaction {
-	amount, ok := big.NewInt(0).SetString(amountStr, 10)
-	if !ok {
-		panic("Invalid amount specified for TestZetaWithdraw.")
-	}
-
+// DepositAndApproveWZeta deposits and approves WZETA on ZetaChain from the ZETA smart contract on ZEVM
+func (runner *E2ERunner) DepositAndApproveWZeta(amount *big.Int) {
 	runner.ZEVMAuth.Value = amount
 	tx, err := runner.WZeta.Deposit(runner.ZEVMAuth)
 	if err != nil {
@@ -162,11 +156,6 @@ func (runner *E2ERunner) WithdrawZeta(amountStr string, waitReceipt bool) *ethty
 		panic("deposit failed")
 	}
 
-	chainID, err := runner.EVMClient.ChainID(runner.Ctx)
-	if err != nil {
-		panic(err)
-	}
-
 	tx, err = runner.WZeta.Approve(runner.ZEVMAuth, runner.ConnectorZEVMAddr, amount)
 	if err != nil {
 		panic(err)
@@ -178,8 +167,17 @@ func (runner *E2ERunner) WithdrawZeta(amountStr string, waitReceipt bool) *ethty
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("approve failed, logs: %+v", receipt.Logs))
 	}
+}
 
-	tx, err = runner.ConnectorZEVM.Send(runner.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
+// WithdrawZeta withdraws ZETA from ZetaChain to the ZETA smart contract on EVM
+// waitReceipt specifies whether to wait for the tx receipt and check if the tx was successful
+func (runner *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Transaction {
+	chainID, err := runner.EVMClient.ChainID(runner.Ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	tx, err := runner.ConnectorZEVM.Send(runner.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
 		DestinationAddress:  runner.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
@@ -193,7 +191,7 @@ func (runner *E2ERunner) WithdrawZeta(amountStr string, waitReceipt bool) *ethty
 	runner.Logger.Info("send tx hash: %s", tx.Hash().Hex())
 
 	if waitReceipt {
-		receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+		receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 		runner.Logger.EVMReceipt(*receipt, "send")
 		if receipt.Status == 0 {
 			panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
