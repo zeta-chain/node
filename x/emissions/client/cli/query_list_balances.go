@@ -12,7 +12,7 @@ func CmdListPoolAddresses() *cobra.Command {
 		Use:   "list-pool-addresses",
 		Short: "Query list-pool-addresses",
 		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
