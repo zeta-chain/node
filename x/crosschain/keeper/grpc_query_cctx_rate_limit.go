@@ -234,12 +234,12 @@ func ConvertCctxValue(
 	}
 
 	// get foreign coin decimals
-	_, found := foreignCoinMap[chainID]
+	foreignCoinFromChainMap, found := foreignCoinMap[chainID]
 	if !found {
 		// skip if no coin found for this chainID
 		return sdk.NewDec(0)
 	}
-	fCoin, found := foreignCoinMap[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
+	fCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundTxParams.Asset)]
 	if !found {
 		// skip if no coin found for this Asset
 		return sdk.NewDec(0)
