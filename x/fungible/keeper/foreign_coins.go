@@ -87,12 +87,12 @@ func (k Keeper) GetAllForeignCoinMap(ctx sdk.Context) map[int64]map[string]types
 
 	foreignCoinMap := make(map[int64]map[string]types.ForeignCoins)
 	for _, c := range allForeignCoins {
-		if _, found := fCoinMap[c.ForeignChainId]; !found {
-			fCoinMap[c.ForeignChainId] = make(map[string]types.ForeignCoins)
+		if _, found := foreignCoinMap[c.ForeignChainId]; !found {
+			foreignCoinMap[c.ForeignChainId] = make(map[string]types.ForeignCoins)
 		}
-		fCoinMap[c.ForeignChainId][strings.ToLower(c.Asset)] = c
+		foreignCoinMap[c.ForeignChainId][strings.ToLower(c.Asset)] = c
 	}
-	return fCoinMap
+	return foreignCoinMap
 }
 
 // GetGasCoinForForeignCoin returns the gas coin for a given chain

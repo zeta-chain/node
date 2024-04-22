@@ -69,7 +69,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	}
 
 	// calculate the rate limiter sliding window left boundary (inclusive)
-	leftWindowBoundary := height - rateLimitFlags.Window
+	leftWindowBoundary := height - rateLimitFlags.Window + 1
 	if leftWindowBoundary < 0 {
 		leftWindowBoundary = 0
 	}
