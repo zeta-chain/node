@@ -239,12 +239,12 @@ func ConvertCctxValue(
 		// skip if no coin found for this chainID
 		return sdk.NewDec(0)
 	}
-	fCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundTxParams.Asset)]
+	foreignCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundTxParams.Asset)]
 	if !found {
 		// skip if no coin found for this Asset
 		return sdk.NewDec(0)
 	}
-	decimals = uint64(fCoin.Decimals)
+	decimals = uint64(foreignCoin.Decimals)
 
 	// given decimals = 6, the `oneZrc20` amount will be 10^6 = 1000000
 	oneZrc20 := sdk.NewDec(10).Power(decimals)
