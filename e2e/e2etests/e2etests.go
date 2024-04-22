@@ -53,6 +53,7 @@ const (
 	TestPauseZRC20Name              = "pause_zrc20"
 	TestUpdateBytecodeZRC20Name     = "update_bytecode_zrc20"
 	TestUpdateBytecodeConnectorName = "update_bytecode_connector"
+	TestRateLimiterName             = "rate_limiter"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -371,5 +372,11 @@ var AllE2ETests = []runner.E2ETest{
 		"update zevm connector bytecode",
 		[]runner.ArgDefinition{},
 		TestUpdateBytecodeConnector,
+	),
+	runner.NewE2ETest(
+		TestRateLimiterName,
+		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
+		[]runner.ArgDefinition{},
+		TestRateLimiter,
 	),
 }
