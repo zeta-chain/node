@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -38,7 +39,7 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	store := ctx.KVStore(k.storeKey)
 	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
 
-	pageRes, err := query.Paginate(sendStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(sendStore, req.Pagination, func(_ []byte, value []byte) error {
 		var send types.CrossChainTx
 		if err := k.cdc.Unmarshal(value, &send); err != nil {
 			return err
@@ -78,42 +79,32 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
 	// #nosec G701 always in range
-	res, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
-	if !found {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", req.Nonce, req.ChainID))
-	}
-	val, found := k.GetCrossChainTx(ctx, res.CctxIndex)
-	if !found {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+	cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
+	if err != nil {
+		return nil, err
 	}
 
-	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
+	return &types.QueryGetCctxResponse{CrossChainTx: cctx}, nil
 }
 
-// CctxListPending returns a list of pending cctxs and the total number of pending cctxs
-// a limit for the number of cctxs to return can be specified
-// if no limit is specified, the default is MaxPendingCctxs
-func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendingRequest) (*types.QueryListCctxPendingResponse, error) {
+// ListPendingCctx returns a list of pending cctxs and the total number of pending cctxs
+// a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
+func (k Keeper) ListPendingCctx(c context.Context, req *types.QueryListPendingCctxRequest) (*types.QueryListPendingCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	// check limit
-	// if no limit specified, default to MaxPendingCctxs
-	if req.Limit > MaxPendingCctxs {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("limit exceeds max limit of %d", MaxPendingCctxs))
-	}
+	// use default MaxPendingCctxs if not specified or too high
 	limit := req.Limit
-	if limit == 0 {
+	if limit == 0 || limit > MaxPendingCctxs {
 		limit = MaxPendingCctxs
 	}
-
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// query the nonces that are pending
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
-		return nil, status.Error(codes.Internal, "tss not found")
+		return nil, observertypes.ErrTssNotFound
 	}
 	pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
 	if !found {
@@ -136,21 +127,16 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 		startNonce = 0
 	}
 	for i := startNonce; i < pendingNonces.NonceLow; i++ {
-		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
-		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
+		cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainId, i)
+		if err != nil {
+			return nil, err
 		}
-		cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", nonceToCctx.CctxIndex))
-		}
-		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			totalPending++
 
-			// we check here if max cctxs is reached because we want to return the total pending cctxs
-			// even if we have reached the limit
+		// only take a `limit` number of pending cctxs as result but still count the total pending cctxs
+		if IsPending(cctx) {
+			totalPending++
 			if !maxCCTXsReached() {
-				cctxs = append(cctxs, &cctx)
+				cctxs = append(cctxs, cctx)
 			}
 		}
 	}
@@ -161,19 +147,28 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 
 	// now query the pending nonces that we know are pending
 	for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh && !maxCCTXsReached(); i++ {
-		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
-		if !found {
-			return nil, status.Error(codes.Internal, "nonceToCctx not found")
+		cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainId, i)
+		if err != nil {
+			return nil, err
 		}
-		cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-		if !found {
-			return nil, status.Error(codes.Internal, "cctxIndex not found")
-		}
-		cctxs = append(cctxs, &cctx)
+		cctxs = append(cctxs, cctx)
 	}
 
-	return &types.QueryListCctxPendingResponse{
+	return &types.QueryListPendingCctxResponse{
 		CrossChainTx: cctxs,
 		TotalPending: totalPending,
 	}, nil
+}
+
+// getCctxByChainIDAndNonce returns the cctx by chainID and nonce
+func getCctxByChainIDAndNonce(k Keeper, ctx sdk.Context, tssPubkey string, chainID int64, nonce int64) (*types.CrossChainTx, error) {
+	nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, nonce)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: chainid %d, nonce %d", chainID, nonce))
+	}
+	cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", nonceToCctx.CctxIndex))
+	}
+	return &cctx, nil
 }

@@ -1,9 +1,12 @@
 package sample
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"math/rand"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -13,6 +16,38 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+func RateLimiterFlags() types.RateLimiterFlags {
+	r := Rand()
+
+	return types.RateLimiterFlags{
+		Enabled: true,
+		Window:  r.Int63(),
+		Rate:    sdk.NewUint(r.Uint64()),
+		Conversions: []types.Conversion{
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddress().Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+		},
+	}
+}
 
 func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
 	r := newRandFromStringSeed(t, index)
@@ -174,7 +209,7 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteOnObserved
 		Receiver:      EthAddress().String(),
 		ReceiverChain: Chain(to).GetChainId(),
 		Amount:        UintInRange(10000000, 1000000000),
-		Message:       String(),
+		Message:       base64.StdEncoding.EncodeToString(Bytes()),
 		InBlockHeight: Uint64InRange(1, 10000),
 		GasLimit:      1000000000,
 		InTxHash:      Hash().String(),

@@ -25,7 +25,7 @@ func (k Keeper) ChainNoncesAll(c context.Context, req *types.QueryAllChainNonces
 	store := ctx.KVStore(k.storeKey)
 	chainNoncesStore := prefix.NewStore(store, types.KeyPrefix(types.ChainNoncesKey))
 
-	pageRes, err := query.Paginate(chainNoncesStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(chainNoncesStore, req.Pagination, func(_ []byte, value []byte) error {
 		var chainNonces types.ChainNonces
 		if err := k.cdc.Unmarshal(value, &chainNonces); err != nil {
 			return err

@@ -29,8 +29,9 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
-			Return(nil)
+		fungibleMock.On("ZETADepositAndCallContract", mock.Anything,
+			mock.Anything,
+			receiver, int64(0), amount, mock.Anything, mock.Anything).Return(nil, nil)
 
 		// call ProcessInbound
 		cctx := sample.CrossChainTx(t, "test")
@@ -55,8 +56,8 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// mock unsuccessful HandleEVMDeposit which does not revert
-		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
-			Return(fmt.Errorf("deposit error"), false)
+
+		fungibleMock.On("ZETADepositAndCallContract", mock.Anything, mock.Anything, receiver, int64(0), amount, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("deposit error"))
 
 		// call ProcessInbound
 		cctx := sample.CrossChainTx(t, "test")
@@ -82,7 +83,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		errDeposit := fmt.Errorf("deposit failed")
 
 		// Setup expected calls
@@ -112,7 +113,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		errDeposit := fmt.Errorf("deposit failed")
 
@@ -144,7 +145,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// Setup expected calls
@@ -181,7 +182,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 
 		// Setup expected calls
@@ -219,7 +220,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		errDeposit := fmt.Errorf("deposit failed")
 
@@ -259,7 +260,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		errDeposit := fmt.Errorf("deposit failed")
 
@@ -298,7 +299,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		errDeposit := fmt.Errorf("deposit failed")
 
@@ -334,7 +335,7 @@ func TestKeeper_ProcessInboundProcessCrosschainMsgPassing(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		receiverChain := getValidEthChain(t)
+		receiverChain := getValidEthChain()
 
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *receiverChain, "")
@@ -359,7 +360,7 @@ func TestKeeper_ProcessInboundProcessCrosschainMsgPassing(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		receiverChain := getValidEthChain(t)
+		receiverChain := getValidEthChain()
 
 		// mock unsuccessful PayGasAndUpdateCctx
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, receiverChain.ChainId).
@@ -383,7 +384,7 @@ func TestKeeper_ProcessInboundProcessCrosschainMsgPassing(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		receiverChain := getValidEthChain(t)
+		receiverChain := getValidEthChain()
 
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *receiverChain, "")

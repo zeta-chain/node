@@ -42,7 +42,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		gas := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "FOO")
 
@@ -63,7 +63,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		asset := sample.EthAddress().String()
 		zrc20Addr := deployZRC20(
@@ -107,7 +107,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
@@ -141,7 +141,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		asset := sample.EthAddress().String()
 
 		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
@@ -215,7 +215,7 @@ func Test_IsPending(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(fmt.Sprintf("status %s", tc.status), func(t *testing.T) {
-			require.Equal(t, tc.expected, crosschainkeeper.IsPending(types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
+			require.Equal(t, tc.expected, crosschainkeeper.IsPending(&types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
 		})
 	}
 }

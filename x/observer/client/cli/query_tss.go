@@ -14,7 +14,7 @@ func CmdShowTSS() *cobra.Command {
 		Use:   "show-tss",
 		Short: "shows a TSS",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
@@ -40,7 +40,7 @@ func CmdListTssHistory() *cobra.Command {
 		Use:   "list-tss-history",
 		Short: "show historical list of TSS",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)

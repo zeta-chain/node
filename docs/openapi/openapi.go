@@ -30,7 +30,7 @@ func openAPIHandler() http.HandlerFunc {
 		panic(err)
 	}
 
-	return func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		err := tmpl.Execute(w, struct {
 			URL string
 		}{

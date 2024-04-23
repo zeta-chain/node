@@ -35,7 +35,7 @@ func (k Keeper) GetAllPendingNoncesPaginated(ctx sdk.Context, pagination *query.
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
-	pageRes, err = query.Paginate(store, pagination, func(key []byte, value []byte) error {
+	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var val types.PendingNonces
 		if err := k.cdc.Unmarshal(value, &val); err != nil {
 			return err

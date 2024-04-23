@@ -49,6 +49,7 @@ func TestGenesis(t *testing.T) {
 			sample.InTxHashToCctx(t, "0x1"),
 			sample.InTxHashToCctx(t, "0x2"),
 		},
+		RateLimiterFlags: sample.RateLimiterFlags(),
 	}
 
 	// Init and export
