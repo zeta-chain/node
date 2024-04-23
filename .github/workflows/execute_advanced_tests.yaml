@@ -37,14 +37,12 @@ jobs:
       - name: "Checkout Code"
         uses: actions/checkout@v3
 
-      # use docker logs -f rather than docker attach to make sure we get the initial logs
-      - name: Execute e2e-admin-tests
-        shell: bash -e
-        run: |
-          echo "::group::Test Setup"
-          make start-e2e-admin-test
-          echo "::endgroup::"
+      - name: Start Test
+        run: make start-e2e-admin-test
 
+      # use docker logs -f rather than docker attach to make sure we get the initial logs
+      - name: Watch Test
+        run: |
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
@@ -57,13 +55,11 @@ jobs:
       - name: "Checkout Code"
         uses: actions/checkout@v3
 
-      - name: Execute upgrade-test
-        shell: bash -e
-        run: |
-          echo "::group::Test Setup"
-          make start-upgrade-test
-          echo "::endgroup::"
+      - name: Start Test
+        run: make start-upgrade-test
 
+      - name: Watch Test
+        run: |
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
@@ -76,13 +72,11 @@ jobs:
       - name: "Checkout Code"
         uses: actions/checkout@v3
 
-      - name: Execute upgrade-test-light
-        shell: bash -e
-        run: |
-          echo "::group::Test Setup"
-          make start-upgrade-test-light
-          echo "::endgroup::"
+      - name: Start Test
+        run: make start-upgrade-test-light
 
+      - name: Watch Test
+        run: |
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
@@ -95,13 +89,11 @@ jobs:
       - name: "Checkout Code"
         uses: actions/checkout@v3
 
-      - name: Execute Performance Tests
-        shell: bash -e
-        run: |
-          echo "::group::Test Setup"
-          make start-e2e-performance-test
-          echo "::endgroup::"
+      - name: Start Test
+        run: make start-e2e-performance-test
 
+      - name: Watch Test
+        run: |
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
