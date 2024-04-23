@@ -9,6 +9,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
+// UpdateParams defines a governance operation for updating the x/emissions module parameters.
+// The authority is hard-coded to the x/gov module account.
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if msg.Authority != k.authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
