@@ -24,8 +24,9 @@ on:
         required: false
         default: false
   schedule:
-    # run at midnight UTC daily
-    - cron: "0 0 * * *"
+    # run at 6AM UTC Daily
+    # 6AM UTC -> 11PM PT
+    - cron: "0 6 * * *"
 
 jobs:
   e2e-admin-tests:
