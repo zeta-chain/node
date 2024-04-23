@@ -7,9 +7,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
@@ -181,7 +181,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		if !ethcommon.IsHexAddress(c) {
 			return fmt.Errorf("invalid TestDappAddr: %s", c)
 		}
-		r.TestDAppAddr = ethcommon.HexToAddress(c)
+		r.EvmTestDAppAddr = ethcommon.HexToAddress(c)
 	}
 
 	return nil

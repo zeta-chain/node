@@ -22,7 +22,7 @@ func (k Keeper) ForeignCoinsAll(c context.Context, req *types.QueryAllForeignCoi
 	store := ctx.KVStore(k.storeKey)
 	foreignCoinsStore := prefix.NewStore(store, types.KeyPrefix(types.ForeignCoinsKeyPrefix))
 
-	pageRes, err := query.Paginate(foreignCoinsStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(foreignCoinsStore, req.Pagination, func(_ []byte, value []byte) error {
 		var foreignCoins types.ForeignCoins
 		if err := k.cdc.Unmarshal(value, &foreignCoins); err != nil {
 			return err

@@ -6,22 +6,21 @@ import (
 	"sort"
 	"time"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"google.golang.org/grpc"
 )
 
@@ -32,6 +31,15 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 		return observertypes.CrosschainFlags{}, err
 	}
 	return resp.CrosschainFlags, nil
+}
+
+func (b *ZetaCoreBridge) GetVerificationFlags() (lightclienttypes.VerificationFlags, error) {
+	client := lightclienttypes.NewQueryClient(b.grpcConn)
+	resp, err := client.VerificationFlags(context.Background(), &lightclienttypes.QueryVerificationFlagsRequest{})
+	if err != nil {
+		return lightclienttypes.VerificationFlags{}, err
+	}
+	return resp.VerificationFlags, nil
 }
 
 func (b *ZetaCoreBridge) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {
@@ -113,16 +121,36 @@ func (b *ZetaCoreBridge) GetObserverList() ([]string, error) {
 }
 
 // ListPendingCctx returns a list of pending cctxs for a given chainID
-// the returned list has a limited size of crosschainkeeper.MaxPendingCctxs
-// the total number of pending cctxs is returned
+//   - The max size of the list is crosschainkeeper.MaxPendingCctxs
 func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxListPending(context.Background(), &types.QueryListCctxPendingRequest{ChainId: chainID}, maxSizeOption)
+	resp, err := client.ListPendingCctx(
+		context.Background(),
+		&types.QueryListPendingCctxRequest{ChainId: chainID},
+		maxSizeOption,
+	)
 	if err != nil {
 		return nil, 0, err
 	}
 	return resp.CrossChainTx, resp.TotalPending, nil
+}
+
+// ListPendingCctxWithinRatelimit returns a list of pending cctxs that do not exceed the outbound rate limit
+//   - The max size of the list is crosschainkeeper.MaxPendingCctxs
+//   - The returned `rateLimitExceeded` flag indicates if the rate limit is exceeded or not
+func (b *ZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*types.CrossChainTx, uint64, bool, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.ListPendingCctxWithinRateLimit(
+		context.Background(),
+		&types.QueryListPendingCctxWithinRateLimitRequest{},
+		maxSizeOption,
+	)
+	if err != nil {
+		return nil, 0, false, err
+	}
+	return resp.CrossChainTx, resp.TotalPending, resp.RateLimitExceeded, nil
 }
 
 func (b *ZetaCoreBridge) GetAbortedZetaAmount() (string, error) {
@@ -372,11 +400,11 @@ func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (observertypes.P
 	return resp.PendingNonces, nil
 }
 
-func (b *ZetaCoreBridge) GetBlockHeaderStateByChain(chainID int64) (observertypes.QueryGetBlockHeaderStateResponse, error) {
-	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetBlockHeaderStateByChain(context.Background(), &observertypes.QueryGetBlockHeaderStateRequest{ChainId: chainID})
+func (b *ZetaCoreBridge) GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error) {
+	client := lightclienttypes.NewQueryClient(b.grpcConn)
+	resp, err := client.ChainState(context.Background(), &lightclienttypes.QueryGetChainStateRequest{ChainId: chainID})
 	if err != nil {
-		return observertypes.QueryGetBlockHeaderStateResponse{}, err
+		return lightclienttypes.QueryGetChainStateResponse{}, err
 	}
 	return *resp, nil
 }
@@ -400,8 +428,8 @@ func (b *ZetaCoreBridge) GetPendingNonces() (*observertypes.QueryAllPendingNonce
 }
 
 func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *proofs.Proof, chainID int64) (bool, error) {
-	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.Prove(context.Background(), &observertypes.QueryProveRequest{
+	client := lightclienttypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Prove(context.Background(), &lightclienttypes.QueryProveRequest{
 		BlockHash: blockHash,
 		TxIndex:   txIndex,
 		Proof:     proof,

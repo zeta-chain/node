@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -99,6 +100,25 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 	resp, err := zetabridge.GetCrosschainFlags()
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrosschainFlags, resp)
+}
+
+func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
+	expectedOutput := lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: lightclienttypes.VerificationFlags{
+		EthTypeChainEnabled: true,
+		BtcTypeChainEnabled: false,
+	}}
+	input := lightclienttypes.QueryVerificationFlagsRequest{}
+	method := "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCoreBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetVerificationFlags()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.VerificationFlags, resp)
 }
 
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
@@ -247,7 +267,7 @@ func TestZetaCoreBridge_GetObserverList(t *testing.T) {
 }
 
 func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
-	expectedOutput := crosschainTypes.QueryListCctxPendingResponse{
+	expectedOutput := crosschainTypes.QueryListPendingCctxResponse{
 		CrossChainTx: []*crosschainTypes.CrossChainTx{
 			{
 				Index: "cross-chain4456",
@@ -255,8 +275,8 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 		},
 		TotalPending: 1,
 	}
-	input := crosschainTypes.QueryListCctxPendingRequest{ChainId: 7000}
-	method := "/zetachain.zetacore.crosschain.Query/CctxListPending"
+	input := crosschainTypes.QueryListPendingCctxRequest{ChainId: 7000}
+	method := "/zetachain.zetacore.crosschain.Query/ListPendingCctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -738,24 +758,24 @@ func TestZetaCoreBridge_GetPendingNoncesByChain(t *testing.T) {
 	require.Equal(t, expectedOutput.PendingNonces, resp)
 }
 
-func TestZetaCoreBridge_GetBlockHeaderStateByChain(t *testing.T) {
+func TestZetaCoreBridge_GetBlockHeaderChainState(t *testing.T) {
 	chainID := chains.BscMainnetChain().ChainId
-	expectedOutput := observertypes.QueryGetBlockHeaderStateResponse{BlockHeaderState: &observertypes.BlockHeaderState{
+	expectedOutput := lightclienttypes.QueryGetChainStateResponse{ChainState: &lightclienttypes.ChainState{
 		ChainId:         chainID,
 		LatestHeight:    5566654,
 		EarliestHeight:  4454445,
 		LatestBlockHash: nil,
 	}}
-	input := observertypes.QueryGetBlockHeaderStateRequest{ChainId: chainID}
-	method := "/zetachain.zetacore.observer.Query/GetBlockHeaderStateByChain"
-	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	input := lightclienttypes.QueryGetChainStateRequest{ChainId: chainID}
+	method := "/zetachain.zetacore.lightclient.Query/ChainState"
+	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
 
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetBlockHeaderStateByChain(chainID)
+	resp, err := zetabridge.GetBlockHeaderChainState(chainID)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, resp)
 }
@@ -815,18 +835,18 @@ func TestZetaCoreBridge_Prove(t *testing.T) {
 	txHash := "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"
 	blockHash := "0000000000000000000172c9a64f86f208b867a84dc7a0b7c75be51e750ed8eb"
 	txIndex := 555
-	expectedOutput := observertypes.QueryProveResponse{
+	expectedOutput := lightclienttypes.QueryProveResponse{
 		Valid: true,
 	}
-	input := observertypes.QueryProveRequest{
+	input := lightclienttypes.QueryProveRequest{
 		ChainId:   chainId,
 		TxHash:    txHash,
 		Proof:     nil,
 		BlockHash: blockHash,
 		TxIndex:   int64(txIndex),
 	}
-	method := "/zetachain.zetacore.observer.Query/Prove"
-	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	method := "/zetachain.zetacore.lightclient.Query/Prove"
+	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
 

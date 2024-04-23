@@ -3,6 +3,7 @@ FROM golang:1.20-alpine3.18
 ENV GOPATH /go
 ENV GOOS=linux
 ENV CGO_ENABLED=1
+ENV GOCACHE=/root/.cache/go-build
 
 RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl tmux python3 py3-pip
 RUN pip install requests
@@ -14,8 +15,8 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 
-RUN make install
-RUN make install-zetae2e
+RUN --mount=type=cache,target="/root/.cache/go-build" make install
+RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
 
 RUN ssh-keygen -A
 WORKDIR /root

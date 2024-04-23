@@ -359,7 +359,7 @@ func (signer *Signer) TryProcessOutTx(
 
 	// Get cross-chain flags
 	crossChainflags := signer.coreContext.GetCrossChainFlags()
-
+	// https://github.com/zeta-chain/node/issues/2050
 	var tx *ethtypes.Transaction
 	// compliance check goes first
 	if compliance.IsCctxRestricted(cctx) {
@@ -410,6 +410,11 @@ func (signer *Signer) TryProcessOutTx(
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundTxParams[0].ReceiverChainId == zetaBridge.ZetaChain().ChainId {
 		switch cctx.InboundTxParams.CoinType {
+		case coin.CoinType_Zeta:
+			logger.Info().Msgf("SignRevertTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
+			txData.srcChainID = big.NewInt(cctx.OutboundTxParams[0].ReceiverChainId)
+			txData.toChainID = big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId)
+			tx, err = signer.SignRevertTx(txData)
 		case coin.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignWithdrawTx(txData)
@@ -456,7 +461,9 @@ func (signer *Signer) BroadcastOutTx(
 	txData *OutBoundTransactionData) {
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
-
+	if tx == nil {
+		logger.Warn().Msgf("BroadcastOutTx: no tx to broadcast %s", cctx.Index)
+	}
 	// Try to broadcast transaction
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()
@@ -560,7 +567,7 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 				cctx, err := zetaBridge.GetCctxByNonce(chainID, nonce)
 				if err != nil {
 					logger.Err(err).Msgf("reportToOutTxTracker: error getting cctx for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
-				} else if !crosschainkeeper.IsPending(*cctx) {
+				} else if !crosschainkeeper.IsPending(cctx) {
 					logger.Info().Msgf("reportToOutTxTracker: cctx already finalized for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
 					break
 				}

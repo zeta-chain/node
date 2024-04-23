@@ -11,6 +11,7 @@ import type { CrossChainTx, ZetaAccounting } from "./cross_chain_tx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
+import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
  * GenesisState defines the metacore module's genesis state.
@@ -19,44 +20,49 @@ import type { InTxTracker } from "./in_tx_tracker_pb.js";
  */
 export declare class GenesisState extends Message<GenesisState> {
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 1;
+   * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 2;
    */
   outTxTrackerList: OutTxTracker[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 2;
+   * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 5;
    */
   gasPriceList: GasPrice[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTxs = 3;
+   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTxs = 7;
    */
   CrossChainTxs: CrossChainTx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.LastBlockHeight lastBlockHeightList = 4;
+   * @generated from field: repeated zetachain.zetacore.crosschain.LastBlockHeight lastBlockHeightList = 8;
    */
   lastBlockHeightList: LastBlockHeight[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 5;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 9;
    */
   inTxHashToCctxList: InTxHashToCctx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 6;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 11;
    */
   inTxTrackerList: InTxTracker[];
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 7;
+   * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 12;
    */
   zetaAccounting?: ZetaAccounting;
 
   /**
-   * @generated from field: repeated string FinalizedInbounds = 8;
+   * @generated from field: repeated string FinalizedInbounds = 16;
    */
   FinalizedInbounds: string[];
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.RateLimiterFlags rate_limiter_flags = 17;
+   */
+  rateLimiterFlags?: RateLimiterFlags;
 
   constructor(data?: PartialMessage<GenesisState>);
 

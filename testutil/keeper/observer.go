@@ -21,16 +21,18 @@ import (
 
 // ObserverMockOptions represents options for instantiating an observer keeper with mocks
 type ObserverMockOptions struct {
-	UseStakingMock   bool
-	UseSlashingMock  bool
-	UseAuthorityMock bool
+	UseStakingMock     bool
+	UseSlashingMock    bool
+	UseAuthorityMock   bool
+	UseLightclientMock bool
 }
 
 var (
 	ObserverMocksAll = ObserverMockOptions{
-		UseStakingMock:   true,
-		UseSlashingMock:  true,
-		UseAuthorityMock: true,
+		UseStakingMock:     true,
+		UseSlashingMock:    true,
+		UseAuthorityMock:   true,
+		UseLightclientMock: true,
 	}
 	ObserverNoMocks = ObserverMockOptions{}
 )
@@ -43,6 +45,7 @@ func initObserverKeeper(
 	slashingKeeper slashingkeeper.Keeper,
 	paramKeeper paramskeeper.Keeper,
 	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -57,6 +60,7 @@ func initObserverKeeper(
 		stakingKeeper,
 		slashingKeeper,
 		authorityKeeper,
+		lightclientKeeper,
 	)
 }
 
@@ -71,6 +75,7 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	cdc := NewCodec()
 
 	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
+	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore, authorityKeeperTmp)
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
@@ -92,6 +97,7 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	var stakingKeeper types.StakingKeeper = sdkKeepers.StakingKeeper
 	var slashingKeeper types.SlashingKeeper = sdkKeepers.SlashingKeeper
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
+	var lightclientKeeper types.LightclientKeeper = lightclientKeeperTmp
 	if mockOptions.UseStakingMock {
 		stakingKeeper = observermocks.NewObserverStakingKeeper(t)
 	}
@@ -100,6 +106,9 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	}
 	if mockOptions.UseAuthorityMock {
 		authorityKeeper = observermocks.NewObserverAuthorityKeeper(t)
+	}
+	if mockOptions.UseLightclientMock {
+		lightclientKeeper = observermocks.NewObserverLightclientKeeper(t)
 	}
 
 	k := keeper.NewKeeper(
@@ -110,6 +119,7 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 		stakingKeeper,
 		slashingKeeper,
 		authorityKeeper,
+		lightclientKeeper,
 	)
 
 	k.SetParams(ctx, types.DefaultParams())
@@ -122,6 +132,13 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 // ObserverKeeper instantiates an observer keeper for testing purposes
 func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	return ObserverKeeperWithMocks(t, ObserverNoMocks)
+}
+
+// GetObserverLightclientMock returns a new observer lightclient keeper mock
+func GetObserverLightclientMock(t testing.TB, keeper *keeper.Keeper) *observermocks.ObserverLightclientKeeper {
+	cok, ok := keeper.GetLightclientKeeper().(*observermocks.ObserverLightclientKeeper)
+	require.True(t, ok)
+	return cok
 }
 
 // GetObserverAuthorityMock returns a new observer authority keeper mock

@@ -37,7 +37,7 @@ func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []types.Blame) {
 
 func (k Keeper) GetAllBlamePaginated(ctx sdk.Context, pagination *query.PageRequest) (blameRecords []types.Blame, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
-	pageRes, err = query.Paginate(store, pagination, func(key []byte, value []byte) error {
+	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var blame types.Blame
 		if err := k.cdc.Unmarshal(value, &blame); err != nil {
 			return err

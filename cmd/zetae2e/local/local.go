@@ -188,6 +188,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
+
+		if err := deployerRunner.EnableVerificationFlags(); err != nil {
+			panic(err)
+		}
+
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
 
@@ -248,6 +253,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestMessagePassingZEVMToEVMName,
+			e2etests.TestMessagePassingEVMtoZEVMName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertName,
 		}
 		bitcoinTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,

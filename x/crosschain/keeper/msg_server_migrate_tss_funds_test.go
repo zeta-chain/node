@@ -89,7 +89,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
@@ -149,7 +149,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -172,7 +172,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(true)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -197,7 +197,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -223,7 +223,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock.On("GetAllTSS", mock.Anything).Return([]observertypes.TSS{})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -250,7 +250,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock.On("GetAllTSS", mock.Anything).Return([]observertypes.TSS{tss})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -280,7 +280,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock.On("GetAllTSS", mock.Anything).Return([]observertypes.TSS{tss2})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -311,7 +311,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{}, false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -331,7 +331,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
@@ -359,7 +359,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("100")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
@@ -384,7 +384,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
@@ -409,7 +409,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
@@ -441,7 +441,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
@@ -482,7 +482,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain(t)
+		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, false)
 		currentTss, found := k.GetObserverKeeper().GetTSS(ctx)

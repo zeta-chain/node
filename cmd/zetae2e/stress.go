@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"math/big"
 	"os"
 	"sort"
@@ -143,7 +142,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		local.DeployerAddress,
 		local.DeployerPrivateKey,
 		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
+		local.FungibleAdminMnemonic,
 		logger,
 	)
 	if err != nil {
@@ -253,7 +252,7 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := runner.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
+			cctxResp, err := runner.CctxClient.ListPendingCctx(context.Background(), &crosschaintypes.QueryListPendingCctxRequest{
 				ChainId: chainID.Int64(),
 			})
 			if err != nil {

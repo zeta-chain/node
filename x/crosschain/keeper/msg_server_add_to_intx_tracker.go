@@ -6,52 +6,71 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AddToInTxTracker adds a new record to the inbound transaction tracker.
-//
-// Authorized: admin policy group 1, observer.
 func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}
 
-	isAdmin := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
-	isObserver := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator)
+	// emergency or observer group can submit tracker without proof
+	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
+	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 
-	isProven := false
-	if !(isAdmin || isObserver) && msg.Proof != nil {
-		txBytes, err := k.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
-		if err != nil {
-			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
+	// only emergency group and observer can submit tracker without proof
+	// if the sender is not from the emergency group or observer, the inbound proof must be provided
+	if !(isEmergencyGroup || isObserver) {
+		if msg.Proof == nil {
+			return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 		}
 
-		if chains.IsEVMChain(msg.ChainId) {
-			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
-			if err != nil {
-				return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
-			}
-		} else {
-			return nil, types.ErrTxBodyVerificationFail.Wrapf(fmt.Sprintf("cannot verify inTx body for chain %d", msg.ChainId))
+		// verify the proof and tx body
+		if err := verifyProofAndInTxBody(ctx, k, msg); err != nil {
+			return nil, err
 		}
-		isProven = true
 	}
 
-	// Sender needs to be either the admin policy account or an observer
-	if !(isAdmin || isObserver || isProven) {
-		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
-	}
-
+	// add the inTx tracker
 	k.SetInTxTracker(ctx, types.InTxTracker{
 		ChainId:  msg.ChainId,
 		TxHash:   msg.TxHash,
 		CoinType: msg.CoinType,
 	})
+
 	return &types.MsgAddToInTxTrackerResponse{}, nil
+}
+
+// verifyProofAndInTxBody verifies the proof and inbound tx body
+func verifyProofAndInTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToInTxTracker) error {
+	txBytes, err := k.GetLightclientKeeper().VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
+	if err != nil {
+		return types.ErrProofVerificationFail.Wrapf(err.Error())
+	}
+
+	// get chain params and tss addresses to verify the inTx body
+	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, msg.ChainId)
+	if !found || chainParams == nil {
+		return types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
+	}
+	tss, err := k.GetObserverKeeper().GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+		BitcoinChainId: msg.ChainId,
+	})
+	if err != nil {
+		return observertypes.ErrTssNotFound.Wrapf(err.Error())
+	}
+	if tss == nil {
+		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
+	}
+
+	if err := types.VerifyInTxBody(*msg, txBytes, *chainParams, *tss); err != nil {
+		return types.ErrTxBodyVerificationFail.Wrapf(err.Error())
+	}
+
+	return nil
 }

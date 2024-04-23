@@ -22,7 +22,7 @@ func (k Keeper) InTxHashToCctxAll(c context.Context, req *types.QueryAllInTxHash
 	store := ctx.KVStore(k.storeKey)
 	inTxHashToCctxStore := prefix.NewStore(store, types.KeyPrefix(types.InTxHashToCctxKeyPrefix))
 
-	pageRes, err := query.Paginate(inTxHashToCctxStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(inTxHashToCctxStore, req.Pagination, func(_ []byte, value []byte) error {
 		var inTxHashToCctx types.InTxHashToCctx
 		if err := k.cdc.Unmarshal(value, &inTxHashToCctx); err != nil {
 			return err

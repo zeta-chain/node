@@ -6,8 +6,6 @@ AddToOutTxTracker adds a new record to the outbound transaction tracker.
 only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
 
-Authorized: admin policy group 1, observer.
-
 ```proto
 message MsgAddToOutTxTracker {
 	string creator = 1;
@@ -23,8 +21,6 @@ message MsgAddToOutTxTracker {
 ## MsgAddToInTxTracker
 
 AddToInTxTracker adds a new record to the inbound transaction tracker.
-
-Authorized: admin policy group 1, observer.
 
 ```proto
 message MsgAddToInTxTracker {
@@ -261,6 +257,18 @@ message MsgRefundAbortedCCTX {
 	string creator = 1;
 	string cctx_index = 2;
 	string refund_address = 3;
+}
+```
+
+## MsgUpdateRateLimiterFlags
+
+UpdateRateLimiterFlags updates the rate limiter flags.
+Authorized: admin policy operational.
+
+```proto
+message MsgUpdateRateLimiterFlags {
+	string creator = 1;
+	RateLimiterFlags rate_limiter_flags = 2;
 }
 ```
 
