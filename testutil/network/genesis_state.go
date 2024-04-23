@@ -61,8 +61,9 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	}
 
 	if setupChainNonces {
-		chainNonceList := make([]observertypes.ChainNonces, len(chains.PrivnetChainList()))
-		for i, chain := range chains.PrivnetChainList() {
+		privatenetChain := chains.ChainListByNetworkType(chains.NetworkType_PRIVNET)
+		chainNonceList := make([]observertypes.ChainNonces, len(privatenetChain))
+		for i, chain := range privatenetChain {
 			chainNonceList[i] = observertypes.ChainNonces{
 				Index:   chain.ChainName.String(),
 				ChainId: chain.ChainId,

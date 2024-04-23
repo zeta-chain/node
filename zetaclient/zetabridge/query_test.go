@@ -783,11 +783,25 @@ func TestZetaCoreBridge_GetBlockHeaderChainState(t *testing.T) {
 func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []*chains.Chain{
-			{chains.BscMainnetChain().ChainName,
-				chains.BscMainnetChain().ChainId,
+			{
+				chains.BtcMainnetChain().ChainName,
+				chains.BtcMainnetChain().ChainId,
+				chains.BscMainnetChain().Network,
+				chains.BscMainnetChain().NetworkType,
+				chains.BscMainnetChain().Vm,
+				chains.BscMainnetChain().Consensus,
+				chains.BscMainnetChain().IsExternal,
+				chains.BscMainnetChain().IsHeaderSupported,
 			},
-			{chains.EthChain().ChainName,
+			{
+				chains.EthChain().ChainName,
 				chains.EthChain().ChainId,
+				chains.EthChain().Network,
+				chains.EthChain().NetworkType,
+				chains.EthChain().Vm,
+				chains.EthChain().Consensus,
+				chains.EthChain().IsExternal,
+				chains.EthChain().IsHeaderSupported,
 			},
 		},
 	}

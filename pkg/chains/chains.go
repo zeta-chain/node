@@ -2,123 +2,217 @@ package chains
 
 import "fmt"
 
-// Zeta chains
-
+// Mainnet chains
 func ZetaChainMainnet() Chain {
 	return Chain{
-		ChainName: ChainName_zeta_mainnet,
-		ChainId:   7000,
+		ChainName:         ChainName_zeta_mainnet,
+		ChainId:           7000,
+		Network:           Network_ZETA,
+		NetworkType:       NetworkType_MAINNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Tendermint,
+		IsExternal:        false,
+		IsHeaderSupported: false,
 	}
 }
-
-func ZetaTestnetChain() Chain {
-	return Chain{
-		ChainName: ChainName_zeta_testnet,
-		ChainId:   7001,
-	}
-}
-
-func ZetaMocknetChain() Chain {
-	return Chain{
-		ChainName: ChainName_zeta_mainnet,
-		ChainId:   70000,
-	}
-}
-
-func ZetaPrivnetChain() Chain {
-	return Chain{
-		ChainName: ChainName_zeta_mainnet,
-		ChainId:   101,
-	}
-}
-
-// Mainnet chains
-
 func EthChain() Chain {
 	return Chain{
-		ChainName: ChainName_eth_mainnet,
-		ChainId:   1,
+		ChainName:         ChainName_eth_mainnet,
+		ChainId:           1,
+		Network:           Network_ETH,
+		NetworkType:       NetworkType_MAINNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
 	}
 }
 
 func BscMainnetChain() Chain {
 	return Chain{
-		ChainName: ChainName_bsc_mainnet,
-		ChainId:   56,
+		ChainName:         ChainName_bsc_mainnet,
+		ChainId:           56,
+		Network:           Network_BSC,
+		NetworkType:       NetworkType_MAINNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
 	}
 }
 
 func BtcMainnetChain() Chain {
 	return Chain{
-		ChainName: ChainName_btc_mainnet,
-		ChainId:   8332,
+		ChainName:         ChainName_btc_mainnet,
+		ChainId:           8332,
+		Network:           Network_BTC,
+		NetworkType:       NetworkType_MAINNET,
+		Vm:                Vm_NO_VM,
+		Consensus:         Consensus_Bitcoin,
+		IsExternal:        true,
+		IsHeaderSupported: false,
 	}
 }
 
 func PolygonChain() Chain {
 	return Chain{
-		ChainName: ChainName_polygon_mainnet,
-		ChainId:   137,
+		ChainName:         ChainName_polygon_mainnet,
+		ChainId:           137,
+		Network:           Network_POLYGON,
+		NetworkType:       NetworkType_MAINNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: false,
 	}
 }
 
 // Testnet chains
 
-func SepoliaChain() Chain {
+func ZetaTestnetChain() Chain {
 	return Chain{
-		ChainName: ChainName_sepolia_testnet,
-		ChainId:   11155111,
+		ChainName:         ChainName_zeta_testnet,
+		ChainId:           7001,
+		Network:           Network_ZETA,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Tendermint,
+		IsExternal:        false,
+		IsHeaderSupported: false,
 	}
 }
 
+func SepoliaChain() Chain {
+	return Chain{
+		ChainName:         ChainName_sepolia_testnet,
+		ChainId:           11155111,
+		Network:           Network_ETH,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
+	}
+}
+
+// GoerliChain Deprecated
 func GoerliChain() Chain {
 	return Chain{
-		ChainName: ChainName_goerli_testnet,
-		ChainId:   5,
+		ChainName:         ChainName_goerli_testnet,
+		ChainId:           5,
+		Network:           Network_ETH,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
 	}
 }
 
 func BscTestnetChain() Chain {
 	return Chain{
-		ChainName: ChainName_bsc_testnet,
-		ChainId:   97,
+		ChainName:         ChainName_bsc_testnet,
+		ChainId:           97,
+		Network:           Network_BSC,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
 	}
 }
 
 func BtcTestNetChain() Chain {
 	return Chain{
-		ChainName: ChainName_btc_testnet,
-		ChainId:   18332,
+		ChainName:         ChainName_btc_testnet,
+		ChainId:           18332,
+		Network:           Network_BTC,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_NO_VM,
+		Consensus:         Consensus_Bitcoin,
+		IsExternal:        true,
+		IsHeaderSupported: false,
 	}
 }
 
+// MumbaiChain Deprecated
 func MumbaiChain() Chain {
 	return Chain{
-		ChainName: ChainName_mumbai_testnet,
-		ChainId:   80001,
+		ChainName:         ChainName_mumbai_testnet,
+		ChainId:           80001,
+		Network:           Network_POLYGON,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: false,
 	}
 }
 
 func AmoyChain() Chain {
 	return Chain{
-		ChainName: ChainName_amoy_testnet,
-		ChainId:   80002,
+		ChainName:         ChainName_amoy_testnet,
+		ChainId:           80002,
+		Network:           Network_POLYGON,
+		NetworkType:       NetworkType_TESTNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: false,
+	}
+}
+
+// Devnet chains
+func ZetaMocknetChain() Chain {
+	return Chain{
+		ChainName:         ChainName_zeta_mainnet,
+		ChainId:           70000,
+		Network:           Network_ZETA,
+		NetworkType:       NetworkType_DEVNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Tendermint,
+		IsExternal:        false,
+		IsHeaderSupported: false,
 	}
 }
 
 // Privnet chains
 
+func ZetaPrivnetChain() Chain {
+	return Chain{
+		ChainName:         ChainName_zeta_mainnet,
+		ChainId:           101,
+		Network:           Network_ZETA,
+		NetworkType:       NetworkType_PRIVNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Tendermint,
+		IsExternal:        false,
+		IsHeaderSupported: false,
+	}
+}
 func BtcRegtestChain() Chain {
 	return Chain{
-		ChainName: ChainName_btc_regtest,
-		ChainId:   18444,
+		ChainName:         ChainName_btc_regtest,
+		ChainId:           18444,
+		Network:           Network_BTC,
+		NetworkType:       NetworkType_PRIVNET,
+		Vm:                Vm_NO_VM,
+		Consensus:         Consensus_Bitcoin,
+		IsExternal:        true,
+		IsHeaderSupported: false,
 	}
 }
 
 func GoerliLocalnetChain() Chain {
 	return Chain{
-		ChainName: ChainName_goerli_localnet,
-		ChainId:   1337,
+		ChainName:         ChainName_goerli_localnet,
+		ChainId:           1337,
+		Network:           Network_ETH,
+		NetworkType:       NetworkType_PRIVNET,
+		Vm:                Vm_EVM,
+		Consensus:         Consensus_Ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
 	}
 }
 
@@ -127,6 +221,7 @@ func BtcDustOffset() int64 {
 }
 
 // DefaultChainsList returns a list of default chains
+// TODO : Check why polygon is not in this list
 func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
 		BtcMainnetChain(),
@@ -144,66 +239,60 @@ func DefaultChainsList() []*Chain {
 		ZetaTestnetChain(),
 		ZetaMocknetChain(),
 		ZetaPrivnetChain(),
+		PolygonChain(),
 	})
 }
 
 // MainnetChainList returns a list of mainnet chains
-func MainnetChainList() []*Chain {
-	return chainListPointers([]Chain{
-		ZetaChainMainnet(),
-		BtcMainnetChain(),
-		BscMainnetChain(),
-		EthChain(),
-	})
+func ChainListByNetworkType(networkType NetworkType) []*Chain {
+	var mainNetList []*Chain
+	for _, chain := range DefaultChainsList() {
+		if chain.NetworkType == networkType {
+			mainNetList = append(mainNetList, chain)
+		}
+	}
+	return mainNetList
 }
 
-// TestnetChainList returns a list of testnet chains
-func TestnetChainList() []*Chain {
-	return chainListPointers([]Chain{
-		ZetaTestnetChain(),
-		BtcTestNetChain(),
-		MumbaiChain(),
-		AmoyChain(),
-		BscTestnetChain(),
-		GoerliChain(),
-		SepoliaChain(),
-	})
-}
-
-// PrivnetChainList returns a list of privnet chains
-func PrivnetChainList() []*Chain {
-	return chainListPointers([]Chain{
-		ZetaPrivnetChain(),
-		BtcRegtestChain(),
-		GoerliLocalnetChain(),
-	})
+func ChainListByNetwork(network Network) []*Chain {
+	var chainList []*Chain
+	for _, chain := range DefaultChainsList() {
+		if chain.Network == network {
+			chainList = append(chainList, chain)
+		}
+	}
+	return chainList
 }
 
 // ExternalChainList returns a list chains that are not Zeta
 func ExternalChainList() []*Chain {
-	return chainListPointers([]Chain{
-		BtcMainnetChain(),
-		BscMainnetChain(),
-		EthChain(),
-		BtcTestNetChain(),
-		MumbaiChain(),
-		AmoyChain(),
-		BscTestnetChain(),
-		GoerliChain(),
-		SepoliaChain(),
-		BtcRegtestChain(),
-		GoerliLocalnetChain(),
-	})
+	var chainList []*Chain
+	for _, chain := range DefaultChainsList() {
+		if chain.IsExternal {
+			chainList = append(chainList, chain)
+		}
+	}
+	return chainList
 }
 
-// ZetaChainList returns a list of Zeta chains
-func ZetaChainList() []*Chain {
-	return chainListPointers([]Chain{
-		ZetaChainMainnet(),
-		ZetaTestnetChain(),
-		ZetaMocknetChain(),
-		ZetaPrivnetChain(),
-	})
+func ChainListByConsensus(consensus Consensus) []*Chain {
+	var chainList []*Chain
+	for _, chain := range DefaultChainsList() {
+		if chain.Consensus == consensus {
+			chainList = append(chainList, chain)
+		}
+	}
+	return chainList
+
+}
+func ChainListForHeaderSupport() []*Chain {
+	var chainList []*Chain
+	for _, chain := range DefaultChainsList() {
+		if chain.IsHeaderSupported {
+			chainList = append(chainList, chain)
+		}
+	}
+	return chainList
 }
 
 // ZetaChainFromChainID returns a ZetaChain chainobject  from a Cosmos chain ID

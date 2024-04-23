@@ -20,10 +20,10 @@ func (chain Chain) IsEqual(c Chain) bool {
 }
 
 func (chain Chain) IsZetaChain() bool {
-	return chain.InChainList(ZetaChainList())
+	return chain.Network == Network_ZETA
 }
 func (chain Chain) IsExternalChain() bool {
-	return !chain.InChainList(ZetaChainList())
+	return chain.IsExternal
 }
 
 // EncodeAddress bytes representations of address
@@ -82,35 +82,19 @@ func DecodeAddressFromChainID(chainID int64, addr string) ([]byte, error) {
 }
 
 func IsZetaChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ZetaChainList())
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ZETA))
 }
 
 // IsEVMChain returns true if the chain is an EVM chain
-// TODO: put this information directly in chain object
-// https://github.com/zeta-chain/node-private/issues/63
 func IsEVMChain(chainID int64) bool {
-	return chainID == 5 || // Goerli
-		chainID == AmoyChain().ChainId ||
-		chainID == SepoliaChain().ChainId || // Sepolia
-		chainID == 80001 || // Polygon mumbai
-		chainID == 97 || // BSC testnet
-		chainID == 1001 || // klaytn baobab
-		chainID == 1337 || // eth privnet
-		chainID == 1 || // eth mainnet
-		chainID == 56 || // bsc mainnet
-		chainID == 137 // polygon mainnet
+	evmChainList := ChainListByConsensus(Consensus_Ethereum)
+	return ChainIDInChainList(chainID, evmChainList)
 }
 
 // IsHeaderSupportedEvmChain returns true if the chain is an EVM chain supporting block header-based verification
-// TODO: put this information directly in chain object
-// https://github.com/zeta-chain/node-private/issues/63
 func IsHeaderSupportedEvmChain(chainID int64) bool {
-	return chainID == 5 || // Goerli
-		chainID == SepoliaChain().ChainId || // Sepolia
-		chainID == 97 || // BSC testnet
-		chainID == 1337 || // eth privnet
-		chainID == 1 || // eth mainnet
-		chainID == 56 // bsc mainnet
+	chainList := ChainListForHeaderSupport()
+	return ChainIDInChainList(chainID, chainList)
 }
 
 // SupportMerkleProof returns true if the chain supports block header-based verification
@@ -122,19 +106,14 @@ func (chain Chain) SupportMerkleProof() bool {
 // TODO: put this information directly in chain object
 // https://github.com/zeta-chain/node-private/issues/63
 func IsBitcoinChain(chainID int64) bool {
-	return chainID == 18444 || // regtest
-		chainID == 18332 || //testnet
-		chainID == 8332 // mainnet
+	btcChainList := ChainListByNetwork(Network_BTC)
+	return ChainIDInChainList(chainID, btcChainList)
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain
-// TODO: put this information directly in chain object
-// https://github.com/zeta-chain/node-private/issues/63
 func IsEthereumChain(chainID int64) bool {
-	return chainID == 1 || // eth mainnet
-		chainID == 5 || // Goerli
-		chainID == SepoliaChain().ChainId || // Sepolia
-		chainID == 1337 // eth privnet
+	ethChainList := ChainListByNetwork(Network_ETH)
+	return ChainIDInChainList(chainID, ethChainList)
 }
 
 // IsEmpty is to determinate whether the chain is empty

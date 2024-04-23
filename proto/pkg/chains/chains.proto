@@ -34,7 +34,43 @@ enum ChainName {
   amoy_testnet = 16;
 }
 
+enum Network {
+  option (gogoproto.goproto_enum_stringer) = true;
+  ETH = 0;
+  ZETA = 1;
+  BTC = 2;
+  POLYGON = 3;
+  BSC = 4;
+}
+
+enum NetworkType {
+  option (gogoproto.goproto_enum_stringer) = true;
+  MAINNET = 0;
+  TESTNET = 1;
+  PRIVNET = 2;
+  DEVNET = 3;
+}
+
+enum Vm {
+  option (gogoproto.goproto_enum_stringer) = true;
+  NO_VM = 0;
+  EVM = 1;
+}
+
+enum Consensus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  Ethereum = 0;
+  Tendermint = 1;
+  Bitcoin = 2;
+}
+
 message Chain {
   ChainName chain_name = 1;
   int64 chain_id = 2;
+  Network network = 3;
+  NetworkType network_type = 4;
+  Vm vm = 5;
+  Consensus consensus = 6;
+  bool is_external = 7;
+  bool is_header_supported = 8;
 }

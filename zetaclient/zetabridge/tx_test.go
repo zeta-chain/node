@@ -245,11 +245,26 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 				WithPayload(observertypes.QuerySupportedChains{}).
 				Return(observertypes.QuerySupportedChainsResponse{
 					Chains: []*chains.Chain{
-						{chains.BscMainnetChain().ChainName,
-							chains.BscMainnetChain().ChainId,
+
+						{
+							chains.BtcMainnetChain().ChainName,
+							chains.BtcMainnetChain().ChainId,
+							chains.BscMainnetChain().Network,
+							chains.BscMainnetChain().NetworkType,
+							chains.BscMainnetChain().Vm,
+							chains.BscMainnetChain().Consensus,
+							chains.BscMainnetChain().IsExternal,
+							chains.BscMainnetChain().IsHeaderSupported,
 						},
-						{chains.EthChain().ChainName,
+						{
+							chains.EthChain().ChainName,
 							chains.EthChain().ChainId,
+							chains.EthChain().Network,
+							chains.EthChain().NetworkType,
+							chains.EthChain().Vm,
+							chains.EthChain().Consensus,
+							chains.EthChain().IsExternal,
+							chains.EthChain().IsHeaderSupported,
 						},
 					},
 				})
