@@ -7,9 +7,9 @@ option go_package = "github.com/zeta-chain/zetacore/pkg/chains";
 
 enum ReceiveStatus {
   option (gogoproto.goproto_enum_stringer) = true;
-  Created = 0; // some observer sees inbound tx
-  Success = 1;
-  Failed = 2;
+  created = 0; // some observer sees inbound tx
+  success = 1;
+  failed = 2;
 }
 
 // ChainName represents the name of the chain
@@ -38,35 +38,35 @@ enum ChainName {
 // Network represents the network type of the chain
 enum Network {
   option (gogoproto.goproto_enum_stringer) = true;
-  ETH = 0;
-  ZETA = 1;
-  BTC = 2;
-  POLYGON = 3;
-  BSC = 4;
+  eth = 0;
+  zeta = 1;
+  btc = 2;
+  polygon = 3;
+  bsc = 4;
 }
 
 // NetworkType represents the network type of the chain
 enum NetworkType {
   option (gogoproto.goproto_enum_stringer) = true;
-  MAINNET = 0;
-  TESTNET = 1;
-  PRIVNET = 2;
-  DEVNET = 3;
+  mainnet = 0;
+  testnet = 1;
+  privnet = 2;
+  devnet = 3;
 }
 
 // Vm represents the virtual machine type of the chain to support smart contracts
 enum Vm {
   option (gogoproto.goproto_enum_stringer) = true;
-  NO_VM = 0;
-  EVM = 1;
+  no_vm = 0;
+  evm = 1;
 }
 
 // Consensus represents the consensus algorithm used by the chain
 enum Consensus {
   option (gogoproto.goproto_enum_stringer) = true;
-  Ethereum = 0;
-  Tendermint = 1;
-  Bitcoin = 2;
+  ethereum = 0;
+  tendermint = 1;
+  bitcoin = 2;
 }
 
 //    Chain represents a blockchain network with its unique chain ID

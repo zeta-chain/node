@@ -190,7 +190,7 @@ func TestZetaCoreBridge_SetTSS(t *testing.T) {
 		hash, err := zetabridge.SetTSS(
 			"zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
 			9987,
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 		)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
@@ -471,7 +471,7 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 		big.NewInt(100),
 		1200,
 		big.NewInt(500),
-		chains.ReceiveStatus_Success,
+		chains.ReceiveStatus_success,
 		chains.EthChain(),
 		10001,
 		coin.CoinType_Gas)

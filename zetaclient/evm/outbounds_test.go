@@ -153,7 +153,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 	t.Run("post vote outbound successfully", func(t *testing.T) {
 		// the amount and status to be used for vote
 		receiveValue := cctx.GetCurrentOutTxParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_Success
+		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetaBridge and post outbound vote
 		zetaBridge := stub.NewMockZetaCoreBridge()
@@ -351,7 +351,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should parse and check ZetaReverted event from archived outtx receipt", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReverted event
@@ -366,7 +366,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 			cctx, receipt, outtx, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should parse and check ERC20 Withdrawn event from archived outtx receipt", func(t *testing.T) {
 		// load archived outtx receipt that contains ERC20 Withdrawn event
@@ -378,7 +378,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("nothing to parse if coinType is Gas", func(t *testing.T) {
 		// load archived outtx receipt of Gas token transfer
@@ -390,7 +390,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should fail on unknown coin type", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReceived event
@@ -401,7 +401,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.ErrorContains(t, err, "unknown coin type")
 		require.Nil(t, value)
-		require.Equal(t, chains.ReceiveStatus_Failed, status)
+		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReceived event
@@ -415,7 +415,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, fakeConnectorAddress, connector, custodyAddr, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
-		require.Equal(t, chains.ReceiveStatus_Failed, status)
+		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 	t.Run("should fail if unable to parse ERC20 Withdrawn event", func(t *testing.T) {
 		// load archived outtx receipt that contains ERC20 Withdrawn event
@@ -429,6 +429,6 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, fakeCustodyAddress, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
-		require.Equal(t, chains.ReceiveStatus_Failed, status)
+		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 }

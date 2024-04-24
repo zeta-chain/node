@@ -138,11 +138,11 @@ func TestChain_DecodeAddress(t *testing.T) {
 }
 
 func TestChain_InChainList(t *testing.T) {
-	require.True(t, ZetaChainMainnet().InChainList(ChainListByNetwork(Network_ZETA)))
-	require.True(t, ZetaMocknetChain().InChainList(ChainListByNetwork(Network_ZETA)))
-	require.True(t, ZetaPrivnetChain().InChainList(ChainListByNetwork(Network_ZETA)))
-	require.True(t, ZetaTestnetChain().InChainList(ChainListByNetwork(Network_ZETA)))
-	require.False(t, EthChain().InChainList(ChainListByNetwork(Network_ZETA)))
+	require.True(t, ZetaChainMainnet().InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaMocknetChain().InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaPrivnetChain().InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaTestnetChain().InChainList(ChainListByNetwork(Network_zeta)))
+	require.False(t, EthChain().InChainList(ChainListByNetwork(Network_zeta)))
 }
 
 func TestIsZetaChain(t *testing.T) {
@@ -376,6 +376,6 @@ func TestGetBTCChainIDFromChainParams(t *testing.T) {
 }
 
 func TestChainIDInChainList(t *testing.T) {
-	require.True(t, ChainIDInChainList(ZetaChainMainnet().ChainId, ChainListByNetwork(Network_ZETA)))
-	require.False(t, ChainIDInChainList(EthChain().ChainId, ChainListByNetwork(Network_ZETA)))
+	require.True(t, ChainIDInChainList(ZetaChainMainnet().ChainId, ChainListByNetwork(Network_zeta)))
+	require.False(t, ChainIDInChainList(EthChain().ChainId, ChainListByNetwork(Network_zeta)))
 }

@@ -50,7 +50,7 @@ func (msg *MsgVoteTSS) ValidateBasic() error {
 	}
 
 	// either success or observation failure
-	if msg.Status != chains.ReceiveStatus_Success && msg.Status != chains.ReceiveStatus_Failed {
+	if msg.Status != chains.ReceiveStatus_success && msg.Status != chains.ReceiveStatus_failed {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid status: %s", msg.Status)
 	}
 

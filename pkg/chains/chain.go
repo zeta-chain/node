@@ -20,7 +20,7 @@ func (chain Chain) IsEqual(c Chain) bool {
 }
 
 func (chain Chain) IsZetaChain() bool {
-	return chain.Network == Network_ZETA
+	return chain.Network == Network_zeta
 }
 func (chain Chain) IsExternalChain() bool {
 	return chain.IsExternal
@@ -83,22 +83,22 @@ func DecodeAddressFromChainID(chainID int64, addr string) ([]byte, error) {
 
 // IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality
 func IsEVMChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_Ethereum))
+	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_ethereum))
 }
 
 // IsBitcoinChain returns true if the chain is a Bitcoin-based chain or uses the bitcoin consensus mechanism for block finality
 func IsBitcoinChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_Bitcoin))
+	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain
 func IsEthereumChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ETH))
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_eth))
 }
 
 // IsZetaChain returns true if the chain is a Zeta chain
 func IsZetaChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ZETA))
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_zeta))
 }
 
 // IsHeaderSupportedEvmChain returns true if the chain is an EVM chain supporting block header-based verification

@@ -22,10 +22,10 @@ func ZetaChainMainnet() Chain {
 	return Chain{
 		ChainName:         ChainName_zeta_mainnet,
 		ChainId:           7000,
-		Network:           Network_ZETA,
-		NetworkType:       NetworkType_MAINNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Tendermint,
+		Network:           Network_zeta,
+		NetworkType:       NetworkType_mainnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_tendermint,
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
@@ -34,10 +34,10 @@ func EthChain() Chain {
 	return Chain{
 		ChainName:         ChainName_eth_mainnet,
 		ChainId:           1,
-		Network:           Network_ETH,
-		NetworkType:       NetworkType_MAINNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_eth,
+		NetworkType:       NetworkType_mainnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
@@ -47,10 +47,10 @@ func BscMainnetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_bsc_mainnet,
 		ChainId:           56,
-		Network:           Network_BSC,
-		NetworkType:       NetworkType_MAINNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_bsc,
+		NetworkType:       NetworkType_mainnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
@@ -60,10 +60,10 @@ func BtcMainnetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_btc_mainnet,
 		ChainId:           8332,
-		Network:           Network_BTC,
-		NetworkType:       NetworkType_MAINNET,
-		Vm:                Vm_NO_VM,
-		Consensus:         Consensus_Bitcoin,
+		Network:           Network_btc,
+		NetworkType:       NetworkType_mainnet,
+		Vm:                Vm_no_vm,
+		Consensus:         Consensus_bitcoin,
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
@@ -73,10 +73,10 @@ func PolygonChain() Chain {
 	return Chain{
 		ChainName:         ChainName_polygon_mainnet,
 		ChainId:           137,
-		Network:           Network_POLYGON,
-		NetworkType:       NetworkType_MAINNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_polygon,
+		NetworkType:       NetworkType_mainnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
@@ -88,10 +88,10 @@ func ZetaTestnetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_zeta_testnet,
 		ChainId:           7001,
-		Network:           Network_ZETA,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Tendermint,
+		Network:           Network_zeta,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_tendermint,
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
@@ -101,10 +101,10 @@ func SepoliaChain() Chain {
 	return Chain{
 		ChainName:         ChainName_sepolia_testnet,
 		ChainId:           11155111,
-		Network:           Network_ETH,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_eth,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
@@ -115,10 +115,10 @@ func GoerliChain() Chain {
 	return Chain{
 		ChainName:         ChainName_goerli_testnet,
 		ChainId:           5,
-		Network:           Network_ETH,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_eth,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
@@ -128,10 +128,10 @@ func BscTestnetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_bsc_testnet,
 		ChainId:           97,
-		Network:           Network_BSC,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_bsc,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
@@ -141,10 +141,10 @@ func BtcTestNetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_btc_testnet,
 		ChainId:           18332,
-		Network:           Network_BTC,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_NO_VM,
-		Consensus:         Consensus_Bitcoin,
+		Network:           Network_btc,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_no_vm,
+		Consensus:         Consensus_bitcoin,
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
@@ -155,10 +155,10 @@ func MumbaiChain() Chain {
 	return Chain{
 		ChainName:         ChainName_mumbai_testnet,
 		ChainId:           80001,
-		Network:           Network_POLYGON,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_polygon,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
@@ -168,10 +168,10 @@ func AmoyChain() Chain {
 	return Chain{
 		ChainName:         ChainName_amoy_testnet,
 		ChainId:           80002,
-		Network:           Network_POLYGON,
-		NetworkType:       NetworkType_TESTNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_polygon,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
@@ -182,10 +182,10 @@ func ZetaMocknetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_zeta_mainnet,
 		ChainId:           70000,
-		Network:           Network_ZETA,
-		NetworkType:       NetworkType_DEVNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Tendermint,
+		Network:           Network_zeta,
+		NetworkType:       NetworkType_devnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_tendermint,
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
@@ -197,10 +197,10 @@ func ZetaPrivnetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_zeta_mainnet,
 		ChainId:           101,
-		Network:           Network_ZETA,
-		NetworkType:       NetworkType_PRIVNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Tendermint,
+		Network:           Network_zeta,
+		NetworkType:       NetworkType_privnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_tendermint,
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
@@ -209,10 +209,10 @@ func BtcRegtestChain() Chain {
 	return Chain{
 		ChainName:         ChainName_btc_regtest,
 		ChainId:           18444,
-		Network:           Network_BTC,
-		NetworkType:       NetworkType_PRIVNET,
-		Vm:                Vm_NO_VM,
-		Consensus:         Consensus_Bitcoin,
+		Network:           Network_btc,
+		NetworkType:       NetworkType_privnet,
+		Vm:                Vm_no_vm,
+		Consensus:         Consensus_bitcoin,
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
@@ -222,10 +222,10 @@ func GoerliLocalnetChain() Chain {
 	return Chain{
 		ChainName:         ChainName_goerli_localnet,
 		ChainId:           1337,
-		Network:           Network_ETH,
-		NetworkType:       NetworkType_PRIVNET,
-		Vm:                Vm_EVM,
-		Consensus:         Consensus_Ethereum,
+		Network:           Network_eth,
+		NetworkType:       NetworkType_privnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}

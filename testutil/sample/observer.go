@@ -110,7 +110,7 @@ func ChainParamsSupported(chainID int64) *types.ChainParams {
 }
 
 func ChainParamsList() (cpl types.ChainParamsList) {
-	chainList := chains.ChainListByNetworkType(chains.NetworkType_PRIVNET)
+	chainList := chains.ChainListByNetworkType(chains.NetworkType_privnet)
 
 	for _, chain := range chainList {
 		cpl.ChainParams = append(cpl.ChainParams, ChainParams(chain.ChainId))
