@@ -295,10 +295,10 @@ testnet-zetarpc-node:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
 mainnet-zetarpc-node-local-dev:
-	cd contrib/mainnet/zetacored-localbuild && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+	cd contrib/mainnet/zetacored-localbuild && docker-compose up
 
 testnet-zetarpc-node-local-dev:
-	cd contrib/athens3/zetacored-localbuild && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+	cd contrib/athens3/zetacored-localbuild && docker-compose up
 
 ###############################################################################
 ###                               Debug Tools                               ###
