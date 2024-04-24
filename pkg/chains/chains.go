@@ -221,7 +221,6 @@ func BtcDustOffset() int64 {
 }
 
 // DefaultChainsList returns a list of default chains
-// TODO : Check why polygon is not in this list
 func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
 		BtcMainnetChain(),
@@ -243,7 +242,7 @@ func DefaultChainsList() []*Chain {
 	})
 }
 
-// MainnetChainList returns a list of mainnet chains
+// ChainListByNetworkType returns a list of chains by network type
 func ChainListByNetworkType(networkType NetworkType) []*Chain {
 	var mainNetList []*Chain
 	for _, chain := range DefaultChainsList() {
@@ -254,6 +253,7 @@ func ChainListByNetworkType(networkType NetworkType) []*Chain {
 	return mainNetList
 }
 
+// ChainListByNetwork returns a list of chains by network
 func ChainListByNetwork(network Network) []*Chain {
 	var chainList []*Chain
 	for _, chain := range DefaultChainsList() {
@@ -275,6 +275,7 @@ func ExternalChainList() []*Chain {
 	return chainList
 }
 
+// ChainListByConsensus returns a list of chains by consensus
 func ChainListByConsensus(consensus Consensus) []*Chain {
 	var chainList []*Chain
 	for _, chain := range DefaultChainsList() {
@@ -285,6 +286,8 @@ func ChainListByConsensus(consensus Consensus) []*Chain {
 	return chainList
 
 }
+
+// ChainListForHeaderSupport returns a list of chains that support headers
 func ChainListForHeaderSupport() []*Chain {
 	var chainList []*Chain
 	for _, chain := range DefaultChainsList() {
@@ -295,7 +298,7 @@ func ChainListForHeaderSupport() []*Chain {
 	return chainList
 }
 
-// ZetaChainFromChainID returns a ZetaChain chainobject  from a Cosmos chain ID
+// ZetaChainFromChainID returns a ZetaChain chain object  from a Cosmos chain ID
 func ZetaChainFromChainID(chainID string) (Chain, error) {
 	ethChainID, err := CosmosToEthChainID(chainID)
 	if err != nil {
