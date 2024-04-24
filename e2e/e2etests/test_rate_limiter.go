@@ -90,7 +90,8 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	// Perform 10 withdraws to log time for completion
 	txs := make([]*ethtypes.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		txs[i] = r.WithdrawZeta(big.NewInt(1e18), true)
+		amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(3))
+		txs[i] = r.WithdrawZeta(amount, true)
 	}
 
 	// start a error group to wait for all the withdraws to be mined
@@ -111,9 +112,9 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	}
 
 	duration := time.Now().Sub(startTime).Seconds()
-	block, err := r.ZEVMClient.BlockNumber(ctx)
+	block, err := r.ZEVMClient.BlockNumber(r.Ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting block number: %w", err)
 	}
 	r.Logger.Print("all 10 withdraws completed in %vs at block %d", duration, block)
 
