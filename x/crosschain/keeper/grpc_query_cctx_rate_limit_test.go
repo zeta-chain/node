@@ -408,7 +408,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			rateLimitExceeded:    true,
 		},
 		{
-			name: "set high rate and big window to early to break inner loop with the criteria #1",
+			name: "set high rate and wide window to early to break inner loop with the criteria #1",
 			// The left boundary will be 49 (currentHeight-1150), which will be less than the endNonce 99 (1099 - 1000)
 			rateLimitFlags:  createTestRateLimiterFlags(1150, math.NewUint(10000), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
 			ethMindedCctxs:  ethMindedCctxs,
@@ -483,6 +483,35 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			queryLimit:    keeper.MaxPendingCctxs,
 			// 120 ETH cctx + 200 BTC cctx
 			expectedCctxs:        append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:120]...), btcPendingCctxs...),
+			expectedTotalPending: 400,
+			rateLimitExceeded:    true,
+		},
+		{
+			name: "set low rate and narrow window to early break the LoopForwards loop with criteria #2",
+			// the left boundary will be 1149 (currentHeight-50), the pending nonces [1099, 1148] fall beyond the left boundary.
+			// `pendingCctxWindow` is 100 which is wider than rate limiter window 50.
+			//  give a block rate of 2 ZETA/block, the max value allowed should be 100 * 2 = 200 ZETA
+			rateLimitFlags:  createTestRateLimiterFlags(50, math.NewUint(100), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMindedCctxs:  ethMindedCctxs,
+			ethPendingCctxs: ethPendingCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,
+			queryLimit:    keeper.MaxPendingCctxs,
+			// 160 ETH cctx + 200 BTC cctx
+			expectedCctxs:        append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:160]...), btcPendingCctxs...),
 			expectedTotalPending: 400,
 			rateLimitExceeded:    true,
 		},

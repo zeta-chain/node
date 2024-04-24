@@ -78,11 +78,13 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	var gasCoinRates map[int64]sdk.Dec
 	var erc20CoinRates map[int64]map[string]sdk.Dec
 	var foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins
-	var rateLimitInZeta sdk.Dec
+	var windowLimitInZeta sdk.Dec
+	var blockLimitInZeta sdk.Dec
 	if applyLimit {
 		gasCoinRates, erc20CoinRates = k.GetRateLimiterRates(ctx)
 		foreignCoinMap = k.fungibleKeeper.GetAllForeignCoinMap(ctx)
-		rateLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
+		windowLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
+		blockLimitInZeta = windowLimitInZeta.Quo(sdk.NewDec(rateLimitFlags.Window))
 	}
 
 	// the criteria to stop adding cctxs to the rpc response
@@ -97,15 +99,40 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 		return cctx.InboundTxParams.InboundTxObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
-	// query pending nonces for each foreign chain
+	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs
 	// Note: The pending nonces could change during the RPC call, so query them beforehand
+	lowestPendingCctxHeight := int64(0)
 	pendingNoncesMap := make(map[int64]*observertypes.PendingNonces)
 	for _, chain := range chains {
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			return nil, status.Error(codes.Internal, "pending nonces not found")
 		}
-		pendingNoncesMap[chain.ChainId] = &pendingNonces
+
+		// insert pending nonces and update lowest height
+		if pendingNonces.NonceLow < pendingNonces.NonceHigh {
+			pendingNoncesMap[chain.ChainId] = &pendingNonces
+			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, pendingNonces.NonceLow)
+			if err != nil {
+				return nil, err
+			}
+			// #nosec G701 len always in range
+			cctxHeight := int64(cctx.InboundTxParams.InboundTxObservedExternalHeight)
+			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
+				lowestPendingCctxHeight = cctxHeight
+			}
+		}
+	}
+
+	// invariant: for period of time > window, the average rate per block cannot exceed `blockLimitInZeta`
+	pendingCctxsLimitInZeta := windowLimitInZeta
+	if lowestPendingCctxHeight != 0 {
+		// `pendingCctxWindow` is the width of [lowestPendingCctxHeight, height] window
+		// if the window can be wider than the rate limit window, we should adjust the total limit proportionally
+		pendingCctxWindow := height - lowestPendingCctxHeight + 1
+		if pendingCctxWindow > rateLimitFlags.Window {
+			pendingCctxsLimitInZeta = blockLimitInZeta.Mul(sdk.NewDec(pendingCctxWindow))
+		}
 	}
 
 	// query backwards for potential missed pending cctxs for each foreign chain
@@ -143,7 +170,7 @@ LoopBackwards:
 				break
 			}
 			// criteria #2: we should finish the RPC call if the rate limit is exceeded
-			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
+			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, windowLimitInZeta) {
 				limitExceeded = true
 				break LoopBackwards
 			}
@@ -168,14 +195,13 @@ LoopForwards:
 			if err != nil {
 				return nil, err
 			}
-			inWindow := isCctxInWindow(cctx)
 
 			// only take a `limit` number of pending cctxs as result
 			if maxCCTXsReached() {
 				break LoopForwards
 			}
 			// criteria #2: we should finish the RPC call if the rate limit is exceeded
-			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, rateLimitInZeta) {
+			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalCctxValueInZeta, pendingCctxsLimitInZeta) {
 				limitExceeded = true
 				break LoopForwards
 			}
