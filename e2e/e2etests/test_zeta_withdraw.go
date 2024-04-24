@@ -5,7 +5,6 @@ import (
 
 	"math/big"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"

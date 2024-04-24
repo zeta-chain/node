@@ -383,8 +383,8 @@ var AllE2ETests = []runner.E2ETest{
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
 		TestRateLimiter,
-  ),
-  runner.NewE2ETest(
+	),
+	runner.NewE2ETest(
 		TestMessagePassingZEVMToEVMName,
 		"zevm -> evm message passing contract call",
 		[]runner.ArgDefinition{
