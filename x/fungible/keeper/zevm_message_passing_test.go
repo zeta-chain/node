@@ -84,8 +84,8 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		require.Equal(t, inboundAmount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("fail ZETADepositAndCallContract if account not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+	t.Run("automatically deposit coin  if account not found", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		zetaTxSender := sample.EthAddress()
@@ -96,11 +96,12 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		cctxIndexBytes := [32]byte{}
 
 		_, err := k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
-		require.ErrorIs(t, err, types.ErrAccountNotFound)
-		require.ErrorContains(t, err, "account not found")
+		require.NoError(t, err)
+		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxReceiver.Bytes()), config.BaseDenom)
+		require.Equal(t, inboundAmount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("fail ZETADepositAndCallContract id Deposit Fails", func(t *testing.T) {
+	t.Run("fail ZETADepositAndCallContract if Deposit Fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -196,8 +197,8 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		require.Equal(t, amount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("fail ZETARevertAndCallContract if account not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+	t.Run("successfully deposit coin if account not found", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		zetaTxSender := sample.EthAddress()
@@ -209,8 +210,9 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		cctxIndexBytes := [32]byte{}
 
 		_, err := k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
-		require.ErrorIs(t, err, types.ErrAccountNotFound)
-		require.ErrorContains(t, err, "account not found")
+		require.NoError(t, err)
+		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxSender.Bytes()), config.BaseDenom)
+		require.Equal(t, amount.Int64(), b.Amount.Int64())
 	})
 
 	t.Run("fail ZETARevertAndCallContract if Deposit Fails", func(t *testing.T) {
