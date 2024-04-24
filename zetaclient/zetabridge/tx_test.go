@@ -143,7 +143,7 @@ func TestZetaCoreBridge_PostGasPrice(t *testing.T) {
 
 	t.Run("post gas price success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		hash, err := zetabridge.PostGasPrice(chains.BscMainnetChain(), 1000000, "100", 1234)
+		hash, err := zetabridge.PostGasPrice(chains.BscMainnetChain, 1000000, "100", 1234)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
@@ -152,7 +152,7 @@ func TestZetaCoreBridge_PostGasPrice(t *testing.T) {
 	//
 	//t.Run("post gas price fail", func(t *testing.T) {
 	//	zetaBridgeBroadcast = ZetaBridgeBroadcastTestErr
-	//	hash, err := zetabridge.PostGasPrice(chains.BscMainnetChain(), 1000000, "100", 1234)
+	//	hash, err := zetabridge.PostGasPrice(chains.BscMainnetChain, 1000000, "100", 1234)
 	//	require.ErrorContains(t, err, "post gasprice failed")
 	//	require.Equal(t, "", hash)
 	//})
@@ -166,14 +166,14 @@ func TestZetaCoreBridge_AddTxHashToOutTxTracker(t *testing.T) {
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		hash, err := zetabridge.AddTxHashToOutTxTracker(chains.BscMainnetChain().ChainId, 123, "", nil, "", 456)
+		hash, err := zetabridge.AddTxHashToOutTxTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTestErr
-		hash, err := zetabridge.AddTxHashToOutTxTracker(chains.BscMainnetChain().ChainId, 123, "", nil, "", 456)
+		hash, err := zetabridge.AddTxHashToOutTxTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.Error(t, err)
 		require.Equal(t, "", hash)
 	})
@@ -247,24 +247,24 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					Chains: []*chains.Chain{
 
 						{
-							chains.BtcMainnetChain().ChainName,
-							chains.BtcMainnetChain().ChainId,
-							chains.BscMainnetChain().Network,
-							chains.BscMainnetChain().NetworkType,
-							chains.BscMainnetChain().Vm,
-							chains.BscMainnetChain().Consensus,
-							chains.BscMainnetChain().IsExternal,
-							chains.BscMainnetChain().IsHeaderSupported,
+							chains.BtcMainnetChain.ChainName,
+							chains.BtcMainnetChain.ChainId,
+							chains.BscMainnetChain.Network,
+							chains.BscMainnetChain.NetworkType,
+							chains.BscMainnetChain.Vm,
+							chains.BscMainnetChain.Consensus,
+							chains.BscMainnetChain.IsExternal,
+							chains.BscMainnetChain.IsHeaderSupported,
 						},
 						{
-							chains.EthChain().ChainName,
-							chains.EthChain().ChainId,
-							chains.EthChain().Network,
-							chains.EthChain().NetworkType,
-							chains.EthChain().Vm,
-							chains.EthChain().Consensus,
-							chains.EthChain().IsExternal,
-							chains.EthChain().IsHeaderSupported,
+							chains.EthChain.ChainName,
+							chains.EthChain.ChainId,
+							chains.EthChain.Network,
+							chains.EthChain.NetworkType,
+							chains.EthChain.Vm,
+							chains.EthChain.Consensus,
+							chains.EthChain.IsExternal,
+							chains.EthChain.IsHeaderSupported,
 						},
 					},
 				})
@@ -348,7 +348,7 @@ func TestZetaCoreBridge_PostBlameData(t *testing.T) {
 				IsUnicast:  false,
 				BlameNodes: nil,
 			},
-			chains.BscMainnetChain().ChainId,
+			chains.BscMainnetChain.ChainId,
 			"102394876-bsc",
 		)
 		require.NoError(t, err)
@@ -367,7 +367,7 @@ func TestZetaCoreBridge_PostVoteBlockHeader(t *testing.T) {
 	t.Run("post add block header success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
 		hash, err := zetabridge.PostVoteBlockHeader(
-			chains.EthChain().ChainId,
+			chains.EthChain.ChainId,
 			blockHash,
 			18495266,
 			getHeaderData(t),
@@ -411,10 +411,10 @@ func TestZetaCoreBridge_GetInBoundVoteMessage(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
 		msg := GetInBoundVoteMessage(
 			address.String(),
-			chains.EthChain().ChainId,
+			chains.EthChain.ChainId,
 			"",
 			address.String(),
-			chains.ZetaChainMainnet().ChainId,
+			chains.ZetaChainMainnet.ChainId,
 			math.NewUint(500),
 			"",
 			"", 12345,
@@ -472,7 +472,7 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 		1200,
 		big.NewInt(500),
 		chains.ReceiveStatus_success,
-		chains.EthChain(),
+		chains.EthChain,
 		10001,
 		coin.CoinType_Gas)
 	require.NoError(t, err)

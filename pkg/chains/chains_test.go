@@ -10,7 +10,7 @@ import (
 func TestChainRetrievalFunctions(t *testing.T) {
 	tests := []struct {
 		name     string
-		function func() Chain
+		chain    Chain
 		expected Chain
 	}{
 		{"ZetaChainMainnet", ZetaChainMainnet, Chain{
@@ -179,7 +179,7 @@ func TestChainRetrievalFunctions(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			chain := tc.function()
+			chain := tc.chain
 			require.Equal(t, tc.expected, chain)
 		})
 	}
@@ -190,9 +190,9 @@ func TestChainListByNetworkType(t *testing.T) {
 		networkType NetworkType
 		expected    []Chain
 	}{
-		{"MainnetChainList", NetworkType_mainnet, []Chain{ZetaChainMainnet(), BtcMainnetChain(), BscMainnetChain(), EthChain(), PolygonChain()}},
-		{"TestnetChainList", NetworkType_testnet, []Chain{ZetaTestnetChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain()}},
-		{"PrivnetChainList", NetworkType_privnet, []Chain{ZetaPrivnetChain(), BtcRegtestChain(), GoerliLocalnetChain()}},
+		{"MainnetChainList", NetworkType_mainnet, []Chain{ZetaChainMainnet, BtcMainnetChain, BscMainnetChain, EthChain, PolygonChain}},
+		{"TestnetChainList", NetworkType_testnet, []Chain{ZetaTestnetChain, BtcTestNetChain, MumbaiChain, AmoyChain, BscTestnetChain, GoerliChain, SepoliaChain}},
+		{"PrivnetChainList", NetworkType_privnet, []Chain{ZetaPrivnetChain, BtcRegtestChain, GoerliLocalnetChain}},
 	}
 
 	for _, lt := range listTests {
@@ -218,11 +218,11 @@ func TestChainListByNetwork(t *testing.T) {
 		network  Network
 		expected []Chain
 	}{
-		{"Zeta", Network_zeta, []Chain{ZetaChainMainnet(), ZetaMocknetChain(), ZetaPrivnetChain(), ZetaTestnetChain()}},
-		{"Btc", Network_btc, []Chain{BtcMainnetChain(), BtcTestNetChain(), BtcRegtestChain()}},
-		{"Eth", Network_eth, []Chain{EthChain(), GoerliChain(), SepoliaChain(), GoerliLocalnetChain()}},
-		{"Bsc", Network_bsc, []Chain{BscMainnetChain(), BscTestnetChain()}},
-		{"Polygon", Network_polygon, []Chain{PolygonChain(), MumbaiChain(), AmoyChain()}},
+		{"Zeta", Network_zeta, []Chain{ZetaChainMainnet, ZetaMocknetChain, ZetaPrivnetChain, ZetaTestnetChain}},
+		{"Btc", Network_btc, []Chain{BtcMainnetChain, BtcTestNetChain, BtcRegtestChain}},
+		{"Eth", Network_eth, []Chain{EthChain, GoerliChain, SepoliaChain, GoerliLocalnetChain}},
+		{"Bsc", Network_bsc, []Chain{BscMainnetChain, BscTestnetChain}},
+		{"Polygon", Network_polygon, []Chain{PolygonChain, MumbaiChain, AmoyChain}},
 	}
 
 	for _, lt := range listTests {
@@ -247,8 +247,8 @@ func TestChainListFunctions(t *testing.T) {
 		function func() []*Chain
 		expected []Chain
 	}{
-		{"DefaultChainsList", DefaultChainsList, []Chain{BtcMainnetChain(), BscMainnetChain(), EthChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain(), BtcRegtestChain(), GoerliLocalnetChain(), ZetaChainMainnet(), ZetaTestnetChain(), ZetaMocknetChain(), ZetaPrivnetChain(), PolygonChain()}},
-		{"ExternalChainList", ExternalChainList, []Chain{BtcMainnetChain(), BscMainnetChain(), EthChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain(), BtcRegtestChain(), GoerliLocalnetChain(), PolygonChain()}},
+		{"DefaultChainsList", DefaultChainsList, []Chain{BtcMainnetChain, BscMainnetChain, EthChain, BtcTestNetChain, MumbaiChain, AmoyChain, BscTestnetChain, GoerliChain, SepoliaChain, BtcRegtestChain, GoerliLocalnetChain, ZetaChainMainnet, ZetaTestnetChain, ZetaMocknetChain, ZetaPrivnetChain, PolygonChain}},
+		{"ExternalChainList", ExternalChainList, []Chain{BtcMainnetChain, BscMainnetChain, EthChain, BtcTestNetChain, MumbaiChain, AmoyChain, BscTestnetChain, GoerliChain, SepoliaChain, BtcRegtestChain, GoerliLocalnetChain, PolygonChain}},
 	}
 
 	for _, lt := range listTests {
@@ -278,25 +278,25 @@ func TestZetaChainFromChainID(t *testing.T) {
 		{
 			name:     "ZetaChainMainnet",
 			chainID:  "cosmoshub_7000-1",
-			expected: ZetaChainMainnet(),
+			expected: ZetaChainMainnet,
 			wantErr:  false,
 		},
 		{
 			name:     "ZetaTestnetChain",
 			chainID:  "cosmoshub_7001-1",
-			expected: ZetaTestnetChain(),
+			expected: ZetaTestnetChain,
 			wantErr:  false,
 		},
 		{
 			name:     "ZetaMocknetChain",
 			chainID:  "cosmoshub_70000-1",
-			expected: ZetaMocknetChain(),
+			expected: ZetaMocknetChain,
 			wantErr:  false,
 		},
 		{
 			name:     "ZetaPrivnetChain",
 			chainID:  "cosmoshub_101-1",
-			expected: ZetaPrivnetChain(),
+			expected: ZetaPrivnetChain,
 			wantErr:  false,
 		},
 		{

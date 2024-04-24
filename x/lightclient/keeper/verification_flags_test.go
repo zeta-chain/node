@@ -37,10 +37,10 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 			BtcTypeChainEnabled: false,
 		})
 
-		err := k.CheckVerificationFlagsEnabled(ctx, chains.EthChain().ChainId)
+		err := k.CheckVerificationFlagsEnabled(ctx, chains.EthChain.ChainId)
 		require.NoError(t, err)
 
-		err = k.CheckVerificationFlagsEnabled(ctx, chains.BtcMainnetChain().ChainId)
+		err = k.CheckVerificationFlagsEnabled(ctx, chains.BtcMainnetChain.ChainId)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "proof verification not enabled for bitcoin")
 
@@ -56,11 +56,11 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 			BtcTypeChainEnabled: true,
 		})
 
-		err := k.CheckVerificationFlagsEnabled(ctx, chains.EthChain().ChainId)
+		err := k.CheckVerificationFlagsEnabled(ctx, chains.EthChain.ChainId)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "proof verification not enabled for evm")
 
-		err = k.CheckVerificationFlagsEnabled(ctx, chains.BtcMainnetChain().ChainId)
+		err = k.CheckVerificationFlagsEnabled(ctx, chains.BtcMainnetChain.ChainId)
 		require.NoError(t, err)
 
 		err = k.CheckVerificationFlagsEnabled(ctx, 1000)

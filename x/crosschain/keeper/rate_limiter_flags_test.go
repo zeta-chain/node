@@ -53,7 +53,7 @@ func TestKeeper_GetRateLimiterRates(t *testing.T) {
 		},
 	}
 
-	chainID := chains.GoerliLocalnetChain().ChainId
+	chainID := chains.GoerliLocalnetChain.ChainId
 
 	// add gas coin
 	fcGas := sample.ForeignCoins(t, zrc20GasAddr)

@@ -17,9 +17,10 @@ import "fmt"
        Such as GoerliChain and MumbaiChain which have been replaced by SepoliaChain and AmoyChain respectively.
 */
 
-// Mainnet chains
-func ZetaChainMainnet() Chain {
-	return Chain{
+var (
+
+	// Mainnet chains
+	ZetaChainMainnet = Chain{
 		ChainName:         ChainName_zeta_mainnet,
 		ChainId:           7000,
 		Network:           Network_zeta,
@@ -29,9 +30,7 @@ func ZetaChainMainnet() Chain {
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
-}
-func EthChain() Chain {
-	return Chain{
+	EthChain = Chain{
 		ChainName:         ChainName_eth_mainnet,
 		ChainId:           1,
 		Network:           Network_eth,
@@ -41,10 +40,7 @@ func EthChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
-}
-
-func BscMainnetChain() Chain {
-	return Chain{
+	BscMainnetChain = Chain{
 		ChainName:         ChainName_bsc_mainnet,
 		ChainId:           56,
 		Network:           Network_bsc,
@@ -54,10 +50,7 @@ func BscMainnetChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
-}
-
-func BtcMainnetChain() Chain {
-	return Chain{
+	BtcMainnetChain = Chain{
 		ChainName:         ChainName_btc_mainnet,
 		ChainId:           8332,
 		Network:           Network_btc,
@@ -67,10 +60,7 @@ func BtcMainnetChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
-}
-
-func PolygonChain() Chain {
-	return Chain{
+	PolygonChain = Chain{
 		ChainName:         ChainName_polygon_mainnet,
 		ChainId:           137,
 		Network:           Network_polygon,
@@ -80,12 +70,8 @@ func PolygonChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
-}
-
-// Testnet chains
-
-func ZetaTestnetChain() Chain {
-	return Chain{
+	// Testnet chains
+	ZetaTestnetChain = Chain{
 		ChainName:         ChainName_zeta_testnet,
 		ChainId:           7001,
 		Network:           Network_zeta,
@@ -95,10 +81,7 @@ func ZetaTestnetChain() Chain {
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
-}
-
-func SepoliaChain() Chain {
-	return Chain{
+	SepoliaChain = Chain{
 		ChainName:         ChainName_sepolia_testnet,
 		ChainId:           11155111,
 		Network:           Network_eth,
@@ -108,24 +91,7 @@ func SepoliaChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
-}
-
-// GoerliChain Deprecated
-func GoerliChain() Chain {
-	return Chain{
-		ChainName:         ChainName_goerli_testnet,
-		ChainId:           5,
-		Network:           Network_eth,
-		NetworkType:       NetworkType_testnet,
-		Vm:                Vm_evm,
-		Consensus:         Consensus_ethereum,
-		IsExternal:        true,
-		IsHeaderSupported: true,
-	}
-}
-
-func BscTestnetChain() Chain {
-	return Chain{
+	BscTestnetChain = Chain{
 		ChainName:         ChainName_bsc_testnet,
 		ChainId:           97,
 		Network:           Network_bsc,
@@ -135,10 +101,7 @@ func BscTestnetChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
-}
-
-func BtcTestNetChain() Chain {
-	return Chain{
+	BtcTestNetChain = Chain{
 		ChainName:         ChainName_btc_testnet,
 		ChainId:           18332,
 		Network:           Network_btc,
@@ -148,24 +111,8 @@ func BtcTestNetChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
-}
 
-// MumbaiChain Deprecated
-func MumbaiChain() Chain {
-	return Chain{
-		ChainName:         ChainName_mumbai_testnet,
-		ChainId:           80001,
-		Network:           Network_polygon,
-		NetworkType:       NetworkType_testnet,
-		Vm:                Vm_evm,
-		Consensus:         Consensus_ethereum,
-		IsExternal:        true,
-		IsHeaderSupported: false,
-	}
-}
-
-func AmoyChain() Chain {
-	return Chain{
+	AmoyChain = Chain{
 		ChainName:         ChainName_amoy_testnet,
 		ChainId:           80002,
 		Network:           Network_polygon,
@@ -175,11 +122,8 @@ func AmoyChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
-}
-
-// Devnet chains
-func ZetaMocknetChain() Chain {
-	return Chain{
+	// Devnet chains
+	ZetaMocknetChain = Chain{
 		ChainName:         ChainName_zeta_mainnet,
 		ChainId:           70000,
 		Network:           Network_zeta,
@@ -189,12 +133,8 @@ func ZetaMocknetChain() Chain {
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
-}
-
-// Privnet chains
-
-func ZetaPrivnetChain() Chain {
-	return Chain{
+	// Privnet chains
+	ZetaPrivnetChain = Chain{
 		ChainName:         ChainName_zeta_mainnet,
 		ChainId:           101,
 		Network:           Network_zeta,
@@ -204,9 +144,8 @@ func ZetaPrivnetChain() Chain {
 		IsExternal:        false,
 		IsHeaderSupported: false,
 	}
-}
-func BtcRegtestChain() Chain {
-	return Chain{
+
+	BtcRegtestChain = Chain{
 		ChainName:         ChainName_btc_regtest,
 		ChainId:           18444,
 		Network:           Network_btc,
@@ -216,10 +155,8 @@ func BtcRegtestChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: false,
 	}
-}
 
-func GoerliLocalnetChain() Chain {
-	return Chain{
+	GoerliLocalnetChain = Chain{
 		ChainName:         ChainName_goerli_localnet,
 		ChainId:           1337,
 		Network:           Network_eth,
@@ -229,7 +166,29 @@ func GoerliLocalnetChain() Chain {
 		IsExternal:        true,
 		IsHeaderSupported: true,
 	}
-}
+
+	// Deprecated testnet chains
+	GoerliChain = Chain{
+		ChainName:         ChainName_goerli_testnet,
+		ChainId:           5,
+		Network:           Network_eth,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: true,
+	}
+	MumbaiChain = Chain{
+		ChainName:         ChainName_mumbai_testnet,
+		ChainId:           80001,
+		Network:           Network_polygon,
+		NetworkType:       NetworkType_testnet,
+		Vm:                Vm_evm,
+		Consensus:         Consensus_ethereum,
+		IsExternal:        true,
+		IsHeaderSupported: false,
+	}
+)
 
 func BtcDustOffset() int64 {
 	return 2000
@@ -238,22 +197,22 @@ func BtcDustOffset() int64 {
 // DefaultChainsList returns a list of default chains
 func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
-		BtcMainnetChain(),
-		BscMainnetChain(),
-		EthChain(),
-		BtcTestNetChain(),
-		MumbaiChain(),
-		AmoyChain(),
-		BscTestnetChain(),
-		GoerliChain(),
-		SepoliaChain(),
-		BtcRegtestChain(),
-		GoerliLocalnetChain(),
-		ZetaChainMainnet(),
-		ZetaTestnetChain(),
-		ZetaMocknetChain(),
-		ZetaPrivnetChain(),
-		PolygonChain(),
+		BtcMainnetChain,
+		BscMainnetChain,
+		EthChain,
+		BtcTestNetChain,
+		MumbaiChain,
+		AmoyChain,
+		BscTestnetChain,
+		GoerliChain,
+		SepoliaChain,
+		BtcRegtestChain,
+		GoerliLocalnetChain,
+		ZetaChainMainnet,
+		ZetaTestnetChain,
+		ZetaMocknetChain,
+		ZetaPrivnetChain,
+		PolygonChain,
 	})
 }
 
@@ -321,14 +280,14 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 
 	switch ethChainID {
-	case ZetaPrivnetChain().ChainId:
-		return ZetaPrivnetChain(), nil
-	case ZetaChainMainnet().ChainId:
-		return ZetaChainMainnet(), nil
-	case ZetaTestnetChain().ChainId:
-		return ZetaTestnetChain(), nil
-	case ZetaMocknetChain().ChainId:
-		return ZetaMocknetChain(), nil
+	case ZetaPrivnetChain.ChainId:
+		return ZetaPrivnetChain, nil
+	case ZetaChainMainnet.ChainId:
+		return ZetaChainMainnet, nil
+	case ZetaTestnetChain.ChainId:
+		return ZetaTestnetChain, nil
+	case ZetaMocknetChain.ChainId:
+		return ZetaMocknetChain, nil
 	default:
 		return Chain{}, fmt.Errorf("chain %d not found", ethChainID)
 	}
