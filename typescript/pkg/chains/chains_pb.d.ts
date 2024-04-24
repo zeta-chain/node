@@ -119,6 +119,96 @@ export declare enum ChainName {
 }
 
 /**
+ * @generated from enum chains.Network
+ */
+export declare enum Network {
+  /**
+   * @generated from enum value: ETH = 0;
+   */
+  ETH = 0,
+
+  /**
+   * @generated from enum value: ZETA = 1;
+   */
+  ZETA = 1,
+
+  /**
+   * @generated from enum value: BTC = 2;
+   */
+  BTC = 2,
+
+  /**
+   * @generated from enum value: POLYGON = 3;
+   */
+  POLYGON = 3,
+
+  /**
+   * @generated from enum value: BSC = 4;
+   */
+  BSC = 4,
+}
+
+/**
+ * @generated from enum chains.NetworkType
+ */
+export declare enum NetworkType {
+  /**
+   * @generated from enum value: MAINNET = 0;
+   */
+  MAINNET = 0,
+
+  /**
+   * @generated from enum value: TESTNET = 1;
+   */
+  TESTNET = 1,
+
+  /**
+   * @generated from enum value: PRIVNET = 2;
+   */
+  PRIVNET = 2,
+
+  /**
+   * @generated from enum value: DEVNET = 3;
+   */
+  DEVNET = 3,
+}
+
+/**
+ * @generated from enum chains.Vm
+ */
+export declare enum Vm {
+  /**
+   * @generated from enum value: NO_VM = 0;
+   */
+  NO_VM = 0,
+
+  /**
+   * @generated from enum value: EVM = 1;
+   */
+  EVM = 1,
+}
+
+/**
+ * @generated from enum chains.Consensus
+ */
+export declare enum Consensus {
+  /**
+   * @generated from enum value: Ethereum = 0;
+   */
+  Ethereum = 0,
+
+  /**
+   * @generated from enum value: Tendermint = 1;
+   */
+  Tendermint = 1,
+
+  /**
+   * @generated from enum value: Bitcoin = 2;
+   */
+  Bitcoin = 2,
+}
+
+/**
  * @generated from message chains.Chain
  */
 export declare class Chain extends Message<Chain> {
@@ -131,6 +221,36 @@ export declare class Chain extends Message<Chain> {
    * @generated from field: int64 chain_id = 2;
    */
   chainId: bigint;
+
+  /**
+   * @generated from field: chains.Network network = 3;
+   */
+  network: Network;
+
+  /**
+   * @generated from field: chains.NetworkType network_type = 4;
+   */
+  networkType: NetworkType;
+
+  /**
+   * @generated from field: chains.Vm vm = 5;
+   */
+  vm: Vm;
+
+  /**
+   * @generated from field: chains.Consensus consensus = 6;
+   */
+  consensus: Consensus;
+
+  /**
+   * @generated from field: bool is_external = 7;
+   */
+  isExternal: boolean;
+
+  /**
+   * @generated from field: bool is_header_supported = 8;
+   */
+  isHeaderSupported: boolean;
 
   constructor(data?: PartialMessage<Chain>);
 

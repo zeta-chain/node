@@ -53592,6 +53592,18 @@ definitions:
       chain_id:
         type: string
         format: int64
+      network:
+        $ref: '#/definitions/chainsNetwork'
+      network_type:
+        $ref: '#/definitions/chainsNetworkType'
+      vm:
+        $ref: '#/definitions/chainsVm'
+      consensus:
+        $ref: '#/definitions/chainsConsensus'
+      is_external:
+        type: boolean
+      is_header_supported:
+        type: boolean
   chainsChainName:
     type: string
     enum:
@@ -53613,6 +53625,30 @@ definitions:
       - btc_regtest
       - amoy_testnet
     default: empty
+  chainsConsensus:
+    type: string
+    enum:
+      - Ethereum
+      - Tendermint
+      - Bitcoin
+    default: Ethereum
+  chainsNetwork:
+    type: string
+    enum:
+      - ETH
+      - ZETA
+      - BTC
+      - POLYGON
+      - BSC
+    default: ETH
+  chainsNetworkType:
+    type: string
+    enum:
+      - MAINNET
+      - TESTNET
+      - PRIVNET
+      - DEVNET
+    default: MAINNET
   chainsReceiveStatus:
     type: string
     enum:
@@ -53621,6 +53657,12 @@ definitions:
       - Failed
     default: Created
     title: '- Created: some observer sees inbound tx'
+  chainsVm:
+    type: string
+    enum:
+      - NO_VM
+      - EVM
+    default: NO_VM
   coinCoinType:
     type: string
     enum:

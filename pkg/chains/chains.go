@@ -259,13 +259,13 @@ func DefaultChainsList() []*Chain {
 
 // ChainListByNetworkType returns a list of chains by network type
 func ChainListByNetworkType(networkType NetworkType) []*Chain {
-	var mainNetList []*Chain
+	var chainList []*Chain
 	for _, chain := range DefaultChainsList() {
 		if chain.NetworkType == networkType {
-			mainNetList = append(mainNetList, chain)
+			chainList = append(chainList, chain)
 		}
 	}
-	return mainNetList
+	return chainList
 }
 
 // ChainListByNetwork returns a list of chains by network

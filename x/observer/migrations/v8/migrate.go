@@ -11,9 +11,9 @@ type observerKeeper interface {
 	SetParams(ctx sdk.Context, params types.Params)
 }
 
-// MigrateStore performs in-place store migrations from v6 to v7
+// MigrateStore performs in-place store migrations from v7 to v8
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
-	ctx.Logger().Info("Migrating observer store from v6 to v7")
+	ctx.Logger().Info("Migrating observer store from v7 to v8")
 	params := observerKeeper.GetParamsIfExists(ctx)
 	for _, ob := range params.ObserverParams {
 		chain := chains.GetChainFromChainID(ob.Chain.ChainId)
