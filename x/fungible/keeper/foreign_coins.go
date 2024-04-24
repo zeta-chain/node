@@ -82,6 +82,7 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) 
 }
 
 // GetAllForeignCoinMap returns all foreign ERC20 coins in a map of chainID -> asset -> coin
+// Note: DO NOT use this method outside of gRPC queries
 func (k Keeper) GetAllForeignCoinMap(ctx sdk.Context) map[int64]map[string]types.ForeignCoins {
 	allForeignCoins := k.GetAllForeignCoins(ctx)
 
