@@ -106,7 +106,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.WZetaAddr = r.WZetaAddr.Hex()
 	conf.Contracts.ZEVM.ZEVMSwapAppAddr = r.ZEVMSwapAppAddr.Hex()
 	conf.Contracts.ZEVM.ContextAppAddr = r.ContextAppAddr.Hex()
-	conf.Contracts.ZEVM.TestDappAddr = r.TestDAppAddr.Hex()
+	conf.Contracts.ZEVM.TestDappAddr = r.EvmTestDAppAddr.Hex()
 
 	return conf
 }

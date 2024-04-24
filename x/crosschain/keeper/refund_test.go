@@ -23,7 +23,7 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
@@ -54,7 +54,7 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		fungibleMock.On("GetGasCoinForForeignCoin", mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: "0x",
@@ -84,7 +84,7 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		fungibleMock.On("GetGasCoinForForeignCoin", mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().Hex(),
@@ -113,7 +113,7 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
@@ -137,7 +137,7 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		err := k.RefundAmountOnZetaChainGas(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -160,7 +160,7 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
@@ -188,7 +188,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -240,7 +240,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		fungibleMock.On("DepositCoinZeta", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("err"))
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -263,7 +263,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -284,7 +284,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -310,7 +310,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		asset := sample.EthAddress().String()
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		// deploy zrc20
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -376,7 +376,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		asset := sample.EthAddress().String()
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		err := k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -403,7 +403,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		asset := sample.EthAddress().String()
 		sender := sample.EthAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().Hex(),
@@ -462,7 +462,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
+				SenderChainId: getValidEthChainID(),
 				Sender:        sample.EthAddress().String(),
 				Amount:        math.Uint{},
 			}},
@@ -473,7 +473,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
+				SenderChainId: getValidEthChainID(),
 				Sender:        sample.EthAddress().String(),
 				Amount:        math.ZeroUint(),
 			}},
@@ -485,7 +485,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
+				SenderChainId: getValidEthChainID(),
 				Sender:        sample.EthAddress().String(),
 				Asset:         sample.EthAddress().String(),
 				Amount:        math.NewUint(42),

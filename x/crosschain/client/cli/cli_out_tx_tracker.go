@@ -15,7 +15,7 @@ func CmdListOutTxTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-out-tx-tracker",
 		Short: "list all OutTxTracker",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())

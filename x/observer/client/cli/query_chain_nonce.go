@@ -13,7 +13,7 @@ func CmdListChainNonces() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-chain-nonces",
 		Short: "list all chainNonces",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())

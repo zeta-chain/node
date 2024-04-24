@@ -130,16 +130,33 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 						}
 					}
 
-					// Set Current Hot key burn rate
+					// set current hot key burn rate
 					metrics.HotKeyBurnRate.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
+
+					// query pending cctxs across all foreign chains with rate limit
+					cctxMap, valueWithinWindow, err := co.getAllPendingCctxWithRatelimit()
+					if err != nil {
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: queryPendingCctxWithRatelimit failed")
+					}
+					// print value within rate limiter window every minute
+					if bn%10 == 0 {
+						co.logger.ZetaChainWatcher.Debug().Msgf("startCctxScheduler: value within rate limiter window is %d ZETA", valueWithinWindow)
+					}
 
 					// schedule keysign for pending cctxs on each chain
 					coreContext := appContext.ZetaCoreContext()
 					supportedChains := coreContext.GetEnabledChains()
 					for _, c := range supportedChains {
-						if c.ChainId == co.bridge.ZetaChain().ChainId {
+						if c.IsZetaChain() {
 							continue
 						}
+						// get cctxs from map and set pending transactions prometheus gauge
+						cctxList := cctxMap[c.ChainId]
+						metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(len(cctxList)))
+						if len(cctxList) == 0 {
+							continue
+						}
+
 						// update chain parameters for signer and chain client
 						signer, err := co.GetUpdatedSigner(coreContext, c.ChainId)
 						if err != nil {
@@ -154,14 +171,6 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 						if !corecontext.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
 							continue
 						}
-
-						cctxList, totalPending, err := co.bridge.ListPendingCctx(c.ChainId)
-						if err != nil {
-							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: ListPendingCctx failed for chain %d", c.ChainId)
-							continue
-						}
-						// Set Pending transactions prometheus gauge
-						metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(totalPending))
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
@@ -182,6 +191,29 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 			}
 		}
 	}
+}
+
+// getAllPendingCctxWithRatelimit get pending cctxs across all foreign chains with rate limit
+func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.CrossChainTx, uint64, error) {
+	cctxList, totalPending, valueWithinWindow, rateLimitExceeded, err := co.bridge.ListPendingCctxWithinRatelimit()
+	if err != nil {
+		return nil, 0, err
+	}
+	if rateLimitExceeded {
+		co.logger.ZetaChainWatcher.Warn().Msgf("rate limit exceeded, fetched %d cctxs out of %d", len(cctxList), totalPending)
+	}
+
+	// classify pending cctxs by chain id
+	cctxMap := make(map[int64][]*types.CrossChainTx)
+	for _, cctx := range cctxList {
+		chainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+		if _, found := cctxMap[chainID]; !found {
+			cctxMap[chainID] = make([]*types.CrossChainTx, 0)
+		}
+		cctxMap[chainID] = append(cctxMap[chainID], cctx)
+	}
+
+	return cctxMap, valueWithinWindow, nil
 }
 
 // scheduleCctxEVM schedules evm outtx keysign on each ZetaChain block (the ticker)

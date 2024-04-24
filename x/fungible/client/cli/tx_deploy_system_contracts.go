@@ -13,7 +13,7 @@ func CmdDeploySystemContracts() *cobra.Command {
 		Use:   "deploy-system-contracts",
 		Short: "Broadcast message SystemContracts",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

@@ -43,6 +43,7 @@
 * [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync and remove fungible params
 * [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
+* [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 
 ### Features
 
@@ -52,8 +53,11 @@
 * [1942](https://github.com/zeta-chain/node/pull/1982) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
+* [1979](https://github.com/zeta-chain/node/pull/1979) - add script to import genesis data into an existing genesis file
 * [2006](https://github.com/zeta-chain/node/pull/2006) - add Amoy testnet static chain information
+* [2045](https://github.com/zeta-chain/node/pull/2046) - add grpc query with outbound rate limit for zetaclient to use
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
+* [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
 
 ### Tests
 
@@ -78,6 +82,7 @@
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
+* [2060](https://github.com/zeta-chain/node/pull/2060) - add unit test for rate limiter query
 
 ### Fixes
 

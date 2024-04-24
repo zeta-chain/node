@@ -14,7 +14,7 @@ func CmdShowKeygen() *cobra.Command {
 		Use:   "show-keygen",
 		Short: "shows keygen",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)

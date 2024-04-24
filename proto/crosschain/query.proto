@@ -95,8 +95,13 @@ service Query {
   }
 
   // Queries a list of pending cctxs.
-  rpc CctxListPending(QueryListCctxPendingRequest) returns (QueryListCctxPendingResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
+  rpc ListPendingCctx(QueryListPendingCctxRequest) returns (QueryListPendingCctxResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingCctx";
+  }
+
+  // Queries a list of pending cctxs within rate limit.
+  rpc ListPendingCctxWithinRateLimit(QueryListPendingCctxWithinRateLimitRequest) returns (QueryListPendingCctxWithinRateLimitResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingCctxWithinRateLimit";
   }
 
   rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
@@ -248,14 +253,25 @@ message QueryAllCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryListCctxPendingRequest {
+message QueryListPendingCctxRequest {
   int64 chain_id = 1;
   uint32 limit = 2;
 }
 
-message QueryListCctxPendingResponse {
+message QueryListPendingCctxResponse {
   repeated CrossChainTx CrossChainTx = 1;
   uint64 totalPending = 2;
+}
+
+message QueryListPendingCctxWithinRateLimitRequest {
+  uint32 limit = 1;
+}
+
+message QueryListPendingCctxWithinRateLimitResponse {
+  repeated CrossChainTx cross_chain_tx = 1;
+  uint64 total_pending = 2;
+  uint64 value_within_window = 3;
+  bool rate_limit_exceeded = 4;
 }
 
 message QueryLastZetaHeightRequest {}

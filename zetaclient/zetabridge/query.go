@@ -121,16 +121,36 @@ func (b *ZetaCoreBridge) GetObserverList() ([]string, error) {
 }
 
 // ListPendingCctx returns a list of pending cctxs for a given chainID
-// the returned list has a limited size of crosschainkeeper.MaxPendingCctxs
-// the total number of pending cctxs is returned
+//   - The max size of the list is crosschainkeeper.MaxPendingCctxs
 func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxListPending(context.Background(), &types.QueryListCctxPendingRequest{ChainId: chainID}, maxSizeOption)
+	resp, err := client.ListPendingCctx(
+		context.Background(),
+		&types.QueryListPendingCctxRequest{ChainId: chainID},
+		maxSizeOption,
+	)
 	if err != nil {
 		return nil, 0, err
 	}
 	return resp.CrossChainTx, resp.TotalPending, nil
+}
+
+// ListPendingCctxWithinRatelimit returns a list of pending cctxs that do not exceed the outbound rate limit
+//   - The max size of the list is crosschainkeeper.MaxPendingCctxs
+//   - The returned `rateLimitExceeded` flag indicates if the rate limit is exceeded or not
+func (b *ZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*types.CrossChainTx, uint64, uint64, bool, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.ListPendingCctxWithinRateLimit(
+		context.Background(),
+		&types.QueryListPendingCctxWithinRateLimitRequest{},
+		maxSizeOption,
+	)
+	if err != nil {
+		return nil, 0, 0, false, err
+	}
+	return resp.CrossChainTx, resp.TotalPending, resp.ValueWithinWindow, resp.RateLimitExceeded, nil
 }
 
 func (b *ZetaCoreBridge) GetAbortedZetaAmount() (string, error) {

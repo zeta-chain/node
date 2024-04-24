@@ -253,6 +253,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestMessagePassingZEVMToEVMName,
+			e2etests.TestMessagePassingEVMtoZEVMName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertName,
 		}
 		bitcoinTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,

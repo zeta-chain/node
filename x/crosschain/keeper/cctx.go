@@ -16,23 +16,6 @@ import (
 // 3. set the mapping nonce => cctx
 // 4. update the zeta accounting
 func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx types.CrossChainTx) {
-	k.SetCrossChainTx(ctx, cctx)
-
-	// set mapping inTxHash -> cctxIndex
-	in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
-	in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
-	found := false
-	for _, cctxIndex := range in.CctxIndex {
-		if cctxIndex == cctx.Index {
-			found = true
-			break
-		}
-	}
-	if !found {
-		in.CctxIndex = append(in.CctxIndex, cctx.Index)
-	}
-	k.SetInTxHashToCctx(ctx, in)
-
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return
@@ -47,6 +30,23 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 			Tss:       tss.TssPubkey,
 		})
 	}
+
+	k.SetCrossChainTx(ctx, cctx)
+	// set mapping inTxHash -> cctxIndex
+	in, _ := k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
+	in.InTxHash = cctx.InboundTxParams.InboundTxObservedHash
+	found = false
+	for _, cctxIndex := range in.CctxIndex {
+		if cctxIndex == cctx.Index {
+			found = true
+			break
+		}
+	}
+	if !found {
+		in.CctxIndex = append(in.CctxIndex, cctx.Index)
+	}
+	k.SetInTxHashToCctx(ctx, in)
+
 	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
