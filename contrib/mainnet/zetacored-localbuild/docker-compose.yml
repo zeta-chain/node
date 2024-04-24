@@ -22,8 +22,10 @@ services:
       CLIENT_DAEMON_ARGS: ""
       CLIENT_SKIP_UPGRADE: "true"
       CLIENT_START_PROCESS: "false"
-      MONIKER: local-test
+      MONIKER: mainnet-docker-rpc
+      #If this is true it will erase everything and start over from scratch.
       RE_DO_START_SEQUENCE: "false"
+      #If this is true it will build the dockerfile and use binary from built docker file instead of remote docker image for local development testing on non-governance upgrades.
       IS_LOCAL_DEVELOPMENT: "true"
     ports:
       - "26656:26656"

@@ -294,11 +294,35 @@ mainnet-bitcoind-node:
 testnet-zetarpc-node:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
+mainnet-bitcoind-node-down:
+	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+
+testnet-zetarpc-node-down:
+	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+
+mainnet-bitcoind-node-down-clean:
+	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+testnet-zetarpc-node-down-clean:
+	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
 mainnet-zetarpc-node-local-dev:
-	cd contrib/mainnet/zetacored-localbuild && docker-compose up
+	cd contrib/mainnet/zetacored-localbuild && docker-compose up --build
 
 testnet-zetarpc-node-local-dev:
-	cd contrib/athens3/zetacored-localbuild && docker-compose up
+	cd contrib/athens3/zetacored-localbuild && docker-compose up --build
+
+mainnet-zetarpc-node-local-dev-down:
+	cd contrib/mainnet/zetacored-localbuild && docker-compose down
+
+testnet-zetarpc-node-local-dev-down:
+	cd contrib/athens3/zetacored-localbuild && docker-compose down
+
+mainnet-zetarpc-node-local-dev-down-clean:
+	cd contrib/mainnet/zetacored-localbuild && docker-compose down -v
+
+testnet-zetarpc-node-local-dev-down-cliean:
+	cd contrib/athens3/zetacored-localbuild && docker-compose down -v
 
 ###############################################################################
 ###                               Debug Tools                               ###

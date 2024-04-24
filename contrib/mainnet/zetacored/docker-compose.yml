@@ -7,7 +7,6 @@ services:
     environment:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: mainnet
-      #RESTORE_TYPE=snapshot/snapshot-archive/statesync
       RESTORE_TYPE: "snapshot"
       SNAPSHOT_API: https://snapshots.zetachain.com
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
@@ -21,8 +20,10 @@ services:
       CLIENT_DAEMON_ARGS: ""
       CLIENT_SKIP_UPGRADE: "true"
       CLIENT_START_PROCESS: "false"
-      MONIKER: local-test
+      MONIKER: mainnet-docker-rpc
+      #If this is true it will erase everything and start over from scratch.
       RE_DO_START_SEQUENCE: "false"
+      #If this is true it will build the dockerfile and use binary from built docker file instead of remote docker image for local development testing on non-governance upgrades.
       IS_LOCAL_DEVELOPMENT: "false"
     ports:
       - "26656:26656"

@@ -238,13 +238,39 @@ function move_zetacored_binaries {
 function start_network {
   if [ "${IS_LOCAL_DEVELOPMENT}" == "true" ]; then
     cp /usr/local/bin/zetacored ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored
+    rm -rf ${DAEMON_HOME}/cosmovisor/current/bin/zetacored
+    ln -s ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored ${DAEMON_HOME}/cosmovisor/current/bin/zetacored
   fi
-  ${VISOR_NAME} version
-  ${VISOR_NAME} run start --home ${DAEMON_HOME} \
-    --log_level info \
-    --moniker ${MONIKER} \
-    --rpc.laddr tcp://0.0.0.0:26657
-    --minimum-gas-prices 1.0azeta "--grpc.enable=true"
+
+  EXPECTED_MAJOR_VERSION=$(grep 'const releaseVersion = ' $FILE_PATH | awk -F'"' '{print $2}')
+
+  VISOR_VERSION=$(${VISOR_NAME} version)
+  DAEMON_VERSION=$(${DAEMON_NAME} version)
+
+  VISOR_MAJOR_VERSION=$(echo $VISOR_VERSION | grep -o '^v[0-9]*')
+  DAEMON_MAJOR_VERSION=$(echo $DAEMON_VERSION | grep -o '^v[0-9]*')
+
+  if [ "$VISOR_MAJOR_VERSION" != "$EXPECTED_MAJOR_VERSION" ] || [ "$DAEMON_MAJOR_VERSION" != "$EXPECTED_MAJOR_VERSION" ]; then
+      logt "One or both versions don't match the expected major release version: $EXPECTED_MAJOR_VERSION"
+  else
+      logt "Both versions match the expected major release version: $EXPECTED_MAJOR_VERSION"
+  fi
+
+  if [ "$VISOR_VERSION" != "$DAEMON_VERSION" ]; then
+      logt "cosmovisor version doesn't appear to match your daemon version. Start ${DAEMON_NAME}"
+      ${DAEMON_NAME} start --home ${DAEMON_HOME} \
+      --log_level info \
+      --moniker ${MONIKER} \
+      --rpc.laddr tcp://0.0.0.0:26657 \
+      --minimum-gas-prices 1.0azeta "--grpc.enable=true"
+  else
+    logt "cosmovisor version match your daemon version. Start ${VISOR_NAME}"
+    ${VISOR_NAME} run start --home ${DAEMON_HOME} \
+      --log_level info \
+      --moniker ${MONIKER} \
+      --rpc.laddr tcp://0.0.0.0:26657 \
+      --minimum-gas-prices 1.0azeta "--grpc.enable=true"
+  fi
 }
 
 logt "Load Default Values for ENV Vars if not set."
