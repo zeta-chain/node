@@ -29,6 +29,8 @@ export declare enum ReceiveStatus {
 }
 
 /**
+ * ChainName represents the name of the chain
+ *
  * @generated from enum chains.ChainName
  */
 export declare enum ChainName {
@@ -119,6 +121,8 @@ export declare enum ChainName {
 }
 
 /**
+ * Network represents the network type of the chain
+ *
  * @generated from enum chains.Network
  */
 export declare enum Network {
@@ -149,6 +153,8 @@ export declare enum Network {
 }
 
 /**
+ * NetworkType represents the network type of the chain
+ *
  * @generated from enum chains.NetworkType
  */
 export declare enum NetworkType {
@@ -174,6 +180,8 @@ export declare enum NetworkType {
 }
 
 /**
+ * Vm represents the virtual machine type of the chain to support smart contracts
+ *
  * @generated from enum chains.Vm
  */
 export declare enum Vm {
@@ -189,6 +197,8 @@ export declare enum Vm {
 }
 
 /**
+ * Consensus represents the consensus algorithm used by the chain
+ *
  * @generated from enum chains.Consensus
  */
 export declare enum Consensus {

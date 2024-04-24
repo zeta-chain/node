@@ -53625,6 +53625,7 @@ definitions:
       - btc_regtest
       - amoy_testnet
     default: empty
+    title: ChainName represents the name of the chain
   chainsConsensus:
     type: string
     enum:
@@ -53632,6 +53633,7 @@ definitions:
       - Tendermint
       - Bitcoin
     default: Ethereum
+    title: Consensus represents the consensus algorithm used by the chain
   chainsNetwork:
     type: string
     enum:
@@ -53641,6 +53643,7 @@ definitions:
       - POLYGON
       - BSC
     default: ETH
+    title: Network represents the network type of the chain
   chainsNetworkType:
     type: string
     enum:
@@ -53649,6 +53652,7 @@ definitions:
       - PRIVNET
       - DEVNET
     default: MAINNET
+    title: NetworkType represents the network type of the chain
   chainsReceiveStatus:
     type: string
     enum:
@@ -53663,6 +53667,7 @@ definitions:
       - NO_VM
       - EVM
     default: NO_VM
+    title: Vm represents the virtual machine type of the chain to support smart contracts
   coinCoinType:
     type: string
     enum:

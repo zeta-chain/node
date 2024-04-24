@@ -11,6 +11,7 @@ enum ReceiveStatus {
   Success = 1;
   Failed = 2;
 }
+
 // ChainName represents the name of the chain
 enum ChainName {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -33,6 +34,7 @@ enum ChainName {
   btc_regtest = 15;
   amoy_testnet = 16;
 }
+
 // Network represents the network type of the chain
 enum Network {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -42,6 +44,7 @@ enum Network {
   POLYGON = 3;
   BSC = 4;
 }
+
 // NetworkType represents the network type of the chain
 enum NetworkType {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -50,12 +53,14 @@ enum NetworkType {
   PRIVNET = 2;
   DEVNET = 3;
 }
+
 // Vm represents the virtual machine type of the chain to support smart contracts
 enum Vm {
   option (gogoproto.goproto_enum_stringer) = true;
   NO_VM = 0;
   EVM = 1;
 }
+
 // Consensus represents the consensus algorithm used by the chain
 enum Consensus {
   option (gogoproto.goproto_enum_stringer) = true;

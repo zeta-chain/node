@@ -52,6 +52,7 @@ func (ReceiveStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_37ad35e0488e8bbc, []int{0}
 }
 
+// ChainName represents the name of the chain
 type ChainName int32
 
 const (
@@ -122,6 +123,7 @@ func (ChainName) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_37ad35e0488e8bbc, []int{1}
 }
 
+// Network represents the network type of the chain
 type Network int32
 
 const (
@@ -156,6 +158,7 @@ func (Network) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_37ad35e0488e8bbc, []int{2}
 }
 
+// NetworkType represents the network type of the chain
 type NetworkType int32
 
 const (
@@ -187,6 +190,7 @@ func (NetworkType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_37ad35e0488e8bbc, []int{3}
 }
 
+// Vm represents the virtual machine type of the chain to support smart contracts
 type Vm int32
 
 const (
@@ -212,6 +216,7 @@ func (Vm) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_37ad35e0488e8bbc, []int{4}
 }
 
+// Consensus represents the consensus algorithm used by the chain
 type Consensus int32
 
 const (

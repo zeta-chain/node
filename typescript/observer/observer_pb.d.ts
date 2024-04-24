@@ -58,6 +58,8 @@ export declare enum ObserverUpdateReason {
 }
 
 /**
+ * Deprecated: Use ObserverSet instead to get the list of observers
+ *
  * @generated from message zetachain.zetacore.observer.ObserverMapper
  */
 export declare class ObserverMapper extends Message<ObserverMapper> {
