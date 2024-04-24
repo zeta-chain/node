@@ -236,12 +236,21 @@ function move_zetacored_binaries {
 }
 
 function start_network {
-  ${VISOR_NAME} version
-  ${VISOR_NAME} run start --home ${DAEMON_HOME} \
-    --log_level info \
-    --moniker ${MONIKER} \
-    --rpc.laddr tcp://0.0.0.0:26657 \
-    --minimum-gas-prices 1.0azeta "--grpc.enable=true"
+  if [ "${IS_LOCAL_DEVELOPMENT}" == "true" ]; then
+    ${DAEMON_NAME} version
+    ${DAEMON_NAME} start --home ${DAEMON_HOME} \
+      --log_level info \
+      --moniker ${MONIKER} \
+      --rpc.laddr tcp://0.0.0.0:26657 \
+      --minimum-gas-prices 1.0azeta "--grpc.enable=true"
+  else
+    ${VISOR_NAME} version
+    ${VISOR_NAME} run start --home ${DAEMON_HOME} \
+      --log_level info \
+      --moniker ${MONIKER} \
+      --rpc.laddr tcp://0.0.0.0:26657 \
+      --minimum-gas-prices 1.0azeta "--grpc.enable=true"
+  fi
 }
 
 logt "Load Default Values for ENV Vars if not set."

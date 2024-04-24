@@ -2,16 +2,17 @@ version: '3.8'
 services:
   zetachain_mainnet_rpc:
     platform: linux/amd64
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1.1}
-    container_name: zetachain_mainnet_rpc
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
     environment:
       DAEMON_HOME: "/root/.zetacored"
-      NETWORK: mainnet
+      NETWORK: athens3
       #RESTORE_TYPE=snapshot/snapshot-archive/statesync
       RESTORE_TYPE: "snapshot"
       SNAPSHOT_API: https://snapshots.zetachain.com
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
-      CHAIN_ID: "zetachain_7000-1"
+      CHAIN_ID: "athens_7001-1"
       VISOR_NAME: "cosmovisor"
       DAEMON_NAME: "zetacored"
       DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
@@ -21,9 +22,9 @@ services:
       CLIENT_DAEMON_ARGS: ""
       CLIENT_SKIP_UPGRADE: "true"
       CLIENT_START_PROCESS: "false"
-      MONIKER: local-test
+      MONIKER: athens3-local-rpc
       RE_DO_START_SEQUENCE: "false"
-      IS_LOCAL_DEVELOPMENT: "false"
+      IS_LOCAL_DEVELOPMENT: "true"
     ports:
       - "26656:26656"
       - "1317:1317"
@@ -33,7 +34,9 @@ services:
       - "9090:9090"
       - "9091:9091"
     volumes:
-      - zetacored_data_mainnet:/root/.zetacored/
+      - zetacored_data_athens3:/root/.zetacored/
+      - ../../../contrib/docker-scripts/start.sh:/scripts/start.sh
     entrypoint: bash /scripts/start.sh
+
 volumes:
-  zetacored_data_mainnet:
+  zetacored_data_athens3:

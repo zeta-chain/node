@@ -2,12 +2,13 @@ version: '3.8'
 services:
   zetachain_mainnet_rpc:
     platform: linux/amd64
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1.1}
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
     container_name: zetachain_mainnet_rpc
     environment:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: mainnet
-      #RESTORE_TYPE=snapshot/snapshot-archive/statesync
       RESTORE_TYPE: "snapshot"
       SNAPSHOT_API: https://snapshots.zetachain.com
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
@@ -23,7 +24,7 @@ services:
       CLIENT_START_PROCESS: "false"
       MONIKER: local-test
       RE_DO_START_SEQUENCE: "false"
-      IS_LOCAL_DEVELOPMENT: "false"
+      IS_LOCAL_DEVELOPMENT: "true"
     ports:
       - "26656:26656"
       - "1317:1317"
@@ -34,6 +35,10 @@ services:
       - "9091:9091"
     volumes:
       - zetacored_data_mainnet:/root/.zetacored/
+      - ../../../contrib/docker-scripts/start.sh:/scripts/start.sh
     entrypoint: bash /scripts/start.sh
+    #for debugging
+    #entrypoint: ["/bin/sh", "-c"]
+    #command: ["while true; do sleep 86400; done"]
 volumes:
   zetacored_data_mainnet:

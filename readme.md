@@ -119,13 +119,25 @@ This guide details deploying Zetacored nodes on both ZetaChain mainnet and Athen
   ```shell
   make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1
   ```
+  
+**For MAinnet:**
+- Use this command for Mainnet to build form the current branch your on and launch with that binary with current athens3 state. This is for testing non-governance upgrade changes locally against a full node.
+  ```shell
+  make mainnet-zetarpc-node-local-dev
+  ```
 
 **For Athens3 (Testnet):**
 - Similar command structure for Athens3, ensuring the correct Docker tag is used.
   ```shell
   make testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1
   ```
-  
+ 
+**For Athens3 (Testnet) Local Development:**
+- Use this command for Athens3 to build form the current branch your on and launch with that binary with current athens3 state. This is for testing non-governance upgrade changes locally against a full node.
+  ```shell
+  make testnet-zetarpc-node-local-dev
+  ```
+
 #### Modifying the Sync Type
 
 **To change the sync type for your node:**
