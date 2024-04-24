@@ -2,6 +2,21 @@ package chains
 
 import "fmt"
 
+/*
+		Chain represents a blockchain network with its unique chain ID
+		ChainName is the name of the chain
+		ChainId is the unique identifier of the chain
+		Network is the network type of the chain , this can be ZETA, ETH, BSC, BTC, POLYGON
+		NetworkType is the network type of the chain, this can be MAINNET, TESTNET, DEVNET, PRIVNET
+		Vm is the virtual machine type of the chain to support smart contracts, this can be EVM, NO_VM
+		Consensus is the consensus algorithm used by the chain, this can be Tendermint, Ethereum, Bitcoin
+		IsExternal is a boolean value to determine if the chain is external to Zeta
+		IsHeaderSupported is a boolean value to determine if the chain supports headers
+
+       Note ChainName is normally NetworkName + NetworkType,but in some cases the value of NetworkName + NetworkType is not unique.This is true for chains which have been deprecated or have been renamed.
+       Such as GoerliChain and MumbaiChain which have been replaced by SepoliaChain and AmoyChain respectively.
+*/
+
 // Mainnet chains
 func ZetaChainMainnet() Chain {
 	return Chain{

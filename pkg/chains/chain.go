@@ -81,39 +81,34 @@ func DecodeAddressFromChainID(chainID int64, addr string) ([]byte, error) {
 	return nil, fmt.Errorf("chain (%d) not supported", chainID)
 }
 
+// IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality
+func IsEVMChain(chainID int64) bool {
+	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_Ethereum))
+}
+
+// IsBitcoinChain returns true if the chain is a Bitcoin-based chain or uses the bitcoin consensus mechanism for block finality
+func IsBitcoinChain(chainID int64) bool {
+	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_Bitcoin))
+}
+
+// IsEthereumChain returns true if the chain is an Ethereum chain
+func IsEthereumChain(chainID int64) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ETH))
+}
+
+// IsZetaChain returns true if the chain is a Zeta chain
 func IsZetaChain(chainID int64) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ZETA))
 }
 
-// IsEVMChain returns true if the chain is an EVM chain
-func IsEVMChain(chainID int64) bool {
-	evmChainList := ChainListByConsensus(Consensus_Ethereum)
-	return ChainIDInChainList(chainID, evmChainList)
-}
-
 // IsHeaderSupportedEvmChain returns true if the chain is an EVM chain supporting block header-based verification
 func IsHeaderSupportedEvmChain(chainID int64) bool {
-	chainList := ChainListForHeaderSupport()
-	return ChainIDInChainList(chainID, chainList)
+	return ChainIDInChainList(chainID, ChainListForHeaderSupport())
 }
 
 // SupportMerkleProof returns true if the chain supports block header-based verification
 func (chain Chain) SupportMerkleProof() bool {
 	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
-}
-
-// IsBitcoinChain returns true if the chain is a Bitcoin chain
-// TODO: put this information directly in chain object
-// https://github.com/zeta-chain/node-private/issues/63
-func IsBitcoinChain(chainID int64) bool {
-	btcChainList := ChainListByNetwork(Network_BTC)
-	return ChainIDInChainList(chainID, btcChainList)
-}
-
-// IsEthereumChain returns true if the chain is an Ethereum chain
-func IsEthereumChain(chainID int64) bool {
-	ethChainList := ChainListByNetwork(Network_ETH)
-	return ChainIDInChainList(chainID, ethChainList)
 }
 
 // IsEmpty is to determinate whether the chain is empty
