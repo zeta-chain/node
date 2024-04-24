@@ -170,7 +170,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 		cctx.InboundTxParams.Asset = ""
 		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e15) // 0.003 ETH
 
-		// convert cctx value
+		// convert cctx value: 0.003 ETH * 2500 = 7.5 ZETA
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
 		require.Equal(t, sdk.MustNewDecFromStr("7.5"), value)
 	})
@@ -181,7 +181,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 		cctx.InboundTxParams.Asset = ""
 		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(70000) // 0.0007 BTC
 
-		// convert cctx value
+		// convert cctx value: 0.0007 BTC * 50000 = 35.0 ZETA
 		value := keeper.ConvertCctxValue(btcChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
 		require.Equal(t, sdk.MustNewDecFromStr("35.0"), value)
 	})
@@ -192,7 +192,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 		cctx.InboundTxParams.Asset = assetUSDT
 		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e6) // 3 USDT
 
-		// convert cctx value
+		// convert cctx value: 3 USDT * 0.8 = 2.4 ZETA
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
 		require.Equal(t, sdk.MustNewDecFromStr("2.4"), value)
 	})
@@ -273,11 +273,13 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 	zrc20BTC := sample.EthAddress().Hex()
 	zrc20USDT := sample.EthAddress().Hex()
 
-	// create Eth chain mined and pending cctxs for rate limiter test
-	ethMindedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
+	// create Eth chain 999 mined and 200 pending cctxs for rate limiter test
+	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
+	ethMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
 	ethPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
 
-	// create Btc chain mined and pending cctxs for rate limiter test
+	// create Btc chain 999 mined and 200 pending cctxs for rate limiter test
+	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
 	btcMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_OutboundMined)
 	btcPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_PendingOutbound)
 
@@ -287,7 +289,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		rateLimitFlags *types.RateLimiterFlags
 
 		// Eth chain cctxs setup
-		ethMindedCctxs   []*types.CrossChainTx
+		ethMinedCctxs    []*types.CrossChainTx
 		ethPendingCctxs  []*types.CrossChainTx
 		ethPendingNonces observertypes.PendingNonces
 
@@ -309,7 +311,31 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		{
 			name:            "should use fallback query if rate limiter is disabled",
 			rateLimitFlags:  nil, // no rate limiter flags set in the keeper
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
+			ethPendingCctxs: ethPendingCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight:        1199,
+			queryLimit:           keeper.MaxPendingCctxs,
+			expectedCctxs:        append(append([]*types.CrossChainTx{}, btcPendingCctxs...), ethPendingCctxs...),
+			expectedTotalPending: 400,
+		},
+		{
+			name:            "should use fallback query if rate is 0",
+			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(0), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -333,7 +359,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		{
 			name:            "can retrieve pending cctx in range without exceeding rate limit",
 			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(5000), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -359,7 +385,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		{
 			name:            "can loop backwards all the way to endNonce 0",
 			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(5000), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -385,7 +411,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		{
 			name:            "set a low rate (< 1200) to early break the LoopBackwards with criteria #2",
 			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(1000), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"), // 1000 < 1200
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -408,10 +434,11 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			rateLimitExceeded:    true,
 		},
 		{
-			name: "set high rate and wide window to early to break inner loop with the criteria #1",
+			// this test case is to break the LoopBackwards with criteria #1: the 1st break in LoopBackwards
+			name: "set high rate and wide window to break inner loop of LoopBackwards when left window boundary is reached",
 			// The left boundary will be 49 (currentHeight-1150), which will be less than the endNonce 99 (1099 - 1000)
 			rateLimitFlags:  createTestRateLimiterFlags(1150, math.NewUint(10000), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -437,7 +464,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		{
 			name:            "set lower request limit to early break the LoopForwards loop",
 			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(5000), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -461,9 +488,11 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			rateLimitExceeded:    false,
 		},
 		{
-			name:            "set rate to middle value (1200 < rate < 1500) to early break the LoopForwards loop with criteria #2",
+			// all pending cctxs fall within the sliding window in this test case.
+			// this test case is to break the LoopBackwards with criteria #2: the 2nd break in LoopForwards
+			name:            "set rate to middle value (1200 < rate < 1500) to early break the LoopForwards when rate limit is exceeded",
 			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(1300), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"), // 1200 < 1300 < 1500
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -487,12 +516,14 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			rateLimitExceeded:    true,
 		},
 		{
-			name: "set low rate and narrow window to early break the LoopForwards loop with criteria #2",
+			// many pending cctxs fall beyond the sliding window in this test case.
+			// this test case is to break the LoopBackwards with criteria #2: the 2nd break in LoopForwards
+			name: "set low rate and narrow window to early break the LoopForwards when rate limit is exceeded",
 			// the left boundary will be 1149 (currentHeight-50), the pending nonces [1099, 1148] fall beyond the left boundary.
 			// `pendingCctxWindow` is 100 which is wider than rate limiter window 50.
 			//  give a block rate of 2 ZETA/block, the max value allowed should be 100 * 2 = 200 ZETA
 			rateLimitFlags:  createTestRateLimiterFlags(50, math.NewUint(100), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
-			ethMindedCctxs:  ethMindedCctxs,
+			ethMinedCctxs:   ethMinedCctxs,
 			ethPendingCctxs: ethPendingCctxs,
 			ethPendingNonces: observertypes.PendingNonces{
 				ChainId:   ethChainID,
@@ -535,7 +566,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			}
 
 			// Set Eth chain mined cctxs, pending ccxts and pending nonces
-			setCctxsInKeeper(ctx, *k, zk, tss, tt.ethMindedCctxs)
+			setCctxsInKeeper(ctx, *k, zk, tss, tt.ethMinedCctxs)
 			setCctxsInKeeper(ctx, *k, zk, tss, tt.ethPendingCctxs)
 			zk.ObserverKeeper.SetPendingNonces(ctx, tt.ethPendingNonces)
 

@@ -41,6 +41,9 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	if !found || !rateLimitFlags.Enabled {
 		applyLimit = false
 	}
+	if rateLimitFlags.Rate.IsNil() || rateLimitFlags.Rate.IsZero() {
+		applyLimit = false
+	}
 
 	// fallback to non-rate-limited query if rate limiter is disabled
 	if !applyLimit {
@@ -143,7 +146,7 @@ LoopBackwards:
 		// therefore might mask some lower nonce cctx that is still pending.
 		pendingNonces := pendingNoncesMap[chain.ChainId]
 		startNonce := pendingNonces.NonceLow - 1
-		endNonce := pendingNonces.NonceLow - 1000
+		endNonce := pendingNonces.NonceLow - MaxLookbackNonce
 		if endNonce < 0 {
 			endNonce = 0
 		}
