@@ -53629,44 +53629,44 @@ definitions:
   chainsConsensus:
     type: string
     enum:
-      - Ethereum
-      - Tendermint
-      - Bitcoin
-    default: Ethereum
+      - ethereum
+      - tendermint
+      - bitcoin
+    default: ethereum
     title: Consensus represents the consensus algorithm used by the chain
   chainsNetwork:
     type: string
     enum:
-      - ETH
-      - ZETA
-      - BTC
-      - POLYGON
-      - BSC
-    default: ETH
+      - eth
+      - zeta
+      - btc
+      - polygon
+      - bsc
+    default: eth
     title: Network represents the network type of the chain
   chainsNetworkType:
     type: string
     enum:
-      - MAINNET
-      - TESTNET
-      - PRIVNET
-      - DEVNET
-    default: MAINNET
+      - mainnet
+      - testnet
+      - privnet
+      - devnet
+    default: mainnet
     title: NetworkType represents the network type of the chain
   chainsReceiveStatus:
     type: string
     enum:
-      - Created
-      - Success
-      - Failed
-    default: Created
-    title: '- Created: some observer sees inbound tx'
+      - created
+      - success
+      - failed
+    default: created
+    title: '- created: some observer sees inbound tx'
   chainsVm:
     type: string
     enum:
-      - NO_VM
-      - EVM
-    default: NO_VM
+      - no_vm
+      - evm
+    default: no_vm
     title: Vm represents the virtual machine type of the chain to support smart contracts
   coinCoinType:
     type: string

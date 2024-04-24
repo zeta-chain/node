@@ -258,7 +258,6 @@ func ChainListByConsensus(consensus Consensus) []*Chain {
 		}
 	}
 	return chainList
-
 }
 
 // ChainListForHeaderSupport returns a list of chains that support headers

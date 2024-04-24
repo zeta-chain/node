@@ -13,19 +13,19 @@ export declare enum ReceiveStatus {
   /**
    * some observer sees inbound tx
    *
-   * @generated from enum value: Created = 0;
+   * @generated from enum value: created = 0;
    */
-  Created = 0,
+  created = 0,
 
   /**
-   * @generated from enum value: Success = 1;
+   * @generated from enum value: success = 1;
    */
-  Success = 1,
+  success = 1,
 
   /**
-   * @generated from enum value: Failed = 2;
+   * @generated from enum value: failed = 2;
    */
-  Failed = 2,
+  failed = 2,
 }
 
 /**
@@ -127,29 +127,29 @@ export declare enum ChainName {
  */
 export declare enum Network {
   /**
-   * @generated from enum value: ETH = 0;
+   * @generated from enum value: eth = 0;
    */
-  ETH = 0,
+  eth = 0,
 
   /**
-   * @generated from enum value: ZETA = 1;
+   * @generated from enum value: zeta = 1;
    */
-  ZETA = 1,
+  zeta = 1,
 
   /**
-   * @generated from enum value: BTC = 2;
+   * @generated from enum value: btc = 2;
    */
-  BTC = 2,
+  btc = 2,
 
   /**
-   * @generated from enum value: POLYGON = 3;
+   * @generated from enum value: polygon = 3;
    */
-  POLYGON = 3,
+  polygon = 3,
 
   /**
-   * @generated from enum value: BSC = 4;
+   * @generated from enum value: bsc = 4;
    */
-  BSC = 4,
+  bsc = 4,
 }
 
 /**
@@ -159,24 +159,24 @@ export declare enum Network {
  */
 export declare enum NetworkType {
   /**
-   * @generated from enum value: MAINNET = 0;
+   * @generated from enum value: mainnet = 0;
    */
-  MAINNET = 0,
+  mainnet = 0,
 
   /**
-   * @generated from enum value: TESTNET = 1;
+   * @generated from enum value: testnet = 1;
    */
-  TESTNET = 1,
+  testnet = 1,
 
   /**
-   * @generated from enum value: PRIVNET = 2;
+   * @generated from enum value: privnet = 2;
    */
-  PRIVNET = 2,
+  privnet = 2,
 
   /**
-   * @generated from enum value: DEVNET = 3;
+   * @generated from enum value: devnet = 3;
    */
-  DEVNET = 3,
+  devnet = 3,
 }
 
 /**
@@ -186,14 +186,14 @@ export declare enum NetworkType {
  */
 export declare enum Vm {
   /**
-   * @generated from enum value: NO_VM = 0;
+   * @generated from enum value: no_vm = 0;
    */
-  NO_VM = 0,
+  no_vm = 0,
 
   /**
-   * @generated from enum value: EVM = 1;
+   * @generated from enum value: evm = 1;
    */
-  EVM = 1,
+  evm = 1,
 }
 
 /**
@@ -203,19 +203,19 @@ export declare enum Vm {
  */
 export declare enum Consensus {
   /**
-   * @generated from enum value: Ethereum = 0;
+   * @generated from enum value: ethereum = 0;
    */
-  Ethereum = 0,
+  ethereum = 0,
 
   /**
-   * @generated from enum value: Tendermint = 1;
+   * @generated from enum value: tendermint = 1;
    */
-  Tendermint = 1,
+  tendermint = 1,
 
   /**
-   * @generated from enum value: Bitcoin = 2;
+   * @generated from enum value: bitcoin = 2;
    */
-  Bitcoin = 2,
+  bitcoin = 2,
 }
 
 /**
