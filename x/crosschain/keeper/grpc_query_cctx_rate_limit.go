@@ -88,7 +88,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 		foreignCoinMap = k.fungibleKeeper.GetAllForeignCoinMap(ctx)
 
 		// convert the rate limit from aZETA to ZETA
-		blockLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt()).Quo(sdk.NewDec(10).Power(18))
+		blockLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt())
 		windowLimitInZeta = blockLimitInZeta.Mul(sdk.NewDec(rateLimitFlags.Window))
 	}
 
@@ -232,7 +232,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 		CrossChainTx:          cctxs,
 		TotalPending:          totalPending,
 		CurrentWithdrawWindow: withdrawWindow,
-		CurrentWithdrawRate:   totalWithdrawInZeta.Mul(sdk.NewDec(10).Power(18)).Quo(sdk.NewDec(withdrawWindow)).String(),
+		CurrentWithdrawRate:   totalWithdrawInZeta.Quo(sdk.NewDec(withdrawWindow)).String(),
 		RateLimitExceeded:     limitExceeded,
 	}, nil
 }
