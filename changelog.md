@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## Unreleased
+# Unreleased
+
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
@@ -60,6 +61,8 @@
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 * [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
 
+
+
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
@@ -112,8 +115,7 @@
 ## Version: v15.0.0
 
 ### Features
-
-*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+* [1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
 
 ## Version: v14.0.1
 
