@@ -270,8 +270,9 @@ message QueryListPendingCctxWithinRateLimitRequest {
 message QueryListPendingCctxWithinRateLimitResponse {
   repeated CrossChainTx cross_chain_tx = 1;
   uint64 total_pending = 2;
-  uint64 value_within_window = 3;
-  bool rate_limit_exceeded = 4;
+  int64 current_withdraw_window = 3;
+  string current_withdraw_rate = 4;
+  bool rate_limit_exceeded = 5;
 }
 
 message QueryLastZetaHeightRequest {}
