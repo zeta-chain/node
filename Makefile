@@ -303,13 +303,13 @@ stop-zetacored-rpc-testnet:
 stop-zetacored-rpc-mainnet:
 	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
-stop-and-clean-bitcoin-node-mainnet:
+clean-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
-stop-and-clean-zetacored-rpc-testnet:
+clean-zetacored-rpc-testnet:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
-stop-and-clean-zetacored-rpc-mainnet:
+clean-zetacored-rpc-mainnet:
 	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
 start-zetacored-rpc-mainnet-localbuild:
@@ -324,10 +324,10 @@ stop-zetacored-rpc-mainnet-localbuild:
 stop-zetacored-rpc-testnet-localbuild:
 	cd contrib/athens3/zetacored-localbuild && docker-compose down
 
-stop-and-clean-zetacored-rpc-mainnet-localbuild:
+zetacored-rpc-mainnet-localbuild:
 	cd contrib/mainnet/zetacored-localbuild && docker-compose down -v
 
-stop-and-clean-zetacored-rpc-testnet-localbuild:
+zetacored-rpc-testnet-localbuild:
 	cd contrib/athens3/zetacored-localbuild && docker-compose down -v
 
 ###############################################################################
