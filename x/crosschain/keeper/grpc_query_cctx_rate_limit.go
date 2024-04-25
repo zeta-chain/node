@@ -16,7 +16,7 @@ import (
 
 // ListPendingCctxWithinRateLimit returns a list of pending cctxs that do not exceed the outbound rate limit
 // a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
-func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.QueryListPendingCctxWithinRateLimitRequest) (*types.QueryListPendingCctxWithinRateLimitResponse, error) {
+func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.QueryListPendingCctxWithinRateLimitRequest) (res *types.QueryListPendingCctxWithinRateLimitResponse, err error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -142,6 +142,11 @@ LoopBackwards:
 		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
 		// therefore might mask some lower nonce cctx that is still pending.
 		pendingNonces := pendingNoncesMap[chain.ChainId]
+
+		if pendingNonces == nil {
+			continue
+		}
+
 		startNonce := pendingNonces.NonceLow - 1
 		endNonce := pendingNonces.NonceLow - 1000
 		if endNonce < 0 {
@@ -190,6 +195,11 @@ LoopForwards:
 	for _, chain := range chains {
 		// query the pending cctxs in range [NonceLow, NonceHigh)
 		pendingNonces := pendingNoncesMap[chain.ChainId]
+
+		if pendingNonces == nil {
+			continue
+		}
+
 		for nonce := pendingNonces.NonceLow; nonce < pendingNonces.NonceHigh; nonce++ {
 			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, nonce)
 			if err != nil {
@@ -283,6 +293,7 @@ func ConvertCctxValue(
 	amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
 	amountZrc20 := amountCctx.Mul(rate)
 	amountZeta := amountZrc20.Quo(oneZrc20)
+
 	return amountZeta
 }
 
