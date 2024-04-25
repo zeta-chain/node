@@ -9,9 +9,7 @@ import (
 
 // DefaultGenesis returns the default observer genesis state
 func DefaultGenesis() *GenesisState {
-	params := DefaultParams()
 	return &GenesisState{
-		Params:            &params,
 		Ballots:           nil,
 		Observers:         ObserverSet{},
 		NodeAccountList:   []*NodeAccount{},
@@ -24,12 +22,6 @@ func DefaultGenesis() *GenesisState {
 
 // Validate performs basic genesis state validation returning an error upon any failure.
 func (gs GenesisState) Validate() error {
-	if gs.Params != nil {
-		err := gs.Params.Validate()
-		if err != nil {
-			return err
-		}
-	}
 	// Check for duplicated index in nodeAccount
 	nodeAccountIndexMap := make(map[string]bool)
 

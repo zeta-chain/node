@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -16,11 +15,11 @@ type (
 		cdc               codec.BinaryCodec
 		storeKey          storetypes.StoreKey
 		memKey            storetypes.StoreKey
-		paramstore        paramtypes.Subspace
 		stakingKeeper     types.StakingKeeper
 		slashingKeeper    types.SlashingKeeper
 		authorityKeeper   types.AuthorityKeeper
 		lightclientKeeper types.LightclientKeeper
+		authority         string
 	}
 )
 
@@ -28,27 +27,27 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey storetypes.StoreKey,
-	ps paramtypes.Subspace,
 	stakingKeeper types.StakingKeeper,
 	slashinKeeper types.SlashingKeeper,
 	authorityKeeper types.AuthorityKeeper,
 	lightclientKeeper types.LightclientKeeper,
+	authority string,
 ) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(err)
 	}
 
 	return &Keeper{
 		cdc:               cdc,
 		storeKey:          storeKey,
 		memKey:            memKey,
-		paramstore:        ps,
 		stakingKeeper:     stakingKeeper,
 		slashingKeeper:    slashinKeeper,
 		authorityKeeper:   authorityKeeper,
 		lightclientKeeper: lightclientKeeper,
+		authority:         authority,
 	}
+
 }
 
 func (k Keeper) GetSlashingKeeper() types.SlashingKeeper {
@@ -77,4 +76,8 @@ func (k Keeper) StoreKey() storetypes.StoreKey {
 
 func (k Keeper) Codec() codec.BinaryCodec {
 	return k.cdc
+}
+
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

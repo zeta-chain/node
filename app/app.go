@@ -382,11 +382,11 @@ func New(
 		appCodec,
 		keys[observertypes.StoreKey],
 		keys[observertypes.MemStoreKey],
-		app.GetSubspace(observertypes.ModuleName),
 		&stakingKeeper,
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// register the staking hooks
@@ -406,12 +406,12 @@ func New(
 		appCodec,
 		keys[emissionstypes.StoreKey],
 		keys[emissionstypes.MemStoreKey],
-		app.GetSubspace(emissionstypes.ModuleName),
 		authtypes.FeeCollectorName,
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.ObserverKeeper,
 		app.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Create Ethermint keepers
@@ -527,7 +527,7 @@ func New(
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
-		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper),
+		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
@@ -821,9 +821,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	paramsKeeper.Subspace(group.ModuleName)
-	paramsKeeper.Subspace(crosschaintypes.ModuleName)
 	paramsKeeper.Subspace(observertypes.ModuleName)
-	paramsKeeper.Subspace(fungibletypes.ModuleName)
 	paramsKeeper.Subspace(emissionstypes.ModuleName)
 	return paramsKeeper
 }

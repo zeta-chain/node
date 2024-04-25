@@ -57,6 +57,11 @@ export declare class Params extends Message<Params> {
    */
   observerSlashAmount: string;
 
+  /**
+   * @generated from field: int64 ballot_maturity_blocks = 10;
+   */
+  ballotMaturityBlocks: bigint;
+
   constructor(data?: PartialMessage<Params>);
 
   static readonly runtime: typeof proto3;

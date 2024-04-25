@@ -16,12 +16,14 @@ type (
 		cdc              codec.BinaryCodec
 		storeKey         storetypes.StoreKey
 		memKey           storetypes.StoreKey
-		paramStore       types.ParamStore
 		feeCollectorName string
 		bankKeeper       types.BankKeeper
 		stakingKeeper    types.StakingKeeper
 		observerKeeper   types.ObserverKeeper
 		authKeeper       types.AccountKeeper
+		// the address capable of executing a MsgUpdateParams message. Typically, this
+		// should be the x/gov module account.
+		authority string
 	}
 )
 
@@ -29,28 +31,27 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey storetypes.StoreKey,
-	ps types.ParamStore,
 	feeCollectorName string,
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	observerKeeper types.ObserverKeeper,
 	authKeeper types.AccountKeeper,
+	authority string,
 ) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(err)
 	}
 
 	return &Keeper{
 		cdc:              cdc,
 		storeKey:         storeKey,
 		memKey:           memKey,
-		paramStore:       ps,
 		feeCollectorName: feeCollectorName,
 		bankKeeper:       bankKeeper,
 		stakingKeeper:    stakingKeeper,
 		observerKeeper:   observerKeeper,
 		authKeeper:       authKeeper,
+		authority:        authority,
 	}
 }
 
@@ -78,6 +79,6 @@ func (k Keeper) GetAuthKeeper() types.AccountKeeper {
 	return k.authKeeper
 }
 
-func (k Keeper) GetParamStore() types.ParamStore {
-	return k.paramStore
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

@@ -71,7 +71,6 @@ func CrosschainKeeperWithMocks(
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
-		sdkKeepers.ParamsKeeper,
 		authorityKeeperTmp,
 		lightclientKeeperTmp,
 	)

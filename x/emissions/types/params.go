@@ -4,20 +4,12 @@ import (
 	"fmt"
 	"strconv"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
 )
 
-var _ paramtypes.ParamSet = (*Params)(nil)
-
-// ParamKeyTable the param key table for launch module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
-
 // NewParams creates a new Params instance
-
 func NewParams() Params {
 	return Params{
 		MaxBondFactor:               "1.25",
@@ -28,11 +20,8 @@ func NewParams() Params {
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",
 		DurationFactorConstant:      "0.001877876953694702",
-
-		// ObserverSlashAmount is currently disabled
-		// TODO: enable this param
-		// https://github.com/zeta-chain/node/issues/1862
-		ObserverSlashAmount: sdk.Int{},
+		ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
+		BallotMaturityBlocks:        100,
 	}
 }
 
@@ -41,27 +30,80 @@ func DefaultParams() Params {
 	return NewParams()
 }
 
-// ParamSetPairs get the params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyPrefix(ParamMaxBondFactor), &p.MaxBondFactor, validateMaxBondFactor),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamMinBondFactor), &p.MinBondFactor, validateMinBondFactor),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamAvgBlockTime), &p.AvgBlockTime, validateAvgBlockTime),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamTargetBondRatio), &p.TargetBondRatio, validateTargetBondRatio),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamValidatorEmissionPercentage), &p.ValidatorEmissionPercentage, validateValidatorEmissionPercentage),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamObserverEmissionPercentage), &p.ObserverEmissionPercentage, validateObserverEmissionPercentage),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamTssSignerEmissionPercentage), &p.TssSignerEmissionPercentage, validateTssEmissionPercentage),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamDurationFactorConstant), &p.DurationFactorConstant, validateDurationFactorConstant),
-
-		// TODO: enable this param
-		// https://github.com/zeta-chain/node/pull/1861
-		//paramtypes.NewParamSetPair(KeyPrefix(ParamObserverSlashAmount), &p.ObserverSlashAmount, validateObserverSlashAmount),
-	}
-}
-
 // Validate validates the set of params
 func (p Params) Validate() error {
-	return nil
+	err := validateMaxBondFactor(p.MaxBondFactor)
+	if err != nil {
+		return err
+	}
+	err = validateMinBondFactor(p.MinBondFactor)
+	if err != nil {
+		return err
+	}
+	err = validateAvgBlockTime(p.AvgBlockTime)
+	if err != nil {
+		return err
+	}
+	err = validateTargetBondRatio(p.TargetBondRatio)
+	if err != nil {
+		return err
+	}
+	err = validateValidatorEmissionPercentage(p.ValidatorEmissionPercentage)
+	if err != nil {
+		return err
+	}
+	err = validateObserverEmissionPercentage(p.ObserverEmissionPercentage)
+	if err != nil {
+		return err
+	}
+	err = validateTssEmissionPercentage(p.TssSignerEmissionPercentage)
+	if err != nil {
+		return err
+	}
+	err = validateBallotMaturityBlocks(p.BallotMaturityBlocks)
+	if err != nil {
+		return err
+	}
+	return validateObserverSlashAmount(p.ObserverSlashAmount)
+}
+
+func (p Params) GetBondFactor(currentBondedRatio sdk.Dec) sdk.Dec {
+	targetBondRatio := sdk.MustNewDecFromStr(p.TargetBondRatio)
+	maxBondFactor := sdk.MustNewDecFromStr(p.MaxBondFactor)
+	minBondFactor := sdk.MustNewDecFromStr(p.MinBondFactor)
+
+	// Bond factor ranges between minBondFactor (0.75) to maxBondFactor (1.25)
+	if currentBondedRatio.IsZero() {
+		return sdk.ZeroDec()
+	}
+	bondFactor := targetBondRatio.Quo(currentBondedRatio)
+	if bondFactor.GT(maxBondFactor) {
+		return maxBondFactor
+	}
+	if bondFactor.LT(minBondFactor) {
+		return minBondFactor
+	}
+	return bondFactor
+}
+
+func (p Params) GetDurationFactor(blockHeight int64) sdk.Dec {
+	avgBlockTime := sdk.MustNewDecFromStr(p.AvgBlockTime)
+	NumberOfBlocksInAMonth := sdk.NewDec(SecsInMonth).Quo(avgBlockTime)
+	monthFactor := sdk.NewDec(blockHeight).Quo(NumberOfBlocksInAMonth)
+	logValueDec := sdk.MustNewDecFromStr(p.DurationFactorConstant)
+	// month * log(1 + 0.02 / 12)
+	fractionNumerator := monthFactor.Mul(logValueDec)
+	// (month * log(1 + 0.02 / 12) ) + 1
+	fractionDenominator := fractionNumerator.Add(sdk.OneDec())
+
+	// (month * log(1 + 0.02 / 12)) / (month * log(1 + 0.02 / 12) ) + 1
+	if fractionDenominator.IsZero() {
+		return sdk.OneDec()
+	}
+	if fractionNumerator.IsZero() {
+		return sdk.ZeroDec()
+	}
+	return fractionNumerator.Quo(fractionDenominator)
 }
 
 // String implements the Stringer interface.
@@ -88,7 +130,7 @@ func validateMaxBondFactor(i interface{}) error {
 	}
 	decMaxBond := sdk.MustNewDecFromStr(v)
 	if decMaxBond.GT(sdk.MustNewDecFromStr("1.25")) {
-		return fmt.Errorf("max bond factor cannot be higher that 0.25")
+		return fmt.Errorf("max bond factor cannot be higher that 1.25")
 	}
 	return nil
 }
@@ -177,5 +219,29 @@ func validateTssEmissionPercentage(i interface{}) error {
 	if dec.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("tss emission percentage cannot be less than 0 percent")
 	}
+	return nil
+}
+
+func validateObserverSlashAmount(i interface{}) error {
+	v, ok := i.(sdkmath.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.LT(sdk.ZeroInt()) {
+		return fmt.Errorf("slash amount cannot be less than 0")
+	}
+	return nil
+}
+
+func validateBallotMaturityBlocks(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("ballot maturity types must be gte 0")
+	}
+
 	return nil
 }

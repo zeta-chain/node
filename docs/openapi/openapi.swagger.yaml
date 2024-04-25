@@ -27239,7 +27239,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/zetacoreemissionsQueryParamsResponse'
+            $ref: '#/definitions/emissionsQueryParamsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28092,21 +28092,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/observerQueryObserverSetResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
-  /zeta-chain/observer/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: Query_Params
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetacoreobserverQueryParamsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -53995,8 +53980,35 @@ definitions:
       ed25519:
         type: string
     title: PubKeySet contains two pub keys , secp256k1 and ed25519
+  emissionsMsgUpdateParamsResponse:
+    type: object
   emissionsMsgWithdrawEmissionResponse:
     type: object
+  emissionsParams:
+    type: object
+    properties:
+      max_bond_factor:
+        type: string
+      min_bond_factor:
+        type: string
+      avg_block_time:
+        type: string
+      target_bond_ratio:
+        type: string
+      validator_emission_percentage:
+        type: string
+      observer_emission_percentage:
+        type: string
+      tss_signer_emission_percentage:
+        type: string
+      duration_factor_constant:
+        type: string
+      observer_slash_amount:
+        type: string
+      ballot_maturity_blocks:
+        type: string
+        format: int64
+    description: Params defines the parameters for the module.
   emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:
@@ -54015,6 +54027,13 @@ definitions:
         type: string
       emission_module_address:
         type: string
+  emissionsQueryParamsResponse:
+    type: object
+    properties:
+      params:
+        $ref: '#/definitions/emissionsParams'
+        description: params holds all the parameters of this module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   emissionsQueryShowAvailableEmissionsResponse:
     type: object
     properties:
@@ -54228,14 +54247,6 @@ definitions:
       btcTypeChainEnabled:
         type: boolean
     title: VerificationFlags is a structure containing information which chain types are enabled for block header verification
-  observerAdmin_Policy:
-    type: object
-    properties:
-      policy_type:
-        $ref: '#/definitions/observerPolicy_Type'
-      address:
-        type: string
-    title: Deprecated(v14):Moved into the authority module
   observerBallotStatus:
     type: string
     enum:
@@ -54466,18 +54477,6 @@ definitions:
       - TSSKeyGen
       - TSSKeySign
     default: EmptyObserverType
-  observerObserverParams:
-    type: object
-    properties:
-      chain:
-        $ref: '#/definitions/chainsChain'
-      ballot_threshold:
-        type: string
-      min_observer_delegation:
-        type: string
-      is_supported:
-        type: boolean
-    title: 'Deprecated(v13): Use ChainParamsList'
   observerObserverUpdateReason:
     type: string
     enum:
@@ -54500,13 +54499,6 @@ definitions:
       tss:
         type: string
     title: store key is tss+chainid
-  observerPolicy_Type:
-    type: string
-    enum:
-      - group1
-      - group2
-    default: group1
-    title: Deprecated(v14):Moved into the authority module
   observerQueryAllBlameRecordsResponse:
     type: object
     properties:
@@ -54819,61 +54811,6 @@ definitions:
         format: int64
       isAbortRefunded:
         type: boolean
-  zetacoreemissionsParams:
-    type: object
-    properties:
-      max_bond_factor:
-        type: string
-      min_bond_factor:
-        type: string
-      avg_block_time:
-        type: string
-      target_bond_ratio:
-        type: string
-      validator_emission_percentage:
-        type: string
-      observer_emission_percentage:
-        type: string
-      tss_signer_emission_percentage:
-        type: string
-      duration_factor_constant:
-        type: string
-      observer_slash_amount:
-        type: string
-    description: Params defines the parameters for the module.
-  zetacoreemissionsQueryParamsResponse:
-    type: object
-    properties:
-      params:
-        $ref: '#/definitions/zetacoreemissionsParams'
-        description: params holds all the parameters of this module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetacoreobserverParams:
-    type: object
-    properties:
-      observer_params:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerObserverParams'
-        title: 'Deprecated(v13): Use ChainParamsList'
-      admin_policy:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerAdmin_Policy'
-        title: Deprecated(v14):Moved into the authority module
-      ballot_maturity_blocks:
-        type: string
-        format: int64
-    description: Params defines the parameters for the module.
-  zetacoreobserverQueryParamsResponse:
-    type: object
-    properties:
-      params:
-        $ref: '#/definitions/zetacoreobserverParams'
-        description: params holds all the parameters of this module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:

@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## Unreleased
+
+### Refactor
+* [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
+
+## Unreleased
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.

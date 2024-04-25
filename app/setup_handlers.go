@@ -6,20 +6,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const releaseVersion = "v15"
 
 func SetupHandlers(app *App) {
+	// Set param key table for params module migration
+	for _, subspace := range app.ParamsKeeper.GetSubspaces() {
+		subspace := subspace
+
+		switch subspace.Name() {
+		// TODO: add all modules when cosmos-sdk is updated
+		case emissionstypes.ModuleName:
+			subspace.WithKeyTable(emissionstypes.ParamKeyTable())
+		}
+	}
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
 		// Updated version map to the latest consensus versions from each module
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
