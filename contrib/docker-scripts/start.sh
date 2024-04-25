@@ -242,13 +242,23 @@ function start_network {
     ln -s ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored ${DAEMON_HOME}/cosmovisor/current/bin/zetacored
   fi
 
-  EXPECTED_MAJOR_VERSION=$(grep 'const releaseVersion = ' $FILE_PATH | awk -F'"' '{print $2}')
+  logt "Visor Version"
+  ${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n'
 
-  VISOR_VERSION=$(${VISOR_NAME} version)
+  logt "Visor Version"
+  ${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n'
+
+  EXPECTED_MAJOR_VERSION=$(cat /scripts/EXPECTED_MAJOR_VERSION)
+  VISOR_VERSION=v$(${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n')
   DAEMON_VERSION=$(${DAEMON_NAME} version)
-
   VISOR_MAJOR_VERSION=$(echo $VISOR_VERSION | grep -o '^v[0-9]*')
   DAEMON_MAJOR_VERSION=$(echo $DAEMON_VERSION | grep -o '^v[0-9]*')
+
+  logt "EXPECTED_MAJOR_VERSION: ${EXPECTED_MAJOR_VERSION}"
+  logt "VISOR_VERSION: ${VISOR_VERSION}"
+  logt "DAEMON_VERSION: ${DAEMON_VERSION}"
+  logt "VISOR_MAJOR_VERSION: ${VISOR_MAJOR_VERSION}"
+  logt "DAEMON_MAJOR_VERSION: ${DAEMON_MAJOR_VERSION}"
 
   if [ "$VISOR_MAJOR_VERSION" != "$EXPECTED_MAJOR_VERSION" ] || [ "$DAEMON_MAJOR_VERSION" != "$EXPECTED_MAJOR_VERSION" ]; then
       logt "One or both versions don't match the expected major release version: $EXPECTED_MAJOR_VERSION"

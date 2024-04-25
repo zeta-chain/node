@@ -20,7 +20,9 @@ RUN go mod download
 # Copy the rest of the source code and build the application
 COPY . .
 
-RUN make install
+RUN EXPECTED_MAJOR_VERSION=$(grep 'const releaseVersion = ' app/setup_handlers.go | awk -F'"' '{print $2}') && \
+    make install VERSION="${EXPECTED_MAJOR_VERSION}" && \
+    echo -n "${EXPECTED_MAJOR_VERSION}" > /go/delivery/zeta-node/EXPECTED_MAJOR_VERSION
 
 # Run Stage
 FROM alpine:3.18
@@ -46,6 +48,7 @@ RUN apk --no-cache add git jq bash curl nano vim tmux python3 libusb-dev linux-h
 # Copy the binaries from the build stage
 COPY --from=builder /go/bin/zetaclientd /usr/local/bin/zetaclientd
 COPY --from=builder /go/bin/zetacored /usr/local/bin/zetacored
+COPY --from=builder /go/delivery/zeta-node/EXPECTED_MAJOR_VERSION /scripts/EXPECTED_MAJOR_VERSION
 
 # Set the working directory
 WORKDIR /usr/local/bin
