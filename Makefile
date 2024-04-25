@@ -285,43 +285,49 @@ release:
 ###                     Local Mainnet Development                           ###
 ###############################################################################
 
-mainnet-zetarpc-node:
-	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
-
-mainnet-bitcoind-node:
+start-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
-testnet-zetarpc-node:
+start-zetacored-rpc-mainnet:
+	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+start-zetacored-rpc-testnet:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
-mainnet-bitcoind-node-down:
+stop-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
-testnet-zetarpc-node-down:
+stop-zetacored-rpc-testnet:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
-mainnet-bitcoind-node-down-clean:
+stop-zetacored-rpc-mainnet:
+	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+
+stop-and-clean-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
-testnet-zetarpc-node-down-clean:
+stop-and-clean-zetacored-rpc-testnet:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
-mainnet-zetarpc-node-local-dev:
+stop-and-clean-zetacored-rpc-mainnet:
+	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+start-zetacored-rpc-mainnet-localbuild:
 	cd contrib/mainnet/zetacored-localbuild && docker-compose up --build
 
-testnet-zetarpc-node-local-dev:
+start-zetacored-rpc-testnet-localbuild:
 	cd contrib/athens3/zetacored-localbuild && docker-compose up --build
 
-mainnet-zetarpc-node-local-dev-down:
+stop-zetacored-rpc-mainnet-localbuild:
 	cd contrib/mainnet/zetacored-localbuild && docker-compose down
 
-testnet-zetarpc-node-local-dev-down:
+stop-zetacored-rpc-testnet-localbuild:
 	cd contrib/athens3/zetacored-localbuild && docker-compose down
 
-mainnet-zetarpc-node-local-dev-down-clean:
+stop-and-clean-zetacored-rpc-mainnet-localbuild:
 	cd contrib/mainnet/zetacored-localbuild && docker-compose down -v
 
-testnet-zetarpc-node-local-dev-down-cliean:
+stop-and-clean-zetacored-rpc-testnet-localbuild:
 	cd contrib/athens3/zetacored-localbuild && docker-compose down -v
 
 ###############################################################################

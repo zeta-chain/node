@@ -2,7 +2,7 @@ version: '3.8'
 services:
   zetachain_mainnet_rpc:
     platform: linux/amd64
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1.1}
+    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1.0}
     container_name: zetachain_mainnet_rpc
     environment:
       DAEMON_HOME: "/root/.zetacored"
