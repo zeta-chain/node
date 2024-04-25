@@ -251,7 +251,7 @@ func ConvertCctxValue(
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
 		amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
-		return amountCctx.Quo(sdk.NewDec(10).Power(18))
+		return amountCctx
 	case coin.CoinType_Gas:
 		rate = gasCoinRates[chainID]
 	case coin.CoinType_ERC20:

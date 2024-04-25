@@ -17,8 +17,8 @@ import (
 // rateLimiterFlags are the rate limiter flags for the test
 var rateLimiterFlags = crosschaintypes.RateLimiterFlags{
 	Enabled: true,
-	Rate:    sdk.NewUint(1e17).MulUint64(15), // this value is used so rate is reached
-	Window:  5,
+	Rate:    sdk.NewUint(1e17).MulUint64(5), // this value is used so rate is reached
+	Window:  10,
 }
 
 func TestRateLimiter(r *runner.E2ERunner, _ []string) {
@@ -40,7 +40,7 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 
 	// Set the rate limiter to 0.11ZETA per 10 blocks
 	// These rate limiter flags will only allow to process 1 withdraw per 10 blocks
-	r.Logger.Info("setting up rate limiter flags")
+	//r.Logger.Info("setting up rate limiter flags")
 	if err := setupRateLimiterFlags(r, rateLimiterFlags); err != nil {
 		panic(err)
 	}
