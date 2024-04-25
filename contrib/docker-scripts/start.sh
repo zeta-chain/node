@@ -242,12 +242,6 @@ function start_network {
     ln -s ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored ${DAEMON_HOME}/cosmovisor/current/bin/zetacored
   fi
 
-  logt "Visor Version"
-  ${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n'
-
-  logt "Visor Version"
-  ${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n'
-
   EXPECTED_MAJOR_VERSION=$(cat /scripts/EXPECTED_MAJOR_VERSION)
   VISOR_VERSION=v$(${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n')
   DAEMON_VERSION=$(${DAEMON_NAME} version)
