@@ -15,8 +15,6 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	// TODO : Add a new policy type for updating the TSS address
-	// https://github.com/zeta-chain/node/issues/1715
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
