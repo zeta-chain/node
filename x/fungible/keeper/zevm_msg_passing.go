@@ -21,10 +21,7 @@ func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 	data []byte,
 	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	acc := k.evmKeeper.GetAccount(ctx, to)
-	if acc == nil {
-		return nil, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", to.String()))
-	}
-	if !acc.IsContract() {
+	if acc == nil || !acc.IsContract() {
 		err := k.DepositCoinZeta(ctx, to, inboundAmount)
 		if err != nil {
 			return nil, err
