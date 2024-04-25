@@ -17,7 +17,7 @@ import (
 // rateLimiterFlags are the rate limiter flags for the test
 var rateLimiterFlags = crosschaintypes.RateLimiterFlags{
 	Enabled: true,
-	Rate:    sdk.NewUint(110000000000000000), // 0.11 ZETA, this value is used so rate is reached
+	Rate:    sdk.NewUint(1e17).MulUint64(15), // this value is used so rate is reached
 	Window:  5,
 }
 
@@ -33,24 +33,24 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	}
 
 	// First test without rate limiter
-	r.Logger.Print("rate limiter disabled")
+	//r.Logger.Print("rate limiter disabled")
+	//if err := createAndWaitWithdraws(r); err != nil {
+	//	panic(err)
+	//}
+
+	// Set the rate limiter to 0.11ZETA per 10 blocks
+	// These rate limiter flags will only allow to process 1 withdraw per 10 blocks
+	r.Logger.Info("setting up rate limiter flags")
+	if err := setupRateLimiterFlags(r, rateLimiterFlags); err != nil {
+		panic(err)
+	}
+
+	// Test with rate limiter
+	r.Logger.Print("rate limiter enabled")
 	if err := createAndWaitWithdraws(r); err != nil {
 		panic(err)
 	}
 
-	//// Set the rate limiter to 0.11ZETA per 10 blocks
-	//// These rate limiter flags will only allow to process 1 withdraw per 10 blocks
-	//r.Logger.Info("setting up rate limiter flags")
-	//if err := setupRateLimiterFlags(r, rateLimiterFlags); err != nil {
-	//	panic(err)
-	//}
-	//
-	//// Test with rate limiter
-	//r.Logger.Print("rate limiter enabled")
-	//if err := createAndWaitWithdraws(r); err != nil {
-	//	panic(err)
-	//}
-	//
 	//// Disable rate limiter
 	//r.Logger.Info("disabling rate limiter")
 	//if err := setupRateLimiterFlags(r, crosschaintypes.RateLimiterFlags{Enabled: false}); err != nil {
@@ -85,7 +85,7 @@ func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimite
 func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	startTime := time.Now()
 
-	r.Logger.Print("starting 10 withdraws of 0.1 ZETA each")
+	r.Logger.Print("starting 10 withdraws")
 
 	// Perform 10 withdraws to log time for completion
 	txs := make([]*ethtypes.Transaction, 10)
