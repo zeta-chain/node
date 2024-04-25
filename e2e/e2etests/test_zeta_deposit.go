@@ -29,12 +29,12 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 
 func TestZetaDepositNewAddress(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
-		panic("TestZetaDeposit requires exactly one argument for the amount.")
+		panic("TestZetaDepositNewAddress requires exactly one argument for the amount.")
 	}
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	if !ok {
-		panic("Invalid amount specified for TestZetaDeposit.")
+		panic("Invalid amount specified for TestZetaDepositNewAddress.")
 	}
 
 	newAddress := sample.EthAddress()

@@ -197,7 +197,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		require.Equal(t, amount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("successfully deposit coin if account not found", func(t *testing.T) {
+	t.Run("automatically deposit coin if account not found", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
