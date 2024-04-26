@@ -107,16 +107,16 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs
 	// Note: The pending nonces could change during the RPC call, so query them beforehand
 	lowestPendingCctxHeight := int64(0)
-	pendingNoncesMap := make(map[int64]*observertypes.PendingNonces)
+	pendingNoncesMap := make(map[int64]observertypes.PendingNonces)
 	for _, chain := range chains {
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			return nil, status.Error(codes.Internal, "pending nonces not found")
 		}
+		pendingNoncesMap[chain.ChainId] = pendingNonces
 
 		// insert pending nonces and update lowest height
 		if pendingNonces.NonceLow < pendingNonces.NonceHigh {
-			pendingNoncesMap[chain.ChainId] = &pendingNonces
 			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, pendingNonces.NonceLow)
 			if err != nil {
 				return nil, err
@@ -149,11 +149,6 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
 		// therefore might mask some lower nonce cctx that is still pending.
 		pendingNonces := pendingNoncesMap[chain.ChainId]
-
-		if pendingNonces == nil {
-			continue
-		}
-
 		startNonce := pendingNonces.NonceLow - 1
 		endNonce := pendingNonces.NonceLow - MaxLookbackNonce
 		if endNonce < 0 {
@@ -195,16 +190,12 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 
 	// query forwards for pending cctxs for each foreign chain
 	for _, chain := range chains {
-		// query the pending cctxs in range [NonceLow, NonceHigh)
 		pendingNonces := pendingNoncesMap[chain.ChainId]
 
-		if pendingNonces == nil {
-			continue
-		}
-
-    // #nosec G701 always in range
+		// #nosec G701 always in range
 		totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
 
+		// query the pending cctxs in range [NonceLow, NonceHigh)
 		for nonce := pendingNonces.NonceLow; nonce < pendingNonces.NonceHigh; nonce++ {
 			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, nonce)
 			if err != nil {
