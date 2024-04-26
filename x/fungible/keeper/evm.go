@@ -20,12 +20,12 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
-	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
-	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	zevmconnectercontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
@@ -37,6 +37,8 @@ import (
 var (
 	BigIntZero                 = big.NewInt(0)
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
+
+	ZEVMGasLimitConnectorCall = big.NewInt(1_000_000)
 )
 
 // DeployContract deploys a new contract in the ZEVM
@@ -179,7 +181,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 }
 
 func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (common.Address, error) {
-	contractAddr, err := k.DeployContract(ctx, connectorzevm.ZetaConnectorZEVMMetaData, wzeta)
+	contractAddr, err := k.DeployContract(ctx, zevmconnectercontract.ZetaConnectorZEVMMetaData, wzeta)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(err, "ZetaConnectorZEVM")
 	}
@@ -302,6 +304,99 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		amount,
 		targetContract,
 		message,
+	)
+}
+
+// CallOnReceiveZevmConnector calls the onReceive function of the ZevmConnector contract
+// Before calling it mints the zetaValue tokens to the fungible module , and this amount is then provided as value to the onReceive function
+// The onReceive function will then wrap this native zeta into WZETA and call the onReceive function of the destination contract specified by the destinationAddress
+func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
+	zetaTxSenderAddress []byte,
+	sourceChainID *big.Int,
+	destinationAddress common.Address,
+	zetaValue *big.Int,
+	message []byte,
+	internalSendHash [32]byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	system, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
+	}
+	connectorAddress := common.HexToAddress(system.ConnectorZevm)
+
+	zevmConnecterAbi, err := zevmconnectercontract.ZetaConnectorZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return k.CallEVM(
+		ctx,
+		*zevmConnecterAbi,
+		types.ModuleAddressEVM,
+		connectorAddress,
+		zetaValue,
+		ZEVMGasLimitConnectorCall,
+		true,
+		false,
+		"onReceive",
+		zetaTxSenderAddress,
+		sourceChainID,
+		destinationAddress,
+		zetaValue,
+		message,
+		internalSendHash,
+	)
+}
+
+// CallOnRevertZevmConnector calls the onRevert function of the ZevmConnector contract
+// Before calling it mints the remainingZetaValue tokens to the fungible module , and this amount is then provided as value to the onRevert function
+// The onRevert function will then wrap this native zeta into WZETA and call the onRevert function of the contract specified by the zetaTxSenderAddress
+// Note the destination address is the original destination address of the transaction and not the current destination .
+func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
+	zetaTxSenderAddress common.Address,
+	sourceChainID *big.Int,
+	destinationAddress []byte,
+	destinationChainID *big.Int,
+	remainingZetaValue *big.Int,
+	message []byte,
+	internalSendHash [32]byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	system, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
+	}
+	connectorAddress := common.HexToAddress(system.ConnectorZevm)
+
+	zevmConnecterAbi, err := zevmconnectercontract.ZetaConnectorZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	err = k.DepositCoinsToFungibleModule(ctx, remainingZetaValue)
+	if err != nil {
+		return nil, err
+	}
+	return k.CallEVM(
+		ctx,
+		*zevmConnecterAbi,
+		types.ModuleAddressEVM,
+		connectorAddress,
+		remainingZetaValue,
+		ZEVMGasLimitConnectorCall,
+		true,
+		false,
+		"onRevert",
+		zetaTxSenderAddress,
+		sourceChainID,
+		destinationAddress,
+		destinationChainID,
+		remainingZetaValue,
+		message,
+		internalSendHash,
 	)
 }
 

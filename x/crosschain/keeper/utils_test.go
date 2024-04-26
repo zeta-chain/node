@@ -22,12 +22,12 @@ import (
 )
 
 // getValidEthChainID get a valid eth chain id
-func getValidEthChainID(t *testing.T) int64 {
-	return getValidEthChain(t).ChainId
+func getValidEthChainID() int64 {
+	return getValidEthChain().ChainId
 }
 
 // getValidEthChain get a valid eth chain
-func getValidEthChain(_ *testing.T) *chains.Chain {
+func getValidEthChain() *chains.Chain {
 	goerli := chains.GoerliLocalnetChain()
 	return &goerli
 }

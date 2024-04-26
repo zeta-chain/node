@@ -134,6 +134,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddObserverAccountsCmd(),
+		CmdParseGenesisFile(),
 		GetPubKeyCmd(),
 		CollectObserverInfoCmd(),
 		AddrConversionCmd(),

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
+import "crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 import "pkg/chains/chains.proto";
 import "pkg/coin/coin.proto";
@@ -23,6 +24,8 @@ service Msg {
 
   rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
   rpc RefundAbortedCCTX(MsgRefundAbortedCCTX) returns (MsgRefundAbortedCCTXResponse);
+
+  rpc UpdateRateLimiterFlags(MsgUpdateRateLimiterFlags) returns (MsgUpdateRateLimiterFlagsResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -164,3 +167,10 @@ message MsgRefundAbortedCCTX {
 }
 
 message MsgRefundAbortedCCTXResponse {}
+
+message MsgUpdateRateLimiterFlags {
+  string creator = 1;
+  RateLimiterFlags rate_limiter_flags = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateRateLimiterFlagsResponse {}

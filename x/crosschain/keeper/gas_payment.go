@@ -295,7 +295,6 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapV2RouterGetZetaAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
-
 	// reduce the amount of the outbound tx
 	if feeInZeta.GT(zetaBurnt) {
 		return cosmoserrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",

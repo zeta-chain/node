@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -82,10 +83,14 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	if m.IsCurrentOutTxRevert() {
 		return fmt.Errorf("cannot revert a revert tx")
 	}
+	if len(m.OutboundTxParams) == 0 {
+		return fmt.Errorf("cannot revert before trying to process an outbound tx")
+	}
+
 	revertTxParams := &OutboundTxParams{
 		Receiver:           m.InboundTxParams.Sender,
 		ReceiverChainId:    m.InboundTxParams.SenderChainId,
-		Amount:             m.InboundTxParams.Amount,
+		Amount:             m.GetCurrentOutTxParam().Amount,
 		OutboundTxGasLimit: gasLimit,
 		TssPubkey:          m.GetCurrentOutTxParam().TssPubkey,
 	}
@@ -138,6 +143,23 @@ func (m CrossChainTx) SetOutBoundMined(message string) {
 // SetReverted sets the CCTX status to Reverted with the given error message.
 func (m CrossChainTx) SetReverted(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
+}
+
+func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
+	sendHash := [32]byte{}
+	if len(m.Index) < 2 {
+		return [32]byte{}, fmt.Errorf("decode CCTX %s index too short", m.Index)
+	}
+	decodedIndex, err := hex.DecodeString(m.Index[2:]) // remove the leading 0x
+	if err != nil || len(decodedIndex) != 32 {
+		return [32]byte{}, fmt.Errorf("decode CCTX %s error", m.Index)
+	}
+	copy(sendHash[:32], decodedIndex[:32])
+	return sendHash, nil
+}
+
+func GetCctxIndexFromBytes(sendHash [32]byte) string {
+	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
 
 // NewCCTX creates a new CCTX.From a MsgVoteOnObservedInboundTx message and a TSS pubkey.

@@ -7,4 +7,5 @@ export * from "./in_tx_tracker_pb";
 export * from "./last_block_height_pb";
 export * from "./out_tx_tracker_pb";
 export * from "./query_pb";
+export * from "./rate_limiter_flags_pb";
 export * from "./tx_pb";

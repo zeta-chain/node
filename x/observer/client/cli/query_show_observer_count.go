@@ -12,7 +12,7 @@ func CmdShowObserverCount() *cobra.Command {
 		Use:   "show-observer-count",
 		Short: "Query show-observer-count",
 		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

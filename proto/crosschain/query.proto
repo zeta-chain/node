@@ -8,6 +8,7 @@ import "crosschain/in_tx_hash_to_cctx.proto";
 import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
+import "crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -94,8 +95,13 @@ service Query {
   }
 
   // Queries a list of pending cctxs.
-  rpc CctxListPending(QueryListCctxPendingRequest) returns (QueryListCctxPendingResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
+  rpc ListPendingCctx(QueryListPendingCctxRequest) returns (QueryListPendingCctxResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingCctx";
+  }
+
+  // Queries a list of pending cctxs within rate limit.
+  rpc ListPendingCctxWithinRateLimit(QueryListPendingCctxWithinRateLimitRequest) returns (QueryListPendingCctxWithinRateLimitResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingCctxWithinRateLimit";
   }
 
   rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
@@ -105,6 +111,11 @@ service Query {
   // Queries a list of lastMetaHeight items.
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
+  }
+
+  // Queries the rate limiter flags
+  rpc RateLimiterFlags(QueryRateLimiterFlagsRequest) returns (QueryRateLimiterFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/rateLimiterFlags";
   }
 }
 
@@ -242,14 +253,24 @@ message QueryAllCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryListCctxPendingRequest {
+message QueryListPendingCctxRequest {
   int64 chain_id = 1;
   uint32 limit = 2;
 }
 
-message QueryListCctxPendingResponse {
+message QueryListPendingCctxResponse {
   repeated CrossChainTx CrossChainTx = 1;
   uint64 totalPending = 2;
+}
+
+message QueryListPendingCctxWithinRateLimitRequest {
+  uint32 limit = 1;
+}
+
+message QueryListPendingCctxWithinRateLimitResponse {
+  repeated CrossChainTx cross_chain_tx = 1;
+  uint64 total_pending = 2;
+  bool rate_limit_exceeded = 3;
 }
 
 message QueryLastZetaHeightRequest {}
@@ -273,4 +294,10 @@ message QueryMessagePassingProtocolFeeRequest {}
 
 message QueryMessagePassingProtocolFeeResponse {
   string feeInZeta = 1;
+}
+
+message QueryRateLimiterFlagsRequest {}
+
+message QueryRateLimiterFlagsResponse {
+  RateLimiterFlags rateLimiterFlags = 1 [(gogoproto.nullable) = false];
 }

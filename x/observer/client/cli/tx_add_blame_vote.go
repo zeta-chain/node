@@ -71,7 +71,7 @@ func CmdEncode() *cobra.Command {
 		Use:   "encode [file.json]",
 		Short: "Encode a json string into hex",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(_ *cobra.Command, args []string) (err error) {
 			fp := args[0]
 			file, err := filepath.Abs(fp)
 			if err != nil {
