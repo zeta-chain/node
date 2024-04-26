@@ -13,7 +13,7 @@ func CmdListForeignCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-foreign-coins",
 		Short: "list all ForeignCoins",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())

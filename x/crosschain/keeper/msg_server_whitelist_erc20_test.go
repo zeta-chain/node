@@ -26,7 +26,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
 		admin := sample.AccAddress()
@@ -104,7 +104,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: sample.EthAddress().Hex(),
-			ChainId:      getValidEthChainID(t),
+			ChainId:      getValidEthChainID(),
 			Name:         "foo",
 			Symbol:       "FOO",
 			Decimals:     18,
@@ -128,7 +128,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: "invalid",
-			ChainId:      getValidEthChainID(t),
+			ChainId:      getValidEthChainID(),
 			Name:         "foo",
 			Symbol:       "FOO",
 			Decimals:     18,
@@ -149,7 +149,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		asset := sample.EthAddress().Hex()
 		fc := sample.ForeignCoins(t, sample.EthAddress().Hex())
 		fc.Asset = asset
@@ -176,7 +176,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)

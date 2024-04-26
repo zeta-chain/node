@@ -27,4 +27,5 @@ var (
 	ErrCallNonContract         = cosmoserrors.Register(ModuleName, 1124, "can't call a non-contract address")
 	ErrForeignCoinAlreadyExist = cosmoserrors.Register(ModuleName, 1125, "foreign coin already exist")
 	ErrNilGasPrice             = cosmoserrors.Register(ModuleName, 1127, "nil gas price")
+	ErrAccountNotFound         = cosmoserrors.Register(ModuleName, 1128, "account not found")
 )

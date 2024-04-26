@@ -65,6 +65,7 @@ func WaitCctxsMinedByInTxHash(
 		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
 			InTxHash: inTxHash,
 		})
+
 		if err != nil {
 			// prevent spamming logs
 			if i%10 == 0 {

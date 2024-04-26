@@ -14,7 +14,7 @@ func CmdShowCrosschainFlags() *cobra.Command {
 		Use:   "show-crosschain-flags",
 		Short: "shows the crosschain flags",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)

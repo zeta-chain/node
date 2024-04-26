@@ -154,6 +154,7 @@ SaveFailedOutbound saves a failed outbound transaction.It does the following thi
 
  2. Save the outbound
 */
+
 func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, ballotIndex string) {
 	cctx.SetAbort(errMessage)
 	ctx.Logger().Error(errMessage)
@@ -162,6 +163,8 @@ func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, er
 }
 
 // SaveSuccessfulOutbound saves a successful outbound transaction.
+// This function does not set the CCTX status, therefore all successful outbound transactions need
+// to have their status set during processing
 func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
 	k.SaveOutbound(ctx, cctx, ballotIndex)
 }

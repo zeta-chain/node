@@ -190,7 +190,7 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 
 	auth := r.EVMAuth
 
-	tx, err := r.ZetaEth.Approve(auth, r.TestDAppAddr, amount)
+	tx, err := r.ZetaEth.Approve(auth, r.EvmTestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -202,8 +202,8 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
-	r.Logger.Info("Calling TestDApp.SendHello on contract address %s", r.TestDAppAddr.Hex())
-	testDApp, err := testdapp.NewTestDApp(r.TestDAppAddr, r.EVMClient)
+	r.Logger.Info("Calling TestDApp.SendHello on contract address %s", r.EvmTestDAppAddr.Hex())
+	testDApp, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
 	if err != nil {
 		panic(err)
 	}
@@ -216,7 +216,7 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Info("$$$ Before: SUPPLY OF AZETA: %d", res2.Amount.Amount)
 
-	tx, err = testDApp.SendHelloWorld(auth, r.TestDAppAddr, chainID, amount, true)
+	tx, err = testDApp.SendHelloWorld(auth, r.EvmTestDAppAddr, chainID, amount, true)
 	if err != nil {
 		panic(err)
 	}
