@@ -40,7 +40,7 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 
 	// Set the rate limiter to 0.11ZETA per 10 blocks
 	// These rate limiter flags will only allow to process 1 withdraw per 10 blocks
-	//r.Logger.Info("setting up rate limiter flags")
+	r.Logger.Info("setting up rate limiter flags")
 	if err := setupRateLimiterFlags(r, rateLimiterFlags); err != nil {
 		panic(err)
 	}
@@ -51,17 +51,17 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 
-	//// Disable rate limiter
-	//r.Logger.Info("disabling rate limiter")
-	//if err := setupRateLimiterFlags(r, crosschaintypes.RateLimiterFlags{Enabled: false}); err != nil {
-	//	panic(err)
-	//}
-	//
-	//// Test without rate limiter again
-	//r.Logger.Print("rate limiter disabled")
-	//if err := createAndWaitWithdraws(r); err != nil {
-	//	panic(err)
-	//}
+	// Disable rate limiter
+	r.Logger.Info("disabling rate limiter")
+	if err := setupRateLimiterFlags(r, crosschaintypes.RateLimiterFlags{Enabled: false}); err != nil {
+		panic(err)
+	}
+
+	// Test without rate limiter again
+	r.Logger.Print("rate limiter disabled")
+	if err := createAndWaitWithdraws(r); err != nil {
+		panic(err)
+	}
 }
 
 // setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
@@ -88,7 +88,7 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	r.Logger.Print("starting 10 withdraws")
 
 	// Perform 10 withdraws to log time for completion
-	txs := make([]*ethtypes.Transaction, 10)
+	txs := make([]*ethtypes.Transaction, 5)
 	for i := 0; i < 10; i++ {
 		amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(3))
 		txs[i] = r.WithdrawZeta(amount, true)
