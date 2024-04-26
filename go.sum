@@ -1769,8 +1769,8 @@ github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-github.com/zeta-chain/ethermint v0.6.1-0.20240423143242-83484d55cb06 h1:BJJX9TagUs0hMPMorIaBiJCuMPXDjlk9XRjKx92BSbg=
-github.com/zeta-chain/ethermint v0.6.1-0.20240423143242-83484d55cb06/go.mod h1:yfPV8OcVegMzYQjYgvl0MJ0DQ1wgyeSSDecKlGhqBDI=
+github.com/zeta-chain/ethermint v0.0.0-20240426125617-308e6f08a922 h1:U4+71OFfTYcOLL4OvZF8VDHJwopOnG7Z/8nD2VSKyMw=
+github.com/zeta-chain/ethermint v0.0.0-20240426125617-308e6f08a922/go.mod h1:s1zA6OpXv3Tb5I0M6M6j5fo/AssaZL/pgkc7G0W2kN8=
 github.com/zeta-chain/go-tss v0.1.1-0.20240208222330-f3be0d4a0d98 h1:GCSRgszQbAR7h/qK0YKjlm1mcnZOaGMbztRLaAfoOx0=
 github.com/zeta-chain/go-tss v0.1.1-0.20240208222330-f3be0d4a0d98/go.mod h1:+lJfk/qqt+oxXeVuJV+PzpUoxftUfoTRf2eF3qlbyFI=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2 h1:gd2uE0X+ZbdFJ8DubxNqLbOVlCB12EgWdzSNRAR82tM=
