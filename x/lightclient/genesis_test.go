@@ -16,10 +16,7 @@ import (
 func TestGenesis(t *testing.T) {
 	t.Run("can import and export genesis", func(t *testing.T) {
 		genesisState := types.GenesisState{
-			VerificationFlags: types.VerificationFlags{
-				EthTypeChainEnabled: false,
-				BtcTypeChainEnabled: true,
-			},
+			VerificationFlags: sample.VerificationFlags(),
 			BlockHeaders: []proofs.BlockHeader{
 				sample.BlockHeader(sample.Hash().Bytes()),
 				sample.BlockHeader(sample.Hash().Bytes()),
@@ -52,7 +49,7 @@ func TestGenesis(t *testing.T) {
 
 		// Compare genesis after export
 		expected := types.GenesisState{
-			VerificationFlags: types.DefaultVerificationFlags(),
+			VerificationFlags: []types.VerificationFlags{},
 			BlockHeaders:      []proofs.BlockHeader{},
 			ChainStates:       []types.ChainState{},
 		}

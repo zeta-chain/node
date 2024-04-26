@@ -33,11 +33,11 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 	return resp.CrosschainFlags, nil
 }
 
-func (b *ZetaCoreBridge) GetVerificationFlags() (lightclienttypes.VerificationFlags, error) {
+func (b *ZetaCoreBridge) GetVerificationFlags() ([]lightclienttypes.VerificationFlags, error) {
 	client := lightclienttypes.NewQueryClient(b.grpcConn)
 	resp, err := client.VerificationFlags(context.Background(), &lightclienttypes.QueryVerificationFlagsRequest{})
 	if err != nil {
-		return lightclienttypes.VerificationFlags{}, err
+		return []lightclienttypes.VerificationFlags{}, err
 	}
 	return resp.VerificationFlags, nil
 }

@@ -103,9 +103,15 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 }
 
 func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: lightclienttypes.VerificationFlags{
-		EthTypeChainEnabled: true,
-		BtcTypeChainEnabled: false,
+	expectedOutput := lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: []lightclienttypes.VerificationFlags{
+		{
+			ChainId: chains.EthChain.ChainId,
+			Enabled: true,
+		},
+		{
+			ChainId: chains.BtcMainnetChain.ChainId,
+			Enabled: true,
+		},
 	}}
 	input := lightclienttypes.QueryVerificationFlagsRequest{}
 	method := "/zetachain.zetacore.lightclient.Query/VerificationFlags"
@@ -791,7 +797,6 @@ func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 				chains.BscMainnetChain.Vm,
 				chains.BscMainnetChain.Consensus,
 				chains.BscMainnetChain.IsExternal,
-				chains.BscMainnetChain.IsHeaderSupported,
 			},
 			{
 				chains.EthChain.ChainName,
@@ -801,7 +806,6 @@ func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 				chains.EthChain.Vm,
 				chains.EthChain.Consensus,
 				chains.EthChain.IsExternal,
-				chains.EthChain.IsHeaderSupported,
 			},
 		},
 	}

@@ -16,10 +16,7 @@ func (k Keeper) VerificationFlags(c context.Context, req *types.QueryVerificatio
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetVerificationFlags(ctx)
-	if !found {
-		return nil, status.Error(codes.NotFound, "not found")
-	}
+	val := k.GetAllVerificationFlags(ctx)
 
 	return &types.QueryVerificationFlagsResponse{VerificationFlags: val}, nil
 }

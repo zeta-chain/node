@@ -8,12 +8,16 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgUpdateVerificationFlags{}, "lightclient/UpdateVerificationFlags", nil)
+	cdc.RegisterConcrete(&MsgEnableVerificationFlags{}, "lightclient/EnableVerificationFlags", nil)
+	cdc.RegisterConcrete(&MsgDisableVerificationFlags{}, "lightclient/DisableVerificationFlags", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgUpdateVerificationFlags{},
+		&MsgEnableVerificationFlags{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgDisableVerificationFlags{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

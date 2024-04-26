@@ -262,10 +262,9 @@ func (zts ZetaTxServer) EnableVerificationFlags(account string) error {
 		return err
 	}
 
-	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgUpdateVerificationFlags(
+	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableVerificationFlags(
 		addr.String(),
-		true,
-		true,
+		[]int64{chains.GoerliLocalnetChain.ChainId},
 	))
 
 	return err

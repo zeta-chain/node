@@ -33,10 +33,16 @@ func ChainState(chainID int64) lightclienttypes.ChainState {
 	}
 }
 
-func VerificationFlags() lightclienttypes.VerificationFlags {
-	return lightclienttypes.VerificationFlags{
-		EthTypeChainEnabled: true,
-		BtcTypeChainEnabled: true,
+func VerificationFlags() []lightclienttypes.VerificationFlags {
+	return []lightclienttypes.VerificationFlags{
+		{
+			ChainId: 1,
+			Enabled: true,
+		},
+		{
+			ChainId: 2,
+			Enabled: true,
+		},
 	}
 }
 

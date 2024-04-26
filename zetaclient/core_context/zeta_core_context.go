@@ -25,7 +25,7 @@ type ZetaCoreContext struct {
 	crossChainFlags    observertypes.CrosschainFlags
 
 	// verificationFlags is used to store the verification flags for the lightclient module to enable header/proof verification
-	verificationFlags lightclienttypes.VerificationFlags
+	verificationFlags []lightclienttypes.VerificationFlags
 }
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
@@ -46,7 +46,7 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 		evmChainParams:     evmChainParams,
 		bitcoinChainParams: bitcoinChainParams,
 		crossChainFlags:    observertypes.CrosschainFlags{},
-		verificationFlags:  lightclienttypes.VerificationFlags{},
+		verificationFlags:  []lightclienttypes.VerificationFlags{},
 	}
 }
 
@@ -120,10 +120,23 @@ func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return c.crossChainFlags
 }
 
-func (c *ZetaCoreContext) GetVerificationFlags() lightclienttypes.VerificationFlags {
+// GetAllVerificationFlags returns all verification flags
+func (c *ZetaCoreContext) GetAllVerificationFlags() []lightclienttypes.VerificationFlags {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	return c.verificationFlags
+}
+
+// GetVerificationFlags returns verification flags for a chain
+func (c *ZetaCoreContext) GetVerificationFlags(chainID int64) (lightclienttypes.VerificationFlags, bool) {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	for _, flags := range c.verificationFlags {
+		if flags.ChainId == chainID {
+			return flags, true
+		}
+	}
+	return lightclienttypes.VerificationFlags{}, false
 }
 
 // Update updates core context and params for all chains
@@ -135,7 +148,7 @@ func (c *ZetaCoreContext) Update(
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
-	verificationFlags lightclienttypes.VerificationFlags,
+	verificationFlags []lightclienttypes.VerificationFlags,
 	init bool,
 	logger zerolog.Logger,
 ) {

@@ -436,8 +436,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		// add block header to zetabridge
 		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		verificationFlags := ob.coreContext.GetVerificationFlags()
-		if verificationFlags.BtcTypeChainEnabled {
+		verificationFlags, found := ob.coreContext.GetVerificationFlags(ob.chain.ChainId)
+		if found && verificationFlags.Enabled {
 			err = ob.postBlockHeader(bn)
 			if err != nil {
 				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)

@@ -86,5 +86,5 @@ message QueryProveResponse {
 message QueryVerificationFlagsRequest {}
 
 message QueryVerificationFlagsResponse {
-  VerificationFlags verification_flags = 1 [(gogoproto.nullable) = false];
+  repeated VerificationFlags verification_flags = 1 [(gogoproto.nullable) = false];
 }

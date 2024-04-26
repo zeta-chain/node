@@ -12,5 +12,5 @@ option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 message GenesisState {
   repeated proofs.BlockHeader block_headers = 1 [(gogoproto.nullable) = false];
   repeated ChainState chain_states = 2 [(gogoproto.nullable) = false];
-  VerificationFlags verification_flags = 3 [(gogoproto.nullable) = false];
+  repeated VerificationFlags verification_flags = 3 [(gogoproto.nullable) = false];
 }

@@ -28,7 +28,7 @@ func getTestCoreContext(
 	evmChain chains.Chain,
 	evmChainParams *observertypes.ChainParams,
 	ccFlags observertypes.CrosschainFlags,
-	verificationFlags lightclienttypes.VerificationFlags,
+	verificationFlags []lightclienttypes.VerificationFlags,
 ) *corecontext.ZetaCoreContext {
 	// create config
 	cfg := config.NewConfig()
@@ -208,7 +208,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, *crosschainFlags, ccFlags)
 
-		verFlags := zetaContext.GetVerificationFlags()
+		verFlags := zetaContext.GetAllVerificationFlags()
 		require.Equal(t, verificationFlags, verFlags)
 	})
 
@@ -313,7 +313,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, ccFlags, *crosschainFlags)
 
-		verFlags := zetaContext.GetVerificationFlags()
+		verFlags := zetaContext.GetAllVerificationFlags()
 		require.Equal(t, verFlags, verificationFlags)
 	})
 }

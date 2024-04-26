@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
@@ -23,25 +24,20 @@ func TestKeeper_VerificationFlags(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		res, err := k.VerificationFlags(wctx, &types.QueryVerificationFlagsRequest{})
-		require.Nil(t, res)
-		require.Error(t, err)
+		res, _ := k.VerificationFlags(wctx, &types.QueryVerificationFlagsRequest{})
+		require.Len(t, res.VerificationFlags, 0)
 	})
 
 	t.Run("should return if block header state is found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
-
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: false,
-			BtcTypeChainEnabled: true,
-		})
+		vf := sample.VerificationFlags()
+		for _, v := range vf {
+			k.SetVerificationFlags(ctx, v)
+		}
 
 		res, err := k.VerificationFlags(wctx, &types.QueryVerificationFlagsRequest{})
 		require.NoError(t, err)
-		require.Equal(t, types.VerificationFlags{
-			EthTypeChainEnabled: false,
-			BtcTypeChainEnabled: true,
-		}, res.VerificationFlags)
+		require.Equal(t, vf, res.VerificationFlags)
 	})
 }

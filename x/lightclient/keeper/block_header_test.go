@@ -128,7 +128,8 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -142,7 +143,8 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: false,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: false,
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -178,7 +180,8 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -192,9 +195,9 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
-
 		bh, _, _ := sepoliaBlockHeaders(t)
 
 		k.SetChainState(ctx, types.ChainState{
@@ -212,7 +215,8 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -234,9 +238,9 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
-
 		bh, _, _ := sepoliaBlockHeaders(t)
 
 		k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
@@ -262,7 +266,8 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -297,7 +302,8 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			EthTypeChainEnabled: true,
+			ChainId: chains.SepoliaChain.ChainId,
+			Enabled: true,
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)

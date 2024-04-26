@@ -22,10 +22,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
-				VerificationFlags: types.VerificationFlags{
-					EthTypeChainEnabled: false,
-					BtcTypeChainEnabled: true,
-				},
+				VerificationFlags: sample.VerificationFlags(),
 				BlockHeaders: []proofs.BlockHeader{
 					sample.BlockHeader(sample.Hash().Bytes()),
 					sample.BlockHeader(sample.Hash().Bytes()),
