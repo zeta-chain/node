@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const releaseVersion = "v15"
@@ -15,12 +14,6 @@ const releaseVersion = "v15"
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
-		// Updated version map to the latest consensus versions from each module
-		for m, mb := range app.mm.Modules {
-			vm[m] = mb.ConsensusVersion()
-		}
-		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
-
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
@@ -38,13 +31,4 @@ func SetupHandlers(app *App) {
 		// instead the default which is the latest version that store last committed i.e 0 for new stores.
 		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
-}
-
-type VersionMigrator struct {
-	v module.VersionMap
-}
-
-func (v VersionMigrator) TriggerMigration(moduleName string) module.VersionMap {
-	v.v[moduleName] = v.v[moduleName] - 1
-	return v.v
 }
