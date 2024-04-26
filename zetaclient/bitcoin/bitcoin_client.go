@@ -63,11 +63,22 @@ var _ interfaces.ChainClient = &BTCChainClient{}
 
 // BTCLogger contains list of loggers used by Bitcoin chain client
 type BTCLogger struct {
-	Chain      zerolog.Logger // The parent logger for the chain
-	InTx       zerolog.Logger // The logger for incoming transactions
-	OutTx      zerolog.Logger // The logger for outgoing transactions
-	UTXOS      zerolog.Logger // The logger for UTXOs management
-	GasPrice   zerolog.Logger // The logger for gas price
+	// Chain is the parent logger for the chain
+	Chain zerolog.Logger
+
+	// InTx is the logger for incoming transactions
+	InTx zerolog.Logger // The logger for incoming transactions
+
+	// OutTx is the logger for outgoing transactions
+	OutTx zerolog.Logger // The logger for outgoing transactions
+
+	// UTXOS is the logger for UTXOs management
+	UTXOS zerolog.Logger // The logger for UTXOs management
+
+	// GasPrice is the logger for gas price
+	GasPrice zerolog.Logger // The logger for gas price
+
+	// Compliance is the logger for compliance checks
 	Compliance zerolog.Logger // The logger for compliance checks
 }
 
@@ -90,10 +101,15 @@ type BTCInTxEvent struct {
 // BTCChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BTCChainClient struct {
-	BlockTime  uint64 // block time in seconds
+	// BlockTime contains the block time in seconds
+	BlockTime uint64
+
 	BlockCache *lru.Cache
-	Mu         *sync.Mutex // lock for all the maps, utxos and core params
-	Tss        interfaces.TSSSigner
+
+	// Mu is lock for all the maps, utxos and core params
+	Mu *sync.Mutex
+
+	Tss interfaces.TSSSigner
 
 	chain            chains.Chain
 	netParams        *chaincfg.Params

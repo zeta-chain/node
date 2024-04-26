@@ -49,11 +49,20 @@ import (
 
 // Logger is the logger for evm chains
 type Logger struct {
-	Chain      zerolog.Logger // The parent logger for the chain
-	InTx       zerolog.Logger // Logger for incoming trasnactions
-	OutTx      zerolog.Logger // Logger for outgoing transactions
-	GasPrice   zerolog.Logger // Logger for gas prices
-	Compliance zerolog.Logger // Logger for compliance checks
+	// Chain is the parent logger for the chain
+	Chain zerolog.Logger
+
+	// InTx is the logger for incoming transactions
+	InTx zerolog.Logger
+
+	// OutTx is the logger for outgoing transactions
+	OutTx zerolog.Logger
+
+	// GasPrice is the logger for gas prices
+	GasPrice zerolog.Logger
+
+	// Compliance is the logger for compliance checks
+	Compliance zerolog.Logger
 }
 
 var _ interfaces.ChainClient = &ChainClient{}
@@ -61,9 +70,12 @@ var _ interfaces.ChainClient = &ChainClient{}
 // ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type ChainClient struct {
-	Tss                    interfaces.TSSSigner
-	BlockTimeExternalChain uint64 // block time in seconds
-	Mu                     *sync.Mutex
+	Tss interfaces.TSSSigner
+
+	// BlockTimeExternalChain is the block time of the external chain
+	BlockTimeExternalChain uint64
+
+	Mu *sync.Mutex
 
 	chain                      chains.Chain
 	evmClient                  interfaces.EVMRPCClient
@@ -262,11 +274,20 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 
 // Start all observation routines for the evm chain
 func (ob *ChainClient) Start() {
-	go ob.WatchInTx()        // watch evm chain for incoming txs and post votes to zetacore
-	go ob.WatchOutTx()       // watch evm chain for outgoing txs status
-	go ob.WatchGasPrice()    // watch evm chain for gas prices and post to zetacore
-	go ob.WatchIntxTracker() // watch zetacore for intx trackers
-	go ob.WatchRPCStatus()   // watch the RPC status of the evm chain
+	// watch evm chain for incoming txs and post votes to zetacore
+	go ob.WatchInTx()
+
+	// watch evm chain for outgoing txs status
+	go ob.WatchOutTx()
+
+	// watch evm chain for gas prices and post to zetacore
+	go ob.WatchGasPrice()
+
+	// watch zetacore for intx trackers
+	go ob.WatchIntxTracker()
+
+	// watch the RPC status of the evm chain
+	go ob.WatchRPCStatus()
 }
 
 // WatchRPCStatus watches the RPC status of the evm chain
@@ -1178,13 +1199,6 @@ func (ob *ChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block
 // RemoveCachedBlock remove block from cache
 func (ob *ChainClient) RemoveCachedBlock(blockNumber uint64) {
 	ob.blockCache.Remove(blockNumber)
-}
-
-// isTxConfirmed returns true if there is a confirmed tx for 'nonce'
-func (ob *ChainClient) isTxConfirmed(nonce uint64) bool {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
-	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }
 
 // checkConfirmedTx checks if a txHash is confirmed
