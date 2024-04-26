@@ -20,6 +20,17 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
+	t.Run("invalid if params are invalid", func(t *testing.T) {
+		params := types.NewParams()
+		params.MaxBondFactor = "1.50"
+		msg := types.MsgUpdateParams{
+			Authority: sample.AccAddress(),
+			Params:    params,
+		}
+		err := msg.ValidateBasic()
+		require.ErrorContains(t, err, "max bond factor cannot be higher that 1.25")
+	})
+
 	t.Run("valid", func(t *testing.T) {
 		msg := types.MsgUpdateParams{
 			Authority: sample.AccAddress(),
