@@ -127,7 +127,7 @@ func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, 
 
 // DepositEther sends Ethers into ZEVM
 func (runner *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
-	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth]
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
 	return runner.DepositEtherWithAmount(testHeader, amount)
 }
 
