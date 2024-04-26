@@ -5,7 +5,6 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Chain } from "../pkg/chains/chains_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.ChainParamsList
@@ -118,46 +117,5 @@ export declare class ChainParams extends Message<ChainParams> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ChainParams;
 
   static equals(a: ChainParams | PlainMessage<ChainParams> | undefined, b: ChainParams | PlainMessage<ChainParams> | undefined): boolean;
-}
-
-/**
- * Deprecated(v13): Use ChainParamsList
- *
- * @generated from message zetachain.zetacore.observer.ObserverParams
- */
-export declare class ObserverParams extends Message<ObserverParams> {
-  /**
-   * @generated from field: zetachain.zetacore.pkg.chains.Chain chain = 1;
-   */
-  chain?: Chain;
-
-  /**
-   * @generated from field: string ballot_threshold = 3;
-   */
-  ballotThreshold: string;
-
-  /**
-   * @generated from field: string min_observer_delegation = 4;
-   */
-  minObserverDelegation: string;
-
-  /**
-   * @generated from field: bool is_supported = 5;
-   */
-  isSupported: boolean;
-
-  constructor(data?: PartialMessage<ObserverParams>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.ObserverParams";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverParams;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverParams;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverParams;
-
-  static equals(a: ObserverParams | PlainMessage<ObserverParams> | undefined, b: ObserverParams | PlainMessage<ObserverParams> | undefined): boolean;
 }
 

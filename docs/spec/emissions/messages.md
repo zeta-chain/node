@@ -1,17 +1,5 @@
 # Messages
 
-## MsgUpdateParams
-
-UpdateParams defines a governance operation for updating the x/emissions module parameters.
-The authority is hard-coded to the x/gov module account.
-
-```proto
-message MsgUpdateParams {
-	string authority = 1;
-	Params params = 2;
-}
-```
-
 ## MsgWithdrawEmission
 
 WithdrawEmission allows the user to withdraw from their withdrawable emissions.
