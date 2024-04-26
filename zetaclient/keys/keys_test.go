@@ -110,3 +110,15 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(pubKey.VerifySignature([]byte(msg), signedMsg), Equals, true)
 }
+
+func SetupConfigForTest() {
+	testConfig := sdk.GetConfig()
+	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
+	testConfig.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
+	testConfig.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
+	//config.SetCoinType(cmd.MetaChainCoinType)
+	testConfig.SetFullFundraiserPath(cmd.ZetaChainHDPath)
+	sdk.SetCoinDenomRegex(func() string {
+		return cmd.DenomRegex
+	})
+}

@@ -14,7 +14,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -162,18 +161,6 @@ func (k *Keys) GetHotkeyPassword() string {
 		return k.hotkeyPassword
 	}
 	return ""
-}
-
-func SetupConfigForTest() {
-	testConfig := sdk.GetConfig()
-	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
-	testConfig.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
-	testConfig.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
-	//config.SetCoinType(cmd.MetaChainCoinType)
-	testConfig.SetFullFundraiserPath(cmd.ZetaChainHDPath)
-	sdk.SetCoinDenomRegex(func() string {
-		return cmd.DenomRegex
-	})
 }
 
 // getKeybase will create an instance of Keybase

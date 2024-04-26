@@ -24,11 +24,7 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 		RHS:                      rhs,
 	}
 	defer logs.LogOutput()
-	if !lhs.Equal(rhs) {
-		logs.SupplyCheckSuccess = false
-		return false
-	}
 
-	logs.SupplyCheckSuccess = true
-	return true
+	logs.SupplyCheckSuccess = lhs.Equal(rhs)
+	return logs.SupplyCheckSuccess
 }

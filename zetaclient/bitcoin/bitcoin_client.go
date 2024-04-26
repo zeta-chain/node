@@ -62,6 +62,8 @@ const (
 var _ interfaces.ChainClient = &BTCChainClient{}
 
 // BTCLogger contains list of loggers used by Bitcoin chain client
+// TODO: Merge this logger with the one in evm
+// https://github.com/zeta-chain/node/issues/2022
 type BTCLogger struct {
 	// Chain is the parent logger for the chain
 	Chain zerolog.Logger
@@ -452,16 +454,6 @@ func (ob *BTCChainClient) ObserveInTx() error {
 	}
 	ob.logger.InTx.Info().Msgf("observeInTxBTC: block %d has %d txs, current block %d, last block %d",
 		blockNumber, len(res.Block.Tx), cnt, lastScanned)
-
-	// print some debug information
-	if len(res.Block.Tx) > 1 {
-		for idx, tx := range res.Block.Tx {
-			ob.logger.InTx.Debug().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
-			for vidx, vout := range tx.Vout {
-				ob.logger.InTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
-			}
-		}
-	}
 
 	// add block header to zetabridge
 	// TODO: consider having a separate ticker(from TSS scaning) for posting block headers

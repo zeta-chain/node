@@ -48,6 +48,8 @@ import (
 )
 
 // Logger is the logger for evm chains
+// TODO: Merge this logger with the one in bitcoin
+// https://github.com/zeta-chain/node/issues/2022
 type Logger struct {
 	// Chain is the parent logger for the chain
 	Chain zerolog.Logger

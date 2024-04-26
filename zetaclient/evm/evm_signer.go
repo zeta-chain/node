@@ -559,6 +559,9 @@ func (signer *Signer) SignWhitelistTx(
 
 // Exported for unit tests
 
+// GetReportedTxList returns a list of outTxHash being reported
+// TODO: investigate pointer usage
+// https://github.com/zeta-chain/node/issues/2084
 func (signer *Signer) GetReportedTxList() *map[string]bool {
 	return &signer.outTxHashBeingReported
 }
@@ -570,8 +573,6 @@ func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
 func (signer *Signer) EvmSigner() ethtypes.Signer {
 	return signer.ethSigner
 }
-
-// ________________________
 
 func IsSenderZetaChain(cctx *types.CrossChainTx, zetaBridge interfaces.ZetaCoreBridger, flags *observertypes.CrosschainFlags) bool {
 	return cctx.InboundTxParams.SenderChainId == zetaBridge.ZetaChain().ChainId && cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled
