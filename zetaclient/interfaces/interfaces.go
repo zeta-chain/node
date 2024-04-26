@@ -94,7 +94,6 @@ type ZetaCoreBridger interface {
 		txIndex int64,
 	) (string, error)
 	GetKeys() *keys.Keys
-	GetBlockHeight() (int64, error)
 	GetZetaBlockHeight() (int64, error)
 	GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error)
 	ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)

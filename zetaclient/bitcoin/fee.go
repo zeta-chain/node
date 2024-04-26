@@ -36,13 +36,13 @@ const (
 )
 
 var (
-	// The outtx size incurred by the depositor: 68vB
+	// BtcOutTxBytesDepositor is the outtx size incurred by the depositor: 68vB
 	BtcOutTxBytesDepositor = OuttxSizeDepositor()
 
-	// The outtx size incurred by the withdrawer: 177vB
+	// BtcOutTxBytesWithdrawer is the outtx size incurred by the withdrawer: 177vB
 	BtcOutTxBytesWithdrawer = OuttxSizeWithdrawer()
 
-	// The default depositor fee is 0.00001360 BTC (20 * 68vB / 100000000)
+	// DefaultDepositorFee is the default depositor fee is 0.00001360 BTC (20 * 68vB / 100000000)
 	// default depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
 	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate)
 )
@@ -82,8 +82,10 @@ func EstimateOuttxSize(numInputs uint64, payees []btcutil.Address) (uint64, erro
 		}
 		bytesToPayees += sizeOutput
 	}
+
 	// calculate the size of the witness
 	bytesWitness := bytes1stWitness + (numInputs-1)*bytesPerWitness
+
 	// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
 	// Calculation for signed SegWit tx: blockchain.GetTransactionWeight(tx) / 4
 	return bytesWiredTx + bytesInput + bytesOutput + bytesToPayees + bytesWitness/blockchain.WitnessScaleFactor, nil
@@ -133,6 +135,7 @@ func OuttxSizeWithdrawer() uint64 {
 	bytesInput := uint64(1) * bytesPerInput         // nonce mark
 	bytesOutput := uint64(2) * bytesPerOutputP2WPKH // 2 P2WPKH outputs: new nonce mark, change
 	bytesOutput += bytesPerOutputAvg                // 1 output to withdrawer's address
+
 	return bytesWiredTx + bytesInput + bytesOutput + bytes1stWitness/blockchain.WitnessScaleFactor
 }
 
@@ -151,6 +154,7 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 	if len(blockVb.Tx) == 1 {
 		return 0, nil // only coinbase tx, it happens
 	}
+
 	txCoinbase := &blockVb.Tx[0]
 	if blockVb.Weight < blockchain.WitnessScaleFactor {
 		return 0, fmt.Errorf("block weight %d too small", blockVb.Weight)
@@ -200,6 +204,7 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 
 	// calculate average fee rate.
 	vBytes := txsWeight / blockchain.WitnessScaleFactor
+
 	return txsFees / int64(vBytes), nil
 }
 
@@ -220,7 +225,9 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 		feeRate = defaultDepositorFeeRate // use default fee rate if calculation fails, should not happen
 		logger.Error().Err(err).Msgf("cannot calculate fee rate for block %d", blockVb.Height)
 	}
+
 	// #nosec G701 always in range
 	feeRate = int64(float64(feeRate) * clientcommon.BTCOuttxGasPriceMultiplier)
+
 	return DepositorFee(feeRate)
 }

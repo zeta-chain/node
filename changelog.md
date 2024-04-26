@@ -1,7 +1,12 @@
 # CHANGELOG
 
-# Unreleased
+## Unreleased
 
+### Refactor
+
+* [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
+
+## Unreleased
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
@@ -60,8 +65,6 @@
 * [2045](https://github.com/zeta-chain/node/pull/2046) - add grpc query with outbound rate limit for zetaclient to use
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 * [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
-
-
 
 ### Tests
 
