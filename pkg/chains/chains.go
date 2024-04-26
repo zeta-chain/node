@@ -292,6 +292,8 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 }
 
+// TODO : https://github.com/zeta-chain/node/issues/2080
+// remove the usage of this function
 // chainListPointers returns a list of chain pointers
 func chainListPointers(chains []Chain) []*Chain {
 	var c []*Chain
