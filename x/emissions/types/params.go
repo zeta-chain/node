@@ -32,36 +32,28 @@ func DefaultParams() Params {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
-	err := validateMaxBondFactor(p.MaxBondFactor)
-	if err != nil {
+	if err := validateMaxBondFactor(p.MaxBondFactor); err != nil {
 		return err
 	}
-	err = validateMinBondFactor(p.MinBondFactor)
-	if err != nil {
+	if err := validateMinBondFactor(p.MinBondFactor); err != nil {
 		return err
 	}
-	err = validateAvgBlockTime(p.AvgBlockTime)
-	if err != nil {
+	if err := validateAvgBlockTime(p.AvgBlockTime); err != nil {
 		return err
 	}
-	err = validateTargetBondRatio(p.TargetBondRatio)
-	if err != nil {
+	if err := validateTargetBondRatio(p.TargetBondRatio); err != nil {
 		return err
 	}
-	err = validateValidatorEmissionPercentage(p.ValidatorEmissionPercentage)
-	if err != nil {
+	if err := validateValidatorEmissionPercentage(p.ValidatorEmissionPercentage); err != nil {
 		return err
 	}
-	err = validateObserverEmissionPercentage(p.ObserverEmissionPercentage)
-	if err != nil {
+	if err := validateObserverEmissionPercentage(p.ObserverEmissionPercentage); err != nil {
 		return err
 	}
-	err = validateTssEmissionPercentage(p.TssSignerEmissionPercentage)
-	if err != nil {
+	if err := validateTssEmissionPercentage(p.TssSignerEmissionPercentage); err != nil {
 		return err
 	}
-	err = validateBallotMaturityBlocks(p.BallotMaturityBlocks)
-	if err != nil {
+	if err := validateBallotMaturityBlocks(p.BallotMaturityBlocks); err != nil {
 		return err
 	}
 	return validateObserverSlashAmount(p.ObserverSlashAmount)
