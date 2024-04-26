@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## Unreleased
+
+### Refactor
+
+* [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
+
+## Unreleased
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.

@@ -38,6 +38,8 @@ const (
 	consolidationRank = 10
 )
 
+var _ interfaces.ChainSigner = &BTCSigner{}
+
 // BTCSigner deals with signing BTC transactions and implements the ChainSigner interface
 type BTCSigner struct {
 	tssSigner        interfaces.TSSSigner
@@ -47,8 +49,6 @@ type BTCSigner struct {
 	ts               *metrics.TelemetryServer
 	coreContext      *corecontext.ZetaCoreContext
 }
-
-var _ interfaces.ChainSigner = &BTCSigner{}
 
 func NewBTCSigner(
 	cfg config.BTCConfig,
@@ -247,11 +247,12 @@ func (signer *BTCSigner) SignWithdrawTx(
 			return nil, err
 		}
 	}
-	tss, ok := signer.tssSigner.(*tss.TSS)
+
+	tssSigner, ok := signer.tssSigner.(*tss.TSS)
 	if !ok {
 		return nil, fmt.Errorf("tssSigner is not a TSS")
 	}
-	sig65Bs, err := tss.SignBatch(witnessHashes, height, nonce, chain)
+	sig65Bs, err := tssSigner.SignBatch(witnessHashes, height, nonce, chain)
 	if err != nil {
 		return nil, fmt.Errorf("SignBatch error: %v", err)
 	}
@@ -270,6 +271,7 @@ func (signer *BTCSigner) SignWithdrawTx(
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
 	}
+
 	return tx, nil
 }
 
@@ -288,6 +290,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	if err != nil {
 		return err
 	}
+
 	signer.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
 	return nil
 }
