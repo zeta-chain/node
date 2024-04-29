@@ -161,7 +161,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.MustNewDecFromStr("0.3"), value)
+		require.Equal(t, sdk.NewInt(3e17), value)
 	})
 	t.Run("should convert cctx ETH value correctly", func(t *testing.T) {
 		// create cctx with 0.003 ETH
@@ -172,7 +172,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value: 0.003 ETH * 2500 = 7.5 ZETA
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.MustNewDecFromStr("7.5"), value)
+		require.Equal(t, sdk.NewInt(75e17), value)
 	})
 	t.Run("should convert cctx BTC value correctly", func(t *testing.T) {
 		// create cctx with 0.0007 BTC
@@ -183,7 +183,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value: 0.0007 BTC * 50000 = 35.0 ZETA
 		value := keeper.ConvertCctxValue(btcChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.MustNewDecFromStr("35.0"), value)
+		require.Equal(t, sdk.NewInt(35).Mul(sdk.NewInt(1e18)), value)
 	})
 	t.Run("should convert cctx USDT value correctly", func(t *testing.T) {
 		// create cctx with 3 USDT
@@ -194,7 +194,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value: 3 USDT * 0.8 = 2.4 ZETA
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.MustNewDecFromStr("2.4"), value)
+		require.Equal(t, sdk.NewInt(24e17), value)
 	})
 	t.Run("should return 0 if no rate found for chainID", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
@@ -203,7 +203,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// use nil erc20CoinRates map to convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, nil, foreignCoinMap)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 	})
 	t.Run("should return 0 if coinType is CoinType_Cmd", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
@@ -212,7 +212,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 	})
 	t.Run("should return 0 on nil rate or rate <= 0", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
@@ -221,7 +221,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// use nil gasCoinRates map to convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, nil, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 
 		// set rate to 0
 		zeroCoinRates, _ := k.GetRateLimiterRates(ctx)
@@ -229,7 +229,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value
 		value = keeper.ConvertCctxValue(ethChainID, cctx, zeroCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 
 		// set rate to -1
 		negativeCoinRates, _ := k.GetRateLimiterRates(ctx)
@@ -237,7 +237,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value
 		value = keeper.ConvertCctxValue(ethChainID, cctx, negativeCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 	})
 	t.Run("should return 0 if no coin found for chainID", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
@@ -246,7 +246,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// use empty foreignCoinMap to convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, nil)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 	})
 	t.Run("should return 0 if no coin found for asset", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
@@ -260,7 +260,7 @@ func Test_ConvertCctxValue(t *testing.T) {
 
 		// convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, tempCoinMap)
-		require.Equal(t, sdk.NewDec(0), value)
+		require.Equal(t, sdk.NewInt(0), value)
 	})
 }
 
@@ -384,7 +384,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewDec(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      false,
 		},
 		{
@@ -411,7 +411,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewDec(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      false,
 		},
 		{
@@ -439,7 +439,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs[0:100]...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewDec(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      true,
 		},
 		{
@@ -466,7 +466,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewDec(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      false,
 		},
 		{
@@ -494,7 +494,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs[0:100]...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewDec(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      true,
 		},
 		{
@@ -526,7 +526,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs[0:100]...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 100,                       // 100 > sliding window 50
-			expectedWithdrawRate:   sdk.NewDec(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      true,
 		},
 	}

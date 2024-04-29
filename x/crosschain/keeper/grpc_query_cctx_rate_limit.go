@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -31,7 +32,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// define a few variables to be used in the query loops
 	limitExceeded := false
 	totalPending := uint64(0)
-	totalWithdrawInZeta := sdk.NewDec(0)
+	totalWithdrawInAzeta := sdkmath.NewInt(0)
 	cctxs := make([]*types.CrossChainTx, 0)
 	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
 
@@ -81,15 +82,15 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	var gasCoinRates map[int64]sdk.Dec
 	var erc20CoinRates map[int64]map[string]sdk.Dec
 	var foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins
-	var windowLimitInZeta sdk.Dec
-	var blockLimitInZeta sdk.Dec
+	var blockLimitInAzeta sdkmath.Int
+	var windowLimitInAzeta sdkmath.Int
 	if applyLimit {
 		gasCoinRates, erc20CoinRates = k.GetRateLimiterRates(ctx)
 		foreignCoinMap = k.fungibleKeeper.GetAllForeignCoinMap(ctx)
 
-		// convert the rate limit from aZETA to ZETA
-		blockLimitInZeta = sdk.NewDecFromBigInt(rateLimitFlags.Rate.BigInt()).Quo(sdk.NewDec(10).Power(18))
-		windowLimitInZeta = blockLimitInZeta.Mul(sdk.NewDec(rateLimitFlags.Window))
+		// initiate block limit and window limit in azeta
+		blockLimitInAzeta = sdkmath.NewIntFromBigInt(rateLimitFlags.Rate.BigInt())
+		windowLimitInAzeta = blockLimitInAzeta.Mul(sdkmath.NewInt(rateLimitFlags.Window))
 	}
 
 	// the criteria to stop adding cctxs to the rpc response
@@ -132,14 +133,14 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// invariant: for period of time >= `rateLimitFlags.Window`, the zetaclient-side average withdraw rate should be <= `blockLimitInZeta`
 	// otherwise, this query should return empty result and wait for the average rate to drop below `blockLimitInZeta`
 	withdrawWindow := rateLimitFlags.Window
-	withdrawLimitInZeta := windowLimitInZeta
+	withdrawLimitInAzeta := windowLimitInAzeta
 	if lowestPendingCctxHeight != 0 {
 		// `pendingCctxWindow` is the width of [lowestPendingCctxHeight, height] window
 		// if the window can be wider than `rateLimitFlags.Window`, we should adjust the total withdraw limit proportionally
 		pendingCctxWindow := height - lowestPendingCctxHeight + 1
 		if pendingCctxWindow > rateLimitFlags.Window {
 			withdrawWindow = pendingCctxWindow
-			withdrawLimitInZeta = blockLimitInZeta.Mul(sdk.NewDec(pendingCctxWindow))
+			withdrawLimitInAzeta = blockLimitInAzeta.Mul(sdk.NewInt(pendingCctxWindow))
 		}
 	}
 
@@ -170,7 +171,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 				break
 			}
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalWithdrawInZeta, withdrawLimitInZeta) {
+			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
 				limitExceeded = true
 				continue
 			}
@@ -203,7 +204,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 			}
 
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalWithdrawInZeta, withdrawLimitInZeta) {
+			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
 				limitExceeded = true
 				continue
 			}
@@ -232,26 +233,25 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 		CrossChainTx:          cctxs,
 		TotalPending:          totalPending,
 		CurrentWithdrawWindow: withdrawWindow,
-		CurrentWithdrawRate:   totalWithdrawInZeta.Mul(sdk.NewDec(10).Power(18)).Quo(sdk.NewDec(withdrawWindow)).String(),
+		CurrentWithdrawRate:   totalWithdrawInAzeta.Quo(sdk.NewInt(withdrawWindow)).String(),
 		RateLimitExceeded:     limitExceeded,
 	}, nil
 }
 
-// ConvertCctxValue converts the value of the cctx in ZETA using given conversion rates
+// ConvertCctxValue converts the value of the cctx to azeta using given conversion rates
 func ConvertCctxValue(
 	chainID int64,
 	cctx *types.CrossChainTx,
 	gasCoinRates map[int64]sdk.Dec,
 	erc20CoinRates map[int64]map[string]sdk.Dec,
 	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
-) sdk.Dec {
+) sdkmath.Int {
 	var rate sdk.Dec
 	var decimals uint64
 	switch cctx.InboundTxParams.CoinType {
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
-		amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
-		return amountCctx.Quo(sdk.NewDec(10).Power(18))
+		return sdkmath.NewIntFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
 	case coin.CoinType_Gas:
 		rate = gasCoinRates[chainID]
 	case coin.CoinType_ERC20:
@@ -259,43 +259,43 @@ func ConvertCctxValue(
 		_, found := erc20CoinRates[chainID]
 		if !found {
 			// skip if no rate found for this chainID
-			return sdk.NewDec(0)
+			return sdkmath.NewInt(0)
 		}
 		rate = erc20CoinRates[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
 	default:
 		// skip CoinType_Cmd
-		return sdk.NewDec(0)
+		return sdkmath.NewInt(0)
 	}
 	// should not happen, return 0 to skip if it happens
 	if rate.IsNil() || rate.LTE(sdk.NewDec(0)) {
-		return sdk.NewDec(0)
+		return sdkmath.NewInt(0)
 	}
 
 	// get foreign coin decimals
 	foreignCoinFromChainMap, found := foreignCoinMap[chainID]
 	if !found {
 		// skip if no coin found for this chainID
-		return sdk.NewDec(0)
+		return sdkmath.NewInt(0)
 	}
 	foreignCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundTxParams.Asset)]
 	if !found {
 		// skip if no coin found for this Asset
-		return sdk.NewDec(0)
+		return sdkmath.NewInt(0)
 	}
 	decimals = uint64(foreignCoin.Decimals)
 
-	// given decimals = 6, the `oneZrc20` amount will be 10^6 = 1000000
+	// the whole coin amounts of zeta and zrc20
+	// given decimals = 6, the amount will be 10^6 = 1000000
+	oneZeta := coin.AzetaPerZeta()
 	oneZrc20 := sdk.NewDec(10).Power(decimals)
 
-	// convert asset amount into ZETA
-	// step 1: convert the amount into ZRC20 integer amount
-	// step 2: convert the ZRC20 integer amount into decimal amount
+	// convert cctx asset amount into azeta amount
 	// given amountCctx = 2000000, rate = 0.8, decimals = 6
-	// the amountZrc20 = 2000000 * 0.8 = 1600000, the amountZeta = 1600000 / 1000000 = 1.6
-	amountCctx := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
-	amountZrc20 := amountCctx.Mul(rate)
-	amountZeta := amountZrc20.Quo(oneZrc20)
-	return amountZeta
+	// amountCctxDec: 2000000 * 0.8 = 1600000.0
+	// amountAzetaDec: 1600000.0 * 10e18 / 10e6 = 1600000000000000000.0
+	amountCctxDec := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+	amountAzetaDec := amountCctxDec.Mul(rate).Mul(oneZeta).Quo(oneZrc20)
+	return amountAzetaDec.TruncateInt()
 }
 
 // rateLimitExceeded accumulates the cctx value and then checks if the rate limit is exceeded
@@ -306,10 +306,10 @@ func rateLimitExceeded(
 	gasCoinRates map[int64]sdk.Dec,
 	erc20CoinRates map[int64]map[string]sdk.Dec,
 	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
-	currentCctxValue *sdk.Dec,
-	withdrawLimitInZeta sdk.Dec,
+	currentCctxValue *sdkmath.Int,
+	withdrawLimitInZeta sdkmath.Int,
 ) bool {
-	amountZeta := ConvertCctxValue(chainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-	*currentCctxValue = currentCctxValue.Add(amountZeta)
+	cctxValueAzeta := ConvertCctxValue(chainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
+	*currentCctxValue = currentCctxValue.Add(cctxValueAzeta)
 	return currentCctxValue.GT(withdrawLimitInZeta)
 }
