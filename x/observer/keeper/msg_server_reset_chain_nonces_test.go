@@ -19,7 +19,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
-		chainId := chains.GoerliLocalnetChain().ChainId
+		chainId := chains.GoerliLocalnetChain.ChainId
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
@@ -44,7 +44,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		chainId := chains.GoerliLocalnetChain().ChainId
+		chainId := chains.GoerliLocalnetChain.ChainId
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
@@ -88,8 +88,8 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		chainId := chains.GoerliLocalnetChain().ChainId
-		index := chains.GoerliLocalnetChain().ChainName.String()
+		chainId := chains.GoerliLocalnetChain.ChainId
+		index := chains.GoerliLocalnetChain.ChainName.String()
 
 		// check existing chain nonces
 		_, found := k.GetChainNonces(ctx, index)

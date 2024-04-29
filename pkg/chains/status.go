@@ -9,9 +9,9 @@ import "errors"
 func ReceiveStatusFromString(str string) (ReceiveStatus, error) {
 	switch str {
 	case "0":
-		return ReceiveStatus_Success, nil
+		return ReceiveStatus_success, nil
 	case "1":
-		return ReceiveStatus_Failed, nil
+		return ReceiveStatus_failed, nil
 	default:
 		return ReceiveStatus(0), errors.New("wrong status, must be 0 for success or 1 for failed")
 	}

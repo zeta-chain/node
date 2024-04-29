@@ -710,7 +710,7 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
 func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
 	if endpoint == stub.EVMRPCEnabled {
-		chainID := big.NewInt(chains.BscMainnetChain().ChainId)
+		chainID := big.NewInt(chains.BscMainnetChain.ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
 		client := &stub.MockEvmClient{}
 		return client, ethSigner, nil

@@ -132,12 +132,12 @@ func parseBitcoinWithdrawArgs(args []string, defaultReceiver string) (btcutil.Ad
 	var receiver btcutil.Address
 	if args[0] == "" {
 		// use the default receiver
-		receiver, err = chains.DecodeBtcAddress(defaultReceiver, chains.BtcRegtestChain().ChainId)
+		receiver, err = chains.DecodeBtcAddress(defaultReceiver, chains.BtcRegtestChain.ChainId)
 		if err != nil {
 			panic("Invalid default receiver address specified for TestBitcoinWithdraw.")
 		}
 	} else {
-		receiver, err = chains.DecodeBtcAddress(args[0], chains.BtcRegtestChain().ChainId)
+		receiver, err = chains.DecodeBtcAddress(args[0], chains.BtcRegtestChain.ChainId)
 		if err != nil {
 			panic("Invalid receiver address specified for TestBitcoinWithdraw.")
 		}
@@ -224,7 +224,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
-	addressRestricted, err := chains.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, chains.BtcRegtestChain().ChainId)
+	addressRestricted, err := chains.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, chains.BtcRegtestChain.ChainId)
 	if err != nil {
 		panic(err)
 	}
@@ -246,7 +246,7 @@ func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 //	amount := big.NewInt(int64(0.1 * 1e8 / float64(repeat)))
 //
 //	// check if the deposit is successful
-//	BTCZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
+//	BTCZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain.ChainId))
 //	if err != nil {
 //		panic(err)
 //	}
