@@ -49,10 +49,10 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("successfully process failed outbound if original sender is a address", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
 		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(cctx.InboundTxParams.Sender), *statedb.NewEmptyAccount())
 		require.NoError(t, err)
-		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		err = k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
@@ -61,9 +61,9 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("unable to  process failed outbound if GetCCTXIndexBytes fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
 		cctx.Index = ""
-		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.ErrorContains(t, err, "failed reverting GetCCTXIndexBytes")
 	})
@@ -71,7 +71,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("unable to  process failed outbound if Adding Revert fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
-		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.ErrorContains(t, err, "failed AddRevertOutbound")
 	})
@@ -79,8 +79,8 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("unable to  process failed outbound if ZETARevertAndCallContract fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
-		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.ErrorContains(t, err, "failed ZETARevertAndCallContract")
 	})
@@ -89,7 +89,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
 		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -97,7 +97,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 		cctx.InboundTxParams.Sender = dAppContract.String()
-		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 
 		err = k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.NoError(t, err)
@@ -278,7 +278,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 func TestKeeper_ProcessOutbound(t *testing.T) {
 	t.Run("successfully process outbound with ballot finalized to success", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
 		require.NoError(t, err)
@@ -287,7 +287,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and old status is Pending Revert", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
 		require.NoError(t, err)
@@ -297,7 +297,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and coin-type is CMD", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
@@ -308,7 +308,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("do not process if cctx invalid", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundTxParams = nil
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotInProgress, sample.String())

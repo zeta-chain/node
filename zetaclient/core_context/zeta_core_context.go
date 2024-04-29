@@ -35,11 +35,13 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	for _, e := range cfg.EVMChainConfigs {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
 	}
+
 	var bitcoinChainParams *observertypes.ChainParams
 	_, found := cfg.GetBTCConfig()
 	if found {
 		bitcoinChainParams = &observertypes.ChainParams{}
 	}
+
 	return &ZetaCoreContext{
 		coreContextLock:    new(sync.RWMutex),
 		chainsEnabled:      []chains.Chain{},
@@ -59,6 +61,7 @@ func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 		copiedPubkeys = make([]string, len(c.keygen.GranteePubkeys))
 		copy(copiedPubkeys, c.keygen.GranteePubkeys)
 	}
+
 	return observertypes.Keygen{
 		Status:         c.keygen.Status,
 		GranteePubkeys: copiedPubkeys,
@@ -107,10 +110,12 @@ func (c *ZetaCoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 	if c.bitcoinChainParams == nil { // bitcoin is not enabled
 		return chains.Chain{}, &observertypes.ChainParams{}, false
 	}
+
 	chain := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId)
 	if chain == nil {
 		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.bitcoinChainParams.ChainId))
 	}
+
 	return *chain, c.bitcoinChainParams, true
 }
 
@@ -146,6 +151,7 @@ func (c *ZetaCoreContext) Update(
 	sort.SliceStable(newChains, func(i, j int) bool {
 		return newChains[i].ChainId < newChains[j].ChainId
 	})
+
 	if len(newChains) == 0 {
 		logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
 	}
@@ -170,16 +176,20 @@ func (c *ZetaCoreContext) Update(
 			}
 		}
 	}
+
 	if keygen != nil {
 		c.keygen = *keygen
 	}
+
 	c.chainsEnabled = newChains
 	c.crossChainFlags = crosschainFlags
 	c.verificationFlags = verificationFlags
+
 	// update chain params for bitcoin if it has config in file
 	if c.bitcoinChainParams != nil && btcChainParams != nil {
 		c.bitcoinChainParams = btcChainParams
 	}
+
 	// update core params for evm chains we have configs in file
 	for _, params := range evmChainParams {
 		_, found := c.evmChainParams[params.ChainId]

@@ -248,7 +248,7 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),
 		Proof:     proofs.NewEthereumProof(txProof),
-		ChainId:   chains.GoerliLocalnetChain().ChainId,
+		ChainId:   chains.GoerliLocalnetChain.ChainId,
 	})
 	if err != nil {
 		panic(err)

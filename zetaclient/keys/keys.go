@@ -14,7 +14,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -84,25 +83,6 @@ func GetKeyringKeybase(cfg config.Config, hotkeyPassword string) (ckeys.Keyring,
 	}
 
 	return kb, pubkeyBech32, nil
-}
-
-// getKeybase will create an instance of Keybase
-func getKeybase(zetaCoreHome string, reader io.Reader, keyringBackend config.KeyringBackend) (ckeys.Keyring, error) {
-	cliDir := zetaCoreHome
-	if len(zetaCoreHome) == 0 {
-		return nil, fmt.Errorf("zetaCoreHome is empty")
-	}
-	registry := codectypes.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
-
-	// create a new keybase based on the selected backend
-	backend := ckeys.BackendTest
-	if keyringBackend == config.KeyringBackendFile {
-		backend = ckeys.BackendFile
-	}
-
-	return ckeys.New(sdk.KeyringServiceName(), backend, cliDir, reader, cdc)
 }
 
 // GetSignerInfo return signer info
@@ -183,14 +163,21 @@ func (k *Keys) GetHotkeyPassword() string {
 	return ""
 }
 
-func SetupConfigForTest() {
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
-	//config.SetCoinType(cmd.MetaChainCoinType)
-	config.SetFullFundraiserPath(cmd.ZetaChainHDPath)
-	sdk.SetCoinDenomRegex(func() string {
-		return cmd.DenomRegex
-	})
+// getKeybase will create an instance of Keybase
+func getKeybase(zetaCoreHome string, reader io.Reader, keyringBackend config.KeyringBackend) (ckeys.Keyring, error) {
+	cliDir := zetaCoreHome
+	if len(zetaCoreHome) == 0 {
+		return nil, fmt.Errorf("zetaCoreHome is empty")
+	}
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	// create a new keybase based on the selected backend
+	backend := ckeys.BackendTest
+	if keyringBackend == config.KeyringBackendFile {
+		backend = ckeys.BackendFile
+	}
+
+	return ckeys.New(sdk.KeyringServiceName(), backend, cliDir, reader, cdc)
 }

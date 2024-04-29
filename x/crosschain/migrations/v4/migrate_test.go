@@ -97,49 +97,49 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "0",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.GoerliChain().ChainId,
+				SenderChainId:         chains.GoerliChain.ChainId,
 				InboundTxObservedHash: "0xaaa",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "1",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcMainnetChain().ChainId,
+				SenderChainId:         chains.BtcMainnetChain.ChainId,
 				InboundTxObservedHash: "0x111",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "2",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.EthChain().ChainId,
+				SenderChainId:         chains.EthChain.ChainId,
 				InboundTxObservedHash: "0xbbb",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "3",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcTestNetChain().ChainId,
+				SenderChainId:         chains.BtcTestNetChain.ChainId,
 				InboundTxObservedHash: "0x222",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "4",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcTestNetChain().ChainId,
+				SenderChainId:         chains.BtcTestNetChain.ChainId,
 				InboundTxObservedHash: "0x333",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "5",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.MumbaiChain().ChainId,
+				SenderChainId:         chains.MumbaiChain.ChainId,
 				InboundTxObservedHash: "0xccc",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "6",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcRegtestChain().ChainId,
+				SenderChainId:         chains.BtcRegtestChain.ChainId,
 				InboundTxObservedHash: "0x444",
 			},
 		})
@@ -148,13 +148,13 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		v4.SetBitcoinFinalizedInbound(ctx, k)
 
 		// check finalized inbound
-		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.GoerliChain().ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", chains.EthChain().ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.MumbaiChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BtcMainnetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x222", chains.BtcTestNetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x333", chains.BtcTestNetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x444", chains.BtcRegtestChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.GoerliChain.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", chains.EthChain.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.MumbaiChain.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BtcMainnetChain.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x222", chains.BtcTestNetChain.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x333", chains.BtcTestNetChain.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x444", chains.BtcRegtestChain.ChainId, 0))
 
 	})
 }

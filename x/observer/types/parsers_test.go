@@ -16,9 +16,9 @@ func TestConvertReceiveStatusToVoteType(t *testing.T) {
 		status   chains.ReceiveStatus
 		expected types.VoteType
 	}{
-		{"TestSuccessStatus", chains.ReceiveStatus_Success, types.VoteType_SuccessObservation},
-		{"TestFailedStatus", chains.ReceiveStatus_Failed, types.VoteType_FailureObservation},
-		{"TestDefaultStatus", chains.ReceiveStatus_Created, types.VoteType_NotYetVoted},
+		{"TestSuccessStatus", chains.ReceiveStatus_success, types.VoteType_SuccessObservation},
+		{"TestFailedStatus", chains.ReceiveStatus_failed, types.VoteType_FailureObservation},
+		{"TestDefaultStatus", chains.ReceiveStatus_created, types.VoteType_NotYetVoted},
 	}
 
 	for _, tt := range tests {
