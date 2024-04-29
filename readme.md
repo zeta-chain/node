@@ -111,9 +111,11 @@ git push origin my-backport-branch
 </details>
 
 ### Creating a Release Candidate
-Once a release branch has been created, you can use github actions to create a release candidate:
+You can use github actions to create a release candidate:
 1) Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
 2) Push the tag and the automation will take care of the rest
+
+You may create the RC tag directly off `develop` if a release branch has not been created yet. You should use the release branch if it exists and has diverged from develop.
 
 By following these steps, you can efficiently create a release candidate for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
