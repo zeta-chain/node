@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
@@ -77,10 +78,22 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	})
 
 	t.Run("unable to  process failed outbound if ZETARevertAndCallContract fails", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
+		errorFailedZETARevertAndCallContract := errors.New("test", 999, "failed ZETARevertAndCallContract")
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
+		fungibleMock.On("ZETARevertAndCallContract", mock.Anything,
+			ethcommon.HexToAddress(cctx.InboundTxParams.Sender),
+			ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver),
+			cctx.InboundTxParams.SenderChainId,
+			cctx.GetCurrentOutTxParam().ReceiverChainId,
+			cctx.GetCurrentOutTxParam().Amount.BigInt(),
+			mock.Anything,
+			mock.Anything).Return(nil, errorFailedZETARevertAndCallContract).Once()
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.ErrorContains(t, err, "failed ZETARevertAndCallContract")
 	})
