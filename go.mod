@@ -357,4 +357,4 @@ replace (
 
 replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db v0.0.0-20230321185329-6dc7c0ca6345
 
-replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240426125617-308e6f08a922
+replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240429123701-35f3f79bf83f
