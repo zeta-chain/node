@@ -32,13 +32,7 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 
-	// First test without rate limiter
-	//r.Logger.Print("rate limiter disabled")
-	//if err := createAndWaitWithdraws(r); err != nil {
-	//	panic(err)
-	//}
-
-	// Set the rate limiter to 0.11ZETA per 10 blocks
+	// Set the rate limiter to 0.5ZETA per 10 blocks
 	// These rate limiter flags will only allow to process 1 withdraw per 10 blocks
 	r.Logger.Info("setting up rate limiter flags")
 	if err := setupRateLimiterFlags(r, rateLimiterFlags); err != nil {
@@ -46,6 +40,8 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	}
 
 	// Test with rate limiter
+	// TODO: define proper assertion to check the rate limiter is working
+	// https://github.com/zeta-chain/node/issues/2090
 	r.Logger.Print("rate limiter enabled")
 	if err := createAndWaitWithdraws(r); err != nil {
 		panic(err)
