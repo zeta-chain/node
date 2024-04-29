@@ -14,6 +14,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const RateLimiterWithdrawNumber = 5
+
 // rateLimiterFlags are the rate limiter flags for the test
 var rateLimiterFlags = crosschaintypes.RateLimiterFlags{
 	Enabled: true,
@@ -77,15 +79,15 @@ func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimite
 	return nil
 }
 
-// createAndWaitWithdraws performs 10 withdraws
+// createAndWaitWithdraws performs RateLimiterWithdrawNumber withdraws
 func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	startTime := time.Now()
 
-	r.Logger.Print("starting 10 withdraws")
+	r.Logger.Print("starting %d withdraws", RateLimiterWithdrawNumber)
 
-	// Perform 10 withdraws to log time for completion
-	txs := make([]*ethtypes.Transaction, 5)
-	for i := 0; i < 10; i++ {
+	// Perform RateLimiterWithdrawNumber withdraws to log time for completion
+	txs := make([]*ethtypes.Transaction, RateLimiterWithdrawNumber)
+	for i := 0; i < RateLimiterWithdrawNumber; i++ {
 		amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(3))
 		txs[i] = r.WithdrawZeta(amount, true)
 	}
@@ -112,7 +114,7 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	if err != nil {
 		return fmt.Errorf("error getting block number: %w", err)
 	}
-	r.Logger.Print("all 10 withdraws completed in %vs at block %d", duration, block)
+	r.Logger.Print("all withdraws completed in %vs at block %d", duration, block)
 
 	return nil
 }
