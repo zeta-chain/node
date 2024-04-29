@@ -238,9 +238,6 @@ function move_zetacored_binaries {
 function start_network {
   if [ "${IS_LOCAL_DEVELOPMENT}" == "true" ]; then
     cp /usr/local/bin/zetacored ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored
-    mkdir -p ${DAEMON_HOME}/cosmovisor/current/bin
-    rm -rf ${DAEMON_HOME}/cosmovisor/current/bin/zetacored || echo "Doesn't Exist"
-    ln -s ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored ${DAEMON_HOME}/cosmovisor/current/bin/zetacored
   fi
   EXPECTED_MAJOR_VERSION=$(cat /scripts/EXPECTED_MAJOR_VERSION)
   VISOR_VERSION=v$(${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n')

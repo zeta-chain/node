@@ -285,50 +285,60 @@ release:
 ###                     Local Mainnet Development                           ###
 ###############################################################################
 
+#BTC
 start-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
-
-start-zetacored-rpc-mainnet:
-	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
-
-start-zetacored-rpc-testnet:
-	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
 stop-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
-stop-zetacored-rpc-testnet:
-	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
-
-stop-zetacored-rpc-mainnet:
-	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
-
 clean-bitcoin-node-mainnet:
 	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
-clean-zetacored-rpc-testnet:
-	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+#ZETA
+
+#FULL-NODE-RPC-FROM-BUILT-IMAGE
+start-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet image $(DOCKER_TAG)
+
+stop-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
 
 clean-zetacored-rpc-mainnet:
-	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
 
+#FULL-NODE-RPC-FROM-BUILT-IMAGE
+start-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 image $(DOCKER_TAG)
+
+stop-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
+
+clean-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
+
+
+#FULL-NODE-RPC-FROM-LOCAL-BUILD
 start-zetacored-rpc-mainnet-localbuild:
-	cd contrib/mainnet/zetacored-localbuild && docker-compose up --build
-
-start-zetacored-rpc-testnet-localbuild:
-	cd contrib/athens3/zetacored-localbuild && docker-compose up --build
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet localbuild $(DOCKER_TAG)
 
 stop-zetacored-rpc-mainnet-localbuild:
-	cd contrib/mainnet/zetacored-localbuild && docker-compose down
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
+
+clean-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
+
+#FULL-NODE-RPC-FROM-LOCAL-BUILD
+start-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 localbuild $(DOCKER_TAG)
 
 stop-zetacored-rpc-testnet-localbuild:
-	cd contrib/athens3/zetacored-localbuild && docker-compose down
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
 
-zetacored-rpc-mainnet-localbuild:
-	cd contrib/mainnet/zetacored-localbuild && docker-compose down -v
+clean-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
 
-zetacored-rpc-testnet-localbuild:
-	cd contrib/athens3/zetacored-localbuild && docker-compose down -v
 
 ###############################################################################
 ###                               Debug Tools                               ###
