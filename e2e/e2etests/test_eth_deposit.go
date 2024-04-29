@@ -268,8 +268,8 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	}
 
 	liquidityCap := math.NewUintFromBigInt(supply).Add(liquidityCapArg)
-	amountLessThanCap := liquidityCap.BigInt().Div(liquidityCap.BigInt(), big.NewInt(10)) // 1/10 of the cap
-	amountMoreThanCap := liquidityCap.BigInt().Mul(liquidityCap.BigInt(), big.NewInt(10)) // 10 times the cap
+	amountLessThanCap := liquidityCapArg.BigInt().Div(liquidityCapArg.BigInt(), big.NewInt(10)) // 1/10 of the cap
+	amountMoreThanCap := liquidityCapArg.BigInt().Mul(liquidityCapArg.BigInt(), big.NewInt(10)) // 10 times the cap
 	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
 		r.ZetaTxServer.GetAccountAddress(0),
 		r.ETHZRC20Addr.Hex(),
