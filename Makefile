@@ -142,21 +142,21 @@ gosec:
 ###                           Generation commands  		                    ###
 ###############################################################################
 
-proto:
-	@echo "--> Removing old Go types "
-	@find . -name '*.pb.go' -type f -delete
-	@echo "--> Generating new Go types from protocol buffer files"
-	@bash ./scripts/protoc-gen-go.sh
-	@buf format -w
-.PHONY: proto
-
 typescript:
 	@echo "--> Generating TypeScript bindings"
 	@bash ./scripts/protoc-gen-typescript.sh
 .PHONY: typescript
 
+protoVer=0.13.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+
+proto-gen:
+	@echo "Generating Protobuf files"
+	@$(protoImage) sh ./scripts/protoc-gen-go.sh
+
 proto-format:
-	@bash ./scripts/proto-format.sh
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
 openapi:
 	@echo "--> Generating OpenAPI specs"

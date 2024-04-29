@@ -1,0 +1,11 @@
+syntax = "proto3";
+package zetachain.zetacore.lightclient;
+
+option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+
+// VerificationFlags is a structure containing information which chain types are
+// enabled for block header verification
+message VerificationFlags {
+  bool ethTypeChainEnabled = 1;
+  bool btcTypeChainEnabled = 2;
+}

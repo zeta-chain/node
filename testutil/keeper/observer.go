@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -14,7 +15,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	tmdb "github.com/tendermint/tm-db"
 	observermocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"

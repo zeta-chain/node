@@ -1,0 +1,31 @@
+syntax = "proto3";
+package zetachain.zetacore.pkg.proofs;
+
+import "gogoproto/gogo.proto";
+import "zetachain/zetacore/pkg/proofs/bitcoin/bitcoin.proto";
+import "zetachain/zetacore/pkg/proofs/ethereum/ethereum.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/pkg/proofs";
+
+message BlockHeader {
+  int64 height = 1;
+  bytes hash = 2;
+  bytes parent_hash = 3;
+  int64 chain_id = 4;
+  // chain specific header
+  HeaderData header = 5 [ (gogoproto.nullable) = false ];
+}
+
+message HeaderData {
+  oneof data {
+    bytes ethereum_header = 1; // binary encoded headers; RLP for ethereum
+    bytes bitcoin_header = 2;  // 80-byte little-endian encoded binary data
+  }
+}
+
+message Proof {
+  oneof proof {
+    pkg.proofs.ethereum.Proof ethereum_proof = 1;
+    pkg.proofs.bitcoin.Proof bitcoin_proof = 2;
+  }
+}

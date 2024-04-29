@@ -19,7 +19,7 @@ func TestKeeper_GetBallot(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.Dec{},
+		BallotThreshold:      sdk.ZeroDec(),
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}
@@ -38,7 +38,7 @@ func TestKeeper_GetBallot(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      1,
-		BallotThreshold:      sdk.Dec{},
+		BallotThreshold:      sdk.ZeroDec(),
 		BallotStatus:         1,
 		BallotCreationHeight: 2,
 	}
@@ -60,7 +60,7 @@ func TestKeeper_GetBallotList(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.Dec{},
+		BallotThreshold:      sdk.ZeroDec(),
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}
@@ -105,7 +105,7 @@ func TestKeeper_GetAllBallots(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.Dec{},
+		BallotThreshold:      sdk.ZeroDec(),
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}

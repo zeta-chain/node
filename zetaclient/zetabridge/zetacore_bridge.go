@@ -5,14 +5,15 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"

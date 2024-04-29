@@ -1,3 +1,8 @@
+/*
+NOTE: Usage of x/params to manage parameters is deprecated in favor of x/gov
+controlled execution of MsgUpdateParams messages. These types remains solely
+for migration purposes and will be removed in a future release.
+*/
 package types
 
 import paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -20,9 +25,5 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyPrefix(ParamObserverEmissionPercentage), &p.ObserverEmissionPercentage, validateObserverEmissionPercentage),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamTssSignerEmissionPercentage), &p.TssSignerEmissionPercentage, validateTssEmissionPercentage),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamDurationFactorConstant), &p.DurationFactorConstant, validateDurationFactorConstant),
-
-		// TODO: enable this param
-		// https://github.com/zeta-chain/node/pull/1861
-		//paramtypes.NewParamSetPair(KeyPrefix(ParamObserverSlashAmount), &p.ObserverSlashAmount, validateObserverSlashAmount),
 	}
 }

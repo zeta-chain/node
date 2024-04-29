@@ -23,9 +23,9 @@ zetacored testnet init-files [flags]
 ### Options
 
 ```
-      --algo string                  Key signing algorithm to generate keys for 
       --chain-id string              genesis file chain-id, if left blank will be randomly created
   -h, --help                         help for init-files
+      --key-type string              Key signing algorithm to generate keys for 
       --keyring-backend string       Select keyring's backend (os|file|test) 
       --minimum-gas-prices string    Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake) 
       --node-daemon-home string      Home directory of the node's daemon configuration 
@@ -41,6 +41,7 @@ zetacored testnet init-files [flags]
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

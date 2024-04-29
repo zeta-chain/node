@@ -1,36 +1,25 @@
 package cli_test
 
-import (
-	"fmt"
-	"testing"
+// func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []types.OutTxTracker) {
+// 	t.Helper()
+// 	cfg := network.DefaultConfig()
+// 	state := types.GenesisState{}
+// 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/testutil/network"
-	"github.com/zeta-chain/zetacore/testutil/nullify"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-)
-
-func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []types.OutTxTracker) {
-	t.Helper()
-	cfg := network.DefaultConfig()
-	state := types.GenesisState{}
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
-
-	for i := 0; i < n; i++ {
-		outTxTracker := types.OutTxTracker{
-			Index: fmt.Sprintf("testchain-%d", i),
-		}
-		nullify.Fill(&outTxTracker)
-		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
-	}
-	buf, err := cfg.Codec.MarshalJSON(&state)
-	require.NoError(t, err)
-	cfg.GenesisState[types.ModuleName] = buf
-	//cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
-	net, err := network.New(t, app.NodeDir, cfg)
-	return net, state.OutTxTrackerList
-}
+// 	for i := 0; i < n; i++ {
+// 		outTxTracker := types.OutTxTracker{
+// 			Index: fmt.Sprintf("testchain-%d", i),
+// 		}
+// 		nullify.Fill(&outTxTracker)
+// 		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
+// 	}
+// 	buf, err := cfg.Codec.MarshalJSON(&state)
+// 	require.NoError(t, err)
+// 	cfg.GenesisState[types.ModuleName] = buf
+// 	//cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
+// 	net, err := network.New(t, app.NodeDir, cfg)
+// 	return net, state.OutTxTrackerList
+// }
 
 //
 //func TestShowOutTxTracker(t *testing.T) {

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Breaking Changes
+* Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
+
+### Features
+* [2039](https://github.com/zeta-chain/node/pull/2039) - cosmos v0.47 upgrade
+
 ### Refactor
 * [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
 
