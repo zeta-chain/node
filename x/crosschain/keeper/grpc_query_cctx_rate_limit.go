@@ -306,9 +306,9 @@ func rateLimitExceeded(
 	erc20CoinRates map[int64]map[string]sdk.Dec,
 	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
 	currentCctxValue *sdkmath.Int,
-	withdrawLimitInZeta sdkmath.Int,
+	withdrawLimitInAzeta sdkmath.Int,
 ) bool {
 	cctxValueAzeta := ConvertCctxValue(chainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
 	*currentCctxValue = currentCctxValue.Add(cctxValueAzeta)
-	return currentCctxValue.GT(withdrawLimitInZeta)
+	return currentCctxValue.GT(withdrawLimitInAzeta)
 }
