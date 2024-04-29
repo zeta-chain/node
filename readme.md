@@ -116,22 +116,26 @@ Here's a comprehensive documentation using markdown tables to cover all the `mak
 
 #### Commands Overview for Zetacored
 
-Here's the updated table incorporating the new make commands you provided for managing both the Zetacored and Bitcoin nodes.
-
-| Environment                          | Action                         | Command                                                     | Docker Compose Location                 |
-|--------------------------------------|--------------------------------|-------------------------------------------------------------|-----------------------------------------|
-| **Mainnet**                          | Start Zetacored Node           | `make start-mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1` | `contrib/mainnet/zetacored`             |
-| **Mainnet**                          | Stop Zetacored Node            | `make stop-mainnet-zetarpc-node`                            | `contrib/mainnet/zetacored`             |
-| **Mainnet**                          | Clean Zetacored Node Data      | `make clean-mainnet-zetarpc-node`                           | `contrib/mainnet/zetacored`             |
-| **Testnet (Athens3)**                | Start Zetacored Node           | `make start-testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1` | `contrib/athens3/zetacored`             |
-| **Testnet (Athens3)**                | Stop Zetacored Node            | `make stop-testnet-zetarpc-node`                            | `contrib/athens3/zetacored`             |
-| **Testnet (Athens3)**                | Clean Zetacored Node Data      | `make clean-testnet-zetarpc-node`                           | `contrib/athens3/zetacored`             |
-| **Mainnet Local Build**              | Start Zetacored Node           | `make start-zetacored-rpc-mainnet-localbuild`               | `contrib/mainnet/zetacored-localbuild`  |
-| **Mainnet Local Build**              | Stop Zetacored Node            | `make stop-zetacored-rpc-mainnet-localbuild`                | `contrib/mainnet/zetacored-localbuild`  |
-| **Mainnet Local Build**              | Clean Zetacored Node Data      | `make clean-zetacored-rpc-mainnet-localbuild`               | `contrib/mainnet/zetacored-localbuild`  |
-| **Testnet Local Build (Athens3)**    | Start Zetacored Node           | `make start-zetacored-rpc-testnet-localbuild`               | `contrib/athens3/zetacored-localbuild`  |
-| **Testnet Local Build (Athens3)**    | Stop Zetacored Node            | `make stop-zetacored-rpc-testnet-localbuild`                | `contrib/athens3/zetacored-localbuild`  |
-| **Testnet Local Build (Athens3)**    | Clean Zetacored Node Data      | `make clean-zetacored-rpc-testnet-localbuild`               | `contrib/athens3/zetacored-localbuild`  |
+| Environment                         | Action                      | Command                                                       | Docker Compose Location                  |
+|-------------------------------------|-----------------------------|---------------------------------------------------------------|------------------------------------------|
+| **Mainnet**                         | Start Bitcoin Node          | `make start-bitcoin-node-mainnet`                             | `contrib/rpc/bitcoind-mainnet`           |
+| **Mainnet**                         | Stop Bitcoin Node           | `make stop-bitcoin-node-mainnet`                              | `contrib/rpc/bitcoind-mainnet`           |
+| **Mainnet**                         | Clean Bitcoin Node Data     | `make clean-bitcoin-node-mainnet`                             | `contrib/rpc/bitcoind-mainnet`           |
+| **Mainnet**                         | Start Ethereum Node         | `make start-eth-node-mainnet`                                 | `contrib/rpc/ethereum`                   |
+| **Mainnet**                         | Stop Ethereum Node          | `make stop-eth-node-mainnet`                                  | `contrib/rpc/ethereum`                   |
+| **Mainnet**                         | Clean Ethereum Node Data    | `make clean-eth-node-mainnet`                                 | `contrib/rpc/ethereum`                   |
+| **Mainnet**                         | Start Zetacored Node        | `make start-mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1`   | `contrib/rpc/zetacored`                  |
+| **Mainnet**                         | Stop Zetacored Node         | `make stop-mainnet-zetarpc-node`                              | `contrib/rpc/zetacored`                  |
+| **Mainnet**                         | Clean Zetacored Node Data   | `make clean-mainnet-zetarpc-node`                             | `contrib/rpc/zetacored`                  |
+| **Testnet (Athens3)**               | Start Zetacored Node        | `make start-testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1`   | `contrib/rpc/zetacored`                  |
+| **Testnet (Athens3)**               | Stop Zetacored Node         | `make stop-testnet-zetarpc-node`                              | `contrib/rpc/zetacored`                  |
+| **Testnet (Athens3)**               | Clean Zetacored Node Data   | `make clean-testnet-zetarpc-node`                             | `contrib/rpc/zetacored`                  |
+| **Mainnet Local Build**             | Start Zetacored Node        | `make start-zetacored-rpc-mainnet-localbuild`                 | `contrib/rpc/zetacored`                  |
+| **Mainnet Local Build**             | Stop Zetacored Node         | `make stop-zetacored-rpc-mainnet-localbuild`                  | `contrib/rpc/zetacored`                  |
+| **Mainnet Local Build**             | Clean Zetacored Node Data   | `make clean-zetacored-rpc-mainnet-localbuild`                 | `contrib/rpc/zetacored`                  |
+| **Testnet Local Build (Athens3)**   | Start Zetacored Node        | `make start-zetacored-rpc-testnet-localbuild`                 | `contrib/rpc/zetacored`                  |
+| **Testnet Local Build (Athens3)**   | Stop Zetacored Node         | `make stop-zetacored-rpc-testnet-localbuild`                  | `contrib/rpc/zetacored`                  |
+| **Testnet Local Build (Athens3)**   | Clean Zetacored Node Data   | `make clean-zetacored-rpc-testnet-localbuild`                 | `contrib/rpc/zetacored`                  |
 
 
 ### Bitcoin Node Setup for Mainnet

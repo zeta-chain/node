@@ -287,14 +287,23 @@ release:
 
 #BTC
 start-bitcoin-node-mainnet:
-	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
 stop-bitcoin-node-mainnet:
-	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
 clean-bitcoin-node-mainnet:
-	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
+#ETHEREUM
+start-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+stop-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+
+clean-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
 #ZETA
 
@@ -317,7 +326,6 @@ stop-zetacored-rpc-testnet:
 
 clean-zetacored-rpc-testnet:
 	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
-
 
 #FULL-NODE-RPC-FROM-LOCAL-BUILD
 start-zetacored-rpc-mainnet-localbuild:
