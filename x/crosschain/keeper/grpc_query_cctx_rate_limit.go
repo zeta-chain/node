@@ -106,7 +106,6 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	}
 
 	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs
-	// Note: The pending nonces could change during the RPC call, so query them beforehand
 	lowestPendingCctxHeight := int64(0)
 	pendingNoncesMap := make(map[int64]observertypes.PendingNonces)
 	for _, chain := range chains {
