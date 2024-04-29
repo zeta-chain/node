@@ -26,9 +26,9 @@ export declare class GenesisState extends Message<GenesisState> {
   chainStates: ChainState[];
 
   /**
-   * @generated from field: zetachain.zetacore.lightclient.VerificationFlags verification_flags = 3;
+   * @generated from field: repeated zetachain.zetacore.lightclient.VerificationFlags verification_flags = 3;
    */
-  verificationFlags?: VerificationFlags;
+  verificationFlags: VerificationFlags[];
 
   constructor(data?: PartialMessage<GenesisState>);
 

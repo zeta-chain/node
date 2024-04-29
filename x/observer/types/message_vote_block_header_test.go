@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -51,6 +52,17 @@ func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
 			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
 				-1,
+				[]byte{},
+				6,
+				proofs.HeaderData{},
+			),
+			error: true,
+		},
+		{
+			name: "bitcoin chain id",
+			msg: types.NewMsgVoteBlockHeader(
+				sample.AccAddress(),
+				chains.BtcMainnetChain.ChainId,
 				[]byte{},
 				6,
 				proofs.HeaderData{},

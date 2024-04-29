@@ -53602,8 +53602,6 @@ definitions:
         $ref: '#/definitions/chainsConsensus'
       is_external:
         type: boolean
-      is_header_supported:
-        type: boolean
   chainsChainName:
     type: string
     enum:
@@ -54306,7 +54304,9 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
-  lightclientMsgUpdateVerificationFlagsResponse:
+  lightclientMsgDisableVerificationFlagsResponse:
+    type: object
+  lightclientMsgEnableVerificationFlagsResponse:
     type: object
   lightclientQueryAllBlockHeaderResponse:
     type: object
@@ -54347,13 +54347,17 @@ definitions:
     type: object
     properties:
       verification_flags:
-        $ref: '#/definitions/lightclientVerificationFlags'
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientVerificationFlags'
   lightclientVerificationFlags:
     type: object
     properties:
-      ethTypeChainEnabled:
-        type: boolean
-      btcTypeChainEnabled:
+      chain_id:
+        type: string
+        format: int64
+      enabled:
         type: boolean
     title: VerificationFlags is a structure containing information which chain types are enabled for block header verification
   observerAdmin_Policy:

@@ -257,11 +257,6 @@ export declare class Chain extends Message<Chain> {
    */
   isExternal: boolean;
 
-  /**
-   * @generated from field: bool is_header_supported = 8;
-   */
-  isHeaderSupported: boolean;
-
   constructor(data?: PartialMessage<Chain>);
 
   static readonly runtime: typeof proto3;

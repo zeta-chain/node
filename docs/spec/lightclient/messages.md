@@ -1,15 +1,26 @@
 # Messages
 
-## MsgUpdateVerificationFlags
+## MsgEnableVerificationFlags
 
-UpdateVerificationFlags updates the light client verification flags.
-This disables/enables blocks verification of the light client for the specified chain.
-Emergency group can disable flags, it requires operational group if at least one flag is being enabled
+EnableVerificationFlags enables the verification flags for the given chain IDs
+Enabled chains allow the submissions of block headers and using it to verify the correctness of proofs
 
 ```proto
-message MsgUpdateVerificationFlags {
+message MsgEnableVerificationFlags {
 	string creator = 1;
-	VerificationFlags verification_flags = 2;
+	int64 chain_id_list = 2;
+}
+```
+
+## MsgDisableVerificationFlags
+
+DisableVerificationFlags disables the verification flags for the given chain IDs
+Disabled chains do not allow the submissions of block headers or using it to verify the correctness of proofs
+
+```proto
+message MsgDisableVerificationFlags {
+	string creator = 1;
+	int64 chain_id_list = 2;
 }
 ```
 

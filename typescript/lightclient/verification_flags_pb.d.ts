@@ -13,14 +13,14 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  */
 export declare class VerificationFlags extends Message<VerificationFlags> {
   /**
-   * @generated from field: bool ethTypeChainEnabled = 1;
+   * @generated from field: int64 chain_id = 1;
    */
-  ethTypeChainEnabled: boolean;
+  chainId: bigint;
 
   /**
-   * @generated from field: bool btcTypeChainEnabled = 2;
+   * @generated from field: bool enabled = 2;
    */
-  btcTypeChainEnabled: boolean;
+  enabled: boolean;
 
   constructor(data?: PartialMessage<VerificationFlags>);
 

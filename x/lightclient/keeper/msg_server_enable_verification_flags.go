@@ -8,9 +8,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-// UpdateVerificationFlags updates the light client verification flags.
-// This disables/enables blocks verification of the light client for the specified chain.
-// Emergency group can disable flags, it requires operational group if at least one flag is being enabled
+// EnableVerificationFlags enables the verification flags for the given chain IDs
+// Enabled chains allow the submissions of block headers and using it to verify the correctness of proofs
 func (k msgServer) EnableVerificationFlags(goCtx context.Context, msg *types.MsgEnableVerificationFlags) (
 	*types.MsgEnableVerificationFlagsResponse,
 	error,

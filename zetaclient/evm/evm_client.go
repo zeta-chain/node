@@ -840,7 +840,7 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
 		verificationFlags, found := ob.coreContext.GetVerificationFlags(ob.chain.ChainId)
-		if found && verificationFlags.Enabled && chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) {
+		if found && verificationFlags.Enabled && chains.IsHeaderSupportedChain(ob.chain.ChainId) {
 			// post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {

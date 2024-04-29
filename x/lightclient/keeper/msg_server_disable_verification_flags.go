@@ -8,6 +8,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
+// DisableVerificationFlags disables the verification flags for the given chain IDs
+// Disabled chains do not allow the submissions of block headers or using it to verify the correctness of proofs
 func (k msgServer) DisableVerificationFlags(goCtx context.Context, msg *types.MsgDisableVerificationFlags) (*types.MsgDisableVerificationFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

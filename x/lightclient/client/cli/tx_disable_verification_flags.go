@@ -13,8 +13,8 @@ import (
 
 func CmdDisableVerificationFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "disable-verification-flags [list of chainid]",
-		Short: "Enable verification flags list of chains separated by comma and enabled flag",
+		Use:   "disable-verification-flags [list of chain-id]",
+		Short: "Disable verification flags for the list of chains separated by comma",
 		Long: `Provide a list of chain ids separated by comma to enable block header verification for the specified chain ids.
 
   				Example:

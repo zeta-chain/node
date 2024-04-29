@@ -304,9 +304,9 @@ export declare class QueryVerificationFlagsRequest extends Message<QueryVerifica
  */
 export declare class QueryVerificationFlagsResponse extends Message<QueryVerificationFlagsResponse> {
   /**
-   * @generated from field: zetachain.zetacore.lightclient.VerificationFlags verification_flags = 1;
+   * @generated from field: repeated zetachain.zetacore.lightclient.VerificationFlags verification_flags = 1;
    */
-  verificationFlags?: VerificationFlags;
+  verificationFlags: VerificationFlags[];
 
   constructor(data?: PartialMessage<QueryVerificationFlagsResponse>);
 
