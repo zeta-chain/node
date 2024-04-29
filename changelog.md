@@ -44,6 +44,7 @@
 * [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
+* [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
 
 ### Features
 

@@ -1,18 +1,15 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// ZEVMDepositAndCallContract deposits ZETA to the to address if its an account
-// If it's not an account it calls onReceive function of the connector contract and provides the address as the destinationAddress
+// ZETADepositAndCallContract deposits native ZETA to the to address if its an account or if the account does not exist yet
+// If it's not an account it calls onReceive function of the connector contract and provides the address as the destinationAddress .The amount of tokens is minted to the fungible module account, wrapped and sent to the contract
 func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
@@ -32,8 +29,8 @@ func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 	return k.CallOnReceiveZevmConnector(ctx, sender.Bytes(), big.NewInt(inboundSenderChainID), to, inboundAmount, data, indexBytes)
 }
 
-// ZEVMRevertAndCallContract deposits ZETA to the sender address if its an account
-// If it's not an account it calls onRevert function of the connector contract and provides the sender address as the zetaTxSenderAddress
+// ZETARevertAndCallContract deposits native ZETA to the sender address if its account or if the account does not exist yet
+// If it's not an account it calls onRevert function of the connector contract and provides the sender address as the zetaTxSenderAddress.The amount of tokens is minted to the fungible module account, wrapped and sent to the contract
 func (k Keeper) ZETARevertAndCallContract(ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
@@ -43,10 +40,7 @@ func (k Keeper) ZETARevertAndCallContract(ctx sdk.Context,
 	data []byte,
 	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	acc := k.evmKeeper.GetAccount(ctx, sender)
-	if acc == nil {
-		return nil, errors.Wrap(types.ErrAccountNotFound, fmt.Sprintf("address: %s", to.String()))
-	}
-	if !acc.IsContract() {
+	if acc == nil || !acc.IsContract() {
 		err := k.DepositCoinZeta(ctx, sender, remainingAmount)
 		if err != nil {
 			return nil, err

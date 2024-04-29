@@ -44,6 +44,7 @@ const (
 	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
 	TestBitcoinDepositName          = "bitcoin_deposit"
 	TestZetaDepositName             = "zeta_deposit"
+	TestZetaDepositNewAddressName   = "zeta_deposit_new_address"
 	TestZetaDepositRestrictedName   = "zeta_deposit_restricted"
 
 	TestDonationEtherName = "donation_ether"
@@ -120,6 +121,14 @@ var AllE2ETests = []runner.E2ETest{
 			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestZetaDepositNewAddressName,
+		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaDepositNewAddress,
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawBTCRevertName,
