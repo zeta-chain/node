@@ -49,7 +49,7 @@ func (k Keeper) GetAllVerificationFlags(ctx sdk.Context) (verificationFlags []ty
 // It returns an error if the chain is not enabled
 func (k Keeper) CheckVerificationFlagsEnabled(ctx sdk.Context, chainID int64) error {
 	verificationFlags, found := k.GetVerificationFlags(ctx, chainID)
-	if !found || verificationFlags.Enabled != true {
+	if !found || !verificationFlags.Enabled {
 		return cosmoserrors.Wrapf(
 			types.ErrBlockHeaderVerificationDisabled,
 			"proof verification not enabled for,chain id: %d",
