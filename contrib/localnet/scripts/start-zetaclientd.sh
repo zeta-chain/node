@@ -34,7 +34,7 @@ if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/*
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
-    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
+    zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
 
     # check if the option is additional-evm
    # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
