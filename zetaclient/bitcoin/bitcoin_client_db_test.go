@@ -58,8 +58,7 @@ func (suite *BitcoinClientDBTestSuite) SetupTest() {
 	}
 }
 
-func (suite *BitcoinClientDBTestSuite) TearDownSuite() {
-}
+func (suite *BitcoinClientDBTestSuite) TearDownSuite() {}
 
 func (suite *BitcoinClientDBTestSuite) TestSubmittedTx() {
 	var submittedTransactions []clienttypes.TransactionResultSQLType

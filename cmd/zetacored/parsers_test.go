@@ -31,7 +31,6 @@ func TestParsefileToObserverMapper(t *testing.T) {
 
 func createObserverList(fp string) {
 	var listReader []ObserverInfoReader
-	//listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain.ChainId, common.ZetaChain().ChainId}
 	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
 	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
 	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))

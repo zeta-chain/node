@@ -6,6 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 )
 
+// BurnRate calculates the average burn rate for a range of blocks.
 type BurnRate struct {
 	blockLow   int64
 	blockHigh  int64
@@ -14,6 +15,7 @@ type BurnRate struct {
 	queue      []int64
 }
 
+// NewBurnRate creates a new BurnRate instance with a window size.
 func NewBurnRate(windowSize int64) *BurnRate {
 	return &BurnRate{
 		blockLow:   1,
@@ -24,9 +26,8 @@ func NewBurnRate(windowSize int64) *BurnRate {
 	}
 }
 
-// AddFee - adds fee amount spent on a tx for a particular block. It is added to a queue which is used to calculate
-//
-//	the average burn rate for a range of blocks determined by the window size.
+// AddFee adds fee amount spent on a tx for a particular block. It is added to a queue which is used to calculate
+// the average burn rate for a range of blocks determined by the window size.
 func (br *BurnRate) AddFee(amount int64, block int64) error {
 	// Check if block is in range of the window
 	if block < br.blockLow {
@@ -58,9 +59,8 @@ func (br *BurnRate) AddFee(amount int64, block int64) error {
 	return nil
 }
 
-// enqueueEntry - add fee entry into queue if is in range of the window. A padding is added if the block height is
-//
-//	more than one block greater than the highest range.
+// enqueueEntry adds fee entry into queue if is in range of the window. A padding is added if the block height is
+// more than one block greater than the highest range.
 func (br *BurnRate) enqueueEntry(block int64, amount int64) error {
 	diff := block - br.blockHigh
 	if diff < 1 {
@@ -82,7 +82,8 @@ func (br *BurnRate) enqueueEntry(block int64, amount int64) error {
 	return nil
 }
 
-// dequeueOldEntries - when the window slides forward, older entries in the queue need to be cleared.
+// dequeueOldEntries dequeues old entries
+// when the window slides forward, older entries in the queue need to be cleared.
 func (br *BurnRate) dequeueOldEntries() error {
 	diff := br.blockHigh - br.blockLow
 	if diff < br.windowSize {
@@ -102,7 +103,7 @@ func (br *BurnRate) dequeueOldEntries() error {
 	return nil
 }
 
-// GetBurnRate - calculate current burn rate and return the value.
+// GetBurnRate calculates current burn rate and return the value.
 func (br *BurnRate) GetBurnRate() sdkmath.Int {
 	if br.blockHigh < br.windowSize {
 		return sdkmath.NewInt(br.total).QuoRaw(br.blockHigh)

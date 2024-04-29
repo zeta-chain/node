@@ -53,7 +53,7 @@ func (msg *MsgVoteBlockHeader) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
-	if !chains.IsHeaderSupportedChain(msg.ChainId) {
+	if !chains.IsHeaderSupportedChain(msg.ChainId) && !chains.IsBitcoinChain(msg.ChainId) {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
 	}
 
