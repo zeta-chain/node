@@ -1,13 +1,16 @@
 package app
 
 import (
+	"os"
+
+	"golang.org/x/exp/slices"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -17,12 +20,11 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
+
+const releaseVersion = "v17"
 
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
@@ -53,26 +55,66 @@ func SetupHandlers(app *App) {
 		}
 	}
 	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-	app.UpgradeKeeper.SetUpgradeHandler(constant.Version, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Running upgrade handler for " + constant.Version)
-		// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
-		baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
-		// Updated version map to the latest consensus versions from each module
-		for m, mb := range app.mm.Modules {
-			if module, ok := mb.(module.HasConsensusVersion); ok {
-				vm[m] = module.ConsensusVersion()
+	needsForcedMigration := []string{
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		stakingtypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		emissionstypes.ModuleName,
+	}
+	allUpgrades := upgradeTracker{
+		upgrades: []upgradeTrackerItem{
+			{
+				index: 1714664193,
+				storeUpgrade: &storetypes.StoreUpgrades{
+					Added: []string{consensustypes.ModuleName, crisistypes.ModuleName},
+				},
+				upgradeHandler: func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error) {
+					// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module
+					// https://docs.cosmos.network/main/build/migrations/upgrading#xconsensus
+					baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
+
+					// empty version map happens when upgrading from old versions which did not correctly call
+					// app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap()) in InitChainer.
+					// we must populate the version map if we detect this scenario
+					//
+					// this will only happen on the first upgrade. mainnet and testnet will not require this condition.
+					if len(vm) == 0 {
+						for m, mb := range app.mm.Modules {
+							if module, ok := mb.(module.HasConsensusVersion); ok {
+								if slices.Contains(needsForcedMigration, m) {
+									vm[m] = module.ConsensusVersion() - 1
+								} else {
+									vm[m] = module.ConsensusVersion()
+								}
+							}
+						}
+					}
+					return vm, nil
+				},
+			},
+		},
+	}
+
+	_, useDevelopTracker := os.LookupEnv("ZETACORED_USE_DEVELOP_UPGRADE_TRACKER")
+	upgradeHandlerFns, storeUpgrades, err := allUpgrades.getUpgrades(useDevelopTracker)
+	if err != nil {
+		panic(err)
+	}
+
+	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Running upgrade handler for " + releaseVersion)
+
+		var err error
+		for _, upgradeHandler := range upgradeHandlerFns {
+			vm, err = upgradeHandler(ctx, vm)
+			if err != nil {
+				return vm, err
 			}
 		}
-
-		VersionMigrator{v: vm}.TriggerMigration(authtypes.ModuleName)
-		VersionMigrator{v: vm}.TriggerMigration(banktypes.ModuleName)
-		VersionMigrator{v: vm}.TriggerMigration(stakingtypes.ModuleName)
-		VersionMigrator{v: vm}.TriggerMigration(distrtypes.ModuleName)
-		VersionMigrator{v: vm}.TriggerMigration(slashingtypes.ModuleName)
-		VersionMigrator{v: vm}.TriggerMigration(govtypes.ModuleName)
-		VersionMigrator{v: vm}.TriggerMigration(crisistypes.ModuleName)
-
-		VersionMigrator{v: vm}.TriggerMigration(emissionstypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
@@ -96,15 +138,6 @@ func SetupHandlers(app *App) {
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
 		// so that new stores start with the correct version (the current height of chain),
 		// instead the default which is the latest version that store last committed i.e 0 for new stores.
-		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
-}
-
-type VersionMigrator struct {
-	v module.VersionMap
-}
-
-func (v VersionMigrator) TriggerMigration(moduleName string) module.VersionMap {
-	v.v[moduleName] = v.v[moduleName] - 1
-	return v.v
 }
