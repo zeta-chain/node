@@ -189,7 +189,8 @@ func (NetworkType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_236b85e7bff6130d, []int{3}
 }
 
-// Vm represents the virtual machine type of the chain to support smart contracts
+// Vm represents the virtual machine type of the chain to support smart
+// contracts
 type Vm int32
 
 const (

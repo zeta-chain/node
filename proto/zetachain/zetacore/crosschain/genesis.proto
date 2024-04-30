@@ -23,5 +23,5 @@ message GenesisState {
   repeated InTxTracker in_tx_tracker_list = 11 [ (gogoproto.nullable) = false ];
   ZetaAccounting zeta_accounting = 12 [ (gogoproto.nullable) = false ];
   repeated string FinalizedInbounds = 16;
-  RateLimiterFlags rate_limiter_flags = 17 [(gogoproto.nullable) = false];
+  RateLimiterFlags rate_limiter_flags = 17 [ (gogoproto.nullable) = false ];
 }

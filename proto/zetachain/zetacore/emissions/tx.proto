@@ -25,7 +25,7 @@ message MsgWithdrawEmissionResponse {}
 
 message MsgUpdateParams {
   string authority = 1;
-  Params params = 2 [(gogoproto.nullable) = false];
+  Params params = 2 [ (gogoproto.nullable) = false ];
 }
 
 message MsgUpdateParamsResponse {}

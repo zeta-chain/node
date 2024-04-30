@@ -114,13 +114,16 @@ service Query {
   }
 
   // Queries a list of pending cctxs.
-  rpc ListPendingCctx(QueryListPendingCctxRequest) returns (QueryListPendingCctxResponse) {
+  rpc ListPendingCctx(QueryListPendingCctxRequest)
+      returns (QueryListPendingCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/pendingCctx";
   }
 
   // Queries a list of pending cctxs within rate limit.
-  rpc ListPendingCctxWithinRateLimit(QueryListPendingCctxWithinRateLimitRequest) returns (QueryListPendingCctxWithinRateLimitResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/pendingCctxWithinRateLimit";
+  rpc ListPendingCctxWithinRateLimit(QueryListPendingCctxWithinRateLimitRequest)
+      returns (QueryListPendingCctxWithinRateLimitResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/crosschain/pendingCctxWithinRateLimit";
   }
 
   rpc ZetaAccounting(QueryZetaAccountingRequest)
@@ -135,7 +138,8 @@ service Query {
   }
 
   // Queries the rate limiter flags
-  rpc RateLimiterFlags(QueryRateLimiterFlagsRequest) returns (QueryRateLimiterFlagsResponse) {
+  rpc RateLimiterFlags(QueryRateLimiterFlagsRequest)
+      returns (QueryRateLimiterFlagsResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/rateLimiterFlags";
   }
 }
@@ -266,9 +270,7 @@ message QueryListPendingCctxResponse {
   uint64 totalPending = 2;
 }
 
-message QueryListPendingCctxWithinRateLimitRequest {
-  uint32 limit = 1;
-}
+message QueryListPendingCctxWithinRateLimitRequest { uint32 limit = 1; }
 
 message QueryListPendingCctxWithinRateLimitResponse {
   repeated CrossChainTx cross_chain_tx = 1;
@@ -293,12 +295,10 @@ message QueryConvertGasToZetaResponse {
 
 message QueryMessagePassingProtocolFeeRequest {}
 
-message QueryMessagePassingProtocolFeeResponse {
-  string feeInZeta = 1;
-}
+message QueryMessagePassingProtocolFeeResponse { string feeInZeta = 1; }
 
 message QueryRateLimiterFlagsRequest {}
 
 message QueryRateLimiterFlagsResponse {
-  RateLimiterFlags rateLimiterFlags = 1 [(gogoproto.nullable) = false];
+  RateLimiterFlags rateLimiterFlags = 1 [ (gogoproto.nullable) = false ];
 }

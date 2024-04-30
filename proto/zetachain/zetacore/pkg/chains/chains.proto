@@ -54,7 +54,8 @@ enum NetworkType {
   devnet = 3;
 }
 
-// Vm represents the virtual machine type of the chain to support smart contracts
+// Vm represents the virtual machine type of the chain to support smart
+// contracts
 enum Vm {
   option (gogoproto.goproto_enum_stringer) = true;
   no_vm = 0;
@@ -72,12 +73,14 @@ enum Consensus {
 //    Chain represents a blockchain network with its unique chain ID
 //    ChainName is the name of the chain
 //    ChainId is the unique identifier of the chain
-//    Network is the network type of the chain , this can be ZETA, ETH, BSC, BTC, POLYGON
-//    NetworkType is the network type of the chain, this can be MAINNET, TESTNET, DEVNET, PRIVNET
-//    Vm is the virtual machine type of the chain to support smart contracts, this can be EVM, NO_VM
-//    Consensus is the consensus algorithm used by the chain, this can be Tendermint, Ethereum, Bitcoin
-//    IsExternal is a boolean value to determine if the chain is external to Zeta
-//    IsHeaderSupported is a boolean value to determine if the chain supports headers
+//    Network is the network type of the chain , this can be ZETA, ETH, BSC,
+//    BTC, POLYGON NetworkType is the network type of the chain, this can be
+//    MAINNET, TESTNET, DEVNET, PRIVNET Vm is the virtual machine type of the
+//    chain to support smart contracts, this can be EVM, NO_VM Consensus is the
+//    consensus algorithm used by the chain, this can be Tendermint, Ethereum,
+//    Bitcoin IsExternal is a boolean value to determine if the chain is
+//    external to Zeta IsHeaderSupported is a boolean value to determine if the
+//    chain supports headers
 
 message Chain {
   ChainName chain_name = 1;

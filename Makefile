@@ -155,16 +155,17 @@ protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 protoImageCi=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user root $(protoImageName)
 
-proto-gen:
+proto-format:
+	@echo "Formatting Protobuf files"
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+
+proto-gen: proto-format
 	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protoc-gen-go.sh
 
-proto-gen-ci:
+proto-gen-ci: proto-format
 	@echo "Generating Protobuf files"
 	@$(protoImageCi) sh ./scripts/protoc-gen-go.sh
-
-proto-format:
-	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
 openapi:
 	@echo "--> Generating OpenAPI specs"

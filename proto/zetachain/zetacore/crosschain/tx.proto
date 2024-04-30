@@ -29,9 +29,11 @@ service Msg {
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
 
   rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
-  rpc RefundAbortedCCTX(MsgRefundAbortedCCTX) returns (MsgRefundAbortedCCTXResponse);
+  rpc RefundAbortedCCTX(MsgRefundAbortedCCTX)
+      returns (MsgRefundAbortedCCTXResponse);
 
-  rpc UpdateRateLimiterFlags(MsgUpdateRateLimiterFlags) returns (MsgUpdateRateLimiterFlagsResponse);
+  rpc UpdateRateLimiterFlags(MsgUpdateRateLimiterFlags)
+      returns (MsgUpdateRateLimiterFlagsResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -178,7 +180,7 @@ message MsgRefundAbortedCCTXResponse {}
 
 message MsgUpdateRateLimiterFlags {
   string creator = 1;
-  RateLimiterFlags rate_limiter_flags = 2 [(gogoproto.nullable) = false];
+  RateLimiterFlags rate_limiter_flags = 2 [ (gogoproto.nullable) = false ];
 }
 
 message MsgUpdateRateLimiterFlagsResponse {}
