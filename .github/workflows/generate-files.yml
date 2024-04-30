@@ -18,7 +18,9 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: Generate Go code, docs and specs
-        run: make generate
+        env:
+          TEST_ENV: ${{ github.workspace }}
+        run: make generate-ci
 
       - name: Check for changes
         run: |

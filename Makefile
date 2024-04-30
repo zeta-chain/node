@@ -6,6 +6,7 @@ BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS:=""
+REPOSITORY_ROOT := $(dir $(abspath $(MAKEFILE_LIST)))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
@@ -152,10 +153,15 @@ typescript:
 protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImageCi=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user root $(protoImageName)
 
 proto-gen:
 	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protoc-gen-go.sh
+
+proto-gen-ci:
+	@echo "Generating Protobuf files"
+	@$(protoImageCi) sh ./scripts/protoc-gen-go.sh
 
 proto-format:
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
@@ -182,6 +188,9 @@ mocks:
 
 generate: proto-gen openapi specs typescript docs-zetacored
 .PHONY: generate
+
+generate-ci: proto-gen-ci openapi specs typescript docs-zetacored
+.PHONY: generate-ci
 
 ###############################################################################
 ###                         E2E tests and localnet                          ###
