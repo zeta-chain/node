@@ -23,7 +23,7 @@ func (k Keeper) GasPriceAll(c context.Context, req *types.QueryAllGasPriceReques
 	store := ctx.KVStore(k.storeKey)
 	gasPriceStore := prefix.NewStore(store, types.KeyPrefix(types.GasPriceKey))
 
-	pageRes, err := query.Paginate(gasPriceStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(gasPriceStore, req.Pagination, func(_ []byte, value []byte) error {
 		var gasPrice types.GasPrice
 		if err := k.cdc.Unmarshal(value, &gasPrice); err != nil {
 			return err

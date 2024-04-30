@@ -21,7 +21,7 @@ import (
 func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 	// load archived ZetaSent intx, receipt and cctx
 	// https://etherscan.io/tx/0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	confirmation := uint64(10)
 	chainID := chain.ChainId
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
@@ -72,7 +72,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 	// load archived ERC20 intx, receipt and cctx
 	// https://etherscan.io/tx/0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	confirmation := uint64(10)
 	chainID := chain.ChainId
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
@@ -123,7 +123,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 	// load archived Gas intx, receipt and cctx
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	confirmation := uint64(10)
 	chainID := chain.ChainId
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
@@ -187,7 +187,7 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	// load archived ZetaSent receipt
 	// https://etherscan.io/tx/0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76
 	chainID := int64(1)
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	intxHash := "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76"
 	receipt := testutils.LoadEVMIntxReceipt(t, chainID, intxHash, coin.CoinType_Zeta)
 	cctx := testutils.LoadCctxByIntx(t, chainID, coin.CoinType_Zeta, intxHash)
@@ -233,7 +233,7 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	// load archived Deposited receipt
 	// https://etherscan.io/tx/0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	chainID := chain.ChainId
 	intxHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
 	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, coin.CoinType_ERC20)
@@ -278,7 +278,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	// load archived gas token transfer to TSS
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	chainID := chain.ChainId
 	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
 	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, coin.CoinType_Gas)
@@ -327,7 +327,7 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 
 func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	chainID := chain.ChainId
 	confirmation := uint64(1)
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)

@@ -14,7 +14,6 @@ func TestKeeper_GetAllForeignCoins(t *testing.T) {
 	fc.ForeignChainId = 101
 	k.GetFungibleKeeper().SetForeignCoins(ctx, fc)
 
-	res, err := k.GetAllForeignCoins(ctx)
-	require.NoError(t, err)
+	res := k.GetAllForeignCoins(ctx)
 	require.Equal(t, 1, len(res))
 }

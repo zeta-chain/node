@@ -22,7 +22,7 @@ func (k Keeper) ChainStateAll(c context.Context, req *types.QueryAllChainStateRe
 	chainStateStore := prefix.NewStore(store, types.KeyPrefix(types.ChainStateKey))
 
 	var chainStates []types.ChainState
-	pageRes, err := query.Paginate(chainStateStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(chainStateStore, req.Pagination, func(_ []byte, value []byte) error {
 		var chainState types.ChainState
 		if err := k.cdc.Unmarshal(value, &chainState); err != nil {
 			return err

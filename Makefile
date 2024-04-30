@@ -24,6 +24,8 @@ TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger
 HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
+export DOCKER_BUILDKIT := 1
+
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
 clean-binaries:
@@ -178,7 +180,7 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto openapi specs typescript docs-zetacored
+generate: proto-gen openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################

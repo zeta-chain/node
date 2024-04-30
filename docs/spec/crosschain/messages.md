@@ -260,3 +260,15 @@ message MsgRefundAbortedCCTX {
 }
 ```
 
+## MsgUpdateRateLimiterFlags
+
+UpdateRateLimiterFlags updates the rate limiter flags.
+Authorized: admin policy operational.
+
+```proto
+message MsgUpdateRateLimiterFlags {
+	string creator = 1;
+	RateLimiterFlags rate_limiter_flags = 2;
+}
+```
+

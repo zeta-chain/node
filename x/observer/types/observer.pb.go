@@ -86,6 +86,7 @@ func (ObserverUpdateReason) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_05af1bc65780862e, []int{1}
 }
 
+// Deprecated: Use ObserverSet instead to get the list of observers
 type ObserverMapper struct {
 	Index         string        `protobuf:"bytes,1,opt,name=index,proto3" json:"index,omitempty"`
 	ObserverChain *chains.Chain `protobuf:"bytes,2,opt,name=observer_chain,json=observerChain,proto3" json:"observer_chain,omitempty"`

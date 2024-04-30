@@ -15,7 +15,7 @@ func CmdGasStabilityPoolAddress() *cobra.Command {
 		Use:   "gas-stability-pool-address",
 		Short: "query the address of a gas stability pool",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
@@ -74,7 +74,7 @@ func CmdGasStabilityPoolBalances() *cobra.Command {
 		Use:   "gas-stability-pool-balances",
 		Short: "query all gas stability pool balances",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)

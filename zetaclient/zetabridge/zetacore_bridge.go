@@ -6,18 +6,13 @@ import (
 	"time"
 
 	"cosmossdk.io/simapp/params"
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
@@ -109,16 +104,6 @@ func NewZetaCoreBridge(
 		enableMockSDKClient: false,
 		mockSDKClient:       nil,
 	}, nil
-}
-
-// MakeLegacyCodec creates codec
-func MakeLegacyCodec() *codec.LegacyAmino {
-	cdc := codec.NewLegacyAmino()
-	banktypes.RegisterLegacyAminoCodec(cdc)
-	authtypes.RegisterLegacyAminoCodec(cdc)
-	sdk.RegisterLegacyAminoCodec(cdc)
-	crosschaintypes.RegisterCodec(cdc)
-	return cdc
 }
 
 func (b *ZetaCoreBridge) GetLogger() *zerolog.Logger {

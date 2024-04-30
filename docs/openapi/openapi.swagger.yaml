@@ -28374,32 +28374,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/cctxPending:
-    get:
-      summary: Queries a list of pending cctxs.
-      operationId: Query_CctxListPending
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryListCctxPendingResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: chain_id
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: limit
-          in: query
-          required: false
-          type: integer
-          format: int64
-      tags:
-        - Query
   /zeta-chain/crosschain/convertGasToZeta:
     get:
       operationId: Query_ConvertGasToZeta
@@ -28965,6 +28939,53 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/crosschain/pendingCctx:
+    get:
+      summary: Queries a list of pending cctxs.
+      operationId: Query_ListPendingCctx
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryListPendingCctxResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/crosschain/pendingCctxWithinRateLimit:
+    get:
+      summary: Queries a list of pending cctxs within rate limit.
+      operationId: Query_ListPendingCctxWithinRateLimit
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryListPendingCctxWithinRateLimitResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          format: int64
+      tags:
+        - Query
   /zeta-chain/crosschain/protocolFee:
     get:
       operationId: Query_ProtocolFee
@@ -28973,6 +28994,21 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/crosschainQueryMessagePassingProtocolFeeResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/crosschain/rateLimiterFlags:
+    get:
+      summary: Queries the rate limiter flags
+      operationId: Query_RateLimiterFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryRateLimiterFlagsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -29017,6 +29053,21 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/emissionsQueryListPoolAddressesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/emissions/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: Query_Params
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryParamsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -56290,6 +56341,18 @@ definitions:
       chain_id:
         type: string
         format: int64
+      network:
+        $ref: '#/definitions/chainsNetwork'
+      network_type:
+        $ref: '#/definitions/chainsNetworkType'
+      vm:
+        $ref: '#/definitions/chainsVm'
+      consensus:
+        $ref: '#/definitions/chainsConsensus'
+      is_external:
+        type: boolean
+      is_header_supported:
+        type: boolean
   chainsChainName:
     type: string
     enum:
@@ -56311,14 +56374,49 @@ definitions:
       - btc_regtest
       - amoy_testnet
     default: empty
+    title: ChainName represents the name of the chain
+  chainsConsensus:
+    type: string
+    enum:
+      - ethereum
+      - tendermint
+      - bitcoin
+    default: ethereum
+    title: Consensus represents the consensus algorithm used by the chain
+  chainsNetwork:
+    type: string
+    enum:
+      - eth
+      - zeta
+      - btc
+      - polygon
+      - bsc
+    default: eth
+    title: Network represents the network type of the chain
+  chainsNetworkType:
+    type: string
+    enum:
+      - mainnet
+      - testnet
+      - privnet
+      - devnet
+    default: mainnet
+    title: NetworkType represents the network type of the chain
   chainsReceiveStatus:
     type: string
     enum:
-      - Created
-      - Success
-      - Failed
-    default: Created
-    title: '- Created: some observer sees inbound tx'
+      - created
+      - success
+      - failed
+    default: created
+    title: '- created: some observer sees inbound tx'
+  chainsVm:
+    type: string
+    enum:
+      - no_vm
+      - evm
+    default: no_vm
+    title: Vm represents the virtual machine type of the chain to support smart contracts
   coinCoinType:
     type: string
     enum:
@@ -56348,6 +56446,13 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
+  crosschainConversion:
+    type: object
+    properties:
+      zrc20:
+        type: string
+      rate:
+        type: string
   crosschainCrossChainTx:
     type: object
     properties:
@@ -56477,6 +56582,8 @@ definitions:
   crosschainMsgRefundAbortedCCTXResponse:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
+    type: object
+  crosschainMsgUpdateRateLimiterFlagsResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
     type: object
@@ -56681,7 +56788,7 @@ definitions:
       Height:
         type: string
         format: int64
-  crosschainQueryListCctxPendingResponse:
+  crosschainQueryListPendingCctxResponse:
     type: object
     properties:
       CrossChainTx:
@@ -56692,16 +56799,52 @@ definitions:
       totalPending:
         type: string
         format: uint64
+  crosschainQueryListPendingCctxWithinRateLimitResponse:
+    type: object
+    properties:
+      cross_chain_tx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
+      total_pending:
+        type: string
+        format: uint64
+      rate_limit_exceeded:
+        type: boolean
   crosschainQueryMessagePassingProtocolFeeResponse:
     type: object
     properties:
       feeInZeta:
         type: string
+  crosschainQueryRateLimiterFlagsResponse:
+    type: object
+    properties:
+      rateLimiterFlags:
+        $ref: '#/definitions/crosschainRateLimiterFlags'
   crosschainQueryZetaAccountingResponse:
     type: object
     properties:
       aborted_zeta_amount:
         type: string
+  crosschainRateLimiterFlags:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      window:
+        type: string
+        format: int64
+        title: window in blocks
+      rate:
+        type: string
+        title: rate in azeta per block
+      conversions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainConversion'
+        title: conversion in azeta per token
   crosschainTxFinalizationStatus:
     type: string
     enum:
@@ -56730,8 +56873,35 @@ definitions:
       ed25519:
         type: string
     title: PubKeySet contains two pub keys , secp256k1 and ed25519
+  emissionsMsgUpdateParamsResponse:
+    type: object
   emissionsMsgWithdrawEmissionResponse:
     type: object
+  emissionsParams:
+    type: object
+    properties:
+      max_bond_factor:
+        type: string
+      min_bond_factor:
+        type: string
+      avg_block_time:
+        type: string
+      target_bond_ratio:
+        type: string
+      validator_emission_percentage:
+        type: string
+      observer_emission_percentage:
+        type: string
+      tss_signer_emission_percentage:
+        type: string
+      duration_factor_constant:
+        type: string
+      observer_slash_amount:
+        type: string
+      ballot_maturity_blocks:
+        type: string
+        format: int64
+    description: Params defines the parameters for the module.
   emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:
@@ -56750,6 +56920,13 @@ definitions:
         type: string
       emission_module_address:
         type: string
+  emissionsQueryParamsResponse:
+    type: object
+    properties:
+      params:
+        $ref: '#/definitions/emissionsParams'
+        description: params holds all the parameters of this module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   emissionsQueryShowAvailableEmissionsResponse:
     type: object
     properties:

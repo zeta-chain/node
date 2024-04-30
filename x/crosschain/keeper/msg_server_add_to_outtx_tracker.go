@@ -41,7 +41,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 
 	// tracker submission is only allowed when the cctx is pending
-	if !IsPending(*cctx.CrossChainTx) {
+	if !IsPending(cctx.CrossChainTx) {
 		// garbage tracker (for any reason) is harmful to outTx observation and should be removed if it exists
 		// it if does not exist, RemoveOutTxTracker is a no-op
 		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)

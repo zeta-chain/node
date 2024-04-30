@@ -51,7 +51,7 @@ IterateChains:
 	for _, chain := range chains {
 		// support only external evm chains
 		if zetachains.IsEVMChain(chain.ChainId) && !zetachains.IsZetaChain(chain.ChainId) {
-			res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
+			res, err := k.ListPendingCctx(sdk.UnwrapSDKContext(ctx), &types.QueryListPendingCctxRequest{
 				ChainId: chain.ChainId,
 				Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
 			})

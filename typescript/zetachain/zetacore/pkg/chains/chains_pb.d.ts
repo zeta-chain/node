@@ -13,22 +13,24 @@ export declare enum ReceiveStatus {
   /**
    * some observer sees inbound tx
    *
-   * @generated from enum value: Created = 0;
+   * @generated from enum value: created = 0;
    */
-  Created = 0,
+  created = 0,
 
   /**
-   * @generated from enum value: Success = 1;
+   * @generated from enum value: success = 1;
    */
-  Success = 1,
+  success = 1,
 
   /**
-   * @generated from enum value: Failed = 2;
+   * @generated from enum value: failed = 2;
    */
-  Failed = 2,
+  failed = 2,
 }
 
 /**
+ * ChainName represents the name of the chain
+ *
  * @generated from enum zetachain.zetacore.pkg.chains.ChainName
  */
 export declare enum ChainName {
@@ -119,6 +121,104 @@ export declare enum ChainName {
 }
 
 /**
+ * Network represents the network type of the chain
+ *
+ * @generated from enum zetachain.zetacore.pkg.chains.Network
+ */
+export declare enum Network {
+  /**
+   * @generated from enum value: eth = 0;
+   */
+  eth = 0,
+
+  /**
+   * @generated from enum value: zeta = 1;
+   */
+  zeta = 1,
+
+  /**
+   * @generated from enum value: btc = 2;
+   */
+  btc = 2,
+
+  /**
+   * @generated from enum value: polygon = 3;
+   */
+  polygon = 3,
+
+  /**
+   * @generated from enum value: bsc = 4;
+   */
+  bsc = 4,
+}
+
+/**
+ * NetworkType represents the network type of the chain
+ *
+ * @generated from enum zetachain.zetacore.pkg.chains.NetworkType
+ */
+export declare enum NetworkType {
+  /**
+   * @generated from enum value: mainnet = 0;
+   */
+  mainnet = 0,
+
+  /**
+   * @generated from enum value: testnet = 1;
+   */
+  testnet = 1,
+
+  /**
+   * @generated from enum value: privnet = 2;
+   */
+  privnet = 2,
+
+  /**
+   * @generated from enum value: devnet = 3;
+   */
+  devnet = 3,
+}
+
+/**
+ * Vm represents the virtual machine type of the chain to support smart contracts
+ *
+ * @generated from enum zetachain.zetacore.pkg.chains.Vm
+ */
+export declare enum Vm {
+  /**
+   * @generated from enum value: no_vm = 0;
+   */
+  no_vm = 0,
+
+  /**
+   * @generated from enum value: evm = 1;
+   */
+  evm = 1,
+}
+
+/**
+ * Consensus represents the consensus algorithm used by the chain
+ *
+ * @generated from enum zetachain.zetacore.pkg.chains.Consensus
+ */
+export declare enum Consensus {
+  /**
+   * @generated from enum value: ethereum = 0;
+   */
+  ethereum = 0,
+
+  /**
+   * @generated from enum value: tendermint = 1;
+   */
+  tendermint = 1,
+
+  /**
+   * @generated from enum value: bitcoin = 2;
+   */
+  bitcoin = 2,
+}
+
+/**
  * @generated from message zetachain.zetacore.pkg.chains.Chain
  */
 export declare class Chain extends Message<Chain> {
@@ -131,6 +231,36 @@ export declare class Chain extends Message<Chain> {
    * @generated from field: int64 chain_id = 2;
    */
   chainId: bigint;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.chains.Network network = 3;
+   */
+  network: Network;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.chains.NetworkType network_type = 4;
+   */
+  networkType: NetworkType;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.chains.Vm vm = 5;
+   */
+  vm: Vm;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.chains.Consensus consensus = 6;
+   */
+  consensus: Consensus;
+
+  /**
+   * @generated from field: bool is_external = 7;
+   */
+  isExternal: boolean;
+
+  /**
+   * @generated from field: bool is_header_supported = 8;
+   */
+  isHeaderSupported: boolean;
 
   constructor(data?: PartialMessage<Chain>);
 

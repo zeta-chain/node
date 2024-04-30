@@ -11,6 +11,7 @@ import type { CrossChainTx, ZetaAccounting } from "./cross_chain_tx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
+import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
  * GenesisState defines the metacore module's genesis state.
@@ -57,6 +58,11 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated string FinalizedInbounds = 16;
    */
   FinalizedInbounds: string[];
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.RateLimiterFlags rate_limiter_flags = 17;
+   */
+  rateLimiterFlags?: RateLimiterFlags;
 
   constructor(data?: PartialMessage<GenesisState>);
 

@@ -110,7 +110,7 @@ func ChainParamsSupported(chainID int64) *types.ChainParams {
 }
 
 func ChainParamsList() (cpl types.ChainParamsList) {
-	chainList := chains.PrivnetChainList()
+	chainList := chains.ChainListByNetworkType(chains.NetworkType_privnet)
 
 	for _, chain := range chainList {
 		cpl.ChainParams = append(cpl.ChainParams, ChainParams(chain.ChainId))
@@ -263,4 +263,14 @@ func VotesSuccessOnly(voteCount int) []types.VoteType {
 		votes[i] = types.VoteType_SuccessObservation
 	}
 	return votes
+}
+
+func NonceToCCTX(t *testing.T, seed string) types.NonceToCctx {
+	r := newRandFromStringSeed(t, seed)
+	return types.NonceToCctx{
+		ChainId:   r.Int63(),
+		Nonce:     r.Int63(),
+		CctxIndex: StringRandom(r, 64),
+		Tss:       Tss().TssPubkey,
+	}
 }

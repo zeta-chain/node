@@ -43,6 +43,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.GasPrice(t, "1"),
 					sample.GasPrice(t, "2"),
 				},
+				RateLimiterFlags: sample.RateLimiterFlags(),
 			},
 			valid: true,
 		},
@@ -56,6 +57,21 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						Index: "0",
 					},
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "duplicated outTxTracker",
+			genState: &types.GenesisState{
+				OutTxTrackerList: []types.OutTxTracker{
+					{
+						Index: "0",
+					},
+				},
+				RateLimiterFlags: types.RateLimiterFlags{
+					Enabled: true,
+					Window:  -1,
 				},
 			},
 			valid: false,

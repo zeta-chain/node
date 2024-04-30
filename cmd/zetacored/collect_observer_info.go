@@ -14,7 +14,7 @@ func CollectObserverInfoCmd() *cobra.Command {
 		Use:   "collect-observer-info [folder]",
 		Short: "collect observer info from a folder , default path is ~/.zetacored/os_info/ \n",
 		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			defaultHome := app.DefaultNodeHome
 			defaultFile := filepath.Join(defaultHome, "os_info")
 			if len(args) == 0 {

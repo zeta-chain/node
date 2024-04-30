@@ -22,18 +22,18 @@ import (
 )
 
 // getValidEthChainID get a valid eth chain id
-func getValidEthChainID(t *testing.T) int64 {
-	return getValidEthChain(t).ChainId
+func getValidEthChainID() int64 {
+	return getValidEthChain().ChainId
 }
 
-// getValidEthChain get a valid eth chain
-func getValidEthChain(_ *testing.T) *chains.Chain {
-	goerli := chains.GoerliLocalnetChain()
+// getValidEthChain() get a valid eth chain
+func getValidEthChain() *chains.Chain {
+	goerli := chains.GoerliLocalnetChain
 	return &goerli
 }
 
 func getValidBTCChain() *chains.Chain {
-	btcRegNet := chains.BtcRegtestChain()
+	btcRegNet := chains.BtcRegtestChain
 	return &btcRegNet
 }
 
@@ -45,9 +45,9 @@ func getValidBtcChainID() int64 {
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
 	case 0:
-		return chains.GoerliLocalnetChain().ChainId
+		return chains.GoerliLocalnetChain.ChainId
 	case 1:
-		return chains.GoerliChain().ChainId
+		return chains.GoerliChain.ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}

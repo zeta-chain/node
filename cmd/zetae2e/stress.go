@@ -252,7 +252,7 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := runner.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
+			cctxResp, err := runner.CctxClient.ListPendingCctx(context.Background(), &crosschaintypes.QueryListPendingCctxRequest{
 				ChainId: chainID.Int64(),
 			})
 			if err != nil {

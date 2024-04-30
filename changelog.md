@@ -6,10 +6,10 @@
 * Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
 
 ### Features
-* [2039](https://github.com/zeta-chain/node/pull/2039) - cosmos v0.47 upgrade
+* [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
+* [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
 
 ### Refactor
-* [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
 * [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
 
 ## Unreleased
@@ -55,6 +55,8 @@
 * [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync and remove fungible params
 * [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
+* [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
+* [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 
 ### Features
 
@@ -64,7 +66,11 @@
 * [1942](https://github.com/zeta-chain/node/pull/1982) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
+* [1979](https://github.com/zeta-chain/node/pull/1979) - add script to import genesis data into an existing genesis file
 * [2006](https://github.com/zeta-chain/node/pull/2006) - add Amoy testnet static chain information
+* [2045](https://github.com/zeta-chain/node/pull/2046) - add grpc query with outbound rate limit for zetaclient to use
+* [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
+* [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
 
 ### Tests
 
@@ -89,16 +95,18 @@
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
+* [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
 
 ### Fixes
 
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
-* [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
+* [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check `IsSupported` flag to pause/unpause a specific chain
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 * [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags
 * [1970](https://github.com/zeta-chain/node/issues/1970) - remove the timeout in the evm outtx tracker processing thread
+* [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
 
 ### Chores
 
@@ -117,8 +125,7 @@
 ## Version: v15.0.0
 
 ### Features
-
-*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+* [1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
 
 ## Version: v14.0.1
 

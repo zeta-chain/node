@@ -30,7 +30,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryGetPoliciesRequest is the request type for the Query/Policies RPC method.
+// QueryGetPoliciesRequest is the request type for the Query/Policies RPC
+// method.
 type QueryGetPoliciesRequest struct {
 }
 
@@ -67,7 +68,8 @@ func (m *QueryGetPoliciesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryGetPoliciesRequest proto.InternalMessageInfo
 
-// QueryGetPoliciesResponse is the response type for the Query/Policies RPC method.
+// QueryGetPoliciesResponse is the response type for the Query/Policies RPC
+// method.
 type QueryGetPoliciesResponse struct {
 	Policies Policies `protobuf:"bytes,1,opt,name=policies,proto3" json:"policies"`
 }

@@ -8,6 +8,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
 // Msg defines the Msg service.
 service Msg {
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
   rpc WithdrawEmission(MsgWithdrawEmission)
       returns (MsgWithdrawEmissionResponse);
 }
@@ -21,3 +22,10 @@ message MsgWithdrawEmission {
 }
 
 message MsgWithdrawEmissionResponse {}
+
+message MsgUpdateParams {
+  string authority = 1;
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateParamsResponse {}

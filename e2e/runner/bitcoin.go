@@ -393,7 +393,7 @@ func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 
 	// verify merkle proof through RPC
 	res, err := runner.LightclientClient.Prove(runner.Ctx, &lightclienttypes.QueryProveRequest{
-		ChainId:   chains.BtcRegtestChain().ChainId,
+		ChainId:   chains.BtcRegtestChain.ChainId,
 		TxHash:    txHash.String(),
 		BlockHash: blockHash.String(),
 		Proof:     proofs.NewBitcoinProof(txBytes, path, index),

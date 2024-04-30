@@ -3,6 +3,7 @@ package sample
 import (
 	"testing"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -20,6 +21,35 @@ func ForeignCoins(t *testing.T, address string) types.ForeignCoins {
 		CoinType:             coin.CoinType_ERC20,
 		GasLimit:             r.Uint64(),
 	}
+}
+
+func ForeignCoinList(t *testing.T, zrc20ETH, zrc20BTC, zrc20ERC20, erc20Asset string) []types.ForeignCoins {
+	// eth and btc chain id
+	ethChainID := chains.GoerliLocalnetChain.ChainId
+	btcChainID := chains.BtcRegtestChain.ChainId
+
+	// add zrc20 ETH
+	fcGas := ForeignCoins(t, zrc20ETH)
+	fcGas.Asset = ""
+	fcGas.ForeignChainId = ethChainID
+	fcGas.Decimals = 18
+	fcGas.CoinType = coin.CoinType_Gas
+
+	// add zrc20 BTC
+	fcBTC := ForeignCoins(t, zrc20BTC)
+	fcBTC.Asset = ""
+	fcBTC.ForeignChainId = btcChainID
+	fcBTC.Decimals = 8
+	fcBTC.CoinType = coin.CoinType_Gas
+
+	// add zrc20 ERC20
+	fcERC20 := ForeignCoins(t, zrc20ERC20)
+	fcERC20.Asset = erc20Asset
+	fcERC20.ForeignChainId = ethChainID
+	fcERC20.Decimals = 6
+	fcERC20.CoinType = coin.CoinType_ERC20
+
+	return []types.ForeignCoins{fcGas, fcBTC, fcERC20}
 }
 
 func SystemContract() *types.SystemContract {

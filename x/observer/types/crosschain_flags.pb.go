@@ -34,7 +34,8 @@ type GasPriceIncreaseFlags struct {
 	// Maximum gas price increase in percent of the median gas price
 	// Default is used if 0
 	GasPriceIncreaseMax uint32 `protobuf:"varint,4,opt,name=gasPriceIncreaseMax,proto3" json:"gasPriceIncreaseMax,omitempty"`
-	// Maximum number of pending crosschain transactions to check for gas price increase
+	// Maximum number of pending crosschain transactions to check for gas price
+	// increase
 	MaxPendingCctxs uint32 `protobuf:"varint,5,opt,name=maxPendingCctxs,proto3" json:"maxPendingCctxs,omitempty"`
 }
 
