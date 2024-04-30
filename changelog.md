@@ -10,6 +10,7 @@
 
 ### Refactor
 * [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
+* [2094](https://github.com/zeta-chain/node/pull/2094) - update go-tss
 
 ## Unreleased
 ### Breaking Changes
