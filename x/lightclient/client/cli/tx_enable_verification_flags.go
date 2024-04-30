@@ -29,7 +29,7 @@ func CmdEnableVerificationFlags() *cobra.Command {
 				return err
 			}
 
-			chainIDs := strings.Split(args[0], ",")
+			chainIDs := strings.Split(strings.TrimSpace(args[0]), ",")
 			var chainIDList []int64
 			for _, chainID := range chainIDs {
 				chainIDInt, err := strconv.ParseInt(chainID, 10, 64)
