@@ -39,7 +39,7 @@ require (
 	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/go-tss v0.1.1-0.20240429184752-956bf16839a2
+	github.com/zeta-chain/go-tss v0.1.1-0.20240430111318-1785e48eb127
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
