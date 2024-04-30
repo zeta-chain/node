@@ -17,13 +17,13 @@ func TestReceiveStatusFromString(t *testing.T) {
 		{
 			name:    "success",
 			str:     "0",
-			want:    chains.ReceiveStatus_Success,
+			want:    chains.ReceiveStatus_success,
 			wantErr: false,
 		},
 		{
 			name:    "failed",
 			str:     "1",
-			want:    chains.ReceiveStatus_Failed,
+			want:    chains.ReceiveStatus_failed,
 			wantErr: false,
 		},
 		{

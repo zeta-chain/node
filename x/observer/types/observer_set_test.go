@@ -23,10 +23,10 @@ func TestObserverSet(t *testing.T) {
 }
 
 func TestCheckReceiveStatus(t *testing.T) {
-	err := types.CheckReceiveStatus(chains.ReceiveStatus_Success)
+	err := types.CheckReceiveStatus(chains.ReceiveStatus_success)
 	require.NoError(t, err)
-	err = types.CheckReceiveStatus(chains.ReceiveStatus_Failed)
+	err = types.CheckReceiveStatus(chains.ReceiveStatus_failed)
 	require.NoError(t, err)
-	err = types.CheckReceiveStatus(chains.ReceiveStatus_Created)
+	err = types.CheckReceiveStatus(chains.ReceiveStatus_created)
 	require.Error(t, err)
 }

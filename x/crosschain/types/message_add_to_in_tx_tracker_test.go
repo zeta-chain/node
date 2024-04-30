@@ -24,7 +24,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: types.NewMsgAddToInTxTracker(
 				"invalid_address",
-				chains.GoerliChain().ChainId,
+				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -44,17 +44,17 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			name: "invalid proof",
 			msg: &types.MsgAddToInTxTracker{
 				Creator:  sample.AccAddress(),
-				ChainId:  chains.ZetaTestnetChain().ChainId,
+				ChainId:  chains.ZetaTestnetChain.ChainId,
 				CoinType: coin.CoinType_Gas,
 				Proof:    &proofs.Proof{},
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", chains.ZetaTestnetChain().ChainId),
+			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", chains.ZetaTestnetChain.ChainId),
 		},
 		{
 			name: "invalid coin type",
 			msg: &types.MsgAddToInTxTracker{
 				Creator:  sample.AccAddress(),
-				ChainId:  chains.ZetaTestnetChain().ChainId,
+				ChainId:  chains.ZetaTestnetChain.ChainId,
 				CoinType: 5,
 			},
 			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "coin-type not supported"),
@@ -63,7 +63,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			name: "valid",
 			msg: types.NewMsgAddToInTxTracker(
 				sample.AccAddress(),
-				chains.GoerliChain().ChainId,
+				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -93,7 +93,7 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgAddToInTxTracker(
 				signer,
-				chains.GoerliChain().ChainId,
+				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -103,7 +103,7 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgAddToInTxTracker(
 				"invalid_address",
-				chains.GoerliChain().ChainId,
+				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -128,7 +128,7 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 func TestMsgAddToInTxTracker_Type(t *testing.T) {
 	msg := types.NewMsgAddToInTxTracker(
 		sample.AccAddress(),
-		chains.GoerliChain().ChainId,
+		chains.GoerliChain.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
@@ -138,7 +138,7 @@ func TestMsgAddToInTxTracker_Type(t *testing.T) {
 func TestMsgAddToInTxTracker_Route(t *testing.T) {
 	msg := types.NewMsgAddToInTxTracker(
 		sample.AccAddress(),
-		chains.GoerliChain().ChainId,
+		chains.GoerliChain.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
@@ -148,7 +148,7 @@ func TestMsgAddToInTxTracker_Route(t *testing.T) {
 func TestMsgAddToInTxTracker_GetSignBytes(t *testing.T) {
 	msg := types.NewMsgAddToInTxTracker(
 		sample.AccAddress(),
-		chains.GoerliChain().ChainId,
+		chains.GoerliChain.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)

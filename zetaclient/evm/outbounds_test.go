@@ -30,8 +30,8 @@ func getContractsByChainID(chainID int64) (*zetaconnector.ZetaConnectorNonEth, e
 func Test_IsOutboundProcessed(t *testing.T) {
 	// load archived outtx receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.EthChain()
-	chainID := chains.EthChain().ChainId
+	chain := chains.EthChain
+	chainID := chains.EthChain.ChainId
 	nonce := uint64(9718)
 	chainParam := stub.MockChainParams(chain.ChainId, 1)
 	outtxHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
@@ -107,8 +107,8 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	// load archived outtx receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.EthChain()
-	chainID := chains.EthChain().ChainId
+	chain := chains.EthChain
+	chainID := chains.EthChain.ChainId
 	nonce := uint64(9718)
 	chainParam := stub.MockChainParams(chain.ChainId, 1)
 	outtxHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
@@ -145,7 +145,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 	// Note: outtx of Gas/ERC20 token can also be used for this test
 	// load archived cctx, outtx and receipt for a ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.EthChain()
+	chain := chains.EthChain
 	nonce := uint64(9718)
 	coinType := coin.CoinType_Zeta
 	cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, chain.ChainId, nonce, testutils.EventZetaReceived)
@@ -153,7 +153,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 	t.Run("post vote outbound successfully", func(t *testing.T) {
 		// the amount and status to be used for vote
 		receiveValue := cctx.GetCurrentOutTxParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_Success
+		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetaBridge and post outbound vote
 		zetaBridge := stub.NewMockZetaCoreBridge()
@@ -169,7 +169,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 func Test_ParseZetaReceived(t *testing.T) {
 	// load archived outtx receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chainID := chains.EthChain().ChainId
+	chainID := chains.EthChain.ChainId
 	nonce := uint64(9718)
 	outtxHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
 	connector := stub.MockConnectorNonEth(chainID)
@@ -230,7 +230,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 
 func Test_ParseZetaReverted(t *testing.T) {
 	// load archived outtx receipt that contains ZetaReverted event
-	chainID := chains.GoerliLocalnetChain().ChainId
+	chainID := chains.GoerliLocalnetChain.ChainId
 	nonce := uint64(14)
 	outtxHash := "0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7"
 	connector := stub.MockConnectorNonEth(chainID)
@@ -282,7 +282,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 
 func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	// load archived outtx receipt that contains ERC20 Withdrawn event
-	chainID := chains.EthChain().ChainId
+	chainID := chains.EthChain.ChainId
 	nonce := uint64(8014)
 	outtxHash := "0xd2eba7ac3da1b62800165414ea4bcaf69a3b0fb9b13a0fc32f4be11bfef79146"
 	custody := stub.MockERC20Custody(chainID)
@@ -338,7 +338,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 }
 
 func Test_ParseOuttxReceivedValue(t *testing.T) {
-	chainID := chains.EthChain().ChainId
+	chainID := chains.EthChain.ChainId
 	connector, connectorAddr, custody, custodyAddr := getContractsByChainID(chainID)
 
 	t.Run("should parse and check ZetaReceived event from archived outtx receipt", func(t *testing.T) {
@@ -351,12 +351,12 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should parse and check ZetaReverted event from archived outtx receipt", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReverted event
 		// use local network tx: 0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7
-		localChainID := chains.GoerliLocalnetChain().ChainId
+		localChainID := chains.GoerliLocalnetChain.ChainId
 		nonce := uint64(14)
 		coinType := coin.CoinType_Zeta
 		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(localChainID)
@@ -366,7 +366,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 			cctx, receipt, outtx, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should parse and check ERC20 Withdrawn event from archived outtx receipt", func(t *testing.T) {
 		// load archived outtx receipt that contains ERC20 Withdrawn event
@@ -378,7 +378,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("nothing to parse if coinType is Gas", func(t *testing.T) {
 		// load archived outtx receipt of Gas token transfer
@@ -390,7 +390,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
-		require.Equal(t, chains.ReceiveStatus_Success, status)
+		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should fail on unknown coin type", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReceived event
@@ -401,7 +401,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.ErrorContains(t, err, "unknown coin type")
 		require.Nil(t, value)
-		require.Equal(t, chains.ReceiveStatus_Failed, status)
+		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReceived event
@@ -415,7 +415,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, fakeConnectorAddress, connector, custodyAddr, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
-		require.Equal(t, chains.ReceiveStatus_Failed, status)
+		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 	t.Run("should fail if unable to parse ERC20 Withdrawn event", func(t *testing.T) {
 		// load archived outtx receipt that contains ERC20 Withdrawn event
@@ -429,6 +429,6 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, fakeCustodyAddress, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
-		require.Equal(t, chains.ReceiveStatus_Failed, status)
+		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 }
