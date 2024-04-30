@@ -7,7 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { BlockHeader } from "../pkg/proofs/proofs_pb.js";
 import type { ChainState } from "./chain_state_pb.js";
-import type { VerificationFlags } from "./verification_flags_pb.js";
+import type { BlockHeaderVerification } from "./verification_flags_pb.js";
 
 /**
  * GenesisState defines the lightclient module's genesis state.
@@ -26,9 +26,9 @@ export declare class GenesisState extends Message<GenesisState> {
   chainStates: ChainState[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.lightclient.VerificationFlags verification_flags = 3;
+   * @generated from field: zetachain.zetacore.lightclient.BlockHeaderVerification block_header_verification = 3;
    */
-  verificationFlags: VerificationFlags[];
+  blockHeaderVerification?: BlockHeaderVerification;
 
   constructor(data?: PartialMessage<GenesisState>);
 

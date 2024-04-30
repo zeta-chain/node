@@ -1,18 +1,18 @@
-# tx lightclient enable-verification-flags
+# tx lightclient disable-header-verification
 
-Enable verification flags for the list of chains separated by comma
+Disable header verification for the list of chains separated by comma
 
 ### Synopsis
 
-Provide a list of chain ids separated by comma to enable block header verification for the specified chain ids.
+Provide a list of chain ids separated by comma to disable block header verification for the specified chain ids.
 
   				Example:
-                    To enable verification flags for chain ids 1 and 56
-					zetacored tx lightclient enable-verification-flags "1,56"
+                    To disable verification flags for chain ids 1 and 56
+					zetacored tx lightclient disable-header-verification "1,56"
 				
 
 ```
-zetacored tx lightclient enable-verification-flags [list of chain-id] [flags]
+zetacored tx lightclient disable-header-verification [list of chain-id] [flags]
 ```
 
 ### Options
@@ -30,7 +30,7 @@ zetacored tx lightclient enable-verification-flags [list of chain-id] [flags]
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for enable-verification-flags
+  -h, --help                     help for disable-header-verification
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device

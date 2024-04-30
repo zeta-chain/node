@@ -27674,12 +27674,12 @@ paths:
         - Query
   /zeta-chain/lightclient/verification_flags:
     get:
-      operationId: Query_VerificationFlags
+      operationId: Query_HeaderEnabledChains
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryVerificationFlagsResponse'
+            $ref: '#/definitions/lightclientQueryHeaderEnabledChainsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -54304,9 +54304,18 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
-  lightclientMsgDisableVerificationFlagsResponse:
+  lightclientEnabledChain:
     type: object
-  lightclientMsgEnableVerificationFlagsResponse:
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      enabled:
+        type: boolean
+    title: VerificationFlags is a structure containing information of weather a chain is enabled or not for block header verification
+  lightclientMsgDisableHeaderVerificationResponse:
+    type: object
+  lightclientMsgEnableHeaderVerificationResponse:
     type: object
   lightclientQueryAllBlockHeaderResponse:
     type: object
@@ -54338,28 +54347,19 @@ definitions:
     properties:
       chain_state:
         $ref: '#/definitions/lightclientChainState'
+  lightclientQueryHeaderEnabledChainsResponse:
+    type: object
+    properties:
+      enabled_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientEnabledChain'
   lightclientQueryProveResponse:
     type: object
     properties:
       valid:
         type: boolean
-  lightclientQueryVerificationFlagsResponse:
-    type: object
-    properties:
-      verification_flags:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/lightclientVerificationFlags'
-  lightclientVerificationFlags:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      enabled:
-        type: boolean
-    title: VerificationFlags is a structure containing information of weather a chain is enabled or not for block header verification
   observerAdmin_Policy:
     type: object
     properties:

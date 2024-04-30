@@ -9,9 +9,9 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 /**
  * VerificationFlags is a structure containing information of weather a chain is enabled or not for block header verification
  *
- * @generated from message zetachain.zetacore.lightclient.VerificationFlags
+ * @generated from message zetachain.zetacore.lightclient.EnabledChain
  */
-export declare class VerificationFlags extends Message<VerificationFlags> {
+export declare class EnabledChain extends Message<EnabledChain> {
   /**
    * @generated from field: int64 chain_id = 1;
    */
@@ -22,18 +22,42 @@ export declare class VerificationFlags extends Message<VerificationFlags> {
    */
   enabled: boolean;
 
-  constructor(data?: PartialMessage<VerificationFlags>);
+  constructor(data?: PartialMessage<EnabledChain>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.VerificationFlags";
+  static readonly typeName = "zetachain.zetacore.lightclient.EnabledChain";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): VerificationFlags;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EnabledChain;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): VerificationFlags;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EnabledChain;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): VerificationFlags;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EnabledChain;
 
-  static equals(a: VerificationFlags | PlainMessage<VerificationFlags> | undefined, b: VerificationFlags | PlainMessage<VerificationFlags> | undefined): boolean;
+  static equals(a: EnabledChain | PlainMessage<EnabledChain> | undefined, b: EnabledChain | PlainMessage<EnabledChain> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.BlockHeaderVerification
+ */
+export declare class BlockHeaderVerification extends Message<BlockHeaderVerification> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.lightclient.EnabledChain enabled_chains = 1;
+   */
+  enabledChains: EnabledChain[];
+
+  constructor(data?: PartialMessage<BlockHeaderVerification>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.BlockHeaderVerification";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): BlockHeaderVerification;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): BlockHeaderVerification;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): BlockHeaderVerification;
+
+  static equals(a: BlockHeaderVerification | PlainMessage<BlockHeaderVerification> | undefined, b: BlockHeaderVerification | PlainMessage<BlockHeaderVerification> | undefined): boolean;
 }
 

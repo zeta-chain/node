@@ -8,7 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { BlockHeader, Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ChainState } from "./chain_state_pb.js";
-import type { VerificationFlags } from "./verification_flags_pb.js";
+import type { EnabledChain } from "./verification_flags_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.lightclient.QueryAllBlockHeaderRequest
@@ -281,45 +281,45 @@ export declare class QueryProveResponse extends Message<QueryProveResponse> {
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.QueryVerificationFlagsRequest
+ * @generated from message zetachain.zetacore.lightclient.QueryHeaderEnabledChainsRequest
  */
-export declare class QueryVerificationFlagsRequest extends Message<QueryVerificationFlagsRequest> {
-  constructor(data?: PartialMessage<QueryVerificationFlagsRequest>);
+export declare class QueryHeaderEnabledChainsRequest extends Message<QueryHeaderEnabledChainsRequest> {
+  constructor(data?: PartialMessage<QueryHeaderEnabledChainsRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.QueryVerificationFlagsRequest";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryHeaderEnabledChainsRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryVerificationFlagsRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHeaderEnabledChainsRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryVerificationFlagsRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryVerificationFlagsRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsRequest;
 
-  static equals(a: QueryVerificationFlagsRequest | PlainMessage<QueryVerificationFlagsRequest> | undefined, b: QueryVerificationFlagsRequest | PlainMessage<QueryVerificationFlagsRequest> | undefined): boolean;
+  static equals(a: QueryHeaderEnabledChainsRequest | PlainMessage<QueryHeaderEnabledChainsRequest> | undefined, b: QueryHeaderEnabledChainsRequest | PlainMessage<QueryHeaderEnabledChainsRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.QueryVerificationFlagsResponse
+ * @generated from message zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse
  */
-export declare class QueryVerificationFlagsResponse extends Message<QueryVerificationFlagsResponse> {
+export declare class QueryHeaderEnabledChainsResponse extends Message<QueryHeaderEnabledChainsResponse> {
   /**
-   * @generated from field: repeated zetachain.zetacore.lightclient.VerificationFlags verification_flags = 1;
+   * @generated from field: repeated zetachain.zetacore.lightclient.EnabledChain enabled_chains = 1;
    */
-  verificationFlags: VerificationFlags[];
+  enabledChains: EnabledChain[];
 
-  constructor(data?: PartialMessage<QueryVerificationFlagsResponse>);
+  constructor(data?: PartialMessage<QueryHeaderEnabledChainsResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.QueryVerificationFlagsResponse";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryVerificationFlagsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHeaderEnabledChainsResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryVerificationFlagsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryVerificationFlagsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsResponse;
 
-  static equals(a: QueryVerificationFlagsResponse | PlainMessage<QueryVerificationFlagsResponse> | undefined, b: QueryVerificationFlagsResponse | PlainMessage<QueryVerificationFlagsResponse> | undefined): boolean;
+  static equals(a: QueryHeaderEnabledChainsResponse | PlainMessage<QueryHeaderEnabledChainsResponse> | undefined, b: QueryHeaderEnabledChainsResponse | PlainMessage<QueryHeaderEnabledChainsResponse> | undefined): boolean;
 }
 

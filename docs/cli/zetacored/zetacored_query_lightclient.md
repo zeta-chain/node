@@ -29,5 +29,5 @@ zetacored query lightclient [flags]
 * [zetacored query lightclient list-chain-state](zetacored_query_lightclient_list-chain-state.md)	 - List all the chain states
 * [zetacored query lightclient show-block-header](zetacored_query_lightclient_show-block-header.md)	 - Show a block header from its hash
 * [zetacored query lightclient show-chain-state](zetacored_query_lightclient_show-chain-state.md)	 - Show a chain state from its chain id
-* [zetacored query lightclient show-verification-flags](zetacored_query_lightclient_show-verification-flags.md)	 - Show the verification flags
+* [zetacored query lightclient show-header-enabled-chains](zetacored_query_lightclient_show-header-enabled-chains.md)	 - Show the verification flags
 
