@@ -152,7 +152,7 @@ typescript:
 
 protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(PWD):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --rm -v $(GITHUB_WORKSPACE):/workspace --workdir /workspace $(protoImageName)
 
 proto-gen:
 	@echo "Generating Protobuf files"
