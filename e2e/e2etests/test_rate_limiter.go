@@ -14,20 +14,50 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const RateLimiterWithdrawNumber = 5
+// WithdrawType is the type of withdraw to perform in the test
+type withdrawType string
 
-// rateLimiterFlags are the rate limiter flags for the test
-var rateLimiterFlags = crosschaintypes.RateLimiterFlags{
-	Enabled: true,
-	Rate:    sdk.NewUint(1e17).MulUint64(5), // this value is used so rate is reached
-	Window:  10,
-}
+const (
+	withdrawTypeZETA  withdrawType = "ZETA"
+	withdrawTypeETH   withdrawType = "ETH"
+	withdrawTypeERC20 withdrawType = "ERC20"
+
+	rateLimiterWithdrawNumber = 5
+)
 
 func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("TestRateLimiter")
 
-	// deposit and approve 50 WZETA for the tests
-	r.DepositAndApproveWZeta(big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50)))
+	// rateLimiterFlags are the rate limiter flags for the test
+	rateLimiterFlags := crosschaintypes.RateLimiterFlags{
+		Enabled: true,
+		Rate:    sdk.NewUint(1e17).MulUint64(5), // 0.5 ZETA this value is used so rate is reached
+		Window:  10,
+		Conversions: []crosschaintypes.Conversion{
+			{
+				Zrc20: r.ETHZRC20Addr.Hex(),
+				Rate:  sdk.NewDec(2), // 1 ETH = 2 ZETA
+			},
+			{
+				Zrc20: r.ERC20ZRC20Addr.Hex(),
+				Rate:  sdk.NewDec(1).QuoInt64(2), // 2 USDC = 1 ZETA
+			},
+		},
+	}
+
+	// these are the amounts for the withdraws for the different types
+	// currently these are arbitrary values that can be fine-tuned for manual testing of rate limiter
+	// the current values are defined such as: ZETA takes more time than usual, ETH takes a bit less time and ERC20 are processed immediately
+	// TODO: define more rigorous assertions with proper values
+	// https://github.com/zeta-chain/node/issues/2090
+	zetaAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(3))
+	ethAmount := big.NewInt(1e18)
+	erc20Amount := big.NewInt(1e6)
+
+	// approve tokens for the tests
+	if err := approveTokens(r); err != nil {
+		panic(err)
+	}
 
 	// add liquidity in the pool to prevent high slippage in WZETA/gas pair
 	if err := addZetaGasLiquidity(r); err != nil {
@@ -45,7 +75,13 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	// TODO: define proper assertion to check the rate limiter is working
 	// https://github.com/zeta-chain/node/issues/2090
 	r.Logger.Print("rate limiter enabled")
-	if err := createAndWaitWithdraws(r); err != nil {
+	if err := createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount); err != nil {
+		panic(err)
+	}
+	if err := createAndWaitWithdraws(r, withdrawTypeETH, ethAmount); err != nil {
+		panic(err)
+	}
+	if err := createAndWaitWithdraws(r, withdrawTypeERC20, erc20Amount); err != nil {
 		panic(err)
 	}
 
@@ -55,41 +91,34 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 
-	// Test without rate limiter again
+	// Test without rate limiter again and try again ZETA withdraws
 	r.Logger.Print("rate limiter disabled")
-	if err := createAndWaitWithdraws(r); err != nil {
+	if err := createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount); err != nil {
 		panic(err)
 	}
 }
 
-// setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
-func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimiterFlags) error {
-	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
-	if err != nil {
-		return err
-	}
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgUpdateRateLimiterFlags(
-		adminAddr,
-		flags,
-	))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // createAndWaitWithdraws performs RateLimiterWithdrawNumber withdraws
-func createAndWaitWithdraws(r *runner.E2ERunner) error {
+func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, withdrawAmount *big.Int) error {
 	startTime := time.Now()
 
-	r.Logger.Print("starting %d withdraws", RateLimiterWithdrawNumber)
+	r.Logger.Print("starting %d %s withdraws", rateLimiterWithdrawNumber, withdrawType)
 
 	// Perform RateLimiterWithdrawNumber withdraws to log time for completion
-	txs := make([]*ethtypes.Transaction, RateLimiterWithdrawNumber)
-	for i := 0; i < RateLimiterWithdrawNumber; i++ {
-		amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(3))
-		txs[i] = r.WithdrawZeta(amount, true)
+	txs := make([]*ethtypes.Transaction, rateLimiterWithdrawNumber)
+	for i := 0; i < rateLimiterWithdrawNumber; i++ {
+
+		// create a new withdraw depending on the type
+		switch withdrawType {
+		case withdrawTypeZETA:
+			txs[i] = r.WithdrawZeta(withdrawAmount, true)
+		case withdrawTypeETH:
+			txs[i] = r.WithdrawEther(withdrawAmount)
+		case withdrawTypeERC20:
+			txs[i] = r.WithdrawERC20(withdrawAmount)
+		default:
+			return fmt.Errorf("invalid withdraw type: %s", withdrawType)
+		}
 	}
 
 	// start a error group to wait for all the withdraws to be mined
@@ -100,7 +129,7 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 
 		// start a goroutine to wait for the withdraw to be mined
 		g.Go(func() error {
-			return waitForZetaWithdrawMined(ctx, r, tx, i, startTime)
+			return waitForWithdrawMined(ctx, r, tx, i, startTime)
 		})
 	}
 
@@ -119,13 +148,13 @@ func createAndWaitWithdraws(r *runner.E2ERunner) error {
 	return nil
 }
 
-// waitForZetaWithdrawMined waits for a zeta withdraw to be mined
+// waitForWithdrawMined waits for a withdraw to be mined
 // we first wait to get the receipt
 // NOTE: this could be a more general function but we define it here for this test because we emit in the function logs specific to this test
-func waitForZetaWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+func waitForWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "zeta withdraw")
+	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -142,6 +171,23 @@ func waitForZetaWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *etht
 		return err
 	}
 	r.Logger.Print("cctx %d mined in %vs at block %d", index, duration, block)
+
+	return nil
+}
+
+// setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
+func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimiterFlags) error {
+	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
+	if err != nil {
+		return err
+	}
+	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgUpdateRateLimiterFlags(
+		adminAddr,
+		flags,
+	))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -198,6 +244,42 @@ func addZetaGasLiquidity(r *runner.E2ERunner) error {
 	if receipt.Status != 1 {
 		return fmt.Errorf("add liquidity failed")
 	}
+
+	return nil
+}
+
+// approveTokens approves the tokens for the tests
+func approveTokens(r *runner.E2ERunner) error {
+	// deposit and approve 50 WZETA for the tests
+	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
+	r.DepositAndApproveWZeta(approveAmount)
+
+	// approve ETH for withdraws
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approveAmount)
+	if err != nil {
+		return fmt.Errorf("error approving ETH: %w", err)
+	}
+	r.Logger.EVMTransaction(*tx, "approve")
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	if receipt.Status == 0 {
+		return fmt.Errorf("eth approve failed")
+	}
+	r.Logger.EVMReceipt(*receipt, "approve")
+
+	// approve ETH for ERC20 withdraws (this is for the gas fees)
+	tx, err = r.ETHZRC20.Approve(r.ZEVMAuth, r.ERC20ZRC20Addr, approveAmount)
+	if err != nil {
+		return fmt.Errorf("error approving ERC20: %w", err)
+	}
+
+	r.Logger.EVMTransaction(*tx, "approve")
+
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	if receipt.Status == 0 {
+		return fmt.Errorf("erc 20 approve failed")
+	}
+	r.Logger.EVMReceipt(*receipt, "approve")
 
 	return nil
 }
