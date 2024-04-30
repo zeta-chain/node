@@ -16,7 +16,7 @@ for dir in $proto_dirs; do
     fi
   done
 done
-
+echo */
 cd ..
 echo "$PWD"
 echo */
