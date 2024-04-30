@@ -145,11 +145,6 @@ gosec:
 ###                           Generation commands  		                    ###
 ###############################################################################
 
-typescript:
-	@echo "--> Generating TypeScript bindings"
-	@bash ./scripts/protoc-gen-typescript.sh
-.PHONY: typescript
-
 protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
@@ -158,6 +153,12 @@ protoImageCi=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --u
 proto-format:
 	@echo "Formatting Protobuf files"
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+.PHONY: proto-format
+
+typescript: proto-format
+	@echo "--> Generating TypeScript bindings"
+	@bash ./scripts/protoc-gen-typescript.sh
+.PHONY: typescript
 
 proto-gen: proto-format
 	@echo "Generating Protobuf files"
@@ -167,7 +168,7 @@ proto-gen-ci: proto-format
 	@echo "Generating Protobuf files"
 	@$(protoImageCi) sh ./scripts/protoc-gen-go.sh
 
-openapi:
+openapi: proto-format
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
 .PHONY: openapi

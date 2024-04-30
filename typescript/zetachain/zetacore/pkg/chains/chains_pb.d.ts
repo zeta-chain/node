@@ -180,7 +180,8 @@ export declare enum NetworkType {
 }
 
 /**
- * Vm represents the virtual machine type of the chain to support smart contracts
+ * Vm represents the virtual machine type of the chain to support smart
+ * contracts
  *
  * @generated from enum zetachain.zetacore.pkg.chains.Vm
  */

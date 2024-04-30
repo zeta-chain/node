@@ -56416,7 +56416,9 @@ definitions:
       - no_vm
       - evm
     default: no_vm
-    title: Vm represents the virtual machine type of the chain to support smart contracts
+    title: |-
+      Vm represents the virtual machine type of the chain to support smart
+      contracts
   coinCoinType:
     type: string
     enum:
