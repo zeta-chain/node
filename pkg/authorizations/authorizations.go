@@ -5,6 +5,7 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func AuthorizationTable() map[string]authoritytypes.PolicyType {
@@ -29,5 +30,14 @@ func AuthorizationTable() map[string]authoritytypes.PolicyType {
 		sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}):    authoritytypes.PolicyType_groupAdmin,
 		sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20LiquidityCap{}): authoritytypes.PolicyType_groupOperational,
 		sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20WithdrawFee{}):  authoritytypes.PolicyType_groupOperational,
+
+		// Observer admin messages
+		sdk.MsgTypeURL(&observertypes.MsgAddObserver{}):           authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}):        authoritytypes.PolicyType_groupAdmin,
+		sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}):     authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}):      authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}):     authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateCrosschainFlags{}): authoritytypes.PolicyType_groupEmergency, // Add conditional logic
+		sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{}):          authoritytypes.PolicyType_groupEmergency,
 	}
 }

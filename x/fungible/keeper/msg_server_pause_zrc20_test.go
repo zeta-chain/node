@@ -12,8 +12,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
-	t.Run("can update the paused status of zrc20", func(t *testing.T) {
+func TestKeeper_PauseZRC20(t *testing.T) {
+	t.Run("can pause zrc20", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
@@ -45,43 +45,24 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		// can pause zrc20
-		_, err := msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err := msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
 			admin,
 			[]string{
 				zrc20A,
 				zrc20B,
 			},
-			types.UpdatePausedStatusAction_PAUSE,
 		))
 		require.NoError(t, err)
 		assertPaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can unpause zrc20
-		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
-			admin,
-			[]string{
-				zrc20A,
-			},
-			types.UpdatePausedStatusAction_UNPAUSE,
-		))
-		require.NoError(t, err)
-		assertUnpaused(zrc20A)
-		assertPaused(zrc20B)
-		assertUnpaused(zrc20C)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-
 		// can pause already paused zrc20
-		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
 			admin,
 			[]string{
 				zrc20B,
 			},
-			types.UpdatePausedStatusAction_PAUSE,
 		))
 		require.NoError(t, err)
 		assertUnpaused(zrc20A)
@@ -89,31 +70,15 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		assertUnpaused(zrc20C)
 
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can unpause already unpaused zrc20
-		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
-			admin,
-			[]string{
-				zrc20C,
-			},
-			types.UpdatePausedStatusAction_UNPAUSE,
-		))
-		require.NoError(t, err)
-		assertUnpaused(zrc20A)
-		assertPaused(zrc20B)
-		assertUnpaused(zrc20C)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		// can pause all zrc20
-		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
 			admin,
 			[]string{
 				zrc20A,
 				zrc20B,
 				zrc20C,
 			},
-			types.UpdatePausedStatusAction_PAUSE,
 		))
 		require.NoError(t, err)
 		assertPaused(zrc20A)
@@ -121,21 +86,6 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		assertPaused(zrc20C)
 
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can unpause all zrc20
-		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
-			admin,
-			[]string{
-				zrc20A,
-				zrc20B,
-				zrc20C,
-			},
-			types.UpdatePausedStatusAction_UNPAUSE,
-		))
-		require.NoError(t, err)
-		assertUnpaused(zrc20A)
-		assertUnpaused(zrc20B)
-		assertUnpaused(zrc20C)
 	})
 
 	t.Run("should fail if invalid message", func(t *testing.T) {
@@ -147,10 +97,10 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 
 		admin := sample.AccAddress()
 
-		invalidMsg := types.NewMsgUpdateZRC20PausedStatus(admin, []string{}, types.UpdatePausedStatusAction_PAUSE)
+		invalidMsg := types.NewMsgPauseZRC20(admin, []string{})
 		require.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
 
-		_, err := msgServer.UpdateZRC20PausedStatus(ctx, invalidMsg)
+		_, err := msgServer.PauseZRC20(ctx, invalidMsg)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
 
@@ -165,21 +115,10 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
 
-		_, err := msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err := msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
 			admin,
 			[]string{sample.EthAddress().String()},
-			types.UpdatePausedStatusAction_PAUSE,
 		))
-		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-
-		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
-			admin,
-			[]string{sample.EthAddress().String()},
-			types.UpdatePausedStatusAction_UNPAUSE,
-		))
-
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
@@ -198,14 +137,13 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20B))
 
-		_, err := msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err := msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
 			admin,
 			[]string{
 				zrc20A,
 				sample.EthAddress().String(),
 				zrc20B,
 			},
-			types.UpdatePausedStatusAction_PAUSE,
 		))
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})

@@ -9,83 +9,65 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func TestMMsgUpdateZRC20PausedStatus_ValidateBasic(t *testing.T) {
+func TestMsgUnpauseZRC20_ValidateBasic(t *testing.T) {
 	tt := []struct {
 		name    string
-		msg     *types.MsgUpdateZRC20PausedStatus
+		msg     *types.MsgPauseZRC20
 		wantErr bool
 	}{
 		{
 			name: "valid pause message",
-			msg: types.NewMsgUpdateZRC20PausedStatus(
+			msg: types.NewMsgPauseZRC20(
 				sample.AccAddress(),
 				[]string{
 					sample.EthAddress().String(),
 					sample.EthAddress().String(),
 					sample.EthAddress().String(),
 				},
-				types.UpdatePausedStatusAction_PAUSE,
 			),
 			wantErr: false,
 		},
 		{
 			name: "valid unpause message",
-			msg: types.NewMsgUpdateZRC20PausedStatus(
+			msg: types.NewMsgPauseZRC20(
 				sample.AccAddress(),
 				[]string{
 					sample.EthAddress().String(),
 					sample.EthAddress().String(),
 					sample.EthAddress().String(),
 				},
-				types.UpdatePausedStatusAction_UNPAUSE,
 			),
 			wantErr: false,
 		},
 		{
 			name: "invalid creator address",
-			msg: types.NewMsgUpdateZRC20PausedStatus(
+			msg: types.NewMsgPauseZRC20(
 				"invalid",
 				[]string{
 					sample.EthAddress().String(),
 					sample.EthAddress().String(),
 					sample.EthAddress().String(),
 				},
-				types.UpdatePausedStatusAction_PAUSE,
 			),
 			wantErr: true,
 		},
 		{
 			name: "invalid empty zrc20 address",
-			msg: types.NewMsgUpdateZRC20PausedStatus(
+			msg: types.NewMsgPauseZRC20(
 				sample.AccAddress(),
 				[]string{},
-				types.UpdatePausedStatusAction_PAUSE,
 			),
 			wantErr: true,
 		},
 		{
 			name: "invalid zrc20 address",
-			msg: types.NewMsgUpdateZRC20PausedStatus(
+			msg: types.NewMsgPauseZRC20(
 				sample.AccAddress(),
 				[]string{
 					sample.EthAddress().String(),
 					"invalid",
 					sample.EthAddress().String(),
 				},
-				types.UpdatePausedStatusAction_PAUSE,
-			),
-			wantErr: true,
-		},
-		{
-			name: "invalid action",
-			msg: types.NewMsgUpdateZRC20PausedStatus(
-				sample.AccAddress(),
-				[]string{
-					sample.EthAddress().String(),
-					sample.EthAddress().String(),
-					sample.EthAddress().String(),
-				},
-				3,
 			),
 			wantErr: true,
 		},
@@ -103,23 +85,23 @@ func TestMMsgUpdateZRC20PausedStatus_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMMsgUpdateZRC20PausedStatus_GetSigners(t *testing.T) {
+func TestMsgUnpauseZRC20_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgUpdateZRC20PausedStatus
+		msg    types.MsgPauseZRC20
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgUpdateZRC20PausedStatus{
+			msg: types.MsgPauseZRC20{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgUpdateZRC20PausedStatus{
+			msg: types.MsgPauseZRC20{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -140,22 +122,22 @@ func TestMMsgUpdateZRC20PausedStatus_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMMsgUpdateZRC20PausedStatus_Type(t *testing.T) {
-	msg := types.MsgUpdateZRC20PausedStatus{
+func TestMsgUnpauseZRC20_Type(t *testing.T) {
+	msg := types.MsgPauseZRC20{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgUpdateZRC20PausedStatus, msg.Type())
+	require.Equal(t, types.TypeMsgPauseZrc20, msg.Type())
 }
 
-func TestMMsgUpdateZRC20PausedStatus_Route(t *testing.T) {
-	msg := types.MsgUpdateZRC20PausedStatus{
+func TestMsgUnpauseZRC20_Route(t *testing.T) {
+	msg := types.MsgPauseZRC20{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMMsgUpdateZRC20PausedStatus_GetSignBytes(t *testing.T) {
-	msg := types.MsgUpdateZRC20PausedStatus{
+func TestMsgUnpauseZRC20_GetSignBytes(t *testing.T) {
+	msg := types.MsgPauseZRC20{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

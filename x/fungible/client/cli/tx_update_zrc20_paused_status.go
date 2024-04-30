@@ -13,12 +13,12 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func CmdUpdateZRC20PausedStatus() *cobra.Command {
+func CmdPauseZRC20() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update-zrc20-paused-status [contractAddress1, contractAddress2, ...] [pausedStatus]",
-		Short:   "Broadcast message UpdateZRC20PausedStatus",
-		Example: `zetacored tx fungible update-zrc20-paused-status "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" 0 `,
-		Args:    cobra.ExactArgs(2),
+		Use:     "pause-zrc20 [contractAddress1, contractAddress2, ...]",
+		Short:   "Broadcast message PauseZRC20",
+		Example: `zetacored tx fungible pause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" `,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -35,15 +35,45 @@ func CmdUpdateZRC20PausedStatus() *cobra.Command {
 				return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action (%d)", action)
 			}
 
-			pausedStatus := types.UpdatePausedStatusAction_PAUSE
-			if action == 1 {
-				pausedStatus = types.UpdatePausedStatusAction_UNPAUSE
-			}
-
-			msg := types.NewMsgUpdateZRC20PausedStatus(
+			msg := types.NewMsgPauseZRC20(
 				clientCtx.GetFromAddress().String(),
 				contractAddressList,
-				pausedStatus,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdUnpauseZRC20() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "unpause-zrc20 [contractAddress1, contractAddress2, ...]",
+		Short:   "Broadcast message UnpauseZRC20",
+		Example: `zetacored tx fungible unpause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" `,
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			contractAddressList := strings.Split(strings.TrimSpace(args[0]), ",")
+
+			action, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
+			if (action != 0) && (action != 1) {
+				return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action (%d)", action)
+			}
+
+			msg := types.NewMsgUnpauseZRC20(
+				clientCtx.GetFromAddress().String(),
+				contractAddressList,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

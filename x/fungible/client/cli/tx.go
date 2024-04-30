@@ -25,7 +25,8 @@ func GetTxCmd() *cobra.Command {
 		CmdUpdateZRC20LiquidityCap(),
 		CmdUpdateContractBytecode(),
 		CmdUpdateSystemContract(),
-		CmdUpdateZRC20PausedStatus(),
+		CmdPauseZRC20(),
+		CmdUnpauseZRC20(),
 		CmdUpdateZRC20WithdrawFee(),
 	)
 
