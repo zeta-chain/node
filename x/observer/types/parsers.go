@@ -7,9 +7,9 @@ import (
 
 func ConvertReceiveStatusToVoteType(status chains.ReceiveStatus) VoteType {
 	switch status {
-	case chains.ReceiveStatus_Success:
+	case chains.ReceiveStatus_success:
 		return VoteType_SuccessObservation
-	case chains.ReceiveStatus_Failed:
+	case chains.ReceiveStatus_failed:
 		return VoteType_FailureObservation
 	default:
 		return VoteType_NotYetVoted

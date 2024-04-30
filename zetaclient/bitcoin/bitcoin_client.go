@@ -642,7 +642,7 @@ func (ob *BTCChainClient) IsOutboundProcessed(cctx *types.CrossChainTx, logger z
 		nil, // gas price not used with Bitcoin
 		0,   // gas limit not used with Bitcoin
 		amountInSat,
-		chains.ReceiveStatus_Success,
+		chains.ReceiveStatus_success,
 		ob.chain,
 		nonce,
 		coin.CoinType_Gas,

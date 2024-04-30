@@ -286,12 +286,12 @@ func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, 
 }
 
 func MockVoteOnOutboundSuccessBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_Success, observer).
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
 		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).Once()
 }
 
 func MockVoteOnOutboundFailedBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_Failed, observer).
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
 		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).Once()
 }
 

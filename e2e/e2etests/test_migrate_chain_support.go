@@ -30,7 +30,7 @@ const EVM2RPCURL = "http://eth2:8545"
 
 // EVM2ChainID is the chain ID for the additional EVM localnet
 // We set Sepolia testnet although the value is not important, only used to differentiate
-var EVM2ChainID = chains.SepoliaChain().ChainId
+var EVM2ChainID = chains.SepoliaChain.ChainId
 
 func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
@@ -170,7 +170,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
 		adminAddr,
 		newRunner.ERC20Addr.Hex(),
-		chains.SepoliaChain().ChainId,
+		chains.SepoliaChain.ChainId,
 		"USDT",
 		"USDT",
 		18,

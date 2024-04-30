@@ -214,16 +214,18 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
-start-upgrade-test:
-	@echo "--> Starting upgrade test"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
+zetanode-upgrade:
+	@echo "Building zetanode-upgrade"
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION=v14.0.0 --build-arg NEW_VERSION=v15 .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+.PHONY: zetanode-upgrade
+
+start-upgrade-test: zetanode-upgrade
+	@echo "--> Starting upgrade test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-upgrade-test-light:
+start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade-light.yml up -d
 
 start-localnet: zetanode

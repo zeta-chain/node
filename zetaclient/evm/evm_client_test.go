@@ -185,7 +185,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 			math.NewIntFromBigInt(tx.GasPrice()),
 			tx.Gas(),
 			math.NewUintFromBigInt(tx.Value()),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			chainID,
 			tx.Nonce(),
 			coinType,

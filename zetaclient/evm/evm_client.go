@@ -367,9 +367,9 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 
 	// compliance check, special handling the cancelled cctx
 	if compliance.IsCctxRestricted(cctx) {
-		recvStatus := chains.ReceiveStatus_Failed
+		recvStatus := chains.ReceiveStatus_failed
 		if receipt.Status == 1 {
-			recvStatus = chains.ReceiveStatus_Success
+			recvStatus = chains.ReceiveStatus_success
 		}
 		zetaTxHash, ballot, err := ob.zetaBridge.PostVoteOutbound(
 			sendHash,
@@ -394,9 +394,9 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 	}
 
 	if cointype == coin.CoinType_Cmd {
-		recvStatus := chains.ReceiveStatus_Failed
+		recvStatus := chains.ReceiveStatus_failed
 		if receipt.Status == 1 {
-			recvStatus = chains.ReceiveStatus_Success
+			recvStatus = chains.ReceiveStatus_success
 		}
 		zetaTxHash, ballot, err := ob.zetaBridge.PostVoteOutbound(
 			sendHash,
@@ -428,7 +428,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				transaction.Value(),
-				chains.ReceiveStatus_Success,
+				chains.ReceiveStatus_success,
 				ob.chain,
 				nonce,
 				coin.CoinType_Gas,
@@ -449,7 +449,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				big.NewInt(0),
-				chains.ReceiveStatus_Failed,
+				chains.ReceiveStatus_failed,
 				ob.chain,
 				nonce,
 				coin.CoinType_Gas,
@@ -493,7 +493,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 							transaction.GasPrice(),
 							transaction.Gas(),
 							mMint,
-							chains.ReceiveStatus_Success,
+							chains.ReceiveStatus_success,
 							ob.chain,
 							nonce,
 							coin.CoinType_Zeta,
@@ -530,7 +530,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 							transaction.GasPrice(),
 							transaction.Gas(),
 							mMint,
-							chains.ReceiveStatus_Success,
+							chains.ReceiveStatus_success,
 							ob.chain,
 							nonce,
 							coin.CoinType_Zeta,
@@ -558,7 +558,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				big.NewInt(0),
-				chains.ReceiveStatus_Failed,
+				chains.ReceiveStatus_failed,
 				ob.chain,
 				nonce,
 				coin.CoinType_Zeta,
@@ -598,7 +598,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 							transaction.GasPrice(),
 							transaction.Gas(),
 							event.Amount,
-							chains.ReceiveStatus_Success,
+							chains.ReceiveStatus_success,
 							ob.chain,
 							nonce,
 							coin.CoinType_ERC20,
@@ -625,7 +625,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				big.NewInt(0),
-				chains.ReceiveStatus_Failed,
+				chains.ReceiveStatus_failed,
 				ob.chain,
 				nonce,
 				coin.CoinType_ERC20,

@@ -20,7 +20,11 @@ import (
 )
 
 const (
-	MaxLookaheadNonce = 120
+	// EVMOutboundTxLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
+	// For example, give OutboundTxScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
+	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
+	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
+	EVMOutboundTxLookbackFactor = 1.0
 )
 
 type ZetaCoreLog struct {
@@ -28,7 +32,7 @@ type ZetaCoreLog struct {
 	ZetaChainWatcher zerolog.Logger
 }
 
-// CoreObserver wraps the zetabridge bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
+// CoreObserver wraps the zetabridge, chain clients and signers. This is the high level object used for CCTX scheduling
 type CoreObserver struct {
 	bridge              interfaces.ZetaCoreBridger
 	signerMap           map[int64]interfaces.ChainSigner
@@ -285,6 +289,11 @@ func (co *CoreObserver) scheduleCctxEVM(
 	for _, v := range res {
 		trackerMap[v.Nonce] = true
 	}
+	outboundScheduleLookahead := ob.GetChainParams().OutboundTxScheduleLookahead
+	// #nosec G701 always in range
+	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * EVMOutboundTxLookbackFactor)
+	// #nosec G701 positive
+	outboundScheduleInterval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
 
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutTxParam()
@@ -295,7 +304,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
-		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+MaxLookaheadNonce {
+		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+outboundScheduleLookback {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
 				params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce, chainID)
 			break
@@ -312,15 +321,11 @@ func (co *CoreObserver) scheduleCctxEVM(
 			continue
 		}
 
-		// #nosec G701 positive
-		interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
-		lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
-
 		// determining critical outtx; if it satisfies following criteria
 		// 1. it's the first pending outtx for this chain
 		// 2. the following 5 nonces have been in tracker
-		criticalInterval := uint64(10)      // for critical pending outTx we reduce re-try interval
-		nonCriticalInterval := interval * 2 // for non-critical pending outTx we increase re-try interval
+		criticalInterval := uint64(10)                      // for critical pending outTx we reduce re-try interval
+		nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outTx we increase re-try interval
 		if nonce%criticalInterval == zetaHeight%criticalInterval {
 			count := 0
 			for i := nonce + 1; i <= nonce+10; i++ {
@@ -329,23 +334,23 @@ func (co *CoreObserver) scheduleCctxEVM(
 				}
 			}
 			if count >= 5 {
-				interval = criticalInterval
+				outboundScheduleInterval = criticalInterval
 			}
 		}
 		// if it's already in tracker, we increase re-try interval
 		if _, ok := trackerMap[nonce]; ok {
-			interval = nonCriticalInterval
+			outboundScheduleInterval = nonCriticalInterval
 		}
 
 		// otherwise, the normal interval is used
-		if nonce%interval == zetaHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
+		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !outTxMan.IsOutTxActive(outTxID) {
 			outTxMan.StartTryProcess(outTxID)
 			co.logger.ZetaChainWatcher.Debug().Msgf("scheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutTxParam().Amount)
 			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
 		}
 
 		// #nosec G701 always in range
-		if int64(idx) >= lookahead-1 { // only look at 'lookahead' cctxs per chain
+		if int64(idx) >= outboundScheduleLookahead-1 { // only look at 'lookahead' cctxs per chain
 			break
 		}
 	}
