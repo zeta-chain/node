@@ -47,7 +47,6 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 
 	// these are the amounts for the withdraws for the different types
 	// currently these are arbitrary values that can be fine-tuned for manual testing of rate limiter
-	// the current values are defined such as: ZETA takes more time than usual, ETH takes a bit less time and ERC20 are processed immediately
 	// TODO: define more rigorous assertions with proper values
 	// https://github.com/zeta-chain/node/issues/2090
 	zetaAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(3))
