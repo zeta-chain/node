@@ -1341,13 +1341,13 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
-	_, err = ob.zetaClient.PostVoteBlockHeader(
+	zetatxHash, err := ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,
 		proofs.NewBitcoinHeader(headerBuf.Bytes()),
 	)
-	ob.logger.InTx.Info().Msgf("posted block header %d: %s", bn, blockHash)
+	ob.logger.InTx.Info().Msgf("posted block header %d: %s , Zeta tx hash :%s", bn, blockHash, zetatxHash)
 	if err != nil { // error shouldn't block the process
 		ob.logger.InTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 	}

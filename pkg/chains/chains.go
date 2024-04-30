@@ -248,7 +248,7 @@ func ChainListByConsensus(consensus Consensus) []*Chain {
 func ChainListForHeaderSupport() []*Chain {
 	var chainList []*Chain
 	for _, chain := range DefaultChainsList() {
-		if chain.Consensus == Consensus_ethereum {
+		if chain.Consensus == Consensus_ethereum || chain.Consensus == Consensus_bitcoin {
 			chainList = append(chainList, chain)
 		}
 	}

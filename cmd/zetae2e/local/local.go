@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -189,7 +190,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
-		if err := deployerRunner.EnableVerificationFlags(); err != nil {
+		if err := deployerRunner.EnableVerificationFlags([]int64{
+			chains.GoerliLocalnetChain.ChainId,
+			chains.BtcRegtestChain.ChainId}); err != nil {
 			panic(err)
 		}
 
