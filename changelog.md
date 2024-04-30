@@ -10,7 +10,7 @@
 
 ### Refactor
 * [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
-* [2094](https://github.com/zeta-chain/node/pull/2094) - update go-tss
+* [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
 
 ## Unreleased
 ### Breaking Changes
