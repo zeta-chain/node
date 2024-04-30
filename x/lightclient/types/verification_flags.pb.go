@@ -22,7 +22,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// VerificationFlags is a structure containing information which chain types are enabled for block header verification
+// VerificationFlags is a structure containing information which chain types are
+// enabled for block header verification
 type VerificationFlags struct {
 	EthTypeChainEnabled bool `protobuf:"varint,1,opt,name=ethTypeChainEnabled,proto3" json:"ethTypeChainEnabled,omitempty"`
 	BtcTypeChainEnabled bool `protobuf:"varint,2,opt,name=btcTypeChainEnabled,proto3" json:"btcTypeChainEnabled,omitempty"`

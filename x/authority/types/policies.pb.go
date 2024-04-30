@@ -29,7 +29,8 @@ type PolicyType int32
 const (
 	PolicyType_groupEmergency   PolicyType = 0
 	PolicyType_groupOperational PolicyType = 1
-	PolicyType_groupAdmin       PolicyType = 2
+	// non-sensitive protocol parameters
+	PolicyType_groupAdmin PolicyType = 2
 )
 
 var PolicyType_name = map[int32]string{

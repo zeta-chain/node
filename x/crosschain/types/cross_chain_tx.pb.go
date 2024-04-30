@@ -91,7 +91,8 @@ func (TxFinalizationStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type InboundTxParams struct {
-	Sender                          string                                  `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// the Connector.send()
 	SenderChainId                   int64                                   `protobuf:"varint,2,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
 	TxOrigin                        string                                  `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
 	CoinType                        coin.CoinType                           `protobuf:"varint,4,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
@@ -208,7 +209,8 @@ func (m *InboundTxParams) GetTxFinalizationStatus() TxFinalizationStatus {
 }
 
 type ZetaAccounting struct {
-	// aborted_zeta_amount stores the total aborted amount for cctx of coin-type ZETA
+	// aborted_zeta_amount stores the total aborted amount for cctx of coin-type
+	// ZETA
 	AbortedZetaAmount github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,1,opt,name=aborted_zeta_amount,json=abortedZetaAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"aborted_zeta_amount"`
 }
 

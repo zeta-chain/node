@@ -1,11 +1,11 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-import "crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/coin/coin.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
+import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
