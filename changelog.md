@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## Unreleased
+## v16.0.0
+
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
