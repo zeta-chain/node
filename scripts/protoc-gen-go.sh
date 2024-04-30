@@ -18,7 +18,7 @@ for dir in $proto_dirs; do
 done
 echo */
 cd zetachain
-echo "*/"
+echo */
 cd ../..
 echo "$PWD"
 echo */
