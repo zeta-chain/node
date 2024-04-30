@@ -31,7 +31,7 @@ export declare enum ReceiveStatus {
 /**
  * ChainName represents the name of the chain
  *
- * @generated from enum chains.ChainName
+ * @generated from enum zetachain.zetacore.pkg.chains.ChainName
  */
 export declare enum ChainName {
   /**
@@ -123,7 +123,7 @@ export declare enum ChainName {
 /**
  * Network represents the network type of the chain
  *
- * @generated from enum chains.Network
+ * @generated from enum zetachain.zetacore.pkg.chains.Network
  */
 export declare enum Network {
   /**
@@ -155,7 +155,7 @@ export declare enum Network {
 /**
  * NetworkType represents the network type of the chain
  *
- * @generated from enum chains.NetworkType
+ * @generated from enum zetachain.zetacore.pkg.chains.NetworkType
  */
 export declare enum NetworkType {
   /**
@@ -182,7 +182,7 @@ export declare enum NetworkType {
 /**
  * Vm represents the virtual machine type of the chain to support smart contracts
  *
- * @generated from enum chains.Vm
+ * @generated from enum zetachain.zetacore.pkg.chains.Vm
  */
 export declare enum Vm {
   /**
@@ -199,7 +199,7 @@ export declare enum Vm {
 /**
  * Consensus represents the consensus algorithm used by the chain
  *
- * @generated from enum chains.Consensus
+ * @generated from enum zetachain.zetacore.pkg.chains.Consensus
  */
 export declare enum Consensus {
   /**
@@ -219,7 +219,7 @@ export declare enum Consensus {
 }
 
 /**
- * @generated from message chains.Chain
+ * @generated from message zetachain.zetacore.pkg.chains.Chain
  */
 export declare class Chain extends Message<Chain> {
   /**
@@ -233,22 +233,22 @@ export declare class Chain extends Message<Chain> {
   chainId: bigint;
 
   /**
-   * @generated from field: chains.Network network = 3;
+   * @generated from field: zetachain.zetacore.pkg.chains.Network network = 3;
    */
   network: Network;
 
   /**
-   * @generated from field: chains.NetworkType network_type = 4;
+   * @generated from field: zetachain.zetacore.pkg.chains.NetworkType network_type = 4;
    */
   networkType: NetworkType;
 
   /**
-   * @generated from field: chains.Vm vm = 5;
+   * @generated from field: zetachain.zetacore.pkg.chains.Vm vm = 5;
    */
   vm: Vm;
 
   /**
-   * @generated from field: chains.Consensus consensus = 6;
+   * @generated from field: zetachain.zetacore.pkg.chains.Consensus consensus = 6;
    */
   consensus: Consensus;
 

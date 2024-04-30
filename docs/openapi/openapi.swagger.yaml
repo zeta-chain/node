@@ -29059,6 +29059,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/emissions/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: Query_Params
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryParamsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/emissions/show_available_emissions/{address}:
     get:
       summary: Queries a list of ShowAvailableEmissions items.
@@ -56430,7 +56445,7 @@ definitions:
        - OutboundMined: the corresponding outbound tx is mined
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
-       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
+       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
   crosschainConversion:
     type: object
     properties:
@@ -56858,8 +56873,35 @@ definitions:
       ed25519:
         type: string
     title: PubKeySet contains two pub keys , secp256k1 and ed25519
+  emissionsMsgUpdateParamsResponse:
+    type: object
   emissionsMsgWithdrawEmissionResponse:
     type: object
+  emissionsParams:
+    type: object
+    properties:
+      max_bond_factor:
+        type: string
+      min_bond_factor:
+        type: string
+      avg_block_time:
+        type: string
+      target_bond_ratio:
+        type: string
+      validator_emission_percentage:
+        type: string
+      observer_emission_percentage:
+        type: string
+      tss_signer_emission_percentage:
+        type: string
+      duration_factor_constant:
+        type: string
+      observer_slash_amount:
+        type: string
+      ballot_maturity_blocks:
+        type: string
+        format: int64
+    description: Params defines the parameters for the module.
   emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:
@@ -56878,6 +56920,13 @@ definitions:
         type: string
       emission_module_address:
         type: string
+  emissionsQueryParamsResponse:
+    type: object
+    properties:
+      params:
+        $ref: '#/definitions/emissionsParams'
+        description: params holds all the parameters of this module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   emissionsQueryShowAvailableEmissionsResponse:
     type: object
     properties:
