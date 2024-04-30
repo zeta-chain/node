@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-// SetVerificationFlags set the verification flags in the store
+// SetVerificationFlags set the verification flags in the store. The key is the chain id
 func (k Keeper) SetVerificationFlags(ctx sdk.Context, verificationFlag types.VerificationFlags) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VerificationFlagsKey))
 	b := k.cdc.MustMarshal(&verificationFlag)
@@ -46,7 +46,7 @@ func (k Keeper) GetAllVerificationFlags(ctx sdk.Context) (verificationFlags []ty
 }
 
 // CheckVerificationFlagsEnabled checks for a specific chain if the verification flags are enabled
-// It returns an error if the chain is not enabled
+// It returns an error if the chain is not enabled or the verification flags are not for that chain
 func (k Keeper) CheckVerificationFlagsEnabled(ctx sdk.Context, chainID int64) error {
 	verificationFlags, found := k.GetVerificationFlags(ctx, chainID)
 	if !found || !verificationFlags.Enabled {

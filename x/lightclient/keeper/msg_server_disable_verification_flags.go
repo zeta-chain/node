@@ -19,7 +19,7 @@ func (k msgServer) DisableVerificationFlags(goCtx context.Context, msg *types.Ms
 	}
 
 	for _, chainID := range msg.ChainIdList {
-		// set the verification flags
+		// set the verification flags to false to disable verification
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
 			ChainId: chainID,
 			Enabled: false,

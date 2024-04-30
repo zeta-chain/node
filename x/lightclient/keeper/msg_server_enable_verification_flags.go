@@ -22,7 +22,7 @@ func (k msgServer) EnableVerificationFlags(goCtx context.Context, msg *types.Msg
 	}
 
 	for _, chainID := range msg.ChainIdList {
-		// set the verification flags
+		// set the verification flags to true to enable verification
 		k.SetVerificationFlags(ctx, types.VerificationFlags{
 			ChainId: chainID,
 			Enabled: true,
