@@ -102,8 +102,8 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 	require.Equal(t, expectedOutput.CrosschainFlags, resp)
 }
 
-func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: []lightclienttypes.VerificationFlags{
+func TestZetaCoreBridge_HeaderEnabledChains(t *testing.T) {
+	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{EnabledChains: []lightclienttypes.EnabledChain{
 		{
 			ChainId: chains.EthChain.ChainId,
 			Enabled: true,
@@ -113,8 +113,8 @@ func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
 			Enabled: true,
 		},
 	}}
-	input := lightclienttypes.QueryVerificationFlagsRequest{}
-	method := "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+	input := lightclienttypes.QueryHeaderEnabledChainsRequest{}
+	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -122,9 +122,9 @@ func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetVerificationFlags()
+	resp, err := zetabridge.GetBlockHeaderEnabledChains()
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.VerificationFlags, resp)
+	require.Equal(t, expectedOutput.EnabledChains, resp)
 }
 
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {

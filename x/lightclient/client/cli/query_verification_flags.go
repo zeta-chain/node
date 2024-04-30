@@ -7,9 +7,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-func CmdShowVerificationFlags() *cobra.Command {
+func CmdShowHeaderEnabledChains() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-verification-flags",
+		Use:   "show-header-enabled-chains",
 		Short: "Show the verification flags",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
@@ -20,9 +20,9 @@ func CmdShowVerificationFlags() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryVerificationFlagsRequest{}
+			params := &types.QueryHeaderEnabledChainsRequest{}
 
-			res, err := queryClient.VerificationFlags(cmd.Context(), params)
+			res, err := queryClient.HeaderEnabledChains(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

@@ -22,7 +22,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
-				VerificationFlags: sample.VerificationFlags(),
+				BlockHeaderVerification: sample.BlockHeaderVerification(),
 				BlockHeaders: []proofs.BlockHeader{
 					sample.BlockHeader(sample.Hash().Bytes()),
 					sample.BlockHeader(sample.Hash().Bytes()),

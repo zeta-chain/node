@@ -127,9 +127,13 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	t.Run("should succeed if block header is valid", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -142,9 +146,13 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	t.Run("should fail if verification flag not enabled", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: false,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: false,
+				},
+			},
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -158,7 +166,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	//t.Run("should succeed if block header is valid with chain state existing", func(t *testing.T) {
 	//	k, ctx, _, _ := keepertest.LightclientKeeper(t)
 	//
-	//	k.SetVerificationFlags(ctx, types.VerificationFlags{
+	//	k.SetEnabledChain(ctx, types.EnabledChain{
 	//		EthTypeChainEnabled: true,
 	//	})
 	//
@@ -179,11 +187,14 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	t.Run("fail if block already exist", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
-
 		bh, _, _ := sepoliaBlockHeaders(t)
 		k.SetBlockHeader(ctx, bh)
 
@@ -194,9 +205,13 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	t.Run("fail if chain state and invalid height", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
 		bh, _, _ := sepoliaBlockHeaders(t)
 
@@ -214,9 +229,13 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 	t.Run("fail if chain state and no parent", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -237,9 +256,13 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 	t.Run("should add a block header and create chain state if doesn't exist", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
 		bh, _, _ := sepoliaBlockHeaders(t)
 
@@ -265,9 +288,13 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 	t.Run("should add a block header and update chain state if exists", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)
@@ -301,9 +328,13 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 	t.Run("should add a block header and update chain state if exists and set earliest height if 0", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chains.SepoliaChain.ChainId,
-			Enabled: true,
+		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+			EnabledChains: []types.EnabledChain{
+				{
+					ChainId: chains.SepoliaChain.ChainId,
+					Enabled: true,
+				},
+			},
 		})
 
 		bh, _, _ := sepoliaBlockHeaders(t)

@@ -67,7 +67,7 @@ func (k Keeper) CheckNewBlockHeader(
 	header proofs.HeaderData,
 ) ([]byte, error) {
 	// check verification flags are set
-	if err := k.CheckVerificationFlagsEnabled(ctx, chainID); err != nil {
+	if err := k.CheckBlockHeaderVerificationEnabled(ctx, chainID); err != nil {
 		return nil, err
 	}
 

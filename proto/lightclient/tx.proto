@@ -8,19 +8,19 @@ option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc EnableVerificationFlags(MsgEnableVerificationFlags) returns (MsgEnableVerificationFlagsResponse);
-  rpc DisableVerificationFlags(MsgDisableVerificationFlags) returns (MsgDisableVerificationFlagsResponse);
+  rpc EnableHeaderVerification(MsgEnableHeaderVerification) returns (MsgEnableHeaderVerificationResponse);
+  rpc DisableHeaderVerification(MsgDisableHeaderVerification) returns (MsgDisableHeaderVerificationResponse);
 }
 
-message MsgEnableVerificationFlags {
+message MsgEnableHeaderVerification {
   string creator = 1;
   repeated int64 chain_id_list = 2;
 }
 
-message MsgEnableVerificationFlagsResponse {}
+message MsgEnableHeaderVerificationResponse {}
 
-message MsgDisableVerificationFlags {
+message MsgDisableHeaderVerification {
   string creator = 1;
   repeated int64 chain_id_list = 2;
 }
-message MsgDisableVerificationFlagsResponse {}
+message MsgDisableHeaderVerificationResponse {}

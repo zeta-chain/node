@@ -15,7 +15,7 @@ func TestKeeper_VerificationFlags(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		res, err := k.VerificationFlags(wctx, nil)
+		res, err := k.HeaderEnabledChains(wctx, nil)
 		require.Nil(t, res)
 		require.Error(t, err)
 	})
@@ -24,20 +24,18 @@ func TestKeeper_VerificationFlags(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		res, _ := k.VerificationFlags(wctx, &types.QueryVerificationFlagsRequest{})
-		require.Len(t, res.VerificationFlags, 0)
+		res, _ := k.HeaderEnabledChains(wctx, &types.QueryHeaderEnabledChainsRequest{})
+		require.Len(t, res.EnabledChains, 0)
 	})
 
 	t.Run("should return if block header state is found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
-		vf := sample.VerificationFlags()
-		for _, v := range vf {
-			k.SetVerificationFlags(ctx, v)
-		}
+		bhv := sample.BlockHeaderVerification()
+		k.SetBlockHeaderVerification(ctx, bhv)
 
-		res, err := k.VerificationFlags(wctx, &types.QueryVerificationFlagsRequest{})
+		res, err := k.HeaderEnabledChains(wctx, &types.QueryHeaderEnabledChainsRequest{})
 		require.NoError(t, err)
-		require.Equal(t, vf, res.VerificationFlags)
+		require.Equal(t, bhv.EnabledChains, res.EnabledChains)
 	})
 }

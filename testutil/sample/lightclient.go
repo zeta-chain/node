@@ -33,8 +33,8 @@ func ChainState(chainID int64) lightclienttypes.ChainState {
 	}
 }
 
-func VerificationFlags() []lightclienttypes.VerificationFlags {
-	return []lightclienttypes.VerificationFlags{
+func VerificationFlags() []lightclienttypes.EnabledChain {
+	return []lightclienttypes.EnabledChain{
 		{
 			ChainId: 1,
 			Enabled: true,
@@ -44,6 +44,11 @@ func VerificationFlags() []lightclienttypes.VerificationFlags {
 			Enabled: true,
 		},
 	}
+}
+
+func BlockHeaderVerification() lightclienttypes.BlockHeaderVerification {
+	return lightclienttypes.BlockHeaderVerification{EnabledChains: VerificationFlags()}
+
 }
 
 // Proof generates a proof and block header

@@ -24,7 +24,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListBlockHeader(),
 		CmdShowChainState(),
 		CmdListChainState(),
-		CmdShowVerificationFlags(),
+		CmdShowHeaderEnabledChains(),
 	)
 
 	return cmd

@@ -10,7 +10,7 @@ import (
 
 // DisableVerificationFlags disables the verification flags for the given chain IDs
 // Disabled chains do not allow the submissions of block headers or using it to verify the correctness of proofs
-func (k msgServer) DisableVerificationFlags(goCtx context.Context, msg *types.MsgDisableVerificationFlags) (*types.MsgDisableVerificationFlagsResponse, error) {
+func (k msgServer) DisableHeaderVerification(goCtx context.Context, msg *types.MsgDisableHeaderVerification) (*types.MsgDisableHeaderVerificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
@@ -18,13 +18,13 @@ func (k msgServer) DisableVerificationFlags(goCtx context.Context, msg *types.Ms
 		return nil, authoritytypes.ErrUnauthorized
 	}
 
+	bhv, _ := k.GetBlockHeaderVerification(ctx)
+
 	for _, chainID := range msg.ChainIdList {
-		// set the verification flags to false to disable verification
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chainID,
-			Enabled: false,
-		})
+		bhv.DisableChain(chainID)
 	}
 
-	return &types.MsgDisableVerificationFlagsResponse{}, nil
+	k.SetBlockHeaderVerification(ctx, bhv)
+
+	return &types.MsgDisableHeaderVerificationResponse{}, nil
 }

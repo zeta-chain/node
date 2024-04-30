@@ -250,8 +250,8 @@ type intoAny interface {
 	AsAny() *codectypes.Any
 }
 
-// EnableVerificationFlags enables the verification flags for the lightclient module
-func (zts ZetaTxServer) EnableVerificationFlags(account string, chainIDList []int64) error {
+// EnableHeaderVerification enables the verification flags for the lightclient module
+func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []int64) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -262,7 +262,7 @@ func (zts ZetaTxServer) EnableVerificationFlags(account string, chainIDList []in
 		return err
 	}
 
-	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableVerificationFlags(
+	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
 		addr.String(),
 		chainIDList,
 	))

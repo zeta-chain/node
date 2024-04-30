@@ -13,13 +13,13 @@ import (
 
 func CmdEnableVerificationFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "enable-verification-flags [list of chain-id]",
-		Short: "Enable verification flags for the list of chains separated by comma",
+		Use:   "enable-header-verification [list of chain-id]",
+		Short: "Enable verification for the list of chains separated by comma",
 		Long: `Provide a list of chain ids separated by comma to enable block header verification for the specified chain ids.
 
   				Example:
                     To enable verification flags for chain ids 1 and 56
-					zetacored tx lightclient enable-verification-flags "1,56"
+					zetacored tx lightclient enable-header-verification "1,56"
 				`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -39,7 +39,7 @@ func CmdEnableVerificationFlags() *cobra.Command {
 				chainIDList = append(chainIDList, chainIDInt)
 			}
 
-			msg := types.NewMsgEnableVerificationFlags(clientCtx.GetFromAddress().String(), chainIDList)
+			msg := types.NewMsgEnableHeaderVerification(clientCtx.GetFromAddress().String(), chainIDList)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

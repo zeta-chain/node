@@ -2,10 +2,16 @@ package types
 
 import "github.com/zeta-chain/zetacore/pkg/chains"
 
+func DefaultBlockHeaderVerification() BlockHeaderVerification {
+	return BlockHeaderVerification{
+		EnabledChains: DefaultVerificationFlags(),
+	}
+}
+
 // DefaultVerificationFlags returns the default verification flags.
 // By default, everything disabled.
-func DefaultVerificationFlags() []VerificationFlags {
-	return []VerificationFlags{
+func DefaultVerificationFlags() []EnabledChain {
+	return []EnabledChain{
 		{
 			ChainId: chains.EthChain.ChainId,
 			Enabled: false,

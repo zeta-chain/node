@@ -190,7 +190,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
-		if err := deployerRunner.EnableVerificationFlags([]int64{
+		if err := deployerRunner.EnableHeaderVerification([]int64{
 			chains.GoerliLocalnetChain.ChainId,
 			chains.BtcRegtestChain.ChainId}); err != nil {
 			panic(err)

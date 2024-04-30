@@ -32,7 +32,7 @@ service Query {
     option (google.api.http).get = "/zeta-chain/lightclient/prove";
   }
 
-  rpc VerificationFlags(QueryVerificationFlagsRequest) returns (QueryVerificationFlagsResponse) {
+  rpc HeaderEnabledChains(QueryHeaderEnabledChainsRequest) returns (QueryHeaderEnabledChainsResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/verification_flags";
   }
 }
@@ -83,8 +83,8 @@ message QueryProveResponse {
   bool valid = 1;
 }
 
-message QueryVerificationFlagsRequest {}
+message QueryHeaderEnabledChainsRequest {}
 
-message QueryVerificationFlagsResponse {
-  repeated VerificationFlags verification_flags = 1 [(gogoproto.nullable) = false];
+message QueryHeaderEnabledChainsResponse {
+  repeated EnabledChain enabled_chains = 1 [(gogoproto.nullable) = false];
 }

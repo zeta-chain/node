@@ -303,11 +303,11 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					BlockHeaderVerificationFlags: nil,
 				}})
 
-			method = "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+			method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
-				WithPayload(lightclienttypes.QueryVerificationFlagsRequest{}).
-				Return(lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: []lightclienttypes.VerificationFlags{
+				WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
+				Return(lightclienttypes.QueryHeaderEnabledChainsResponse{EnabledChains: []lightclienttypes.EnabledChain{
 					{
 						ChainId: chains.EthChain.ChainId,
 						Enabled: true,

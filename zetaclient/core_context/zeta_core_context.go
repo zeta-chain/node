@@ -24,8 +24,8 @@ type ZetaCoreContext struct {
 	currentTssPubkey   string
 	crossChainFlags    observertypes.CrosschainFlags
 
-	// verificationFlags is used to store the verification flags for the lightclient module to enable header/proof verification
-	verificationFlags []lightclienttypes.VerificationFlags
+	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
+	blockHeaderEnabledChains []lightclienttypes.EnabledChain
 }
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
@@ -43,12 +43,12 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	}
 
 	return &ZetaCoreContext{
-		coreContextLock:    new(sync.RWMutex),
-		chainsEnabled:      []chains.Chain{},
-		evmChainParams:     evmChainParams,
-		bitcoinChainParams: bitcoinChainParams,
-		crossChainFlags:    observertypes.CrosschainFlags{},
-		verificationFlags:  []lightclienttypes.VerificationFlags{},
+		coreContextLock:          new(sync.RWMutex),
+		chainsEnabled:            []chains.Chain{},
+		evmChainParams:           evmChainParams,
+		bitcoinChainParams:       bitcoinChainParams,
+		crossChainFlags:          observertypes.CrosschainFlags{},
+		blockHeaderEnabledChains: []lightclienttypes.EnabledChain{},
 	}
 }
 
@@ -126,22 +126,22 @@ func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 }
 
 // GetAllVerificationFlags returns all verification flags
-func (c *ZetaCoreContext) GetAllVerificationFlags() []lightclienttypes.VerificationFlags {
+func (c *ZetaCoreContext) GetAllVerificationFlags() []lightclienttypes.EnabledChain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	return c.verificationFlags
+	return c.blockHeaderEnabledChains
 }
 
 // GetVerificationFlags returns verification flags for a chain
-func (c *ZetaCoreContext) GetVerificationFlags(chainID int64) (lightclienttypes.VerificationFlags, bool) {
+func (c *ZetaCoreContext) GetVerificationFlags(chainID int64) (lightclienttypes.EnabledChain, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	for _, flags := range c.verificationFlags {
+	for _, flags := range c.blockHeaderEnabledChains {
 		if flags.ChainId == chainID {
 			return flags, true
 		}
 	}
-	return lightclienttypes.VerificationFlags{}, false
+	return lightclienttypes.EnabledChain{}, false
 }
 
 // Update updates core context and params for all chains
@@ -153,7 +153,7 @@ func (c *ZetaCoreContext) Update(
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
-	verificationFlags []lightclienttypes.VerificationFlags,
+	verificationFlags []lightclienttypes.EnabledChain,
 	init bool,
 	logger zerolog.Logger,
 ) {
@@ -196,7 +196,7 @@ func (c *ZetaCoreContext) Update(
 
 	c.chainsEnabled = newChains
 	c.crossChainFlags = crosschainFlags
-	c.verificationFlags = verificationFlags
+	c.blockHeaderEnabledChains = verificationFlags
 
 	// update chain params for bitcoin if it has config in file
 	if c.bitcoinChainParams != nil && btcChainParams != nil {

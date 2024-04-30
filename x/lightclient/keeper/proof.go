@@ -12,7 +12,7 @@ import (
 // It returns the transaction bytes if the proof is valid
 func (k Keeper) VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error) {
 	// check verification flags are set
-	if err := k.CheckVerificationFlagsEnabled(ctx, chainID); err != nil {
+	if err := k.CheckBlockHeaderVerificationEnabled(ctx, chainID); err != nil {
 		return nil, err
 	}
 

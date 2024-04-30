@@ -8,10 +8,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-// EnableVerificationFlags enables the verification flags for the given chain IDs
+// EnableHeaderVerification enables the verification flags for the given chain IDs
 // Enabled chains allow the submissions of block headers and using it to verify the correctness of proofs
-func (k msgServer) EnableVerificationFlags(goCtx context.Context, msg *types.MsgEnableVerificationFlags) (
-	*types.MsgEnableVerificationFlagsResponse,
+func (k msgServer) EnableHeaderVerification(goCtx context.Context, msg *types.MsgEnableHeaderVerification) (
+	*types.MsgEnableHeaderVerificationResponse,
 	error,
 ) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -21,13 +21,12 @@ func (k msgServer) EnableVerificationFlags(goCtx context.Context, msg *types.Msg
 		return nil, authoritytypes.ErrUnauthorized
 	}
 
+	bhv, _ := k.GetBlockHeaderVerification(ctx)
+
 	for _, chainID := range msg.ChainIdList {
-		// set the verification flags to true to enable verification
-		k.SetVerificationFlags(ctx, types.VerificationFlags{
-			ChainId: chainID,
-			Enabled: true,
-		})
+		bhv.EnableChain(chainID)
 	}
 
-	return &types.MsgEnableVerificationFlagsResponse{}, nil
+	k.SetBlockHeaderVerification(ctx, bhv)
+	return &types.MsgEnableHeaderVerificationResponse{}, nil
 }

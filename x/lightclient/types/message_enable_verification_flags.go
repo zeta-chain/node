@@ -8,27 +8,27 @@ import (
 )
 
 const (
-	TypeMsgEnableVerificationFlags = "enable_verification_flags"
+	TypeMsgEnableHeaderVerification = "enable_header_verification"
 )
 
-var _ sdk.Msg = &MsgEnableVerificationFlags{}
+var _ sdk.Msg = &MsgEnableHeaderVerification{}
 
-func NewMsgEnableVerificationFlags(creator string, chainIDs []int64) *MsgEnableVerificationFlags {
-	return &MsgEnableVerificationFlags{
+func NewMsgEnableHeaderVerification(creator string, chainIDs []int64) *MsgEnableHeaderVerification {
+	return &MsgEnableHeaderVerification{
 		Creator:     creator,
 		ChainIdList: chainIDs,
 	}
 }
 
-func (msg *MsgEnableVerificationFlags) Route() string {
+func (msg *MsgEnableHeaderVerification) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgEnableVerificationFlags) Type() string {
-	return TypeMsgEnableVerificationFlags
+func (msg *MsgEnableHeaderVerification) Type() string {
+	return TypeMsgEnableHeaderVerification
 }
 
-func (msg *MsgEnableVerificationFlags) GetSigners() []sdk.AccAddress {
+func (msg *MsgEnableHeaderVerification) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -36,12 +36,12 @@ func (msg *MsgEnableVerificationFlags) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgEnableVerificationFlags) GetSignBytes() []byte {
+func (msg *MsgEnableHeaderVerification) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgEnableVerificationFlags) ValidateBasic() error {
+func (msg *MsgEnableHeaderVerification) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}

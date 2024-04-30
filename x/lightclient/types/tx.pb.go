@@ -29,23 +29,23 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type MsgEnableVerificationFlags struct {
+type MsgEnableHeaderVerification struct {
 	Creator     string  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ChainIdList []int64 `protobuf:"varint,2,rep,packed,name=chain_id_list,json=chainIdList,proto3" json:"chain_id_list,omitempty"`
 }
 
-func (m *MsgEnableVerificationFlags) Reset()         { *m = MsgEnableVerificationFlags{} }
-func (m *MsgEnableVerificationFlags) String() string { return proto.CompactTextString(m) }
-func (*MsgEnableVerificationFlags) ProtoMessage()    {}
-func (*MsgEnableVerificationFlags) Descriptor() ([]byte, []int) {
+func (m *MsgEnableHeaderVerification) Reset()         { *m = MsgEnableHeaderVerification{} }
+func (m *MsgEnableHeaderVerification) String() string { return proto.CompactTextString(m) }
+func (*MsgEnableHeaderVerification) ProtoMessage()    {}
+func (*MsgEnableHeaderVerification) Descriptor() ([]byte, []int) {
 	return fileDescriptor_81fed8987f08d9c5, []int{0}
 }
-func (m *MsgEnableVerificationFlags) XXX_Unmarshal(b []byte) error {
+func (m *MsgEnableHeaderVerification) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgEnableVerificationFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgEnableHeaderVerification) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgEnableVerificationFlags.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgEnableHeaderVerification.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -55,47 +55,47 @@ func (m *MsgEnableVerificationFlags) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *MsgEnableVerificationFlags) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgEnableVerificationFlags.Merge(m, src)
+func (m *MsgEnableHeaderVerification) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgEnableHeaderVerification.Merge(m, src)
 }
-func (m *MsgEnableVerificationFlags) XXX_Size() int {
+func (m *MsgEnableHeaderVerification) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgEnableVerificationFlags) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgEnableVerificationFlags.DiscardUnknown(m)
+func (m *MsgEnableHeaderVerification) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgEnableHeaderVerification.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgEnableVerificationFlags proto.InternalMessageInfo
+var xxx_messageInfo_MsgEnableHeaderVerification proto.InternalMessageInfo
 
-func (m *MsgEnableVerificationFlags) GetCreator() string {
+func (m *MsgEnableHeaderVerification) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgEnableVerificationFlags) GetChainIdList() []int64 {
+func (m *MsgEnableHeaderVerification) GetChainIdList() []int64 {
 	if m != nil {
 		return m.ChainIdList
 	}
 	return nil
 }
 
-type MsgEnableVerificationFlagsResponse struct {
+type MsgEnableHeaderVerificationResponse struct {
 }
 
-func (m *MsgEnableVerificationFlagsResponse) Reset()         { *m = MsgEnableVerificationFlagsResponse{} }
-func (m *MsgEnableVerificationFlagsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgEnableVerificationFlagsResponse) ProtoMessage()    {}
-func (*MsgEnableVerificationFlagsResponse) Descriptor() ([]byte, []int) {
+func (m *MsgEnableHeaderVerificationResponse) Reset()         { *m = MsgEnableHeaderVerificationResponse{} }
+func (m *MsgEnableHeaderVerificationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgEnableHeaderVerificationResponse) ProtoMessage()    {}
+func (*MsgEnableHeaderVerificationResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_81fed8987f08d9c5, []int{1}
 }
-func (m *MsgEnableVerificationFlagsResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgEnableHeaderVerificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgEnableVerificationFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgEnableHeaderVerificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgEnableVerificationFlagsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgEnableHeaderVerificationResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -105,35 +105,35 @@ func (m *MsgEnableVerificationFlagsResponse) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *MsgEnableVerificationFlagsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgEnableVerificationFlagsResponse.Merge(m, src)
+func (m *MsgEnableHeaderVerificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgEnableHeaderVerificationResponse.Merge(m, src)
 }
-func (m *MsgEnableVerificationFlagsResponse) XXX_Size() int {
+func (m *MsgEnableHeaderVerificationResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgEnableVerificationFlagsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgEnableVerificationFlagsResponse.DiscardUnknown(m)
+func (m *MsgEnableHeaderVerificationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgEnableHeaderVerificationResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgEnableVerificationFlagsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgEnableHeaderVerificationResponse proto.InternalMessageInfo
 
-type MsgDisableVerificationFlags struct {
+type MsgDisableHeaderVerification struct {
 	Creator     string  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ChainIdList []int64 `protobuf:"varint,2,rep,packed,name=chain_id_list,json=chainIdList,proto3" json:"chain_id_list,omitempty"`
 }
 
-func (m *MsgDisableVerificationFlags) Reset()         { *m = MsgDisableVerificationFlags{} }
-func (m *MsgDisableVerificationFlags) String() string { return proto.CompactTextString(m) }
-func (*MsgDisableVerificationFlags) ProtoMessage()    {}
-func (*MsgDisableVerificationFlags) Descriptor() ([]byte, []int) {
+func (m *MsgDisableHeaderVerification) Reset()         { *m = MsgDisableHeaderVerification{} }
+func (m *MsgDisableHeaderVerification) String() string { return proto.CompactTextString(m) }
+func (*MsgDisableHeaderVerification) ProtoMessage()    {}
+func (*MsgDisableHeaderVerification) Descriptor() ([]byte, []int) {
 	return fileDescriptor_81fed8987f08d9c5, []int{2}
 }
-func (m *MsgDisableVerificationFlags) XXX_Unmarshal(b []byte) error {
+func (m *MsgDisableHeaderVerification) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDisableVerificationFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDisableHeaderVerification) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDisableVerificationFlags.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDisableHeaderVerification.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -143,47 +143,47 @@ func (m *MsgDisableVerificationFlags) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *MsgDisableVerificationFlags) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDisableVerificationFlags.Merge(m, src)
+func (m *MsgDisableHeaderVerification) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDisableHeaderVerification.Merge(m, src)
 }
-func (m *MsgDisableVerificationFlags) XXX_Size() int {
+func (m *MsgDisableHeaderVerification) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDisableVerificationFlags) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDisableVerificationFlags.DiscardUnknown(m)
+func (m *MsgDisableHeaderVerification) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDisableHeaderVerification.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDisableVerificationFlags proto.InternalMessageInfo
+var xxx_messageInfo_MsgDisableHeaderVerification proto.InternalMessageInfo
 
-func (m *MsgDisableVerificationFlags) GetCreator() string {
+func (m *MsgDisableHeaderVerification) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgDisableVerificationFlags) GetChainIdList() []int64 {
+func (m *MsgDisableHeaderVerification) GetChainIdList() []int64 {
 	if m != nil {
 		return m.ChainIdList
 	}
 	return nil
 }
 
-type MsgDisableVerificationFlagsResponse struct {
+type MsgDisableHeaderVerificationResponse struct {
 }
 
-func (m *MsgDisableVerificationFlagsResponse) Reset()         { *m = MsgDisableVerificationFlagsResponse{} }
-func (m *MsgDisableVerificationFlagsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgDisableVerificationFlagsResponse) ProtoMessage()    {}
-func (*MsgDisableVerificationFlagsResponse) Descriptor() ([]byte, []int) {
+func (m *MsgDisableHeaderVerificationResponse) Reset()         { *m = MsgDisableHeaderVerificationResponse{} }
+func (m *MsgDisableHeaderVerificationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDisableHeaderVerificationResponse) ProtoMessage()    {}
+func (*MsgDisableHeaderVerificationResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_81fed8987f08d9c5, []int{3}
 }
-func (m *MsgDisableVerificationFlagsResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgDisableHeaderVerificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDisableVerificationFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDisableHeaderVerificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDisableVerificationFlagsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDisableHeaderVerificationResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -193,50 +193,50 @@ func (m *MsgDisableVerificationFlagsResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgDisableVerificationFlagsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDisableVerificationFlagsResponse.Merge(m, src)
+func (m *MsgDisableHeaderVerificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDisableHeaderVerificationResponse.Merge(m, src)
 }
-func (m *MsgDisableVerificationFlagsResponse) XXX_Size() int {
+func (m *MsgDisableHeaderVerificationResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDisableVerificationFlagsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDisableVerificationFlagsResponse.DiscardUnknown(m)
+func (m *MsgDisableHeaderVerificationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDisableHeaderVerificationResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDisableVerificationFlagsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgDisableHeaderVerificationResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgEnableVerificationFlags)(nil), "zetachain.zetacore.lightclient.MsgEnableVerificationFlags")
-	proto.RegisterType((*MsgEnableVerificationFlagsResponse)(nil), "zetachain.zetacore.lightclient.MsgEnableVerificationFlagsResponse")
-	proto.RegisterType((*MsgDisableVerificationFlags)(nil), "zetachain.zetacore.lightclient.MsgDisableVerificationFlags")
-	proto.RegisterType((*MsgDisableVerificationFlagsResponse)(nil), "zetachain.zetacore.lightclient.MsgDisableVerificationFlagsResponse")
+	proto.RegisterType((*MsgEnableHeaderVerification)(nil), "zetachain.zetacore.lightclient.MsgEnableHeaderVerification")
+	proto.RegisterType((*MsgEnableHeaderVerificationResponse)(nil), "zetachain.zetacore.lightclient.MsgEnableHeaderVerificationResponse")
+	proto.RegisterType((*MsgDisableHeaderVerification)(nil), "zetachain.zetacore.lightclient.MsgDisableHeaderVerification")
+	proto.RegisterType((*MsgDisableHeaderVerificationResponse)(nil), "zetachain.zetacore.lightclient.MsgDisableHeaderVerificationResponse")
 }
 
 func init() { proto.RegisterFile("lightclient/tx.proto", fileDescriptor_81fed8987f08d9c5) }
 
 var fileDescriptor_81fed8987f08d9c5 = []byte{
-	// 321 bytes of a gzipped FileDescriptorProto
+	// 324 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xc9, 0xc9, 0x4c, 0xcf,
 	0x28, 0x49, 0xce, 0xc9, 0x4c, 0xcd, 0x2b, 0xd1, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9,
 	0x17, 0x92, 0xab, 0x4a, 0x2d, 0x49, 0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3, 0xf2, 0x8b,
 	0x52, 0xf5, 0x90, 0x14, 0x4a, 0x89, 0xa4, 0xe7, 0xa7, 0xe7, 0x83, 0x95, 0xea, 0x83, 0x58, 0x10,
 	0x5d, 0x52, 0x2a, 0xc8, 0x66, 0x95, 0xa5, 0x16, 0x65, 0xa6, 0x65, 0x26, 0x27, 0x96, 0x64, 0xe6,
-	0xe7, 0xc5, 0xa7, 0xe5, 0x24, 0xa6, 0x17, 0x43, 0x54, 0x29, 0x45, 0x71, 0x49, 0xf9, 0x16, 0xa7,
-	0xbb, 0xe6, 0x25, 0x26, 0xe5, 0xa4, 0x86, 0x21, 0x29, 0x72, 0x03, 0xa9, 0x11, 0x92, 0xe0, 0x62,
-	0x4f, 0x2e, 0x4a, 0x4d, 0x2c, 0xc9, 0x2f, 0x92, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x82, 0x71,
-	0x85, 0x94, 0xb8, 0x78, 0xc1, 0x2e, 0x8a, 0xcf, 0x4c, 0x89, 0xcf, 0xc9, 0x2c, 0x2e, 0x91, 0x60,
-	0x52, 0x60, 0xd6, 0x60, 0x0e, 0xe2, 0x06, 0x0b, 0x7a, 0xa6, 0xf8, 0x64, 0x16, 0x97, 0x28, 0xa9,
-	0x70, 0x29, 0xe1, 0x36, 0x3b, 0x28, 0xb5, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55, 0x29, 0x9a, 0x4b,
-	0xda, 0xb7, 0x38, 0xdd, 0x25, 0xb3, 0x98, 0x16, 0x4e, 0x50, 0xe5, 0x52, 0xc6, 0x63, 0x38, 0xcc,
-	0x0d, 0x46, 0x07, 0x98, 0xb8, 0x98, 0x7d, 0x8b, 0xd3, 0x85, 0x66, 0x32, 0x72, 0x89, 0xe3, 0x0a,
-	0x0b, 0x2b, 0x3d, 0xfc, 0xd1, 0xa0, 0x87, 0xdb, 0xaf, 0x52, 0x4e, 0xe4, 0xeb, 0x85, 0xb9, 0x51,
-	0x68, 0x0e, 0x23, 0x97, 0x04, 0xce, 0x50, 0xb2, 0x26, 0xc2, 0x02, 0x5c, 0x9a, 0xa5, 0x9c, 0x29,
-	0xd0, 0x0c, 0x73, 0x9e, 0x93, 0xcf, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78,
-	0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44,
-	0x19, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0x83, 0x8c, 0xd7, 0x05,
-	0xdb, 0xa4, 0x0f, 0xb3, 0x49, 0xbf, 0x42, 0x1f, 0x25, 0xd5, 0x57, 0x16, 0xa4, 0x16, 0x27, 0xb1,
-	0x81, 0x53, 0xa7, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x0d, 0xfc, 0x84, 0x07, 0x11, 0x03, 0x00,
-	0x00,
+	0xe7, 0xc5, 0xa7, 0xe5, 0x24, 0xa6, 0x17, 0x43, 0x54, 0x29, 0x45, 0x73, 0x49, 0xfb, 0x16, 0xa7,
+	0xbb, 0xe6, 0x25, 0x26, 0xe5, 0xa4, 0x7a, 0xa4, 0x26, 0xa6, 0xa4, 0x16, 0x85, 0x21, 0x29, 0x15,
+	0x92, 0xe0, 0x62, 0x4f, 0x2e, 0x4a, 0x4d, 0x2c, 0xc9, 0x2f, 0x92, 0x60, 0x54, 0x60, 0xd4, 0xe0,
+	0x0c, 0x82, 0x71, 0x85, 0x94, 0xb8, 0x78, 0xc1, 0x4e, 0x8a, 0xcf, 0x4c, 0x89, 0xcf, 0xc9, 0x2c,
+	0x2e, 0x91, 0x60, 0x52, 0x60, 0xd6, 0x60, 0x0e, 0xe2, 0x06, 0x0b, 0x7a, 0xa6, 0xf8, 0x64, 0x16,
+	0x97, 0x28, 0xa9, 0x72, 0x29, 0xe3, 0x31, 0x3c, 0x28, 0xb5, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55,
+	0x29, 0x86, 0x4b, 0xc6, 0xb7, 0x38, 0xdd, 0x25, 0xb3, 0x98, 0x26, 0x8e, 0x50, 0xe3, 0x52, 0xc1,
+	0x67, 0x3a, 0xcc, 0x15, 0x46, 0xc7, 0x98, 0xb8, 0x98, 0x7d, 0x8b, 0xd3, 0x85, 0xe6, 0x30, 0x72,
+	0x49, 0xe0, 0x0c, 0x0f, 0x6b, 0x3d, 0xfc, 0x71, 0xa1, 0x87, 0xc7, 0xbf, 0x52, 0xce, 0x14, 0x68,
+	0x86, 0x39, 0x53, 0x68, 0x3e, 0x23, 0x97, 0x24, 0xee, 0xa0, 0xb2, 0x21, 0xc2, 0x0a, 0x9c, 0xba,
+	0xa5, 0x5c, 0x28, 0xd1, 0x0d, 0x73, 0xa1, 0x93, 0xcf, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9,
+	0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e,
+	0xcb, 0x31, 0x44, 0x19, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0x83,
+	0xcc, 0xd7, 0x05, 0x5b, 0xa5, 0x0f, 0xb3, 0x4a, 0xbf, 0x42, 0x1f, 0x25, 0xfd, 0x57, 0x16, 0xa4,
+	0x16, 0x27, 0xb1, 0x81, 0xd3, 0xa9, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x23, 0x96, 0x87, 0x88,
+	0x1b, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -251,8 +251,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	EnableVerificationFlags(ctx context.Context, in *MsgEnableVerificationFlags, opts ...grpc.CallOption) (*MsgEnableVerificationFlagsResponse, error)
-	DisableVerificationFlags(ctx context.Context, in *MsgDisableVerificationFlags, opts ...grpc.CallOption) (*MsgDisableVerificationFlagsResponse, error)
+	EnableHeaderVerification(ctx context.Context, in *MsgEnableHeaderVerification, opts ...grpc.CallOption) (*MsgEnableHeaderVerificationResponse, error)
+	DisableHeaderVerification(ctx context.Context, in *MsgDisableHeaderVerification, opts ...grpc.CallOption) (*MsgDisableHeaderVerificationResponse, error)
 }
 
 type msgClient struct {
@@ -263,18 +263,18 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) EnableVerificationFlags(ctx context.Context, in *MsgEnableVerificationFlags, opts ...grpc.CallOption) (*MsgEnableVerificationFlagsResponse, error) {
-	out := new(MsgEnableVerificationFlagsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Msg/EnableVerificationFlags", in, out, opts...)
+func (c *msgClient) EnableHeaderVerification(ctx context.Context, in *MsgEnableHeaderVerification, opts ...grpc.CallOption) (*MsgEnableHeaderVerificationResponse, error) {
+	out := new(MsgEnableHeaderVerificationResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Msg/EnableHeaderVerification", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) DisableVerificationFlags(ctx context.Context, in *MsgDisableVerificationFlags, opts ...grpc.CallOption) (*MsgDisableVerificationFlagsResponse, error) {
-	out := new(MsgDisableVerificationFlagsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Msg/DisableVerificationFlags", in, out, opts...)
+func (c *msgClient) DisableHeaderVerification(ctx context.Context, in *MsgDisableHeaderVerification, opts ...grpc.CallOption) (*MsgDisableHeaderVerificationResponse, error) {
+	out := new(MsgDisableHeaderVerificationResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Msg/DisableHeaderVerification", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -283,57 +283,57 @@ func (c *msgClient) DisableVerificationFlags(ctx context.Context, in *MsgDisable
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	EnableVerificationFlags(context.Context, *MsgEnableVerificationFlags) (*MsgEnableVerificationFlagsResponse, error)
-	DisableVerificationFlags(context.Context, *MsgDisableVerificationFlags) (*MsgDisableVerificationFlagsResponse, error)
+	EnableHeaderVerification(context.Context, *MsgEnableHeaderVerification) (*MsgEnableHeaderVerificationResponse, error)
+	DisableHeaderVerification(context.Context, *MsgDisableHeaderVerification) (*MsgDisableHeaderVerificationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) EnableVerificationFlags(ctx context.Context, req *MsgEnableVerificationFlags) (*MsgEnableVerificationFlagsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EnableVerificationFlags not implemented")
+func (*UnimplementedMsgServer) EnableHeaderVerification(ctx context.Context, req *MsgEnableHeaderVerification) (*MsgEnableHeaderVerificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableHeaderVerification not implemented")
 }
-func (*UnimplementedMsgServer) DisableVerificationFlags(ctx context.Context, req *MsgDisableVerificationFlags) (*MsgDisableVerificationFlagsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DisableVerificationFlags not implemented")
+func (*UnimplementedMsgServer) DisableHeaderVerification(ctx context.Context, req *MsgDisableHeaderVerification) (*MsgDisableHeaderVerificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableHeaderVerification not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_EnableVerificationFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgEnableVerificationFlags)
+func _Msg_EnableHeaderVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgEnableHeaderVerification)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).EnableVerificationFlags(ctx, in)
+		return srv.(MsgServer).EnableHeaderVerification(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.lightclient.Msg/EnableVerificationFlags",
+		FullMethod: "/zetachain.zetacore.lightclient.Msg/EnableHeaderVerification",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).EnableVerificationFlags(ctx, req.(*MsgEnableVerificationFlags))
+		return srv.(MsgServer).EnableHeaderVerification(ctx, req.(*MsgEnableHeaderVerification))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_DisableVerificationFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDisableVerificationFlags)
+func _Msg_DisableHeaderVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDisableHeaderVerification)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DisableVerificationFlags(ctx, in)
+		return srv.(MsgServer).DisableHeaderVerification(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.lightclient.Msg/DisableVerificationFlags",
+		FullMethod: "/zetachain.zetacore.lightclient.Msg/DisableHeaderVerification",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DisableVerificationFlags(ctx, req.(*MsgDisableVerificationFlags))
+		return srv.(MsgServer).DisableHeaderVerification(ctx, req.(*MsgDisableHeaderVerification))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -343,19 +343,19 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "EnableVerificationFlags",
-			Handler:    _Msg_EnableVerificationFlags_Handler,
+			MethodName: "EnableHeaderVerification",
+			Handler:    _Msg_EnableHeaderVerification_Handler,
 		},
 		{
-			MethodName: "DisableVerificationFlags",
-			Handler:    _Msg_DisableVerificationFlags_Handler,
+			MethodName: "DisableHeaderVerification",
+			Handler:    _Msg_DisableHeaderVerification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "lightclient/tx.proto",
 }
 
-func (m *MsgEnableVerificationFlags) Marshal() (dAtA []byte, err error) {
+func (m *MsgEnableHeaderVerification) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -365,12 +365,12 @@ func (m *MsgEnableVerificationFlags) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgEnableVerificationFlags) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgEnableHeaderVerification) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgEnableVerificationFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgEnableHeaderVerification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -404,7 +404,7 @@ func (m *MsgEnableVerificationFlags) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgEnableVerificationFlagsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgEnableHeaderVerificationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -414,12 +414,12 @@ func (m *MsgEnableVerificationFlagsResponse) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgEnableVerificationFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgEnableHeaderVerificationResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgEnableVerificationFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgEnableHeaderVerificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -427,7 +427,7 @@ func (m *MsgEnableVerificationFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDisableVerificationFlags) Marshal() (dAtA []byte, err error) {
+func (m *MsgDisableHeaderVerification) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -437,12 +437,12 @@ func (m *MsgDisableVerificationFlags) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDisableVerificationFlags) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDisableHeaderVerification) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDisableVerificationFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDisableHeaderVerification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -476,7 +476,7 @@ func (m *MsgDisableVerificationFlags) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDisableVerificationFlagsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgDisableHeaderVerificationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -486,12 +486,12 @@ func (m *MsgDisableVerificationFlagsResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgDisableVerificationFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDisableHeaderVerificationResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDisableVerificationFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDisableHeaderVerificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -510,7 +510,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgEnableVerificationFlags) Size() (n int) {
+func (m *MsgEnableHeaderVerification) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -530,7 +530,7 @@ func (m *MsgEnableVerificationFlags) Size() (n int) {
 	return n
 }
 
-func (m *MsgEnableVerificationFlagsResponse) Size() (n int) {
+func (m *MsgEnableHeaderVerificationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -539,7 +539,7 @@ func (m *MsgEnableVerificationFlagsResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgDisableVerificationFlags) Size() (n int) {
+func (m *MsgDisableHeaderVerification) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -559,7 +559,7 @@ func (m *MsgDisableVerificationFlags) Size() (n int) {
 	return n
 }
 
-func (m *MsgDisableVerificationFlagsResponse) Size() (n int) {
+func (m *MsgDisableHeaderVerificationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -574,7 +574,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgEnableVerificationFlags) Unmarshal(dAtA []byte) error {
+func (m *MsgEnableHeaderVerification) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -597,10 +597,10 @@ func (m *MsgEnableVerificationFlags) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgEnableVerificationFlags: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgEnableHeaderVerification: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgEnableVerificationFlags: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgEnableHeaderVerification: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -732,7 +732,7 @@ func (m *MsgEnableVerificationFlags) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgEnableVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgEnableHeaderVerificationResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -755,10 +755,10 @@ func (m *MsgEnableVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgEnableVerificationFlagsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgEnableHeaderVerificationResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgEnableVerificationFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgEnableHeaderVerificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -782,7 +782,7 @@ func (m *MsgEnableVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgDisableVerificationFlags) Unmarshal(dAtA []byte) error {
+func (m *MsgDisableHeaderVerification) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -805,10 +805,10 @@ func (m *MsgDisableVerificationFlags) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDisableVerificationFlags: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDisableHeaderVerification: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDisableVerificationFlags: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDisableHeaderVerification: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -940,7 +940,7 @@ func (m *MsgDisableVerificationFlags) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgDisableVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgDisableHeaderVerificationResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -963,10 +963,10 @@ func (m *MsgDisableVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDisableVerificationFlagsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDisableHeaderVerificationResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDisableVerificationFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDisableHeaderVerificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

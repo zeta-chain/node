@@ -12,15 +12,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-func TestMsgEnableVerificationFlags_ValidateBasic(t *testing.T) {
+func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgEnableVerificationFlags
+		msg  types.MsgEnableHeaderVerification
 		err  require.ErrorAssertionFunc
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgEnableVerificationFlags{
+			msg: types.MsgEnableHeaderVerification{
 				Creator: "invalid_address",
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
@@ -29,7 +29,7 @@ func TestMsgEnableVerificationFlags_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty chain id list",
-			msg: types.MsgEnableVerificationFlags{
+			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
 				ChainIdList: []int64{},
 			},
@@ -40,7 +40,7 @@ func TestMsgEnableVerificationFlags_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "chain id list is too long",
-			msg: types.MsgEnableVerificationFlags{
+			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
 				ChainIdList: make([]int64, 200),
 			},
@@ -51,7 +51,7 @@ func TestMsgEnableVerificationFlags_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain id",
-			msg: types.MsgEnableVerificationFlags{
+			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
 				ChainIdList: []int64{chains.ZetaPrivnetChain.ChainId},
 			},
@@ -62,7 +62,7 @@ func TestMsgEnableVerificationFlags_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid address",
-			msg: types.MsgEnableVerificationFlags{
+			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
 				ChainIdList: []int64{chains.EthChain.ChainId},
 			},
@@ -77,16 +77,16 @@ func TestMsgEnableVerificationFlags_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgEnableVerificationFlags_GetSigners(t *testing.T) {
+func TestMsgEnableHeaderVerification_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgEnableVerificationFlags
+		msg    *types.MsgEnableHeaderVerification
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.NewMsgEnableVerificationFlags(
+			msg: types.NewMsgEnableHeaderVerification(
 				signer,
 				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
 			),
@@ -94,7 +94,7 @@ func TestMsgEnableVerificationFlags_GetSigners(t *testing.T) {
 		},
 		{
 			name: "invalid signer",
-			msg: types.NewMsgEnableVerificationFlags(
+			msg: types.NewMsgEnableHeaderVerification(
 				"invalid",
 				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
 			),
@@ -116,22 +116,22 @@ func TestMsgEnableVerificationFlags_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgEnableVerificationFlags_Type(t *testing.T) {
-	msg := types.MsgEnableVerificationFlags{
+func TestMsgEnableHeaderVerification_Type(t *testing.T) {
+	msg := types.MsgEnableHeaderVerification{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgEnableVerificationFlags, msg.Type())
+	require.Equal(t, types.TypeMsgEnableHeaderVerification, msg.Type())
 }
 
-func TestMsgEnableVerificationFlags_Route(t *testing.T) {
-	msg := types.MsgEnableVerificationFlags{
+func TestMsgEnableHeaderVerification_Route(t *testing.T) {
+	msg := types.MsgEnableHeaderVerification{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgEnableVerificationFlags_GetSignBytes(t *testing.T) {
-	msg := types.MsgEnableVerificationFlags{
+func TestMsgEnableHeaderVerification_GetSignBytes(t *testing.T) {
+	msg := types.MsgEnableHeaderVerification{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

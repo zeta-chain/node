@@ -251,9 +251,9 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		return err
 	}
 
-	verificationFlags, err := b.GetVerificationFlags()
+	blockHeaderEnabledChains, err := b.GetBlockHeaderEnabledChains()
 	if err != nil {
-		b.logger.Info().Msg("Unable to fetch verification flags from zetabridge")
+		b.logger.Info().Msg("Unable to fetch block header enabled chains from zetabridge")
 		return err
 	}
 
@@ -264,7 +264,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		newBTCParams,
 		tssPubKey,
 		crosschainFlags,
-		verificationFlags,
+		blockHeaderEnabledChains,
 		init,
 		b.logger,
 	)

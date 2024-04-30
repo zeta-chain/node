@@ -9,9 +9,9 @@ import (
 // DefaultGenesis returns the default lightclient genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		BlockHeaders:      []proofs.BlockHeader{},
-		ChainStates:       []ChainState{},
-		VerificationFlags: []VerificationFlags{},
+		BlockHeaders:            []proofs.BlockHeader{},
+		ChainStates:             []ChainState{},
+		BlockHeaderVerification: BlockHeaderVerification{},
 	}
 }
 
