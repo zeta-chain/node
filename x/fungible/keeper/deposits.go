@@ -18,6 +18,10 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
+func (k Keeper) DepositCoinsToFungibleModule(ctx sdk.Context, amount *big.Int) error {
+	return k.MintZetaToFungibleModule(ctx, amount)
+}
+
 // ZRC20DepositAndCallContract deposits ZRC20 to the EVM account and calls the contract
 // returns [txResponse, isContractCall, error]
 // isContractCall is true if the receiver is a contract and a contract call was made

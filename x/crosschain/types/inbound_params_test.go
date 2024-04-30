@@ -19,11 +19,11 @@ func TestInboundTxParams_Validate(t *testing.T) {
 	inTxParams.SenderChainId = 1000
 	require.ErrorContains(t, inTxParams.Validate(), "invalid sender chain id 1000")
 	inTxParams = sample.InboundTxParamsValidChainID(r)
-	inTxParams.SenderChainId = chains.GoerliChain().ChainId
+	inTxParams.SenderChainId = chains.GoerliChain.ChainId
 	inTxParams.Sender = "0x123"
 	require.ErrorContains(t, inTxParams.Validate(), "invalid address 0x123")
 	inTxParams = sample.InboundTxParamsValidChainID(r)
-	inTxParams.SenderChainId = chains.GoerliChain().ChainId
+	inTxParams.SenderChainId = chains.GoerliChain.ChainId
 	inTxParams.TxOrigin = "0x123"
 	require.ErrorContains(t, inTxParams.Validate(), "invalid address 0x123")
 	inTxParams = sample.InboundTxParamsValidChainID(r)

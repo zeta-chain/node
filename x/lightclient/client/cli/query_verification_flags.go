@@ -12,7 +12,7 @@ func CmdShowVerificationFlags() *cobra.Command {
 		Use:   "show-verification-flags",
 		Short: "Show the verification flags",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

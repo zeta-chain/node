@@ -7,6 +7,7 @@ import "zetachain/zetacore/crosschain/in_tx_hash_to_cctx.proto";
 import "zetachain/zetacore/crosschain/in_tx_tracker.proto";
 import "zetachain/zetacore/crosschain/last_block_height.proto";
 import "zetachain/zetacore/crosschain/out_tx_tracker.proto";
+import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
@@ -22,4 +23,5 @@ message GenesisState {
   repeated InTxTracker in_tx_tracker_list = 11 [ (gogoproto.nullable) = false ];
   ZetaAccounting zeta_accounting = 12 [ (gogoproto.nullable) = false ];
   repeated string FinalizedInbounds = 16;
+  RateLimiterFlags rate_limiter_flags = 17 [(gogoproto.nullable) = false];
 }

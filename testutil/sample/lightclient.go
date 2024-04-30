@@ -61,7 +61,7 @@ func Proof(t *testing.T) (*proofs.Proof, proofs.BlockHeader, string, int64, int6
 	proof, err := txsTree.GenerateProof(txIndex)
 	require.NoError(t, err)
 
-	chainID := chains.SepoliaChain().ChainId
+	chainID := chains.SepoliaChain.ChainId
 	ethProof := proofs.NewEthereumProof(proof)
 	ethHeader := proofs.NewEthereumHeader(b)
 	blockHeader := proofs.BlockHeader{

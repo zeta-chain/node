@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -70,7 +70,6 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
-
 	}
 
 	r.Logger.Info("  Logs:")
@@ -135,7 +134,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 
 	lessThanAmount := amount.Div(amount, big.NewInt(10)) // 1/10 of amount
 	tx, err = r.ConnectorZEVM.Send(r.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(chains.BtcRegtestChain().ChainId),
+		DestinationChainId:  big.NewInt(chains.BtcRegtestChain.ChainId),
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,

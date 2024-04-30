@@ -21,6 +21,7 @@ func Save(config *Config, path string) error {
 	if err != nil {
 		return err
 	}
+
 	file := filepath.Join(path, folder, filename)
 	file = filepath.Clean(file)
 
@@ -28,10 +29,12 @@ func Save(config *Config, path string) error {
 	if err != nil {
 		return err
 	}
+
 	err = os.WriteFile(file, jsonFile, 0600)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

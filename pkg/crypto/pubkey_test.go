@@ -132,21 +132,21 @@ func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 		c.Assert(err, IsNil)
 
 		c.Assert(os.Setenv("NET", "mainnet"), IsNil)
-		addrETH, err := pk.GetAddress(chains.GoerliChain())
+		addrETH, err := pk.GetAddress(chains.GoerliChain)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mainnet)
 
 		c.Assert(os.Setenv("NET", "testnet"), IsNil)
-		addrETH, err = pk.GetAddress(chains.GoerliChain())
+		addrETH, err = pk.GetAddress(chains.GoerliChain)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.testnet)
 
 		c.Assert(os.Setenv("NET", "mocknet"), IsNil)
-		addrETH, err = pk.GetAddress(chains.GoerliChain())
+		addrETH, err = pk.GetAddress(chains.GoerliChain)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mocknet)
 
-		addrETH, err = pk.GetAddress(chains.BtcRegtestChain())
+		addrETH, err = pk.GetAddress(chains.BtcRegtestChain)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH, Equals, chains.NoAddress)
 	}

@@ -129,7 +129,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -154,7 +154,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         chains.ReceiveStatus_Success,
+			Status:                         chains.ReceiveStatus_success,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -180,7 +180,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -210,7 +210,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         chains.ReceiveStatus_Failed,
+			Status:                         chains.ReceiveStatus_failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -239,7 +239,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -270,7 +270,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         chains.ReceiveStatus_Failed,
+			Status:                         chains.ReceiveStatus_failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -302,7 +302,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		observer := sample.AccAddress()
 		tss := sample.Tss()
@@ -332,7 +332,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         chains.ReceiveStatus_Failed,
+			Status:                         chains.ReceiveStatus_failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -354,7 +354,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Setup mock data
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -376,7 +376,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         chains.ReceiveStatus_Success,
+			Status:                         chains.ReceiveStatus_success,
 			Creator:                        accAddress.String(),
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -401,7 +401,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Setup mock data
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChain()
 		asset := ""
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -422,7 +422,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         chains.ReceiveStatus_Success,
+			Status:                         chains.ReceiveStatus_success,
 			Creator:                        accAddress.String(),
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,

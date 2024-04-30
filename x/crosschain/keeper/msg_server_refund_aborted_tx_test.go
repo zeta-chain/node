@@ -42,7 +42,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -81,7 +81,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -120,7 +120,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -160,7 +160,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -192,7 +192,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -224,7 +224,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -263,7 +263,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		asset := sample.EthAddress().String()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
@@ -352,7 +352,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -383,7 +383,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -414,7 +414,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -447,7 +447,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -507,7 +507,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
@@ -537,7 +537,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		chainID := getValidEthChainID(t)
+		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 

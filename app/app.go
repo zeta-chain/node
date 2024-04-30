@@ -605,32 +605,7 @@ func New(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	// NOTE: Cross-chain module must be initialized after observer module, as pending nonces in crosschain needs the tss pubkey from observer module
-	app.mm.SetOrderInitGenesis(
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		govtypes.ModuleName,
-		evmtypes.ModuleName,
-		feemarkettypes.ModuleName,
-		paramstypes.ModuleName,
-		group.ModuleName,
-		genutiltypes.ModuleName,
-		upgradetypes.ModuleName,
-		evidencetypes.ModuleName,
-		vestingtypes.ModuleName,
-		observertypes.ModuleName,
-		crosschaintypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
-		// NOTE: crisis module must go at the end to check for invariants on each module
-		crisistypes.ModuleName,
-	)
+	app.mm.SetOrderInitGenesis(InitGenesisModuleList()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
