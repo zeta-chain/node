@@ -39,12 +39,11 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 
 	// Pause ETH ZRC20
 	r.Logger.Info("Pausing ETH")
-	msg := fungibletypes.NewMsgPauseZRC20(
+	msgPause := fungibletypes.NewMsgPauseZRC20(
 		r.ZetaTxServer.GetAccountAddress(0),
 		[]string{r.ETHZRC20Addr.Hex()},
-		fungibletypes.UpdatePausedStatusAction_PAUSE,
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgPause)
 	if err != nil {
 		panic(err)
 	}
@@ -129,12 +128,11 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 
 	// Unpause ETH ZRC20
 	r.Logger.Info("Unpausing ETH")
-	msg = fungibletypes.NewMsgPauseZRC20(
+	msgUnpause := fungibletypes.NewMsgUnpauseZRC20(
 		r.ZetaTxServer.GetAccountAddress(0),
 		[]string{r.ETHZRC20Addr.Hex()},
-		fungibletypes.UpdatePausedStatusAction_UNPAUSE,
 	)
-	res, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgUnpause)
 	if err != nil {
 		panic(err)
 	}

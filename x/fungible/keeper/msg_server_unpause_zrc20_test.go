@@ -36,10 +36,12 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 		// setup zrc20
 		zrc20A, zrc20B, zrc20C := sample.EthAddress().String(), sample.EthAddress().String(), sample.EthAddress().String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))
-		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20B))
+		fcB := sample.ForeignCoins(t, zrc20B)
+		fcB.Paused = true
+		k.SetForeignCoins(ctx, fcB)
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20C))
 		assertUnpaused(zrc20A)
-		assertUnpaused(zrc20B)
+		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
@@ -132,7 +134,7 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		zrc20A, zrc20B := sample.EthAddress().String(), sample.EthAddress().String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))

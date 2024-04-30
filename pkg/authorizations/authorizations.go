@@ -30,6 +30,8 @@ func AuthorizationTable() map[string]authoritytypes.PolicyType {
 		sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}):    authoritytypes.PolicyType_groupAdmin,
 		sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20LiquidityCap{}): authoritytypes.PolicyType_groupOperational,
 		sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20WithdrawFee{}):  authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}):              authoritytypes.PolicyType_groupEmergency,
+		sdk.MsgTypeURL(&fungibletypes.MsgUnpauseZRC20{}):            authoritytypes.PolicyType_groupOperational,
 
 		// Observer admin messages
 		sdk.MsgTypeURL(&observertypes.MsgAddObserver{}):           authoritytypes.PolicyType_groupOperational,

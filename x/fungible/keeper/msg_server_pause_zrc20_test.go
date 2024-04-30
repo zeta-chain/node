@@ -57,6 +57,8 @@ func TestKeeper_PauseZRC20(t *testing.T) {
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+
 		// can pause already paused zrc20
 		_, err = msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
 			admin,
@@ -65,11 +67,11 @@ func TestKeeper_PauseZRC20(t *testing.T) {
 			},
 		))
 		require.NoError(t, err)
-		assertUnpaused(zrc20A)
+		assertPaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		// can pause all zrc20
 		_, err = msgServer.PauseZRC20(ctx, types.NewMsgPauseZRC20(
@@ -84,8 +86,6 @@ func TestKeeper_PauseZRC20(t *testing.T) {
 		assertPaused(zrc20A)
 		assertPaused(zrc20B)
 		assertPaused(zrc20C)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 	})
 
 	t.Run("should fail if invalid message", func(t *testing.T) {

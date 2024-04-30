@@ -36,11 +36,6 @@ func (k msgServer) PauseZRC20(
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 
-	//pausedStatus := true
-	//if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
-	//	pausedStatus = false
-	//}
-
 	// iterate all foreign coins and set paused status
 	for _, zrc20 := range msg.Zrc20Addresses {
 		fc, found := k.GetForeignCoins(ctx, zrc20)
