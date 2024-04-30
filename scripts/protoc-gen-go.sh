@@ -2,6 +2,8 @@
 
 set -eo pipefail
 
+export BUF_CACHE_DIR="/tmp/buf-cache"
+
 echo "Generating gogo proto code"
 cd proto
 proto_dirs=$(find . -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
