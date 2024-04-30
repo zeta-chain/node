@@ -147,11 +147,10 @@ gosec:
 
 protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
-protoImageCi=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user root $(protoImageName)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user $(shell id -u):$(shell id -g) $(protoImageName)
 
 proto-format:
-	@echo "Formatting Protobuf files"
+	@echo "--> Formatting Protobuf files"
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 .PHONY: proto-format
 
@@ -161,12 +160,8 @@ typescript: proto-format
 .PHONY: typescript
 
 proto-gen: proto-format
-	@echo "Generating Protobuf files"
+	@echo "--> Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protoc-gen-go.sh
-
-proto-gen-ci: proto-format
-	@echo "Generating Protobuf files"
-	@$(protoImageCi) sh ./scripts/protoc-gen-go.sh
 
 openapi: proto-format
 	@echo "--> Generating OpenAPI specs"
@@ -190,9 +185,6 @@ mocks:
 
 generate: proto-gen openapi specs typescript docs-zetacored
 .PHONY: generate
-
-generate-ci: proto-gen-ci openapi specs typescript docs-zetacored
-.PHONY: generate-ci
 
 ###############################################################################
 ###                         E2E tests and localnet                          ###
