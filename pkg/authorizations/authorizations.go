@@ -1,4 +1,4 @@
-package pkg
+package authorizations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

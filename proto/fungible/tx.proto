@@ -95,6 +95,15 @@ message MsgUpdateZRC20PausedStatus {
 
 message MsgUpdateZRC20PausedStatusResponse {}
 
+
+message MsgUnpauseZRC20PausedStatus {
+  string creator = 1;
+  repeated string zrc20_addresses = 2;
+  UpdatePausedStatusAction action = 3;
+}
+
+message MsgUpdateZRC20PausedStatusResponse {}
+
 message MsgUpdateZRC20LiquidityCap {
   string creator = 1;
   string zrc20_address = 2;
