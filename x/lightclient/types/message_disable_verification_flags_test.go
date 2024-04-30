@@ -53,11 +53,11 @@ func TestMsgDisableVerificationFlags_ValidateBasic(t *testing.T) {
 			name: "invalid chain id",
 			msg: types.MsgDisableVerificationFlags{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.BtcMainnetChain.ChainId},
+				ChainIdList: []int64{chains.ZetaPrivnetChain.ChainId},
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(t, err, fmt.Sprintf("invalid chain id header not supported (%d)", chains.BtcMainnetChain.ChainId))
+				require.ErrorContains(t, err, fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId))
 			},
 		},
 		{

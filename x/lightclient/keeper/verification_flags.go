@@ -10,24 +10,24 @@ import (
 )
 
 // SetVerificationFlags set the verification flags in the store
-func (k Keeper) SetVerificationFlags(ctx sdk.Context, vf types.VerificationFlags) {
+func (k Keeper) SetVerificationFlags(ctx sdk.Context, verificationFlag types.VerificationFlags) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VerificationFlagsKey))
-	b := k.cdc.MustMarshal(&vf)
-	key := types.KeyPrefix(fmt.Sprintf("%d", vf.ChainId))
+	b := k.cdc.MustMarshal(&verificationFlag)
+	key := types.KeyPrefix(fmt.Sprintf("%d", verificationFlag.ChainId))
 	store.Set(key, b)
 }
 
 // GetVerificationFlags returns the verification flags
-func (k Keeper) GetVerificationFlags(ctx sdk.Context, chainID int64) (val types.VerificationFlags, found bool) {
+func (k Keeper) GetVerificationFlags(ctx sdk.Context, chainID int64) (verificationFlag types.VerificationFlags, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VerificationFlagsKey))
 	key := types.KeyPrefix(fmt.Sprintf("%d", chainID))
 	b := store.Get(key)
 	if b == nil {
-		return val, false
+		return verificationFlag, false
 	}
 
-	k.cdc.MustUnmarshal(b, &val)
-	return val, true
+	k.cdc.MustUnmarshal(b, &verificationFlag)
+	return verificationFlag, true
 }
 
 func (k Keeper) GetAllVerificationFlags(ctx sdk.Context) (verificationFlags []types.VerificationFlags) {

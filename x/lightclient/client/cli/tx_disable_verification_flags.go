@@ -15,7 +15,7 @@ func CmdDisableVerificationFlags() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "disable-verification-flags [list of chain-id]",
 		Short: "Disable verification flags for the list of chains separated by comma",
-		Long: `Provide a list of chain ids separated by comma to enable block header verification for the specified chain ids.
+		Long: `Provide a list of chain ids separated by comma to disable block header verification for the specified chain ids.
 
   				Example:
                     To disable verification flags for chain ids 1 and 56
@@ -40,6 +40,10 @@ func CmdDisableVerificationFlags() *cobra.Command {
 			}
 
 			msg := types.NewMsgDisableVerificationFlags(clientCtx.GetFromAddress().String(), chainIDList)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

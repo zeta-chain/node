@@ -20,7 +20,7 @@ func TestKeeper_VerificationFlags(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("should error if not found", func(t *testing.T) {
+	t.Run("should return empty set if not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 

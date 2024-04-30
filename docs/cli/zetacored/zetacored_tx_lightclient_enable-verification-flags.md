@@ -1,6 +1,6 @@
 # tx lightclient enable-verification-flags
 
-Disable verification flags for the list of chains separated by comma
+Enable verification flags for the list of chains separated by comma
 
 ### Synopsis
 

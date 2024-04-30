@@ -54359,7 +54359,7 @@ definitions:
         format: int64
       enabled:
         type: boolean
-    title: VerificationFlags is a structure containing information which chain types are enabled for block header verification
+    title: VerificationFlags is a structure containing information of weather a chain is enabled or not for block header verification
   observerAdmin_Policy:
     type: object
     properties:

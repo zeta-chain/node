@@ -4,7 +4,7 @@ Disable verification flags for the list of chains separated by comma
 
 ### Synopsis
 
-Provide a list of chain ids separated by comma to enable block header verification for the specified chain ids.
+Provide a list of chain ids separated by comma to disable block header verification for the specified chain ids.
 
   				Example:
                     To disable verification flags for chain ids 1 and 56

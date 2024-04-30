@@ -215,10 +215,10 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 }
 
 // EnableVerificationFlags enables the verification flags on ZetaChain
-func (runner *E2ERunner) EnableVerificationFlags(chainIdList []int64) error {
+func (runner *E2ERunner) EnableVerificationFlags(chainIDList []int64) error {
 	runner.Logger.Print("⚙️ enabling verification flags for block headers")
 
-	return runner.ZetaTxServer.EnableVerificationFlags(e2eutils.FungibleAdminName, chainIdList)
+	return runner.ZetaTxServer.EnableVerificationFlags(e2eutils.FungibleAdminName, chainIDList)
 }
 
 // FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)

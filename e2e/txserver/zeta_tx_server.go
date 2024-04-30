@@ -251,7 +251,7 @@ type intoAny interface {
 }
 
 // EnableVerificationFlags enables the verification flags for the lightclient module
-func (zts ZetaTxServer) EnableVerificationFlags(account string, chainIdList []int64) error {
+func (zts ZetaTxServer) EnableVerificationFlags(account string, chainIDList []int64) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -264,7 +264,7 @@ func (zts ZetaTxServer) EnableVerificationFlags(account string, chainIdList []in
 
 	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableVerificationFlags(
 		addr.String(),
-		chainIdList,
+		chainIDList,
 	))
 
 	return err

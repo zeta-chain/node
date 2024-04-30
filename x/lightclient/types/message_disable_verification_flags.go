@@ -46,15 +46,15 @@ func (msg *MsgDisableVerificationFlags) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	changelistForHeaderSupport := chains.ChainListForHeaderSupport()
+	chainListForHeaderSupport := chains.ChainListForHeaderSupport()
 	if len(msg.ChainIdList) == 0 {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "chain id list cannot be empty")
 	}
-	if len(msg.ChainIdList) > len(changelistForHeaderSupport) {
+	if len(msg.ChainIdList) > len(chainListForHeaderSupport) {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "chain id list cannot be greater than supported chains")
 	}
 	for _, chainID := range msg.ChainIdList {
-		if !chains.ChainIDInChainList(chainID, changelistForHeaderSupport) {
+		if !chains.ChainIDInChainList(chainID, chainListForHeaderSupport) {
 			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id header not supported (%d)", chainID)
 		}
 	}

@@ -5,6 +5,7 @@
 ### Refactor
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
+* [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 
 ## Unreleased
 ### Breaking Changes

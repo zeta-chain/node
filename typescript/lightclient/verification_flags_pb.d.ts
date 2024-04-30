@@ -7,7 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
- * VerificationFlags is a structure containing information which chain types are enabled for block header verification
+ * VerificationFlags is a structure containing information of weather a chain is enabled or not for block header verification
  *
  * @generated from message zetachain.zetacore.lightclient.VerificationFlags
  */

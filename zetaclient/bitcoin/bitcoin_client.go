@@ -1347,7 +1347,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		res2.Block.Height,
 		proofs.NewBitcoinHeader(headerBuf.Bytes()),
 	)
-	ob.logger.InTx.Info().Msgf("posted block header %d: %s , Zeta tx hash :%s", bn, blockHash, zetatxHash)
+	ob.logger.InTx.Info().Msgf("posted block header %d: %s, zeta tx hash :%s", bn, blockHash, zetatxHash)
 	if err != nil { // error shouldn't block the process
 		ob.logger.InTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 	}
