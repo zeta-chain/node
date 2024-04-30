@@ -57,12 +57,12 @@ if [ "$OPTION" == "upgrade" ]; then
   # Run zetae2e, if the upgrade height is lower than 100, we use the setup-only flag
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
     echo "running E2E command to setup the networks..."
-    zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml
+    zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml --skip-header-proof
   else
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e "$ZETAE2E_CMD" --config-out deployed.yml --light
+    zetae2e "$ZETAE2E_CMD" --config-out deployed.yml --light --skip-header-proof
  fi
   ZETAE2E_EXIT_CODE=$?
 
@@ -86,9 +86,9 @@ if [ "$OPTION" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --light
+    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --light --skip-header-proof
   else
-    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --skip-bitcoin-setup --light
+    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
   fi
 
   ZETAE2E_EXIT_CODE=$?
