@@ -7,10 +7,7 @@
 
 ### Features
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
-* [2039](https://github.com/zeta-chain/node/pull/2039) - cosmos v0.47 upgrade
-
-### Refactor
-* [2014](https://github.com/zeta-chain/node/pull/2014) - remove params module
+* [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
 
 ## Unreleased
 ### Breaking Changes
