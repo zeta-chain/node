@@ -157,6 +157,10 @@ protoImageCi=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --u
 
 proto-gen:
 	@echo "Generating Protobuf files"
+	@$(protoImage) sh ./scripts/protoc-gen-go.sh
+
+proto-gen-ci:
+	@echo "Generating Protobuf files"
 	@$(protoImageCi) sh ./scripts/protoc-gen-go.sh
 
 proto-format:
@@ -184,6 +188,9 @@ mocks:
 
 generate: proto-gen openapi specs typescript docs-zetacored
 .PHONY: generate
+
+generate-ci: proto-gen-ci openapi specs typescript docs-zetacored
+.PHONY: generate-ci
 
 ###############################################################################
 ###                         E2E tests and localnet                          ###

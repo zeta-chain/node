@@ -20,7 +20,7 @@ jobs:
       - name: Generate Go code, docs and specs
         env:
           TEST_ENV: ${{ github.workspace }}
-        run: make generate
+        run: make generate-ci
 
       - name: Check for changes
         run: |
