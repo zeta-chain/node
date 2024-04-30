@@ -18,7 +18,7 @@ message RateLimiterFlags {
   ];
 
   // conversion in azeta per token
-  repeated Conversion conversions = 4 [ (gogoproto.nullable) = false ];
+  repeated Conversion conversions = 4 [(gogoproto.nullable) = false];
 }
 
 message Conversion {
