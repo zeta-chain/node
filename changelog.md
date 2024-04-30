@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## Unreleased
+### Breaking Changes
+* `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableVerificationFlags` and `MsgDisableVerificationFlags` messages.
+ * `MsgEnableVerificationFlags` message enables the verification flags for a list of chains and can be triggered via `PolicyType_groupOperational`
+ * `MsgDisableVerificationFlags` message disables the verification flags for a list of chains and can be triggered via `PolicyType_emergency`
 
 ### Refactor
 
