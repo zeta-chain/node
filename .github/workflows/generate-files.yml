@@ -12,14 +12,14 @@ jobs:
         uses: actions/checkout@v3
 
       - uses: bufbuild/buf-setup-action@v1
+        with:
+          context: .
 
       - name: Add protoc plugins to PATH
         run: |
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: Generate Go code, docs and specs
-        with:
-          context: .
         env:
           TEST_ENV: ${{ github.workspace }}
         run: make generate
