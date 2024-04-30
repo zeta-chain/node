@@ -1328,7 +1328,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 
 func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 	t.Run("should call on receive on connector which calls onZetaMessage on sample DAPP", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -1371,7 +1371,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 	})
 
 	t.Run("should error if system contract not found", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
@@ -1387,7 +1387,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 	})
 
 	t.Run("should error in contract call reverts", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -1406,7 +1406,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 
 func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 	t.Run("should call on revert on connector which calls onZetaRevert on sample DAPP", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -1446,7 +1446,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 	})
 
 	t.Run("should error if system contract not found", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
@@ -1463,7 +1463,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 	})
 
 	t.Run("should error in contract call reverts", func(t *testing.T) {
-		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)

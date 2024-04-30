@@ -279,7 +279,7 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 		},
 		TotalPending: 1,
 	}
-	input := crosschainTypes.QueryListCctxPendingRequest{ChainId: 7000}
+	input := crosschainTypes.QueryListPendingCctxRequest{ChainId: 7000}
 	method := "zetachain.zetacore.crosschain.Query/ListPendingCctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()

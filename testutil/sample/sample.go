@@ -11,9 +11,9 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
