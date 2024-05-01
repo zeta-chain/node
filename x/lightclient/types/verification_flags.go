@@ -4,14 +4,14 @@ import "github.com/zeta-chain/zetacore/pkg/chains"
 
 func DefaultBlockHeaderVerification() BlockHeaderVerification {
 	return BlockHeaderVerification{
-		EnabledChains: DefaultVerificationFlags(),
+		HeaderSupportedChains: DefaultHeaderSupportedChains(),
 	}
 }
 
-// DefaultVerificationFlags returns the default verification flags.
+// DefaultHeaderSupportedChains returns the default verification flags.
 // By default, everything disabled.
-func DefaultVerificationFlags() []EnabledChain {
-	return []EnabledChain{
+func DefaultHeaderSupportedChains() []HeaderSupportedChain {
+	return []HeaderSupportedChain{
 		{
 			ChainId: chains.EthChain.ChainId,
 			Enabled: false,

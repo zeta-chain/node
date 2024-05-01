@@ -24,7 +24,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: false,
@@ -40,7 +40,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.EthChain.ChainId,
 					Enabled: false,
@@ -55,7 +55,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: false,
@@ -75,7 +75,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: true,
@@ -95,7 +95,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: true,
@@ -117,7 +117,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		proof, blockHeader, blockHash, txIndex, chainID, _ := sample.Proof(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: true,
@@ -142,7 +142,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		proof, blockHeader, blockHash, txIndex, chainID, _ := sample.Proof(t)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: true,

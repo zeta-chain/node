@@ -54,6 +54,6 @@ func TestGenesis(t *testing.T) {
 			ChainStates:             []types.ChainState(nil),
 		}
 		require.Equal(t, expected, *got)
-		require.Equal(t, expected.BlockHeaderVerification.EnabledChains, got.BlockHeaderVerification.EnabledChains)
+		require.Equal(t, expected.BlockHeaderVerification.HeaderSupportedChains, got.BlockHeaderVerification.HeaderSupportedChains)
 	})
 }

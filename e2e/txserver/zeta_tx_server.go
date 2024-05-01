@@ -250,7 +250,7 @@ type intoAny interface {
 	AsAny() *codectypes.Any
 }
 
-// EnableHeaderVerification enables the verification flags for the lightclient module
+// EnableHeaderVerification enables the header verification for the given chain IDs
 func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []int64) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)

@@ -7,7 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { BlockHeader } from "../pkg/proofs/proofs_pb.js";
 import type { ChainState } from "./chain_state_pb.js";
-import type { BlockHeaderVerification } from "./verification_flags_pb.js";
+import type { BlockHeaderVerification } from "./block_header_verification_pb.js";
 
 /**
  * GenesisState defines the lightclient module's genesis state.

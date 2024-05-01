@@ -2,7 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.lightclient;
 
 import "gogoproto/gogo.proto";
-import "lightclient/verification_flags.proto";
+import "lightclient/block_header_verification.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 

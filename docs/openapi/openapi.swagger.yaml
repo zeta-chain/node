@@ -27608,6 +27608,34 @@ paths:
           format: int64
       tags:
         - Query
+  /zeta-chain/lightclient/header_enabled_chains:
+    get:
+      operationId: Query_HeaderEnabledChains
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientHeaderEnabledChainsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/lightclient/header_supported_chains:
+    get:
+      operationId: Query_HeaderSupportedChains
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryHeaderSupportedChainsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/lightclient/prove:
     get:
       operationId: Query_Prove
@@ -27670,20 +27698,6 @@ paths:
           required: false
           type: string
           format: int64
-      tags:
-        - Query
-  /zeta-chain/lightclient/verification_flags:
-    get:
-      operationId: Query_HeaderEnabledChains
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/lightclientQueryHeaderEnabledChainsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/observer/TSS:
@@ -54304,7 +54318,15 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
-  lightclientEnabledChain:
+  lightclientHeaderEnabledChainsResponse:
+    type: object
+    properties:
+      header_enabled_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
+  lightclientHeaderSupportedChain:
     type: object
     properties:
       chain_id:
@@ -54347,14 +54369,14 @@ definitions:
     properties:
       chain_state:
         $ref: '#/definitions/lightclientChainState'
-  lightclientQueryHeaderEnabledChainsResponse:
+  lightclientQueryHeaderSupportedChainsResponse:
     type: object
     properties:
-      enabled_chains:
+      header_supported_chains:
         type: array
         items:
           type: object
-          $ref: '#/definitions/lightclientEnabledChain'
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
   lightclientQueryProveResponse:
     type: object
     properties:

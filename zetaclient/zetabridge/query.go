@@ -33,13 +33,13 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 	return resp.CrosschainFlags, nil
 }
 
-func (b *ZetaCoreBridge) GetBlockHeaderEnabledChains() ([]lightclienttypes.EnabledChain, error) {
+func (b *ZetaCoreBridge) GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error) {
 	client := lightclienttypes.NewQueryClient(b.grpcConn)
-	resp, err := client.HeaderEnabledChains(context.Background(), &lightclienttypes.QueryHeaderEnabledChainsRequest{})
+	resp, err := client.HeaderEnabledChains(context.Background(), &lightclienttypes.HeaderEnabledChainsRequest{})
 	if err != nil {
-		return []lightclienttypes.EnabledChain{}, err
+		return []lightclienttypes.HeaderSupportedChain{}, err
 	}
-	return resp.EnabledChains, nil
+	return resp.HeaderEnabledChains, nil
 }
 
 func (b *ZetaCoreBridge) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {

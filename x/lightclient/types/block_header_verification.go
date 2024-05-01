@@ -1,39 +1,46 @@
 package types
 
+// EnableChain enables block header verification for a specific chain
 func (b *BlockHeaderVerification) EnableChain(chainID int64) {
 	found := false
-	for i, enabledChain := range b.EnabledChains {
+	for i, enabledChain := range b.HeaderSupportedChains {
 		if enabledChain.ChainId == chainID {
-			b.EnabledChains[i].Enabled = true
+			b.HeaderSupportedChains[i].Enabled = true
 			found = true
 		}
 	}
 	if !found {
-		b.EnabledChains = append(b.EnabledChains, EnabledChain{
+		b.HeaderSupportedChains = append(b.HeaderSupportedChains, HeaderSupportedChain{
 			ChainId: chainID,
 			Enabled: true,
 		})
 	}
 }
 
+// DisableChain disables block header verification for a specific chain
+// This function does not remove the chain from the list of enabled chains, it just disables it
+// This keeps track of the chains tha support block header verification and also the ones that currently disabled or enabled
 func (b *BlockHeaderVerification) DisableChain(chainID int64) {
 	found := false
-	for i, v := range b.EnabledChains {
+	for i, v := range b.HeaderSupportedChains {
 		if v.ChainId == chainID {
-			b.EnabledChains[i].Enabled = false
+			b.HeaderSupportedChains[i].Enabled = false
 			found = true
 		}
 	}
 	if !found {
-		b.EnabledChains = append(b.EnabledChains, EnabledChain{
+		b.HeaderSupportedChains = append(b.HeaderSupportedChains, HeaderSupportedChain{
 			ChainId: chainID,
 			Enabled: false,
 		})
 	}
 }
 
+// IsChainEnabled checks if block header verification is enabled for a specific chain
+// It returns true if the chain is enabled, false otherwise
+// If the chain is not found in the list of chains, it returns false
 func (b *BlockHeaderVerification) IsChainEnabled(chainID int64) bool {
-	for _, v := range b.EnabledChains {
+	for _, v := range b.HeaderSupportedChains {
 		if v.ChainId == chainID {
 			return v.Enabled
 		}
@@ -41,9 +48,10 @@ func (b *BlockHeaderVerification) IsChainEnabled(chainID int64) bool {
 	return false
 }
 
-func (b *BlockHeaderVerification) GetEnabledChainIDList() []int64 {
+// GetHeaderSupportedChainIDList returns a list of chain IDs that have block header verification enabled
+func (b *BlockHeaderVerification) GetHeaderEnabledChainIDs() []int64 {
 	var enabledChains []int64
-	for _, v := range b.EnabledChains {
+	for _, v := range b.HeaderSupportedChains {
 		if v.Enabled {
 			enabledChains = append(enabledChains, v.ChainId)
 		}
@@ -51,9 +59,24 @@ func (b *BlockHeaderVerification) GetEnabledChainIDList() []int64 {
 	return enabledChains
 }
 
-func (b *BlockHeaderVerification) GetVerificationFlags() []EnabledChain {
-	if b == nil || b.EnabledChains == nil {
-		return []EnabledChain{}
+// GetHeaderSupportedChainsList returns a list of chains that support block header verification
+func (b *BlockHeaderVerification) GetHeaderSupportedChainsList() []HeaderSupportedChain {
+	if b == nil || b.HeaderSupportedChains == nil {
+		return []HeaderSupportedChain{}
 	}
-	return b.EnabledChains
+	return b.HeaderSupportedChains
+}
+
+// GetHeaderEnabledChains returns a list of chains that have block header verification enabled
+func (b *BlockHeaderVerification) GetHeaderEnabledChains() []HeaderSupportedChain {
+	var chains []HeaderSupportedChain
+	if b == nil || b.HeaderSupportedChains == nil {
+		return []HeaderSupportedChain{}
+	}
+	for _, chain := range b.HeaderSupportedChains {
+		if chain.Enabled {
+			chains = append(chains, chain)
+		}
+	}
+	return chains
 }

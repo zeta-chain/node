@@ -81,12 +81,12 @@ func TestMsgDisableHeaderVerification_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgEnableHeaderVerification
+		msg    *types.MsgDisableHeaderVerification
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.NewMsgEnableHeaderVerification(
+			msg: types.NewMsgDisableHeaderVerification(
 				signer,
 				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
 			),
@@ -94,7 +94,7 @@ func TestMsgDisableHeaderVerification_GetSigners(t *testing.T) {
 		},
 		{
 			name: "invalid signer",
-			msg: types.NewMsgEnableHeaderVerification(
+			msg: types.NewMsgDisableHeaderVerification(
 				"invalid",
 				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
 			),
@@ -124,14 +124,14 @@ func TestMsgDisableHeaderVerification_Type(t *testing.T) {
 }
 
 func TestMsgDisableHeaderVerification_Route(t *testing.T) {
-	msg := types.MsgEnableHeaderVerification{
+	msg := types.MsgDisableHeaderVerification{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMsgDisableHeaderVerification_GetSignBytes(t *testing.T) {
-	msg := types.MsgEnableHeaderVerification{
+	msg := types.MsgDisableHeaderVerification{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

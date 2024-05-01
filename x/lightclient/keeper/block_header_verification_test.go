@@ -21,7 +21,7 @@ func TestKeeper_GetBlockHeaderVerification(t *testing.T) {
 
 		blockHeaderVerification, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
-		require.Len(t, blockHeaderVerification.EnabledChains, 2)
+		require.Len(t, blockHeaderVerification.HeaderSupportedChains, 2)
 		require.Equal(t, bhv, blockHeaderVerification)
 	})
 
@@ -30,7 +30,7 @@ func TestKeeper_GetBlockHeaderVerification(t *testing.T) {
 
 		blockHeaderVerification, found := k.GetBlockHeaderVerification(ctx)
 		require.False(t, found)
-		require.Len(t, blockHeaderVerification.EnabledChains, 0)
+		require.Len(t, blockHeaderVerification.HeaderSupportedChains, 0)
 	})
 }
 
@@ -38,7 +38,7 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 	t.Run("can check verification flags with ethereum enabled", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.EthChain.ChainId,
 					Enabled: true,
@@ -61,7 +61,7 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 	t.Run("can check verification flags with bitcoin enabled", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.BtcMainnetChain.ChainId,
 					Enabled: true,
@@ -93,7 +93,7 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 	t.Run("check returns false is flag is disabled", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.EthChain.ChainId,
 					Enabled: false,

@@ -214,7 +214,7 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 	runner.BTCZRC20 = BTCZRC20
 }
 
-// EnableHeaderVerification enables the verification flags on ZetaChain
+// EnableHeaderVerification enables the header verification for the given chain IDs
 func (runner *E2ERunner) EnableHeaderVerification(chainIDList []int64) error {
 	runner.Logger.Print("⚙️ enabling verification flags for block headers")
 

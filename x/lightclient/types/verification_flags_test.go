@@ -9,7 +9,7 @@ import (
 
 func TestDefaultVerificationFlags(t *testing.T) {
 	t.Run("default verification flags is all disabled", func(t *testing.T) {
-		flags := DefaultVerificationFlags()
+		flags := DefaultHeaderSupportedChains()
 		for _, f := range flags {
 			switch f.ChainId {
 			case chains.EthChain.ChainId:

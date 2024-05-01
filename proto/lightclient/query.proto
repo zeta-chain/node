@@ -4,8 +4,8 @@ package zetachain.zetacore.lightclient;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "lightclient/block_header_verification.proto";
 import "lightclient/chain_state.proto";
-import "lightclient/verification_flags.proto";
 import "pkg/proofs/proofs.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
@@ -32,8 +32,12 @@ service Query {
     option (google.api.http).get = "/zeta-chain/lightclient/prove";
   }
 
-  rpc HeaderEnabledChains(QueryHeaderEnabledChainsRequest) returns (QueryHeaderEnabledChainsResponse) {
-    option (google.api.http).get = "/zeta-chain/lightclient/verification_flags";
+  rpc HeaderSupportedChains(QueryHeaderSupportedChainsRequest) returns (QueryHeaderSupportedChainsResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/header_supported_chains";
+  }
+
+  rpc HeaderEnabledChains(HeaderEnabledChainsRequest) returns (HeaderEnabledChainsResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/header_enabled_chains";
   }
 }
 
@@ -83,8 +87,14 @@ message QueryProveResponse {
   bool valid = 1;
 }
 
-message QueryHeaderEnabledChainsRequest {}
+message QueryHeaderSupportedChainsRequest {}
 
-message QueryHeaderEnabledChainsResponse {
-  repeated EnabledChain enabled_chains = 1 [(gogoproto.nullable) = false];
+message QueryHeaderSupportedChainsResponse {
+  repeated HeaderSupportedChain header_supported_chains = 1 [(gogoproto.nullable) = false];
+}
+
+message HeaderEnabledChainsRequest {}
+
+message HeaderEnabledChainsResponse {
+  repeated HeaderSupportedChain header_enabled_chains = 1 [(gogoproto.nullable) = false];
 }

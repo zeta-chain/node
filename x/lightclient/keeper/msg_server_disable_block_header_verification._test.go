@@ -25,7 +25,7 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		authorityMock := keepertest.GetLightclientAuthorityMock(t, k)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.EthChain.ChainId,
 					Enabled: true,
@@ -62,7 +62,7 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		authorityMock := keepertest.GetLightclientAuthorityMock(t, k)
 
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			EnabledChains: []types.EnabledChain{
+			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
 					ChainId: chains.EthChain.ChainId,
 					Enabled: true,

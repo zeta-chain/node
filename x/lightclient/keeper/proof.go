@@ -11,7 +11,7 @@ import (
 // VerifyProof verifies the merkle proof for a given chain and block header
 // It returns the transaction bytes if the proof is valid
 func (k Keeper) VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error) {
-	// check verification flags are set
+	// check block header verification is set
 	if err := k.CheckBlockHeaderVerificationEnabled(ctx, chainID); err != nil {
 		return nil, err
 	}

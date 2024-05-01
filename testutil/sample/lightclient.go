@@ -33,8 +33,8 @@ func ChainState(chainID int64) lightclienttypes.ChainState {
 	}
 }
 
-func VerificationFlags() []lightclienttypes.EnabledChain {
-	return []lightclienttypes.EnabledChain{
+func HeaderSupportedChains() []lightclienttypes.HeaderSupportedChain {
+	return []lightclienttypes.HeaderSupportedChain{
 		{
 			ChainId: 1,
 			Enabled: true,
@@ -47,7 +47,7 @@ func VerificationFlags() []lightclienttypes.EnabledChain {
 }
 
 func BlockHeaderVerification() lightclienttypes.BlockHeaderVerification {
-	return lightclienttypes.BlockHeaderVerification{EnabledChains: VerificationFlags()}
+	return lightclienttypes.BlockHeaderVerification{HeaderSupportedChains: HeaderSupportedChains()}
 
 }
 

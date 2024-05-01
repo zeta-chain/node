@@ -103,7 +103,7 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 }
 
 func TestZetaCoreBridge_HeaderEnabledChains(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{EnabledChains: []lightclienttypes.EnabledChain{
+	expectedOutput := lightclienttypes.QueryHeaderSupportedChainsResponse{HeaderSupportedChains: []lightclienttypes.HeaderSupportedChain{
 		{
 			ChainId: chains.EthChain.ChainId,
 			Enabled: true,
@@ -113,8 +113,8 @@ func TestZetaCoreBridge_HeaderEnabledChains(t *testing.T) {
 			Enabled: true,
 		},
 	}}
-	input := lightclienttypes.QueryHeaderEnabledChainsRequest{}
-	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
+	input := lightclienttypes.QueryHeaderSupportedChainsRequest{}
+	method := "/zetachain.zetacore.lightclient.Query/HeaderSupportedChains"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -124,7 +124,7 @@ func TestZetaCoreBridge_HeaderEnabledChains(t *testing.T) {
 
 	resp, err := zetabridge.GetBlockHeaderEnabledChains()
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.EnabledChains, resp)
+	require.Equal(t, expectedOutput.HeaderSupportedChains, resp)
 }
 
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {

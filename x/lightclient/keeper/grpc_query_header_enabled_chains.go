@@ -9,8 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// EnabledChain implements the Query/EnabledChain gRPC method
-func (k Keeper) HeaderEnabledChains(c context.Context, req *types.QueryHeaderEnabledChainsRequest) (*types.QueryHeaderEnabledChainsResponse, error) {
+// HeaderSupportedChains implements the Query/HeaderEnabledChains gRPC method
+// It returns a list for chains that support block header verification.
+// Some chains in this list might be disabled which is indicated by the value of the `enabled` field.
+func (k Keeper) HeaderSupportedChains(c context.Context, req *types.QueryHeaderSupportedChainsRequest) (*types.QueryHeaderSupportedChainsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -18,5 +20,19 @@ func (k Keeper) HeaderEnabledChains(c context.Context, req *types.QueryHeaderEna
 
 	val, _ := k.GetBlockHeaderVerification(ctx)
 
-	return &types.QueryHeaderEnabledChainsResponse{EnabledChains: val.GetVerificationFlags()}, nil
+	return &types.QueryHeaderSupportedChainsResponse{HeaderSupportedChains: val.GetHeaderSupportedChainsList()}, nil
+}
+
+// HeaderEnabledChains implements the Query/HeaderEnabledChains gRPC method
+// It returns a list of chains that have block header verification enabled.
+func (k Keeper) HeaderEnabledChains(c context.Context, req *types.HeaderEnabledChainsRequest) (*types.HeaderEnabledChainsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	val, _ := k.GetBlockHeaderVerification(ctx)
+
+	return &types.HeaderEnabledChainsResponse{HeaderEnabledChains: val.GetHeaderEnabledChains()}, nil
+
 }
