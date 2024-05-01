@@ -238,14 +238,16 @@ function move_zetacored_binaries {
 function start_network {
   if [ "${IS_LOCAL_DEVELOPMENT}" == "true" ]; then
     cp /usr/local/bin/zetacored ${DAEMON_HOME}/cosmovisor/genesis/bin/zetacored
+    find /root/.zetacored/cosmovisor/upgrades/ -type f -path "*/bin/zetacored" -exec cp /usr/local/bin/zetacored {} \;
   fi
-  expected_major_version=$(cat /scripts/expected_major_version)
+  expected_major_version=$(cat /scripts/expected_major_version | cut -d '-' -f 1)
   VISOR_VERSION=v$(${VISOR_NAME} version | tail -n 1 | tr -d '(devel)' | tr -d '\n')
   DAEMON_VERSION=$(${DAEMON_NAME} version)
   VISOR_MAJOR_VERSION=$(echo $VISOR_VERSION | grep -o '^v[0-9]*')
   DAEMON_MAJOR_VERSION=$(echo $DAEMON_VERSION | grep -o '^v[0-9]*')
 
-  logt "expected_major_version: ${expected_major_version}"
+  logt "EXPECTED_VERSION_WITH_HASH: $(cat /scripts/expected_major_version | cut -d '-' -f 1)"
+  logt "EXPECTED_MAJOR_VERSION: ${expected_major_version}"
   logt "VISOR_VERSION: ${VISOR_VERSION}"
   logt "DAEMON_VERSION: ${DAEMON_VERSION}"
   logt "VISOR_MAJOR_VERSION: ${VISOR_MAJOR_VERSION}"

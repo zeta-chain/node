@@ -12,8 +12,8 @@ services:
   geth:
     build: .
     ports:
-      - "8545:8545"    # JSON-RPC
-      - "8546:8546"    # WebSocket
+      - "18545:18545"    # JSON-RPC
+      - "18546:18546"    # WebSocket
       - "30303:30303"  # P2P Network
     volumes:
       - type: volume

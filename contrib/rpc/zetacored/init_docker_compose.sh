@@ -58,5 +58,8 @@ echo "Placeholders have been replaced in $FILE_PATH."
 cat $FILE_PATH
 echo "================"
 
-# Run Docker Compose
-docker-compose -f ${FILE_PATH} up
+if [ "$TYPE" == "image" ]; then
+  docker-compose -f ${FILE_PATH} up
+elif [ "$TYPE" == "localbuild" ]; then
+  docker-compose -f ${FILE_PATH} up --build
+fi

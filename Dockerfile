@@ -22,7 +22,8 @@ COPY . .
 
 RUN expected_major_version=$(grep 'const releaseVersion = ' app/setup_handlers.go | awk -F'"' '{print $2}') && \
     make install VERSION="${expected_major_version}" && \
-    echo -n "${expected_major_version}" > /go/delivery/zeta-node/expected_major_version
+    git_hash=$(git rev-parse --short HEAD) && \
+    echo -n "${expected_major_version}-${git_hash}" > /go/delivery/zeta-node/expected_major_version
 
 # Run Stage
 FROM alpine:3.18
