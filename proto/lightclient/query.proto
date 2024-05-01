@@ -36,7 +36,7 @@ service Query {
     option (google.api.http).get = "/zeta-chain/lightclient/header_supported_chains";
   }
 
-  rpc HeaderEnabledChains(HeaderEnabledChainsRequest) returns (HeaderEnabledChainsResponse) {
+  rpc HeaderEnabledChains(QueryHeaderEnabledChainsRequest) returns (QueryHeaderEnabledChainsResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/header_enabled_chains";
   }
 }
@@ -93,8 +93,8 @@ message QueryHeaderSupportedChainsResponse {
   repeated HeaderSupportedChain header_supported_chains = 1 [(gogoproto.nullable) = false];
 }
 
-message HeaderEnabledChainsRequest {}
+message QueryHeaderEnabledChainsRequest {}
 
-message HeaderEnabledChainsResponse {
+message QueryHeaderEnabledChainsResponse {
   repeated HeaderSupportedChain header_enabled_chains = 1 [(gogoproto.nullable) = false];
 }

@@ -268,7 +268,7 @@ func local_request_Query_HeaderSupportedChains_0(ctx context.Context, marshaler 
 }
 
 func request_Query_HeaderEnabledChains_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq HeaderEnabledChainsRequest
+	var protoReq QueryHeaderEnabledChainsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.HeaderEnabledChains(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -277,7 +277,7 @@ func request_Query_HeaderEnabledChains_0(ctx context.Context, marshaler runtime.
 }
 
 func local_request_Query_HeaderEnabledChains_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq HeaderEnabledChainsRequest
+	var protoReq QueryHeaderEnabledChainsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.HeaderEnabledChains(ctx, &protoReq)

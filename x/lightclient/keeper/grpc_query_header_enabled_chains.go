@@ -25,7 +25,7 @@ func (k Keeper) HeaderSupportedChains(c context.Context, req *types.QueryHeaderS
 
 // HeaderEnabledChains implements the Query/HeaderEnabledChains gRPC method
 // It returns a list of chains that have block header verification enabled.
-func (k Keeper) HeaderEnabledChains(c context.Context, req *types.HeaderEnabledChainsRequest) (*types.HeaderEnabledChainsResponse, error) {
+func (k Keeper) HeaderEnabledChains(c context.Context, req *types.QueryHeaderEnabledChainsRequest) (*types.QueryHeaderEnabledChainsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -33,6 +33,6 @@ func (k Keeper) HeaderEnabledChains(c context.Context, req *types.HeaderEnabledC
 
 	val, _ := k.GetBlockHeaderVerification(ctx)
 
-	return &types.HeaderEnabledChainsResponse{HeaderEnabledChains: val.GetHeaderEnabledChains()}, nil
+	return &types.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: val.GetHeaderEnabledChains()}, nil
 
 }

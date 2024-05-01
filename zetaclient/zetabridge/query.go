@@ -35,7 +35,7 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 
 func (b *ZetaCoreBridge) GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error) {
 	client := lightclienttypes.NewQueryClient(b.grpcConn)
-	resp, err := client.HeaderEnabledChains(context.Background(), &lightclienttypes.HeaderEnabledChainsRequest{})
+	resp, err := client.HeaderEnabledChains(context.Background(), &lightclienttypes.QueryHeaderEnabledChainsRequest{})
 	if err != nil {
 		return []lightclienttypes.HeaderSupportedChain{}, err
 	}
