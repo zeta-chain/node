@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### CI
+* [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
+
 ### Refactor
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
