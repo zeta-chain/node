@@ -324,45 +324,45 @@ export declare class QueryHeaderSupportedChainsResponse extends Message<QueryHea
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.HeaderEnabledChainsRequest
+ * @generated from message zetachain.zetacore.lightclient.QueryHeaderEnabledChainsRequest
  */
-export declare class HeaderEnabledChainsRequest extends Message<HeaderEnabledChainsRequest> {
-  constructor(data?: PartialMessage<HeaderEnabledChainsRequest>);
+export declare class QueryHeaderEnabledChainsRequest extends Message<QueryHeaderEnabledChainsRequest> {
+  constructor(data?: PartialMessage<QueryHeaderEnabledChainsRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.HeaderEnabledChainsRequest";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryHeaderEnabledChainsRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): HeaderEnabledChainsRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHeaderEnabledChainsRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): HeaderEnabledChainsRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): HeaderEnabledChainsRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsRequest;
 
-  static equals(a: HeaderEnabledChainsRequest | PlainMessage<HeaderEnabledChainsRequest> | undefined, b: HeaderEnabledChainsRequest | PlainMessage<HeaderEnabledChainsRequest> | undefined): boolean;
+  static equals(a: QueryHeaderEnabledChainsRequest | PlainMessage<QueryHeaderEnabledChainsRequest> | undefined, b: QueryHeaderEnabledChainsRequest | PlainMessage<QueryHeaderEnabledChainsRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.HeaderEnabledChainsResponse
+ * @generated from message zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse
  */
-export declare class HeaderEnabledChainsResponse extends Message<HeaderEnabledChainsResponse> {
+export declare class QueryHeaderEnabledChainsResponse extends Message<QueryHeaderEnabledChainsResponse> {
   /**
    * @generated from field: repeated zetachain.zetacore.lightclient.HeaderSupportedChain header_enabled_chains = 1;
    */
   headerEnabledChains: HeaderSupportedChain[];
 
-  constructor(data?: PartialMessage<HeaderEnabledChainsResponse>);
+  constructor(data?: PartialMessage<QueryHeaderEnabledChainsResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.HeaderEnabledChainsResponse";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): HeaderEnabledChainsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHeaderEnabledChainsResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): HeaderEnabledChainsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): HeaderEnabledChainsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHeaderEnabledChainsResponse;
 
-  static equals(a: HeaderEnabledChainsResponse | PlainMessage<HeaderEnabledChainsResponse> | undefined, b: HeaderEnabledChainsResponse | PlainMessage<HeaderEnabledChainsResponse> | undefined): boolean;
+  static equals(a: QueryHeaderEnabledChainsResponse | PlainMessage<QueryHeaderEnabledChainsResponse> | undefined, b: QueryHeaderEnabledChainsResponse | PlainMessage<QueryHeaderEnabledChainsResponse> | undefined): boolean;
 }
 

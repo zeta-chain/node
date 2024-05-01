@@ -27615,7 +27615,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientHeaderEnabledChainsResponse'
+            $ref: '#/definitions/lightclientQueryHeaderEnabledChainsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -54318,14 +54318,6 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
-  lightclientHeaderEnabledChainsResponse:
-    type: object
-    properties:
-      header_enabled_chains:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/lightclientHeaderSupportedChain'
   lightclientHeaderSupportedChain:
     type: object
     properties:
@@ -54369,6 +54361,14 @@ definitions:
     properties:
       chain_state:
         $ref: '#/definitions/lightclientChainState'
+  lightclientQueryHeaderEnabledChainsResponse:
+    type: object
+    properties:
+      header_enabled_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
   lightclientQueryHeaderSupportedChainsResponse:
     type: object
     properties:
