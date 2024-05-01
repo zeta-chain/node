@@ -15,7 +15,7 @@ import (
 func (k msgServer) UpdateRateLimiterFlags(goCtx context.Context, msg *types.MsgUpdateRateLimiterFlags) (*types.MsgUpdateRateLimiterFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
 

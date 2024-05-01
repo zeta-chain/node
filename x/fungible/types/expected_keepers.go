@@ -12,7 +12,6 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -54,5 +53,5 @@ type EVMKeeper interface {
 }
 
 type AuthorityKeeper interface {
-	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
+	IsAuthorized(ctx sdk.Context, msg sdk.Msg) bool
 }

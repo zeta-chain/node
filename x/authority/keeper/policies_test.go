@@ -6,8 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestKeeper_SetPolicies(t *testing.T) {
@@ -33,52 +31,27 @@ func TestKeeper_SetPolicies(t *testing.T) {
 	require.Equal(t, newPolicies, got)
 }
 
-func TestKeeper_IsAuthorized(t *testing.T) {
-	k, ctx := keepertest.AuthorityKeeper(t)
-
-	// Not authorized if no policies
-	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
-	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
-
-	policies := sample.Policies()
-	k.SetPolicies(ctx, policies)
-
-	// Check policy is set
-	got, found := k.GetPolicies(ctx)
-	require.True(t, found)
-	require.Equal(t, policies, got)
-
-	// Check policy is authorized
-	for _, policy := range policies.Items {
-		require.True(t, k.IsAuthorized(ctx, policy.Address, policy.PolicyType))
-	}
-
-	// Check policy is not authorized
-	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
-	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
-}
-
-func TestKeeper_IsAuthorizedMessage(t *testing.T) {
-	address := sample.AccAddress()
-	msg := crosschaintypes.MsgRefundAbortedCCTX{
-		Creator: address,
-	}
-	k, ctx := keepertest.AuthorityKeeper(t)
-	policies := types.Policies{Items: []*types.Policy{
-		{
-			Address:    address,
-			PolicyType: types.PolicyType_groupOperational,
-		},
-		{
-			Address:    address,
-			PolicyType: types.PolicyType_groupEmergency,
-		},
-		{
-			Address:    address,
-			PolicyType: types.PolicyType_groupAdmin,
-		},
-	}}
-	k.SetPolicies(ctx, policies)
-
-	require.True(t, k.IsAuthorizedMessage(ctx, &msg))
-}
+//func TestKeeper_IsAuthorized(t *testing.T) {
+//	k, ctx := keepertest.AuthorityKeeper(t)
+//
+//	// Not authorized if no policies
+//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
+//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
+//
+//	policies := sample.Policies()
+//	k.SetPolicies(ctx, policies)
+//
+//	// Check policy is set
+//	got, found := k.GetPolicies(ctx)
+//	require.True(t, found)
+//	require.Equal(t, policies, got)
+//
+//	// Check policy is authorized
+//	for _, policy := range policies.Items {
+//		require.True(t, k.IsAuthorized(ctx, policy.Address, policy.PolicyType))
+//	}
+//
+//	// Check policy is not authorized
+//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
+//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
+//}

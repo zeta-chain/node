@@ -15,7 +15,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 

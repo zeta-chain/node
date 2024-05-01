@@ -13,7 +13,7 @@ import (
 // Authorized: admin policy group 1.
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return &types.MsgRemoveFromOutTxTrackerResponse{}, authoritytypes.ErrUnauthorized
 	}
 

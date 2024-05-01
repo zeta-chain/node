@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/pkg/authorizations"
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -25,13 +26,19 @@ func (k Keeper) GetPolicies(ctx sdk.Context) (val types.Policies, found bool) {
 }
 
 // IsAuthorized checks if the address is authorized for the given policy type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, policyType types.PolicyType) bool {
+func (k Keeper) IsAuthorized(ctx sdk.Context, msg sdk.Msg) bool {
+	if len(msg.GetSigners()) != 0 {
+		return false
+	}
+	signer := msg.GetSigners()[0].String()
+	policyRequired := authorizations.AuthorizationTable()[sdk.MsgTypeURL(msg)]
+
 	policies, found := k.GetPolicies(ctx)
 	if !found {
 		return false
 	}
 	for _, policy := range policies.Items {
-		if policy.Address == address && policy.PolicyType == policyType {
+		if policy.Address == signer && policy.PolicyType == policyRequired {
 			return true
 		}
 	}
