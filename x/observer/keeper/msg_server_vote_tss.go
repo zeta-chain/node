@@ -73,7 +73,7 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	// vote the ballot
 	var err error
 	vote := types.VoteType_SuccessObservation
-	if msg.Status == chains.ReceiveStatus_Failed {
+	if msg.Status == chains.ReceiveStatus_failed {
 		vote = types.VoteType_FailureObservation
 	}
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, vote)

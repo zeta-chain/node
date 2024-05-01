@@ -28,9 +28,9 @@ func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy, ba
 // privnet chains are supported by default for testing purposes
 // custom params must be provided in genesis for other networks
 func DefaultParams() Params {
-	chains := chains.PrivnetChainList()
-	observerParams := make([]*ObserverParams, len(chains))
-	for i, chain := range chains {
+	chainList := chains.ChainListByNetworkType(chains.NetworkType_privnet)
+	observerParams := make([]*ObserverParams, len(chainList))
+	for i, chain := range chainList {
 		observerParams[i] = &ObserverParams{
 			IsSupported:           true,
 			Chain:                 chain,

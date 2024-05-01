@@ -316,7 +316,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	// the higher gas limit is only necessary when the vote is finalized and the outbound is processed
 	// therefore we use a retryGasLimit with a higher value to resend the tx if it fails (when the vote is finalized)
 	retryGasLimit := uint64(0)
-	if msg.Status == chains.ReceiveStatus_Failed {
+	if msg.Status == chains.ReceiveStatus_failed {
 		retryGasLimit = PostVoteOutboundRevertGasLimit
 	}
 
