@@ -43,7 +43,7 @@ then
      set_sepolia_endpoint
     fi
 
-    zetaclientd start < /root/password.file
+    zetaclientd-supervisor < /root/password.file
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')
   node="zetacore$num"
@@ -63,7 +63,7 @@ else
    set_sepolia_endpoint
   fi
 
-  zetaclientd start < /root/password.file
+  zetaclientd-supervisor < /root/password.file
 fi
 
 # check if the option is background
