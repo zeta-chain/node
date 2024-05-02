@@ -25,6 +25,9 @@ service Msg {
   rpc VoteBlockHeader(MsgVoteBlockHeader) returns (MsgVoteBlockHeaderResponse);
   rpc ResetChainNonces(MsgResetChainNonces) returns (MsgResetChainNoncesResponse);
   rpc VoteTSS(MsgVoteTSS) returns (MsgVoteTSSResponse);
+  rpc EnableCCTXFlags(MsgEnableCCTXFlags) returns (MsgEnableCCTXFlagsResponse);
+  rpc DisableCCTXFlags(MsgDisableCCTXFlags) returns (MsgDisableCCTXFlagsResponse);
+  rpc UpdateGasPriceIncreaseFlags(MsgUpdateGasPriceIncreaseFlags) returns (MsgUpdateGasPriceIncreaseFlagsResponse);
 }
 
 message MsgUpdateObserver {
@@ -78,6 +81,29 @@ message MsgAddBlameVote {
 }
 
 message MsgAddBlameVoteResponse {}
+
+message MsgEnableCCTXFlags {
+  string creator = 1;
+  bool enableInbound = 2;
+  bool enableOutbound = 3;
+}
+
+message MsgEnableCCTXFlagsResponse {}
+
+message MsgDisableCCTXFlags {
+  string creator = 1;
+  bool disableInbound = 2;
+  bool disableOutbound = 3;
+}
+
+message MsgDisableCCTXFlagsResponse {}
+
+message MsgUpdateGasPriceIncreaseFlags {
+  string creator = 1;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 2;
+}
+
+message MsgUpdateGasPriceIncreaseFlagsResponse {}
 
 message MsgUpdateCrosschainFlags {
   string creator = 1;
