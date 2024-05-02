@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// RateLimiterInput returns the input data for the rate limiter
+// RateLimiterInput collects the input data for the rate limiter
 func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterInputRequest) (res *types.QueryRateLimiterInputResponse, err error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

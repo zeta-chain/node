@@ -480,6 +480,52 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 	}
 }
 
+func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
+	t.Run("should fail for empty req", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		_, err := k.RateLimiterInput(ctx, nil)
+		require.ErrorContains(t, err, "invalid request")
+	})
+	t.Run("window must be positive", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
+			Window: 0, // 0 window
+		})
+		require.ErrorContains(t, err, "window must be positive")
+	})
+	t.Run("height out of range", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// set current height to 0
+		ctx = ctx.WithBlockHeight(0)
+		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
+			Window: 100,
+		})
+		require.ErrorContains(t, err, "height out of range")
+	})
+	t.Run("tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// no TSS set
+		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
+			Window: 100,
+		})
+		require.ErrorContains(t, err, "tss not found")
+	})
+	t.Run("pending nonces not found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+		// Set TSS
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+
+		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
+			Window: 100,
+		})
+		require.ErrorContains(t, err, "pending nonces not found")
+	})
+}
+
 func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 	// create sample TSS
 	tss := sample.Tss()
