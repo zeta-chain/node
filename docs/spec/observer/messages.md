@@ -63,23 +63,6 @@ message MsgAddBlameVote {
 }
 ```
 
-## MsgUpdateCrosschainFlags
-
-UpdateCrosschainFlags updates the crosschain related flags.
-
-Aurthorized: admin policy group 1 (except enabling/disabled
-inbounds/outbounds and gas price increase), admin policy group 2 (all).
-
-```proto
-message MsgUpdateCrosschainFlags {
-	string creator = 1;
-	bool isInboundEnabled = 3;
-	bool isOutboundEnabled = 4;
-	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
-	BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
-}
-```
-
 ## MsgUpdateKeygen
 
 UpdateKeygen updates the block height of the keygen and sets the status to
@@ -140,6 +123,35 @@ message MsgVoteTSS {
 	string tss_pubkey = 2;
 	int64 keygen_zeta_height = 3;
 	chains.ReceiveStatus status = 4;
+}
+```
+
+## MsgEnableCCTXFlags
+
+```proto
+message MsgEnableCCTXFlags {
+	string creator = 1;
+	bool enableInbound = 2;
+	bool enableOutbound = 3;
+}
+```
+
+## MsgDisableCCTXFlags
+
+```proto
+message MsgDisableCCTXFlags {
+	string creator = 1;
+	bool disableInbound = 2;
+	bool disableOutbound = 3;
+}
+```
+
+## MsgUpdateGasPriceIncreaseFlags
+
+```proto
+message MsgUpdateGasPriceIncreaseFlags {
+	string creator = 1;
+	GasPriceIncreaseFlags gasPriceIncreaseFlags = 2;
 }
 ```
 

@@ -34,12 +34,14 @@ func AuthorizationTable() map[string]authoritytypes.PolicyType {
 		sdk.MsgTypeURL(&fungibletypes.MsgUnpauseZRC20{}):            authoritytypes.PolicyType_groupOperational,
 
 		// Observer admin messages
-		sdk.MsgTypeURL(&observertypes.MsgAddObserver{}):           authoritytypes.PolicyType_groupOperational,
-		sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}):        authoritytypes.PolicyType_groupAdmin,
-		sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}):     authoritytypes.PolicyType_groupOperational,
-		sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}):      authoritytypes.PolicyType_groupOperational,
-		sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}):     authoritytypes.PolicyType_groupOperational,
-		sdk.MsgTypeURL(&observertypes.MsgUpdateCrosschainFlags{}): authoritytypes.PolicyType_groupEmergency, // Add conditional logic
-		sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{}):          authoritytypes.PolicyType_groupEmergency,
+		sdk.MsgTypeURL(&observertypes.MsgAddObserver{}):                 authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}):              authoritytypes.PolicyType_groupAdmin,
+		sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}):           authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}):            authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}):           authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{}):                authoritytypes.PolicyType_groupEmergency,
+		sdk.MsgTypeURL(&observertypes.MsgEnableCCTXFlags{}):             authoritytypes.PolicyType_groupOperational,
+		sdk.MsgTypeURL(&observertypes.MsgDisableCCTXFlags{}):            authoritytypes.PolicyType_groupEmergency,
+		sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}): authoritytypes.PolicyType_groupOperational,
 	}
 }

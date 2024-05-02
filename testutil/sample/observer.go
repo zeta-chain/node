@@ -56,6 +56,15 @@ func CrosschainFlags() *types.CrosschainFlags {
 	}
 }
 
+func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
+	return types.GasPriceIncreaseFlags{
+		EpochLength:             1,
+		RetryInterval:           1,
+		GasPriceIncreasePercent: 1,
+		MaxPendingCctxs:         100,
+	}
+}
+
 func Keygen(t *testing.T) *types.Keygen {
 	pubKey := ed25519.GenPrivKey().PubKey().String()
 	r := newRandFromStringSeed(t, pubKey)

@@ -102,7 +102,7 @@ message MsgUpdateZRC20WithdrawFee {
 }
 ```
 
-## MsgUpdateZRC20PausedStatus
+## MsgPauseZRC20
 
 UpdateZRC20PausedStatus updates the paused status of a ZRC20
 The list of ZRC20s are either paused or unpaused
@@ -110,10 +110,23 @@ The list of ZRC20s are either paused or unpaused
 Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
 
 ```proto
-message MsgUpdateZRC20PausedStatus {
+message MsgPauseZRC20 {
 	string creator = 1;
 	string zrc20_addresses = 2;
-	UpdatePausedStatusAction action = 3;
+}
+```
+
+## MsgUnpauseZRC20
+
+UpdateZRC20PausedStatus updates the paused status of a ZRC20
+The list of ZRC20s are either paused or unpaused
+
+Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
+
+```proto
+message MsgUnpauseZRC20 {
+	string creator = 1;
+	string zrc20_addresses = 2;
 }
 ```
 

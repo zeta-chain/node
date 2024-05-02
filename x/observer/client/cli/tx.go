@@ -24,13 +24,14 @@ func GetTxCmd() *cobra.Command {
 		CmdAddObserver(),
 		CmdUpdateChainParams(),
 		CmdRemoveChainParams(),
-		CmdUpdateCrosschainFlags(),
 		CmdUpdateKeygen(),
 		CmdAddBlameVote(),
 		CmdUpdateObserver(),
 		CmdEncode(),
 		CmdResetChainNonces(),
 		CmdVoteTSS(),
+		CmdEnableCCTXFlags(),
+		CmdDisableCCTXFlags(),
 	)
 
 	return cmd

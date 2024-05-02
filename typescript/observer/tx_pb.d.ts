@@ -9,7 +9,7 @@ import type { ObserverUpdateReason } from "./observer_pb.js";
 import type { HeaderData } from "../pkg/proofs/proofs_pb.js";
 import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
-import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
+import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 
 /**
@@ -351,66 +351,157 @@ export declare class MsgAddBlameVoteResponse extends Message<MsgAddBlameVoteResp
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgUpdateCrosschainFlags
+ * @generated from message zetachain.zetacore.observer.MsgEnableCCTXFlags
  */
-export declare class MsgUpdateCrosschainFlags extends Message<MsgUpdateCrosschainFlags> {
+export declare class MsgEnableCCTXFlags extends Message<MsgEnableCCTXFlags> {
   /**
    * @generated from field: string creator = 1;
    */
   creator: string;
 
   /**
-   * @generated from field: bool isInboundEnabled = 3;
+   * @generated from field: bool enableInbound = 2;
    */
-  isInboundEnabled: boolean;
+  enableInbound: boolean;
 
   /**
-   * @generated from field: bool isOutboundEnabled = 4;
+   * @generated from field: bool enableOutbound = 3;
    */
-  isOutboundEnabled: boolean;
+  enableOutbound: boolean;
 
-  /**
-   * @generated from field: zetachain.zetacore.observer.GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
-   */
-  gasPriceIncreaseFlags?: GasPriceIncreaseFlags;
-
-  /**
-   * @generated from field: zetachain.zetacore.observer.BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
-   */
-  blockHeaderVerificationFlags?: BlockHeaderVerificationFlags;
-
-  constructor(data?: PartialMessage<MsgUpdateCrosschainFlags>);
+  constructor(data?: PartialMessage<MsgEnableCCTXFlags>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateCrosschainFlags";
+  static readonly typeName = "zetachain.zetacore.observer.MsgEnableCCTXFlags";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateCrosschainFlags;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableCCTXFlags;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateCrosschainFlags;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlags;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateCrosschainFlags;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlags;
 
-  static equals(a: MsgUpdateCrosschainFlags | PlainMessage<MsgUpdateCrosschainFlags> | undefined, b: MsgUpdateCrosschainFlags | PlainMessage<MsgUpdateCrosschainFlags> | undefined): boolean;
+  static equals(a: MsgEnableCCTXFlags | PlainMessage<MsgEnableCCTXFlags> | undefined, b: MsgEnableCCTXFlags | PlainMessage<MsgEnableCCTXFlags> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgUpdateCrosschainFlagsResponse
+ * @generated from message zetachain.zetacore.observer.MsgEnableCCTXFlagsResponse
  */
-export declare class MsgUpdateCrosschainFlagsResponse extends Message<MsgUpdateCrosschainFlagsResponse> {
-  constructor(data?: PartialMessage<MsgUpdateCrosschainFlagsResponse>);
+export declare class MsgEnableCCTXFlagsResponse extends Message<MsgEnableCCTXFlagsResponse> {
+  constructor(data?: PartialMessage<MsgEnableCCTXFlagsResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateCrosschainFlagsResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgEnableCCTXFlagsResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateCrosschainFlagsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableCCTXFlagsResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateCrosschainFlagsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlagsResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateCrosschainFlagsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlagsResponse;
 
-  static equals(a: MsgUpdateCrosschainFlagsResponse | PlainMessage<MsgUpdateCrosschainFlagsResponse> | undefined, b: MsgUpdateCrosschainFlagsResponse | PlainMessage<MsgUpdateCrosschainFlagsResponse> | undefined): boolean;
+  static equals(a: MsgEnableCCTXFlagsResponse | PlainMessage<MsgEnableCCTXFlagsResponse> | undefined, b: MsgEnableCCTXFlagsResponse | PlainMessage<MsgEnableCCTXFlagsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgDisableCCTXFlags
+ */
+export declare class MsgDisableCCTXFlags extends Message<MsgDisableCCTXFlags> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: bool disableInbound = 2;
+   */
+  disableInbound: boolean;
+
+  /**
+   * @generated from field: bool disableOutbound = 3;
+   */
+  disableOutbound: boolean;
+
+  constructor(data?: PartialMessage<MsgDisableCCTXFlags>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgDisableCCTXFlags";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableCCTXFlags;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlags;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlags;
+
+  static equals(a: MsgDisableCCTXFlags | PlainMessage<MsgDisableCCTXFlags> | undefined, b: MsgDisableCCTXFlags | PlainMessage<MsgDisableCCTXFlags> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgDisableCCTXFlagsResponse
+ */
+export declare class MsgDisableCCTXFlagsResponse extends Message<MsgDisableCCTXFlagsResponse> {
+  constructor(data?: PartialMessage<MsgDisableCCTXFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgDisableCCTXFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableCCTXFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlagsResponse;
+
+  static equals(a: MsgDisableCCTXFlagsResponse | PlainMessage<MsgDisableCCTXFlagsResponse> | undefined, b: MsgDisableCCTXFlagsResponse | PlainMessage<MsgDisableCCTXFlagsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags
+ */
+export declare class MsgUpdateGasPriceIncreaseFlags extends Message<MsgUpdateGasPriceIncreaseFlags> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.GasPriceIncreaseFlags gasPriceIncreaseFlags = 2;
+   */
+  gasPriceIncreaseFlags?: GasPriceIncreaseFlags;
+
+  constructor(data?: PartialMessage<MsgUpdateGasPriceIncreaseFlags>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateGasPriceIncreaseFlags;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateGasPriceIncreaseFlags;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateGasPriceIncreaseFlags;
+
+  static equals(a: MsgUpdateGasPriceIncreaseFlags | PlainMessage<MsgUpdateGasPriceIncreaseFlags> | undefined, b: MsgUpdateGasPriceIncreaseFlags | PlainMessage<MsgUpdateGasPriceIncreaseFlags> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlagsResponse
+ */
+export declare class MsgUpdateGasPriceIncreaseFlagsResponse extends Message<MsgUpdateGasPriceIncreaseFlagsResponse> {
+  constructor(data?: PartialMessage<MsgUpdateGasPriceIncreaseFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateGasPriceIncreaseFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateGasPriceIncreaseFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateGasPriceIncreaseFlagsResponse;
+
+  static equals(a: MsgUpdateGasPriceIncreaseFlagsResponse | PlainMessage<MsgUpdateGasPriceIncreaseFlagsResponse> | undefined, b: MsgUpdateGasPriceIncreaseFlagsResponse | PlainMessage<MsgUpdateGasPriceIncreaseFlagsResponse> | undefined): boolean;
 }
 
 /**
