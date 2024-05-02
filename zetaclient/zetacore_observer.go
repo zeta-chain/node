@@ -423,14 +423,14 @@ func (co *CoreObserver) GetPendingCctxsWithinRatelimit(foreignChains []chains.Ch
 
 	// apply rate limiter
 	output := ratelimiter.ApplyRateLimiter(input, rateLimitFlags.Window, rateLimitFlags.Rate)
-	logger.Info().Msgf(
-		"current rate limiter window: %d rate: %s", output.CurrentWithdrawWindow, output.CurrentWithdrawRate.String())
 
 	// set metrics
 	percentage := zetamath.Percentage(output.CurrentWithdrawRate.BigInt(), rateLimitFlags.Rate.BigInt())
 	if percentage != nil {
 		percentageFloat, _ := percentage.Float64()
 		metrics.PercentageOfRateReached.Set(percentageFloat)
+		logger.Info().Msgf("current rate limiter window: %d rate: %s, percentage: %f",
+			output.CurrentWithdrawWindow, output.CurrentWithdrawRate.String(), percentageFloat)
 	}
 
 	return output.CctxsMap, nil
