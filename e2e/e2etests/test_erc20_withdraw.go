@@ -36,28 +36,10 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
-	tx, err = r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-	for _, log := range receipt.Logs {
-		event, err := r.ERC20ZRC20.ParseWithdrawal(*log)
-		if err != nil {
-			continue
-		}
-		r.Logger.Info(
-			"  logs: from %s, to %x, value %d, gasfee %d",
-			event.From.Hex(),
-			event.To,
-			event.Value,
-			event.Gasfee,
-		)
-	}
+	tx = r.WithdrawERC20(withdrawalAmount)
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
 }
 
