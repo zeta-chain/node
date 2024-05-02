@@ -26,8 +26,9 @@ EVM-compatibility.
   contains the source code for the Solidity smart contracts that implement the
   core functionality of ZetaChain.
 
-## Building the zetacored/zetaclientd binaries
-For the Athens 3 testnet, clone this repository, checkout the latest release tag, and type the following command to build the binaries:
+## Building the `zetacored`/`zetaclientd` binaries
+
+Clone this repository, checkout the latest release tag, and type the following command to build the binaries:
 ```
 make install
 ```
@@ -45,23 +46,15 @@ zetaclientd version
 ## Making changes to the source code
 
 After making changes to any of the protocol buffer files, run the following
-command to generate the Go files:
+command to run generated files generation (ProtoBuf, OpenAPI and docs):
 
 ```
-make proto
+make generate
 ```
 
 This command will use `buf` to generate the Go files from the protocol buffer
 files and move them to the correct directories inside `x/`. It will also
 generate an OpenAPI spec.
-
-### Generate documentation
-
-To generate the documentation, run the following command:
-
-```
-make specs
-```
 
 This command will run a script to update the modules' documentation. The script
 uses static code analysis to read the protocol buffer files and identify all
@@ -70,10 +63,13 @@ message handler functions and retrieves the documentation for those functions.
 Finally, it creates a `messages.md` file for each module, which contains the
 documentation for all the messages in that module.
 
-## Running tests
+## Further Reading
 
-To check that the source code is working as expected, refer to the manual on how
-to [run the E2E test](./LOCAL_TESTING.md).
+Find below further documentation for development and running your own ZetaChain node:
+
+* [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
+* [Make a new ZetaChain release](docs/development/RELEASES.md)
+* [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
 
 ## Community
 
@@ -81,125 +77,4 @@ to [run the E2E test](./LOCAL_TESTING.md).
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)
 
-## Releases
 
-To start a new major release, begin by creating and pushing a `release/` branch based on `develop`.
-
-<details>
-<summary>Example Commands</summary>
-
-```bash
-git fetch
-git checkout -b release/v15 origin/develop
-git push origin release/v15
-```
-
-</details>
-
-Most changes should first be merged into `develop` then backported to the release branch via a PR.
-
-<details>
-<summary>Example Commands to Backport a Change</summary>
-
-```bash
-git fetch
-git checkout -b my-backport-branch origin/release/v15
-git cherry-pick <commit SHA from develop>
-git push origin my-backport-branch
-```
-
-</details>
-
-### Creating a Release Candidate
-You can use github actions to create a release candidate:
-1) Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
-2) Push the tag and the automation will take care of the rest
-
-You may create the RC tag directly off `develop` if a release branch has not been created yet. You should use the release branch if it exists and has diverged from develop.
-
-By following these steps, you can efficiently create a release candidate for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
-Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
-
-### Creating a Release / Hotfix Release
-
-To create a release simply execute the publish-release workflow and follow these steps:
-
-1) Go to this pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml
-2) Select the release branch.
-3) In the version input, include the version of your release.
-  - The major version must match what is in the upgrade handler
-  - The version should look like this: `v15.0.0`
-4) Select if you want to skip the tests by checking the checkbox for skip tests.
-5) Once the testing steps pass it will create a Github Issue. This Github Issue needes to be approved by one of the approvers: kingpinXD,lumtis,brewmaster012
-
-Once the release is approved the pipeline will continue and will publish the releases with the title / version you specified in the user input.
-
----
-## Full Deployment Guide for Zetacored and Bitcoin Nodes
-
-This guide details deploying Zetacored nodes on both ZetaChain mainnet and Athens3 (testnet), alongside setting up a Bitcoin node for mainnet. The setup utilizes Docker Compose with environment variables for a streamlined deployment process.
-
-Here's a comprehensive documentation using markdown tables to cover all the `make` commands for managing Zetacored and Bitcoin nodes, including where to modify the environment variables in Docker Compose configurations.
-
-### Zetacored / BTC Node Deployment and Management
-
-#### Commands Overview for Zetacored
-
-| Environment                         | Action                      | Command                                                       | Docker Compose Location                  |
-|-------------------------------------|-----------------------------|---------------------------------------------------------------|------------------------------------------|
-| **Mainnet**                         | Start Bitcoin Node          | `make start-bitcoin-node-mainnet`                             | `contrib/rpc/bitcoind-mainnet`           |
-| **Mainnet**                         | Stop Bitcoin Node           | `make stop-bitcoin-node-mainnet`                              | `contrib/rpc/bitcoind-mainnet`           |
-| **Mainnet**                         | Clean Bitcoin Node Data     | `make clean-bitcoin-node-mainnet`                             | `contrib/rpc/bitcoind-mainnet`           |
-| **Mainnet**                         | Start Ethereum Node         | `make start-eth-node-mainnet`                                 | `contrib/rpc/ethereum`                   |
-| **Mainnet**                         | Stop Ethereum Node          | `make stop-eth-node-mainnet`                                  | `contrib/rpc/ethereum`                   |
-| **Mainnet**                         | Clean Ethereum Node Data    | `make clean-eth-node-mainnet`                                 | `contrib/rpc/ethereum`                   |
-| **Mainnet**                         | Start Zetacored Node        | `make start-mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1`   | `contrib/rpc/zetacored`                  |
-| **Mainnet**                         | Stop Zetacored Node         | `make stop-mainnet-zetarpc-node`                              | `contrib/rpc/zetacored`                  |
-| **Mainnet**                         | Clean Zetacored Node Data   | `make clean-mainnet-zetarpc-node`                             | `contrib/rpc/zetacored`                  |
-| **Testnet (Athens3)**               | Start Zetacored Node        | `make start-testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1`   | `contrib/rpc/zetacored`                  |
-| **Testnet (Athens3)**               | Stop Zetacored Node         | `make stop-testnet-zetarpc-node`                              | `contrib/rpc/zetacored`                  |
-| **Testnet (Athens3)**               | Clean Zetacored Node Data   | `make clean-testnet-zetarpc-node`                             | `contrib/rpc/zetacored`                  |
-| **Mainnet Local Build**             | Start Zetacored Node        | `make start-zetacored-rpc-mainnet-localbuild`                 | `contrib/rpc/zetacored`                  |
-| **Mainnet Local Build**             | Stop Zetacored Node         | `make stop-zetacored-rpc-mainnet-localbuild`                  | `contrib/rpc/zetacored`                  |
-| **Mainnet Local Build**             | Clean Zetacored Node Data   | `make clean-zetacored-rpc-mainnet-localbuild`                 | `contrib/rpc/zetacored`                  |
-| **Testnet Local Build (Athens3)**   | Start Zetacored Node        | `make start-zetacored-rpc-testnet-localbuild`                 | `contrib/rpc/zetacored`                  |
-| **Testnet Local Build (Athens3)**   | Stop Zetacored Node         | `make stop-zetacored-rpc-testnet-localbuild`                  | `contrib/rpc/zetacored`                  |
-| **Testnet Local Build (Athens3)**   | Clean Zetacored Node Data   | `make clean-zetacored-rpc-testnet-localbuild`                 | `contrib/rpc/zetacored`                  |
-
-
-### Bitcoin Node Setup for Mainnet
-
-#### Commands Overview for Bitcoin
-
-| Action | Command | Docker Compose Location |
-|--------|---------|-------------------------|
-| Start Node | `make start-mainnet-bitcoind-node DOCKER_TAG=36-mainnet` | `contrib/mainnet/bitcoind` |
-| Stop Node | `make stop-mainnet-bitcoind-node` | `contrib/mainnet/bitcoind` |
-| Clean Node Data | `make clean-mainnet-bitcoind-node` | `contrib/mainnet/bitcoind` |
-
-### Configuration Options
-
-#### Where to Modify Environment Variables
-
-The environment variables for both Zetacored and Bitcoin nodes are defined in the `docker-compose.yml` files located in the respective directories mentioned above. These variables control various operational aspects like the sync type, networking details, and client behavior.
-
-#### Example Environment Variables for Zetacored
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DAEMON_HOME` | Daemon's home directory | `/root/.zetacored` |
-| `NETWORK` | Network identifier | `mainnet`, `athens3` |
-| `CHAIN_ID` | Chain ID for the network | `zetachain_7000-1`, `athens_7001-1` |
-| `RESTORE_TYPE` | Node restoration method | `snapshot`, `statesync` |
-| `SNAPSHOT_API` | API URL for fetching snapshots | `https://snapshots.zetachain.com` |
-
-#### Example Environment Variables for Bitcoin
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `bitcoin_username` | Username for Bitcoin RPC | `user` |
-| `bitcoin_password` | Password for Bitcoin RPC | `pass` |
-| `WALLET_NAME` | Name of the Bitcoin wallet | `tssMainnet` |
-| `WALLET_ADDRESS` | Bitcoin wallet address for transactions | `bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y` |
-
-This detailed tabulation ensures all necessary commands and configurations are neatly organized, providing clarity on where to manage the settings and how to execute different operations for Zetacored and Bitcoin nodes across different environments.
