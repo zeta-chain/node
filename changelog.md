@@ -3,14 +3,21 @@
 ## Unreleased
 
 ### Breaking Changes
+
 * Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
 
 ### Features
+
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
 
 ### Refactor
+
 * [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
+
+### CI
+
+* [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
 
 ## Unreleased
 ### Breaking Changes
