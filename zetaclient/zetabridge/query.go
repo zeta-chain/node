@@ -17,7 +17,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -31,6 +31,15 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 		return observertypes.CrosschainFlags{}, err
 	}
 	return resp.CrosschainFlags, nil
+}
+
+func (b *ZetaCoreBridge) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.RateLimiterFlags(context.Background(), &crosschaintypes.QueryRateLimiterFlagsRequest{})
+	if err != nil {
+		return crosschaintypes.RateLimiterFlags{}, err
+	}
+	return resp.RateLimiterFlags, nil
 }
 
 func (b *ZetaCoreBridge) GetVerificationFlags() (lightclienttypes.VerificationFlags, error) {
@@ -76,27 +85,27 @@ func (b *ZetaCoreBridge) GetUpgradePlan() (*upgradetypes.Plan, error) {
 	return resp.Plan, nil
 }
 
-func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
+func (b *ZetaCoreBridge) GetAllCctx() ([]*crosschaintypes.CrossChainTx, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.CctxAll(context.Background(), &crosschaintypes.QueryAllCctxRequest{})
 	if err != nil {
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: sendHash})
+func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*crosschaintypes.CrossChainTx, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Cctx(context.Background(), &crosschaintypes.QueryGetCctxRequest{Index: sendHash})
 	if err != nil {
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*types.CrossChainTx, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxByNonce(context.Background(), &types.QueryGetCctxByNonceRequest{
+func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.CctxByNonce(context.Background(), &crosschaintypes.QueryGetCctxByNonceRequest{
 		ChainID: chainID,
 		Nonce:   nonce,
 	})
@@ -120,14 +129,33 @@ func (b *ZetaCoreBridge) GetObserverList() ([]string, error) {
 	return nil, err
 }
 
+// GetRateLimiterInput returns input data for the rate limit checker
+func (b *ZetaCoreBridge) GetRateLimiterInput(window int64) (crosschaintypes.QueryRateLimiterInputResponse, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.RateLimiterInput(
+		context.Background(),
+		&crosschaintypes.QueryRateLimiterInputRequest{
+			Window: window,
+		},
+		maxSizeOption,
+	)
+	if err != nil {
+		return crosschaintypes.QueryRateLimiterInputResponse{}, err
+	}
+	return *resp, nil
+}
+
 // ListPendingCctx returns a list of pending cctxs for a given chainID
 //   - The max size of the list is crosschainkeeper.MaxPendingCctxs
-func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*types.CrossChainTx, uint64, error) {
-	client := types.NewQueryClient(b.grpcConn)
+func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 	resp, err := client.ListPendingCctx(
 		context.Background(),
-		&types.QueryListPendingCctxRequest{ChainId: chainID},
+		&crosschaintypes.QueryListPendingCctxRequest{
+			ChainId: chainID,
+		},
 		maxSizeOption,
 	)
 	if err != nil {
@@ -139,12 +167,12 @@ func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*types.CrossChainTx, 
 // ListPendingCctxWithinRatelimit returns a list of pending cctxs that do not exceed the outbound rate limit
 //   - The max size of the list is crosschainkeeper.MaxPendingCctxs
 //   - The returned `rateLimitExceeded` flag indicates if the rate limit is exceeded or not
-func (b *ZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*types.CrossChainTx, uint64, int64, string, bool, error) {
-	client := types.NewQueryClient(b.grpcConn)
+func (b *ZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*crosschaintypes.CrossChainTx, uint64, int64, string, bool, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 	resp, err := client.ListPendingCctxWithinRateLimit(
 		context.Background(),
-		&types.QueryListPendingCctxWithinRateLimitRequest{},
+		&crosschaintypes.QueryListPendingCctxWithinRateLimitRequest{},
 		maxSizeOption,
 	)
 	if err != nil {
@@ -154,8 +182,8 @@ func (b *ZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*types.CrossChainTx
 }
 
 func (b *ZetaCoreBridge) GetAbortedZetaAmount() (string, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ZetaAccounting(context.Background(), &types.QueryZetaAccountingRequest{})
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.ZetaAccounting(context.Background(), &crosschaintypes.QueryZetaAccountingRequest{})
 	if err != nil {
 		return "", err
 	}
@@ -189,9 +217,9 @@ func (b *ZetaCoreBridge) GetZetaTokenSupplyOnNode() (sdkmath.Int, error) {
 	return resp.GetAmount().Amount, nil
 }
 
-func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
+func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*crosschaintypes.LastBlockHeight, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.LastBlockHeightAll(context.Background(), &crosschaintypes.QueryAllLastBlockHeightRequest{})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query GetBlockHeight error")
 		return nil, err
@@ -222,9 +250,9 @@ func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	return nil, err
 }
 
-func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain chains.Chain) (*types.LastBlockHeight, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
+func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.LastBlockHeight(context.Background(), &crosschaintypes.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -232,8 +260,8 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain chains.Chain) (*types.L
 }
 
 func (b *ZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
 	if err != nil {
 		return 0, err
 	}
@@ -304,9 +332,9 @@ func (b *ZetaCoreBridge) GetBallot(ballotIdentifier string) (*observertypes.Quer
 	return resp, nil
 }
 
-func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTxTracker, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.InTxTrackerAllByChain(context.Background(), &types.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
+func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.InTxTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
 	if err != nil {
 		return nil, err
 	}
@@ -351,9 +379,9 @@ func (b *ZetaCoreBridge) GetTssHistory() ([]observertypes.TSS, error) {
 	return resp.TssList, nil
 }
 
-func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*types.OutTxTracker, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
+func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.OutTxTracker(context.Background(), &crosschaintypes.QueryGetOutTxTrackerRequest{
 		ChainID: chain.ChainId,
 		Nonce:   nonce,
 	})
@@ -363,9 +391,9 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]types.OutTxTracker, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
+	client := crosschaintypes.NewQueryClient(b.grpcConn)
+	resp, err := client.OutTxTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllOutTxTrackerByChainRequest{
 		Chain: chainID,
 		Pagination: &query.PageRequest{
 			Key:        nil,

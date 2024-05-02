@@ -9,6 +9,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
@@ -17,6 +18,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/ratelimiter"
 )
 
 const (
@@ -93,6 +95,7 @@ func (co *CoreObserver) MonitorCore(appContext *appcontext.AppContext) {
 func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 	outTxMan := outtxprocessor.NewOutTxProcessorManager(co.logger.ChainLogger)
 	observeTicker := time.NewTicker(3 * time.Second)
+	sampledLogger := co.logger.ZetaChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
 	var lastBlockNum int64
 	for {
 		select {
@@ -133,21 +136,18 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 					// set current hot key burn rate
 					metrics.HotKeyBurnRate.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
+					// get supported foreign chains
+					coreContext := appContext.ZetaCoreContext()
+					supportedForeignChains := coreContext.GetEnabledForeignChains()
+
 					// query pending cctxs across all foreign chains with rate limit
-					cctxMap, withdrawWindow, withdrawRate, err := co.getAllPendingCctxWithRatelimit()
+					cctxMap, err := co.GetPendingCctxsWithinRatelimit(supportedForeignChains, sampledLogger)
 					if err != nil {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: queryPendingCctxWithRatelimit failed")
 					}
-					// print value within rate limiter window every minute
-					if bn%10 == 0 {
-						co.logger.ZetaChainWatcher.Debug().Msgf(
-							"startCctxScheduler: withdraw window is %d, withdraw rate is %s", withdrawWindow, withdrawRate)
-					}
 
 					// schedule keysign for pending cctxs on each chain
-					coreContext := appContext.ZetaCoreContext()
-					supportedChains := coreContext.GetEnabledChains()
-					for _, c := range supportedChains {
+					for _, c := range supportedForeignChains {
 						if c.IsZetaChain() {
 							continue
 						}
@@ -192,29 +192,6 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 			}
 		}
 	}
-}
-
-// getAllPendingCctxWithRatelimit get pending cctxs across all foreign chains with rate limit
-func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.CrossChainTx, int64, string, error) {
-	cctxList, totalPending, withdrawWindow, withdrawRate, rateLimitExceeded, err := co.bridge.ListPendingCctxWithinRatelimit()
-	if err != nil {
-		return nil, 0, "", err
-	}
-	if rateLimitExceeded {
-		co.logger.ZetaChainWatcher.Warn().Msgf("rate limit exceeded, fetched %d cctxs out of %d", len(cctxList), totalPending)
-	}
-
-	// classify pending cctxs by chain id
-	cctxMap := make(map[int64][]*types.CrossChainTx)
-	for _, cctx := range cctxList {
-		chainID := cctx.GetCurrentOutTxParam().ReceiverChainId
-		if _, found := cctxMap[chainID]; !found {
-			cctxMap[chainID] = make([]*types.CrossChainTx, 0)
-		}
-		cctxMap[chainID] = append(cctxMap[chainID], cctx)
-	}
-
-	return cctxMap, withdrawWindow, withdrawRate, nil
 }
 
 // scheduleCctxEVM schedules evm outtx keysign on each ZetaChain block (the ticker)
@@ -412,4 +389,52 @@ func (co *CoreObserver) GetUpdatedChainClient(coreContext *corecontext.ZetaCoreC
 		}
 	}
 	return chainOb, nil
+}
+
+// GetPendingCctxsWithinRatelimit get pending cctxs across foreign chains within rate limit
+func (co *CoreObserver) GetPendingCctxsWithinRatelimit(foreignChains []chains.Chain, logger zerolog.Logger) (map[int64][]*types.CrossChainTx, error) {
+	// get rate limiter flags
+	rateLimitFlags, err := co.bridge.GetRateLimiterFlags()
+	if err != nil {
+		return nil, err
+	}
+
+	// apply rate limiter or not according to the flags
+	applyLimit := ratelimiter.IsRateLimiterUsable(rateLimitFlags)
+
+	// fallback to non-rate-limited query if rate limiter is not usable
+	cctxsMap := make(map[int64][]*types.CrossChainTx)
+	if !applyLimit {
+		for _, chain := range foreignChains {
+			resp, _, err := co.bridge.ListPendingCctx(chain.ChainId)
+			if err == nil && resp != nil {
+				cctxsMap[chain.ChainId] = resp
+			}
+		}
+		return cctxsMap, nil
+	}
+
+	// query rate limiter input
+	resp, err := co.bridge.GetRateLimiterInput(rateLimitFlags.Window)
+	if err != nil {
+		return nil, err
+	}
+	input, ok := ratelimiter.NewInput(resp)
+	if !ok {
+		return nil, fmt.Errorf("failed to create rate limiter input")
+	}
+
+	// apply rate limiter
+	output := ratelimiter.ApplyRateLimiter(input, rateLimitFlags.Window, rateLimitFlags.Rate)
+	logger.Info().Msgf(
+		"current window: %d, current rate: %s", output.CurrentWithdrawWindow, output.CurrentWithdrawRate.String())
+
+	// set metrics
+	percentage := zetamath.Percentage(output.CurrentWithdrawRate.BigInt(), rateLimitFlags.Rate.BigInt())
+	if percentage != nil {
+		percentageFloat, _ := percentage.Float64()
+		metrics.PercentageOfRateReached.Set(percentageFloat)
+	}
+
+	return output.CctxsMap, nil
 }

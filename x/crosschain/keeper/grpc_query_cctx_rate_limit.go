@@ -9,11 +9,164 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// RateLimiterInput returns the input data for the rate limiter
+func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterInputRequest) (res *types.QueryRateLimiterInputResponse, err error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	if req.Window <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "window must be positive")
+	}
+
+	// use default MaxPendingCctxs if not specified or too high
+	limit := req.Limit
+	if limit == 0 || limit > MaxPendingCctxs {
+		limit = MaxPendingCctxs
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	// get current height and tss
+	height := ctx.BlockHeight()
+	if height <= 0 {
+		return nil, status.Error(codes.OutOfRange, "height out of range")
+	}
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	if !found {
+		return nil, observertypes.ErrTssNotFound
+	}
+
+	// calculate the rate limiter sliding window left boundary (inclusive)
+	leftWindowBoundary := height - req.Window + 1
+	if leftWindowBoundary < 1 {
+		leftWindowBoundary = 1
+	}
+
+	// the `limit` of pending result is reached or not
+	maxCCTXsReached := func(cctxs []*types.CrossChainTx) bool {
+		// #nosec G701 len always positive
+		return uint32(len(cctxs)) > limit
+	}
+
+	// if a cctx falls within the rate limiter window
+	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
+		// #nosec G701 checked positive
+		return cctx.InboundTxParams.InboundTxObservedExternalHeight >= uint64(leftWindowBoundary)
+	}
+
+	// it is a past cctx if its nonce < `nonceLow`,
+	isPastCctx := func(cctx *types.CrossChainTx, nonceLow int64) bool {
+		// #nosec G701 always positive
+		return cctx.GetCurrentOutTxParam().OutboundTxTssNonce < uint64(nonceLow)
+	}
+
+	// get foreign chains and conversion rates of foreign coins
+	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+	assetRates := k.GetRateLimiterAssetRateList(ctx)
+	gasAssetRateMap, erc20AssetRateMap := BuildAssetRateMapFromList(assetRates)
+
+	// query pending nonces of each foreign chain and get the lowest height of the pending cctxs
+	lowestPendingCctxHeight := int64(0)
+	pendingNoncesMap := make(map[int64]observertypes.PendingNonces)
+	for _, chain := range chains {
+		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+		if !found {
+			return nil, status.Error(codes.Internal, "pending nonces not found")
+		}
+		pendingNoncesMap[chain.ChainId] = pendingNonces
+
+		// update lowest pending cctx height
+		if pendingNonces.NonceLow < pendingNonces.NonceHigh {
+			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, pendingNonces.NonceLow)
+			if err != nil {
+				return nil, err
+			}
+			// #nosec G701 len always in range
+			cctxHeight := int64(cctx.InboundTxParams.InboundTxObservedExternalHeight)
+			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
+				lowestPendingCctxHeight = cctxHeight
+			}
+		}
+	}
+
+	// define a few variables to be used in the query loops
+	totalPending := uint64(0)
+	pastCctxsValue := sdk.NewInt(0)
+	pendingCctxsValue := sdk.NewInt(0)
+	cctxsMissed := make([]*types.CrossChainTx, 0)
+	cctxsPending := make([]*types.CrossChainTx, 0)
+
+	// query backwards for pending cctxs of each foreign chain
+	for _, chain := range chains {
+		// we should at least query 1000 prior to find any pending cctx that we might have missed
+		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
+		// therefore might mask some lower nonce cctx that is still pending.
+		pendingNonces := pendingNoncesMap[chain.ChainId]
+		startNonce := pendingNonces.NonceHigh - 1
+		endNonce := pendingNonces.NonceLow - MaxLookbackNonce
+		if endNonce < 0 {
+			endNonce = 0
+		}
+
+		// go all the way back to the left window boundary or `NonceLow - 1000`, depending on which on arrives first
+		for nonce := startNonce; nonce >= 0; nonce-- {
+			cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, chain.ChainId, nonce)
+			if err != nil {
+				return nil, err
+			}
+			inWindow := isCctxInWindow(cctx)
+			isPast := isPastCctx(cctx, pendingNonces.NonceLow)
+
+			// we should at least go backwards by 1000 nonces to pick up missed pending cctxs
+			// we might go even further back if the endNonce hasn't hit the left window boundary yet
+			if nonce < endNonce && !inWindow {
+				break
+			}
+
+			// sum up past cctxs' value within window
+			if inWindow && isPast {
+				pastCctxsValue = pastCctxsValue.Add(ConvertCctxValue(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
+			}
+
+			// add cctx to corresponding list
+			if IsPending(cctx) {
+				totalPending++
+				if isPast {
+					cctxsMissed = append(cctxsMissed, cctx)
+				} else {
+					cctxsPending = append(cctxsPending, cctx)
+					// sum up non-past pending cctxs' value
+					pendingCctxsValue = pendingCctxsValue.Add(ConvertCctxValue(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
+				}
+			}
+		}
+	}
+
+	// sort the missed cctxs order by height (can sort by other criteria, for unit testability)
+	SortCctxsByHeightAndChainID(cctxsMissed)
+
+	// sort the pending cctxs order by height (first come first serve)
+	SortCctxsByHeightAndChainID(cctxsPending)
+
+	// we take all the missed cctxs (won't be a lot) for simplicity of the query, but we only take a `limit` number of pending cctxs
+	if maxCCTXsReached(cctxsPending) {
+		cctxsPending = cctxsPending[:limit]
+	}
+
+	return &types.QueryRateLimiterInputResponse{
+		Height:                  height,
+		CctxsMissed:             cctxsMissed,
+		CctxsPending:            cctxsPending,
+		TotalPending:            totalPending,
+		PastCctxsValue:          pastCctxsValue.String(),
+		PendingCctxsValue:       pendingCctxsValue.String(),
+		LowestPendingCctxHeight: lowestPendingCctxHeight,
+	}, nil
+}
 
 // ListPendingCctxWithinRateLimit returns a list of pending cctxs that do not exceed the outbound rate limit
 // a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
@@ -79,14 +232,13 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	}
 
 	// get the conversion rates for all foreign coins
-	var gasCoinRates map[int64]sdk.Dec
-	var erc20CoinRates map[int64]map[string]sdk.Dec
-	var foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins
+	var gasAssetRateMap map[int64]*types.AssetRate
+	var erc20AssetRateMap map[int64]map[string]*types.AssetRate
 	var blockLimitInAzeta sdkmath.Int
 	var windowLimitInAzeta sdkmath.Int
 	if applyLimit {
-		gasCoinRates, erc20CoinRates = k.GetRateLimiterRates(ctx)
-		foreignCoinMap = k.fungibleKeeper.GetAllForeignCoinMap(ctx)
+		assetRates := k.GetRateLimiterAssetRateList(ctx)
+		gasAssetRateMap, erc20AssetRateMap = BuildAssetRateMapFromList(assetRates)
 
 		// initiate block limit and window limit in azeta
 		blockLimitInAzeta = sdkmath.NewIntFromBigInt(rateLimitFlags.Rate.BigInt())
@@ -170,7 +322,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 				break
 			}
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
+			if inWindow && rateLimitExceeded(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
 				limitExceeded = true
 				continue
 			}
@@ -203,7 +355,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 			}
 
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if rateLimitExceeded(chain.ChainId, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
+			if rateLimitExceeded(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
 				limitExceeded = true
 				continue
 			}
@@ -241,52 +393,46 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 func ConvertCctxValue(
 	chainID int64,
 	cctx *types.CrossChainTx,
-	gasCoinRates map[int64]sdk.Dec,
-	erc20CoinRates map[int64]map[string]sdk.Dec,
-	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
+	gasAssetRateMap map[int64]*types.AssetRate,
+	erc20AssetRateMap map[int64]map[string]*types.AssetRate,
 ) sdkmath.Int {
 	var rate sdk.Dec
-	var decimals uint64
+	var decimals uint32
 	switch cctx.InboundTxParams.CoinType {
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
-		return sdkmath.NewIntFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+		return sdk.NewIntFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
 	case coin.CoinType_Gas:
-		rate = gasCoinRates[chainID]
+		assetRate, found := gasAssetRateMap[chainID]
+		if !found {
+			// skip if no rate found for gas coin on this chainID
+			return sdk.NewInt(0)
+		}
+		rate = assetRate.Rate
+		decimals = assetRate.Decimals
 	case coin.CoinType_ERC20:
 		// get the ERC20 coin rate
-		_, found := erc20CoinRates[chainID]
+		_, found := erc20AssetRateMap[chainID]
 		if !found {
 			// skip if no rate found for this chainID
-			return sdkmath.NewInt(0)
+			return sdk.NewInt(0)
 		}
-		rate = erc20CoinRates[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
+		assetRate := erc20AssetRateMap[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
+		rate = assetRate.Rate
+		decimals = assetRate.Decimals
 	default:
 		// skip CoinType_Cmd
-		return sdkmath.NewInt(0)
+		return sdk.NewInt(0)
 	}
 	// should not happen, return 0 to skip if it happens
 	if rate.IsNil() || rate.LTE(sdk.NewDec(0)) {
 		return sdkmath.NewInt(0)
 	}
 
-	// get foreign coin decimals
-	foreignCoinFromChainMap, found := foreignCoinMap[chainID]
-	if !found {
-		// skip if no coin found for this chainID
-		return sdkmath.NewInt(0)
-	}
-	foreignCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundTxParams.Asset)]
-	if !found {
-		// skip if no coin found for this Asset
-		return sdkmath.NewInt(0)
-	}
-	decimals = uint64(foreignCoin.Decimals)
-
 	// the whole coin amounts of zeta and zrc20
 	// given decimals = 6, the amount will be 10^6 = 1000000
 	oneZeta := coin.AzetaPerZeta()
-	oneZrc20 := sdk.NewDec(10).Power(decimals)
+	oneZrc20 := sdk.NewDec(10).Power(uint64(decimals))
 
 	// convert cctx asset amount into azeta amount
 	// given amountCctx = 2000000, rate = 0.8, decimals = 6
@@ -302,13 +448,12 @@ func ConvertCctxValue(
 func rateLimitExceeded(
 	chainID int64,
 	cctx *types.CrossChainTx,
-	gasCoinRates map[int64]sdk.Dec,
-	erc20CoinRates map[int64]map[string]sdk.Dec,
-	foreignCoinMap map[int64]map[string]fungibletypes.ForeignCoins,
+	gasAssetRateMap map[int64]*types.AssetRate,
+	erc20AssetRateMap map[int64]map[string]*types.AssetRate,
 	currentCctxValue *sdkmath.Int,
-	withdrawLimitInZeta sdkmath.Int,
+	withdrawLimitInAzeta sdkmath.Int,
 ) bool {
-	cctxValueAzeta := ConvertCctxValue(chainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-	*currentCctxValue = currentCctxValue.Add(cctxValueAzeta)
-	return currentCctxValue.GT(withdrawLimitInZeta)
+	amountZeta := ConvertCctxValue(chainID, cctx, gasAssetRateMap, erc20AssetRateMap)
+	*currentCctxValue = currentCctxValue.Add(amountZeta)
+	return currentCctxValue.GT(withdrawLimitInAzeta)
 }

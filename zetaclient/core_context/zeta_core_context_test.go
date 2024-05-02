@@ -69,6 +69,9 @@ func TestNewZetaCoreContext(t *testing.T) {
 		// assert enabled chains
 		require.Empty(t, len(zetaContext.GetEnabledChains()))
 
+		// assert foreign chains
+		require.Empty(t, len(zetaContext.GetEnabledForeignChains()))
+
 		// assert current tss pubkey
 		require.Equal(t, "", zetaContext.GetCurrentTssPubkey())
 
@@ -155,6 +158,10 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 				ChainName: 2,
 				ChainId:   2,
 			},
+			{
+				ChainName: 3,
+				ChainId:   chains.ZetaTestnetChain().ChainId,
+			},
 		}
 		evmChainParamsToUpdate := map[int64]*observertypes.ChainParams{
 			1: {
@@ -191,6 +198,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 		// assert enabled chains updated
 		require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
+
+		// assert enabled foreign chains
+		require.Equal(t, enabledChainsToUpdate[0:2], zetaContext.GetEnabledForeignChains())
 
 		// assert current tss pubkey updated
 		require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())

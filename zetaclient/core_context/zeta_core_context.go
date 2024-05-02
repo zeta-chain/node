@@ -80,6 +80,18 @@ func (c *ZetaCoreContext) GetEnabledChains() []chains.Chain {
 	return copiedChains
 }
 
+func (c *ZetaCoreContext) GetEnabledForeignChains() []chains.Chain {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	foreignChains := make([]chains.Chain, 0)
+	for _, chain := range c.chainsEnabled {
+		if !chain.IsZetaChain() {
+			foreignChains = append(foreignChains, chain)
+		}
+	}
+	return foreignChains
+}
+
 func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()

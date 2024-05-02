@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -59,37 +60,6 @@ func createTestRateLimiterFlags(
 	}
 }
 
-// createCctxsWithCoinTypeAndHeightRange
-//   - create 1 cctx per block from lowBlock to highBlock (inclusive)
-//
-// return created cctxs
-func createCctxsWithCoinTypeAndHeightRange(
-	t *testing.T,
-	lowBlock uint64,
-	highBlock uint64,
-	chainID int64,
-	coinType coin.CoinType,
-	asset string,
-	amount uint64,
-	status types.CctxStatus,
-) (cctxs []*types.CrossChainTx) {
-	// create 1 pending cctxs per block
-	for i := lowBlock; i <= highBlock; i++ {
-		nonce := i - 1
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
-		cctx.CctxStatus.Status = status
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coinType
-		cctx.InboundTxParams.Asset = asset
-		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
-		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
-		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
-		cctxs = append(cctxs, cctx)
-	}
-	return cctxs
-}
-
 // setCctxsInKeeper sets the given cctxs to the keeper
 func setCctxsInKeeper(
 	ctx sdk.Context,
@@ -101,7 +71,7 @@ func setCctxsInKeeper(
 	for _, cctx := range cctxs {
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
-			ChainId: cctx.InboundTxParams.SenderChainId,
+			ChainId: cctx.GetCurrentOutTxParam().ReceiverChainId,
 			// #nosec G701 always in range for tests
 			Nonce:     int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce),
 			CctxIndex: cctx.Index,
@@ -149,119 +119,365 @@ func Test_ConvertCctxValue(t *testing.T) {
 	k.SetRateLimiterFlags(ctx, *rateLimiterFlags)
 
 	// get rate limiter rates
-	gasCoinRates, erc20CoinRates := k.GetRateLimiterRates(ctx)
-	foreignCoinMap := zk.FungibleKeeper.GetAllForeignCoinMap(ctx)
+	assetRates := k.GetRateLimiterAssetRateList(ctx)
+	gasAssetRateMap, erc20AssetRateMap := keeper.BuildAssetRateMapFromList(assetRates)
 
-	t.Run("should convert cctx ZETA value correctly", func(t *testing.T) {
-		// create cctx with 0.3 ZETA
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
-		cctx.InboundTxParams.Asset = ""
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e17) // 0.3 ZETA
+	// test cases
+	tests := []struct {
+		name string
 
-		// convert cctx value
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(3e17), value)
-	})
-	t.Run("should convert cctx ETH value correctly", func(t *testing.T) {
-		// create cctx with 0.003 ETH
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.InboundTxParams.Asset = ""
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e15) // 0.003 ETH
+		// input
+		chainID         int64
+		coinType        coin.CoinType
+		asset           string
+		amount          math.Uint
+		gasAssetRates   map[int64]*types.AssetRate
+		erc20AssetRates map[int64]map[string]*types.AssetRate
 
-		// convert cctx value: 0.003 ETH * 2500 = 7.5 ZETA
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(75e17), value)
-	})
-	t.Run("should convert cctx BTC value correctly", func(t *testing.T) {
-		// create cctx with 0.0007 BTC
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", btcChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.InboundTxParams.Asset = ""
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(70000) // 0.0007 BTC
+		// output
+		expectedValue sdkmath.Int
+	}{
+		{
+			name:            "should convert cctx ZETA value correctly",
+			chainID:         ethChainID,
+			coinType:        coin.CoinType_Zeta,
+			asset:           "",
+			amount:          sdk.NewUint(3e17), // 0.3 ZETA
+			gasAssetRates:   gasAssetRateMap,
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(3e17),
+		},
+		{
+			name:            "should convert cctx ETH value correctly",
+			chainID:         ethChainID,
+			coinType:        coin.CoinType_Gas,
+			asset:           "",
+			amount:          sdk.NewUint(3e15), // 0.003 ETH
+			gasAssetRates:   gasAssetRateMap,
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(75e17), // 0.003 ETH * 2500 = 7.5 ZETA
+		},
+		{
+			name:            "should convert cctx BTC value correctly",
+			chainID:         btcChainID,
+			coinType:        coin.CoinType_Gas,
+			asset:           "",
+			amount:          sdk.NewUint(70000), // 0.0007 BTC
+			gasAssetRates:   gasAssetRateMap,
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(35).Mul(sdk.NewInt(1e18)), // 0.0007 BTC * 50000 = 35.0 ZETA
+		},
+		{
+			name:            "should convert cctx USDT value correctly",
+			chainID:         ethChainID,
+			coinType:        coin.CoinType_ERC20,
+			asset:           assetUSDT,
+			amount:          sdk.NewUint(3e6), // 3 USDT
+			gasAssetRates:   gasAssetRateMap,
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(24e17), // 3 USDT * 0.8 = 2.4 ZETA
+		},
+		{
+			name:            "should return 0 if no gas asset rate found for chainID",
+			chainID:         ethChainID,
+			coinType:        coin.CoinType_Gas,
+			asset:           "",
+			amount:          sdk.NewUint(100),
+			gasAssetRates:   nil,
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(0),
+		},
+		{
+			name:            "should return 0 if no erc20 asset rate found for chainID",
+			chainID:         ethChainID,
+			coinType:        coin.CoinType_ERC20,
+			asset:           assetUSDT,
+			amount:          sdk.NewUint(100),
+			gasAssetRates:   gasAssetRateMap,
+			erc20AssetRates: nil,
+			expectedValue:   sdk.NewInt(0),
+		},
+		{
+			name:            "should return 0 if coinType is CoinType_Cmd",
+			chainID:         ethChainID,
+			coinType:        coin.CoinType_Cmd,
+			asset:           "",
+			amount:          sdk.NewUint(100),
+			gasAssetRates:   gasAssetRateMap,
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(0),
+		},
+		{
+			name:     "should return 0 on nil rate",
+			chainID:  ethChainID,
+			coinType: coin.CoinType_Gas,
+			asset:    "",
+			amount:   sdk.NewUint(100),
+			gasAssetRates: func() map[int64]*types.AssetRate {
+				// set rate to nil
+				tempRates := k.GetRateLimiterAssetRateList(ctx)
+				nilAssetRateMap, _ := keeper.BuildAssetRateMapFromList(tempRates)
+				nilAssetRateMap[ethChainID].Rate = sdk.Dec{}
+				return nilAssetRateMap
+			}(),
+			erc20AssetRates: erc20AssetRateMap,
+			expectedValue:   sdk.NewInt(0),
+		},
+		{
+			name:          "should return 0 on rate <= 0",
+			chainID:       ethChainID,
+			coinType:      coin.CoinType_ERC20,
+			asset:         assetUSDT,
+			amount:        sdk.NewUint(100),
+			gasAssetRates: gasAssetRateMap,
+			erc20AssetRates: func() map[int64]map[string]*types.AssetRate {
+				// set rate to 0
+				tempRates := k.GetRateLimiterAssetRateList(ctx)
+				_, zeroAssetRateMap := keeper.BuildAssetRateMapFromList(tempRates)
+				zeroAssetRateMap[ethChainID][strings.ToLower(assetUSDT)].Rate = sdk.NewDec(0)
+				return zeroAssetRateMap
+			}(),
+			expectedValue: sdk.NewInt(0),
+		},
+	}
 
-		// convert cctx value: 0.0007 BTC * 50000 = 35.0 ZETA
-		value := keeper.ConvertCctxValue(btcChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(35).Mul(sdk.NewInt(1e18)), value)
-	})
-	t.Run("should convert cctx USDT value correctly", func(t *testing.T) {
-		// create cctx with 3 USDT
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.InboundTxParams.Asset = assetUSDT
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e6) // 3 USDT
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create cctx with given input
+			cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", tt.chainID, 1))
+			cctx.InboundTxParams.CoinType = tt.coinType
+			cctx.InboundTxParams.Asset = tt.asset
+			cctx.GetCurrentOutTxParam().Amount = tt.amount
 
-		// convert cctx value: 3 USDT * 0.8 = 2.4 ZETA
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(24e17), value)
-	})
-	t.Run("should return 0 if no rate found for chainID", func(t *testing.T) {
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+			// convert cctx value
+			value := keeper.ConvertCctxValue(tt.chainID, cctx, tt.gasAssetRates, tt.erc20AssetRates)
+			require.Equal(t, tt.expectedValue, value)
+		})
+	}
+}
 
-		// use nil erc20CoinRates map to convert cctx value
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, nil, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(0), value)
-	})
-	t.Run("should return 0 if coinType is CoinType_Cmd", func(t *testing.T) {
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+func TestKeeper_RateLimiterInput(t *testing.T) {
+	// create sample TSS
+	tss := sample.Tss()
 
-		// convert cctx value
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(0), value)
-	})
-	t.Run("should return 0 on nil rate or rate <= 0", func(t *testing.T) {
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+	// create sample zrc20 addresses for ETH, BTC, USDT
+	zrc20ETH := sample.EthAddress().Hex()
+	zrc20BTC := sample.EthAddress().Hex()
+	zrc20USDT := sample.EthAddress().Hex()
 
-		// use nil gasCoinRates map to convert cctx value
-		value := keeper.ConvertCctxValue(ethChainID, cctx, nil, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(0), value)
+	// create Eth chain 999 mined and 200 pending cctxs for rate limiter test
+	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
+	ethMinedCctxs := sample.CustomCctxsInBlockRange(t, 1, 999, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
+	ethPendingCctxs := sample.CustomCctxsInBlockRange(t, 1000, 1199, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
 
-		// set rate to 0
-		zeroCoinRates, _ := k.GetRateLimiterRates(ctx)
-		zeroCoinRates[ethChainID] = sdk.NewDec(0)
+	// create Btc chain 999 mined and 200 pending cctxs for rate limiter test
+	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
+	btcMinedCctxs := sample.CustomCctxsInBlockRange(t, 1, 999, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_OutboundMined)
+	btcPendingCctxs := sample.CustomCctxsInBlockRange(t, 1000, 1199, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_PendingOutbound)
 
-		// convert cctx value
-		value = keeper.ConvertCctxValue(ethChainID, cctx, zeroCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(0), value)
+	// define test cases
+	tests := []struct {
+		name           string
+		rateLimitFlags *types.RateLimiterFlags
 
-		// set rate to -1
-		negativeCoinRates, _ := k.GetRateLimiterRates(ctx)
-		negativeCoinRates[ethChainID] = sdk.NewDec(-1)
+		// Eth chain cctxs setup
+		ethMinedCctxs    []*types.CrossChainTx
+		ethPendingCctxs  []*types.CrossChainTx
+		ethPendingNonces observertypes.PendingNonces
 
-		// convert cctx value
-		value = keeper.ConvertCctxValue(ethChainID, cctx, negativeCoinRates, erc20CoinRates, foreignCoinMap)
-		require.Equal(t, sdk.NewInt(0), value)
-	})
-	t.Run("should return 0 if no coin found for chainID", func(t *testing.T) {
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		// Btc chain cctxs setup
+		btcMinedCctxs    []*types.CrossChainTx
+		btcPendingCctxs  []*types.CrossChainTx
+		btcPendingNonces observertypes.PendingNonces
 
-		// use empty foreignCoinMap to convert cctx value
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, nil)
-		require.Equal(t, sdk.NewInt(0), value)
-	})
-	t.Run("should return 0 if no coin found for asset", func(t *testing.T) {
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.InboundTxParams.Asset = assetUSDT
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		// block height and limit of cctxs to retrieve
+		currentHeight int64
+		queryLimit    uint32
 
-		// delete assetUSDT from foreignCoinMap for ethChainID
-		tempCoinMap := zk.FungibleKeeper.GetAllForeignCoinMap(ctx)
-		delete(tempCoinMap[ethChainID], strings.ToLower(assetUSDT))
+		// expected results
+		expectedHeight                  int64
+		expectedCctxsMissed             []*types.CrossChainTx
+		expectedCctxsPending            []*types.CrossChainTx
+		expectedTotalPending            uint64
+		expectedPastCctxsValue          string
+		expectedPendingCctxsValue       string
+		expectedLowestPendingCctxHeight int64
+	}{
+		{
+			name:            "can retrieve all pending cctxs",
+			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(10*1e18), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMinedCctxs:   ethMinedCctxs,
+			ethPendingCctxs: ethPendingCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,
+			queryLimit:    0, // use default MaxPendingCctxs
 
-		// convert cctx value
-		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, tempCoinMap)
-		require.Equal(t, sdk.NewInt(0), value)
-	})
+			// expected results
+			expectedHeight:                  1199,
+			expectedCctxsMissed:             keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs[0:100]...)),
+			expectedCctxsPending:            keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:200]...), btcPendingCctxs[100:200]...)),
+			expectedTotalPending:            400,
+			expectedPastCctxsValue:          sdk.NewInt(1200).Mul(sdk.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * 1e15 ZETA
+			expectedLowestPendingCctxHeight: 1100,
+		},
+		{
+			name:            "should use left window boundary 1 if window > currentHeight",
+			rateLimitFlags:  createTestRateLimiterFlags(1200, math.NewUint(10*1e18), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMinedCctxs:   ethMinedCctxs,
+			ethPendingCctxs: ethPendingCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,                       // window 1200 > 1199
+			queryLimit:    keeper.MaxPendingCctxs + 1, // should use default MaxPendingCctxs
+
+			// expected results
+			expectedHeight:                  1199,
+			expectedCctxsMissed:             keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs[0:100]...)),
+			expectedCctxsPending:            keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:200]...), btcPendingCctxs[100:200]...)),
+			expectedTotalPending:            400,
+			expectedPastCctxsValue:          sdk.NewInt(3297).Mul(sdk.NewInt(1e18)).String(), // 1099 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * 1e15 ZETA
+			expectedLowestPendingCctxHeight: 1100,
+		},
+		{
+			name:            "should loop from nonce 0",
+			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(10*1e18), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMinedCctxs:   ethMinedCctxs,
+			ethPendingCctxs: ethPendingCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  999, // startNonce will be set to 0 (NonceLow - 1000 < 0)
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  999, // startNonce will be set to 0 (NonceLow - 1000 < 0)
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,
+			queryLimit:    keeper.MaxPendingCctxs,
+
+			// expected results
+			expectedHeight:                  1199,
+			expectedCctxsMissed:             []*types.CrossChainTx{}, // no missed cctxs
+			expectedCctxsPending:            keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...)),
+			expectedTotalPending:            400,
+			expectedPastCctxsValue:          sdk.NewInt(900).Mul(sdk.NewInt(1e18)).String(), // 300 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdk.NewInt(600).Mul(sdk.NewInt(1e18)).String(), // 200 * (2.5 + 0.5) ZETA
+			expectedLowestPendingCctxHeight: 1000,
+		},
+		{
+			name:            "set a lower gRPC request limit < len(pending_cctxs)",
+			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(10*1e18), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMinedCctxs:   ethMinedCctxs,
+			ethPendingCctxs: ethPendingCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,
+			queryLimit:    100, // 100 < keeper.MaxPendingCctxs
+
+			// expected results
+			expectedHeight: 1199,
+			// should include all missed and 50 pending cctxs for each chain
+			expectedCctxsMissed:             keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...), btcPendingCctxs[0:100]...)),
+			expectedCctxsPending:            keeper.SortCctxsByHeightAndChainID(append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:150]...), btcPendingCctxs[100:150]...)),
+			expectedTotalPending:            400,
+			expectedPastCctxsValue:          sdk.NewInt(1200).Mul(sdk.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedLowestPendingCctxHeight: 1100,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create test keepers
+			k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+			// Set TSS
+			zk.ObserverKeeper.SetTSS(ctx, tss)
+
+			// Set foreign coins
+			assetUSDT := sample.EthAddress().Hex()
+			setupForeignCoins(t, ctx, zk, zrc20ETH, zrc20BTC, zrc20USDT, assetUSDT)
+
+			// Set rate limiter flags
+			if tt.rateLimitFlags != nil {
+				k.SetRateLimiterFlags(ctx, *tt.rateLimitFlags)
+			}
+
+			// Set Eth chain mined cctxs, pending ccxts and pending nonces
+			setCctxsInKeeper(ctx, *k, zk, tss, tt.ethMinedCctxs)
+			setCctxsInKeeper(ctx, *k, zk, tss, tt.ethPendingCctxs)
+			zk.ObserverKeeper.SetPendingNonces(ctx, tt.ethPendingNonces)
+
+			// Set Btc chain mined cctxs, pending ccxts and pending nonces
+			setCctxsInKeeper(ctx, *k, zk, tss, tt.btcMinedCctxs)
+			setCctxsInKeeper(ctx, *k, zk, tss, tt.btcPendingCctxs)
+			zk.ObserverKeeper.SetPendingNonces(ctx, tt.btcPendingNonces)
+
+			// Set current block height
+			ctx = ctx.WithBlockHeight(tt.currentHeight)
+
+			// Query input data for the rate limiter
+			request := &types.QueryRateLimiterInputRequest{
+				Limit:  tt.queryLimit,
+				Window: tt.rateLimitFlags.Window,
+			}
+			res, err := k.RateLimiterInput(ctx, request)
+
+			// check results
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedHeight, res.Height)
+			require.Equal(t, tt.expectedCctxsMissed, res.CctxsMissed)
+			require.Equal(t, tt.expectedCctxsPending, res.CctxsPending)
+			require.Equal(t, tt.expectedTotalPending, res.TotalPending)
+			require.Equal(t, tt.expectedPastCctxsValue, res.PastCctxsValue)
+			require.Equal(t, tt.expectedPendingCctxsValue, res.PendingCctxsValue)
+			require.Equal(t, tt.expectedLowestPendingCctxHeight, res.LowestPendingCctxHeight)
+		})
+	}
 }
 
 func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
@@ -275,13 +491,13 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 
 	// create Eth chain 999 mined and 200 pending cctxs for rate limiter test
 	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
-	ethMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
-	ethPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
+	ethMinedCctxs := sample.CustomCctxsInBlockRange(t, 1, 999, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
+	ethPendingCctxs := sample.CustomCctxsInBlockRange(t, 1000, 1199, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
 
 	// create Btc chain 999 mined and 200 pending cctxs for rate limiter test
 	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
-	btcMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_OutboundMined)
-	btcPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_PendingOutbound)
+	btcMinedCctxs := sample.CustomCctxsInBlockRange(t, 1, 999, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_OutboundMined)
+	btcPendingCctxs := sample.CustomCctxsInBlockRange(t, 1000, 1199, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_PendingOutbound)
 
 	// define test cases
 	tests := []struct {

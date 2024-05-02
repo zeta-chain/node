@@ -117,6 +117,11 @@ service Query {
   rpc RateLimiterFlags(QueryRateLimiterFlagsRequest) returns (QueryRateLimiterFlagsResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/rateLimiterFlags";
   }
+
+  // Queries the input data of rate limiter.
+  rpc RateLimiterInput(QueryRateLimiterInputRequest) returns (QueryRateLimiterInputResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/rateLimiterInput";
+  }
 }
 
 message QueryZetaAccountingRequest {}
@@ -261,6 +266,21 @@ message QueryListPendingCctxRequest {
 message QueryListPendingCctxResponse {
   repeated CrossChainTx CrossChainTx = 1;
   uint64 totalPending = 2;
+}
+
+message QueryRateLimiterInputRequest {
+  uint32 limit = 1;
+  int64 window = 2;
+}
+
+message QueryRateLimiterInputResponse {
+  int64 height = 1;
+  repeated CrossChainTx cctxs_missed = 2;
+  repeated CrossChainTx cctxs_pending = 3;
+  uint64 total_pending = 4;
+  string past_cctxs_value = 5;
+  string pending_cctxs_value = 6;
+  int64 lowest_pending_cctx_height = 7;
 }
 
 message QueryListPendingCctxWithinRateLimitRequest {

@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -100,6 +101,29 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 	resp, err := zetabridge.GetCrosschainFlags()
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrosschainFlags, resp)
+}
+
+func TestZetaCoreBridge_GetRateLimiterFlags(t *testing.T) {
+	// create sample flags
+	rateLimiterFlags := sample.RateLimiterFlags()
+	expectedOutput := crosschainTypes.QueryRateLimiterFlagsResponse{
+		RateLimiterFlags: rateLimiterFlags,
+	}
+
+	// setup mock server
+	input := crosschainTypes.QueryRateLimiterFlagsRequest{}
+	method := "/zetachain.zetacore.crosschain.Query/RateLimiterFlags"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCoreBridge()
+	require.NoError(t, err)
+
+	// query
+	resp, err := zetabridge.GetRateLimiterFlags()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.RateLimiterFlags, resp)
 }
 
 func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
@@ -264,6 +288,30 @@ func TestZetaCoreBridge_GetObserverList(t *testing.T) {
 	resp, err := zetabridge.GetObserverList()
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Observers, resp)
+}
+
+func TestZetaCoreBridge_GetRateLimiterInput(t *testing.T) {
+	expectedOutput := crosschainTypes.QueryRateLimiterInputResponse{
+		Height:                  10,
+		CctxsMissed:             []*crosschainTypes.CrossChainTx{sample.CrossChainTx(t, "1-1")},
+		CctxsPending:            []*crosschainTypes.CrossChainTx{sample.CrossChainTx(t, "1-2")},
+		TotalPending:            1,
+		PastCctxsValue:          "123456",
+		PendingCctxsValue:       "1234",
+		LowestPendingCctxHeight: 2,
+	}
+	input := crosschainTypes.QueryRateLimiterInputRequest{Window: 10}
+	method := "/zetachain.zetacore.crosschain.Query/RateLimiterInput"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCoreBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetRateLimiterInput(10)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput, resp)
 }
 
 func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {

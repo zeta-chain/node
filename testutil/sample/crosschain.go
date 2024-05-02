@@ -3,6 +3,7 @@ package sample
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -46,6 +47,18 @@ func RateLimiterFlags() types.RateLimiterFlags {
 				Rate:  sdk.NewDec(r.Int63()),
 			},
 		},
+	}
+}
+
+func AssetRate() *types.AssetRate {
+	r := Rand()
+
+	return &types.AssetRate{
+		ChainId:  r.Int63(),
+		Asset:    EthAddress().Hex(),
+		Decimals: uint32(r.Uint64()),
+		CoinType: coin.CoinType_ERC20,
+		Rate:     sdk.NewDec(r.Int63()),
 	}
 }
 
@@ -171,6 +184,33 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 		InboundTxParams:  InboundTxParams(r),
 		OutboundTxParams: []*types.OutboundTxParams{OutboundTxParams(r), OutboundTxParams(r)},
 	}
+}
+
+// CustomCctxsInBlockRange create 1 cctx per block in block range [lowBlock, highBlock] (inclusive)
+func CustomCctxsInBlockRange(
+	t *testing.T,
+	lowBlock uint64,
+	highBlock uint64,
+	chainID int64,
+	coinType coin.CoinType,
+	asset string,
+	amount uint64,
+	status types.CctxStatus,
+) (cctxs []*types.CrossChainTx) {
+	// create 1 cctx per block
+	for i := lowBlock; i <= highBlock; i++ {
+		nonce := i - 1
+		cctx := CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
+		cctx.CctxStatus.Status = status
+		cctx.InboundTxParams.CoinType = coinType
+		cctx.InboundTxParams.Asset = asset
+		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
+		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
+		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
+		cctxs = append(cctxs, cctx)
+	}
+	return cctxs
 }
 
 func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
