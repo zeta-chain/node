@@ -16,7 +16,7 @@ func (k msgServer) UpdateZRC20LiquidityCap(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "update can only be executed by group 2 policy group")
 	}
 

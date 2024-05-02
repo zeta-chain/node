@@ -74,8 +74,8 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 }
 
 // MockIsAuthorized mocks the IsAuthorized method of an authority keeper mock
-func MockIsAuthorized(m *mock.Mock, address string, policyType types.PolicyType, isAuthorized bool) {
-	m.On("IsAuthorized", mock.Anything, address, policyType).Return(isAuthorized).Once()
+func MockIsAuthorized(m *mock.Mock, _ string, _ types.PolicyType, isAuthorized bool) {
+	m.On("IsAuthorized", mock.Anything, mock.Anything).Return(isAuthorized).Once()
 }
 
 func SetAdminPolices(ctx sdk.Context, ak *keeper.Keeper) string {

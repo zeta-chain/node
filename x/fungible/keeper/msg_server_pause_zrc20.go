@@ -32,7 +32,7 @@ func (k msgServer) PauseZRC20(
 	//if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
 	//	requiredPolicyAccount = authoritytypes.PolicyType_groupOperational
 	//}
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 

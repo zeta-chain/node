@@ -17,7 +17,7 @@ func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeyge
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return &types.MsgUpdateKeygenResponse{}, authoritytypes.ErrUnauthorized
 	}
 

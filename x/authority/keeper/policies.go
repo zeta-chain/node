@@ -27,12 +27,11 @@ func (k Keeper) GetPolicies(ctx sdk.Context) (val types.Policies, found bool) {
 
 // IsAuthorized checks if the address is authorized for the given policy type
 func (k Keeper) IsAuthorized(ctx sdk.Context, msg sdk.Msg) bool {
-	if len(msg.GetSigners()) != 0 {
+	if len(msg.GetSigners()) != 1 {
 		return false
 	}
 	signer := msg.GetSigners()[0].String()
 	policyRequired := authorizations.AuthorizationTable()[sdk.MsgTypeURL(msg)]
-
 	policies, found := k.GetPolicies(ctx)
 	if !found {
 		return false

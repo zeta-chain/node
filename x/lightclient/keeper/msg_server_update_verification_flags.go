@@ -18,7 +18,7 @@ func (k msgServer) UpdateVerificationFlags(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, msg.GetRequireGroup()) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
 		return &types.MsgUpdateVerificationFlagsResponse{}, authoritytypes.ErrUnauthorized
 	}
 
