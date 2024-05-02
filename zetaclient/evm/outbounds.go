@@ -81,9 +81,9 @@ func (ob *ChainClient) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, l
 	if compliance.IsCctxRestricted(cctx) {
 		// use cctx's amount to bypass the amount check in zetacore
 		receiveValue = cctx.GetCurrentOutTxParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_Failed
+		receiveStatus := chains.ReceiveStatus_failed
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			receiveStatus = chains.ReceiveStatus_Success
+			receiveStatus = chains.ReceiveStatus_success
 		}
 		ob.PostVoteOutbound(cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 		return true, true, nil
@@ -205,10 +205,10 @@ func ParseOuttxReceivedValue(
 	// determine the receive status and value
 	// https://docs.nethereum.com/en/latest/nethereum-receipt-status/
 	receiveValue := big.NewInt(0)
-	receiveStatus := chains.ReceiveStatus_Failed
+	receiveStatus := chains.ReceiveStatus_failed
 	if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 		receiveValue = transaction.Value()
-		receiveStatus = chains.ReceiveStatus_Success
+		receiveStatus = chains.ReceiveStatus_success
 	}
 
 	// parse receive value from the outtx receipt for Zeta and ERC20
@@ -217,7 +217,7 @@ func ParseOuttxReceivedValue(
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 			receivedLog, revertedLog, err := ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 			if err != nil {
-				return nil, chains.ReceiveStatus_Failed, err
+				return nil, chains.ReceiveStatus_failed, err
 			}
 			// use the value in ZetaReceived/ZetaReverted event for vote message
 			if receivedLog != nil {
@@ -230,7 +230,7 @@ func ParseOuttxReceivedValue(
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 			withdrawn, err := ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 			if err != nil {
-				return nil, chains.ReceiveStatus_Failed, err
+				return nil, chains.ReceiveStatus_failed, err
 			}
 			// use the value in Withdrawn event for vote message
 			receiveValue = withdrawn.Amount
@@ -238,7 +238,7 @@ func ParseOuttxReceivedValue(
 	case coin.CoinType_Gas, coin.CoinType_Cmd:
 		// nothing to do for CoinType_Gas/CoinType_Cmd, no need to parse event
 	default:
-		return nil, chains.ReceiveStatus_Failed, fmt.Errorf("unknown coin type %s", cointype)
+		return nil, chains.ReceiveStatus_failed, fmt.Errorf("unknown coin type %s", cointype)
 	}
 	return receiveValue, receiveStatus, nil
 }

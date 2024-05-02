@@ -67,8 +67,8 @@ func TestMigrateStore(t *testing.T) {
 func TestResetTestnetNonce(t *testing.T) {
 	t.Run("reset only testnet nonce without changing mainnet chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		testnetChains := []chains.Chain{chains.GoerliChain(), chains.MumbaiChain(), chains.BscTestnetChain(), chains.BtcTestNetChain()}
-		mainnetChains := []chains.Chain{chains.EthChain(), chains.BscMainnetChain(), chains.BtcMainnetChain()}
+		testnetChains := []chains.Chain{chains.GoerliChain, chains.MumbaiChain, chains.BscTestnetChain, chains.BtcTestNetChain}
+		mainnetChains := []chains.Chain{chains.EthChain, chains.BscMainnetChain, chains.BtcMainnetChain}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()
@@ -102,10 +102,10 @@ func TestResetTestnetNonce(t *testing.T) {
 		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
 		require.NoError(t, err)
 		assertValues := map[chains.Chain]int64{
-			chains.GoerliChain():     226841,
-			chains.MumbaiChain():     200599,
-			chains.BscTestnetChain(): 110454,
-			chains.BtcTestNetChain(): 4881,
+			chains.GoerliChain:     226841,
+			chains.MumbaiChain:     200599,
+			chains.BscTestnetChain: 110454,
+			chains.BtcTestNetChain: 4881,
 		}
 
 		for _, chain := range testnetChains {
@@ -130,7 +130,7 @@ func TestResetTestnetNonce(t *testing.T) {
 
 	t.Run("reset nonce even if some chain values are missing", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		testnetChains := []chains.Chain{chains.GoerliChain()}
+		testnetChains := []chains.Chain{chains.GoerliChain}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()
@@ -151,9 +151,9 @@ func TestResetTestnetNonce(t *testing.T) {
 		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
 		require.NoError(t, err)
 		assertValuesSet := map[chains.Chain]int64{
-			chains.GoerliChain(): 226841,
+			chains.GoerliChain: 226841,
 		}
-		assertValuesNotSet := []chains.Chain{chains.MumbaiChain(), chains.BscTestnetChain(), chains.BtcTestNetChain()}
+		assertValuesNotSet := []chains.Chain{chains.MumbaiChain, chains.BscTestnetChain, chains.BtcTestNetChain}
 
 		for _, chain := range testnetChains {
 			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
@@ -218,7 +218,7 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
 					CoinType:        coin.CoinType_ERC20,
-					ReceiverChainId: chains.ZetaPrivnetChain().ChainId,
+					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				}},
 			}
 		}
@@ -234,7 +234,7 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
 					CoinType:        coin.CoinType_ERC20,
-					ReceiverChainId: chains.GoerliLocalnetChain().ChainId,
+					ReceiverChainId: chains.GoerliLocalnetChain.ChainId,
 				}},
 			}
 		}

@@ -77,10 +77,10 @@ type TestnetNonce struct {
 
 func CurrentTestnetChains() []TestnetNonce {
 	return []TestnetNonce{
-		{chain: chains.GoerliChain(), nonceHigh: 226841, nonceLow: 226841},
-		{chain: chains.MumbaiChain(), nonceHigh: 200599, nonceLow: 200599},
-		{chain: chains.BscTestnetChain(), nonceHigh: 110454, nonceLow: 110454},
-		{chain: chains.BtcTestNetChain(), nonceHigh: 4881, nonceLow: 4881},
+		{chain: chains.GoerliChain, nonceHigh: 226841, nonceLow: 226841},
+		{chain: chains.MumbaiChain, nonceHigh: 200599, nonceLow: 200599},
+		{chain: chains.BscTestnetChain, nonceHigh: 110454, nonceLow: 110454},
+		{chain: chains.BtcTestNetChain, nonceHigh: 4881, nonceLow: 4881},
 	}
 }
 

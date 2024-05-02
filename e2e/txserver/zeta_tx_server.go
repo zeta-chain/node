@@ -327,7 +327,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain.ChainId,
 		18,
 		"ETH",
 		"gETH",
@@ -342,7 +342,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.BtcRegtestChain().ChainId,
+		chains.BtcRegtestChain.ChainId,
 		8,
 		"BTC",
 		"tBTC",
@@ -357,7 +357,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		erc20Addr,
-		chains.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain.ChainId,
 		6,
 		"USDT",
 		"USDT",

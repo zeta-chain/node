@@ -26,9 +26,9 @@ func (m *ObserverSet) Validate() error {
 
 func CheckReceiveStatus(status chains.ReceiveStatus) error {
 	switch status {
-	case chains.ReceiveStatus_Success:
+	case chains.ReceiveStatus_success:
 		return nil
-	case chains.ReceiveStatus_Failed:
+	case chains.ReceiveStatus_failed:
 		return nil
 	default:
 		return ErrInvalidStatus

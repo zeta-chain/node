@@ -51,14 +51,14 @@ func TestSigner_SetupGas(t *testing.T) {
 	logger := zerolog.Logger{}
 
 	t.Run("SetupGas_success", func(t *testing.T) {
-		chain := chains.BscMainnetChain()
+		chain := chains.BscMainnetChain
 		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.NoError(t, err)
 	})
 
 	t.Run("SetupGas_error", func(t *testing.T) {
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
-		chain := chains.BscMainnetChain()
+		chain := chains.BscMainnetChain
 		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})

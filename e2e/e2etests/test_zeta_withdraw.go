@@ -75,7 +75,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 
 	lessThanAmount := amount.Div(amount, big.NewInt(10)) // 1/10 of amount
 	tx, err = r.ConnectorZEVM.Send(r.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(chains.BtcRegtestChain().ChainId),
+		DestinationChainId:  big.NewInt(chains.BtcRegtestChain.ChainId),
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,

@@ -226,8 +226,8 @@ else
   sleep 7
   /root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
 
-  # We use tail -f to keep the container running
-  tail -f zetanode.log
+  # We use tail -f to keep the container running. Use -n999999 to ensure we get all the context.
+  tail -n999999 -f zetanode.log
 
 fi
 

@@ -81,27 +81,56 @@ to [run the E2E test](./LOCAL_TESTING.md).
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)
 
+## Releases
 
-## Creating a Release Candidate
-Creating a release candidate for testing is a straightforward process. Here are the steps to follow:
+To start a new major release, begin by creating and pushing a `release/` branch based on `develop`.
 
-### Steps
- - Step 1. Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
- - Step 2. Once a RC branch is created the automation will kickoff to build and upload the release and its binaries.
+<details>
+<summary>Example Commands</summary>
+
+```bash
+git fetch
+git checkout -b release/v15 origin/develop
+git push origin release/v15
+```
+
+</details>
+
+Most changes should first be merged into `develop` then backported to the release branch via a PR.
+
+<details>
+<summary>Example Commands to Backport a Change</summary>
+
+```bash
+git fetch
+git checkout -b my-backport-branch origin/release/v15
+git cherry-pick <commit SHA from develop>
+git push origin my-backport-branch
+```
+
+</details>
+
+### Creating a Release Candidate
+You can use github actions to create a release candidate:
+1) Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
+2) Push the tag and the automation will take care of the rest
+
+You may create the RC tag directly off `develop` if a release branch has not been created yet. You should use the release branch if it exists and has diverged from develop.
 
 By following these steps, you can efficiently create a release candidate for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
 
-## Creating a Release / Hotfix Release
+### Creating a Release / Hotfix Release
 
-To create a release simply execute the publish-release workflow and follow the steps below.
+To create a release simply execute the publish-release workflow and follow these steps:
 
-### Steps
- - Step 1. Go to this pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml
- - Step 2. Select the dropdown branch / tag you want to create the release with.
- - Step 3. In the version input, include the version of your release. Note. The major version must match what is in the upgrade handler.
- - Step 4. Select if you want to skip the tests by checking the checkbox for skip tests.
- - Step 5. Once the testing steps pass it will create a Github Issue. This Github Issue needes to be approved by one of the approvers: kingpinXD,lumtis,brewmaster012
+1) Go to this pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml
+2) Select the release branch.
+3) In the version input, include the version of your release.
+  - The major version must match what is in the upgrade handler
+  - The version should look like this: `v15.0.0`
+4) Select if you want to skip the tests by checking the checkbox for skip tests.
+5) Once the testing steps pass it will create a Github Issue. This Github Issue needes to be approved by one of the approvers: kingpinXD,lumtis,brewmaster012
 
 Once the release is approved the pipeline will continue and will publish the releases with the title / version you specified in the user input.
 
@@ -110,182 +139,67 @@ Once the release is approved the pipeline will continue and will publish the rel
 
 This guide details deploying Zetacored nodes on both ZetaChain mainnet and Athens3 (testnet), alongside setting up a Bitcoin node for mainnet. The setup utilizes Docker Compose with environment variables for a streamlined deployment process.
 
-### Deploying Zetacored Nodes
+Here's a comprehensive documentation using markdown tables to cover all the `make` commands for managing Zetacored and Bitcoin nodes, including where to modify the environment variables in Docker Compose configurations.
 
-#### Launching a Node
+### Zetacored / BTC Node Deployment and Management
 
-**For Mainnet:**
-- Use the `make` command with a specified Docker tag to initiate a mainnet Zetacored node.
-  ```shell
-  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1
-  ```
+#### Commands Overview for Zetacored
 
-**For Athens3 (Testnet):**
-- Similar command structure for Athens3, ensuring the correct Docker tag is used.
-  ```shell
-  make testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1
-  ```
-  
-#### Modifying the Sync Type
+| Environment                         | Action                      | Command                                                       | Docker Compose Location                  |
+|-------------------------------------|-----------------------------|---------------------------------------------------------------|------------------------------------------|
+| **Mainnet**                         | Start Bitcoin Node          | `make start-bitcoin-node-mainnet`                             | `contrib/rpc/bitcoind-mainnet`           |
+| **Mainnet**                         | Stop Bitcoin Node           | `make stop-bitcoin-node-mainnet`                              | `contrib/rpc/bitcoind-mainnet`           |
+| **Mainnet**                         | Clean Bitcoin Node Data     | `make clean-bitcoin-node-mainnet`                             | `contrib/rpc/bitcoind-mainnet`           |
+| **Mainnet**                         | Start Ethereum Node         | `make start-eth-node-mainnet`                                 | `contrib/rpc/ethereum`                   |
+| **Mainnet**                         | Stop Ethereum Node          | `make stop-eth-node-mainnet`                                  | `contrib/rpc/ethereum`                   |
+| **Mainnet**                         | Clean Ethereum Node Data    | `make clean-eth-node-mainnet`                                 | `contrib/rpc/ethereum`                   |
+| **Mainnet**                         | Start Zetacored Node        | `make start-mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1`   | `contrib/rpc/zetacored`                  |
+| **Mainnet**                         | Stop Zetacored Node         | `make stop-mainnet-zetarpc-node`                              | `contrib/rpc/zetacored`                  |
+| **Mainnet**                         | Clean Zetacored Node Data   | `make clean-mainnet-zetarpc-node`                             | `contrib/rpc/zetacored`                  |
+| **Testnet (Athens3)**               | Start Zetacored Node        | `make start-testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1`   | `contrib/rpc/zetacored`                  |
+| **Testnet (Athens3)**               | Stop Zetacored Node         | `make stop-testnet-zetarpc-node`                              | `contrib/rpc/zetacored`                  |
+| **Testnet (Athens3)**               | Clean Zetacored Node Data   | `make clean-testnet-zetarpc-node`                             | `contrib/rpc/zetacored`                  |
+| **Mainnet Local Build**             | Start Zetacored Node        | `make start-zetacored-rpc-mainnet-localbuild`                 | `contrib/rpc/zetacored`                  |
+| **Mainnet Local Build**             | Stop Zetacored Node         | `make stop-zetacored-rpc-mainnet-localbuild`                  | `contrib/rpc/zetacored`                  |
+| **Mainnet Local Build**             | Clean Zetacored Node Data   | `make clean-zetacored-rpc-mainnet-localbuild`                 | `contrib/rpc/zetacored`                  |
+| **Testnet Local Build (Athens3)**   | Start Zetacored Node        | `make start-zetacored-rpc-testnet-localbuild`                 | `contrib/rpc/zetacored`                  |
+| **Testnet Local Build (Athens3)**   | Stop Zetacored Node         | `make stop-zetacored-rpc-testnet-localbuild`                  | `contrib/rpc/zetacored`                  |
+| **Testnet Local Build (Athens3)**   | Clean Zetacored Node Data   | `make clean-zetacored-rpc-testnet-localbuild`                 | `contrib/rpc/zetacored`                  |
 
-**To change the sync type for your node:**
-- Edit docker-compose.yml in contrib/{NETWORK}/zetacored/.
-- Set RESTORE_TYPE to your desired method (snapshot, snapshot-archive, statesync).
-
-#### Zetacored Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `DAEMON_HOME` | Daemon's home directory (`/root/.zetacored`). |
-| `NETWORK` | Network identifier: `mainnet` or `athens3` (for testnet). |
-| `RESTORE_TYPE` | Node restoration method: `snapshot`, `snapshot-archive`, `statesync`. |
-| `SNAPSHOT_API` | API URL for fetching snapshots. |
-| `TRUST_HEIGHT_DIFFERENCE_STATE_SYNC` | Trust height difference for state synchronization. |
-| `CHAIN_ID` | Chain ID for the network. |
-| `VISOR_NAME` | Visor software name, typically `cosmovisor`. |
-| `DAEMON_NAME` | Daemon software name, `zetacored`. |
-| `DAEMON_ALLOW_DOWNLOAD_BINARIES` | Enable daemon to download binaries. |
-| `DAEMON_RESTART_AFTER_UPGRADE` | Restart daemon after software upgrade. |
-| `UNSAFE_SKIP_BACKUP` | Skip backup during potentially unsafe operations. |
-| `CLIENT_DAEMON_NAME` | Client daemon name, such as `zetaclientd`. |
-| `CLIENT_DAEMON_ARGS` | Extra arguments for the client daemon. |
-| `CLIENT_SKIP_UPGRADE` | Skip client software upgrade. |
-| `CLIENT_START_PROCESS` | Begin client process start-up. |
-| `MONIKER` | Node's moniker or nickname. |
-| `RE_DO_START_SEQUENCE` | Restart node setup from scratch if necessary. |
 
 ### Bitcoin Node Setup for Mainnet
 
-**Restoring a BTC Watcher Node:**
-- To deploy a Bitcoin mainnet node, specify the `DOCKER_TAG` for your Docker image.
-  ```shell
-  make mainnet-bitcoind-node DOCKER_TAG=36-mainnet
-  ```
+#### Commands Overview for Bitcoin
 
-#### Bitcoin Node Environment Variables
+| Action | Command | Docker Compose Location |
+|--------|---------|-------------------------|
+| Start Node | `make start-mainnet-bitcoind-node DOCKER_TAG=36-mainnet` | `contrib/mainnet/bitcoind` |
+| Stop Node | `make stop-mainnet-bitcoind-node` | `contrib/mainnet/bitcoind` |
+| Clean Node Data | `make clean-mainnet-bitcoind-node` | `contrib/mainnet/bitcoind` |
 
-| Variable | Description |
-|----------|-------------|
-| `bitcoin_username` | Username for Bitcoin RPC. |
-| `bitcoin_password` | Password for Bitcoin RPC. |
-| `NETWORK_HEIGHT_URL` | URL to fetch the latest block height. |
-| `WALLET_NAME` | Name of the Bitcoin wallet. |
-| `WALLET_ADDRESS` | Bitcoin wallet address for transactions. |
-| `SNAPSHOT_URL` | URL for downloading the blockchain snapshot. |
-| `SNAPSHOT_RESTORE` | Enable restoration from snapshot. |
-| `CLEAN_SNAPSHOT` | Clean existing data before restoring snapshot. |
-| `DOWNLOAD_SNAPSHOT` | Download the snapshot if not present. |
+### Configuration Options
 
-### Docker Compose Configurations
+#### Where to Modify Environment Variables
 
-#### Zetacored Mainnet
+The environment variables for both Zetacored and Bitcoin nodes are defined in the `docker-compose.yml` files located in the respective directories mentioned above. These variables control various operational aspects like the sync type, networking details, and client behavior.
 
-```yaml
-version: '3.8'
-services:
-  zetachain_mainnet_rpc:
-    platform: linux/amd64
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1}
-    environment:
-      DAEMON_HOME: "/root/.zetacored"
-      NETWORK: mainnet
-      RESTORE_TYPE: "snapshot"
-      SNAPSHOT_API: https://snapshots.zetachain.com
-      TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
-      CHAIN_ID: "zetachain_7000-1"
-      VISOR_NAME: "cosmovisor"
-      DAEMON_NAME: "zetacored"
-      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
-      DAEMON_RESTART_AFTER_UPGRADE: "true"
-      UNSAFE_SKIP_BACKUP: "true"
-      CLIENT_DAEMON_NAME: "zetaclientd"
-      CLIENT_DAEMON_ARGS: ""
-      CLIENT_SKIP_UPGRADE: "true"
-      CLIENT_START_PROCESS: "false"
-      MONIKER: local-test
-      RE_DO_START_SEQUENCE: "false"
-    ports:
-      - "26656:26656"
-      - "1317:1317"
-      - "8545:8545"
-      - "8546:8546"
-      - "26657:26657"
-      - "9090:9090"
-      - "9091:9091"
-    volumes:
+#### Example Environment Variables for Zetacored
 
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DAEMON_HOME` | Daemon's home directory | `/root/.zetacored` |
+| `NETWORK` | Network identifier | `mainnet`, `athens3` |
+| `CHAIN_ID` | Chain ID for the network | `zetachain_7000-1`, `athens_7001-1` |
+| `RESTORE_TYPE` | Node restoration method | `snapshot`, `statesync` |
+| `SNAPSHOT_API` | API URL for fetching snapshots | `https://snapshots.zetachain.com` |
 
-      - zetacored_data_mainnet:/root/.zetacored/
-    entrypoint: bash /scripts/start.sh
-volumes:
-  zetacored_data_mainnet:
-```
+#### Example Environment Variables for Bitcoin
 
-#### Zetacored Athens3/Testnet
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `bitcoin_username` | Username for Bitcoin RPC | `user` |
+| `bitcoin_password` | Password for Bitcoin RPC | `pass` |
+| `WALLET_NAME` | Name of the Bitcoin wallet | `tssMainnet` |
+| `WALLET_ADDRESS` | Bitcoin wallet address for transactions | `bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y` |
 
-```yaml
-version: '3.8'
-services:
-  zetachain_testnet_rpc:
-    platform: linux/amd64
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14-testnet}
-    environment:
-      DAEMON_HOME: "/root/.zetacored"
-      NETWORK: athens3
-      RESTORE_TYPE: "snapshot"
-      SNAPSHOT_API: https://snapshots.zetachain.com
-      TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
-      CHAIN_ID: "athens_7001-1"
-      VISOR_NAME: "cosmovisor"
-      DAEMON_NAME: "zetacored"
-      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
-      DAEMON_RESTART_AFTER_UPGRADE: "true"
-      UNSAFE_SKIP_BACKUP: "true"
-      CLIENT_DAEMON_NAME: "zetaclientd"
-      CLIENT_DAEMON_ARGS: ""
-      CLIENT_SKIP_UPGRADE: "true"
-      CLIENT_START_PROCESS: "false"
-      MONIKER: local-test
-      RE_DO_START_SEQUENCE: "false"
-    ports:
-      - "26656:26656"
-      - "1317:1317"
-      - "8545:8545"
-      - "8546:8546"
-      - "26657:26657"
-      - "9090:9090"
-      - "9091:9091"
-    volumes:
-      - zetacored_data_athens3:/root/.zetacored/
-    entrypoint: bash /scripts/start.sh
-volumes:
-  zetacored_data_athens3:
-```
-
-#### Bitcoin Mainnet Node
-
-```yaml
-version: '3'
-services:
-  bitcoin:
-    image: zetachain/bitcoin:${DOCKER_TAG:-36-mainnet}
-    platform: linux/amd64
-    environment:
-      - bitcoin_username=test
-      - bitcoin_password=test
-      - NETWORK_HEIGHT_URL=https://blockstream.info/api/blocks/tip/height
-      - WALLET_NAME=tssMainnet
-      - WALLET_ADDRESS=bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y
-      - SNAPSHOT_URL=https://storage.googleapis.com/bitcoin-rpc-snapshots-prod/bitcoind-mainnet-2024-02-20-00-22-06.tar.gz
-      - SNAPSHOT_RESTORE=true
-      - CLEAN_SNAPSHOT=true
-      - DOWNLOAD_SNAPSHOT=true
-    volumes:
-      - bitcoin_data:/root/
-    ports:
-      - 8332:8332
-volumes:
-  bitcoin_data:
-```
-
-Replace placeholders in Docker Compose files and `make` commands with actual values appropriate for your deployment scenario. This complete setup guide is designed to facilitate the deployment and management of Zetacored and Bitcoin nodes in various environments.
+This detailed tabulation ensures all necessary commands and configurations are neatly organized, providing clarity on where to manage the settings and how to execute different operations for Zetacored and Bitcoin nodes across different environments.

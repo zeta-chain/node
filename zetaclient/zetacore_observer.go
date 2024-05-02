@@ -20,7 +20,11 @@ import (
 )
 
 const (
-	MaxLookaheadNonce = 120
+	// EVMOutboundTxLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
+	// For example, give OutboundTxScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
+	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
+	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
+	EVMOutboundTxLookbackFactor = 1.0
 )
 
 type ZetaCoreLog struct {
@@ -28,7 +32,7 @@ type ZetaCoreLog struct {
 	ZetaChainWatcher zerolog.Logger
 }
 
-// CoreObserver wraps the zetabridge bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
+// CoreObserver wraps the zetabridge, chain clients and signers. This is the high level object used for CCTX scheduling
 type CoreObserver struct {
 	bridge              interfaces.ZetaCoreBridger
 	signerMap           map[int64]interfaces.ChainSigner
@@ -87,6 +91,61 @@ func (co *CoreObserver) MonitorCore(appContext *appcontext.AppContext) {
 			c.Stop()
 		}
 	}()
+}
+
+// GetUpdatedSigner returns signer with updated chain parameters
+func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainSigner, error) {
+	signer, found := co.signerMap[chainID]
+	if !found {
+		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
+	}
+	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
+	if chains.IsEVMChain(chainID) {
+		evmParams, found := coreContext.GetEVMChainParams(chainID)
+		if found {
+			// update zeta connector and ERC20 custody addresses
+			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
+			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
+			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
+				signer.SetZetaConnectorAddress(zetaConnectorAddress)
+				co.logger.ZetaChainWatcher.Info().Msgf(
+					"updated zeta connector address for chainID %d, new address: %s", chainID, zetaConnectorAddress)
+			}
+			if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
+				signer.SetERC20CustodyAddress(erc20CustodyAddress)
+				co.logger.ZetaChainWatcher.Info().Msgf(
+					"updated ERC20 custody address for chainID %d, new address: %s", chainID, erc20CustodyAddress)
+			}
+		}
+	}
+	return signer, nil
+}
+
+// GetUpdatedChainClient returns chain client object with updated chain parameters
+func (co *CoreObserver) GetUpdatedChainClient(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainClient, error) {
+	chainOb, found := co.clientMap[chainID]
+	if !found {
+		return nil, fmt.Errorf("chain client not found for chainID %d", chainID)
+	}
+	// update chain client chain parameters
+	curParams := chainOb.GetChainParams()
+	if chains.IsEVMChain(chainID) {
+		evmParams, found := coreContext.GetEVMChainParams(chainID)
+		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
+			chainOb.SetChainParams(*evmParams)
+			co.logger.ZetaChainWatcher.Info().Msgf(
+				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
+		}
+	} else if chains.IsBitcoinChain(chainID) {
+		_, btcParams, found := coreContext.GetBTCChainParams()
+
+		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
+			chainOb.SetChainParams(*btcParams)
+			co.logger.ZetaChainWatcher.Info().Msgf(
+				"updated chain params for Bitcoin, new params: %v", *btcParams)
+		}
+	}
+	return chainOb, nil
 }
 
 // startCctxScheduler schedules keysigns for cctxs on each ZetaChain block (the ticker)
@@ -224,7 +283,8 @@ func (co *CoreObserver) scheduleCctxEVM(
 	chainID int64,
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
-	signer interfaces.ChainSigner) {
+	signer interfaces.ChainSigner,
+) {
 	res, err := co.bridge.GetAllOutTxTrackerByChain(chainID, interfaces.Ascending)
 	if err != nil {
 		co.logger.ZetaChainWatcher.Warn().Err(err).Msgf("scheduleCctxEVM: GetAllOutTxTrackerByChain failed for chain %d", chainID)
@@ -234,6 +294,11 @@ func (co *CoreObserver) scheduleCctxEVM(
 	for _, v := range res {
 		trackerMap[v.Nonce] = true
 	}
+	outboundScheduleLookahead := ob.GetChainParams().OutboundTxScheduleLookahead
+	// #nosec G701 always in range
+	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * EVMOutboundTxLookbackFactor)
+	// #nosec G701 positive
+	outboundScheduleInterval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
 
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutTxParam()
@@ -244,7 +309,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
-		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+MaxLookaheadNonce {
+		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+outboundScheduleLookback {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
 				params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce, chainID)
 			break
@@ -261,15 +326,11 @@ func (co *CoreObserver) scheduleCctxEVM(
 			continue
 		}
 
-		// #nosec G701 positive
-		interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
-		lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
-
 		// determining critical outtx; if it satisfies following criteria
 		// 1. it's the first pending outtx for this chain
 		// 2. the following 5 nonces have been in tracker
-		criticalInterval := uint64(10)      // for critical pending outTx we reduce re-try interval
-		nonCriticalInterval := interval * 2 // for non-critical pending outTx we increase re-try interval
+		criticalInterval := uint64(10)                      // for critical pending outTx we reduce re-try interval
+		nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outTx we increase re-try interval
 		if nonce%criticalInterval == zetaHeight%criticalInterval {
 			count := 0
 			for i := nonce + 1; i <= nonce+10; i++ {
@@ -278,23 +339,23 @@ func (co *CoreObserver) scheduleCctxEVM(
 				}
 			}
 			if count >= 5 {
-				interval = criticalInterval
+				outboundScheduleInterval = criticalInterval
 			}
 		}
 		// if it's already in tracker, we increase re-try interval
 		if _, ok := trackerMap[nonce]; ok {
-			interval = nonCriticalInterval
+			outboundScheduleInterval = nonCriticalInterval
 		}
 
 		// otherwise, the normal interval is used
-		if nonce%interval == zetaHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
+		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !outTxMan.IsOutTxActive(outTxID) {
 			outTxMan.StartTryProcess(outTxID)
 			co.logger.ZetaChainWatcher.Debug().Msgf("scheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutTxParam().Amount)
 			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
 		}
 
 		// #nosec G701 always in range
-		if int64(idx) >= lookahead-1 { // only look at 'lookahead' cctxs per chain
+		if int64(idx) >= outboundScheduleLookahead-1 { // only look at 'lookahead' cctxs per chain
 			break
 		}
 	}
@@ -310,7 +371,8 @@ func (co *CoreObserver) scheduleCctxBTC(
 	chainID int64,
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
-	signer interfaces.ChainSigner) {
+	signer interfaces.ChainSigner,
+) {
 	btcClient, ok := ob.(*bitcoin.BTCChainClient)
 	if !ok { // should never happen
 		co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: chain client is not a bitcoin client")
@@ -357,59 +419,4 @@ func (co *CoreObserver) scheduleCctxBTC(
 			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
 		}
 	}
-}
-
-// GetUpdatedSigner returns signer with updated chain parameters
-func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainSigner, error) {
-	signer, found := co.signerMap[chainID]
-	if !found {
-		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
-	}
-	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
-	if chains.IsEVMChain(chainID) {
-		evmParams, found := coreContext.GetEVMChainParams(chainID)
-		if found {
-			// update zeta connector and ERC20 custody addresses
-			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
-			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
-			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
-				signer.SetZetaConnectorAddress(zetaConnectorAddress)
-				co.logger.ZetaChainWatcher.Info().Msgf(
-					"updated zeta connector address for chainID %d, new address: %s", chainID, zetaConnectorAddress)
-			}
-			if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
-				signer.SetERC20CustodyAddress(erc20CustodyAddress)
-				co.logger.ZetaChainWatcher.Info().Msgf(
-					"updated ERC20 custody address for chainID %d, new address: %s", chainID, erc20CustodyAddress)
-			}
-		}
-	}
-	return signer, nil
-}
-
-// GetUpdatedChainClient returns chain client object with updated chain parameters
-func (co *CoreObserver) GetUpdatedChainClient(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainClient, error) {
-	chainOb, found := co.clientMap[chainID]
-	if !found {
-		return nil, fmt.Errorf("chain client not found for chainID %d", chainID)
-	}
-	// update chain client chain parameters
-	curParams := chainOb.GetChainParams()
-	if chains.IsEVMChain(chainID) {
-		evmParams, found := coreContext.GetEVMChainParams(chainID)
-		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
-			chainOb.SetChainParams(*evmParams)
-			co.logger.ZetaChainWatcher.Info().Msgf(
-				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
-		}
-	} else if chains.IsBitcoinChain(chainID) {
-		_, btcParams, found := coreContext.GetBTCChainParams()
-
-		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
-			chainOb.SetChainParams(*btcParams)
-			co.logger.ZetaChainWatcher.Info().Msgf(
-				"updated chain params for Bitcoin, new params: %v", *btcParams)
-		}
-	}
-	return chainOb, nil
 }

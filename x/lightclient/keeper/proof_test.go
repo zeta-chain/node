@@ -15,7 +15,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 	t.Run("should error if verification flags not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain().ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrVerificationFlagsNotFound)
 	})
 
@@ -27,7 +27,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 			BtcTypeChainEnabled: false,
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BtcMainnetChain().ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BtcMainnetChain.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 	})
 
@@ -39,7 +39,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 			BtcTypeChainEnabled: true,
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain().ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 	})
 
@@ -63,7 +63,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 			BtcTypeChainEnabled: true,
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BtcMainnetChain().ChainId, "invalid", 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BtcMainnetChain.ChainId, "invalid", 1)
 		require.ErrorIs(t, err, types.ErrInvalidBlockHash)
 	})
 
@@ -75,7 +75,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 			BtcTypeChainEnabled: true,
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain().ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrBlockHeaderNotFound)
 	})
 

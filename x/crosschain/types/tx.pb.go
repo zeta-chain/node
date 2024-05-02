@@ -920,7 +920,7 @@ func (m *MsgVoteOnObservedOutboundTx) GetStatus() chains.ReceiveStatus {
 	if m != nil {
 		return m.Status
 	}
-	return chains.ReceiveStatus_Created
+	return chains.ReceiveStatus_created
 }
 
 func (m *MsgVoteOnObservedOutboundTx) GetOutTxChain() int64 {
