@@ -3,14 +3,6 @@ package config
 import "github.com/zeta-chain/zetacore/pkg/chains"
 
 const (
-	BtcConfirmationCount    = 1
-	DevEthConfirmationCount = 2
-
-	// TssTestPrivkey is the private key of the TSS address
-	// #nosec G101 - used for testing only
-	TssTestPrivkey = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
-	TssTestAddress = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
-
 	MaxBlocksPerPeriod = 100
 )
 
@@ -44,30 +36,30 @@ var bitcoinConfigRegnet = BTCConfig{
 }
 
 var evmChainsConfigs = map[int64]EVMConfig{
-	chains.EthChain().ChainId: {
-		Chain: chains.EthChain(),
+	chains.EthChain.ChainId: {
+		Chain: chains.EthChain,
 	},
-	chains.BscMainnetChain().ChainId: {
-		Chain: chains.BscMainnetChain(),
+	chains.BscMainnetChain.ChainId: {
+		Chain: chains.BscMainnetChain,
 	},
-	chains.GoerliChain().ChainId: {
-		Chain:    chains.GoerliChain(),
+	chains.GoerliChain.ChainId: {
+		Chain:    chains.GoerliChain,
 		Endpoint: "",
 	},
-	chains.SepoliaChain().ChainId: {
-		Chain:    chains.SepoliaChain(),
+	chains.SepoliaChain.ChainId: {
+		Chain:    chains.SepoliaChain,
 		Endpoint: "",
 	},
-	chains.BscTestnetChain().ChainId: {
-		Chain:    chains.BscTestnetChain(),
+	chains.BscTestnetChain.ChainId: {
+		Chain:    chains.BscTestnetChain,
 		Endpoint: "",
 	},
-	chains.MumbaiChain().ChainId: {
-		Chain:    chains.MumbaiChain(),
+	chains.MumbaiChain.ChainId: {
+		Chain:    chains.MumbaiChain,
 		Endpoint: "",
 	},
-	chains.GoerliLocalnetChain().ChainId: {
-		Chain:    chains.GoerliLocalnetChain(),
+	chains.GoerliLocalnetChain.ChainId: {
+		Chain:    chains.GoerliLocalnetChain,
 		Endpoint: "http://eth:8545",
 	},
 }

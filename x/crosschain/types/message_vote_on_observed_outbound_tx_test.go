@@ -32,7 +32,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				math.NewInt(42),
 				42,
 				math.NewUint(42),
-				chains.ReceiveStatus_Created,
+				chains.ReceiveStatus_created,
 				42,
 				42,
 				coin.CoinType_Zeta,
@@ -49,7 +49,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				math.NewInt(42),
 				42,
 				math.NewUint(42),
-				chains.ReceiveStatus_Created,
+				chains.ReceiveStatus_created,
 				42,
 				42,
 				coin.CoinType_Zeta,
@@ -67,7 +67,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				math.NewInt(42),
 				42,
 				math.NewUint(42),
-				chains.ReceiveStatus_Created,
+				chains.ReceiveStatus_created,
 				-1,
 				42,
 				coin.CoinType_Zeta,
@@ -99,7 +99,7 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 		ObservedOutTxEffectiveGasPrice: math.NewInt(42),
 		ObservedOutTxEffectiveGasLimit: 42,
 		ValueReceived:                  math.NewUint(42),
-		Status:                         chains.ReceiveStatus_Created,
+		Status:                         chains.ReceiveStatus_created,
 		OutTxChain:                     42,
 		OutTxTssNonce:                  42,
 		CoinType:                       coin.CoinType_Zeta,
@@ -115,7 +115,7 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 
 	// status not used
 	msg2 = msg
-	msg2.Status = chains.ReceiveStatus_Failed
+	msg2.Status = chains.ReceiveStatus_failed
 	hash2 = msg2.Digest()
 	require.Equal(t, hash, hash2, "status should not change hash")
 

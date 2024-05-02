@@ -85,8 +85,8 @@ func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChain
 
 func Test_GetUpdatedSigner(t *testing.T) {
 	// initial parameters for core observer creation
-	evmChain := chains.EthChain()
-	btcChain := chains.BtcMainnetChain()
+	evmChain := chains.EthChain
+	btcChain := chains.BtcMainnetChain
 	evmChainParams := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConnectorContractAddress:    testutils.ConnectorAddresses[evmChain.ChainId].Hex(),
@@ -105,7 +105,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		observer := MockCoreObserver(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC signer should not be found
-		_, err := observer.GetUpdatedSigner(coreContext, chains.BscMainnetChain().ChainId)
+		_, err := observer.GetUpdatedSigner(coreContext, chains.BscMainnetChain.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
@@ -121,8 +121,8 @@ func Test_GetUpdatedSigner(t *testing.T) {
 
 func Test_GetUpdatedChainClient(t *testing.T) {
 	// initial parameters for core observer creation
-	evmChain := chains.EthChain()
-	btcChain := chains.BtcMainnetChain()
+	evmChain := chains.EthChain
+	btcChain := chains.BtcMainnetChain
 	evmChainParams := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConnectorContractAddress:    testutils.ConnectorAddresses[evmChain.ChainId].Hex(),
@@ -170,7 +170,7 @@ func Test_GetUpdatedChainClient(t *testing.T) {
 		observer := MockCoreObserver(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC chain client should not be found
-		_, err := observer.GetUpdatedChainClient(coreContext, chains.BscMainnetChain().ChainId)
+		_, err := observer.GetUpdatedChainClient(coreContext, chains.BscMainnetChain.ChainId)
 		require.ErrorContains(t, err, "chain client not found")
 	})
 	t.Run("chain params in evm chain client should be updated successfully", func(t *testing.T) {
@@ -186,7 +186,7 @@ func Test_GetUpdatedChainClient(t *testing.T) {
 		observer := MockCoreObserver(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
 		// BTC testnet chain client should not be found
-		_, err := observer.GetUpdatedChainClient(coreContext, chains.BtcTestNetChain().ChainId)
+		_, err := observer.GetUpdatedChainClient(coreContext, chains.BtcTestNetChain.ChainId)
 		require.ErrorContains(t, err, "chain client not found")
 	})
 	t.Run("chain params in btc chain client should be updated successfully", func(t *testing.T) {
@@ -202,8 +202,8 @@ func Test_GetUpdatedChainClient(t *testing.T) {
 
 func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	// define test foreign chains
-	ethChain := chains.EthChain()
-	btcChain := chains.BtcMainnetChain()
+	ethChain := chains.EthChain
+	btcChain := chains.BtcMainnetChain
 	foreignChains := []chains.Chain{
 		ethChain,
 		btcChain,

@@ -22,7 +22,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          sample.AccAddress(),
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.ErrorIs(t, err, sdkerrors.ErrorInvalidSigner)
 	})
@@ -39,7 +39,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.ErrorIs(t, err, types.ErrKeygenNotFound)
 	})
@@ -59,7 +59,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.ErrorIs(t, err, types.ErrKeygenCompleted)
 	})
@@ -81,7 +81,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.NoError(t, err)
 
@@ -114,7 +114,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Failed,
+			Status:           chains.ReceiveStatus_failed,
 		})
 		require.NoError(t, err)
 
@@ -152,7 +152,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc1.Operator,
 			TssPubkey:        tss.TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.NoError(t, err)
 
@@ -171,7 +171,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc2.Operator,
 			TssPubkey:        tss.TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.NoError(t, err)
 
@@ -190,7 +190,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc3.Operator,
 			TssPubkey:        tss.TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.NoError(t, err)
 
@@ -224,7 +224,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.NoError(t, err)
 		require.False(t, res.VoteFinalized)
@@ -234,7 +234,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_Success,
+			Status:           chains.ReceiveStatus_success,
 		})
 		require.ErrorIs(t, err, types.ErrUnableToAddVote)
 	})

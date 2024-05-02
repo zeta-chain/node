@@ -46,7 +46,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	appContext := appcontext.NewAppContext(&corecontext.ZetaCoreContext{}, config.Config{})
-	client, err := NewBitcoinClient(appContext, chains.BtcRegtestChain(), nil, tss, tempSQLiteDbPath,
+	client, err := NewBitcoinClient(appContext, chains.BtcRegtestChain, nil, tss, tempSQLiteDbPath,
 		clientcommon.DefaultLoggers(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.rpcClient, err = getRPCClient(18332)
@@ -365,7 +365,7 @@ func LiveTestGetSenderByVin(t *testing.T) {
 	net, err := chains.GetBTCChainParams(chainID)
 	require.NoError(t, err)
 	testnet := false
-	if chainID == chains.BtcTestNetChain().ChainId {
+	if chainID == chains.BtcTestNetChain.ChainId {
 		testnet = true
 	}
 

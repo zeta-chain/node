@@ -53618,6 +53618,18 @@ definitions:
       chain_id:
         type: string
         format: int64
+      network:
+        $ref: '#/definitions/chainsNetwork'
+      network_type:
+        $ref: '#/definitions/chainsNetworkType'
+      vm:
+        $ref: '#/definitions/chainsVm'
+      consensus:
+        $ref: '#/definitions/chainsConsensus'
+      is_external:
+        type: boolean
+      is_header_supported:
+        type: boolean
   chainsChainName:
     type: string
     enum:
@@ -53639,14 +53651,49 @@ definitions:
       - btc_regtest
       - amoy_testnet
     default: empty
+    title: ChainName represents the name of the chain
+  chainsConsensus:
+    type: string
+    enum:
+      - ethereum
+      - tendermint
+      - bitcoin
+    default: ethereum
+    title: Consensus represents the consensus algorithm used by the chain
+  chainsNetwork:
+    type: string
+    enum:
+      - eth
+      - zeta
+      - btc
+      - polygon
+      - bsc
+    default: eth
+    title: Network represents the network type of the chain
+  chainsNetworkType:
+    type: string
+    enum:
+      - mainnet
+      - testnet
+      - privnet
+      - devnet
+    default: mainnet
+    title: NetworkType represents the network type of the chain
   chainsReceiveStatus:
     type: string
     enum:
-      - Created
-      - Success
-      - Failed
-    default: Created
-    title: '- Created: some observer sees inbound tx'
+      - created
+      - success
+      - failed
+    default: created
+    title: '- created: some observer sees inbound tx'
+  chainsVm:
+    type: string
+    enum:
+      - no_vm
+      - evm
+    default: no_vm
+    title: Vm represents the virtual machine type of the chain to support smart contracts
   coinCoinType:
     type: string
     enum:

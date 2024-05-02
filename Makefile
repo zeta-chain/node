@@ -214,16 +214,18 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
-start-upgrade-test:
-	@echo "--> Starting upgrade test"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
+zetanode-upgrade:
+	@echo "Building zetanode-upgrade"
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION=v15.0.0 --build-arg NEW_VERSION=v16 .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+.PHONY: zetanode-upgrade
+
+start-upgrade-test: zetanode-upgrade
+	@echo "--> Starting upgrade test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-upgrade-test-light:
+start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade-light.yml up -d
 
 start-localnet: zetanode
@@ -285,14 +287,68 @@ release:
 ###                     Local Mainnet Development                           ###
 ###############################################################################
 
-mainnet-zetarpc-node:
-	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+#BTC
+start-bitcoin-node-mainnet:
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
-mainnet-bitcoind-node:
-	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+stop-bitcoin-node-mainnet:
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
-athens3-zetarpc-node:
-	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+clean-bitcoin-node-mainnet:
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+#ETHEREUM
+start-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+stop-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+
+clean-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+#ZETA
+
+#FULL-NODE-RPC-FROM-BUILT-IMAGE
+start-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet image $(DOCKER_TAG)
+
+stop-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
+
+clean-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
+
+#FULL-NODE-RPC-FROM-BUILT-IMAGE
+start-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 image $(DOCKER_TAG)
+
+stop-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
+
+clean-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
+
+#FULL-NODE-RPC-FROM-LOCAL-BUILD
+start-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet localbuild $(DOCKER_TAG)
+
+stop-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
+
+clean-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
+
+#FULL-NODE-RPC-FROM-LOCAL-BUILD
+start-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 localbuild $(DOCKER_TAG)
+
+stop-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
+
+clean-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
+
 
 ###############################################################################
 ###                               Debug Tools                               ###

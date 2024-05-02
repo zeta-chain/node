@@ -18,19 +18,19 @@ import (
 )
 
 const (
-	// Lenth of P2TR script [OP_1 0x20 <32-byte-hash>]
+	// LengthScriptP2TR is the lenth of P2TR script [OP_1 0x20 <32-byte-hash>]
 	LengthScriptP2TR = 34
 
-	// Length of P2WSH script [OP_0 0x20 <32-byte-hash>]
+	// LengthScriptP2WSH is the length of P2WSH script [OP_0 0x20 <32-byte-hash>]
 	LengthScriptP2WSH = 34
 
-	// Length of P2WPKH script [OP_0 0x14 <20-byte-hash>]
+	// LengthScriptP2WPKH is the length of P2WPKH script [OP_0 0x14 <20-byte-hash>]
 	LengthScriptP2WPKH = 22
 
-	// Length of P2SH script [OP_HASH160 0x14 <20-byte-hash> OP_EQUAL]
+	// LengthScriptP2SH is the length of P2SH script [OP_HASH160 0x14 <20-byte-hash> OP_EQUAL]
 	LengthScriptP2SH = 23
 
-	// Length of P2PKH script [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
+	// LengthScriptP2PKH is the length of P2PKH script [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
 	LengthScriptP2PKH = 25
 )
 
@@ -87,11 +87,13 @@ func DecodeScriptP2TR(scriptHex string, net *chaincfg.Params) (string, error) {
 	if !IsPkScriptP2TR(script) {
 		return "", fmt.Errorf("invalid P2TR script: %s", scriptHex)
 	}
+
 	witnessProg := script[2:]
 	receiverAddress, err := chains.NewAddressTaproot(witnessProg, net)
 	if err != nil { // should never happen
 		return "", errors.Wrapf(err, "error getting address from script %s", scriptHex)
 	}
+
 	return receiverAddress.EncodeAddress(), nil
 }
 
@@ -104,11 +106,13 @@ func DecodeScriptP2WSH(scriptHex string, net *chaincfg.Params) (string, error) {
 	if !IsPkScriptP2WSH(script) {
 		return "", fmt.Errorf("invalid P2WSH script: %s", scriptHex)
 	}
+
 	witnessProg := script[2:]
 	receiverAddress, err := btcutil.NewAddressWitnessScriptHash(witnessProg, net)
 	if err != nil { // should never happen
 		return "", errors.Wrapf(err, "error getting receiver from script: %s", scriptHex)
 	}
+
 	return receiverAddress.EncodeAddress(), nil
 }
 
@@ -121,11 +125,13 @@ func DecodeScriptP2WPKH(scriptHex string, net *chaincfg.Params) (string, error) 
 	if !IsPkScriptP2WPKH(script) {
 		return "", fmt.Errorf("invalid P2WPKH script: %s", scriptHex)
 	}
+
 	witnessProg := script[2:]
 	receiverAddress, err := btcutil.NewAddressWitnessPubKeyHash(witnessProg, net)
 	if err != nil { // should never happen
 		return "", errors.Wrapf(err, "error getting receiver from script: %s", scriptHex)
 	}
+
 	return receiverAddress.EncodeAddress(), nil
 }
 
@@ -138,7 +144,9 @@ func DecodeScriptP2SH(scriptHex string, net *chaincfg.Params) (string, error) {
 	if !IsPkScriptP2SH(script) {
 		return "", fmt.Errorf("invalid P2SH script: %s", scriptHex)
 	}
+
 	scriptHash := script[2:22]
+
 	return EncodeAddress(scriptHash, net.ScriptHashAddrID), nil
 }
 
@@ -151,7 +159,9 @@ func DecodeScriptP2PKH(scriptHex string, net *chaincfg.Params) (string, error) {
 	if !IsPkScriptP2PKH(script) {
 		return "", fmt.Errorf("invalid P2PKH script: %s", scriptHex)
 	}
+
 	pubKeyHash := script[3:23]
+
 	return EncodeAddress(pubKeyHash, net.PubKeyHashAddrID), nil
 }
 
@@ -166,6 +176,7 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 		if int(memoSize) != (len(scriptHex)-4)/2 {
 			return nil, false, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(scriptHex)-4)/2)
 		}
+
 		memoBytes, err := hex.DecodeString(scriptHex[4:])
 		if err != nil {
 			return nil, false, errors.Wrapf(err, "error hex decoding memo: %s", scriptHex)
@@ -175,6 +186,7 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 		}
 		return memoBytes, true, nil
 	}
+
 	return nil, false, nil
 }
 
@@ -196,16 +208,19 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error getting satoshis")
 	}
+
 	// get btc chain params
 	chainParams, err := chains.GetBTCChainParams(chain.ChainId)
 	if err != nil {
 		return "", 0, errors.Wrapf(err, "error GetBTCChainParams for chain %d", chain.ChainId)
 	}
+
 	// decode cctx receiver address
 	addr, err := chains.DecodeBtcAddress(receiverExpected, chain.ChainId)
 	if err != nil {
 		return "", 0, errors.Wrapf(err, "error decoding receiver %s", receiverExpected)
 	}
+
 	// parse receiver address from vout
 	var receiverVout string
 	switch addr.(type) {
@@ -225,5 +240,6 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error decoding TSS vout")
 	}
+
 	return receiverVout, amount, nil
 }

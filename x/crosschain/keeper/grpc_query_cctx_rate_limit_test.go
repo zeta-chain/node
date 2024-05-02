@@ -515,6 +515,10 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 	t.Run("pending nonces not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
+		// Set rate limiter flags as disabled
+		rFlags := sample.RateLimiterFlags()
+		k.SetRateLimiterFlags(ctx, rFlags)
+
 		// Set TSS
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)

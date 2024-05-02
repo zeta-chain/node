@@ -212,3 +212,49 @@ func (runner *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtyp
 
 	return tx
 }
+
+// WithdrawEther withdraws Ether from ZetaChain to the ZETA smart contract on EVM
+func (runner *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
+	// withdraw
+	tx, err := runner.ETHZRC20.Withdraw(runner.ZEVMAuth, runner.DeployerAddress.Bytes(), amount)
+	if err != nil {
+		panic(err)
+	}
+	runner.Logger.EVMTransaction(*tx, "withdraw")
+
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+	if receipt.Status == 0 {
+		panic("withdraw failed")
+	}
+	runner.Logger.EVMReceipt(*receipt, "withdraw")
+	runner.Logger.ZRC20Withdrawal(runner.ETHZRC20, *receipt, "withdraw")
+
+	return tx
+}
+
+// WithdrawERC20 withdraws an ERC20 token from ZetaChain to the ZETA smart contract on EVM
+func (runner *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
+	tx, err := runner.ERC20ZRC20.Withdraw(runner.ZEVMAuth, runner.DeployerAddress.Bytes(), amount)
+	if err != nil {
+		panic(err)
+	}
+	runner.Logger.EVMTransaction(*tx, "withdraw")
+
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+	runner.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	for _, log := range receipt.Logs {
+		event, err := runner.ERC20ZRC20.ParseWithdrawal(*log)
+		if err != nil {
+			continue
+		}
+		runner.Logger.Info(
+			"  logs: from %s, to %x, value %d, gasfee %d",
+			event.From.Hex(),
+			event.To,
+			event.Value,
+			event.Gasfee,
+		)
+	}
+
+	return tx
+}
