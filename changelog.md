@@ -9,6 +9,9 @@
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
 
+### Refactor
+* [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
+
 ## Unreleased
 ### Breaking Changes
 
