@@ -164,11 +164,11 @@ func (co *CoreObserver) GetPendingCctxsWithinRatelimit(foreignChains []chains.Ch
 	}
 
 	// apply rate limiter or not according to the flags
-	applyLimit := ratelimiter.IsRateLimiterUsable(rateLimitFlags)
+	rateLimiterUsable := ratelimiter.IsRateLimiterUsable(rateLimitFlags)
 
 	// fallback to non-rate-limited query if rate limiter is not usable
 	cctxsMap := make(map[int64][]*types.CrossChainTx)
-	if !applyLimit {
+	if !rateLimiterUsable {
 		for _, chain := range foreignChains {
 			resp, _, err := co.bridge.ListPendingCctx(chain.ChainId)
 			if err == nil && resp != nil {
@@ -309,7 +309,8 @@ func (co *CoreObserver) ScheduleCctxEVM(
 	chainID int64,
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
-	signer interfaces.ChainSigner) {
+	signer interfaces.ChainSigner,
+) {
 	res, err := co.bridge.GetAllOutTxTrackerByChain(chainID, interfaces.Ascending)
 	if err != nil {
 		co.logger.Observer.Warn().Err(err).Msgf("ScheduleCctxEVM: GetAllOutTxTrackerByChain failed for chain %d", chainID)
@@ -396,7 +397,8 @@ func (co *CoreObserver) ScheduleCctxBTC(
 	chainID int64,
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
-	signer interfaces.ChainSigner) {
+	signer interfaces.ChainSigner,
+) {
 	btcClient, ok := ob.(*bitcoin.BTCChainClient)
 	if !ok { // should never happen
 		co.logger.Observer.Error().Msgf("ScheduleCctxBTC: chain client is not a bitcoin client")
