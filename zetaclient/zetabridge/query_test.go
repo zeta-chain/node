@@ -4,6 +4,7 @@ import (
 	"net"
 	"testing"
 
+	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -11,7 +12,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -69,7 +69,7 @@ func TestZetaCoreBridge_GetBallot(t *testing.T) {
 		BallotStatus:     0,
 	}
 	input := observertypes.QueryBallotByIdentifierRequest{BallotIdentifier: "123"}
-	method := "/zetachain.zetacore.observer.Query/BallotByIdentifier"
+	method := "zetachain.zetacore.observer.Query/BallotByIdentifier"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -90,7 +90,7 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 		BlockHeaderVerificationFlags: nil,
 	}}
 	input := observertypes.QueryGetCrosschainFlagsRequest{}
-	method := "/zetachain.zetacore.observer.Query/CrosschainFlags"
+	method := "zetachain.zetacore.observer.Query/CrosschainFlags"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -132,7 +132,7 @@ func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
 		BtcTypeChainEnabled: false,
 	}}
 	input := lightclienttypes.QueryVerificationFlagsRequest{}
-	method := "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+	method := "zetachain.zetacore.lightclient.Query/VerificationFlags"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -147,10 +147,12 @@ func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
 
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsForChainResponse{ChainParams: &observertypes.ChainParams{
-		ChainId: 123,
+		ChainId:               123,
+		BallotThreshold:       types.ZeroDec(),
+		MinObserverDelegation: types.ZeroDec(),
 	}}
 	input := observertypes.QueryGetChainParamsForChainRequest{ChainId: 123}
-	method := "/zetachain.zetacore.observer.Query/GetChainParamsForChain"
+	method := "zetachain.zetacore.observer.Query/GetChainParamsForChain"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -167,12 +169,14 @@ func TestZetaCoreBridge_GetChainParams(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 		ChainParams: []*observertypes.ChainParams{
 			{
-				ChainId: 123,
+				ChainId:               123,
+				MinObserverDelegation: types.ZeroDec(),
+				BallotThreshold:       types.ZeroDec(),
 			},
 		},
 	}}
 	input := observertypes.QueryGetChainParamsRequest{}
-	method := "/zetachain.zetacore.observer.Query/GetChainParams"
+	method := "zetachain.zetacore.observer.Query/GetChainParams"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -216,7 +220,7 @@ func TestZetaCoreBridge_GetAllCctx(t *testing.T) {
 		Pagination: nil,
 	}
 	input := crosschainTypes.QueryAllCctxRequest{}
-	method := "/zetachain.zetacore.crosschain.Query/CctxAll"
+	method := "zetachain.zetacore.crosschain.Query/CctxAll"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -234,7 +238,7 @@ func TestZetaCoreBridge_GetCctxByHash(t *testing.T) {
 		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
 	}}
 	input := crosschainTypes.QueryGetCctxRequest{Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"}
-	method := "/zetachain.zetacore.crosschain.Query/Cctx"
+	method := "zetachain.zetacore.crosschain.Query/Cctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -255,7 +259,7 @@ func TestZetaCoreBridge_GetCctxByNonce(t *testing.T) {
 		ChainID: 7000,
 		Nonce:   55,
 	}
-	method := "/zetachain.zetacore.crosschain.Query/CctxByNonce"
+	method := "zetachain.zetacore.crosschain.Query/CctxByNonce"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -277,7 +281,7 @@ func TestZetaCoreBridge_GetObserverList(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryObserverSet{}
-	method := "/zetachain.zetacore.observer.Query/ObserverSet"
+	method := "zetachain.zetacore.observer.Query/ObserverSet"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -324,7 +328,7 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 		TotalPending: 1,
 	}
 	input := crosschainTypes.QueryListPendingCctxRequest{ChainId: 7000}
-	method := "/zetachain.zetacore.crosschain.Query/ListPendingCctx"
+	method := "zetachain.zetacore.crosschain.Query/ListPendingCctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -341,7 +345,7 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 func TestZetaCoreBridge_GetAbortedZetaAmount(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryZetaAccountingResponse{AbortedZetaAmount: "1080999"}
 	input := crosschainTypes.QueryZetaAccountingRequest{}
-	method := "/zetachain.zetacore.crosschain.Query/ZetaAccounting"
+	method := "zetachain.zetacore.crosschain.Query/ZetaAccounting"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -390,7 +394,7 @@ func TestZetaCoreBridge_GetLastBlockHeight(t *testing.T) {
 		},
 	}
 	input := crosschainTypes.QueryAllLastBlockHeightRequest{}
-	method := "/zetachain.zetacore.crosschain.Query/LastBlockHeightAll"
+	method := "zetachain.zetacore.crosschain.Query/LastBlockHeightAll"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -457,7 +461,7 @@ func TestZetaCoreBridge_GetLastBlockHeightByChain(t *testing.T) {
 		},
 	}
 	input := crosschainTypes.QueryGetLastBlockHeightRequest{Index: index.ChainName.String()}
-	method := "/zetachain.zetacore.crosschain.Query/LastBlockHeight"
+	method := "zetachain.zetacore.crosschain.Query/LastBlockHeight"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -473,7 +477,7 @@ func TestZetaCoreBridge_GetLastBlockHeightByChain(t *testing.T) {
 func TestZetaCoreBridge_GetZetaBlockHeight(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryLastZetaHeightResponse{Height: 12345}
 	input := crosschainTypes.QueryLastZetaHeightRequest{}
-	method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+	method := "zetachain.zetacore.crosschain.Query/LastZetaHeight"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -521,7 +525,7 @@ func TestZetaCoreBridge_GetNonceByChain(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()}
-	method := "/zetachain.zetacore.observer.Query/ChainNonces"
+	method := "zetachain.zetacore.observer.Query/ChainNonces"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -546,7 +550,7 @@ func TestZetaCoreBridge_GetAllNodeAccounts(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryAllNodeAccountRequest{}
-	method := "/zetachain.zetacore.observer.Query/NodeAccountAll"
+	method := "zetachain.zetacore.observer.Query/NodeAccountAll"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -567,7 +571,7 @@ func TestZetaCoreBridge_GetKeyGen(t *testing.T) {
 			BlockNumber:    5646,
 		}}
 	input := observertypes.QueryGetKeygenRequest{}
-	method := "/zetachain.zetacore.observer.Query/Keygen"
+	method := "zetachain.zetacore.observer.Query/Keygen"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -585,7 +589,7 @@ func TestZetaCoreBridge_GetBallotByID(t *testing.T) {
 		BallotIdentifier: "ballot1235",
 	}
 	input := observertypes.QueryBallotByIdentifierRequest{BallotIdentifier: "ballot1235"}
-	method := "/zetachain.zetacore.observer.Query/BallotByIdentifier"
+	method := "zetachain.zetacore.observer.Query/BallotByIdentifier"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -610,7 +614,7 @@ func TestZetaCoreBridge_GetInboundTrackersForChain(t *testing.T) {
 		},
 	}
 	input := crosschainTypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID}
-	method := "/zetachain.zetacore.crosschain.Query/InTxTrackerAllByChain"
+	method := "zetachain.zetacore.crosschain.Query/InTxTrackerAllByChain"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -634,7 +638,7 @@ func TestZetaCoreBridge_GetCurrentTss(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryGetTSSRequest{}
-	method := "/zetachain.zetacore.observer.Query/TSS"
+	method := "zetachain.zetacore.observer.Query/TSS"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -653,7 +657,7 @@ func TestZetaCoreBridge_GetEthTssAddress(t *testing.T) {
 		Btc: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
 	}
 	input := observertypes.QueryGetTssAddressRequest{}
-	method := "/zetachain.zetacore.observer.Query/GetTssAddress"
+	method := "zetachain.zetacore.observer.Query/GetTssAddress"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -672,7 +676,7 @@ func TestZetaCoreBridge_GetBtcTssAddress(t *testing.T) {
 		Btc: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
 	}
 	input := observertypes.QueryGetTssAddressRequest{BitcoinChainId: 8332}
-	method := "/zetachain.zetacore.observer.Query/GetTssAddress"
+	method := "zetachain.zetacore.observer.Query/GetTssAddress"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -698,7 +702,7 @@ func TestZetaCoreBridge_GetTssHistory(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryTssHistoryRequest{}
-	method := "/zetachain.zetacore.observer.Query/TssHistory"
+	method := "zetachain.zetacore.observer.Query/TssHistory"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -725,7 +729,7 @@ func TestZetaCoreBridge_GetOutTxTracker(t *testing.T) {
 		ChainID: chain.ChainId,
 		Nonce:   456,
 	}
-	method := "/zetachain.zetacore.crosschain.Query/OutTxTracker"
+	method := "zetachain.zetacore.crosschain.Query/OutTxTracker"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -760,7 +764,7 @@ func TestZetaCoreBridge_GetAllOutTxTrackerByChain(t *testing.T) {
 			Reverse:    false,
 		},
 	}
-	method := "/zetachain.zetacore.crosschain.Query/OutTxTrackerAllByChain"
+	method := "zetachain.zetacore.crosschain.Query/OutTxTrackerAllByChain"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -787,7 +791,7 @@ func TestZetaCoreBridge_GetPendingNoncesByChain(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryPendingNoncesByChainRequest{ChainId: chains.EthChain.ChainId}
-	method := "/zetachain.zetacore.observer.Query/PendingNoncesByChain"
+	method := "zetachain.zetacore.observer.Query/PendingNoncesByChain"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -809,7 +813,7 @@ func TestZetaCoreBridge_GetBlockHeaderChainState(t *testing.T) {
 		LatestBlockHash: nil,
 	}}
 	input := lightclienttypes.QueryGetChainStateRequest{ChainId: chainID}
-	method := "/zetachain.zetacore.lightclient.Query/ChainState"
+	method := "zetachain.zetacore.lightclient.Query/ChainState"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -848,7 +852,7 @@ func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 		},
 	}
 	input := observertypes.QuerySupportedChains{}
-	method := "/zetachain.zetacore.observer.Query/SupportedChains"
+	method := "zetachain.zetacore.observer.Query/SupportedChains"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -873,7 +877,7 @@ func TestZetaCoreBridge_GetPendingNonces(t *testing.T) {
 		},
 	}
 	input := observertypes.QueryAllPendingNoncesRequest{}
-	method := "/zetachain.zetacore.observer.Query/PendingNoncesAll"
+	method := "zetachain.zetacore.observer.Query/PendingNoncesAll"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -901,7 +905,7 @@ func TestZetaCoreBridge_Prove(t *testing.T) {
 		BlockHash: blockHash,
 		TxIndex:   int64(txIndex),
 	}
-	method := "/zetachain.zetacore.lightclient.Query/Prove"
+	method := "zetachain.zetacore.lightclient.Query/Prove"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -920,7 +924,7 @@ func TestZetaCoreBridge_HasVoted(t *testing.T) {
 		BallotIdentifier: "123456asdf",
 		VoterAddress:     "zeta1l40mm7meacx03r4lp87s9gkxfan32xnznp42u6",
 	}
-	method := "/zetachain.zetacore.observer.Query/HasVoted"
+	method := "zetachain.zetacore.observer.Query/HasVoted"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)

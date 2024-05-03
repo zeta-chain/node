@@ -20,16 +20,12 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	}
 
 	// Get the distribution of rewards
-	params := keeper.GetParamsIfExists(ctx)
-	validatorRewards, observerRewards, tssSignerRewards := types.GetRewardsDistributions(params)
-
-	// TODO : Replace hardcoded slash amount with a parameter
-	// https://github.com/zeta-chain/node/pull/1861
-	slashAmount, ok := sdkmath.NewIntFromString(types.ObserverSlashAmount)
-	if !ok {
-		ctx.Logger().Error(fmt.Sprintf("Error while parsing observer slash amount %s", types.ObserverSlashAmount))
+	params, found := keeper.GetParams(ctx)
+	if !found {
 		return
 	}
+
+	validatorRewards, observerRewards, tssSignerRewards := types.GetRewardsDistributions(params)
 
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
@@ -39,7 +35,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing validator rewards %s", err))
 		return
 	}
-	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper, slashAmount)
+	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper, params)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing observer rewards %s", err))
 		return
@@ -75,16 +71,22 @@ func DistributeObserverRewards(
 	ctx sdk.Context,
 	amount sdkmath.Int,
 	keeper keeper.Keeper,
-	slashAmount sdkmath.Int,
+	params types.Params,
 ) error {
-
+	slashAmount := params.ObserverSlashAmount
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)
 	err := keeper.GetBankKeeper().SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
 	if err != nil {
 		return err
 	}
-	ballotIdentifiers := keeper.GetObserverKeeper().GetMaturedBallotList(ctx)
+
+	list, found := keeper.GetObserverKeeper().GetMaturedBallots(ctx, params.BallotMaturityBlocks)
+	ballotIdentifiers := []string{}
+	if found {
+		ballotIdentifiers = list.BallotsIndexList
+	}
+
 	// do not distribute rewards if no ballots are matured, the rewards can accumulate in the undistributed pool
 	if len(ballotIdentifiers) == 0 {
 		return nil

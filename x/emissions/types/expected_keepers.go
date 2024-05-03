@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -14,8 +13,8 @@ type AccountKeeper interface {
 }
 
 type ObserverKeeper interface {
-	GetMaturedBallotList(ctx sdk.Context) []string
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
+	GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val observertypes.BallotListForHeight, found bool)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -28,12 +27,4 @@ type BankKeeper interface {
 
 type StakingKeeper interface {
 	BondedRatio(ctx sdk.Context) sdk.Dec
-}
-
-// ParamStore defines the expected paramstore methods to store and load Params (noalias)
-type ParamStore interface {
-	GetParamSetIfExists(ctx sdk.Context, ps paramstypes.ParamSet)
-	SetParamSet(ctx sdk.Context, ps paramstypes.ParamSet)
-	WithKeyTable(table paramstypes.KeyTable) paramstypes.Subspace
-	HasKeyTable() bool
 }

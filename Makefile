@@ -6,6 +6,7 @@ BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS:=""
+REPOSITORY_ROOT := $(dir $(abspath $(MAKEFILE_LIST)))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
@@ -144,23 +145,25 @@ gosec:
 ###                           Generation commands  		                    ###
 ###############################################################################
 
-proto:
-	@echo "--> Removing old Go types "
-	@find . -name '*.pb.go' -type f -delete
-	@echo "--> Generating new Go types from protocol buffer files"
-	@bash ./scripts/protoc-gen-go.sh
-	@buf format -w
-.PHONY: proto
+protoVer=0.13.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user $(shell id -u):$(shell id -g) $(protoImageName)
 
-typescript:
+proto-format:
+	@echo "--> Formatting Protobuf files"
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+.PHONY: proto-format
+
+typescript: proto-format
 	@echo "--> Generating TypeScript bindings"
 	@bash ./scripts/protoc-gen-typescript.sh
 .PHONY: typescript
 
-proto-format:
-	@bash ./scripts/proto-format.sh
+proto-gen: proto-format
+	@echo "--> Generating Protobuf files"
+	@$(protoImage) sh ./scripts/protoc-gen-go.sh
 
-openapi:
+openapi: proto-format
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
 .PHONY: openapi
@@ -180,7 +183,7 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto openapi specs typescript docs-zetacored
+generate: proto-gen openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################

@@ -25,7 +25,6 @@ func GetQueryCmd(_ string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdQueryParams(),
 		CmdBallotByIdentifier(),
 		CmdObserverSet(),
 		CmdGetSupportedChains(),

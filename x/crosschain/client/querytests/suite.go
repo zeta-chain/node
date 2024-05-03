@@ -32,6 +32,7 @@ func (s *CliTestSuite) Setconfig() {
 	config.SetAddressVerifier(app.VerifyAddressFormat)
 	config.Seal()
 }
+
 func (s *CliTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	s.Setconfig()

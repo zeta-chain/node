@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/99designs/keyring"
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 
