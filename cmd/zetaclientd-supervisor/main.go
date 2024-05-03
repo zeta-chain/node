@@ -103,7 +103,7 @@ func main() {
 	}
 
 	for {
-		cmd := exec.Command("zetaclientd", "start")
+		cmd := exec.Command("zetaclientd", os.Args[1:]...)
 		cmd.Stdout = serializedStdout
 		cmd.Stderr = os.Stderr
 		// must reset the passwordInputBuffer every iteration because reads are stateful (seek to end)
