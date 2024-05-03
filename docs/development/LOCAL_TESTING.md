@@ -170,12 +170,17 @@ cast send 0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c --value 42 --rpc-url http:/
 
 `zetae2e` CLI can also be used to interact with the localnet and test specific functionalities with the `run` command. The [local config](../../cmd/zetae2e/config/local.yml) can be used to interact with the network. 
 
+For local interactions, the Bitcoin account is not automatically setup. To set it up, the following command can be used:
+
+```bash
+zetae2e setup-bitcoin cmd/zetae2e/config/local.yml
+```
+
 The balances on the localnet can be checked with the following command:
 
 ```bash
-zetae2e balances cmd/zetae2e/config/local.yml --skip-btc
+zetae2e balances cmd/zetae2e/config/local.yml
 ```
-Note: Bitcoin network is currently not supported for the command.
 
 Example of `run` command:
 
