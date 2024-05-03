@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -150,5 +152,69 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 		fc, found := k.GetForeignCoinFromAsset(ctx, "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 1)
 		require.True(t, found)
 		require.Equal(t, "foo", fc.Name)
+	})
+}
+
+func TestKeeperGetAllForeignCoinMap(t *testing.T) {
+	t.Run("can get all foreign foreign map", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+
+		// create foreign coins
+		coinFoo1 := types.ForeignCoins{
+			Zrc20ContractAddress: sample.EthAddress().String(),
+			Asset:                strings.ToLower(sample.EthAddress().String()),
+			ForeignChainId:       1,
+			Decimals:             6,
+			CoinType:             coin.CoinType_ERC20,
+			Name:                 "foo",
+			LiquidityCap:         math.NewUint(100),
+		}
+		coinBar1 := types.ForeignCoins{
+			Zrc20ContractAddress: sample.EthAddress().String(),
+			Asset:                "",
+			ForeignChainId:       1,
+			Decimals:             18,
+			CoinType:             coin.CoinType_Gas,
+			Name:                 "bar",
+			LiquidityCap:         math.NewUint(100),
+		}
+		coinFoo2 := types.ForeignCoins{
+			Zrc20ContractAddress: sample.EthAddress().String(),
+			Asset:                strings.ToLower(sample.EthAddress().String()),
+			ForeignChainId:       2,
+			Decimals:             8,
+			CoinType:             coin.CoinType_ERC20,
+			Name:                 "foo",
+			LiquidityCap:         math.NewUint(200),
+		}
+		coinBar2 := types.ForeignCoins{
+			Zrc20ContractAddress: sample.EthAddress().String(),
+			Asset:                "",
+			ForeignChainId:       2,
+			Decimals:             18,
+			CoinType:             coin.CoinType_Gas,
+			Name:                 "bar",
+			LiquidityCap:         math.NewUint(200),
+		}
+
+		// populate and get
+		setForeignCoins(ctx, k,
+			coinFoo1,
+			coinBar1,
+			coinFoo2,
+			coinBar2,
+		)
+		foreignCoinMap := k.GetAllForeignCoinMap(ctx)
+
+		// check length
+		require.Len(t, foreignCoinMap, 2)
+		require.Len(t, foreignCoinMap[1], 2)
+		require.Len(t, foreignCoinMap[2], 2)
+
+		// check coin
+		require.Equal(t, coinFoo1, foreignCoinMap[1][coinFoo1.Asset])
+		require.Equal(t, coinBar1, foreignCoinMap[1][coinBar1.Asset])
+		require.Equal(t, coinFoo2, foreignCoinMap[2][coinFoo2.Asset])
+		require.Equal(t, coinBar2, foreignCoinMap[2][coinBar2.Asset])
 	})
 }
