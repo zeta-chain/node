@@ -9,7 +9,15 @@
 ### Refactor
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
+* [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 
+### Tests
+
+* [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+
+### Fixes
+
+* [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
 
 ## v16.0.0
 
@@ -57,7 +65,6 @@
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
-* [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 
 ### Features
 
@@ -97,7 +104,6 @@
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
 * [2060](https://github.com/zeta-chain/node/pull/2060) - add unit test for rate limiter query
-* [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
 
 ### Fixes
 
@@ -108,7 +114,6 @@
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 * [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags
 * [1970](https://github.com/zeta-chain/node/issues/1970) - remove the timeout in the evm outtx tracker processing thread
-* [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
 
 ### Chores
 
@@ -151,7 +156,7 @@
 
 ### Features
 
-*[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
+* [1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
 
 ### Refactor
 
@@ -200,7 +205,6 @@
 
 * [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
 
-
 ### Chores
 
 * [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
@@ -232,6 +236,7 @@
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
 
 ### Features
+
 * [1658](https://github.com/zeta-chain/node/pull/1658) - modify emission distribution to use fixed block rewards
 
 ### Fixes
@@ -252,7 +257,6 @@
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 * [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
 
-
 ### Features
 
 * [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
@@ -262,8 +266,6 @@
 
 * [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
 * [1640](https://github.com/zeta-chain/node/pull/1640) reorganize zetaclient into subpackages
-
-### Refactoring
 * [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
 
 ## Version: v12.0.0
@@ -288,6 +290,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * `GetTssAddress` : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoin chain id can now be passed as a parameter to fetch the correct tss for required BTC chain. This parameter only affects the BTC tss address in the response.
 
 ### Features
+
 * [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
@@ -343,17 +346,19 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * Update --ledger flag hint
 
 ### Chores
+
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
 * [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
-*  [1564](https://github.com/zeta-chain/node/pull/1564) - bump ti-actions/changed-files
+* [1564](https://github.com/zeta-chain/node/pull/1564) - bump ti-actions/changed-files
 
 ### Tests
 
 * [1538](https://github.com/zeta-chain/node/pull/1538) - improve stateful e2e testing
 
 ### CI
+
 * Removed private runners and unused GitHub Action
 
 ## Version: v11.0.0
@@ -382,13 +387,15 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 ### Chores
 
 ### Tests
-- Add unit tests for adding votes to a ballot 
+
+* Add unit tests for adding votes to a ballot 
 
 ### CI
 
 ## Version: v10.1.2
 
 ### Features
+
 * [1137](https://github.com/zeta-chain/node/pull/1137) - external stress testing
 * [1205](https://github.com/zeta-chain/node/pull/1205) - allow setting liquidity cap for ZRC20
 * [1260](https://github.com/zeta-chain/node/pull/1260) - add ability to update gas limit
@@ -397,6 +404,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1143](https://github.com/zeta-chain/node/pull/1143) - tss funds migration capability
 * [1358](https://github.com/zeta-chain/node/pull/1358) - zetaclient thread for zeta supply checks
 * [1384](https://github.com/zeta-chain/node/pull/1384) - tx to update an observer
+
 ### Fixes
 
 * [1195](https://github.com/zeta-chain/node/pull/1195) - added upgrade name, and allow download. allows to test release
