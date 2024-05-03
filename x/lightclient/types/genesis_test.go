@@ -63,6 +63,15 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			valid: false,
 		},
+		{
+			desc: "invalid block header verification",
+			genState: &types.GenesisState{
+				BlockHeaderVerification: types.BlockHeaderVerification{
+					HeaderSupportedChains: []types.HeaderSupportedChain{{ChainId: 1, Enabled: true}, {ChainId: 1, Enabled: true}},
+				},
+			},
+			valid: false,
+		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := tc.genState.Validate()

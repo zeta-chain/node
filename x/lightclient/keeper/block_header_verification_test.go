@@ -31,6 +31,7 @@ func TestKeeper_GetBlockHeaderVerification(t *testing.T) {
 		blockHeaderVerification, found := k.GetBlockHeaderVerification(ctx)
 		require.False(t, found)
 		require.Len(t, blockHeaderVerification.HeaderSupportedChains, 0)
+		require.Equal(t, types.BlockHeaderVerification{}, blockHeaderVerification)
 	})
 }
 

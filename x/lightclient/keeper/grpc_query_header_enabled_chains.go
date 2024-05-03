@@ -18,7 +18,10 @@ func (k Keeper) HeaderSupportedChains(c context.Context, req *types.QueryHeaderS
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, _ := k.GetBlockHeaderVerification(ctx)
+	val, found := k.GetBlockHeaderVerification(ctx)
+	if !found {
+		return &types.QueryHeaderSupportedChainsResponse{}, types.ErrBlockHeaderVerificationDisabled.Wrapf("proof verification is disabled for all chains")
+	}
 
 	return &types.QueryHeaderSupportedChainsResponse{HeaderSupportedChains: val.GetHeaderSupportedChainsList()}, nil
 }
@@ -31,7 +34,10 @@ func (k Keeper) HeaderEnabledChains(c context.Context, req *types.QueryHeaderEna
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, _ := k.GetBlockHeaderVerification(ctx)
+	val, found := k.GetBlockHeaderVerification(ctx)
+	if !found {
+		return &types.QueryHeaderEnabledChainsResponse{}, types.ErrBlockHeaderVerificationDisabled.Wrapf("proof verification is disabled for all chains")
+	}
 
 	return &types.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: val.GetHeaderEnabledChains()}, nil
 

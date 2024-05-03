@@ -34,5 +34,10 @@ func (gs GenesisState) Validate() error {
 		ChainStateMap[elem.ChainId] = true
 	}
 
+	err := gs.BlockHeaderVerification.Validate()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

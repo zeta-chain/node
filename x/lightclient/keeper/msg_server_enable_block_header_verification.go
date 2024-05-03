@@ -21,7 +21,10 @@ func (k msgServer) EnableHeaderVerification(goCtx context.Context, msg *types.Ms
 		return nil, authoritytypes.ErrUnauthorized
 	}
 
-	bhv, _ := k.GetBlockHeaderVerification(ctx)
+	bhv, found := k.GetBlockHeaderVerification(ctx)
+	if !found {
+		bhv = types.BlockHeaderVerification{}
+	}
 
 	for _, chainID := range msg.ChainIdList {
 		bhv.EnableChain(chainID)

@@ -9,6 +9,19 @@ import (
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
+func TestBlockHeaderVerification_Validate(t *testing.T) {
+	t.Run("should return nil if no duplicate chain id", func(t *testing.T) {
+		bhv := types.BlockHeaderVerification{
+			HeaderSupportedChains: []types.HeaderSupportedChain{{ChainId: 1, Enabled: true}, {ChainId: 2, Enabled: true}}}
+		require.NoError(t, bhv.Validate())
+	})
+
+	t.Run("should return error if duplicate chain id", func(t *testing.T) {
+		bhv := types.BlockHeaderVerification{
+			HeaderSupportedChains: []types.HeaderSupportedChain{{ChainId: 1, Enabled: true}, {ChainId: 1, Enabled: true}}}
+		require.Error(t, bhv.Validate())
+	})
+}
 func TestBlockHeaderVerification_EnableChain(t *testing.T) {
 	t.Run("should enable chain if chain not present", func(t *testing.T) {
 		bhv := sample.BlockHeaderVerification()

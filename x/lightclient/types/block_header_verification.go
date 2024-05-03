@@ -1,5 +1,18 @@
 package types
 
+import "fmt"
+
+func (b *BlockHeaderVerification) Validate() error {
+	detectDuplicates := make(map[int64]bool)
+	for _, chain := range b.HeaderSupportedChains {
+		if _, ok := detectDuplicates[chain.ChainId]; ok {
+			return fmt.Errorf("duplicated chain id for block header verification")
+		}
+		detectDuplicates[chain.ChainId] = true
+	}
+	return nil
+}
+
 // EnableChain enables block header verification for a specific chain
 func (b *BlockHeaderVerification) EnableChain(chainID int64) {
 	found := false
