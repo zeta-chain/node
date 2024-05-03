@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +15,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
@@ -83,7 +83,11 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	if err != nil {
 		return "", err
 	}
-	factory := clienttx.NewFactoryCLI(ctx, flags)
+	factory, err := clienttx.NewFactoryCLI(ctx, flags)
+	if err != nil {
+		return "", err
+	}
+
 	factory = factory.WithAccountNumber(b.accountNumber[authzSigner.KeyType])
 	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)

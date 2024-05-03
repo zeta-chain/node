@@ -5,6 +5,7 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -33,7 +34,6 @@ func InitGenesisModuleList() []string {
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
-		crisistypes.ModuleName,
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		paramstypes.ModuleName,
@@ -49,5 +49,8 @@ func InitGenesisModuleList() []string {
 		authz.ModuleName,
 		authoritytypes.ModuleName,
 		lightclienttypes.ModuleName,
+		consensusparamtypes.ModuleName,
+		// NOTE: crisis module must go at the end to check for invariants on each module
+		crisistypes.ModuleName,
 	}
 }

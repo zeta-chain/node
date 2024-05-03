@@ -104,7 +104,7 @@ message MsgVoteBlockHeader {
 	int64 chain_id = 2;
 	bytes block_hash = 3;
 	int64 height = 4;
-	proofs.HeaderData header = 5;
+	pkg.proofs.HeaderData header = 5;
 }
 ```
 
@@ -139,7 +139,7 @@ message MsgVoteTSS {
 	string creator = 1;
 	string tss_pubkey = 2;
 	int64 keygen_zeta_height = 3;
-	chains.ReceiveStatus status = 4;
+	pkg.chains.ReceiveStatus status = 4;
 }
 ```
 

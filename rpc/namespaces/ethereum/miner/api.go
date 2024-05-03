@@ -16,10 +16,10 @@
 package miner
 
 import (
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/tendermint/tendermint/libs/log"
 	"github.com/zeta-chain/zetacore/rpc/backend"
 )
 

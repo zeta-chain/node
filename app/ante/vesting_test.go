@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -73,14 +73,14 @@ func TestVesting_AnteHandle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := helpers.GenSignedMockTx(
+			tx, err := simtestutil.GenSignedMockTx(
 				rand.New(rand.NewSource(time.Now().UnixNano())),
 				txConfig,
 				[]sdk.Msg{
 					tt.msg,
 				},
 				sdk.NewCoins(),
-				helpers.DefaultGenTxGas,
+				simtestutil.DefaultGenTxGas,
 				"testing-chain-id",
 				[]uint64{0},
 				[]uint64{0},

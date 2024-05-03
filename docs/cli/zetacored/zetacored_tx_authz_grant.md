@@ -7,7 +7,7 @@ Grant authorization to an address
 create a new grant authorization to an address to execute a transaction on your behalf:
 
 Examples:
- $ zetacored tx authz grant cosmos1skjw.. send /cosmos.bank.v1beta1.MsgSend --spend-limit=1000stake --from=cosmos1skl..
+ $ zetacored tx authz grant cosmos1skjw.. send --spend-limit=1000stake --from=cosmos1skl..
  $ zetacored tx authz grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
 
 ```
@@ -18,9 +18,11 @@ zetacored tx authz grant [grantee] [authorization_type="send"|"generic"|"delegat
 
 ```
   -a, --account-number uint          The account number of the signing account (offline mode only)
+      --allow-list strings           Allowed addresses grantee is allowed to send funds separated by ,
       --allowed-validators strings   Allowed validators addresses separated by ,
       --aux                          Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string        Transaction broadcasting mode (sync|async|block) 
+  -b, --broadcast-mode string        Transaction broadcasting mode (sync|async) 
+      --chain-id string              The network chain ID
       --deny-validators strings      Deny validators addresses separated by ,
       --dry-run                      ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
       --expiration int               Expire time as Unix timestamp. Set zero (0) for no expiry. Default is 0.
@@ -52,10 +54,10 @@ zetacored tx authz grant [grantee] [authorization_type="send"|"generic"|"delegat
 ### Options inherited from parent commands
 
 ```
-      --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
