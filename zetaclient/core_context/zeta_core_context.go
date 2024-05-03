@@ -90,13 +90,13 @@ func (c *ZetaCoreContext) GetEnabledExternalChains() []chains.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
-	foreignChains := make([]chains.Chain, 0)
+	externalChains := make([]chains.Chain, 0)
 	for _, chain := range c.chainsEnabled {
-		if !chain.IsZetaChain() {
-			foreignChains = append(foreignChains, chain)
+		if chain.IsExternal {
+			externalChains = append(externalChains, chain)
 		}
 	}
-	return foreignChains
+	return externalChains
 }
 
 func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
