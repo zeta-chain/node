@@ -158,10 +158,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 				ChainName: 2,
 				ChainId:   2,
 			},
-			{
-				ChainName: 3,
-				ChainId:   chains.ZetaTestnetChain().ChainId,
-			},
+			chains.ZetaTestnetChain,
 		}
 		evmChainParamsToUpdate := map[int64]*observertypes.ChainParams{
 			1: {
