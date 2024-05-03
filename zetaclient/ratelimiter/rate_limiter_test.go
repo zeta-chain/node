@@ -14,7 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/ratelimiter"
 )
 
-func Test_NewFilterInput(t *testing.T) {
+func Test_NewInput(t *testing.T) {
 	// sample response
 	response := crosschaintypes.QueryRateLimiterInputResponse{
 		Height:                  10,
@@ -26,7 +26,7 @@ func Test_NewFilterInput(t *testing.T) {
 		LowestPendingCctxHeight: 2,
 	}
 
-	t.Run("should create a filter input from gRPC response", func(t *testing.T) {
+	t.Run("should create a input from gRPC response", func(t *testing.T) {
 		filterInput, ok := ratelimiter.NewInput(response)
 		require.True(t, ok)
 		require.Equal(t, response.Height, filterInput.Height)

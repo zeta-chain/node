@@ -69,8 +69,8 @@ func TestNewZetaCoreContext(t *testing.T) {
 		// assert enabled chains
 		require.Empty(t, len(zetaContext.GetEnabledChains()))
 
-		// assert foreign chains
-		require.Empty(t, len(zetaContext.GetEnabledForeignChains()))
+		// assert external chains
+		require.Empty(t, len(zetaContext.GetEnabledExternalChains()))
 
 		// assert current tss pubkey
 		require.Equal(t, "", zetaContext.GetCurrentTssPubkey())
@@ -196,8 +196,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		// assert enabled chains updated
 		require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
 
-		// assert enabled foreign chains
-		require.Equal(t, enabledChainsToUpdate[0:2], zetaContext.GetEnabledForeignChains())
+		// assert enabled external chains
+		require.Equal(t, enabledChainsToUpdate[0:2], zetaContext.GetEnabledExternalChains())
 
 		// assert current tss pubkey updated
 		require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())

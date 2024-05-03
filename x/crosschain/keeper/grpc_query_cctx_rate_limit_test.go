@@ -1,12 +1,9 @@
 package keeper_test
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -91,168 +88,6 @@ func setupForeignCoins(
 	fCoins := sample.ForeignCoinList(t, zrc20ETH, zrc20BTC, zrc20USDT, assetUSDT)
 	for _, fc := range fCoins {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fc)
-	}
-}
-
-func Test_ConvertCctxValue(t *testing.T) {
-	// chain IDs
-	ethChainID := getValidEthChainID()
-	btcChainID := getValidBtcChainID()
-
-	// zrc20 addresses for ETH, BTC, USDT and asset for USDT
-	zrc20ETH := sample.EthAddress().Hex()
-	zrc20BTC := sample.EthAddress().Hex()
-	zrc20USDT := sample.EthAddress().Hex()
-	assetUSDT := sample.EthAddress().Hex()
-
-	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-
-	// Set TSS
-	tss := sample.Tss()
-	zk.ObserverKeeper.SetTSS(ctx, tss)
-
-	// Set foreign coins
-	setupForeignCoins(t, ctx, zk, zrc20ETH, zrc20BTC, zrc20USDT, assetUSDT)
-
-	// Set rate limiter flags
-	rateLimiterFlags := createTestRateLimiterFlags(500, math.NewUint(10), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8")
-	k.SetRateLimiterFlags(ctx, *rateLimiterFlags)
-
-	// get rate limiter rates
-	assetRates := k.GetRateLimiterAssetRateList(ctx)
-	gasAssetRateMap, erc20AssetRateMap := keeper.BuildAssetRateMapFromList(assetRates)
-
-	// test cases
-	tests := []struct {
-		name string
-
-		// input
-		chainID         int64
-		coinType        coin.CoinType
-		asset           string
-		amount          math.Uint
-		gasAssetRates   map[int64]*types.AssetRate
-		erc20AssetRates map[int64]map[string]*types.AssetRate
-
-		// output
-		expectedValue sdkmath.Int
-	}{
-		{
-			name:            "should convert cctx ZETA value correctly",
-			chainID:         ethChainID,
-			coinType:        coin.CoinType_Zeta,
-			asset:           "",
-			amount:          sdk.NewUint(3e17), // 0.3 ZETA
-			gasAssetRates:   gasAssetRateMap,
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(3e17),
-		},
-		{
-			name:            "should convert cctx ETH value correctly",
-			chainID:         ethChainID,
-			coinType:        coin.CoinType_Gas,
-			asset:           "",
-			amount:          sdk.NewUint(3e15), // 0.003 ETH
-			gasAssetRates:   gasAssetRateMap,
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(75e17), // 0.003 ETH * 2500 = 7.5 ZETA
-		},
-		{
-			name:            "should convert cctx BTC value correctly",
-			chainID:         btcChainID,
-			coinType:        coin.CoinType_Gas,
-			asset:           "",
-			amount:          sdk.NewUint(70000), // 0.0007 BTC
-			gasAssetRates:   gasAssetRateMap,
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(35).Mul(sdk.NewInt(1e18)), // 0.0007 BTC * 50000 = 35.0 ZETA
-		},
-		{
-			name:            "should convert cctx USDT value correctly",
-			chainID:         ethChainID,
-			coinType:        coin.CoinType_ERC20,
-			asset:           assetUSDT,
-			amount:          sdk.NewUint(3e6), // 3 USDT
-			gasAssetRates:   gasAssetRateMap,
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(24e17), // 3 USDT * 0.8 = 2.4 ZETA
-		},
-		{
-			name:            "should return 0 if no gas asset rate found for chainID",
-			chainID:         ethChainID,
-			coinType:        coin.CoinType_Gas,
-			asset:           "",
-			amount:          sdk.NewUint(100),
-			gasAssetRates:   nil,
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(0),
-		},
-		{
-			name:            "should return 0 if no erc20 asset rate found for chainID",
-			chainID:         ethChainID,
-			coinType:        coin.CoinType_ERC20,
-			asset:           assetUSDT,
-			amount:          sdk.NewUint(100),
-			gasAssetRates:   gasAssetRateMap,
-			erc20AssetRates: nil,
-			expectedValue:   sdk.NewInt(0),
-		},
-		{
-			name:            "should return 0 if coinType is CoinType_Cmd",
-			chainID:         ethChainID,
-			coinType:        coin.CoinType_Cmd,
-			asset:           "",
-			amount:          sdk.NewUint(100),
-			gasAssetRates:   gasAssetRateMap,
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(0),
-		},
-		{
-			name:     "should return 0 on nil rate",
-			chainID:  ethChainID,
-			coinType: coin.CoinType_Gas,
-			asset:    "",
-			amount:   sdk.NewUint(100),
-			gasAssetRates: func() map[int64]*types.AssetRate {
-				// set rate to nil
-				tempRates := k.GetRateLimiterAssetRateList(ctx)
-				nilAssetRateMap, _ := keeper.BuildAssetRateMapFromList(tempRates)
-				nilAssetRateMap[ethChainID].Rate = sdk.Dec{}
-				return nilAssetRateMap
-			}(),
-			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(0),
-		},
-		{
-			name:          "should return 0 on rate <= 0",
-			chainID:       ethChainID,
-			coinType:      coin.CoinType_ERC20,
-			asset:         assetUSDT,
-			amount:        sdk.NewUint(100),
-			gasAssetRates: gasAssetRateMap,
-			erc20AssetRates: func() map[int64]map[string]*types.AssetRate {
-				// set rate to 0
-				tempRates := k.GetRateLimiterAssetRateList(ctx)
-				_, zeroAssetRateMap := keeper.BuildAssetRateMapFromList(tempRates)
-				zeroAssetRateMap[ethChainID][strings.ToLower(assetUSDT)].Rate = sdk.NewDec(0)
-				return zeroAssetRateMap
-			}(),
-			expectedValue: sdk.NewInt(0),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// create cctx with given input
-			cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", tt.chainID, 1))
-			cctx.InboundTxParams.CoinType = tt.coinType
-			cctx.InboundTxParams.Asset = tt.asset
-			cctx.GetCurrentOutTxParam().Amount = tt.amount
-
-			// convert cctx value
-			value := keeper.ConvertCctxValue(tt.chainID, cctx, tt.gasAssetRates, tt.erc20AssetRates)
-			require.Equal(t, tt.expectedValue, value)
-		})
 	}
 }
 
@@ -512,16 +347,28 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "tss not found")
 	})
-	t.Run("pending nonces not found", func(t *testing.T) {
+	t.Run("asset rates not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
-		// Set rate limiter flags as disabled
-		rFlags := sample.RateLimiterFlags()
-		k.SetRateLimiterFlags(ctx, rFlags)
+		// Set TSS but no rate limiter flags
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+
+		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
+			Window: 100,
+		})
+		require.ErrorContains(t, err, "asset rates not found")
+	})
+	t.Run("pending nonces not found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
 		// Set TSS
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
+
+		// Set rate limiter flags as disabled
+		rFlags := sample.RateLimiterFlags()
+		k.SetRateLimiterFlags(ctx, rFlags)
 
 		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
 			Window: 100,

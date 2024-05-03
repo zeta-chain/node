@@ -320,7 +320,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 			observer := MockCoreObserver(t, bridge, ethChain, btcChain, ethChainParams, btcChainParams)
 
 			// run the test
-			cctxsMap, err := observer.GetPendingCctxsWithinRatelimit(foreignChains, zerolog.Logger{})
+			cctxsMap, err := observer.GetPendingCctxsWithinRatelimit(foreignChains)
 			if tt.fail {
 				require.Error(t, err)
 				require.Nil(t, cctxsMap)

@@ -9,7 +9,7 @@
 ### Refactor
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
-
+* [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor.
 
 ## v16.0.0
 
@@ -57,7 +57,6 @@
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
-* [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor.
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 
 ### Features

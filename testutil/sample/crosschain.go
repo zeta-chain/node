@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,15 +51,36 @@ func RateLimiterFlags() types.RateLimiterFlags {
 	}
 }
 
-func AssetRate() *types.AssetRate {
+// CustomRateLimiterFlags creates a custom rate limiter flags with the given parameters
+func CustomRateLimiterFlags(enabled bool, window int64, rate math.Uint, conversions []types.Conversion) types.RateLimiterFlags {
+	return types.RateLimiterFlags{
+		Enabled:     enabled,
+		Window:      window,
+		Rate:        rate,
+		Conversions: conversions,
+	}
+}
+
+func AssetRate() types.AssetRate {
 	r := Rand()
 
-	return &types.AssetRate{
+	return types.AssetRate{
 		ChainId:  r.Int63(),
 		Asset:    EthAddress().Hex(),
 		Decimals: uint32(r.Uint64()),
 		CoinType: coin.CoinType_ERC20,
 		Rate:     sdk.NewDec(r.Int63()),
+	}
+}
+
+// CustomAssetRate creates a custom asset rate with the given parameters
+func CustomAssetRate(chainID int64, asset string, decimals uint32, coinType coin.CoinType, rate sdk.Dec) types.AssetRate {
+	return types.AssetRate{
+		ChainId:  chainID,
+		Asset:    strings.ToLower(asset),
+		Decimals: decimals,
+		CoinType: coinType,
+		Rate:     rate,
 	}
 }
 
