@@ -2,9 +2,9 @@
 
 ZetaChain localnet development and testing environment is divided into three different directories:
 
-- [localnet](./contrib/localnet/README.md): a set of Docker images and script for spinning up a localnet.
-- [e2e](./e2e/README.md): a set of Go packages for end-to-end testing between ZetaChain and other blockchains.
-- [zetae2e](./cmd/zetae2e/README.md): a CLI tool using `e2e` for running end-to-end tests.
+- [localnet](../../contrib/localnet/README.md): a set of Docker images and script for spinning up a localnet.
+- [e2e](../../e2e/README.md): a set of Go packages for end-to-end testing between ZetaChain and other blockchains.
+- [zetae2e](../../cmd/zetae2e/README.md): a CLI tool using `e2e` for running end-to-end tests.
 
 A description of each directory is provided in the respective README files.
 
@@ -168,7 +168,7 @@ cast send 0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c --value 42 --rpc-url http:/
 
 ### Interaction using `zetae2e`
 
-`zetae2e` CLI can also be used to interact with the localnet and test specific functionalities with the `run` command. The [local config](cmd/zetae2e/config/local.yml) can be used to interact with the network. 
+`zetae2e` CLI can also be used to interact with the localnet and test specific functionalities with the `run` command. The [local config](../../cmd/zetae2e/config/local.yml) can be used to interact with the network. 
 
 For local interactions, the Bitcoin account is not automatically setup. To set it up, the following command can be used:
 
