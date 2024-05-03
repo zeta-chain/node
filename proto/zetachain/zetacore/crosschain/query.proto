@@ -275,7 +275,9 @@ message QueryListPendingCctxWithinRateLimitRequest { uint32 limit = 1; }
 message QueryListPendingCctxWithinRateLimitResponse {
   repeated CrossChainTx cross_chain_tx = 1;
   uint64 total_pending = 2;
-  bool rate_limit_exceeded = 3;
+  int64 current_withdraw_window = 3;
+  string current_withdraw_rate = 4;
+  bool rate_limit_exceeded = 5;
 }
 
 message QueryLastZetaHeightRequest {}

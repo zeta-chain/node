@@ -21,7 +21,7 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-const releaseVersion = "v15"
+const releaseVersion = "v16"
 
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration

@@ -219,7 +219,7 @@ start-stress-test: zetanode
 
 zetanode-upgrade:
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION=v14.0.0 --build-arg NEW_VERSION=v15 .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION=v15.0.0 --build-arg NEW_VERSION=v16 .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 

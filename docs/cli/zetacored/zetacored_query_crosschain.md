@@ -36,6 +36,7 @@ zetacored query crosschain [flags]
 * [zetacored query crosschain list-in-tx-tracker](zetacored_query_crosschain_list-in-tx-tracker.md)	 - shows a list of in tx tracker by chainId
 * [zetacored query crosschain list-out-tx-tracker](zetacored_query_crosschain_list-out-tx-tracker.md)	 - list all OutTxTracker
 * [zetacored query crosschain list-pending-cctx](zetacored_query_crosschain_list-pending-cctx.md)	 - shows pending CCTX
+* [zetacored query crosschain list_pending_cctx_within_rate_limit](zetacored_query_crosschain_list_pending_cctx_within_rate_limit.md)	 - list all pending CCTX within rate limit
 * [zetacored query crosschain show-cctx](zetacored_query_crosschain_show-cctx.md)	 - shows a CCTX
 * [zetacored query crosschain show-gas-price](zetacored_query_crosschain_show-gas-price.md)	 - shows a gasPrice
 * [zetacored query crosschain show-in-tx-hash-to-cctx](zetacored_query_crosschain_show-in-tx-hash-to-cctx.md)	 - shows a inTxHashToCctx

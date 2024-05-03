@@ -56812,6 +56812,11 @@ definitions:
       total_pending:
         type: string
         format: uint64
+      current_withdraw_window:
+        type: string
+        format: int64
+      current_withdraw_rate:
+        type: string
       rate_limit_exceeded:
         type: boolean
   crosschainQueryMessagePassingProtocolFeeResponse:
