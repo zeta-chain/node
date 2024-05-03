@@ -101,7 +101,7 @@ func IsZetaChain(chainID int64) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_zeta))
 }
 
-// IsHeaderSupportedChain returns true if the chain is supports block header-based verification
+// IsHeaderSupportedChain returns true if the chain's consensus supports block header-based verification
 func IsHeaderSupportedChain(chainID int64) bool {
 	return ChainIDInChainList(chainID, ChainListForHeaderSupport())
 }
