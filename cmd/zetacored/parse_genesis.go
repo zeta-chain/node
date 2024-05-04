@@ -47,7 +47,6 @@ var Copy = map[string]bool{
 	upgradetypes.ModuleName:   true,
 	evidencetypes.ModuleName:  true,
 	vestingtypes.ModuleName:   true,
-	fungibletypes.ModuleName:  true,
 	emissionstypes.ModuleName: true,
 	authz.ModuleName:          true,
 }
@@ -67,6 +66,7 @@ var Skip = map[string]bool{
 var Modify = map[string]bool{
 	crosschaintypes.ModuleName: true,
 	observertypes.ModuleName:   true,
+	fungibletypes.ModuleName:   true,
 }
 
 func CmdParseGenesisFile() *cobra.Command {
@@ -135,6 +135,11 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 				if err != nil {
 					return err
 				}
+			case fungibletypes.ModuleName:
+				err := ModifyFungibleState(appState, importAppState, cdc)
+				if err != nil {
+					return err
+				}
 			default:
 				return fmt.Errorf("modify function for %s not found", m)
 			}
@@ -152,16 +157,34 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 
 // ModifyCrosschainState modifies the crosschain state before importing
 // It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
-func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
-	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importAppState)
-	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
-	importedCrossChainGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InTxHashToCctxList))]
-	importedCrossChainGenState.FinalizedInbounds = importedCrossChainGenState.FinalizedInbounds[:math.Min(MaxItemsForList, len(importedCrossChainGenState.FinalizedInbounds))]
-	importedCrossChainStateBz, err := json.Marshal(importedCrossChainGenState)
+func ModifyFungibleState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
+	importedCrossChainGenState := fungibletypes.GetGenesisStateFromAppStateLegacy(cdc, importAppState)
+	appStateGenState := fungibletypes.GetGenesisStateFromAppState(cdc, appState)
+	// The genesis state has been modified between the two versions, so we add only the required fields and leave out the rest
+	appStateGenState.ForeignCoinsList = importedCrossChainGenState.ForeignCoinsList
+	appStateGenState.SystemContract = importedCrossChainGenState.SystemContract
+	appStateBz, err := cdc.MarshalJSON(&appStateGenState)
 	if err != nil {
-		return fmt.Errorf("failed to marshal zetacrosschain genesis state: %w", err)
+		return fmt.Errorf("failed to marshal fungible genesis state: %w", err)
 	}
-	appState[crosschaintypes.ModuleName] = importedCrossChainStateBz
+	appState[fungibletypes.ModuleName] = appStateBz
+	return nil
+}
+
+// ModifyCrosschainState modifies the crosschain state before importing
+// It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
+func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
+	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppStateLegacy(cdc, importAppState)
+	appStateGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
+	// The genesis state has been modified between the two versions , so we add only the required fields and leave out the rest
+	appStateGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
+	appStateGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InTxHashToCctxList))]
+	appStateGenState.FinalizedInbounds = importedCrossChainGenState.FinalizedInbounds[:math.Min(MaxItemsForList, len(importedCrossChainGenState.FinalizedInbounds))]
+	appStateBz, err := cdc.MarshalJSON(&appStateGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal crosschain genesis state: %w", err)
+	}
+	appState[crosschaintypes.ModuleName] = appStateBz
 	return nil
 }
 
