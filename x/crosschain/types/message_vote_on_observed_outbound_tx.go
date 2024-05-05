@@ -15,7 +15,7 @@ var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
 
 func NewMsgVoteOnObservedOutboundTx(
 	creator,
-	sendHash,
+	cctxIndex,
 	outTxHash string,
 	outBlockHeight,
 	outTxGasUsed uint64,
@@ -29,7 +29,7 @@ func NewMsgVoteOnObservedOutboundTx(
 ) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
 		Creator:                        creator,
-		CctxHash:                       sendHash,
+		CctxHash:                       cctxIndex,
 		ObservedOutTxHash:              outTxHash,
 		ObservedOutTxBlockHeight:       outBlockHeight,
 		ObservedOutTxGasUsed:           outTxGasUsed,

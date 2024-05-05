@@ -21,9 +21,9 @@ const (
 	MaxGasLimit = 1_000_000
 )
 
-// OutBoundTransactionData is a data structure containing input fields used to construct each type of transaction.
+// OutboundData is a data structure containing input fields used to construct each type of transaction.
 // This is populated using cctx and other input parameters passed to TryProcessOutTx
-type OutBoundTransactionData struct {
+type OutboundData struct {
 	srcChainID *big.Int
 	toChainID  *big.Int
 	sender     ethcommon.Address
@@ -36,8 +36,8 @@ type OutBoundTransactionData struct {
 	nonce      uint64
 	height     uint64
 
-	// sendHash field is the inbound message digest that is sent to the destination contract
-	sendHash [32]byte
+	// cctxIndex field is the inbound message digest that is sent to the destination contract
+	cctxIndex [32]byte
 
 	// outboundParams field contains data detailing the receiver chain and outbound transaction
 	outboundParams *types.OutboundTxParams
@@ -46,7 +46,7 @@ type OutBoundTransactionData struct {
 // SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
 // returns true if transaction should be skipped
 // returns false otherwise
-func (txData *OutBoundTransactionData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
+func (txData *OutboundData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingRevert:
 		txData.to = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
@@ -63,7 +63,7 @@ func (txData *OutBoundTransactionData) SetChainAndSender(cctx *types.CrossChainT
 }
 
 // SetupGas sets the gas limit and price
-func (txData *OutBoundTransactionData) SetupGas(
+func (txData *OutboundData) SetupGas(
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
@@ -101,20 +101,20 @@ func (txData *OutBoundTransactionData) SetupGas(
 	return nil
 }
 
-// NewOutBoundTransactionData populates transaction input fields parsed from the cctx and other parameters
+// NewOutboundData populates transaction input fields parsed from the cctx and other parameters
 // returns
 //  1. New OutBoundTransaction Data struct or nil if an error occurred.
 //  2. bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
 //     cctx will be skipped and false otherwise.
 //  3. error
-func NewOutBoundTransactionData(
+func NewOutboundData(
 	cctx *types.CrossChainTx,
 	evmClient *ChainClient,
 	evmRPC interfaces.EVMRPCClient,
 	logger zerolog.Logger,
 	height uint64,
-) (*OutBoundTransactionData, bool, error) {
-	txData := OutBoundTransactionData{}
+) (*OutboundData, bool, error) {
+	txData := OutboundData{}
 	txData.outboundParams = cctx.GetCurrentOutTxParam()
 	txData.amount = cctx.GetCurrentOutTxParam().Amount.BigInt()
 	txData.nonce = cctx.GetCurrentOutTxParam().OutboundTxTssNonce
@@ -152,11 +152,11 @@ func NewOutBoundTransactionData(
 
 	// Get sendHash
 	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
-	sendHash, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
-	if err != nil || len(sendHash) != 32 {
+	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
+	if err != nil || len(cctxIndex) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
 	}
-	copy(txData.sendHash[:32], sendHash[:32])
+	copy(txData.cctxIndex[:32], cctxIndex[:32])
 
 	// In case there is a pending transaction, make sure this keysign is a transaction replacement
 	pendingTx := evmClient.GetPendingTx(nonce)
