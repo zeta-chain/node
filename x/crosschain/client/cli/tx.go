@@ -23,8 +23,8 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		CmdAddToWatchList(),
 		CmdVoteGasPrice(),
-		CmdCCTXOutboundVoter(),
-		CmdCCTXInboundVoter(),
+		CmdVoteInbound(),
+		CmdVoteOutbound(),
 		CmdRemoveFromWatchList(),
 		CmdUpdateTss(),
 		CmdMigrateTssFunds(),
