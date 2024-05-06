@@ -112,9 +112,9 @@ export declare class MsgUpdateTssAddressResponse extends Message<MsgUpdateTssAdd
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgAddToInTxTracker
+ * @generated from message zetachain.zetacore.crosschain.MsgAddInboundTracker
  */
-export declare class MsgAddToInTxTracker extends Message<MsgAddToInTxTracker> {
+export declare class MsgAddInboundTracker extends Message<MsgAddInboundTracker> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -150,38 +150,38 @@ export declare class MsgAddToInTxTracker extends Message<MsgAddToInTxTracker> {
    */
   txIndex: bigint;
 
-  constructor(data?: PartialMessage<MsgAddToInTxTracker>);
+  constructor(data?: PartialMessage<MsgAddInboundTracker>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddToInTxTracker";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddInboundTracker";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddToInTxTracker;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddInboundTracker;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddToInTxTracker;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddInboundTracker;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToInTxTracker;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddInboundTracker;
 
-  static equals(a: MsgAddToInTxTracker | PlainMessage<MsgAddToInTxTracker> | undefined, b: MsgAddToInTxTracker | PlainMessage<MsgAddToInTxTracker> | undefined): boolean;
+  static equals(a: MsgAddInboundTracker | PlainMessage<MsgAddInboundTracker> | undefined, b: MsgAddInboundTracker | PlainMessage<MsgAddInboundTracker> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgAddToInTxTrackerResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgAddInboundTrackerResponse
  */
-export declare class MsgAddToInTxTrackerResponse extends Message<MsgAddToInTxTrackerResponse> {
-  constructor(data?: PartialMessage<MsgAddToInTxTrackerResponse>);
+export declare class MsgAddInboundTrackerResponse extends Message<MsgAddInboundTrackerResponse> {
+  constructor(data?: PartialMessage<MsgAddInboundTrackerResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddToInTxTrackerResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddInboundTrackerResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddToInTxTrackerResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddInboundTrackerResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddToInTxTrackerResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddInboundTrackerResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToInTxTrackerResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddInboundTrackerResponse;
 
-  static equals(a: MsgAddToInTxTrackerResponse | PlainMessage<MsgAddToInTxTrackerResponse> | undefined, b: MsgAddToInTxTrackerResponse | PlainMessage<MsgAddToInTxTrackerResponse> | undefined): boolean;
+  static equals(a: MsgAddInboundTrackerResponse | PlainMessage<MsgAddInboundTrackerResponse> | undefined, b: MsgAddInboundTrackerResponse | PlainMessage<MsgAddInboundTrackerResponse> | undefined): boolean;
 }
 
 /**
@@ -268,9 +268,9 @@ export declare class MsgWhitelistERC20Response extends Message<MsgWhitelistERC20
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgAddToOutTxTracker
+ * @generated from message zetachain.zetacore.crosschain.MsgAddOutboundTracker
  */
-export declare class MsgAddToOutTxTracker extends Message<MsgAddToOutTxTracker> {
+export declare class MsgAddOutboundTracker extends Message<MsgAddOutboundTracker> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -306,25 +306,25 @@ export declare class MsgAddToOutTxTracker extends Message<MsgAddToOutTxTracker> 
    */
   txIndex: bigint;
 
-  constructor(data?: PartialMessage<MsgAddToOutTxTracker>);
+  constructor(data?: PartialMessage<MsgAddOutboundTracker>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddToOutTxTracker";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddOutboundTracker";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddToOutTxTracker;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddOutboundTracker;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddToOutTxTracker;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddOutboundTracker;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToOutTxTracker;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddOutboundTracker;
 
-  static equals(a: MsgAddToOutTxTracker | PlainMessage<MsgAddToOutTxTracker> | undefined, b: MsgAddToOutTxTracker | PlainMessage<MsgAddToOutTxTracker> | undefined): boolean;
+  static equals(a: MsgAddOutboundTracker | PlainMessage<MsgAddOutboundTracker> | undefined, b: MsgAddOutboundTracker | PlainMessage<MsgAddOutboundTracker> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgAddOutboundTrackerResponse
  */
-export declare class MsgAddToOutTxTrackerResponse extends Message<MsgAddToOutTxTrackerResponse> {
+export declare class MsgAddOutboundTrackerResponse extends Message<MsgAddOutboundTrackerResponse> {
   /**
    * if the tx was removed from the tracker due to no pending cctx
    *
@@ -332,25 +332,25 @@ export declare class MsgAddToOutTxTrackerResponse extends Message<MsgAddToOutTxT
    */
   isRemoved: boolean;
 
-  constructor(data?: PartialMessage<MsgAddToOutTxTrackerResponse>);
+  constructor(data?: PartialMessage<MsgAddOutboundTrackerResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddOutboundTrackerResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddToOutTxTrackerResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddOutboundTrackerResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddToOutTxTrackerResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddOutboundTrackerResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToOutTxTrackerResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddOutboundTrackerResponse;
 
-  static equals(a: MsgAddToOutTxTrackerResponse | PlainMessage<MsgAddToOutTxTrackerResponse> | undefined, b: MsgAddToOutTxTrackerResponse | PlainMessage<MsgAddToOutTxTrackerResponse> | undefined): boolean;
+  static equals(a: MsgAddOutboundTrackerResponse | PlainMessage<MsgAddOutboundTrackerResponse> | undefined, b: MsgAddOutboundTrackerResponse | PlainMessage<MsgAddOutboundTrackerResponse> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgRemoveFromOutTxTracker
+ * @generated from message zetachain.zetacore.crosschain.MsgRemoveOutboundTracker
  */
-export declare class MsgRemoveFromOutTxTracker extends Message<MsgRemoveFromOutTxTracker> {
+export declare class MsgRemoveOutboundTracker extends Message<MsgRemoveOutboundTracker> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -366,38 +366,38 @@ export declare class MsgRemoveFromOutTxTracker extends Message<MsgRemoveFromOutT
    */
   nonce: bigint;
 
-  constructor(data?: PartialMessage<MsgRemoveFromOutTxTracker>);
+  constructor(data?: PartialMessage<MsgRemoveOutboundTracker>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveFromOutTxTracker";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveOutboundTracker";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveFromOutTxTracker;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveOutboundTracker;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveFromOutTxTracker;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveOutboundTracker;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveFromOutTxTracker;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveOutboundTracker;
 
-  static equals(a: MsgRemoveFromOutTxTracker | PlainMessage<MsgRemoveFromOutTxTracker> | undefined, b: MsgRemoveFromOutTxTracker | PlainMessage<MsgRemoveFromOutTxTracker> | undefined): boolean;
+  static equals(a: MsgRemoveOutboundTracker | PlainMessage<MsgRemoveOutboundTracker> | undefined, b: MsgRemoveOutboundTracker | PlainMessage<MsgRemoveOutboundTracker> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgRemoveFromOutTxTrackerResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgRemoveOutboundTrackerResponse
  */
-export declare class MsgRemoveFromOutTxTrackerResponse extends Message<MsgRemoveFromOutTxTrackerResponse> {
-  constructor(data?: PartialMessage<MsgRemoveFromOutTxTrackerResponse>);
+export declare class MsgRemoveOutboundTrackerResponse extends Message<MsgRemoveOutboundTrackerResponse> {
+  constructor(data?: PartialMessage<MsgRemoveOutboundTrackerResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveFromOutTxTrackerResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveOutboundTrackerResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveFromOutTxTrackerResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveOutboundTrackerResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveFromOutTxTrackerResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveOutboundTrackerResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveFromOutTxTrackerResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveOutboundTrackerResponse;
 
-  static equals(a: MsgRemoveFromOutTxTrackerResponse | PlainMessage<MsgRemoveFromOutTxTrackerResponse> | undefined, b: MsgRemoveFromOutTxTrackerResponse | PlainMessage<MsgRemoveFromOutTxTrackerResponse> | undefined): boolean;
+  static equals(a: MsgRemoveOutboundTrackerResponse | PlainMessage<MsgRemoveOutboundTrackerResponse> | undefined, b: MsgRemoveOutboundTrackerResponse | PlainMessage<MsgRemoveOutboundTrackerResponse> | undefined): boolean;
 }
 
 /**
@@ -464,9 +464,9 @@ export declare class MsgVoteGasPriceResponse extends Message<MsgVoteGasPriceResp
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteOutbound
  */
-export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObservedOutboundTx> {
+export declare class MsgVoteOutbound extends Message<MsgVoteOutbound> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -478,29 +478,29 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   cctxHash: string;
 
   /**
-   * @generated from field: string observed_outTx_hash = 3;
+   * @generated from field: string observed_outbound_hash = 3;
    */
-  observedOutTxHash: string;
+  observedOutboundHash: string;
 
   /**
-   * @generated from field: uint64 observed_outTx_blockHeight = 4;
+   * @generated from field: uint64 observed_outbound_blockHeight = 4;
    */
-  observedOutTxBlockHeight: bigint;
+  observedOutboundBlockHeight: bigint;
 
   /**
-   * @generated from field: uint64 observed_outTx_gas_used = 10;
+   * @generated from field: uint64 observed_outbound_gas_used = 10;
    */
-  observedOutTxGasUsed: bigint;
+  observedOutboundGasUsed: bigint;
 
   /**
-   * @generated from field: string observed_outTx_effective_gas_price = 11;
+   * @generated from field: string observed_outbound_effective_gas_price = 11;
    */
-  observedOutTxEffectiveGasPrice: string;
+  observedOutboundEffectiveGasPrice: string;
 
   /**
-   * @generated from field: uint64 observed_outTx_effective_gas_limit = 12;
+   * @generated from field: uint64 observed_outbound_effective_gas_limit = 12;
    */
-  observedOutTxEffectiveGasLimit: bigint;
+  observedOutboundEffectiveGasLimit: bigint;
 
   /**
    * @generated from field: string value_received = 5;
@@ -513,58 +513,58 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   status: ReceiveStatus;
 
   /**
-   * @generated from field: int64 outTx_chain = 7;
+   * @generated from field: int64 outbound_chain = 7;
    */
-  outTxChain: bigint;
+  outboundChain: bigint;
 
   /**
-   * @generated from field: uint64 outTx_tss_nonce = 8;
+   * @generated from field: uint64 outbound_tss_nonce = 8;
    */
-  outTxTssNonce: bigint;
+  outboundTssNonce: bigint;
 
   /**
    * @generated from field: zetachain.zetacore.pkg.coin.CoinType coin_type = 9;
    */
   coinType: CoinType;
 
-  constructor(data?: PartialMessage<MsgVoteOnObservedOutboundTx>);
+  constructor(data?: PartialMessage<MsgVoteOutbound>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteOutbound";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteOnObservedOutboundTx;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteOutbound;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteOnObservedOutboundTx;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteOutbound;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOnObservedOutboundTx;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOutbound;
 
-  static equals(a: MsgVoteOnObservedOutboundTx | PlainMessage<MsgVoteOnObservedOutboundTx> | undefined, b: MsgVoteOnObservedOutboundTx | PlainMessage<MsgVoteOnObservedOutboundTx> | undefined): boolean;
+  static equals(a: MsgVoteOutbound | PlainMessage<MsgVoteOutbound> | undefined, b: MsgVoteOutbound | PlainMessage<MsgVoteOutbound> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTxResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteOutboundResponse
  */
-export declare class MsgVoteOnObservedOutboundTxResponse extends Message<MsgVoteOnObservedOutboundTxResponse> {
-  constructor(data?: PartialMessage<MsgVoteOnObservedOutboundTxResponse>);
+export declare class MsgVoteOutboundResponse extends Message<MsgVoteOutboundResponse> {
+  constructor(data?: PartialMessage<MsgVoteOutboundResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTxResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteOutboundResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteOnObservedOutboundTxResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteOutboundResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteOnObservedOutboundTxResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteOutboundResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOnObservedOutboundTxResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOutboundResponse;
 
-  static equals(a: MsgVoteOnObservedOutboundTxResponse | PlainMessage<MsgVoteOnObservedOutboundTxResponse> | undefined, b: MsgVoteOnObservedOutboundTxResponse | PlainMessage<MsgVoteOnObservedOutboundTxResponse> | undefined): boolean;
+  static equals(a: MsgVoteOutboundResponse | PlainMessage<MsgVoteOutboundResponse> | undefined, b: MsgVoteOutboundResponse | PlainMessage<MsgVoteOutboundResponse> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteInbound
  */
-export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObservedInboundTx> {
+export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -605,14 +605,14 @@ export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObserve
   message: string;
 
   /**
-   * @generated from field: string in_tx_hash = 9;
+   * @generated from field: string inbound_hash = 9;
    */
-  inTxHash: string;
+  inboundHash: string;
 
   /**
-   * @generated from field: uint64 in_block_height = 10;
+   * @generated from field: uint64 inbound_block_height = 10;
    */
-  inBlockHeight: bigint;
+  inboundBlockHeight: bigint;
 
   /**
    * @generated from field: uint64 gas_limit = 11;
@@ -641,38 +641,38 @@ export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObserve
    */
   eventIndex: bigint;
 
-  constructor(data?: PartialMessage<MsgVoteOnObservedInboundTx>);
+  constructor(data?: PartialMessage<MsgVoteInbound>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteInbound";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteOnObservedInboundTx;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteInbound;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteOnObservedInboundTx;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteInbound;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOnObservedInboundTx;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteInbound;
 
-  static equals(a: MsgVoteOnObservedInboundTx | PlainMessage<MsgVoteOnObservedInboundTx> | undefined, b: MsgVoteOnObservedInboundTx | PlainMessage<MsgVoteOnObservedInboundTx> | undefined): boolean;
+  static equals(a: MsgVoteInbound | PlainMessage<MsgVoteInbound> | undefined, b: MsgVoteInbound | PlainMessage<MsgVoteInbound> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTxResponse
+ * @generated from message zetachain.zetacore.crosschain.MsgVoteInboundResponse
  */
-export declare class MsgVoteOnObservedInboundTxResponse extends Message<MsgVoteOnObservedInboundTxResponse> {
-  constructor(data?: PartialMessage<MsgVoteOnObservedInboundTxResponse>);
+export declare class MsgVoteInboundResponse extends Message<MsgVoteInboundResponse> {
+  constructor(data?: PartialMessage<MsgVoteInboundResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTxResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgVoteInboundResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteOnObservedInboundTxResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteInboundResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteOnObservedInboundTxResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteInboundResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOnObservedInboundTxResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteInboundResponse;
 
-  static equals(a: MsgVoteOnObservedInboundTxResponse | PlainMessage<MsgVoteOnObservedInboundTxResponse> | undefined, b: MsgVoteOnObservedInboundTxResponse | PlainMessage<MsgVoteOnObservedInboundTxResponse> | undefined): boolean;
+  static equals(a: MsgVoteInboundResponse | PlainMessage<MsgVoteInboundResponse> | undefined, b: MsgVoteInboundResponse | PlainMessage<MsgVoteInboundResponse> | undefined): boolean;
 }
 
 /**

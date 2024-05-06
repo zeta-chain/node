@@ -1,13 +1,13 @@
 # Messages
 
-## MsgAddToOutTxTracker
+## MsgAddOutboundTracker
 
-AddToOutTxTracker adds a new record to the outbound transaction tracker.
+AddOutboundTracker adds a new record to the outbound transaction tracker.
 only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
 
 ```proto
-message MsgAddToOutTxTracker {
+message MsgAddOutboundTracker {
 	string creator = 1;
 	int64 chain_id = 2;
 	uint64 nonce = 3;
@@ -18,12 +18,12 @@ message MsgAddToOutTxTracker {
 }
 ```
 
-## MsgAddToInTxTracker
+## MsgAddInboundTracker
 
-AddToInTxTracker adds a new record to the inbound transaction tracker.
+AddInboundTracker adds a new record to the inbound transaction tracker.
 
 ```proto
-message MsgAddToInTxTracker {
+message MsgAddInboundTracker {
 	string creator = 1;
 	int64 chain_id = 2;
 	string tx_hash = 3;
@@ -34,14 +34,14 @@ message MsgAddToInTxTracker {
 }
 ```
 
-## MsgRemoveFromOutTxTracker
+## MsgRemoveOutboundTracker
 
-RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
+RemoveOutboundTracker removes a record from the outbound transaction tracker by chain ID and nonce.
 
 Authorized: admin policy group 1.
 
 ```proto
-message MsgRemoveFromOutTxTracker {
+message MsgRemoveOutboundTracker {
 	string creator = 1;
 	int64 chain_id = 2;
 	uint64 nonce = 3;
@@ -66,9 +66,9 @@ message MsgVoteGasPrice {
 }
 ```
 
-## MsgVoteOnObservedOutboundTx
+## MsgVoteOutbound
 
-VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
+VoteOutbound casts a vote on an outbound transaction observed on a connected chain (after
 it has been broadcasted to and finalized on a connected chain). If this is
 the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, the outbound
@@ -111,25 +111,25 @@ stateDiagram-v2
 Only observer validators are authorized to broadcast this message.
 
 ```proto
-message MsgVoteOnObservedOutboundTx {
+message MsgVoteOutbound {
 	string creator = 1;
 	string cctx_hash = 2;
-	string observed_outTx_hash = 3;
-	uint64 observed_outTx_blockHeight = 4;
-	uint64 observed_outTx_gas_used = 10;
-	string observed_outTx_effective_gas_price = 11;
-	uint64 observed_outTx_effective_gas_limit = 12;
+	string observed_outbound_hash = 3;
+	uint64 observed_outbound_blockHeight = 4;
+	uint64 observed_outbound_gas_used = 10;
+	string observed_outbound_effective_gas_price = 11;
+	uint64 observed_outbound_effective_gas_limit = 12;
 	string value_received = 5;
 	pkg.chains.ReceiveStatus status = 6;
-	int64 outTx_chain = 7;
-	uint64 outTx_tss_nonce = 8;
+	int64 outbound_chain = 7;
+	uint64 outbound_tss_nonce = 8;
 	pkg.coin.CoinType coin_type = 9;
 }
 ```
 
-## MsgVoteOnObservedInboundTx
+## MsgVoteInbound
 
-VoteOnObservedInboundTx casts a vote on an inbound transaction observed on a connected chain. If this
+VoteInbound casts a vote on an inbound transaction observed on a connected chain. If this
 is the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 created.
@@ -172,7 +172,7 @@ stateDiagram-v2
 Only observer validators are authorized to broadcast this message.
 
 ```proto
-message MsgVoteOnObservedInboundTx {
+message MsgVoteInbound {
 	string creator = 1;
 	string sender = 2;
 	int64 sender_chain_id = 3;
@@ -180,8 +180,8 @@ message MsgVoteOnObservedInboundTx {
 	int64 receiver_chain = 5;
 	string amount = 6;
 	string message = 8;
-	string in_tx_hash = 9;
-	uint64 in_block_height = 10;
+	string inbound_hash = 9;
+	uint64 inbound_block_height = 10;
 	uint64 gas_limit = 11;
 	pkg.coin.CoinType coin_type = 12;
 	string tx_origin = 13;

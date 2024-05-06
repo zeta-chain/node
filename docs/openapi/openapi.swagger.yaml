@@ -28271,7 +28271,7 @@ paths:
         - Query
   /zeta-chain/crosschain/cctx:
     get:
-      summary: Queries a list of send items.
+      summary: Queries a list of cctxx items.
       operationId: Query_CctxAll
       responses:
         "200":
@@ -28330,7 +28330,7 @@ paths:
         - Query
   /zeta-chain/crosschain/cctx/{chainID}/{nonce}:
     get:
-      summary: Queries a send by nonce.
+      summary: Queries a cctx by nonce.
       operationId: Query_CctxByNonce
       responses:
         "200":
@@ -28477,35 +28477,35 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
+  /zeta-chain/crosschain/in_bound_hash_to_cctx_data/{inboundHash}:
     get:
-      summary: Queries a InTxHashToCctx data by index.
-      operationId: Query_InTxHashToCctxData
+      summary: Queries a InboundHashToCctx data by index.
+      operationId: Query_InboundHashToCctxData
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryInTxHashToCctxDataResponse'
+            $ref: '#/definitions/crosschainQueryInboundHashToCctxDataResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: inTxHash
+        - name: inboundHash
           in: path
           required: true
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/inTxHashToCctx:
+  /zeta-chain/crosschain/inboundHashToCctx:
     get:
-      summary: Queries a list of InTxHashToCctx items.
-      operationId: Query_InTxHashToCctxAll
+      summary: Queries a list of InboundHashToCctx items.
+      operationId: Query_InboundHashToCctxAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInTxHashToCctxResponse'
+            $ref: '#/definitions/crosschainQueryAllInboundHashToCctxResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28556,34 +28556,34 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/inTxHashToCctx/{inTxHash}:
+  /zeta-chain/crosschain/inboundHashToCctx/{inboundHash}:
     get:
-      summary: Queries a InTxHashToCctx by index.
-      operationId: Query_InTxHashToCctx
+      summary: Queries a InboundHashToCctx by index.
+      operationId: Query_InboundHashToCctx
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetInTxHashToCctxResponse'
+            $ref: '#/definitions/crosschainQueryGetInboundHashToCctxResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: inTxHash
+        - name: inboundHash
           in: path
           required: true
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/inTxTrackerByChain/{chain_id}:
+  /zeta-chain/crosschain/inboundTrackerByChain/{chain_id}:
     get:
-      operationId: Query_InTxTrackerAllByChain
+      operationId: Query_InboundTrackerAllByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInTxTrackerByChainResponse'
+            $ref: '#/definitions/crosschainQueryAllInboundTrackerByChainResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28639,14 +28639,14 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/inTxTrackers:
+  /zeta-chain/crosschain/inboundTrackers:
     get:
-      operationId: Query_InTxTrackerAll
+      operationId: Query_InboundTrackerAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInTxTrackersResponse'
+            $ref: '#/definitions/crosschainQueryAllInboundTrackersResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28791,15 +28791,15 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTracker:
+  /zeta-chain/crosschain/outboundTracker:
     get:
-      summary: Queries a list of OutTxTracker items.
-      operationId: Query_OutTxTrackerAll
+      summary: Queries a list of OutboundTracker items.
+      operationId: Query_OutboundTrackerAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllOutTxTrackerResponse'
+            $ref: '#/definitions/crosschainQueryAllOutboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28850,15 +28850,15 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}:
+  /zeta-chain/crosschain/outboundTracker/{chainID}/{nonce}:
     get:
-      summary: Queries a OutTxTracker by index.
-      operationId: Query_OutTxTracker
+      summary: Queries a outbound tracker by index.
+      operationId: Query_OutboundTracker
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetOutTxTrackerResponse'
+            $ref: '#/definitions/crosschainQueryGetOutboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28876,14 +28876,14 @@ paths:
           format: uint64
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTrackerByChain/{chain}:
+  /zeta-chain/crosschain/outboundTrackerByChain/{chain}:
     get:
-      operationId: Query_OutTxTrackerAllByChain
+      operationId: Query_OutboundTrackerAllByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllOutTxTrackerByChainResponse'
+            $ref: '#/definitions/crosschainQueryAllOutboundTrackerByChainResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -56469,13 +56469,13 @@ definitions:
         title: Not used by protocol , just relayed across
       cctx_status:
         $ref: '#/definitions/zetacorecrosschainStatus'
-      inbound_tx_params:
-        $ref: '#/definitions/crosschainInboundTxParams'
-      outbound_tx_params:
+      inbound_params:
+        $ref: '#/definitions/crosschainInboundParams'
+      outbound_params:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainOutboundTxParams'
+          $ref: '#/definitions/crosschainOutboundParams'
   crosschainGasPrice:
     type: object
     properties:
@@ -56503,26 +56503,16 @@ definitions:
       median_index:
         type: string
         format: uint64
-  crosschainInTxHashToCctx:
+  crosschainInboundHashToCctx:
     type: object
     properties:
-      in_tx_hash:
+      inbound_hash:
         type: string
       cctx_index:
         type: array
         items:
           type: string
-  crosschainInTxTracker:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      tx_hash:
-        type: string
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-  crosschainInboundTxParams:
+  crosschainInboundParams:
     type: object
     properties:
       sender:
@@ -56542,18 +56532,28 @@ definitions:
         title: for ERC20 coin type, the asset is an address of the ERC20 contract
       amount:
         type: string
-      inbound_tx_observed_hash:
+      observed_hash:
         type: string
-      inbound_tx_observed_external_height:
+      observed_external_height:
         type: string
         format: uint64
-      inbound_tx_ballot_index:
+      ballot_index:
         type: string
-      inbound_tx_finalized_zeta_height:
+      finalized_zeta_height:
         type: string
         format: uint64
       tx_finalization_status:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
+  crosschainInboundTracker:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      tx_hash:
+        type: string
+      coin_type:
+        $ref: '#/definitions/coinCoinType'
   crosschainLastBlockHeight:
     type: object
     properties:
@@ -56563,17 +56563,17 @@ definitions:
         type: string
       chain:
         type: string
-      lastSendHeight:
+      lastInboundHeight:
         type: string
         format: uint64
-      lastReceiveHeight:
+      lastOutboundHeight:
         type: string
         format: uint64
   crosschainMsgAbortStuckCCTXResponse:
     type: object
-  crosschainMsgAddToInTxTrackerResponse:
+  crosschainMsgAddInboundTrackerResponse:
     type: object
-  crosschainMsgAddToOutTxTrackerResponse:
+  crosschainMsgAddOutboundTrackerResponse:
     type: object
     properties:
       is_removed:
@@ -56583,7 +56583,7 @@ definitions:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
     type: object
-  crosschainMsgRemoveFromOutTxTrackerResponse:
+  crosschainMsgRemoveOutboundTrackerResponse:
     type: object
   crosschainMsgUpdateRateLimiterFlagsResponse:
     type: object
@@ -56591,9 +56591,9 @@ definitions:
     type: object
   crosschainMsgVoteGasPriceResponse:
     type: object
-  crosschainMsgVoteOnObservedInboundTxResponse:
+  crosschainMsgVoteInboundResponse:
     type: object
-  crosschainMsgVoteOnObservedOutboundTxResponse:
+  crosschainMsgVoteOutboundResponse:
     type: object
   crosschainMsgWhitelistERC20Response:
     type: object
@@ -56602,7 +56602,49 @@ definitions:
         type: string
       cctx_index:
         type: string
-  crosschainOutTxTracker:
+  crosschainOutboundParams:
+    type: object
+    properties:
+      receiver:
+        type: string
+      receiver_chainId:
+        type: string
+        format: int64
+      coin_type:
+        $ref: '#/definitions/coinCoinType'
+      amount:
+        type: string
+      tss_nonce:
+        type: string
+        format: uint64
+      gas_limit:
+        type: string
+        format: uint64
+      gas_price:
+        type: string
+      hash:
+        type: string
+        title: |-
+          the above are commands for zetaclients
+          the following fields are used when the outbound tx is mined
+      ballot_index:
+        type: string
+      observed_external_height:
+        type: string
+        format: uint64
+      gas_used:
+        type: string
+        format: uint64
+      effective_gas_price:
+        type: string
+      effective_gas_limit:
+        type: string
+        format: uint64
+      tss_pubkey:
+        type: string
+      tx_finalization_status:
+        $ref: '#/definitions/crosschainTxFinalizationStatus'
+  crosschainOutboundTracker:
     type: object
     properties:
       index:
@@ -56619,48 +56661,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainTxHashList'
-  crosschainOutboundTxParams:
-    type: object
-    properties:
-      receiver:
-        type: string
-      receiver_chainId:
-        type: string
-        format: int64
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-      amount:
-        type: string
-      outbound_tx_tss_nonce:
-        type: string
-        format: uint64
-      outbound_tx_gas_limit:
-        type: string
-        format: uint64
-      outbound_tx_gas_price:
-        type: string
-      outbound_tx_hash:
-        type: string
-        title: |-
-          the above are commands for zetaclients
-          the following fields are used when the outbound tx is mined
-      outbound_tx_ballot_index:
-        type: string
-      outbound_tx_observed_external_height:
-        type: string
-        format: uint64
-      outbound_tx_gas_used:
-        type: string
-        format: uint64
-      outbound_tx_effective_gas_price:
-        type: string
-      outbound_tx_effective_gas_limit:
-        type: string
-        format: uint64
-      tss_pubkey:
-        type: string
-      tx_finalization_status:
-        $ref: '#/definitions/crosschainTxFinalizationStatus'
   crosschainQueryAllCctxResponse:
     type: object
     properties:
@@ -56681,34 +56681,34 @@ definitions:
           $ref: '#/definitions/crosschainGasPrice'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllInTxHashToCctxResponse:
+  crosschainQueryAllInboundHashToCctxResponse:
     type: object
     properties:
-      inTxHashToCctx:
+      inboundHashToCctx:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainInTxHashToCctx'
+          $ref: '#/definitions/crosschainInboundHashToCctx'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllInTxTrackerByChainResponse:
+  crosschainQueryAllInboundTrackerByChainResponse:
     type: object
     properties:
-      inTxTracker:
+      inboundTracker:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainInTxTracker'
+          $ref: '#/definitions/crosschainInboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllInTxTrackersResponse:
+  crosschainQueryAllInboundTrackersResponse:
     type: object
     properties:
-      inTxTracker:
+      inboundTracker:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainInTxTracker'
+          $ref: '#/definitions/crosschainInboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllLastBlockHeightResponse:
@@ -56721,24 +56721,24 @@ definitions:
           $ref: '#/definitions/crosschainLastBlockHeight'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllOutTxTrackerByChainResponse:
+  crosschainQueryAllOutboundTrackerByChainResponse:
     type: object
     properties:
-      outTxTracker:
+      outboundTracker:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainOutTxTracker'
+          $ref: '#/definitions/crosschainOutboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllOutTxTrackerResponse:
+  crosschainQueryAllOutboundTrackerResponse:
     type: object
     properties:
-      outTxTracker:
+      outboundTracker:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainOutTxTracker'
+          $ref: '#/definitions/crosschainOutboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryConvertGasToZetaResponse:
@@ -56761,22 +56761,22 @@ definitions:
     properties:
       GasPrice:
         $ref: '#/definitions/crosschainGasPrice'
-  crosschainQueryGetInTxHashToCctxResponse:
+  crosschainQueryGetInboundHashToCctxResponse:
     type: object
     properties:
-      inTxHashToCctx:
-        $ref: '#/definitions/crosschainInTxHashToCctx'
+      inboundHashToCctx:
+        $ref: '#/definitions/crosschainInboundHashToCctx'
   crosschainQueryGetLastBlockHeightResponse:
     type: object
     properties:
       LastBlockHeight:
         $ref: '#/definitions/crosschainLastBlockHeight'
-  crosschainQueryGetOutTxTrackerResponse:
+  crosschainQueryGetOutboundTrackerResponse:
     type: object
     properties:
-      outTxTracker:
-        $ref: '#/definitions/crosschainOutTxTracker'
-  crosschainQueryInTxHashToCctxDataResponse:
+      outboundTracker:
+        $ref: '#/definitions/crosschainOutboundTracker'
+  crosschainQueryInboundHashToCctxDataResponse:
     type: object
     properties:
       CrossChainTxs:
@@ -57195,10 +57195,10 @@ definitions:
       gas_price_ticker:
         type: string
         format: uint64
-      in_tx_ticker:
+      inbound_ticker:
         type: string
         format: uint64
-      out_tx_ticker:
+      outbound_ticker:
         type: string
         format: uint64
       watch_utxo_ticker:
@@ -57210,10 +57210,10 @@ definitions:
         type: string
       erc20_custody_contract_address:
         type: string
-      outbound_tx_schedule_interval:
+      outbound_schedule_interval:
         type: string
         format: int64
-      outbound_tx_schedule_lookahead:
+      outbound_schedule_lookahead:
         type: string
         format: int64
       ballot_threshold:

@@ -50,14 +50,14 @@ export declare class ChainParams extends Message<ChainParams> {
   gasPriceTicker: bigint;
 
   /**
-   * @generated from field: uint64 in_tx_ticker = 3;
+   * @generated from field: uint64 inbound_ticker = 3;
    */
-  inTxTicker: bigint;
+  inboundTicker: bigint;
 
   /**
-   * @generated from field: uint64 out_tx_ticker = 4;
+   * @generated from field: uint64 outbound_ticker = 4;
    */
-  outTxTicker: bigint;
+  outboundTicker: bigint;
 
   /**
    * @generated from field: uint64 watch_utxo_ticker = 5;
@@ -80,14 +80,14 @@ export declare class ChainParams extends Message<ChainParams> {
   erc20CustodyContractAddress: string;
 
   /**
-   * @generated from field: int64 outbound_tx_schedule_interval = 12;
+   * @generated from field: int64 outbound_schedule_interval = 12;
    */
-  outboundTxScheduleInterval: bigint;
+  outboundScheduleInterval: bigint;
 
   /**
-   * @generated from field: int64 outbound_tx_schedule_lookahead = 13;
+   * @generated from field: int64 outbound_schedule_lookahead = 13;
    */
-  outboundTxScheduleLookahead: bigint;
+  outboundScheduleLookahead: bigint;
 
   /**
    * @generated from field: string ballot_threshold = 14;
