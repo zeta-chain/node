@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   check_branch:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Branch
@@ -56,10 +56,11 @@ jobs:
         with:
           args: ./...
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   gosec-cosmos:
     needs:
@@ -84,10 +85,11 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         run: make lint-cosmos-gosec
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   lint:
     needs:
@@ -117,10 +119,11 @@ jobs:
           skip-cache: true
           args: --out-format=json
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   check-changelog:
     needs:
@@ -142,7 +145,6 @@ jobs:
           https://api.github.com/repos/${{ github.repository }}/git/ref/heads/develop | jq -r '.object.sha')
           echo "DEVELOP_SHA=${SHA}" >> ${GITHUB_ENV}
           echo "CURRENT_BRANCH_SHA=${{ github.sha }}" >> ${GITHUB_ENV}
-  
 
       - name: Check for CHANGELOG.md changes
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -159,10 +161,11 @@ jobs:
             echo "CHANGELOG.md has been updated."
           fi
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   check-upgrade-handler-updated:
     needs:
@@ -190,10 +193,11 @@ jobs:
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   build-test:
     needs:
@@ -266,10 +270,11 @@ jobs:
         shell: bash
         run: rm -rf *
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   smoke-test:
     needs:
@@ -343,10 +348,11 @@ jobs:
         shell: bash
         run: sudo rm -rf *
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   e2e-admin-tests:
     needs:
@@ -364,6 +370,12 @@ jobs:
         run: |
           make start-e2e-admin-test
 
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
   e2e-upgrade-test:
     needs:
       - check_branch
@@ -379,6 +391,12 @@ jobs:
         shell: bash
         run: |
           make start-upgrade-test
+
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
 
   publish-release:
     if: ${{ github.event.inputs.skip_release == 'false' }}
