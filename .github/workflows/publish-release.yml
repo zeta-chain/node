@@ -12,13 +12,28 @@ on:
         required: false
         default: false
         description: 'Use this to skip: gosec, gosec-cosmos, check-changelog, check-upgrade-uandler-updated, build-test, smoke-test and go straight to approval step.'
+      skip_release:
+        type: boolean
+        required: false
+        default: false
+        description: 'If this is true it will simply execute all the steps for a release prior to actually cutting the release, then stop'
 
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
 jobs:
+  check_branch:
+    if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Branch
+        run: |
+          echo "${{ github.ref }}"
+
   gosec:
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -41,13 +56,15 @@ jobs:
         with:
           args: ./...
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
-
+          echo "continue"
 
   gosec-cosmos:
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -68,12 +85,15 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         run: make lint-cosmos-gosec
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   lint:
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -99,12 +119,15 @@ jobs:
           skip-cache: true
           args: --out-format=json
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   check-changelog:
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     steps:
 
@@ -122,7 +145,6 @@ jobs:
           https://api.github.com/repos/${{ github.repository }}/git/ref/heads/develop | jq -r '.object.sha')
           echo "DEVELOP_SHA=${SHA}" >> ${GITHUB_ENV}
           echo "CURRENT_BRANCH_SHA=${{ github.sha }}" >> ${GITHUB_ENV}
-  
 
       - name: Check for CHANGELOG.md changes
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -139,12 +161,15 @@ jobs:
             echo "CHANGELOG.md has been updated."
           fi
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   check-upgrade-handler-updated:
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -168,12 +193,15 @@ jobs:
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   build-test:
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 15
     concurrency:
@@ -242,12 +270,15 @@ jobs:
         shell: bash
         run: rm -rf *
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
+          echo "continue"
 
   smoke-test:
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 25
     steps:
@@ -317,15 +348,15 @@ jobs:
         shell: bash
         run: sudo rm -rf *
 
-      - name: Skip Checks Succeed for Needs.
+      - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
         run: |
-          echo "Check Skipped, Mark Green for Pipeline Execution"
-
-
-
+          echo "continue"
 
   e2e-admin-tests:
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
@@ -339,7 +370,15 @@ jobs:
         run: |
           make start-e2e-admin-test
 
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
   e2e-upgrade-test:
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
@@ -353,9 +392,14 @@ jobs:
         run: |
           make start-upgrade-test
 
-  approval:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
+  publish-release:
+    if: ${{ github.event.inputs.skip_release == 'false' }}
     needs:
       - gosec
       - gosec-cosmos
@@ -366,24 +410,10 @@ jobs:
       - build-test
       - e2e-admin-tests
       - e2e-upgrade-test
-    steps:
-
-      - uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: kingpinXD,lumtis,brewmaster012,CharlieMc0
-          minimum-approvals: 1
-          issue-title: "[Release] Approval, version: ${{ github.event.inputs.version }}"
-          issue-body: "Once approved the release pipeline will continue."
-          exclude-workflow-initiator-as-approver: true
-          additional-approved-words: ''
-          additional-denied-words: ''
-  publish-release:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
-    needs:
-      - approval
-
+    environment: release
     steps:
       - uses: actions/checkout@v3
 
