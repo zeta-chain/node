@@ -353,9 +353,10 @@ jobs:
         run: |
           make start-upgrade-test
 
-  approval:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+
+  publish-release:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    timeout-minutes: 60
     needs:
       - gosec
       - gosec-cosmos
@@ -366,24 +367,7 @@ jobs:
       - build-test
       - e2e-admin-tests
       - e2e-upgrade-test
-    steps:
-
-      - uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: kingpinXD,lumtis,brewmaster012,CharlieMc0
-          minimum-approvals: 1
-          issue-title: "[Release] Approval, version: ${{ github.event.inputs.version }}"
-          issue-body: "Once approved the release pipeline will continue."
-          exclude-workflow-initiator-as-approver: true
-          additional-approved-words: ''
-          additional-denied-words: ''
-  publish-release:
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    timeout-minutes: 60
-    needs:
-      - approval
-
+    environment: release
     steps:
       - uses: actions/checkout@v3
 
