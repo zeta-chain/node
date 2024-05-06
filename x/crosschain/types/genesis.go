@@ -10,11 +10,9 @@ import (
 // DefaultGenesis returns the default crosschain genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		OutTxTrackerList:   []OutTxTracker{},
-		InTxHashToCctxList: []InTxHashToCctx{},
-		GasPriceList:       []*GasPrice{},
-		//CCTX:            []*Send{},
-
+		OutboundTrackerList:   []OutboundTracker{},
+		InboundHashToCctxList: []InboundHashToCctx{},
+		GasPriceList:          []*GasPrice{},
 	}
 }
 
@@ -22,24 +20,24 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// Check for duplicated index in outTxTracker
-	outTxTrackerIndexMap := make(map[string]struct{})
+	outboundTrackerIndexMap := make(map[string]struct{})
 
-	for _, elem := range gs.OutTxTrackerList {
-		index := string(OutTxTrackerKey(elem.Index))
-		if _, ok := outTxTrackerIndexMap[index]; ok {
-			return fmt.Errorf("duplicated index for outTxTracker")
+	for _, elem := range gs.OutboundTrackerList {
+		index := string(OutboundTrackerKey(elem.Index))
+		if _, ok := outboundTrackerIndexMap[index]; ok {
+			return fmt.Errorf("duplicated index for outboundTracker")
 		}
-		outTxTrackerIndexMap[index] = struct{}{}
+		outboundTrackerIndexMap[index] = struct{}{}
 	}
 	// Check for duplicated index in inTxHashToCctx
-	inTxHashToCctxIndexMap := make(map[string]struct{})
+	inboundHashToCctxIndexMap := make(map[string]struct{})
 
-	for _, elem := range gs.InTxHashToCctxList {
-		index := string(InTxHashToCctxKey(elem.InTxHash))
-		if _, ok := inTxHashToCctxIndexMap[index]; ok {
-			return fmt.Errorf("duplicated index for inTxHashToCctx")
+	for _, elem := range gs.InboundHashToCctxList {
+		index := string(InboundHashToCctxKey(elem.InboundHash))
+		if _, ok := inboundHashToCctxIndexMap[index]; ok {
+			return fmt.Errorf("duplicated index for inboundHashToCctx")
 		}
-		inTxHashToCctxIndexMap[index] = struct{}{}
+		inboundHashToCctxIndexMap[index] = struct{}{}
 	}
 
 	// Check for duplicated index in gasPrice

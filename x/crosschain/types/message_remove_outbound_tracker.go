@@ -6,27 +6,27 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgRemoveFromOutTxTracker = "RemoveFromTracker"
+const TypeMsgRemoveOutboundTracker = "RemoveOutboundTracker"
 
-var _ sdk.Msg = &MsgRemoveFromOutTxTracker{}
+var _ sdk.Msg = &MsgRemoveOutboundTracker{}
 
-func NewMsgRemoveFromOutTxTracker(creator string, chain int64, nonce uint64) *MsgRemoveFromOutTxTracker {
-	return &MsgRemoveFromOutTxTracker{
+func NewMsgRemoveOutboundTracker(creator string, chain int64, nonce uint64) *MsgRemoveOutboundTracker {
+	return &MsgRemoveOutboundTracker{
 		Creator: creator,
 		ChainId: chain,
 		Nonce:   nonce,
 	}
 }
 
-func (msg *MsgRemoveFromOutTxTracker) Route() string {
+func (msg *MsgRemoveOutboundTracker) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgRemoveFromOutTxTracker) Type() string {
-	return TypeMsgRemoveFromOutTxTracker
+func (msg *MsgRemoveOutboundTracker) Type() string {
+	return TypeMsgRemoveOutboundTracker
 }
 
-func (msg *MsgRemoveFromOutTxTracker) GetSigners() []sdk.AccAddress {
+func (msg *MsgRemoveOutboundTracker) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -34,12 +34,12 @@ func (msg *MsgRemoveFromOutTxTracker) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgRemoveFromOutTxTracker) GetSignBytes() []byte {
+func (msg *MsgRemoveOutboundTracker) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgRemoveFromOutTxTracker) ValidateBasic() error {
+func (msg *MsgRemoveOutboundTracker) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

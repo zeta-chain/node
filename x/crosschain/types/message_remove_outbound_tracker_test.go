@@ -11,24 +11,24 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgRemoveFromOutTxTracker_ValidateBasic(t *testing.T) {
+func TestMsgRemoveOutboundTracker_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgRemoveFromOutTxTracker
+		msg  *types.MsgRemoveOutboundTracker
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0),
+			msg:  types.NewMsgRemoveOutboundTracker(sample.AccAddress(), 1, 0),
 		},
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgRemoveFromOutTxTracker("invalid", 1, 0),
+			msg:  types.NewMsgRemoveOutboundTracker("invalid", 1, 0),
 			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid chain id",
-			msg:  types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), -1, 0),
+			msg:  types.NewMsgRemoveOutboundTracker(sample.AccAddress(), -1, 0),
 			err:  sdkerrors.ErrInvalidChainID,
 		},
 	}
@@ -45,21 +45,21 @@ func TestMsgRemoveFromOutTxTracker_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgRemoveFromOutTxTracker_GetSigners(t *testing.T) {
+func TestMsgRemoveOutboundTracker_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgRemoveFromOutTxTracker
+		msg    *types.MsgRemoveOutboundTracker
 		panics bool
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgRemoveFromOutTxTracker(signer, 1, 0),
+			msg:    types.NewMsgRemoveOutboundTracker(signer, 1, 0),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgRemoveFromOutTxTracker("invalid", 1, 0),
+			msg:    types.NewMsgRemoveOutboundTracker("invalid", 1, 0),
 			panics: true,
 		},
 	}
@@ -78,18 +78,18 @@ func TestMsgRemoveFromOutTxTracker_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgRemoveFromOutTxTracker_Type(t *testing.T) {
-	msg := types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0)
-	require.Equal(t, types.TypeMsgRemoveFromOutTxTracker, msg.Type())
+func TestMsgRemoveOutboundTracker_Type(t *testing.T) {
+	msg := types.NewMsgRemoveOutboundTracker(sample.AccAddress(), 1, 0)
+	require.Equal(t, types.TypeMsgRemoveOutboundTracker, msg.Type())
 }
 
-func TestMsgRemoveFromOutTxTracker_Route(t *testing.T) {
-	msg := types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0)
+func TestMsgRemoveOutboundTracker_Route(t *testing.T) {
+	msg := types.NewMsgRemoveOutboundTracker(sample.AccAddress(), 1, 0)
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgRemoveFromOutTxTracker_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0)
+func TestMsgRemoveOutboundTracker_GetSignBytes(t *testing.T) {
+	msg := types.NewMsgRemoveOutboundTracker(sample.AccAddress(), 1, 0)
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})

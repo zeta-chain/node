@@ -16,9 +16,9 @@ import (
 // https://github.com/zeta-chain/node/issues/862
 const MaxMessageLength = 10240
 
-var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
+var _ sdk.Msg = &MsgVoteInbound{}
 
-func NewMsgVoteOnObservedInboundTx(
+func NewMsgVoteInbound(
 	creator,
 	sender string,
 	senderChain int64,
@@ -27,40 +27,40 @@ func NewMsgVoteOnObservedInboundTx(
 	receiverChain int64,
 	amount math.Uint,
 	message,
-	inTxHash string,
-	inBlockHeight,
+	inboundHash string,
+	inboundBlockHeight,
 	gasLimit uint64,
 	coinType coin.CoinType,
 	asset string,
 	eventIndex uint,
-) *MsgVoteOnObservedInboundTx {
-	return &MsgVoteOnObservedInboundTx{
-		Creator:       creator,
-		Sender:        sender,
-		SenderChainId: senderChain,
-		TxOrigin:      txOrigin,
-		Receiver:      receiver,
-		ReceiverChain: receiverChain,
-		Amount:        amount,
-		Message:       message,
-		InTxHash:      inTxHash,
-		InBlockHeight: inBlockHeight,
-		GasLimit:      gasLimit,
-		CoinType:      coinType,
-		Asset:         asset,
-		EventIndex:    uint64(eventIndex),
+) *MsgVoteInbound {
+	return &MsgVoteInbound{
+		Creator:            creator,
+		Sender:             sender,
+		SenderChainId:      senderChain,
+		TxOrigin:           txOrigin,
+		Receiver:           receiver,
+		ReceiverChain:      receiverChain,
+		Amount:             amount,
+		Message:            message,
+		InboundHash:        inboundHash,
+		InboundBlockHeight: inboundBlockHeight,
+		GasLimit:           gasLimit,
+		CoinType:           coinType,
+		Asset:              asset,
+		EventIndex:         uint64(eventIndex),
 	}
 }
 
-func (msg *MsgVoteOnObservedInboundTx) Route() string {
+func (msg *MsgVoteInbound) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgVoteOnObservedInboundTx) Type() string {
+func (msg *MsgVoteInbound) Type() string {
 	return authz.InboundVoter.String()
 }
 
-func (msg *MsgVoteOnObservedInboundTx) GetSigners() []sdk.AccAddress {
+func (msg *MsgVoteInbound) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -68,12 +68,12 @@ func (msg *MsgVoteOnObservedInboundTx) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgVoteOnObservedInboundTx) GetSignBytes() []byte {
+func (msg *MsgVoteInbound) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
+func (msg *MsgVoteInbound) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
@@ -94,10 +94,10 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgVoteOnObservedInboundTx) Digest() string {
+func (msg *MsgVoteInbound) Digest() string {
 	m := *msg
 	m.Creator = ""
-	m.InBlockHeight = 0
+	m.InboundBlockHeight = 0
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }

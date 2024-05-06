@@ -8,12 +8,12 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 )
 
-const TypeMsgAddToInTxTracker = "AddToInTxTracker"
+const TypeMsgAddInboundTracker = "AddInboundTracker"
 
-var _ sdk.Msg = &MsgAddToInTxTracker{}
+var _ sdk.Msg = &MsgAddInboundTracker{}
 
-func NewMsgAddToInTxTracker(creator string, chain int64, coinType coin.CoinType, txHash string) *MsgAddToInTxTracker {
-	return &MsgAddToInTxTracker{
+func NewMsgAddInboundTracker(creator string, chain int64, coinType coin.CoinType, txHash string) *MsgAddInboundTracker {
+	return &MsgAddInboundTracker{
 		Creator:  creator,
 		ChainId:  chain,
 		TxHash:   txHash,
@@ -21,15 +21,15 @@ func NewMsgAddToInTxTracker(creator string, chain int64, coinType coin.CoinType,
 	}
 }
 
-func (msg *MsgAddToInTxTracker) Route() string {
+func (msg *MsgAddInboundTracker) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgAddToInTxTracker) Type() string {
-	return TypeMsgAddToInTxTracker
+func (msg *MsgAddInboundTracker) Type() string {
+	return TypeMsgAddInboundTracker
 }
 
-func (msg *MsgAddToInTxTracker) GetSigners() []sdk.AccAddress {
+func (msg *MsgAddInboundTracker) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -37,12 +37,12 @@ func (msg *MsgAddToInTxTracker) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgAddToInTxTracker) GetSignBytes() []byte {
+func (msg *MsgAddInboundTracker) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgAddToInTxTracker) ValidateBasic() error {
+func (msg *MsgAddInboundTracker) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

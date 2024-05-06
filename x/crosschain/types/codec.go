@@ -8,12 +8,12 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgAddToOutTxTracker{}, "crosschain/AddToOutTxTracker", nil)
-	cdc.RegisterConcrete(&MsgAddToInTxTracker{}, "crosschain/AddToInTxTracker", nil)
-	cdc.RegisterConcrete(&MsgRemoveFromOutTxTracker{}, "crosschain/RemoveFromOutTxTracker", nil)
+	cdc.RegisterConcrete(&MsgAddOutboundTracker{}, "crosschain/AddOutboundTracker", nil)
+	cdc.RegisterConcrete(&MsgAddInboundTracker{}, "crosschain/AddToInboundTracker", nil)
+	cdc.RegisterConcrete(&MsgRemoveOutboundTracker{}, "crosschain/RemoveOutboundTracker", nil)
 	cdc.RegisterConcrete(&MsgVoteGasPrice{}, "crosschain/VoteGasPrice", nil)
-	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTx{}, "crosschain/VoteOnObservedOutboundTx", nil)
-	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/VoteOnObservedInboundTx", nil)
+	cdc.RegisterConcrete(&MsgVoteOutbound{}, "crosschain/VoteOutbound", nil)
+	cdc.RegisterConcrete(&MsgVoteInbound{}, "crosschain/VoteInbound", nil)
 	cdc.RegisterConcrete(&MsgWhitelistERC20{}, "crosschain/WhitelistERC20", nil)
 	cdc.RegisterConcrete(&MsgMigrateTssFunds{}, "crosschain/MigrateTssFunds", nil)
 	cdc.RegisterConcrete(&MsgUpdateTssAddress{}, "crosschain/UpdateTssAddress", nil)
@@ -23,12 +23,12 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAddToOutTxTracker{},
-		&MsgAddToInTxTracker{},
-		&MsgRemoveFromOutTxTracker{},
+		&MsgAddOutboundTracker{},
+		&MsgAddInboundTracker{},
+		&MsgRemoveOutboundTracker{},
 		&MsgVoteGasPrice{},
-		&MsgVoteOnObservedOutboundTx{},
-		&MsgVoteOnObservedInboundTx{},
+		&MsgVoteOutbound{},
+		&MsgVoteInbound{},
 		&MsgWhitelistERC20{},
 		&MsgMigrateTssFunds{},
 		&MsgUpdateTssAddress{},

@@ -15,15 +15,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
+func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgVoteOnObservedOutboundTx
+		msg  *types.MsgVoteOutbound
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.NewMsgVoteOnObservedOutboundTx(
+			msg: types.NewMsgVoteOutbound(
 				sample.AccAddress(),
 				sample.String(),
 				sample.String(),
@@ -40,7 +40,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid address",
-			msg: types.NewMsgVoteOnObservedOutboundTx(
+			msg: types.NewMsgVoteOutbound(
 				"invalid_address",
 				sample.String(),
 				sample.String(),
@@ -58,7 +58,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain ID",
-			msg: types.NewMsgVoteOnObservedOutboundTx(
+			msg: types.NewMsgVoteOutbound(
 				sample.AccAddress(),
 				sample.String(),
 				sample.String(),
@@ -87,22 +87,22 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
+func TestMsgVoteOutbound_Digest(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
-	msg := types.MsgVoteOnObservedOutboundTx{
-		Creator:                        sample.AccAddress(),
-		CctxHash:                       sample.String(),
-		ObservedOutTxHash:              sample.String(),
-		ObservedOutTxBlockHeight:       42,
-		ObservedOutTxGasUsed:           42,
-		ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-		ObservedOutTxEffectiveGasLimit: 42,
-		ValueReceived:                  math.NewUint(42),
-		Status:                         chains.ReceiveStatus_created,
-		OutTxChain:                     42,
-		OutTxTssNonce:                  42,
-		CoinType:                       coin.CoinType_Zeta,
+	msg := types.MsgVoteOutbound{
+		Creator:                           sample.AccAddress(),
+		CctxHash:                          sample.String(),
+		ObservedOutboundHash:              sample.String(),
+		ObservedOutboundBlockHeight:       42,
+		ObservedOutboundGasUsed:           42,
+		ObservedOutboundEffectiveGasPrice: math.NewInt(42),
+		ObservedOutboundEffectiveGasLimit: 42,
+		ValueReceived:                     math.NewUint(42),
+		Status:                            chains.ReceiveStatus_created,
+		OutboundChain:                     42,
+		OutboundTssNonce:                  42,
+		CoinType:                          coin.CoinType_Zeta,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -127,31 +127,31 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 
 	// observed outbound tx hash used
 	msg2 = msg
-	msg2.ObservedOutTxHash = sample.StringRandom(r, 32)
+	msg2.ObservedOutboundHash = sample.StringRandom(r, 32)
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx hash should change hash")
 
 	// observed outbound tx block height used
 	msg2 = msg
-	msg2.ObservedOutTxBlockHeight = 43
+	msg2.ObservedOutboundBlockHeight = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx block height should change hash")
 
 	// observed outbound tx gas used used
 	msg2 = msg
-	msg2.ObservedOutTxGasUsed = 43
+	msg2.ObservedOutboundGasUsed = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx gas used should change hash")
 
 	// observed outbound tx effective gas price used
 	msg2 = msg
-	msg2.ObservedOutTxEffectiveGasPrice = math.NewInt(43)
+	msg2.ObservedOutboundEffectiveGasPrice = math.NewInt(43)
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas price should change hash")
 
 	// observed outbound tx effective gas limit used
 	msg2 = msg
-	msg2.ObservedOutTxEffectiveGasLimit = 43
+	msg2.ObservedOutboundEffectiveGasLimit = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas limit should change hash")
 
@@ -163,13 +163,13 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 
 	// out tx chain used
 	msg2 = msg
-	msg2.OutTxChain = 43
+	msg2.OutboundChain = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "out tx chain should change hash")
 
 	// out tx tss nonce used
 	msg2 = msg
-	msg2.OutTxTssNonce = 43
+	msg2.OutboundTssNonce = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "out tx tss nonce should change hash")
 
@@ -180,23 +180,23 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 }
 
-func TestMsgVoteOnObservedOutboundTx_GetSigners(t *testing.T) {
+func TestMsgVoteOutbound_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgVoteOnObservedOutboundTx
+		msg    types.MsgVoteOutbound
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgVoteOnObservedOutboundTx{
+			msg: types.MsgVoteOutbound{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgVoteOnObservedOutboundTx{
+			msg: types.MsgVoteOutbound{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -217,22 +217,22 @@ func TestMsgVoteOnObservedOutboundTx_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgVoteOnObservedOutboundTx_Type(t *testing.T) {
-	msg := types.MsgVoteOnObservedOutboundTx{
+func TestMsgVoteOutbound_Type(t *testing.T) {
+	msg := types.MsgVoteOutbound{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, authz.OutboundVoter.String(), msg.Type())
 }
 
-func TestMsgVoteOnObservedOutboundTx_Route(t *testing.T) {
-	msg := types.MsgVoteOnObservedOutboundTx{
+func TestMsgVoteOutbound_Route(t *testing.T) {
+	msg := types.MsgVoteOutbound{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgVoteOnObservedOutboundTx_GetSignBytes(t *testing.T) {
-	msg := types.MsgVoteOnObservedOutboundTx{
+func TestMsgVoteOutbound_GetSignBytes(t *testing.T) {
+	msg := types.MsgVoteOutbound{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

@@ -7,11 +7,11 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 )
 
-const TypeMsgAddToOutTxTracker = "AddToTracker"
+const TypeMsgAddOutboundTracker = "AddOutboundTracker"
 
-var _ sdk.Msg = &MsgAddToOutTxTracker{}
+var _ sdk.Msg = &MsgAddOutboundTracker{}
 
-func NewMsgAddToOutTxTracker(
+func NewMsgAddOutboundTracker(
 	creator string,
 	chain int64,
 	nonce uint64,
@@ -19,8 +19,8 @@ func NewMsgAddToOutTxTracker(
 	proof *proofs.Proof,
 	blockHash string,
 	txIndex int64,
-) *MsgAddToOutTxTracker {
-	return &MsgAddToOutTxTracker{
+) *MsgAddOutboundTracker {
+	return &MsgAddOutboundTracker{
 		Creator:   creator,
 		ChainId:   chain,
 		Nonce:     nonce,
@@ -31,15 +31,15 @@ func NewMsgAddToOutTxTracker(
 	}
 }
 
-func (msg *MsgAddToOutTxTracker) Route() string {
+func (msg *MsgAddOutboundTracker) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgAddToOutTxTracker) Type() string {
-	return TypeMsgAddToOutTxTracker
+func (msg *MsgAddOutboundTracker) Type() string {
+	return TypeMsgAddOutboundTracker
 }
 
-func (msg *MsgAddToOutTxTracker) GetSigners() []sdk.AccAddress {
+func (msg *MsgAddOutboundTracker) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -47,12 +47,12 @@ func (msg *MsgAddToOutTxTracker) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgAddToOutTxTracker) GetSignBytes() []byte {
+func (msg *MsgAddOutboundTracker) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgAddToOutTxTracker) ValidateBasic() error {
+func (msg *MsgAddOutboundTracker) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

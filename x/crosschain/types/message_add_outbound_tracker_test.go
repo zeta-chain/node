@@ -10,15 +10,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgAddToOutTxTracker_ValidateBasic(t *testing.T) {
+func TestMsgAddOutboundTracker_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgAddToOutTxTracker
+		msg  *types.MsgAddOutboundTracker
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.NewMsgAddToOutTxTracker(
+			msg: types.NewMsgAddOutboundTracker(
 				"invalid",
 				1,
 				1,
@@ -31,7 +31,7 @@ func TestMsgAddToOutTxTracker_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain id",
-			msg: types.NewMsgAddToOutTxTracker(
+			msg: types.NewMsgAddOutboundTracker(
 				sample.AccAddress(),
 				-1,
 				1,
@@ -44,7 +44,7 @@ func TestMsgAddToOutTxTracker_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid address",
-			msg: types.NewMsgAddToOutTxTracker(
+			msg: types.NewMsgAddOutboundTracker(
 				sample.AccAddress(),
 				1,
 				1,
@@ -67,23 +67,23 @@ func TestMsgAddToOutTxTracker_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgAddToOutTxTracker_GetSigners(t *testing.T) {
+func TestMsgAddOutboundTracker_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgAddToOutTxTracker
+		msg    types.MsgAddOutboundTracker
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgAddToOutTxTracker{
+			msg: types.MsgAddOutboundTracker{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgAddToOutTxTracker{
+			msg: types.MsgAddOutboundTracker{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -104,22 +104,22 @@ func TestMsgAddToOutTxTracker_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgAddToOutTxTracker_Type(t *testing.T) {
-	msg := types.MsgAddToOutTxTracker{
+func TestMsgAddOutboundTracker_Type(t *testing.T) {
+	msg := types.MsgAddOutboundTracker{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgAddToOutTxTracker, msg.Type())
+	require.Equal(t, types.TypeMsgAddOutboundTracker, msg.Type())
 }
 
-func TestMsgAddToOutTxTracker_Route(t *testing.T) {
-	msg := types.MsgAddToOutTxTracker{
+func TestMsgAddOutboundTracker_Route(t *testing.T) {
+	msg := types.MsgAddOutboundTracker{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgAddToOutTxTracker_GetSignBytes(t *testing.T) {
-	msg := types.MsgAddToOutTxTracker{
+func TestMsgAddOutboundTracker_GetSignBytes(t *testing.T) {
+	msg := types.MsgAddOutboundTracker{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

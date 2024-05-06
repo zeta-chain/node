@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -203,20 +203,20 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 
 func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	return types.MsgVoteInbound{
-		Creator:       "",
-		Sender:        EthAddress().String(),
-		SenderChainId: Chain(from).GetChainId(),
-		Receiver:      EthAddress().String(),
-		ReceiverChain: Chain(to).GetChainId(),
-		Amount:        UintInRange(10000000, 1000000000),
-		Message:       base64.StdEncoding.EncodeToString(Bytes()),
-		InBlockHeight: Uint64InRange(1, 10000),
-		GasLimit:      1000000000,
-		InboundHash:   Hash().String(),
-		CoinType:      coinType,
-		TxOrigin:      EthAddress().String(),
-		Asset:         "",
-		EventIndex:    EventIndex(),
+		Creator:            "",
+		Sender:             EthAddress().String(),
+		SenderChainId:      Chain(from).GetChainId(),
+		Receiver:           EthAddress().String(),
+		ReceiverChain:      Chain(to).GetChainId(),
+		Amount:             UintInRange(10000000, 1000000000),
+		Message:            base64.StdEncoding.EncodeToString(Bytes()),
+		InboundBlockHeight: Uint64InRange(1, 10000),
+		GasLimit:           1000000000,
+		InboundHash:        Hash().String(),
+		CoinType:           coinType,
+		TxOrigin:           EthAddress().String(),
+		Asset:              "",
+		EventIndex:         EventIndex(),
 	}
 }
 

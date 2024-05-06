@@ -14,15 +14,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
+func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgAddToInTxTracker
+		msg  *types.MsgAddInboundTracker
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.NewMsgAddToInTxTracker(
+			msg: types.NewMsgAddInboundTracker(
 				"invalid_address",
 				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
@@ -32,7 +32,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain id",
-			msg: types.NewMsgAddToInTxTracker(
+			msg: types.NewMsgAddInboundTracker(
 				sample.AccAddress(),
 				42,
 				coin.CoinType_Gas,
@@ -42,7 +42,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid proof",
-			msg: &types.MsgAddToInTxTracker{
+			msg: &types.MsgAddInboundTracker{
 				Creator:  sample.AccAddress(),
 				ChainId:  chains.ZetaTestnetChain.ChainId,
 				CoinType: coin.CoinType_Gas,
@@ -52,7 +52,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid coin type",
-			msg: &types.MsgAddToInTxTracker{
+			msg: &types.MsgAddInboundTracker{
 				Creator:  sample.AccAddress(),
 				ChainId:  chains.ZetaTestnetChain.ChainId,
 				CoinType: 5,
@@ -61,7 +61,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid",
-			msg: types.NewMsgAddToInTxTracker(
+			msg: types.NewMsgAddInboundTracker(
 				sample.AccAddress(),
 				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
@@ -82,16 +82,16 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
+func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgAddToInTxTracker
+		msg    *types.MsgAddInboundTracker
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.NewMsgAddToInTxTracker(
+			msg: types.NewMsgAddInboundTracker(
 				signer,
 				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
@@ -101,7 +101,7 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 		},
 		{
 			name: "invalid signer",
-			msg: types.NewMsgAddToInTxTracker(
+			msg: types.NewMsgAddInboundTracker(
 				"invalid_address",
 				chains.GoerliChain.ChainId,
 				coin.CoinType_Gas,
@@ -125,18 +125,18 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgAddToInTxTracker_Type(t *testing.T) {
-	msg := types.NewMsgAddToInTxTracker(
+func TestMsgAddInboundTracker_Type(t *testing.T) {
+	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
 		chains.GoerliChain.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
-	require.Equal(t, types.TypeMsgAddToInTxTracker, msg.Type())
+	require.Equal(t, types.TypeMsgAddInboundTracker, msg.Type())
 }
 
-func TestMsgAddToInTxTracker_Route(t *testing.T) {
-	msg := types.NewMsgAddToInTxTracker(
+func TestMsgAddInboundTracker_Route(t *testing.T) {
+	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
 		chains.GoerliChain.ChainId,
 		coin.CoinType_Gas,
@@ -145,8 +145,8 @@ func TestMsgAddToInTxTracker_Route(t *testing.T) {
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgAddToInTxTracker_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgAddToInTxTracker(
+func TestMsgAddInboundTracker_GetSignBytes(t *testing.T) {
+	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
 		chains.GoerliChain.ChainId,
 		coin.CoinType_Gas,
