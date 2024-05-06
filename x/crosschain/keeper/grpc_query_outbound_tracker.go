@@ -12,18 +12,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutTxTrackerRequest) (*types.QueryAllOutTxTrackerResponse, error) {
+func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutboundTrackerRequest) (*types.QueryAllOutboundTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var outTxTrackers []types.OutTxTracker
+	var outTxTrackers []types.OutboundTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(_ []byte, value []byte) error {
-		var outTxTracker types.OutTxTracker
+		var outTxTracker types.OutboundTracker
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
@@ -35,22 +35,22 @@ func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutTxTrack
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryAllOutTxTrackerResponse{OutTxTracker: outTxTrackers, Pagination: pageRes}, nil
+	return &types.QueryAllOutboundTrackerResponse{OutboundTracker: outTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOutTxTrackerByChainRequest) (*types.QueryAllOutTxTrackerByChainResponse, error) {
+func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOutboundTrackerByChainRequest) (*types.QueryAllOutboundTrackerByChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var outTxTrackers []types.OutTxTracker
+	var outTxTrackers []types.OutboundTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", req.Chain)))
 
 	pageRes, err := query.Paginate(chainStore, req.Pagination, func(_ []byte, value []byte) error {
-		var outTxTracker types.OutTxTracker
+		var outTxTracker types.OutboundTracker
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
@@ -62,10 +62,10 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllOutTxTrackerByChainResponse{OutTxTracker: outTxTrackers, Pagination: pageRes}, nil
+	return &types.QueryAllOutboundTrackerByChainResponse{OutboundTracker: outTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerRequest) (*types.QueryGetOutTxTrackerResponse, error) {
+func (k Keeper) OutboundTracker(c context.Context, req *types.QueryGetOutboundTrackerRequest) (*types.QueryGetOutboundTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -79,5 +79,5 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	return &types.QueryGetOutTxTrackerResponse{OutTxTracker: val}, nil
+	return &types.QueryGetOutboundTrackerResponse{OutboundTracker: val}, nil
 }

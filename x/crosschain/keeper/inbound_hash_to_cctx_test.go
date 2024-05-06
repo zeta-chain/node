@@ -13,12 +13,12 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func createNInTxHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.InTxHashToCctx {
-	items := make([]types.InTxHashToCctx, n)
+func createNInTxHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.InboundHashToCctx {
+	items := make([]types.InboundHashToCctx, n)
 	for i := range items {
-		items[i].InTxHash = strconv.Itoa(i)
+		items[i].InboundHash = strconv.Itoa(i)
 
-		keeper.SetInTxHashToCctx(ctx, items[i])
+		keeper.SetInboundHashToCctx(ctx, items[i])
 	}
 	return items
 }
@@ -27,8 +27,8 @@ func TestInTxHashToCctxGet(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetInTxHashToCctx(ctx,
-			item.InTxHash,
+		rst, found := keeper.GetInboundHashToCctx(ctx,
+			item.InboundHash,
 		)
 		require.True(t, found)
 		require.Equal(t,
@@ -41,11 +41,11 @@ func TestInTxHashToCctxRemove(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveInTxHashToCctx(ctx,
-			item.InTxHash,
+		keeper.RemoveInboundHashToCctx(ctx,
+			item.InboundHash,
 		)
-		_, found := keeper.GetInTxHashToCctx(ctx,
-			item.InTxHash,
+		_, found := keeper.GetInboundHashToCctx(ctx,
+			item.InboundHash,
 		)
 		require.False(t, found)
 	}
@@ -56,6 +56,6 @@ func TestInTxHashToCctxGetAll(t *testing.T) {
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),
-		nullify.Fill(keeper.GetAllInTxHashToCctx(ctx)),
+		nullify.Fill(keeper.GetAllInboundHashToCctx(ctx)),
 	)
 }

@@ -38,7 +38,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   nonAdmin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -48,7 +48,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			TxIndex:   0,
 		})
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.False(t, found)
 	})
 
@@ -65,7 +65,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID + 1,
 			TxHash:    txHash,
@@ -75,7 +75,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			TxIndex:   0,
 		})
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.False(t, found)
 	})
 
@@ -98,7 +98,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -108,7 +108,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			TxIndex:   0,
 		})
 		require.NoError(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.True(t, found)
 	})
 
@@ -130,7 +130,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -140,7 +140,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			TxIndex:   0,
 		})
 		require.NoError(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.True(t, found)
 	})
 
@@ -165,7 +165,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -199,7 +199,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -235,7 +235,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -275,7 +275,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -315,7 +315,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		}, nil)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
 
-		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -325,7 +325,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			TxIndex:   0,
 		})
 		require.NoError(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.True(t, found)
 	})
 }

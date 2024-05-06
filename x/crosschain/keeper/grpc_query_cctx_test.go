@@ -31,7 +31,7 @@ func createCctxWithNonceRange(
 	for i := 0; i < lowPending; i++ {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, i))
 		cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
-		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundParams.SenderChainId = chainID
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId:   chainID,
@@ -43,7 +43,7 @@ func createCctxWithNonceRange(
 	for i := lowPending; i < highPending; i++ {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, i))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundParams.SenderChainId = chainID
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId:   chainID,

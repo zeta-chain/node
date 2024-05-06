@@ -44,7 +44,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		hash := sample.Hash().Hex()
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    hash,
@@ -79,7 +79,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		hash := sample.Hash().Hex()
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    hash,
@@ -115,7 +115,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		existinghHash := sample.Hash().Hex()
 		newHash := sample.Hash().Hex()
 
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
 			HashList: []*types.TxHashList{
@@ -125,7 +125,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			},
 		})
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    newHash,
@@ -159,7 +159,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 
 		chainID := getEthereumChainID()
 
-		res, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		res, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    sample.Hash().Hex(),
@@ -169,7 +169,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     0,
 		})
 		require.NoError(t, err)
-		require.Equal(t, &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, res)
+		require.Equal(t, &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, res)
 
 		// check if tracker is removed
 		_, found := k.GetOutTxTracker(ctx, chainID, 0)
@@ -190,7 +190,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 
 		chainID := getEthereumChainID()
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    sample.Hash().Hex(),
@@ -218,7 +218,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 
 		chainID := getEthereumChainID()
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    sample.Hash().Hex(),
@@ -247,8 +247,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
-		hashes := make([]*types.TxHashList, keeper.MaxOutTxTrackerHashes)
-		for i := 0; i < keeper.MaxOutTxTrackerHashes; i++ {
+		hashes := make([]*types.TxHashList, keeper.MaxOutboundTrackerHashes)
+		for i := 0; i < keeper.MaxOutboundTrackerHashes; i++ {
 			hashes[i] = &types.TxHashList{
 				TxHash: sample.Hash().Hex(),
 			}
@@ -257,13 +257,13 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		newHash := sample.Hash().Hex()
 
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId:  chainID,
 			Nonce:    42,
 			HashList: hashes,
 		})
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    newHash,
@@ -295,7 +295,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		existinghHash := sample.Hash().Hex()
 
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
 			HashList: []*types.TxHashList{
@@ -305,7 +305,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			},
 		})
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    existinghHash,
@@ -347,7 +347,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		}, nil)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -389,7 +389,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		}, nil)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
 
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
 			HashList: []*types.TxHashList{
@@ -404,7 +404,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			},
 		})
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -444,7 +444,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, errors.New("error"))
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -482,7 +482,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Eth: tssAddress.Hex(),
 		}, errors.New("error"))
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -522,7 +522,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		// makes VerifyProof returning an invalid hash
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(sample.Bytes(), nil)
 
-		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,

@@ -40,7 +40,7 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
+	sendStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
 
 	pageRes, err := query.Paginate(sendStore, req.Pagination, func(_ []byte, value []byte) error {
 		var send types.CrossChainTx

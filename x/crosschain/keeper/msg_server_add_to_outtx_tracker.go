@@ -13,13 +13,13 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// MaxOutTxTrackerHashes is the maximum number of hashes that can be stored in the outbound transaction tracker
-const MaxOutTxTrackerHashes = 2
+// MaxOutboundTrackerHashes is the maximum number of hashes that can be stored in the outbound transaction tracker
+const MaxOutboundTrackerHashes = 2
 
-// AddToOutTxTracker adds a new record to the outbound transaction tracker.
+// AddOutboundTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 // If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
-func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
+func (k msgServer) AddOutboundTracker(goCtx context.Context, msg *types.MsgAddOutboundTracker) (*types.MsgAddOutboundTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check the chain is supported
@@ -45,7 +45,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		// garbage tracker (for any reason) is harmful to outTx observation and should be removed if it exists
 		// it if does not exist, RemoveOutTxTracker is a no-op
 		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
-		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
+		return &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, nil
 	}
 
 	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
@@ -59,7 +59,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 		}
 		// verify proof when it is provided
-		if err := verifyProofAndOutTxBody(ctx, k, msg); err != nil {
+		if err := verifyProofAndOutboundBody(ctx, k, msg); err != nil {
 			return nil, err
 		}
 
@@ -75,13 +75,13 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		Proved:   isProven,
 	}
 	if !found {
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			Index:    "",
 			ChainId:  msg.ChainId,
 			Nonce:    msg.Nonce,
 			HashList: []*types.TxHashList{&hash},
 		})
-		return &types.MsgAddToOutTxTrackerResponse{}, nil
+		return &types.MsgAddOutboundTrackerResponse{}, nil
 	}
 
 	// check if the hash is already in the tracker
@@ -93,12 +93,12 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 				tracker.HashList[i].Proved = true
 				k.SetOutTxTracker(ctx, tracker)
 			}
-			return &types.MsgAddToOutTxTrackerResponse{}, nil
+			return &types.MsgAddOutboundTrackerResponse{}, nil
 		}
 	}
 
 	// check if max hashes are reached
-	if len(tracker.HashList) >= MaxOutTxTrackerHashes {
+	if len(tracker.HashList) >= MaxOutboundTrackerHashes {
 		return nil, types.ErrMaxTxOutTrackerHashesReached.Wrapf(
 			"max hashes reached for chain %d, nonce %d, hash number: %d",
 			msg.ChainId,
@@ -110,12 +110,12 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	// add the tracker to the list
 	tracker.HashList = append(tracker.HashList, &hash)
 	k.SetOutTxTracker(ctx, tracker)
-	return &types.MsgAddToOutTxTrackerResponse{}, nil
+	return &types.MsgAddOutboundTrackerResponse{}, nil
 }
 
-// verifyProofAndOutTxBody verifies the proof and outbound tx body
+// verifyProofAndOutboundBody verifies the proof and outbound tx body
 // Precondition: the proof must be non-nil
-func verifyProofAndOutTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToOutTxTracker) error {
+func verifyProofAndOutboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddOutboundTracker) error {
 	txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 	if err != nil {
 		return types.ErrProofVerificationFail.Wrapf(err.Error())
@@ -137,7 +137,7 @@ func verifyProofAndOutTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToOu
 		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
 	}
 
-	if err := types.VerifyOutTxBody(*msg, txBytes, *tss); err != nil {
+	if err := types.VerifyOutboundBody(*msg, txBytes, *tss); err != nil {
 		return types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 	}
 

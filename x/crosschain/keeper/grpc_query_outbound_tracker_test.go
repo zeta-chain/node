@@ -18,18 +18,18 @@ func TestKeeper_OutTxTrackerAllByChain(t *testing.T) {
 
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 		})
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: 2,
 		})
 
-		res, err := k.OutTxTrackerAllByChain(ctx, &types.QueryAllOutTxTrackerByChainRequest{
+		res, err := k.OutTxTrackerAllByChain(ctx, &types.QueryAllOutboundTrackerByChainRequest{
 			Chain: 1,
 		})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(res.OutTxTracker))
+		require.Equal(t, 1, len(res.OutboundTracker))
 	})
 }
 
@@ -43,27 +43,27 @@ func TestKeeper_OutTxTrackerAll(t *testing.T) {
 
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 		})
 
-		res, err := k.OutTxTrackerAll(ctx, &types.QueryAllOutTxTrackerRequest{})
+		res, err := k.OutTxTrackerAll(ctx, &types.QueryAllOutboundTrackerRequest{})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(res.OutTxTracker))
+		require.Equal(t, 1, len(res.OutboundTracker))
 	})
 }
 
 func TestKeeper_OutTxTracker(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		res, err := k.OutTxTracker(ctx, nil)
+		res, err := k.OutboundTracker(ctx, nil)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 
 	t.Run("should return if not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		res, err := k.OutTxTracker(ctx, &types.QueryGetOutTxTrackerRequest{
+		res, err := k.OutboundTracker(ctx, &types.QueryGetOutboundTrackerRequest{
 			ChainID: 1,
 			Nonce:   1,
 		})
@@ -73,12 +73,12 @@ func TestKeeper_OutTxTracker(t *testing.T) {
 
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
+		k.SetOutTxTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 			Nonce:   1,
 		})
 
-		res, err := k.OutTxTracker(ctx, &types.QueryGetOutTxTrackerRequest{
+		res, err := k.OutboundTracker(ctx, &types.QueryGetOutboundTrackerRequest{
 			ChainID: 1,
 			Nonce:   1,
 		})

@@ -102,7 +102,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// if a cctx falls within the rate limiter window
 	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
-		return cctx.InboundTxParams.InboundTxObservedExternalHeight >= uint64(leftWindowBoundary)
+		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
 	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs
@@ -122,7 +122,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 				return nil, err
 			}
 			// #nosec G701 len always in range
-			cctxHeight := int64(cctx.InboundTxParams.InboundTxObservedExternalHeight)
+			cctxHeight := int64(cctx.InboundParams.ObservedExternalHeight)
 			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
 				lowestPendingCctxHeight = cctxHeight
 			}
@@ -222,10 +222,10 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 
 	// sort the cctxs by chain ID and nonce (lower nonce holds higher priority for scheduling)
 	sort.Slice(cctxs, func(i, j int) bool {
-		if cctxs[i].GetCurrentOutTxParam().ReceiverChainId == cctxs[j].GetCurrentOutTxParam().ReceiverChainId {
-			return cctxs[i].GetCurrentOutTxParam().OutboundTxTssNonce < cctxs[j].GetCurrentOutTxParam().OutboundTxTssNonce
+		if cctxs[i].GetCurrentOutboundParam().ReceiverChainId == cctxs[j].GetCurrentOutboundParam().ReceiverChainId {
+			return cctxs[i].GetCurrentOutboundParam().TssNonce < cctxs[j].GetCurrentOutboundParam().TssNonce
 		}
-		return cctxs[i].GetCurrentOutTxParam().ReceiverChainId < cctxs[j].GetCurrentOutTxParam().ReceiverChainId
+		return cctxs[i].GetCurrentOutboundParam().ReceiverChainId < cctxs[j].GetCurrentOutboundParam().ReceiverChainId
 	})
 
 	return &types.QueryListPendingCctxWithinRateLimitResponse{
@@ -247,10 +247,10 @@ func ConvertCctxValue(
 ) sdkmath.Int {
 	var rate sdk.Dec
 	var decimals uint64
-	switch cctx.InboundTxParams.CoinType {
+	switch cctx.InboundParams.CoinType {
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
-		return sdkmath.NewIntFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+		return sdkmath.NewIntFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
 	case coin.CoinType_Gas:
 		rate = gasCoinRates[chainID]
 	case coin.CoinType_ERC20:
@@ -260,7 +260,7 @@ func ConvertCctxValue(
 			// skip if no rate found for this chainID
 			return sdkmath.NewInt(0)
 		}
-		rate = erc20CoinRates[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
+		rate = erc20CoinRates[chainID][strings.ToLower(cctx.InboundParams.Asset)]
 	default:
 		// skip CoinType_Cmd
 		return sdkmath.NewInt(0)
@@ -276,7 +276,7 @@ func ConvertCctxValue(
 		// skip if no coin found for this chainID
 		return sdkmath.NewInt(0)
 	}
-	foreignCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundTxParams.Asset)]
+	foreignCoin, found := foreignCoinFromChainMap[strings.ToLower(cctx.InboundParams.Asset)]
 	if !found {
 		// skip if no coin found for this Asset
 		return sdkmath.NewInt(0)
@@ -292,7 +292,7 @@ func ConvertCctxValue(
 	// given amountCctx = 2000000, rate = 0.8, decimals = 6
 	// amountCctxDec: 2000000 * 0.8 = 1600000.0
 	// amountAzetaDec: 1600000.0 * 10e18 / 10e6 = 1600000000000000000.0
-	amountCctxDec := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+	amountCctxDec := sdk.NewDecFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
 	amountAzetaDec := amountCctxDec.Mul(rate).Mul(oneZeta).Quo(oneZrc20)
 	return amountAzetaDec.TruncateInt()
 }

@@ -13,9 +13,9 @@ func getOutTrackerIndex(chainID int64, nonce uint64) string {
 }
 
 // SetOutTxTracker set a specific outTxTracker in the store from its index
-func (k Keeper) SetOutTxTracker(ctx sdk.Context, outTxTracker types.OutTxTracker) {
+func (k Keeper) SetOutTxTracker(ctx sdk.Context, outTxTracker types.OutboundTracker) {
 	outTxTracker.Index = getOutTrackerIndex(outTxTracker.ChainId, outTxTracker.Nonce)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	b := k.cdc.MustMarshal(&outTxTracker)
 	store.Set(types.OutTxTrackerKey(
 		outTxTracker.Index,
@@ -27,9 +27,9 @@ func (k Keeper) GetOutTxTracker(
 	ctx sdk.Context,
 	chainID int64,
 	nonce uint64,
-) (val types.OutTxTracker, found bool) {
+) (val types.OutboundTracker, found bool) {
 	index := getOutTrackerIndex(chainID, nonce)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 
 	b := store.Get(types.OutTxTrackerKey(
 		index,
@@ -50,21 +50,21 @@ func (k Keeper) RemoveOutTxTracker(
 
 ) {
 	index := getOutTrackerIndex(chainID, nonce)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	store.Delete(types.OutTxTrackerKey(
 		index,
 	))
 }
 
 // GetAllOutTxTracker returns all outTxTracker
-func (k Keeper) GetAllOutTxTracker(ctx sdk.Context) (list []types.OutTxTracker) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+func (k Keeper) GetAllOutTxTracker(ctx sdk.Context) (list []types.OutboundTracker) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var val types.OutTxTracker
+		var val types.OutboundTracker
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}

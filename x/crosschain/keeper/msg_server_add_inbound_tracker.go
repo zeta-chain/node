@@ -11,8 +11,8 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// AddToInTxTracker adds a new record to the inbound transaction tracker.
-func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
+// AddInboundTracker adds a new record to the inbound transaction tracker.
+func (k msgServer) AddInboundTracker(goCtx context.Context, msg *types.MsgAddInboundTracker) (*types.MsgAddInboundTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
@@ -31,23 +31,23 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 		}
 
 		// verify the proof and tx body
-		if err := verifyProofAndInTxBody(ctx, k, msg); err != nil {
+		if err := verifyProofAndInboundBody(ctx, k, msg); err != nil {
 			return nil, err
 		}
 	}
 
 	// add the inTx tracker
-	k.SetInTxTracker(ctx, types.InTxTracker{
+	k.SetInboundTracker(ctx, types.InboundTracker{
 		ChainId:  msg.ChainId,
 		TxHash:   msg.TxHash,
 		CoinType: msg.CoinType,
 	})
 
-	return &types.MsgAddToInTxTrackerResponse{}, nil
+	return &types.MsgAddInboundTrackerResponse{}, nil
 }
 
-// verifyProofAndInTxBody verifies the proof and inbound tx body
-func verifyProofAndInTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToInTxTracker) error {
+// verifyProofAndInboundBody verifies the proof and inbound tx body
+func verifyProofAndInboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddInboundTracker) error {
 	txBytes, err := k.GetLightclientKeeper().VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 	if err != nil {
 		return types.ErrProofVerificationFail.Wrapf(err.Error())
@@ -68,7 +68,7 @@ func verifyProofAndInTxBody(ctx sdk.Context, k msgServer, msg *types.MsgAddToInT
 		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
 	}
 
-	if err := types.VerifyInTxBody(*msg, txBytes, *chainParams, *tss); err != nil {
+	if err := types.VerifyInboundBody(*msg, txBytes, *chainParams, *tss); err != nil {
 		return types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 	}
 

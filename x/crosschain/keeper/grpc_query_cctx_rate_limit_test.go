@@ -78,13 +78,13 @@ func createCctxsWithCoinTypeAndHeightRange(
 		nonce := i - 1
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
 		cctx.CctxStatus.Status = status
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coinType
-		cctx.InboundTxParams.Asset = asset
-		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
-		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
-		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coinType
+		cctx.InboundParams.Asset = asset
+		cctx.InboundParams.ObservedExternalHeight = i
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chainID
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(amount)
+		cctx.GetCurrentOutboundParam().TssNonce = nonce
 		cctxs = append(cctxs, cctx)
 	}
 	return cctxs
@@ -101,9 +101,9 @@ func setCctxsInKeeper(
 	for _, cctx := range cctxs {
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
-			ChainId: cctx.InboundTxParams.SenderChainId,
+			ChainId: cctx.InboundParams.SenderChainId,
 			// #nosec G701 always in range for tests
-			Nonce:     int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce),
+			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
 			CctxIndex: cctx.Index,
 			Tss:       tss.TssPubkey,
 		})
@@ -155,9 +155,9 @@ func Test_ConvertCctxValue(t *testing.T) {
 	t.Run("should convert cctx ZETA value correctly", func(t *testing.T) {
 		// create cctx with 0.3 ZETA
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
-		cctx.InboundTxParams.Asset = ""
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e17) // 0.3 ZETA
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundParams.Asset = ""
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(3e17) // 0.3 ZETA
 
 		// convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
@@ -166,9 +166,9 @@ func Test_ConvertCctxValue(t *testing.T) {
 	t.Run("should convert cctx ETH value correctly", func(t *testing.T) {
 		// create cctx with 0.003 ETH
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.InboundTxParams.Asset = ""
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e15) // 0.003 ETH
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.Asset = ""
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(3e15) // 0.003 ETH
 
 		// convert cctx value: 0.003 ETH * 2500 = 7.5 ZETA
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
@@ -177,9 +177,9 @@ func Test_ConvertCctxValue(t *testing.T) {
 	t.Run("should convert cctx BTC value correctly", func(t *testing.T) {
 		// create cctx with 0.0007 BTC
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", btcChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.InboundTxParams.Asset = ""
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(70000) // 0.0007 BTC
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.Asset = ""
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(70000) // 0.0007 BTC
 
 		// convert cctx value: 0.0007 BTC * 50000 = 35.0 ZETA
 		value := keeper.ConvertCctxValue(btcChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
@@ -188,9 +188,9 @@ func Test_ConvertCctxValue(t *testing.T) {
 	t.Run("should convert cctx USDT value correctly", func(t *testing.T) {
 		// create cctx with 3 USDT
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.InboundTxParams.Asset = assetUSDT
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(3e6) // 3 USDT
+		cctx.InboundParams.CoinType = coin.CoinType_ERC20
+		cctx.InboundParams.Asset = assetUSDT
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(3e6) // 3 USDT
 
 		// convert cctx value: 3 USDT * 0.8 = 2.4 ZETA
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
@@ -198,8 +198,8 @@ func Test_ConvertCctxValue(t *testing.T) {
 	})
 	t.Run("should return 0 if no rate found for chainID", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		cctx.InboundParams.CoinType = coin.CoinType_ERC20
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(100)
 
 		// use nil erc20CoinRates map to convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, nil, foreignCoinMap)
@@ -207,8 +207,8 @@ func Test_ConvertCctxValue(t *testing.T) {
 	})
 	t.Run("should return 0 if coinType is CoinType_Cmd", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		cctx.InboundParams.CoinType = coin.CoinType_Cmd
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(100)
 
 		// convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, foreignCoinMap)
@@ -216,8 +216,8 @@ func Test_ConvertCctxValue(t *testing.T) {
 	})
 	t.Run("should return 0 on nil rate or rate <= 0", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(100)
 
 		// use nil gasCoinRates map to convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, nil, erc20CoinRates, foreignCoinMap)
@@ -241,8 +241,8 @@ func Test_ConvertCctxValue(t *testing.T) {
 	})
 	t.Run("should return 0 if no coin found for chainID", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(100)
 
 		// use empty foreignCoinMap to convert cctx value
 		value := keeper.ConvertCctxValue(ethChainID, cctx, gasCoinRates, erc20CoinRates, nil)
@@ -250,9 +250,9 @@ func Test_ConvertCctxValue(t *testing.T) {
 	})
 	t.Run("should return 0 if no coin found for asset", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", ethChainID, 1))
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.InboundTxParams.Asset = assetUSDT
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(100)
+		cctx.InboundParams.CoinType = coin.CoinType_ERC20
+		cctx.InboundParams.Asset = assetUSDT
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(100)
 
 		// delete assetUSDT from foreignCoinMap for ethChainID
 		tempCoinMap := zk.FungibleKeeper.GetAllForeignCoinMap(ctx)

@@ -72,7 +72,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		require.NoError(t, err)
 		for _, validatorAddr := range validatorList {
 			msg.Creator = validatorAddr
-			_, err := msgServer.VoteOnObservedInboundTx(
+			_, err := msgServer.VoteInbound(
 				ctx,
 				&msg,
 			)
@@ -88,7 +88,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
 		require.True(t, found)
 		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
-		require.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+		require.Equal(t, cctx.InboundParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 
 	t.Run("prevent double event submission", func(t *testing.T) {
@@ -113,23 +113,23 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		// Vote on the FIRST message.
-		msg := &types.MsgVoteOnObservedInboundTx{
-			Creator:       validatorAddr,
-			Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
-			SenderChainId: 1337, // ETH
-			Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
-			ReceiverChain: 101, // zetachain
-			Amount:        sdkmath.NewUintFromString("10000000"),
-			Message:       "",
-			InBlockHeight: 1,
-			GasLimit:      1000000000,
-			InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:      0, // zeta
-			TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:         "",
-			EventIndex:    1,
+		msg := &types.MsgVoteInbound{
+			Creator:            validatorAddr,
+			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
+			SenderChainId:      1337, // ETH
+			Receiver:           "0x954598965C2aCdA2885B037561526260764095B8",
+			ReceiverChain:      101, // zetachain
+			Amount:             sdkmath.NewUintFromString("10000000"),
+			Message:            "",
+			InboundBlockHeight: 1,
+			GasLimit:           1000000000,
+			InboundHash:        "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:           0, // zeta
+			TxOrigin:           "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:              "",
+			EventIndex:         1,
 		}
-		_, err := msgServer.VoteOnObservedInboundTx(
+		_, err := msgServer.VoteInbound(
 			ctx,
 			msg,
 		)
@@ -140,24 +140,24 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		//Perform the SAME event. Except, this time, we resubmit the event.
-		msg2 := &types.MsgVoteOnObservedInboundTx{
-			Creator:       validatorAddr,
-			Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
-			SenderChainId: 1337,
-			Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
-			ReceiverChain: 101,
-			Amount:        sdkmath.NewUintFromString("10000000"),
-			Message:       "",
-			InBlockHeight: 1,
-			GasLimit:      1000000001, // <---- Change here
-			InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:      0,
-			TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:         "",
-			EventIndex:    1,
+		msg2 := &types.MsgVoteInbound{
+			Creator:            validatorAddr,
+			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
+			SenderChainId:      1337,
+			Receiver:           "0x954598965C2aCdA2885B037561526260764095B8",
+			ReceiverChain:      101,
+			Amount:             sdkmath.NewUintFromString("10000000"),
+			Message:            "",
+			InboundBlockHeight: 1,
+			GasLimit:           1000000001, // <---- Change here
+			InboundHash:        "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:           0,
+			TxOrigin:           "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:              "",
+			EventIndex:         1,
 		}
 
-		_, err = msgServer.VoteOnObservedInboundTx(
+		_, err = msgServer.VoteInbound(
 			ctx,
 			msg2,
 		)
@@ -178,7 +178,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		to, from := int64(1337), int64(101)
 
 		msg := sample.InboundVote(0, from, to)
-		res, err := msgServer.VoteOnObservedInboundTx(
+		res, err := msgServer.VoteInbound(
 			ctx,
 			&msg,
 		)
@@ -213,7 +213,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		msg := sample.InboundVote(0, from, to)
 		for _, validatorAddr := range validatorList {
 			msg.Creator = validatorAddr
-			_, err := msgServer.VoteOnObservedInboundTx(
+			_, err := msgServer.VoteInbound(
 				ctx,
 				&msg,
 			)
@@ -244,7 +244,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		to, from := int64(1337), int64(101)
 
 		msg := sample.InboundVote(0, from, to)
-		res, err := msgServer.VoteOnObservedInboundTx(
+		res, err := msgServer.VoteInbound(
 			ctx,
 			&msg,
 		)
@@ -310,8 +310,8 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
 		eventIndex := sample.Uint64InRange(1, 100)
 		k.SaveInbound(ctx, cctx, eventIndex)
-		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundTxParams.TxFinalizationStatus)
-		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundTxParams().InboundTxObservedHash, cctx.GetInboundTxParams().SenderChainId, eventIndex))
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
+		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundParams().ObservedHash, cctx.GetInboundParams().SenderChainId, eventIndex))
 		_, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 	})
@@ -323,8 +323,8 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		senderChain := getValidEthChain()
 		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
 		hash := sample.Hash()
-		cctx.InboundTxParams.InboundTxObservedHash = hash.String()
-		k.SetInTxTracker(ctx, types.InTxTracker{
+		cctx.InboundParams.ObservedHash = hash.String()
+		k.SetInboundTracker(ctx, types.InboundTracker{
 			ChainId:  senderChain.ChainId,
 			TxHash:   hash.String(),
 			CoinType: 0,
@@ -333,11 +333,11 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		k.SaveInbound(ctx, cctx, eventIndex)
-		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundTxParams.TxFinalizationStatus)
-		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundTxParams().InboundTxObservedHash, cctx.GetInboundTxParams().SenderChainId, eventIndex))
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
+		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundParams().ObservedHash, cctx.GetInboundParams().SenderChainId, eventIndex))
 		_, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		_, found = k.GetInTxTracker(ctx, senderChain.ChainId, hash.String())
+		_, found = k.GetInboundTracker(ctx, senderChain.ChainId, hash.String())
 		require.False(t, found)
 	})
 }
@@ -346,34 +346,34 @@ func TestKeeper_SaveInbound(t *testing.T) {
 func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain chains.Chain, asset string, amount *big.Int) *types.CrossChainTx {
 	r := sample.Rand()
 	cctx := &types.CrossChainTx{
-		Creator:          sample.AccAddress(),
-		Index:            sample.ZetaIndex(t),
-		ZetaFees:         sample.UintInRange(0, 100),
-		RelayedMessage:   "",
-		CctxStatus:       &types.Status{Status: types.CctxStatus_PendingInbound},
-		InboundTxParams:  sample.InboundTxParams(r),
-		OutboundTxParams: []*types.OutboundTxParams{sample.OutboundTxParams(r)},
+		Creator:        sample.AccAddress(),
+		Index:          sample.ZetaIndex(t),
+		ZetaFees:       sample.UintInRange(0, 100),
+		RelayedMessage: "",
+		CctxStatus:     &types.Status{Status: types.CctxStatus_PendingInbound},
+		InboundParams:  sample.InboundParams(r),
+		OutboundParams: []*types.OutboundParams{sample.OutboundParams(r)},
 	}
 
-	cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-	cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
-	cctx.GetInboundTxParams().InboundTxObservedHash = sample.Hash().String()
-	cctx.GetInboundTxParams().InboundTxBallotIndex = sample.ZetaIndex(t)
+	cctx.GetInboundParams().Amount = sdkmath.NewUintFromBigInt(amount)
+	cctx.GetInboundParams().SenderChainId = senderChain.ChainId
+	cctx.GetInboundParams().ObservedHash = sample.Hash().String()
+	cctx.GetInboundParams().BallotIndex = sample.ZetaIndex(t)
 
-	cctx.GetCurrentOutTxParam().ReceiverChainId = senderChain.ChainId
-	cctx.GetCurrentOutTxParam().Receiver = receiver.String()
-	cctx.GetCurrentOutTxParam().OutboundTxHash = sample.Hash().String()
-	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = sample.ZetaIndex(t)
+	cctx.GetCurrentOutboundParam().ReceiverChainId = senderChain.ChainId
+	cctx.GetCurrentOutboundParam().Receiver = receiver.String()
+	cctx.GetCurrentOutboundParam().Hash = sample.Hash().String()
+	cctx.GetCurrentOutboundParam().BallotIndex = sample.ZetaIndex(t)
 
-	cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-	for _, outboundTxParam := range cctx.OutboundTxParams {
+	cctx.InboundParams.CoinType = coin.CoinType_ERC20
+	for _, outboundTxParam := range cctx.OutboundParams {
 		outboundTxParam.CoinType = coin.CoinType_ERC20
 	}
 
-	cctx.GetInboundTxParams().Asset = asset
-	cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
-	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = 42
-	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = 100
-	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = 100
+	cctx.GetInboundParams().Asset = asset
+	cctx.GetInboundParams().Sender = sample.EthAddress().String()
+	cctx.GetCurrentOutboundParam().TssNonce = 42
+	cctx.GetCurrentOutboundParam().GasUsed = 100
+	cctx.GetCurrentOutboundParam().EffectiveGasLimit = 100
 	return cctx
 }

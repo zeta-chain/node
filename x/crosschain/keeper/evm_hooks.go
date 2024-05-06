@@ -181,8 +181,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	if !found {
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
 	}
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
+	cctx.GetCurrentOutboundParam().GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.GetCurrentOutboundParam().Amount = cctx.InboundParams.Amount
 
 	EmitZRCWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
@@ -268,7 +268,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *chains.Chain) error {
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
-		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
+		cctx.InboundParams.ObservedHash = inCctxIndex
 	}
 
 	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {

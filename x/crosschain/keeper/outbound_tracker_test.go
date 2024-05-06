@@ -13,8 +13,8 @@ import (
 )
 
 // Keeper Tests
-func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.OutTxTracker {
-	items := make([]types.OutTxTracker, n)
+func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.OutboundTracker {
+	items := make([]types.OutboundTracker, n)
 	for i := range items {
 		items[i].ChainId = int64(i)
 		items[i].Nonce = uint64(i)

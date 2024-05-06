@@ -26,28 +26,28 @@ func TestInTxHashToCctxQuerySingle(t *testing.T) {
 	msgs := createNInTxHashToCctx(keeper, ctx, 2)
 	for _, tc := range []struct {
 		desc     string
-		request  *types.QueryGetInTxHashToCctxRequest
-		response *types.QueryGetInTxHashToCctxResponse
+		request  *types.QueryGetInboundHashToCctxRequest
+		response *types.QueryGetInboundHashToCctxResponse
 		err      error
 	}{
 		{
 			desc: "First",
-			request: &types.QueryGetInTxHashToCctxRequest{
-				InTxHash: msgs[0].InTxHash,
+			request: &types.QueryGetInboundHashToCctxRequest{
+				InboundHash: msgs[0].InboundHash,
 			},
-			response: &types.QueryGetInTxHashToCctxResponse{InTxHashToCctx: msgs[0]},
+			response: &types.QueryGetInboundHashToCctxResponse{InboundHashToCctx: msgs[0]},
 		},
 		{
 			desc: "Second",
-			request: &types.QueryGetInTxHashToCctxRequest{
-				InTxHash: msgs[1].InTxHash,
+			request: &types.QueryGetInboundHashToCctxRequest{
+				InboundHash: msgs[1].InboundHash,
 			},
-			response: &types.QueryGetInTxHashToCctxResponse{InTxHashToCctx: msgs[1]},
+			response: &types.QueryGetInboundHashToCctxResponse{InboundHashToCctx: msgs[1]},
 		},
 		{
 			desc: "KeyNotFound",
-			request: &types.QueryGetInTxHashToCctxRequest{
-				InTxHash: strconv.Itoa(100000),
+			request: &types.QueryGetInboundHashToCctxRequest{
+				InboundHash: strconv.Itoa(100000),
 			},
 			err: status.Error(codes.NotFound, "not found"),
 		},
@@ -57,7 +57,7 @@ func TestInTxHashToCctxQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.InTxHashToCctx(wctx, tc.request)
+			response, err := keeper.InboundHashToCctx(wctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -76,8 +76,8 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNInTxHashToCctx(keeper, ctx, 5)
 
-	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllInTxHashToCctxRequest {
-		return &types.QueryAllInTxHashToCctxRequest{
+	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllInboundHashToCctxRequest {
+		return &types.QueryAllInboundHashToCctxRequest{
 			Pagination: &query.PageRequest{
 				Key:        next,
 				Offset:     offset,
@@ -89,12 +89,12 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.InTxHashToCctxAll(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := keeper.InboundHashToCctxAll(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
-			require.LessOrEqual(t, len(resp.InTxHashToCctx), step)
+			require.LessOrEqual(t, len(resp.InboundHashToCctx), step)
 			require.Subset(t,
 				nullify.Fill(msgs),
-				nullify.Fill(resp.InTxHashToCctx),
+				nullify.Fill(resp.InboundHashToCctx),
 			)
 		}
 	})
@@ -102,51 +102,51 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.InTxHashToCctxAll(wctx, request(next, 0, uint64(step), false))
+			resp, err := keeper.InboundHashToCctxAll(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
-			require.LessOrEqual(t, len(resp.InTxHashToCctx), step)
+			require.LessOrEqual(t, len(resp.InboundHashToCctx), step)
 			require.Subset(t,
 				nullify.Fill(msgs),
-				nullify.Fill(resp.InTxHashToCctx),
+				nullify.Fill(resp.InboundHashToCctx),
 			)
 			next = resp.Pagination.NextKey
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.InTxHashToCctxAll(wctx, request(nil, 0, 0, true))
+		resp, err := keeper.InboundHashToCctxAll(wctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
 			nullify.Fill(msgs),
-			nullify.Fill(resp.InTxHashToCctx),
+			nullify.Fill(resp.InboundHashToCctx),
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.InTxHashToCctxAll(wctx, nil)
+		_, err := keeper.InboundHashToCctxAll(wctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }
 
 func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Context) ([]types.CrossChainTx,
-	types.InTxHashToCctx) {
+	types.InboundHashToCctx) {
 	cctxs := make([]types.CrossChainTx, 5)
 	for i := range cctxs {
 		cctxs[i].Creator = "any"
 		cctxs[i].Index = fmt.Sprintf("0x123%d", i)
 		cctxs[i].ZetaFees = math.OneUint()
-		cctxs[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
+		cctxs[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 		cctxs[i].CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctxs[i])
 	}
 
-	var inTxHashToCctx types.InTxHashToCctx
-	inTxHashToCctx.InTxHash = fmt.Sprintf("0xabc")
+	var inboundHashToCctx types.InboundHashToCctx
+	inboundHashToCctx.InboundHash = fmt.Sprintf("0xabc")
 	for i := range cctxs {
-		inTxHashToCctx.CctxIndex = append(inTxHashToCctx.CctxIndex, cctxs[i].Index)
+		inboundHashToCctx.CctxIndex = append(inboundHashToCctx.CctxIndex, cctxs[i].Index)
 	}
-	keeper.SetInTxHashToCctx(ctx, inTxHashToCctx)
+	keeper.SetInboundHashToCctx(ctx, inboundHashToCctx)
 
-	return cctxs, inTxHashToCctx
+	return cctxs, inboundHashToCctx
 }
 
 func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
@@ -154,11 +154,11 @@ func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
 	wctx := sdk.WrapSDKContext(ctx)
 	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	t.Run("can query all cctxs data with in tx hash", func(t *testing.T) {
-		cctxs, inTxHashToCctx := createInTxHashToCctxWithCctxs(keeper, ctx)
-		req := &types.QueryInTxHashToCctxDataRequest{
-			InTxHash: inTxHashToCctx.InTxHash,
+		cctxs, inboundHashToCctx := createInTxHashToCctxWithCctxs(keeper, ctx)
+		req := &types.QueryInboundHashToCctxDataRequest{
+			InboundHash: inboundHashToCctx.InboundHash,
 		}
-		res, err := keeper.InTxHashToCctxData(wctx, req)
+		res, err := keeper.InboundHashToCctxData(wctx, req)
 		require.NoError(t, err)
 		require.Equal(t, len(cctxs), len(res.CrossChainTxs))
 		for i := range cctxs {
@@ -166,22 +166,22 @@ func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
 		}
 	})
 	t.Run("in tx hash not found", func(t *testing.T) {
-		req := &types.QueryInTxHashToCctxDataRequest{
-			InTxHash: "notfound",
+		req := &types.QueryInboundHashToCctxDataRequest{
+			InboundHash: "notfound",
 		}
-		_, err := keeper.InTxHashToCctxData(wctx, req)
+		_, err := keeper.InboundHashToCctxData(wctx, req)
 		require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
 	})
 	t.Run("cctx not indexed return internal error", func(t *testing.T) {
-		keeper.SetInTxHashToCctx(ctx, types.InTxHashToCctx{
-			InTxHash:  "nocctx",
-			CctxIndex: []string{"notfound"},
+		keeper.SetInboundHashToCctx(ctx, types.InboundHashToCctx{
+			InboundHash: "nocctx",
+			CctxIndex:   []string{"notfound"},
 		})
 
-		req := &types.QueryInTxHashToCctxDataRequest{
-			InTxHash: "nocctx",
+		req := &types.QueryInboundHashToCctxDataRequest{
+			InboundHash: "nocctx",
 		}
-		_, err := keeper.InTxHashToCctxData(wctx, req)
+		_, err := keeper.InboundHashToCctxData(wctx, req)
 		require.ErrorIs(t, err, status.Error(codes.Internal, "cctx indexed notfound doesn't exist"))
 	})
 }
