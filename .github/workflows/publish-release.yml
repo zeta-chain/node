@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
   gosec:
+    if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -54,6 +54,7 @@ jobs:
 
 
   gosec-cosmos:
+    if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
