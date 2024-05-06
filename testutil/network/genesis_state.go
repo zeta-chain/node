@@ -192,9 +192,9 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 				StatusMessage:       "",
 				LastUpdateTimestamp: 0,
 			},
-			InboundTxParams:  &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i), Amount: math.OneUint()},
-			OutboundTxParams: []*types.OutboundTxParams{},
-			ZetaFees:         math.OneUint()},
+			InboundParams:  &types.InboundParams{ObservedHash: fmt.Sprintf("Hash-%d", i), Amount: math.OneUint()},
+			OutboundParams: []*types.OutboundParams{},
+			ZetaFees:       math.OneUint()},
 		)
 	}
 
@@ -206,30 +206,30 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 	}
 
 	for i := 0; i < n; i++ {
-		inTxTracker := types.InTxTracker{
+		inboundTracker := types.InboundTracker{
 			ChainId:  5,
 			TxHash:   fmt.Sprintf("txHash-%d", i),
 			CoinType: coin.CoinType_Gas,
 		}
-		nullify.Fill(&inTxTracker)
-		state.InTxTrackerList = append(state.InTxTrackerList, inTxTracker)
+		nullify.Fill(&inboundTracker)
+		state.InboundTrackerList = append(state.InboundTrackerList, inboundTracker)
 	}
 
 	for i := 0; i < n; i++ {
-		inTxHashToCctx := types.InTxHashToCctx{
-			InTxHash: strconv.Itoa(i),
+		inboundHashToCctx := types.InboundHashToCctx{
+			InboundHash: strconv.Itoa(i),
 		}
-		nullify.Fill(&inTxHashToCctx)
-		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
+		nullify.Fill(&inboundHashToCctx)
+		state.InboundHashToCctxList = append(state.InboundHashToCctxList, inboundHashToCctx)
 	}
 	for i := 0; i < n; i++ {
-		outTxTracker := types.OutTxTracker{
+		outboundTracker := types.OutboundTracker{
 			Index:   fmt.Sprintf("%d-%d", i, i),
 			ChainId: int64(i),
 			Nonce:   uint64(i),
 		}
-		nullify.Fill(&outTxTracker)
-		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
+		nullify.Fill(&outboundTracker)
+		state.OutboundTrackerList = append(state.OutboundTrackerList, outboundTracker)
 	}
 
 	require.NoError(t, state.Validate())
