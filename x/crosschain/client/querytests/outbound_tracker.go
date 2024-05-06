@@ -11,9 +11,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (s *CliTestSuite) TestListOutTxTracker() {
+func (s *CliTestSuite) TestListOutboundTracker() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.OutTxTrackerList
+	objs := s.crosschainState.OutboundTrackerList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
@@ -34,13 +34,13 @@ func (s *CliTestSuite) TestListOutTxTracker() {
 		for i := 0; i < len(objs); i += step {
 			// #nosec G701 always in range
 			args := request(nil, uint64(i), uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutTxTracker(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutboundTracker(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllOutTxTrackerResponse
+			var resp types.QueryAllOutboundTrackerResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			s.Require().LessOrEqual(len(resp.OutTxTracker), step)
+			s.Require().LessOrEqual(len(resp.OutboundTracker), step)
 			s.Require().Subset(nullify.Fill(objs),
-				nullify.Fill(resp.OutTxTracker),
+				nullify.Fill(resp.OutboundTracker),
 			)
 		}
 	})
@@ -50,14 +50,14 @@ func (s *CliTestSuite) TestListOutTxTracker() {
 		for i := 0; i < len(objs); i += step {
 			// #nosec G701 always in range
 			args := request(next, 0, uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutTxTracker(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutboundTracker(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllOutTxTrackerResponse
+			var resp types.QueryAllOutboundTrackerResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			s.Require().LessOrEqual(len(resp.OutTxTracker), step)
+			s.Require().LessOrEqual(len(resp.OutboundTracker), step)
 			s.Require().Subset(
 				nullify.Fill(objs),
-				nullify.Fill(resp.OutTxTracker),
+				nullify.Fill(resp.OutboundTracker),
 			)
 			next = resp.Pagination.NextKey
 		}
@@ -65,15 +65,15 @@ func (s *CliTestSuite) TestListOutTxTracker() {
 	s.Run("Total", func() {
 		// #nosec G701 always in range
 		args := request(nil, 0, uint64(len(objs)), true)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutTxTracker(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutboundTracker(), args)
 		s.Require().NoError(err)
-		var resp types.QueryAllOutTxTrackerResponse
+		var resp types.QueryAllOutboundTrackerResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		// #nosec G701 always in range
 		s.Require().Equal(len(objs), int(resp.Pagination.Total))
 		s.Require().ElementsMatch(nullify.Fill(objs),
-			nullify.Fill(resp.OutTxTracker),
+			nullify.Fill(resp.OutboundTracker),
 		)
 	})
 }

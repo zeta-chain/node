@@ -73,7 +73,7 @@ func CmdVoteOutbound() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgVoteOnObservedOutboundTx(
+			msg := types.NewMsgVoteOutbound(
 				clientCtx.GetFromAddress().String(),
 				argsSendHash,
 				argsOutTxHash,

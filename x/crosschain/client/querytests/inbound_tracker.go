@@ -11,25 +11,25 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (s *CliTestSuite) TestListInTxTrackers() {
+func (s *CliTestSuite) TestListInboundTrackers() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.InTxTrackerList
+	objs := s.crosschainState.InboundTrackerList
 	s.Run("List all trackers", func() {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 		}
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackers(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackers(), args)
 		s.Require().NoError(err)
-		var resp types.QueryAllInTxTrackersResponse
+		var resp types.QueryAllInboundTrackersResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-		s.Require().Equal(len(objs), len(resp.InTxTracker))
-		s.Require().ElementsMatch(nullify.Fill(objs), nullify.Fill(resp.InTxTracker))
+		s.Require().Equal(len(objs), len(resp.InboundTracker))
+		s.Require().ElementsMatch(nullify.Fill(objs), nullify.Fill(resp.InboundTracker))
 	})
 }
 
-func (s *CliTestSuite) TestListInTxTrackersByChain() {
+func (s *CliTestSuite) TestListInboundTrackersByChain() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.InTxTrackerList
+	objs := s.crosschainState.InboundTrackerList
 	request := func(next []byte, offset, limit uint64, total bool, chainID int) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
@@ -51,13 +51,13 @@ func (s *CliTestSuite) TestListInTxTrackersByChain() {
 		for i := 0; i < len(objs); i += step {
 			// #nosec G701 always positive
 			args := request(nil, uint64(i), uint64(step), false, 5)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackerByChain(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackerByChain(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllInTxTrackerByChainResponse
+			var resp types.QueryAllInboundTrackerByChainResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			s.Require().LessOrEqual(len(resp.InTxTracker), step)
+			s.Require().LessOrEqual(len(resp.InboundTracker), step)
 			s.Require().Subset(nullify.Fill(objs),
-				nullify.Fill(resp.InTxTracker),
+				nullify.Fill(resp.InboundTracker),
 			)
 		}
 	})
@@ -67,35 +67,35 @@ func (s *CliTestSuite) TestListInTxTrackersByChain() {
 		for i := 0; i < len(objs); i += step {
 			// #nosec G701 always positive
 			args := request(next, 0, uint64(step), false, 5)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackerByChain(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackerByChain(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllInTxTrackerByChainResponse
+			var resp types.QueryAllInboundTrackerByChainResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			s.Require().LessOrEqual(len(resp.InTxTracker), step)
+			s.Require().LessOrEqual(len(resp.InboundTracker), step)
 			s.Require().Subset(
 				nullify.Fill(objs),
-				nullify.Fill(resp.InTxTracker),
+				nullify.Fill(resp.InboundTracker),
 			)
 			next = resp.Pagination.NextKey
 		}
 	})
 	s.Run("Total", func() {
 		args := request(nil, 0, uint64(len(objs)), true, 5)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackerByChain(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackerByChain(), args)
 		s.Require().NoError(err)
-		var resp types.QueryAllInTxTrackerByChainResponse
+		var resp types.QueryAllInboundTrackerByChainResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		s.Require().Equal(uint64(len(objs)), resp.Pagination.Total)
 		s.Require().ElementsMatch(nullify.Fill(objs),
-			nullify.Fill(resp.InTxTracker),
+			nullify.Fill(resp.InboundTracker),
 		)
 	})
 	s.Run("Incorrect Chain ID ", func() {
 		args := request(nil, 0, uint64(len(objs)), true, 15)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackerByChain(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackerByChain(), args)
 		s.Require().NoError(err)
-		var resp types.QueryAllInTxTrackerByChainResponse
+		var resp types.QueryAllInboundTrackerByChainResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		s.Require().Equal(uint64(0), resp.Pagination.Total)

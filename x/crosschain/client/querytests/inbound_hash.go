@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *CliTestSuite) TestShowInTxHashToCctx() {
+func (s *CliTestSuite) TestShowInboundHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.InTxHashToCctxList
+	objs := s.crosschainState.InboundHashToCctxList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -28,11 +28,11 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 
 		args []string
 		err  error
-		obj  types.InTxHashToCctx
+		obj  types.InboundHashToCctx
 	}{
 		{
 			desc:       "found",
-			idInTxHash: objs[0].InTxHash,
+			idInTxHash: objs[0].InboundHash,
 
 			args: common,
 			obj:  objs[0],
@@ -50,28 +50,28 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 				tc.idInTxHash,
 			}
 			args = append(args, tc.args...)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowInTxHashToCctx(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowInboundHashToCctx(), args)
 			if tc.err != nil {
 				stat, ok := status.FromError(tc.err)
 				s.Require().True(ok)
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp types.QueryGetInTxHashToCctxResponse
+				var resp types.QueryGetInboundHashToCctxResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				s.Require().NotNil(resp.InTxHashToCctx)
+				s.Require().NotNil(resp.InboundHashToCctx)
 				tc := tc
 				s.Require().Equal(nullify.Fill(&tc.obj),
-					nullify.Fill(&resp.InTxHashToCctx),
+					nullify.Fill(&resp.InboundHashToCctx),
 				)
 			}
 		})
 	}
 }
 
-func (s *CliTestSuite) TestListInTxHashToCctx() {
+func (s *CliTestSuite) TestListInboundHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.InTxHashToCctxList
+	objs := s.crosschainState.InboundHashToCctxList
 	cctxCount := len(s.crosschainState.CrossChainTxs)
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
@@ -93,13 +93,13 @@ func (s *CliTestSuite) TestListInTxHashToCctx() {
 		for i := 0; i < len(objs); i += step {
 			// #nosec G701 always in range
 			args := request(nil, uint64(i), uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxHashToCctx(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundHashToCctx(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllInTxHashToCctxResponse
+			var resp types.QueryAllInboundHashToCctxResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			s.Require().LessOrEqual(len(resp.InTxHashToCctx), step)
+			s.Require().LessOrEqual(len(resp.InboundHashToCctx), step)
 			s.Require().Subset(nullify.Fill(objs),
-				nullify.Fill(resp.InTxHashToCctx),
+				nullify.Fill(resp.InboundHashToCctx),
 			)
 		}
 	})
@@ -109,13 +109,13 @@ func (s *CliTestSuite) TestListInTxHashToCctx() {
 		for i := 0; i < len(objs); i += step {
 			// #nosec G701 always in range
 			args := request(next, 0, uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxHashToCctx(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundHashToCctx(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllInTxHashToCctxResponse
+			var resp types.QueryAllInboundHashToCctxResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			s.Require().LessOrEqual(len(resp.InTxHashToCctx), step)
+			s.Require().LessOrEqual(len(resp.InboundHashToCctx), step)
 			s.Require().Subset(nullify.Fill(objs),
-				nullify.Fill(resp.InTxHashToCctx),
+				nullify.Fill(resp.InboundHashToCctx),
 			)
 			next = resp.Pagination.NextKey
 		}
@@ -123,16 +123,16 @@ func (s *CliTestSuite) TestListInTxHashToCctx() {
 	s.Run("Total", func() {
 		// #nosec G701 always in range
 		args := request(nil, 0, uint64(len(objs)), true)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxHashToCctx(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundHashToCctx(), args)
 		s.Require().NoError(err)
-		var resp types.QueryAllInTxHashToCctxResponse
+		var resp types.QueryAllInboundHashToCctxResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		// saving CCTX also adds a new mapping
 		// #nosec G701 always in range
 		s.Require().Equal(len(objs)+cctxCount, int(resp.Pagination.Total))
 		s.Require().ElementsMatch(nullify.Fill(objs),
-			nullify.Fill(resp.InTxHashToCctx),
+			nullify.Fill(resp.InboundHashToCctx),
 		)
 	})
 }
