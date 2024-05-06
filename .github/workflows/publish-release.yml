@@ -12,12 +12,18 @@ on:
         required: false
         default: false
         description: 'Use this to skip: gosec, gosec-cosmos, check-changelog, check-upgrade-uandler-updated, build-test, smoke-test and go straight to approval step.'
+      run_just_checks:
+        type: boolean
+        required: false
+        default: false
+        description: 'If this is true it will simply execute all the steps for a release prior to actually cutting the release, then stop'
 
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
 jobs:
+  if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
   gosec:
     runs-on: ubuntu-latest
     env:
@@ -354,7 +360,7 @@ jobs:
           make start-upgrade-test
 
   publish-release:
-    if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
+    if: ${{ github.event.inputs.run_just_checks == 'false' }}
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
