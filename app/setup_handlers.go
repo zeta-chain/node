@@ -16,10 +16,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 )
-
-const releaseVersion = "v17"
 
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
@@ -50,8 +49,8 @@ func SetupHandlers(app *App) {
 		}
 	}
 	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Running upgrade handler for " + releaseVersion)
+	app.UpgradeKeeper.SetUpgradeHandler(constant.Version, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Running upgrade handler for " + constant.Version)
 		// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
 		baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 		// Updated version map to the latest consensus versions from each module
@@ -78,7 +77,7 @@ func SetupHandlers(app *App) {
 	if err != nil {
 		panic(err)
 	}
-	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == constant.Version && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{consensustypes.ModuleName, crisistypes.ModuleName},
 		}
