@@ -8,7 +8,7 @@ message TxHashList {
   string tx_signer = 2;
   bool proved = 3;
 }
-message OutTxTracker {
+message OutboundTracker {
   string index = 1; // format: "chain-nonce"
   int64 chain_id = 2;
   uint64 nonce = 3;

@@ -209,7 +209,7 @@ func (m *MsgUpdateTssAddressResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateTssAddressResponse proto.InternalMessageInfo
 
-type MsgAddToInTxTracker struct {
+type MsgAddInboundTracker struct {
 	Creator   string        `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ChainId   int64         `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	TxHash    string        `protobuf:"bytes,3,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
@@ -219,18 +219,18 @@ type MsgAddToInTxTracker struct {
 	TxIndex   int64         `protobuf:"varint,7,opt,name=tx_index,json=txIndex,proto3" json:"tx_index,omitempty"`
 }
 
-func (m *MsgAddToInTxTracker) Reset()         { *m = MsgAddToInTxTracker{} }
-func (m *MsgAddToInTxTracker) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToInTxTracker) ProtoMessage()    {}
-func (*MsgAddToInTxTracker) Descriptor() ([]byte, []int) {
+func (m *MsgAddInboundTracker) Reset()         { *m = MsgAddInboundTracker{} }
+func (m *MsgAddInboundTracker) String() string { return proto.CompactTextString(m) }
+func (*MsgAddInboundTracker) ProtoMessage()    {}
+func (*MsgAddInboundTracker) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{4}
 }
-func (m *MsgAddToInTxTracker) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddInboundTracker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddToInTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddInboundTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddToInTxTracker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddInboundTracker.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -240,82 +240,82 @@ func (m *MsgAddToInTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *MsgAddToInTxTracker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToInTxTracker.Merge(m, src)
+func (m *MsgAddInboundTracker) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddInboundTracker.Merge(m, src)
 }
-func (m *MsgAddToInTxTracker) XXX_Size() int {
+func (m *MsgAddInboundTracker) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddToInTxTracker) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToInTxTracker.DiscardUnknown(m)
+func (m *MsgAddInboundTracker) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddInboundTracker.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddToInTxTracker proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddInboundTracker proto.InternalMessageInfo
 
-func (m *MsgAddToInTxTracker) GetCreator() string {
+func (m *MsgAddInboundTracker) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgAddToInTxTracker) GetChainId() int64 {
+func (m *MsgAddInboundTracker) GetChainId() int64 {
 	if m != nil {
 		return m.ChainId
 	}
 	return 0
 }
 
-func (m *MsgAddToInTxTracker) GetTxHash() string {
+func (m *MsgAddInboundTracker) GetTxHash() string {
 	if m != nil {
 		return m.TxHash
 	}
 	return ""
 }
 
-func (m *MsgAddToInTxTracker) GetCoinType() coin.CoinType {
+func (m *MsgAddInboundTracker) GetCoinType() coin.CoinType {
 	if m != nil {
 		return m.CoinType
 	}
 	return coin.CoinType_Zeta
 }
 
-func (m *MsgAddToInTxTracker) GetProof() *proofs.Proof {
+func (m *MsgAddInboundTracker) GetProof() *proofs.Proof {
 	if m != nil {
 		return m.Proof
 	}
 	return nil
 }
 
-func (m *MsgAddToInTxTracker) GetBlockHash() string {
+func (m *MsgAddInboundTracker) GetBlockHash() string {
 	if m != nil {
 		return m.BlockHash
 	}
 	return ""
 }
 
-func (m *MsgAddToInTxTracker) GetTxIndex() int64 {
+func (m *MsgAddInboundTracker) GetTxIndex() int64 {
 	if m != nil {
 		return m.TxIndex
 	}
 	return 0
 }
 
-type MsgAddToInTxTrackerResponse struct {
+type MsgAddInboundTrackerResponse struct {
 }
 
-func (m *MsgAddToInTxTrackerResponse) Reset()         { *m = MsgAddToInTxTrackerResponse{} }
-func (m *MsgAddToInTxTrackerResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToInTxTrackerResponse) ProtoMessage()    {}
-func (*MsgAddToInTxTrackerResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddInboundTrackerResponse) Reset()         { *m = MsgAddInboundTrackerResponse{} }
+func (m *MsgAddInboundTrackerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddInboundTrackerResponse) ProtoMessage()    {}
+func (*MsgAddInboundTrackerResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{5}
 }
-func (m *MsgAddToInTxTrackerResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddInboundTrackerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddToInTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddInboundTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddToInTxTrackerResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddInboundTrackerResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -325,17 +325,17 @@ func (m *MsgAddToInTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *MsgAddToInTxTrackerResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToInTxTrackerResponse.Merge(m, src)
+func (m *MsgAddInboundTrackerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddInboundTrackerResponse.Merge(m, src)
 }
-func (m *MsgAddToInTxTrackerResponse) XXX_Size() int {
+func (m *MsgAddInboundTrackerResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddToInTxTrackerResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToInTxTrackerResponse.DiscardUnknown(m)
+func (m *MsgAddInboundTrackerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddInboundTrackerResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddToInTxTrackerResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddInboundTrackerResponse proto.InternalMessageInfo
 
 type MsgWhitelistERC20 struct {
 	Creator      string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
@@ -481,7 +481,7 @@ func (m *MsgWhitelistERC20Response) GetCctxIndex() string {
 	return ""
 }
 
-type MsgAddToOutTxTracker struct {
+type MsgAddOutboundTracker struct {
 	Creator   string        `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ChainId   int64         `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	Nonce     uint64        `protobuf:"varint,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
@@ -491,18 +491,18 @@ type MsgAddToOutTxTracker struct {
 	TxIndex   int64         `protobuf:"varint,7,opt,name=tx_index,json=txIndex,proto3" json:"tx_index,omitempty"`
 }
 
-func (m *MsgAddToOutTxTracker) Reset()         { *m = MsgAddToOutTxTracker{} }
-func (m *MsgAddToOutTxTracker) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToOutTxTracker) ProtoMessage()    {}
-func (*MsgAddToOutTxTracker) Descriptor() ([]byte, []int) {
+func (m *MsgAddOutboundTracker) Reset()         { *m = MsgAddOutboundTracker{} }
+func (m *MsgAddOutboundTracker) String() string { return proto.CompactTextString(m) }
+func (*MsgAddOutboundTracker) ProtoMessage()    {}
+func (*MsgAddOutboundTracker) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{8}
 }
-func (m *MsgAddToOutTxTracker) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddOutboundTracker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddToOutTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddOutboundTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddToOutTxTracker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddOutboundTracker.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -512,83 +512,83 @@ func (m *MsgAddToOutTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *MsgAddToOutTxTracker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToOutTxTracker.Merge(m, src)
+func (m *MsgAddOutboundTracker) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddOutboundTracker.Merge(m, src)
 }
-func (m *MsgAddToOutTxTracker) XXX_Size() int {
+func (m *MsgAddOutboundTracker) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddToOutTxTracker) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToOutTxTracker.DiscardUnknown(m)
+func (m *MsgAddOutboundTracker) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddOutboundTracker.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddToOutTxTracker proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddOutboundTracker proto.InternalMessageInfo
 
-func (m *MsgAddToOutTxTracker) GetCreator() string {
+func (m *MsgAddOutboundTracker) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgAddToOutTxTracker) GetChainId() int64 {
+func (m *MsgAddOutboundTracker) GetChainId() int64 {
 	if m != nil {
 		return m.ChainId
 	}
 	return 0
 }
 
-func (m *MsgAddToOutTxTracker) GetNonce() uint64 {
+func (m *MsgAddOutboundTracker) GetNonce() uint64 {
 	if m != nil {
 		return m.Nonce
 	}
 	return 0
 }
 
-func (m *MsgAddToOutTxTracker) GetTxHash() string {
+func (m *MsgAddOutboundTracker) GetTxHash() string {
 	if m != nil {
 		return m.TxHash
 	}
 	return ""
 }
 
-func (m *MsgAddToOutTxTracker) GetProof() *proofs.Proof {
+func (m *MsgAddOutboundTracker) GetProof() *proofs.Proof {
 	if m != nil {
 		return m.Proof
 	}
 	return nil
 }
 
-func (m *MsgAddToOutTxTracker) GetBlockHash() string {
+func (m *MsgAddOutboundTracker) GetBlockHash() string {
 	if m != nil {
 		return m.BlockHash
 	}
 	return ""
 }
 
-func (m *MsgAddToOutTxTracker) GetTxIndex() int64 {
+func (m *MsgAddOutboundTracker) GetTxIndex() int64 {
 	if m != nil {
 		return m.TxIndex
 	}
 	return 0
 }
 
-type MsgAddToOutTxTrackerResponse struct {
+type MsgAddOutboundTrackerResponse struct {
 	IsRemoved bool `protobuf:"varint,1,opt,name=is_removed,json=isRemoved,proto3" json:"is_removed,omitempty"`
 }
 
-func (m *MsgAddToOutTxTrackerResponse) Reset()         { *m = MsgAddToOutTxTrackerResponse{} }
-func (m *MsgAddToOutTxTrackerResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToOutTxTrackerResponse) ProtoMessage()    {}
-func (*MsgAddToOutTxTrackerResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddOutboundTrackerResponse) Reset()         { *m = MsgAddOutboundTrackerResponse{} }
+func (m *MsgAddOutboundTrackerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddOutboundTrackerResponse) ProtoMessage()    {}
+func (*MsgAddOutboundTrackerResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{9}
 }
-func (m *MsgAddToOutTxTrackerResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddOutboundTrackerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddToOutTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddOutboundTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddToOutTxTrackerResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddOutboundTrackerResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -598,43 +598,43 @@ func (m *MsgAddToOutTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *MsgAddToOutTxTrackerResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToOutTxTrackerResponse.Merge(m, src)
+func (m *MsgAddOutboundTrackerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddOutboundTrackerResponse.Merge(m, src)
 }
-func (m *MsgAddToOutTxTrackerResponse) XXX_Size() int {
+func (m *MsgAddOutboundTrackerResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddToOutTxTrackerResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToOutTxTrackerResponse.DiscardUnknown(m)
+func (m *MsgAddOutboundTrackerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddOutboundTrackerResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddToOutTxTrackerResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddOutboundTrackerResponse proto.InternalMessageInfo
 
-func (m *MsgAddToOutTxTrackerResponse) GetIsRemoved() bool {
+func (m *MsgAddOutboundTrackerResponse) GetIsRemoved() bool {
 	if m != nil {
 		return m.IsRemoved
 	}
 	return false
 }
 
-type MsgRemoveFromOutTxTracker struct {
+type MsgRemoveOutboundTracker struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ChainId int64  `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	Nonce   uint64 `protobuf:"varint,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
 }
 
-func (m *MsgRemoveFromOutTxTracker) Reset()         { *m = MsgRemoveFromOutTxTracker{} }
-func (m *MsgRemoveFromOutTxTracker) String() string { return proto.CompactTextString(m) }
-func (*MsgRemoveFromOutTxTracker) ProtoMessage()    {}
-func (*MsgRemoveFromOutTxTracker) Descriptor() ([]byte, []int) {
+func (m *MsgRemoveOutboundTracker) Reset()         { *m = MsgRemoveOutboundTracker{} }
+func (m *MsgRemoveOutboundTracker) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveOutboundTracker) ProtoMessage()    {}
+func (*MsgRemoveOutboundTracker) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{10}
 }
-func (m *MsgRemoveFromOutTxTracker) XXX_Unmarshal(b []byte) error {
+func (m *MsgRemoveOutboundTracker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveFromOutTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgRemoveOutboundTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveFromOutTxTracker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgRemoveOutboundTracker.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -644,54 +644,54 @@ func (m *MsgRemoveFromOutTxTracker) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveFromOutTxTracker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveFromOutTxTracker.Merge(m, src)
+func (m *MsgRemoveOutboundTracker) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveOutboundTracker.Merge(m, src)
 }
-func (m *MsgRemoveFromOutTxTracker) XXX_Size() int {
+func (m *MsgRemoveOutboundTracker) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveFromOutTxTracker) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveFromOutTxTracker.DiscardUnknown(m)
+func (m *MsgRemoveOutboundTracker) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveOutboundTracker.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveFromOutTxTracker proto.InternalMessageInfo
+var xxx_messageInfo_MsgRemoveOutboundTracker proto.InternalMessageInfo
 
-func (m *MsgRemoveFromOutTxTracker) GetCreator() string {
+func (m *MsgRemoveOutboundTracker) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgRemoveFromOutTxTracker) GetChainId() int64 {
+func (m *MsgRemoveOutboundTracker) GetChainId() int64 {
 	if m != nil {
 		return m.ChainId
 	}
 	return 0
 }
 
-func (m *MsgRemoveFromOutTxTracker) GetNonce() uint64 {
+func (m *MsgRemoveOutboundTracker) GetNonce() uint64 {
 	if m != nil {
 		return m.Nonce
 	}
 	return 0
 }
 
-type MsgRemoveFromOutTxTrackerResponse struct {
+type MsgRemoveOutboundTrackerResponse struct {
 }
 
-func (m *MsgRemoveFromOutTxTrackerResponse) Reset()         { *m = MsgRemoveFromOutTxTrackerResponse{} }
-func (m *MsgRemoveFromOutTxTrackerResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgRemoveFromOutTxTrackerResponse) ProtoMessage()    {}
-func (*MsgRemoveFromOutTxTrackerResponse) Descriptor() ([]byte, []int) {
+func (m *MsgRemoveOutboundTrackerResponse) Reset()         { *m = MsgRemoveOutboundTrackerResponse{} }
+func (m *MsgRemoveOutboundTrackerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveOutboundTrackerResponse) ProtoMessage()    {}
+func (*MsgRemoveOutboundTrackerResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{11}
 }
-func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgRemoveOutboundTrackerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgRemoveOutboundTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgRemoveOutboundTrackerResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -701,17 +701,17 @@ func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse.Merge(m, src)
+func (m *MsgRemoveOutboundTrackerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveOutboundTrackerResponse.Merge(m, src)
 }
-func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Size() int {
+func (m *MsgRemoveOutboundTrackerResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveFromOutTxTrackerResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse.DiscardUnknown(m)
+func (m *MsgRemoveOutboundTrackerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveOutboundTrackerResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgRemoveOutboundTrackerResponse proto.InternalMessageInfo
 
 type MsgVoteGasPrice struct {
 	Creator     string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
@@ -825,33 +825,33 @@ func (m *MsgVoteGasPriceResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgVoteGasPriceResponse proto.InternalMessageInfo
 
-type MsgVoteOnObservedOutboundTx struct {
-	Creator                        string                                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	CctxHash                       string                                  `protobuf:"bytes,2,opt,name=cctx_hash,json=cctxHash,proto3" json:"cctx_hash,omitempty"`
-	ObservedOutTxHash              string                                  `protobuf:"bytes,3,opt,name=observed_outTx_hash,json=observedOutTxHash,proto3" json:"observed_outTx_hash,omitempty"`
-	ObservedOutTxBlockHeight       uint64                                  `protobuf:"varint,4,opt,name=observed_outTx_blockHeight,json=observedOutTxBlockHeight,proto3" json:"observed_outTx_blockHeight,omitempty"`
-	ObservedOutTxGasUsed           uint64                                  `protobuf:"varint,10,opt,name=observed_outTx_gas_used,json=observedOutTxGasUsed,proto3" json:"observed_outTx_gas_used,omitempty"`
-	ObservedOutTxEffectiveGasPrice github_com_cosmos_cosmos_sdk_types.Int  `protobuf:"bytes,11,opt,name=observed_outTx_effective_gas_price,json=observedOutTxEffectiveGasPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"observed_outTx_effective_gas_price"`
-	ObservedOutTxEffectiveGasLimit uint64                                  `protobuf:"varint,12,opt,name=observed_outTx_effective_gas_limit,json=observedOutTxEffectiveGasLimit,proto3" json:"observed_outTx_effective_gas_limit,omitempty"`
-	ValueReceived                  github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,5,opt,name=value_received,json=valueReceived,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"value_received" yaml:"value_received"`
-	Status                         chains.ReceiveStatus                    `protobuf:"varint,6,opt,name=status,proto3,enum=zetachain.zetacore.pkg.chains.ReceiveStatus" json:"status,omitempty"`
-	OutTxChain                     int64                                   `protobuf:"varint,7,opt,name=outTx_chain,json=outTxChain,proto3" json:"outTx_chain,omitempty"`
-	OutTxTssNonce                  uint64                                  `protobuf:"varint,8,opt,name=outTx_tss_nonce,json=outTxTssNonce,proto3" json:"outTx_tss_nonce,omitempty"`
-	CoinType                       coin.CoinType                           `protobuf:"varint,9,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
+type MsgVoteOutbound struct {
+	Creator                           string                                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	CctxHash                          string                                  `protobuf:"bytes,2,opt,name=cctx_hash,json=cctxHash,proto3" json:"cctx_hash,omitempty"`
+	ObservedOutboundHash              string                                  `protobuf:"bytes,3,opt,name=observed_outbound_hash,json=observedOutboundHash,proto3" json:"observed_outbound_hash,omitempty"`
+	ObservedOutboundBlockHeight       uint64                                  `protobuf:"varint,4,opt,name=observed_outbound_blockHeight,json=observedOutboundBlockHeight,proto3" json:"observed_outbound_blockHeight,omitempty"`
+	ObservedOutboundGasUsed           uint64                                  `protobuf:"varint,10,opt,name=observed_outbound_gas_used,json=observedOutboundGasUsed,proto3" json:"observed_outbound_gas_used,omitempty"`
+	ObservedOutboundEffectiveGasPrice github_com_cosmos_cosmos_sdk_types.Int  `protobuf:"bytes,11,opt,name=observed_outbound_effective_gas_price,json=observedOutboundEffectiveGasPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"observed_outbound_effective_gas_price"`
+	ObservedOutboundEffectiveGasLimit uint64                                  `protobuf:"varint,12,opt,name=observed_outbound_effective_gas_limit,json=observedOutboundEffectiveGasLimit,proto3" json:"observed_outbound_effective_gas_limit,omitempty"`
+	ValueReceived                     github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,5,opt,name=value_received,json=valueReceived,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"value_received" yaml:"value_received"`
+	Status                            chains.ReceiveStatus                    `protobuf:"varint,6,opt,name=status,proto3,enum=zetachain.zetacore.pkg.chains.ReceiveStatus" json:"status,omitempty"`
+	OutboundChain                     int64                                   `protobuf:"varint,7,opt,name=outbound_chain,json=outboundChain,proto3" json:"outbound_chain,omitempty"`
+	OutboundTssNonce                  uint64                                  `protobuf:"varint,8,opt,name=outbound_tss_nonce,json=outboundTssNonce,proto3" json:"outbound_tss_nonce,omitempty"`
+	CoinType                          coin.CoinType                           `protobuf:"varint,9,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
 }
 
-func (m *MsgVoteOnObservedOutboundTx) Reset()         { *m = MsgVoteOnObservedOutboundTx{} }
-func (m *MsgVoteOnObservedOutboundTx) String() string { return proto.CompactTextString(m) }
-func (*MsgVoteOnObservedOutboundTx) ProtoMessage()    {}
-func (*MsgVoteOnObservedOutboundTx) Descriptor() ([]byte, []int) {
+func (m *MsgVoteOutbound) Reset()         { *m = MsgVoteOutbound{} }
+func (m *MsgVoteOutbound) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteOutbound) ProtoMessage()    {}
+func (*MsgVoteOutbound) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{14}
 }
-func (m *MsgVoteOnObservedOutboundTx) XXX_Unmarshal(b []byte) error {
+func (m *MsgVoteOutbound) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgVoteOnObservedOutboundTx) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgVoteOutbound) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgVoteOnObservedOutboundTx.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgVoteOutbound.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -861,103 +861,103 @@ func (m *MsgVoteOnObservedOutboundTx) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *MsgVoteOnObservedOutboundTx) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgVoteOnObservedOutboundTx.Merge(m, src)
+func (m *MsgVoteOutbound) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteOutbound.Merge(m, src)
 }
-func (m *MsgVoteOnObservedOutboundTx) XXX_Size() int {
+func (m *MsgVoteOutbound) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgVoteOnObservedOutboundTx) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgVoteOnObservedOutboundTx.DiscardUnknown(m)
+func (m *MsgVoteOutbound) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteOutbound.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgVoteOnObservedOutboundTx proto.InternalMessageInfo
+var xxx_messageInfo_MsgVoteOutbound proto.InternalMessageInfo
 
-func (m *MsgVoteOnObservedOutboundTx) GetCreator() string {
+func (m *MsgVoteOutbound) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetCctxHash() string {
+func (m *MsgVoteOutbound) GetCctxHash() string {
 	if m != nil {
 		return m.CctxHash
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetObservedOutTxHash() string {
+func (m *MsgVoteOutbound) GetObservedOutboundHash() string {
 	if m != nil {
-		return m.ObservedOutTxHash
+		return m.ObservedOutboundHash
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetObservedOutTxBlockHeight() uint64 {
+func (m *MsgVoteOutbound) GetObservedOutboundBlockHeight() uint64 {
 	if m != nil {
-		return m.ObservedOutTxBlockHeight
+		return m.ObservedOutboundBlockHeight
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetObservedOutTxGasUsed() uint64 {
+func (m *MsgVoteOutbound) GetObservedOutboundGasUsed() uint64 {
 	if m != nil {
-		return m.ObservedOutTxGasUsed
+		return m.ObservedOutboundGasUsed
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetObservedOutTxEffectiveGasLimit() uint64 {
+func (m *MsgVoteOutbound) GetObservedOutboundEffectiveGasLimit() uint64 {
 	if m != nil {
-		return m.ObservedOutTxEffectiveGasLimit
+		return m.ObservedOutboundEffectiveGasLimit
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetStatus() chains.ReceiveStatus {
+func (m *MsgVoteOutbound) GetStatus() chains.ReceiveStatus {
 	if m != nil {
 		return m.Status
 	}
 	return chains.ReceiveStatus_created
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetOutTxChain() int64 {
+func (m *MsgVoteOutbound) GetOutboundChain() int64 {
 	if m != nil {
-		return m.OutTxChain
+		return m.OutboundChain
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetOutTxTssNonce() uint64 {
+func (m *MsgVoteOutbound) GetOutboundTssNonce() uint64 {
 	if m != nil {
-		return m.OutTxTssNonce
+		return m.OutboundTssNonce
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedOutboundTx) GetCoinType() coin.CoinType {
+func (m *MsgVoteOutbound) GetCoinType() coin.CoinType {
 	if m != nil {
 		return m.CoinType
 	}
 	return coin.CoinType_Zeta
 }
 
-type MsgVoteOnObservedOutboundTxResponse struct {
+type MsgVoteOutboundResponse struct {
 }
 
-func (m *MsgVoteOnObservedOutboundTxResponse) Reset()         { *m = MsgVoteOnObservedOutboundTxResponse{} }
-func (m *MsgVoteOnObservedOutboundTxResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgVoteOnObservedOutboundTxResponse) ProtoMessage()    {}
-func (*MsgVoteOnObservedOutboundTxResponse) Descriptor() ([]byte, []int) {
+func (m *MsgVoteOutboundResponse) Reset()         { *m = MsgVoteOutboundResponse{} }
+func (m *MsgVoteOutboundResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteOutboundResponse) ProtoMessage()    {}
+func (*MsgVoteOutboundResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{15}
 }
-func (m *MsgVoteOnObservedOutboundTxResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgVoteOutboundResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgVoteOnObservedOutboundTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgVoteOutboundResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgVoteOnObservedOutboundTxResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgVoteOutboundResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -967,19 +967,19 @@ func (m *MsgVoteOnObservedOutboundTxResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgVoteOnObservedOutboundTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgVoteOnObservedOutboundTxResponse.Merge(m, src)
+func (m *MsgVoteOutboundResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteOutboundResponse.Merge(m, src)
 }
-func (m *MsgVoteOnObservedOutboundTxResponse) XXX_Size() int {
+func (m *MsgVoteOutboundResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgVoteOnObservedOutboundTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgVoteOnObservedOutboundTxResponse.DiscardUnknown(m)
+func (m *MsgVoteOutboundResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteOutboundResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgVoteOnObservedOutboundTxResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgVoteOutboundResponse proto.InternalMessageInfo
 
-type MsgVoteOnObservedInboundTx struct {
+type MsgVoteInbound struct {
 	Creator       string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Sender        string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
 	SenderChainId int64  `protobuf:"varint,3,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
@@ -989,7 +989,7 @@ type MsgVoteOnObservedInboundTx struct {
 	Amount github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,6,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"amount"`
 	// string mMint = 7;
 	Message       string        `protobuf:"bytes,8,opt,name=message,proto3" json:"message,omitempty"`
-	InTxHash      string        `protobuf:"bytes,9,opt,name=in_tx_hash,json=inTxHash,proto3" json:"in_tx_hash,omitempty"`
+	InboundHash   string        `protobuf:"bytes,9,opt,name=inbound_hash,json=inboundHash,proto3" json:"inbound_hash,omitempty"`
 	InBlockHeight uint64        `protobuf:"varint,10,opt,name=in_block_height,json=inBlockHeight,proto3" json:"in_block_height,omitempty"`
 	GasLimit      uint64        `protobuf:"varint,11,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
 	CoinType      coin.CoinType `protobuf:"varint,12,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
@@ -999,18 +999,18 @@ type MsgVoteOnObservedInboundTx struct {
 	EventIndex uint64 `protobuf:"varint,15,opt,name=event_index,json=eventIndex,proto3" json:"event_index,omitempty"`
 }
 
-func (m *MsgVoteOnObservedInboundTx) Reset()         { *m = MsgVoteOnObservedInboundTx{} }
-func (m *MsgVoteOnObservedInboundTx) String() string { return proto.CompactTextString(m) }
-func (*MsgVoteOnObservedInboundTx) ProtoMessage()    {}
-func (*MsgVoteOnObservedInboundTx) Descriptor() ([]byte, []int) {
+func (m *MsgVoteInbound) Reset()         { *m = MsgVoteInbound{} }
+func (m *MsgVoteInbound) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteInbound) ProtoMessage()    {}
+func (*MsgVoteInbound) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{16}
 }
-func (m *MsgVoteOnObservedInboundTx) XXX_Unmarshal(b []byte) error {
+func (m *MsgVoteInbound) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgVoteOnObservedInboundTx) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgVoteInbound) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgVoteOnObservedInboundTx.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgVoteInbound.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1020,124 +1020,124 @@ func (m *MsgVoteOnObservedInboundTx) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *MsgVoteOnObservedInboundTx) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgVoteOnObservedInboundTx.Merge(m, src)
+func (m *MsgVoteInbound) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteInbound.Merge(m, src)
 }
-func (m *MsgVoteOnObservedInboundTx) XXX_Size() int {
+func (m *MsgVoteInbound) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgVoteOnObservedInboundTx) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgVoteOnObservedInboundTx.DiscardUnknown(m)
+func (m *MsgVoteInbound) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteInbound.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgVoteOnObservedInboundTx proto.InternalMessageInfo
+var xxx_messageInfo_MsgVoteInbound proto.InternalMessageInfo
 
-func (m *MsgVoteOnObservedInboundTx) GetCreator() string {
+func (m *MsgVoteInbound) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetSender() string {
+func (m *MsgVoteInbound) GetSender() string {
 	if m != nil {
 		return m.Sender
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetSenderChainId() int64 {
+func (m *MsgVoteInbound) GetSenderChainId() int64 {
 	if m != nil {
 		return m.SenderChainId
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetReceiver() string {
+func (m *MsgVoteInbound) GetReceiver() string {
 	if m != nil {
 		return m.Receiver
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetReceiverChain() int64 {
+func (m *MsgVoteInbound) GetReceiverChain() int64 {
 	if m != nil {
 		return m.ReceiverChain
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetMessage() string {
+func (m *MsgVoteInbound) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetInTxHash() string {
+func (m *MsgVoteInbound) GetInboundHash() string {
 	if m != nil {
-		return m.InTxHash
+		return m.InboundHash
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetInBlockHeight() uint64 {
+func (m *MsgVoteInbound) GetInBlockHeight() uint64 {
 	if m != nil {
 		return m.InBlockHeight
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetGasLimit() uint64 {
+func (m *MsgVoteInbound) GetGasLimit() uint64 {
 	if m != nil {
 		return m.GasLimit
 	}
 	return 0
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetCoinType() coin.CoinType {
+func (m *MsgVoteInbound) GetCoinType() coin.CoinType {
 	if m != nil {
 		return m.CoinType
 	}
 	return coin.CoinType_Zeta
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetTxOrigin() string {
+func (m *MsgVoteInbound) GetTxOrigin() string {
 	if m != nil {
 		return m.TxOrigin
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetAsset() string {
+func (m *MsgVoteInbound) GetAsset() string {
 	if m != nil {
 		return m.Asset
 	}
 	return ""
 }
 
-func (m *MsgVoteOnObservedInboundTx) GetEventIndex() uint64 {
+func (m *MsgVoteInbound) GetEventIndex() uint64 {
 	if m != nil {
 		return m.EventIndex
 	}
 	return 0
 }
 
-type MsgVoteOnObservedInboundTxResponse struct {
+type MsgVoteInboundResponse struct {
 }
 
-func (m *MsgVoteOnObservedInboundTxResponse) Reset()         { *m = MsgVoteOnObservedInboundTxResponse{} }
-func (m *MsgVoteOnObservedInboundTxResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgVoteOnObservedInboundTxResponse) ProtoMessage()    {}
-func (*MsgVoteOnObservedInboundTxResponse) Descriptor() ([]byte, []int) {
+func (m *MsgVoteInboundResponse) Reset()         { *m = MsgVoteInboundResponse{} }
+func (m *MsgVoteInboundResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteInboundResponse) ProtoMessage()    {}
+func (*MsgVoteInboundResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_15f0860550897740, []int{17}
 }
-func (m *MsgVoteOnObservedInboundTxResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgVoteInboundResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgVoteOnObservedInboundTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgVoteInboundResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgVoteOnObservedInboundTxResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgVoteInboundResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1147,17 +1147,17 @@ func (m *MsgVoteOnObservedInboundTxResponse) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *MsgVoteOnObservedInboundTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgVoteOnObservedInboundTxResponse.Merge(m, src)
+func (m *MsgVoteInboundResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteInboundResponse.Merge(m, src)
 }
-func (m *MsgVoteOnObservedInboundTxResponse) XXX_Size() int {
+func (m *MsgVoteInboundResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgVoteOnObservedInboundTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgVoteOnObservedInboundTxResponse.DiscardUnknown(m)
+func (m *MsgVoteInboundResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteInboundResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgVoteOnObservedInboundTxResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgVoteInboundResponse proto.InternalMessageInfo
 
 type MsgAbortStuckCCTX struct {
 	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
@@ -1436,20 +1436,20 @@ func init() {
 	proto.RegisterType((*MsgMigrateTssFundsResponse)(nil), "zetachain.zetacore.crosschain.MsgMigrateTssFundsResponse")
 	proto.RegisterType((*MsgUpdateTssAddress)(nil), "zetachain.zetacore.crosschain.MsgUpdateTssAddress")
 	proto.RegisterType((*MsgUpdateTssAddressResponse)(nil), "zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse")
-	proto.RegisterType((*MsgAddToInTxTracker)(nil), "zetachain.zetacore.crosschain.MsgAddToInTxTracker")
-	proto.RegisterType((*MsgAddToInTxTrackerResponse)(nil), "zetachain.zetacore.crosschain.MsgAddToInTxTrackerResponse")
+	proto.RegisterType((*MsgAddInboundTracker)(nil), "zetachain.zetacore.crosschain.MsgAddInboundTracker")
+	proto.RegisterType((*MsgAddInboundTrackerResponse)(nil), "zetachain.zetacore.crosschain.MsgAddInboundTrackerResponse")
 	proto.RegisterType((*MsgWhitelistERC20)(nil), "zetachain.zetacore.crosschain.MsgWhitelistERC20")
 	proto.RegisterType((*MsgWhitelistERC20Response)(nil), "zetachain.zetacore.crosschain.MsgWhitelistERC20Response")
-	proto.RegisterType((*MsgAddToOutTxTracker)(nil), "zetachain.zetacore.crosschain.MsgAddToOutTxTracker")
-	proto.RegisterType((*MsgAddToOutTxTrackerResponse)(nil), "zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse")
-	proto.RegisterType((*MsgRemoveFromOutTxTracker)(nil), "zetachain.zetacore.crosschain.MsgRemoveFromOutTxTracker")
-	proto.RegisterType((*MsgRemoveFromOutTxTrackerResponse)(nil), "zetachain.zetacore.crosschain.MsgRemoveFromOutTxTrackerResponse")
+	proto.RegisterType((*MsgAddOutboundTracker)(nil), "zetachain.zetacore.crosschain.MsgAddOutboundTracker")
+	proto.RegisterType((*MsgAddOutboundTrackerResponse)(nil), "zetachain.zetacore.crosschain.MsgAddOutboundTrackerResponse")
+	proto.RegisterType((*MsgRemoveOutboundTracker)(nil), "zetachain.zetacore.crosschain.MsgRemoveOutboundTracker")
+	proto.RegisterType((*MsgRemoveOutboundTrackerResponse)(nil), "zetachain.zetacore.crosschain.MsgRemoveOutboundTrackerResponse")
 	proto.RegisterType((*MsgVoteGasPrice)(nil), "zetachain.zetacore.crosschain.MsgVoteGasPrice")
 	proto.RegisterType((*MsgVoteGasPriceResponse)(nil), "zetachain.zetacore.crosschain.MsgVoteGasPriceResponse")
-	proto.RegisterType((*MsgVoteOnObservedOutboundTx)(nil), "zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx")
-	proto.RegisterType((*MsgVoteOnObservedOutboundTxResponse)(nil), "zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTxResponse")
-	proto.RegisterType((*MsgVoteOnObservedInboundTx)(nil), "zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx")
-	proto.RegisterType((*MsgVoteOnObservedInboundTxResponse)(nil), "zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTxResponse")
+	proto.RegisterType((*MsgVoteOutbound)(nil), "zetachain.zetacore.crosschain.MsgVoteOutbound")
+	proto.RegisterType((*MsgVoteOutboundResponse)(nil), "zetachain.zetacore.crosschain.MsgVoteOutboundResponse")
+	proto.RegisterType((*MsgVoteInbound)(nil), "zetachain.zetacore.crosschain.MsgVoteInbound")
+	proto.RegisterType((*MsgVoteInboundResponse)(nil), "zetachain.zetacore.crosschain.MsgVoteInboundResponse")
 	proto.RegisterType((*MsgAbortStuckCCTX)(nil), "zetachain.zetacore.crosschain.MsgAbortStuckCCTX")
 	proto.RegisterType((*MsgAbortStuckCCTXResponse)(nil), "zetachain.zetacore.crosschain.MsgAbortStuckCCTXResponse")
 	proto.RegisterType((*MsgRefundAbortedCCTX)(nil), "zetachain.zetacore.crosschain.MsgRefundAbortedCCTX")
@@ -1463,104 +1463,104 @@ func init() {
 }
 
 var fileDescriptor_15f0860550897740 = []byte{
-	// 1551 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0xdd, 0x4f, 0x1b, 0xc7,
-	0x16, 0x67, 0x03, 0x18, 0xfb, 0x80, 0x21, 0xd9, 0x70, 0x83, 0x31, 0xc1, 0x10, 0x27, 0xe1, 0xa2,
-	0xab, 0x1b, 0x3b, 0x71, 0x74, 0xa3, 0x84, 0xdb, 0x4a, 0x05, 0x9a, 0x0f, 0xda, 0x10, 0xa2, 0x8d,
-	0xd3, 0x56, 0x7d, 0x59, 0xad, 0x77, 0x87, 0x65, 0x85, 0xbd, 0x63, 0xed, 0x8c, 0x91, 0x41, 0x95,
-	0x2a, 0x55, 0xca, 0x7b, 0x55, 0x55, 0x8a, 0x14, 0xa9, 0xff, 0x4f, 0x1e, 0xa3, 0x3e, 0x55, 0x7d,
-	0x88, 0xaa, 0xe4, 0x1f, 0xa8, 0xfa, 0xd6, 0xb7, 0x6a, 0xce, 0x8c, 0x17, 0xef, 0xfa, 0x13, 0x47,
-	0x55, 0x5f, 0x60, 0xcf, 0xf1, 0xf9, 0x9d, 0x39, 0x9f, 0x73, 0xce, 0x2e, 0xac, 0x9d, 0x10, 0x6e,
-	0xd9, 0x07, 0x96, 0xe7, 0x17, 0xf1, 0x89, 0x06, 0xa4, 0x68, 0x07, 0x94, 0x31, 0xc9, 0xe3, 0xcd,
-	0x42, 0x3d, 0xa0, 0x9c, 0xea, 0xcb, 0xa1, 0x5c, 0xa1, 0x25, 0x57, 0x38, 0x95, 0xcb, 0xce, 0xbb,
-	0xd4, 0xa5, 0x28, 0x59, 0x14, 0x4f, 0x12, 0x94, 0xfd, 0x4f, 0x17, 0xe5, 0xf5, 0x43, 0xb7, 0x88,
-	0x2c, 0xa6, 0xfe, 0x29, 0xd9, 0xb5, 0x5e, 0xb2, 0xd4, 0xf3, 0xf1, 0xcf, 0x00, 0x9d, 0xf5, 0x80,
-	0xd2, 0x7d, 0xa6, 0xfe, 0x29, 0xd9, 0x3b, 0xfd, 0x9d, 0x0b, 0x2c, 0x4e, 0xcc, 0xaa, 0x57, 0xf3,
-	0x38, 0x09, 0xcc, 0xfd, 0xaa, 0xe5, 0x2a, 0x5c, 0xfe, 0x07, 0x0d, 0xf4, 0x5d, 0xe6, 0xee, 0x7a,
-	0xae, 0x10, 0x29, 0x33, 0xf6, 0xa0, 0xe1, 0x3b, 0x4c, 0xcf, 0xc0, 0x94, 0x1d, 0x10, 0x8b, 0xd3,
-	0x20, 0xa3, 0xad, 0x6a, 0xeb, 0x29, 0xa3, 0x45, 0xea, 0x8b, 0x90, 0x44, 0x95, 0xa6, 0xe7, 0x64,
-	0xce, 0xad, 0x6a, 0xeb, 0xe3, 0xc6, 0x14, 0xd2, 0x3b, 0x8e, 0xfe, 0x10, 0x12, 0x56, 0x8d, 0x36,
-	0x7c, 0x9e, 0x19, 0x17, 0x98, 0xad, 0xe2, 0xeb, 0xb7, 0x2b, 0x63, 0xbf, 0xbe, 0x5d, 0xf9, 0xb7,
-	0xeb, 0xf1, 0x83, 0x46, 0xa5, 0x60, 0xd3, 0x5a, 0xd1, 0xa6, 0xac, 0x46, 0x99, 0xfa, 0x77, 0x83,
-	0x39, 0x87, 0x45, 0x7e, 0x5c, 0x27, 0xac, 0xf0, 0xdc, 0xf3, 0xb9, 0xa1, 0xe0, 0xf9, 0xcb, 0x90,
-	0xed, 0xb4, 0xc9, 0x20, 0xac, 0x4e, 0x7d, 0x46, 0xf2, 0x4f, 0xe0, 0xe2, 0x2e, 0x73, 0x9f, 0xd7,
-	0x1d, 0xf9, 0xe3, 0xa6, 0xe3, 0x04, 0x84, 0xf5, 0x33, 0x79, 0x19, 0x80, 0x33, 0x66, 0xd6, 0x1b,
-	0x95, 0x43, 0x72, 0x8c, 0x46, 0xa7, 0x8c, 0x14, 0x67, 0xec, 0x29, 0x32, 0xf2, 0xcb, 0xb0, 0xd4,
-	0x45, 0x5f, 0x78, 0xdc, 0x4f, 0xe7, 0xf0, 0xbc, 0x4d, 0xc7, 0x29, 0xd3, 0x1d, 0xbf, 0xdc, 0x2c,
-	0x07, 0x96, 0x7d, 0x48, 0x82, 0xd1, 0x42, 0xb4, 0x00, 0x53, 0xbc, 0x69, 0x1e, 0x58, 0xec, 0x40,
-	0xc6, 0xc8, 0x48, 0xf0, 0xe6, 0x23, 0x8b, 0x1d, 0xe8, 0x5b, 0x90, 0x12, 0x99, 0x37, 0x45, 0x34,
-	0x32, 0x13, 0xab, 0xda, 0xfa, 0x6c, 0xe9, 0x7a, 0xa1, 0x4b, 0x21, 0xd6, 0x0f, 0xdd, 0x02, 0x96,
-	0xc8, 0x36, 0xf5, 0xfc, 0xf2, 0x71, 0x9d, 0x18, 0x49, 0x5b, 0x3d, 0xe9, 0x1b, 0x30, 0x89, 0x35,
-	0x91, 0x99, 0x5c, 0xd5, 0xd6, 0xa7, 0x4b, 0xd7, 0x7a, 0xe1, 0x55, 0xe1, 0x3c, 0x15, 0xff, 0x0c,
-	0x09, 0x11, 0x31, 0xaa, 0x54, 0xa9, 0x7d, 0x28, 0x6d, 0x4b, 0xc8, 0x18, 0x21, 0x07, 0xcd, 0x5b,
-	0x84, 0x24, 0x6f, 0x9a, 0x9e, 0xef, 0x90, 0x66, 0x66, 0x4a, 0xba, 0xc4, 0x9b, 0x3b, 0x82, 0x54,
-	0xe1, 0x8b, 0x87, 0x27, 0x0c, 0xdf, 0xcf, 0x1a, 0x5c, 0xd8, 0x65, 0xee, 0x97, 0x07, 0x1e, 0x27,
-	0x55, 0x8f, 0xf1, 0xfb, 0xc6, 0x76, 0xe9, 0x66, 0x9f, 0xe0, 0x5d, 0x85, 0x34, 0x09, 0xec, 0xd2,
-	0x4d, 0xd3, 0x92, 0x79, 0x50, 0xf9, 0x9a, 0x41, 0x66, 0x2b, 0xd7, 0xed, 0x11, 0x1e, 0x8f, 0x46,
-	0x58, 0x87, 0x09, 0xdf, 0xaa, 0xc9, 0x18, 0xa6, 0x0c, 0x7c, 0xd6, 0x2f, 0x41, 0x82, 0x1d, 0xd7,
-	0x2a, 0xb4, 0x8a, 0x91, 0x49, 0x19, 0x8a, 0xd2, 0xb3, 0x90, 0x74, 0x88, 0xed, 0xd5, 0xac, 0x2a,
-	0x43, 0x97, 0xd3, 0x46, 0x48, 0xeb, 0x4b, 0x90, 0x72, 0x2d, 0x26, 0x7b, 0x46, 0xb9, 0x9c, 0x74,
-	0x2d, 0xf6, 0x58, 0xd0, 0x79, 0x13, 0x16, 0x3b, 0x7c, 0x6a, 0x79, 0x2c, 0x3c, 0x38, 0x89, 0x78,
-	0x20, 0x3d, 0x9c, 0x39, 0x69, 0xf7, 0x60, 0x19, 0xc0, 0xb6, 0xc3, 0x90, 0xaa, 0x9a, 0x14, 0x1c,
-	0x19, 0xd4, 0xdf, 0x35, 0x98, 0x6f, 0x45, 0x75, 0xaf, 0xc1, 0x3f, 0xb0, 0xea, 0xe6, 0x61, 0xd2,
-	0xa7, 0xbe, 0x4d, 0x30, 0x56, 0x13, 0x86, 0x24, 0xda, 0x6b, 0x71, 0x22, 0x52, 0x8b, 0xff, 0x4c,
-	0x1d, 0x7d, 0x0c, 0x97, 0xbb, 0x79, 0x1c, 0x86, 0x75, 0x19, 0xc0, 0x63, 0x66, 0x40, 0x6a, 0xf4,
-	0x88, 0x38, 0xe8, 0x7c, 0xd2, 0x48, 0x79, 0xcc, 0x90, 0x8c, 0xfc, 0x3e, 0xa6, 0x44, 0x52, 0x0f,
-	0x02, 0x5a, 0xfb, 0x9b, 0xa2, 0x96, 0xbf, 0x0a, 0x57, 0x7a, 0x9e, 0x13, 0x16, 0xfd, 0x4b, 0x0d,
-	0xe6, 0x76, 0x99, 0xfb, 0x05, 0xe5, 0xe4, 0xa1, 0xc5, 0x9e, 0x06, 0x9e, 0x4d, 0x46, 0xb6, 0xa1,
-	0x2e, 0xd0, 0x2d, 0x1b, 0x90, 0xd0, 0xaf, 0xc0, 0x8c, 0x0c, 0xb2, 0xdf, 0xa8, 0x55, 0x48, 0x80,
-	0xe9, 0x9b, 0x30, 0xa6, 0x91, 0xf7, 0x04, 0x59, 0x58, 0xf2, 0x8d, 0x7a, 0xbd, 0x7a, 0x1c, 0x96,
-	0x3c, 0x52, 0xf9, 0x45, 0x58, 0x88, 0x19, 0x16, 0x1a, 0xfd, 0x22, 0x81, 0x9d, 0x2c, 0x7e, 0xdb,
-	0xf3, 0xf7, 0x2a, 0x8c, 0x04, 0x47, 0xc4, 0xd9, 0x6b, 0xf0, 0x0a, 0x6d, 0xf8, 0x4e, 0xb9, 0xd9,
-	0xc7, 0x81, 0x25, 0xc0, 0xd2, 0x95, 0x39, 0x97, 0xb5, 0x9c, 0x14, 0x0c, 0x4c, 0x79, 0x01, 0x2e,
-	0x52, 0xa5, 0xcc, 0xa4, 0x22, 0x58, 0xed, 0xd7, 0xdf, 0x05, 0x7a, 0x7a, 0x4e, 0x59, 0xca, 0x7f,
-	0x04, 0xd9, 0x98, 0xbc, 0x2c, 0x1f, 0xe2, 0xb9, 0x07, 0x5c, 0xb9, 0x9a, 0x89, 0xc0, 0xb6, 0x4e,
-	0x7f, 0xd7, 0xff, 0x07, 0x0b, 0x31, 0xb4, 0xe8, 0xe2, 0x06, 0x23, 0x4e, 0x06, 0x10, 0x3a, 0x1f,
-	0x81, 0x3e, 0xb4, 0xd8, 0x73, 0x46, 0x1c, 0xfd, 0x04, 0xf2, 0x31, 0x18, 0xd9, 0xdf, 0x27, 0x36,
-	0xf7, 0x8e, 0x08, 0x2a, 0x90, 0x49, 0x98, 0xc6, 0xb1, 0x56, 0x50, 0x63, 0x6d, 0x6d, 0x88, 0xb1,
-	0xb6, 0xe3, 0x73, 0x23, 0x17, 0x39, 0xf1, 0x7e, 0x4b, 0x6f, 0x58, 0x18, 0x9f, 0x0d, 0x38, 0x5b,
-	0x5e, 0x41, 0x33, 0x68, 0x7d, 0x6f, 0x5d, 0x78, 0x31, 0xe9, 0x14, 0x66, 0x8f, 0xac, 0x6a, 0x83,
-	0x98, 0x01, 0xb1, 0x89, 0x27, 0x1a, 0x05, 0xd3, 0xbf, 0xf5, 0xe8, 0x8c, 0xa3, 0xf8, 0x8f, 0xb7,
-	0x2b, 0xff, 0x3a, 0xb6, 0x6a, 0xd5, 0x8d, 0x7c, 0x54, 0x5d, 0xde, 0x48, 0x23, 0xc3, 0x50, 0xb4,
-	0xfe, 0x29, 0x24, 0x18, 0xb7, 0x78, 0x43, 0x5e, 0xa0, 0xb3, 0xa5, 0xff, 0xf6, 0x1c, 0x5a, 0x72,
-	0x03, 0x52, 0xc0, 0x67, 0x88, 0x31, 0x14, 0x56, 0x5f, 0x81, 0x69, 0xe9, 0x39, 0x4a, 0xa9, 0x9b,
-	0x01, 0x90, 0xb5, 0x2d, 0x38, 0xfa, 0x1a, 0xcc, 0x49, 0x01, 0x31, 0xc8, 0x65, 0x57, 0x26, 0x31,
-	0x20, 0x69, 0x64, 0x97, 0x19, 0x7b, 0x82, 0x77, 0x5a, 0x64, 0x8c, 0xa6, 0x46, 0x1a, 0xa3, 0xf9,
-	0xeb, 0x70, 0xb5, 0x4f, 0x1b, 0x9c, 0xf6, 0xf8, 0x04, 0x6e, 0x29, 0x51, 0xb9, 0x1d, 0x7f, 0x70,
-	0xb7, 0x88, 0xd6, 0x24, 0xbe, 0x43, 0x02, 0xd5, 0x2a, 0x8a, 0x12, 0x3e, 0xca, 0x27, 0x33, 0x36,
-	0xdb, 0xd2, 0x92, 0xbd, 0xad, 0xee, 0x84, 0x2c, 0x24, 0x55, 0x3a, 0x02, 0x75, 0x71, 0x87, 0xb4,
-	0x7e, 0x1d, 0x66, 0x5b, 0xcf, 0x2a, 0x96, 0x93, 0x52, 0x45, 0x8b, 0x2b, 0xc3, 0x79, 0xba, 0xa9,
-	0x25, 0x3e, 0x68, 0x53, 0x13, 0x5e, 0xd6, 0x08, 0x63, 0x96, 0x2b, 0xf3, 0x91, 0x32, 0x5a, 0xa4,
-	0x7e, 0x19, 0x40, 0xe4, 0x41, 0x75, 0x7b, 0x4a, 0xda, 0xe9, 0xf9, 0xaa, 0xc9, 0xd7, 0x60, 0xce,
-	0xf3, 0x4d, 0x35, 0x29, 0x64, 0x67, 0xcb, 0xf6, 0x4c, 0x7b, 0x7e, 0x7b, 0x3b, 0x47, 0xa6, 0xf0,
-	0x34, 0x4a, 0x84, 0x53, 0x38, 0x9a, 0xec, 0x99, 0xd1, 0x76, 0xa6, 0x25, 0x48, 0xf1, 0xa6, 0x49,
-	0x03, 0xcf, 0xf5, 0xfc, 0x4c, 0x5a, 0x5a, 0xc9, 0x9b, 0x7b, 0x48, 0x8b, 0xdb, 0xd7, 0x62, 0x8c,
-	0xf0, 0xcc, 0x2c, 0xfe, 0x20, 0x09, 0x51, 0xac, 0xe4, 0x88, 0xf8, 0x5c, 0x8d, 0xb1, 0x39, 0xb4,
-	0x0a, 0x90, 0x25, 0x27, 0xd9, 0x35, 0xc8, 0xf7, 0x2e, 0x8c, 0xb0, 0x7e, 0x1e, 0xe3, 0x5e, 0xb4,
-	0x59, 0xa1, 0x01, 0x7f, 0xc6, 0x1b, 0xf6, 0xe1, 0xf6, 0x76, 0xf9, 0xab, 0xfe, 0x4b, 0x6c, 0xbf,
-	0x85, 0x61, 0x09, 0xc7, 0x5f, 0x54, 0x5b, 0x78, 0xd4, 0x11, 0x2e, 0x13, 0x06, 0xd9, 0x6f, 0xf8,
-	0x0e, 0x8a, 0x10, 0xe7, 0x83, 0x4e, 0x93, 0x65, 0x26, 0xb4, 0x85, 0x3b, 0x8e, 0xbc, 0xce, 0xd3,
-	0x92, 0xab, 0x96, 0x9c, 0x7c, 0x0e, 0x47, 0x7a, 0xc7, 0xb9, 0xa1, 0x5d, 0xaf, 0x34, 0xb4, 0x5a,
-	0xae, 0xde, 0x86, 0xc5, 0xc9, 0x63, 0xf9, 0x86, 0xf2, 0x40, 0xbc, 0xa0, 0xf4, 0xb1, 0xce, 0x06,
-	0xbd, 0xf3, 0x85, 0x06, 0xad, 0x9c, 0x2e, 0x15, 0x0b, 0x7d, 0x5f, 0xdf, 0x0a, 0xf1, 0x63, 0xb6,
-	0x26, 0x44, 0xed, 0x1b, 0xe7, 0x83, 0x18, 0x5f, 0x0d, 0xfa, 0xee, 0xb6, 0xb5, 0x3c, 0x28, 0xfd,
-	0x39, 0x03, 0xe3, 0xbb, 0xcc, 0xd5, 0x5f, 0x68, 0x70, 0xa1, 0x73, 0x59, 0xbb, 0x3d, 0xc0, 0x96,
-	0x6e, 0xfb, 0x4e, 0xf6, 0xff, 0x23, 0x80, 0xc2, 0x25, 0xe9, 0x3b, 0x0d, 0xce, 0x77, 0xbc, 0xa9,
-	0x94, 0x86, 0xd4, 0xd8, 0x86, 0xc9, 0x6e, 0x9c, 0x1d, 0x13, 0x1a, 0xf1, 0xa3, 0x06, 0x97, 0x7a,
-	0x2c, 0x62, 0x77, 0x07, 0xab, 0xed, 0x8e, 0xcc, 0x7e, 0x32, 0x2a, 0x32, 0x34, 0xeb, 0x08, 0x66,
-	0x22, 0x0b, 0x59, 0x61, 0xb0, 0xc6, 0x76, 0xf9, 0xec, 0x9d, 0xb3, 0xc9, 0x87, 0xe7, 0xbe, 0xd2,
-	0x20, 0xd3, 0x73, 0xa9, 0xda, 0x18, 0x4e, 0x69, 0x37, 0x6c, 0x76, 0x6b, 0x74, 0x6c, 0x68, 0xdc,
-	0x4b, 0x0d, 0x16, 0x7a, 0x8d, 0xb0, 0x7b, 0x67, 0xd5, 0x1f, 0x42, 0xb3, 0x9b, 0x23, 0x43, 0x43,
-	0xcb, 0xbe, 0x81, 0xd9, 0xd8, 0x4b, 0xe3, 0xcd, 0xc1, 0x4a, 0xa3, 0x88, 0xec, 0xdd, 0xb3, 0x22,
-	0x22, 0x8d, 0xd4, 0xf1, 0x89, 0x61, 0x88, 0x46, 0x8a, 0x63, 0x86, 0x69, 0xa4, 0x5e, 0x9f, 0x1e,
-	0xf4, 0x6f, 0x61, 0x2e, 0xfe, 0x61, 0xe6, 0xd6, 0x60, 0x75, 0x31, 0x48, 0xf6, 0xde, 0x99, 0x21,
-	0xed, 0x39, 0x88, 0x0d, 0xa8, 0x21, 0x72, 0x10, 0x45, 0x0c, 0x93, 0x83, 0xee, 0x63, 0x0b, 0x2f,
-	0xd5, 0xce, 0xa1, 0x75, 0x7b, 0x98, 0x8b, 0x20, 0x06, 0x1a, 0xe6, 0x52, 0xed, 0x39, 0xa6, 0xf0,
-	0x3e, 0xeb, 0x31, 0xa3, 0xee, 0x0e, 0x9b, 0xdd, 0x38, 0x72, 0x98, 0xfb, 0xac, 0xff, 0xec, 0xd9,
-	0xfa, 0xfc, 0xf5, 0xbb, 0x9c, 0xf6, 0xe6, 0x5d, 0x4e, 0xfb, 0xed, 0x5d, 0x4e, 0xfb, 0xfe, 0x7d,
-	0x6e, 0xec, 0xcd, 0xfb, 0xdc, 0xd8, 0x2f, 0xef, 0x73, 0x63, 0x5f, 0xdf, 0x6a, 0x5b, 0xe3, 0x84,
-	0xee, 0x1b, 0xb1, 0x0f, 0x83, 0xcd, 0xc8, 0x77, 0x4f, 0xb1, 0xd5, 0x55, 0x12, 0xf8, 0x39, 0xf0,
-	0xf6, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xff, 0x85, 0xff, 0x1f, 0x25, 0x15, 0x00, 0x00,
+	// 1545 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0x5f, 0x6f, 0x1b, 0x45,
+	0x10, 0xcf, 0x35, 0x8e, 0x63, 0x8f, 0xff, 0xa4, 0x3d, 0xd2, 0xd4, 0xb9, 0xd4, 0x4e, 0xea, 0xd2,
+	0x10, 0xa1, 0xd6, 0x6e, 0xdd, 0x52, 0x4a, 0x8b, 0x80, 0x26, 0xf4, 0x4f, 0x44, 0xdd, 0x46, 0xd7,
+	0x14, 0x10, 0x2f, 0xa7, 0xf3, 0xdd, 0xe6, 0x7c, 0xb2, 0x7d, 0x67, 0xdd, 0xae, 0x2d, 0xa7, 0x42,
+	0x02, 0x21, 0x21, 0xf1, 0x58, 0x10, 0x12, 0x12, 0x0f, 0x3c, 0xf1, 0x09, 0xf8, 0x14, 0x7d, 0xac,
+	0x78, 0x42, 0x3c, 0x54, 0xa8, 0xfd, 0x04, 0xf0, 0x09, 0xd0, 0xed, 0xee, 0x6d, 0x7d, 0xe7, 0xbf,
+	0x71, 0x85, 0x78, 0xb1, 0x6f, 0xe6, 0xe6, 0x37, 0x3b, 0x33, 0x3b, 0xb3, 0x33, 0x7b, 0xb0, 0xf9,
+	0x18, 0x11, 0xdd, 0xa8, 0xeb, 0xb6, 0x53, 0xa6, 0x4f, 0xae, 0x87, 0xca, 0x86, 0xe7, 0x62, 0xcc,
+	0x78, 0xa4, 0x57, 0x6a, 0x7b, 0x2e, 0x71, 0xe5, 0xbc, 0x90, 0x2b, 0x05, 0x72, 0xa5, 0x57, 0x72,
+	0xca, 0xb2, 0xe5, 0x5a, 0x2e, 0x95, 0x2c, 0xfb, 0x4f, 0x0c, 0xa4, 0xbc, 0x3d, 0x44, 0x79, 0xbb,
+	0x61, 0x95, 0x29, 0x0b, 0xf3, 0x3f, 0x2e, 0xbb, 0x39, 0x4a, 0xd6, 0xb5, 0x1d, 0xfa, 0x33, 0x41,
+	0x67, 0xdb, 0x73, 0xdd, 0x03, 0xcc, 0xff, 0xb8, 0xec, 0xd5, 0xf1, 0xce, 0x79, 0x3a, 0x41, 0x5a,
+	0xd3, 0x6e, 0xd9, 0x04, 0x79, 0xda, 0x41, 0x53, 0xb7, 0x38, 0xae, 0xf8, 0x83, 0x04, 0x72, 0x15,
+	0x5b, 0x55, 0xdb, 0xf2, 0x45, 0xf6, 0x31, 0xbe, 0xdd, 0x71, 0x4c, 0x2c, 0xe7, 0x60, 0xd1, 0xf0,
+	0x90, 0x4e, 0x5c, 0x2f, 0x27, 0x6d, 0x48, 0x5b, 0x49, 0x35, 0x20, 0xe5, 0x55, 0x48, 0x50, 0x95,
+	0x9a, 0x6d, 0xe6, 0x8e, 0x6d, 0x48, 0x5b, 0xf3, 0xea, 0x22, 0xa5, 0x77, 0x4d, 0xf9, 0x0e, 0xc4,
+	0xf5, 0x96, 0xdb, 0x71, 0x48, 0x6e, 0xde, 0xc7, 0x6c, 0x97, 0x9f, 0x3e, 0x5f, 0x9f, 0xfb, 0xf3,
+	0xf9, 0xfa, 0x5b, 0x96, 0x4d, 0xea, 0x9d, 0x5a, 0xc9, 0x70, 0x5b, 0x65, 0xc3, 0xc5, 0x2d, 0x17,
+	0xf3, 0xbf, 0x0b, 0xd8, 0x6c, 0x94, 0xc9, 0x61, 0x1b, 0xe1, 0xd2, 0x23, 0xdb, 0x21, 0x2a, 0x87,
+	0x17, 0x4f, 0x83, 0x32, 0x68, 0x93, 0x8a, 0x70, 0xdb, 0x75, 0x30, 0x2a, 0xde, 0x87, 0x37, 0xaa,
+	0xd8, 0x7a, 0xd4, 0x36, 0xd9, 0xcb, 0x9b, 0xa6, 0xe9, 0x21, 0x3c, 0xce, 0xe4, 0x3c, 0x00, 0xc1,
+	0x58, 0x6b, 0x77, 0x6a, 0x0d, 0x74, 0x48, 0x8d, 0x4e, 0xaa, 0x49, 0x82, 0xf1, 0x1e, 0x65, 0x14,
+	0xf3, 0xb0, 0x36, 0x44, 0x9f, 0x58, 0xee, 0x97, 0x63, 0xb0, 0x5c, 0xc5, 0xd6, 0x4d, 0xd3, 0xdc,
+	0x75, 0x6a, 0x6e, 0xc7, 0x31, 0xf7, 0x3d, 0xdd, 0x68, 0x20, 0x6f, 0xb6, 0x18, 0x9d, 0x82, 0x45,
+	0xd2, 0xd3, 0xea, 0x3a, 0xae, 0xb3, 0x20, 0xa9, 0x71, 0xd2, 0xbb, 0xab, 0xe3, 0xba, 0xbc, 0x0d,
+	0x49, 0x7f, 0xeb, 0x35, 0x3f, 0x1c, 0xb9, 0xd8, 0x86, 0xb4, 0x95, 0xad, 0x9c, 0x2b, 0x0d, 0xc9,
+	0xc4, 0x76, 0xc3, 0x2a, 0xd1, 0x1c, 0xd9, 0x71, 0x6d, 0x67, 0xff, 0xb0, 0x8d, 0xd4, 0x84, 0xc1,
+	0x9f, 0xe4, 0xeb, 0xb0, 0x40, 0x93, 0x22, 0xb7, 0xb0, 0x21, 0x6d, 0xa5, 0x2a, 0x6f, 0x8e, 0xc2,
+	0xf3, 0xcc, 0xd9, 0xf3, 0xff, 0x54, 0x06, 0xf1, 0x83, 0x54, 0x6b, 0xba, 0x46, 0x83, 0xd9, 0x16,
+	0x67, 0x41, 0xa2, 0x1c, 0x6a, 0xde, 0x2a, 0x24, 0x48, 0x4f, 0xb3, 0x1d, 0x13, 0xf5, 0x72, 0x8b,
+	0xcc, 0x25, 0xd2, 0xdb, 0xf5, 0xc9, 0x62, 0x01, 0x4e, 0x0f, 0x8b, 0x8f, 0x08, 0xe0, 0xef, 0x12,
+	0x9c, 0xa8, 0x62, 0xeb, 0xb3, 0xba, 0x4d, 0x50, 0xd3, 0xc6, 0xe4, 0x96, 0xba, 0x53, 0xb9, 0x38,
+	0x26, 0x7a, 0x67, 0x21, 0x83, 0x3c, 0xa3, 0x72, 0x51, 0xd3, 0xd9, 0x4e, 0xf0, 0x1d, 0x4b, 0x53,
+	0x66, 0xb0, 0xdb, 0xfd, 0x21, 0x9e, 0x0f, 0x87, 0x58, 0x86, 0x98, 0xa3, 0xb7, 0x58, 0x10, 0x93,
+	0x2a, 0x7d, 0x96, 0x57, 0x20, 0x8e, 0x0f, 0x5b, 0x35, 0xb7, 0x49, 0x43, 0x93, 0x54, 0x39, 0x25,
+	0x2b, 0x90, 0x30, 0x91, 0x61, 0xb7, 0xf4, 0x26, 0xa6, 0x3e, 0x67, 0x54, 0x41, 0xcb, 0x6b, 0x90,
+	0xb4, 0x74, 0xcc, 0xaa, 0x86, 0xfb, 0x9c, 0xb0, 0x74, 0x7c, 0xcf, 0xa7, 0x8b, 0x1a, 0xac, 0x0e,
+	0xf8, 0x14, 0x78, 0xec, 0x7b, 0xf0, 0x38, 0xe4, 0x01, 0xf3, 0x30, 0xfd, 0xb8, 0xdf, 0x83, 0x3c,
+	0x80, 0x61, 0x88, 0x98, 0xf2, 0xac, 0xf4, 0x39, 0x2c, 0xaa, 0x7f, 0x4b, 0x70, 0x92, 0x85, 0xf5,
+	0x41, 0x87, 0xbc, 0x7e, 0xde, 0x2d, 0xc3, 0x82, 0xe3, 0x3a, 0x06, 0xa2, 0xc1, 0x8a, 0xa9, 0x8c,
+	0xe8, 0xcf, 0xc6, 0x58, 0x28, 0x1b, 0xff, 0x9f, 0x4c, 0xfa, 0x00, 0xf2, 0x43, 0x5d, 0x16, 0x81,
+	0xcd, 0x03, 0xd8, 0x58, 0xf3, 0x50, 0xcb, 0xed, 0x22, 0x93, 0x7a, 0x9f, 0x50, 0x93, 0x36, 0x56,
+	0x19, 0xa3, 0x88, 0x20, 0x57, 0xc5, 0x16, 0xa3, 0xfe, 0xbb, 0xa8, 0x15, 0x8b, 0xb0, 0x31, 0x6a,
+	0x19, 0x91, 0xf4, 0x3f, 0x49, 0xb0, 0x54, 0xc5, 0xd6, 0xa7, 0x2e, 0x41, 0x77, 0x74, 0xbc, 0xe7,
+	0xd9, 0x06, 0x9a, 0xd9, 0x84, 0xb6, 0x8f, 0x0e, 0x4c, 0xa0, 0x84, 0x7c, 0x06, 0xd2, 0x2c, 0xc6,
+	0x4e, 0xa7, 0x55, 0x43, 0x1e, 0xdd, 0xbd, 0x98, 0x9a, 0xa2, 0xbc, 0xfb, 0x94, 0x45, 0x53, 0xbe,
+	0xd3, 0x6e, 0x37, 0x0f, 0x45, 0xca, 0x53, 0xaa, 0xb8, 0x0a, 0xa7, 0x22, 0x86, 0x09, 0xa3, 0x7f,
+	0x8d, 0x0b, 0xa3, 0x03, 0xbf, 0xc6, 0x18, 0xbd, 0x06, 0x34, 0x5d, 0xd9, 0x36, 0xb3, 0xfc, 0x4d,
+	0xf8, 0x0c, 0xba, 0xcb, 0x57, 0x60, 0xc5, 0xad, 0x61, 0xe4, 0x75, 0x91, 0xa9, 0xb9, 0x5c, 0x57,
+	0xff, 0xb1, 0xb7, 0x1c, 0xbc, 0x0d, 0x16, 0xe2, 0x87, 0x60, 0x7e, 0x10, 0xc5, 0x52, 0x07, 0xd9,
+	0x56, 0x9d, 0x70, 0x3f, 0xd7, 0xa2, 0xe0, 0xed, 0x57, 0x22, 0xf2, 0x0d, 0x50, 0x06, 0x75, 0xf8,
+	0x85, 0xdc, 0xc1, 0xc8, 0xcc, 0x01, 0x55, 0x70, 0x2a, 0xaa, 0xe0, 0x8e, 0x8e, 0x1f, 0x61, 0x64,
+	0xca, 0x5f, 0x4b, 0x70, 0x6e, 0x10, 0x8d, 0x0e, 0x0e, 0x90, 0x41, 0xec, 0x2e, 0xa2, 0x7a, 0xd8,
+	0x76, 0xa4, 0x68, 0x8b, 0x2b, 0xf1, 0x16, 0xb7, 0x39, 0x45, 0x8b, 0xdb, 0x75, 0x88, 0x7a, 0x26,
+	0xba, 0xf0, 0xad, 0x40, 0xb5, 0xc8, 0x92, 0xbd, 0xc9, 0x16, 0xb0, 0x23, 0x29, 0x4d, 0x5d, 0x19,
+	0xab, 0x91, 0x9e, 0x55, 0xb2, 0x0b, 0xd9, 0xae, 0xde, 0xec, 0x20, 0xcd, 0x43, 0x06, 0xb2, 0xfd,
+	0xca, 0xa1, 0x19, 0xb1, 0x7d, 0xf7, 0x88, 0xfd, 0xf9, 0x9f, 0xe7, 0xeb, 0x27, 0x0f, 0xf5, 0x56,
+	0xf3, 0x7a, 0x31, 0xac, 0xae, 0xa8, 0x66, 0x28, 0x43, 0xe5, 0xb4, 0xfc, 0x31, 0xc4, 0x31, 0xd1,
+	0x49, 0x87, 0x9d, 0xa9, 0xd9, 0xca, 0xf9, 0x91, 0x8d, 0x8c, 0x8d, 0x45, 0x1c, 0xf8, 0x90, 0x62,
+	0x54, 0x8e, 0x95, 0xcf, 0x41, 0x56, 0xf8, 0x4f, 0x05, 0xf9, 0x71, 0x91, 0x09, 0xb8, 0x3b, 0x3e,
+	0x53, 0x3e, 0x0f, 0xb2, 0x10, 0xf3, 0xdb, 0x3c, 0x2b, 0xd8, 0x04, 0x0d, 0xce, 0xf1, 0xe0, 0xcd,
+	0x3e, 0xc6, 0xf7, 0xe9, 0x89, 0x17, 0x6a, 0xb3, 0xc9, 0x99, 0xda, 0x6c, 0x5f, 0x05, 0x05, 0x31,
+	0x17, 0x15, 0xf4, 0x24, 0x06, 0x59, 0xfe, 0x8e, 0x77, 0xc3, 0x31, 0x05, 0xe4, 0x57, 0x28, 0x72,
+	0x4c, 0xe4, 0xf1, 0xea, 0xe1, 0x94, 0xbc, 0x09, 0x4b, 0xec, 0x49, 0x8b, 0xb4, 0xb8, 0x0c, 0x63,
+	0xef, 0xf0, 0xa3, 0x41, 0x81, 0x04, 0xdf, 0x02, 0x8f, 0x1f, 0xdf, 0x82, 0xf6, 0x83, 0x17, 0x3c,
+	0xf3, 0xe0, 0x2d, 0x30, 0x15, 0x01, 0x97, 0x05, 0xef, 0xd5, 0xc8, 0x16, 0x7f, 0xad, 0x91, 0xcd,
+	0xf7, 0xb2, 0x85, 0x30, 0xd6, 0x2d, 0x16, 0xfa, 0xa4, 0x1a, 0x90, 0xfe, 0x51, 0x65, 0x3b, 0x7d,
+	0xf5, 0x9f, 0xa4, 0xaf, 0x53, 0x9c, 0x47, 0xcb, 0x7e, 0x13, 0x96, 0x6c, 0x47, 0xe3, 0x4d, 0x83,
+	0x15, 0x3a, 0xab, 0xd3, 0x8c, 0xed, 0xf4, 0x97, 0x76, 0xa8, 0x23, 0xa7, 0xa8, 0x84, 0xe8, 0xc8,
+	0xe1, 0x9d, 0x4d, 0xcf, 0x36, 0x40, 0xad, 0x41, 0x92, 0xf4, 0x34, 0xd7, 0xb3, 0x2d, 0xdb, 0xc9,
+	0x65, 0x58, 0x48, 0x49, 0xef, 0x01, 0xa5, 0xfd, 0x93, 0x58, 0xc7, 0x18, 0x91, 0x5c, 0x96, 0xbe,
+	0x60, 0x84, 0xbc, 0x0e, 0x29, 0xd4, 0x45, 0x0e, 0xe1, 0x1d, 0x6d, 0x89, 0x5a, 0x05, 0x94, 0xc5,
+	0x9a, 0x5a, 0x0e, 0x56, 0xc2, 0x19, 0x21, 0x92, 0xe5, 0x1e, 0x9d, 0x8b, 0x6e, 0xd6, 0x5c, 0x8f,
+	0x3c, 0x24, 0x1d, 0xa3, 0xb1, 0xb3, 0xb3, 0xff, 0xf9, 0xf8, 0x31, 0x76, 0xdc, 0xc0, 0xb0, 0x46,
+	0x27, 0x92, 0xb0, 0x36, 0xb1, 0x54, 0x97, 0xce, 0xb0, 0x2a, 0x3a, 0xe8, 0x38, 0x26, 0x15, 0x41,
+	0xe6, 0x6b, 0xad, 0xc6, 0xf2, 0xcb, 0xd7, 0x26, 0x66, 0x1c, 0x76, 0xae, 0x67, 0x18, 0x97, 0x0f,
+	0x39, 0x7c, 0x36, 0x1c, 0x58, 0x57, 0xd8, 0xf5, 0xb3, 0x44, 0xad, 0x66, 0xc3, 0xb7, 0xaa, 0x13,
+	0x74, 0x8f, 0xdd, 0x51, 0x6e, 0xfb, 0x57, 0x94, 0x31, 0xd6, 0x19, 0x20, 0x0f, 0x5e, 0x69, 0xa8,
+	0x95, 0xa9, 0x4a, 0xb9, 0x34, 0xf6, 0x02, 0x57, 0x8a, 0x2e, 0xb3, 0x1d, 0xf3, 0x93, 0x5e, 0x3d,
+	0xee, 0x45, 0xf8, 0xc5, 0xb3, 0x70, 0x66, 0xa4, 0x6d, 0x81, 0x07, 0x95, 0xdf, 0xd2, 0x30, 0x5f,
+	0xc5, 0x96, 0xfc, 0x9d, 0x04, 0xf2, 0x90, 0x61, 0xed, 0xca, 0x04, 0x63, 0x86, 0xce, 0x3b, 0xca,
+	0xfb, 0xb3, 0xa0, 0xc4, 0x94, 0xf4, 0xad, 0x04, 0x27, 0x06, 0xaf, 0x2b, 0x97, 0xa7, 0xd2, 0x19,
+	0x06, 0x29, 0x37, 0x66, 0x00, 0x09, 0x3b, 0xbe, 0x97, 0xe0, 0xe4, 0xf0, 0x61, 0xec, 0xdd, 0xc9,
+	0x6a, 0x87, 0x02, 0x95, 0x0f, 0x67, 0x04, 0x0a, 0x9b, 0xba, 0x90, 0x0e, 0xcd, 0x64, 0xa5, 0xc9,
+	0x0a, 0xfb, 0xe5, 0x95, 0xab, 0x47, 0x93, 0x8f, 0xae, 0x2b, 0xc6, 0xaa, 0x29, 0xd7, 0x0d, 0xe4,
+	0xa7, 0x5d, 0x37, 0xda, 0x90, 0x64, 0x0c, 0xa9, 0xfe, 0x66, 0x74, 0x61, 0x3a, 0x35, 0x5c, 0x5c,
+	0x79, 0xe7, 0x48, 0xe2, 0x62, 0xd1, 0x2f, 0x21, 0x1b, 0xb9, 0xed, 0x5d, 0x9c, 0xac, 0x28, 0x8c,
+	0x50, 0xae, 0x1d, 0x15, 0x21, 0x56, 0xff, 0x46, 0x82, 0xe3, 0x03, 0x5f, 0x07, 0x2a, 0x93, 0xd5,
+	0x45, 0x31, 0xca, 0xf5, 0xa3, 0x63, 0x84, 0x11, 0x5f, 0xc1, 0x52, 0xf4, 0x9b, 0xca, 0xa5, 0xc9,
+	0xea, 0x22, 0x10, 0xe5, 0xbd, 0x23, 0x43, 0xfa, 0xf7, 0x20, 0xd2, 0x59, 0xa6, 0xd8, 0x83, 0x30,
+	0x62, 0x9a, 0x3d, 0x18, 0xde, 0x6f, 0xe8, 0x11, 0x34, 0xd8, 0x6d, 0x2e, 0x4f, 0x53, 0xbd, 0x11,
+	0xd0, 0x34, 0x47, 0xd0, 0xc8, 0xfe, 0x22, 0xff, 0x28, 0xc1, 0xca, 0x88, 0xe6, 0x72, 0x6d, 0xda,
+	0xdd, 0x8d, 0x22, 0x95, 0x8f, 0x66, 0x45, 0x06, 0x66, 0x6d, 0x7f, 0xf2, 0xf4, 0x45, 0x41, 0x7a,
+	0xf6, 0xa2, 0x20, 0xfd, 0xf5, 0xa2, 0x20, 0x3d, 0x79, 0x59, 0x98, 0x7b, 0xf6, 0xb2, 0x30, 0xf7,
+	0xc7, 0xcb, 0xc2, 0xdc, 0x17, 0x97, 0xfa, 0x06, 0x2f, 0x5f, 0xf7, 0x85, 0xc8, 0x37, 0xbd, 0x5e,
+	0xe8, 0x93, 0xa5, 0x3f, 0x87, 0xd5, 0xe2, 0xf4, 0x4b, 0xde, 0xe5, 0x7f, 0x03, 0x00, 0x00, 0xff,
+	0xff, 0x3f, 0xd8, 0x9f, 0x5b, 0xe0, 0x14, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1575,12 +1575,12 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	AddToOutTxTracker(ctx context.Context, in *MsgAddToOutTxTracker, opts ...grpc.CallOption) (*MsgAddToOutTxTrackerResponse, error)
-	AddToInTxTracker(ctx context.Context, in *MsgAddToInTxTracker, opts ...grpc.CallOption) (*MsgAddToInTxTrackerResponse, error)
-	RemoveFromOutTxTracker(ctx context.Context, in *MsgRemoveFromOutTxTracker, opts ...grpc.CallOption) (*MsgRemoveFromOutTxTrackerResponse, error)
+	AddOutboundTracker(ctx context.Context, in *MsgAddOutboundTracker, opts ...grpc.CallOption) (*MsgAddOutboundTrackerResponse, error)
+	AddInboundTracker(ctx context.Context, in *MsgAddInboundTracker, opts ...grpc.CallOption) (*MsgAddInboundTrackerResponse, error)
+	RemoveOutboundTracker(ctx context.Context, in *MsgRemoveOutboundTracker, opts ...grpc.CallOption) (*MsgRemoveOutboundTrackerResponse, error)
 	VoteGasPrice(ctx context.Context, in *MsgVoteGasPrice, opts ...grpc.CallOption) (*MsgVoteGasPriceResponse, error)
-	VoteOnObservedOutboundTx(ctx context.Context, in *MsgVoteOnObservedOutboundTx, opts ...grpc.CallOption) (*MsgVoteOnObservedOutboundTxResponse, error)
-	VoteOnObservedInboundTx(ctx context.Context, in *MsgVoteOnObservedInboundTx, opts ...grpc.CallOption) (*MsgVoteOnObservedInboundTxResponse, error)
+	VoteOutbound(ctx context.Context, in *MsgVoteOutbound, opts ...grpc.CallOption) (*MsgVoteOutboundResponse, error)
+	VoteInbound(ctx context.Context, in *MsgVoteInbound, opts ...grpc.CallOption) (*MsgVoteInboundResponse, error)
 	WhitelistERC20(ctx context.Context, in *MsgWhitelistERC20, opts ...grpc.CallOption) (*MsgWhitelistERC20Response, error)
 	UpdateTssAddress(ctx context.Context, in *MsgUpdateTssAddress, opts ...grpc.CallOption) (*MsgUpdateTssAddressResponse, error)
 	MigrateTssFunds(ctx context.Context, in *MsgMigrateTssFunds, opts ...grpc.CallOption) (*MsgMigrateTssFundsResponse, error)
@@ -1597,27 +1597,27 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) AddToOutTxTracker(ctx context.Context, in *MsgAddToOutTxTracker, opts ...grpc.CallOption) (*MsgAddToOutTxTrackerResponse, error) {
-	out := new(MsgAddToOutTxTrackerResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/AddToOutTxTracker", in, out, opts...)
+func (c *msgClient) AddOutboundTracker(ctx context.Context, in *MsgAddOutboundTracker, opts ...grpc.CallOption) (*MsgAddOutboundTrackerResponse, error) {
+	out := new(MsgAddOutboundTrackerResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/AddOutboundTracker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) AddToInTxTracker(ctx context.Context, in *MsgAddToInTxTracker, opts ...grpc.CallOption) (*MsgAddToInTxTrackerResponse, error) {
-	out := new(MsgAddToInTxTrackerResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/AddToInTxTracker", in, out, opts...)
+func (c *msgClient) AddInboundTracker(ctx context.Context, in *MsgAddInboundTracker, opts ...grpc.CallOption) (*MsgAddInboundTrackerResponse, error) {
+	out := new(MsgAddInboundTrackerResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/AddInboundTracker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) RemoveFromOutTxTracker(ctx context.Context, in *MsgRemoveFromOutTxTracker, opts ...grpc.CallOption) (*MsgRemoveFromOutTxTrackerResponse, error) {
-	out := new(MsgRemoveFromOutTxTrackerResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/RemoveFromOutTxTracker", in, out, opts...)
+func (c *msgClient) RemoveOutboundTracker(ctx context.Context, in *MsgRemoveOutboundTracker, opts ...grpc.CallOption) (*MsgRemoveOutboundTrackerResponse, error) {
+	out := new(MsgRemoveOutboundTrackerResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/RemoveOutboundTracker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1633,18 +1633,18 @@ func (c *msgClient) VoteGasPrice(ctx context.Context, in *MsgVoteGasPrice, opts 
 	return out, nil
 }
 
-func (c *msgClient) VoteOnObservedOutboundTx(ctx context.Context, in *MsgVoteOnObservedOutboundTx, opts ...grpc.CallOption) (*MsgVoteOnObservedOutboundTxResponse, error) {
-	out := new(MsgVoteOnObservedOutboundTxResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/VoteOnObservedOutboundTx", in, out, opts...)
+func (c *msgClient) VoteOutbound(ctx context.Context, in *MsgVoteOutbound, opts ...grpc.CallOption) (*MsgVoteOutboundResponse, error) {
+	out := new(MsgVoteOutboundResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/VoteOutbound", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) VoteOnObservedInboundTx(ctx context.Context, in *MsgVoteOnObservedInboundTx, opts ...grpc.CallOption) (*MsgVoteOnObservedInboundTxResponse, error) {
-	out := new(MsgVoteOnObservedInboundTxResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/VoteOnObservedInboundTx", in, out, opts...)
+func (c *msgClient) VoteInbound(ctx context.Context, in *MsgVoteInbound, opts ...grpc.CallOption) (*MsgVoteInboundResponse, error) {
+	out := new(MsgVoteInboundResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.crosschain.Msg/VoteInbound", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1707,12 +1707,12 @@ func (c *msgClient) UpdateRateLimiterFlags(ctx context.Context, in *MsgUpdateRat
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	AddToOutTxTracker(context.Context, *MsgAddToOutTxTracker) (*MsgAddToOutTxTrackerResponse, error)
-	AddToInTxTracker(context.Context, *MsgAddToInTxTracker) (*MsgAddToInTxTrackerResponse, error)
-	RemoveFromOutTxTracker(context.Context, *MsgRemoveFromOutTxTracker) (*MsgRemoveFromOutTxTrackerResponse, error)
+	AddOutboundTracker(context.Context, *MsgAddOutboundTracker) (*MsgAddOutboundTrackerResponse, error)
+	AddInboundTracker(context.Context, *MsgAddInboundTracker) (*MsgAddInboundTrackerResponse, error)
+	RemoveOutboundTracker(context.Context, *MsgRemoveOutboundTracker) (*MsgRemoveOutboundTrackerResponse, error)
 	VoteGasPrice(context.Context, *MsgVoteGasPrice) (*MsgVoteGasPriceResponse, error)
-	VoteOnObservedOutboundTx(context.Context, *MsgVoteOnObservedOutboundTx) (*MsgVoteOnObservedOutboundTxResponse, error)
-	VoteOnObservedInboundTx(context.Context, *MsgVoteOnObservedInboundTx) (*MsgVoteOnObservedInboundTxResponse, error)
+	VoteOutbound(context.Context, *MsgVoteOutbound) (*MsgVoteOutboundResponse, error)
+	VoteInbound(context.Context, *MsgVoteInbound) (*MsgVoteInboundResponse, error)
 	WhitelistERC20(context.Context, *MsgWhitelistERC20) (*MsgWhitelistERC20Response, error)
 	UpdateTssAddress(context.Context, *MsgUpdateTssAddress) (*MsgUpdateTssAddressResponse, error)
 	MigrateTssFunds(context.Context, *MsgMigrateTssFunds) (*MsgMigrateTssFundsResponse, error)
@@ -1725,23 +1725,23 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) AddToOutTxTracker(ctx context.Context, req *MsgAddToOutTxTracker) (*MsgAddToOutTxTrackerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddToOutTxTracker not implemented")
+func (*UnimplementedMsgServer) AddOutboundTracker(ctx context.Context, req *MsgAddOutboundTracker) (*MsgAddOutboundTrackerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddOutboundTracker not implemented")
 }
-func (*UnimplementedMsgServer) AddToInTxTracker(ctx context.Context, req *MsgAddToInTxTracker) (*MsgAddToInTxTrackerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddToInTxTracker not implemented")
+func (*UnimplementedMsgServer) AddInboundTracker(ctx context.Context, req *MsgAddInboundTracker) (*MsgAddInboundTrackerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddInboundTracker not implemented")
 }
-func (*UnimplementedMsgServer) RemoveFromOutTxTracker(ctx context.Context, req *MsgRemoveFromOutTxTracker) (*MsgRemoveFromOutTxTrackerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromOutTxTracker not implemented")
+func (*UnimplementedMsgServer) RemoveOutboundTracker(ctx context.Context, req *MsgRemoveOutboundTracker) (*MsgRemoveOutboundTrackerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveOutboundTracker not implemented")
 }
 func (*UnimplementedMsgServer) VoteGasPrice(ctx context.Context, req *MsgVoteGasPrice) (*MsgVoteGasPriceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoteGasPrice not implemented")
 }
-func (*UnimplementedMsgServer) VoteOnObservedOutboundTx(ctx context.Context, req *MsgVoteOnObservedOutboundTx) (*MsgVoteOnObservedOutboundTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VoteOnObservedOutboundTx not implemented")
+func (*UnimplementedMsgServer) VoteOutbound(ctx context.Context, req *MsgVoteOutbound) (*MsgVoteOutboundResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VoteOutbound not implemented")
 }
-func (*UnimplementedMsgServer) VoteOnObservedInboundTx(ctx context.Context, req *MsgVoteOnObservedInboundTx) (*MsgVoteOnObservedInboundTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VoteOnObservedInboundTx not implemented")
+func (*UnimplementedMsgServer) VoteInbound(ctx context.Context, req *MsgVoteInbound) (*MsgVoteInboundResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VoteInbound not implemented")
 }
 func (*UnimplementedMsgServer) WhitelistERC20(ctx context.Context, req *MsgWhitelistERC20) (*MsgWhitelistERC20Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WhitelistERC20 not implemented")
@@ -1766,56 +1766,56 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_AddToOutTxTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddToOutTxTracker)
+func _Msg_AddOutboundTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddOutboundTracker)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AddToOutTxTracker(ctx, in)
+		return srv.(MsgServer).AddOutboundTracker(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.crosschain.Msg/AddToOutTxTracker",
+		FullMethod: "/zetachain.zetacore.crosschain.Msg/AddOutboundTracker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddToOutTxTracker(ctx, req.(*MsgAddToOutTxTracker))
+		return srv.(MsgServer).AddOutboundTracker(ctx, req.(*MsgAddOutboundTracker))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AddToInTxTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddToInTxTracker)
+func _Msg_AddInboundTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddInboundTracker)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AddToInTxTracker(ctx, in)
+		return srv.(MsgServer).AddInboundTracker(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.crosschain.Msg/AddToInTxTracker",
+		FullMethod: "/zetachain.zetacore.crosschain.Msg/AddInboundTracker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddToInTxTracker(ctx, req.(*MsgAddToInTxTracker))
+		return srv.(MsgServer).AddInboundTracker(ctx, req.(*MsgAddInboundTracker))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_RemoveFromOutTxTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRemoveFromOutTxTracker)
+func _Msg_RemoveOutboundTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveOutboundTracker)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).RemoveFromOutTxTracker(ctx, in)
+		return srv.(MsgServer).RemoveOutboundTracker(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.crosschain.Msg/RemoveFromOutTxTracker",
+		FullMethod: "/zetachain.zetacore.crosschain.Msg/RemoveOutboundTracker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RemoveFromOutTxTracker(ctx, req.(*MsgRemoveFromOutTxTracker))
+		return srv.(MsgServer).RemoveOutboundTracker(ctx, req.(*MsgRemoveOutboundTracker))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1838,38 +1838,38 @@ func _Msg_VoteGasPrice_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_VoteOnObservedOutboundTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgVoteOnObservedOutboundTx)
+func _Msg_VoteOutbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVoteOutbound)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).VoteOnObservedOutboundTx(ctx, in)
+		return srv.(MsgServer).VoteOutbound(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.crosschain.Msg/VoteOnObservedOutboundTx",
+		FullMethod: "/zetachain.zetacore.crosschain.Msg/VoteOutbound",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).VoteOnObservedOutboundTx(ctx, req.(*MsgVoteOnObservedOutboundTx))
+		return srv.(MsgServer).VoteOutbound(ctx, req.(*MsgVoteOutbound))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_VoteOnObservedInboundTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgVoteOnObservedInboundTx)
+func _Msg_VoteInbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVoteInbound)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).VoteOnObservedInboundTx(ctx, in)
+		return srv.(MsgServer).VoteInbound(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.crosschain.Msg/VoteOnObservedInboundTx",
+		FullMethod: "/zetachain.zetacore.crosschain.Msg/VoteInbound",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).VoteOnObservedInboundTx(ctx, req.(*MsgVoteOnObservedInboundTx))
+		return srv.(MsgServer).VoteInbound(ctx, req.(*MsgVoteInbound))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1987,28 +1987,28 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddToOutTxTracker",
-			Handler:    _Msg_AddToOutTxTracker_Handler,
+			MethodName: "AddOutboundTracker",
+			Handler:    _Msg_AddOutboundTracker_Handler,
 		},
 		{
-			MethodName: "AddToInTxTracker",
-			Handler:    _Msg_AddToInTxTracker_Handler,
+			MethodName: "AddInboundTracker",
+			Handler:    _Msg_AddInboundTracker_Handler,
 		},
 		{
-			MethodName: "RemoveFromOutTxTracker",
-			Handler:    _Msg_RemoveFromOutTxTracker_Handler,
+			MethodName: "RemoveOutboundTracker",
+			Handler:    _Msg_RemoveOutboundTracker_Handler,
 		},
 		{
 			MethodName: "VoteGasPrice",
 			Handler:    _Msg_VoteGasPrice_Handler,
 		},
 		{
-			MethodName: "VoteOnObservedOutboundTx",
-			Handler:    _Msg_VoteOnObservedOutboundTx_Handler,
+			MethodName: "VoteOutbound",
+			Handler:    _Msg_VoteOutbound_Handler,
 		},
 		{
-			MethodName: "VoteOnObservedInboundTx",
-			Handler:    _Msg_VoteOnObservedInboundTx_Handler,
+			MethodName: "VoteInbound",
+			Handler:    _Msg_VoteInbound_Handler,
 		},
 		{
 			MethodName: "WhitelistERC20",
@@ -2167,7 +2167,7 @@ func (m *MsgUpdateTssAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddToInTxTracker) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddInboundTracker) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2177,12 +2177,12 @@ func (m *MsgAddToInTxTracker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddToInTxTracker) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddInboundTracker) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddToInTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddInboundTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2238,7 +2238,7 @@ func (m *MsgAddToInTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddToInTxTrackerResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddInboundTrackerResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2248,12 +2248,12 @@ func (m *MsgAddToInTxTrackerResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddToInTxTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddInboundTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddToInTxTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddInboundTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2364,7 +2364,7 @@ func (m *MsgWhitelistERC20Response) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddToOutTxTracker) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddOutboundTracker) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2374,12 +2374,12 @@ func (m *MsgAddToOutTxTracker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddToOutTxTracker) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddOutboundTracker) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddToOutTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddOutboundTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2435,7 +2435,7 @@ func (m *MsgAddToOutTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddToOutTxTrackerResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddOutboundTrackerResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2445,12 +2445,12 @@ func (m *MsgAddToOutTxTrackerResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddToOutTxTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddOutboundTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddToOutTxTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddOutboundTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2468,7 +2468,7 @@ func (m *MsgAddToOutTxTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveFromOutTxTracker) Marshal() (dAtA []byte, err error) {
+func (m *MsgRemoveOutboundTracker) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2478,12 +2478,12 @@ func (m *MsgRemoveFromOutTxTracker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveFromOutTxTracker) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgRemoveOutboundTracker) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveFromOutTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgRemoveOutboundTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2508,7 +2508,7 @@ func (m *MsgRemoveFromOutTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveFromOutTxTrackerResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgRemoveOutboundTrackerResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2518,12 +2518,12 @@ func (m *MsgRemoveFromOutTxTrackerResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveFromOutTxTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgRemoveOutboundTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveFromOutTxTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgRemoveOutboundTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2606,7 +2606,7 @@ func (m *MsgVoteGasPriceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgVoteOnObservedOutboundTx) Marshal() (dAtA []byte, err error) {
+func (m *MsgVoteOutbound) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2616,33 +2616,33 @@ func (m *MsgVoteOnObservedOutboundTx) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgVoteOnObservedOutboundTx) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgVoteOutbound) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgVoteOnObservedOutboundTx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgVoteOutbound) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.ObservedOutTxEffectiveGasLimit != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.ObservedOutTxEffectiveGasLimit))
+	if m.ObservedOutboundEffectiveGasLimit != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ObservedOutboundEffectiveGasLimit))
 		i--
 		dAtA[i] = 0x60
 	}
 	{
-		size := m.ObservedOutTxEffectiveGasPrice.Size()
+		size := m.ObservedOutboundEffectiveGasPrice.Size()
 		i -= size
-		if _, err := m.ObservedOutTxEffectiveGasPrice.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ObservedOutboundEffectiveGasPrice.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x5a
-	if m.ObservedOutTxGasUsed != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.ObservedOutTxGasUsed))
+	if m.ObservedOutboundGasUsed != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ObservedOutboundGasUsed))
 		i--
 		dAtA[i] = 0x50
 	}
@@ -2651,13 +2651,13 @@ func (m *MsgVoteOnObservedOutboundTx) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x48
 	}
-	if m.OutTxTssNonce != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.OutTxTssNonce))
+	if m.OutboundTssNonce != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.OutboundTssNonce))
 		i--
 		dAtA[i] = 0x40
 	}
-	if m.OutTxChain != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.OutTxChain))
+	if m.OutboundChain != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.OutboundChain))
 		i--
 		dAtA[i] = 0x38
 	}
@@ -2676,15 +2676,15 @@ func (m *MsgVoteOnObservedOutboundTx) MarshalToSizedBuffer(dAtA []byte) (int, er
 	}
 	i--
 	dAtA[i] = 0x2a
-	if m.ObservedOutTxBlockHeight != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.ObservedOutTxBlockHeight))
+	if m.ObservedOutboundBlockHeight != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ObservedOutboundBlockHeight))
 		i--
 		dAtA[i] = 0x20
 	}
-	if len(m.ObservedOutTxHash) > 0 {
-		i -= len(m.ObservedOutTxHash)
-		copy(dAtA[i:], m.ObservedOutTxHash)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.ObservedOutTxHash)))
+	if len(m.ObservedOutboundHash) > 0 {
+		i -= len(m.ObservedOutboundHash)
+		copy(dAtA[i:], m.ObservedOutboundHash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ObservedOutboundHash)))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -2705,7 +2705,7 @@ func (m *MsgVoteOnObservedOutboundTx) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgVoteOnObservedOutboundTxResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgVoteOutboundResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2715,12 +2715,12 @@ func (m *MsgVoteOnObservedOutboundTxResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgVoteOnObservedOutboundTxResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgVoteOutboundResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgVoteOnObservedOutboundTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgVoteOutboundResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2728,7 +2728,7 @@ func (m *MsgVoteOnObservedOutboundTxResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgVoteOnObservedInboundTx) Marshal() (dAtA []byte, err error) {
+func (m *MsgVoteInbound) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2738,12 +2738,12 @@ func (m *MsgVoteOnObservedInboundTx) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgVoteOnObservedInboundTx) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgVoteInbound) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgVoteOnObservedInboundTx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgVoteInbound) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2782,10 +2782,10 @@ func (m *MsgVoteOnObservedInboundTx) MarshalToSizedBuffer(dAtA []byte) (int, err
 		i--
 		dAtA[i] = 0x50
 	}
-	if len(m.InTxHash) > 0 {
-		i -= len(m.InTxHash)
-		copy(dAtA[i:], m.InTxHash)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.InTxHash)))
+	if len(m.InboundHash) > 0 {
+		i -= len(m.InboundHash)
+		copy(dAtA[i:], m.InboundHash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.InboundHash)))
 		i--
 		dAtA[i] = 0x4a
 	}
@@ -2840,7 +2840,7 @@ func (m *MsgVoteOnObservedInboundTx) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgVoteOnObservedInboundTxResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgVoteInboundResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2850,12 +2850,12 @@ func (m *MsgVoteOnObservedInboundTxResponse) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgVoteOnObservedInboundTxResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgVoteInboundResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgVoteOnObservedInboundTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgVoteInboundResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3117,7 +3117,7 @@ func (m *MsgUpdateTssAddressResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddToInTxTracker) Size() (n int) {
+func (m *MsgAddInboundTracker) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3151,7 +3151,7 @@ func (m *MsgAddToInTxTracker) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddToInTxTrackerResponse) Size() (n int) {
+func (m *MsgAddInboundTrackerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3211,7 +3211,7 @@ func (m *MsgWhitelistERC20Response) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddToOutTxTracker) Size() (n int) {
+func (m *MsgAddOutboundTracker) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3245,7 +3245,7 @@ func (m *MsgAddToOutTxTracker) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddToOutTxTrackerResponse) Size() (n int) {
+func (m *MsgAddOutboundTrackerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3257,7 +3257,7 @@ func (m *MsgAddToOutTxTrackerResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveFromOutTxTracker) Size() (n int) {
+func (m *MsgRemoveOutboundTracker) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3276,7 +3276,7 @@ func (m *MsgRemoveFromOutTxTracker) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveFromOutTxTrackerResponse) Size() (n int) {
+func (m *MsgRemoveOutboundTrackerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3320,7 +3320,7 @@ func (m *MsgVoteGasPriceResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgVoteOnObservedOutboundTx) Size() (n int) {
+func (m *MsgVoteOutbound) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3334,39 +3334,39 @@ func (m *MsgVoteOnObservedOutboundTx) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.ObservedOutTxHash)
+	l = len(m.ObservedOutboundHash)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.ObservedOutTxBlockHeight != 0 {
-		n += 1 + sovTx(uint64(m.ObservedOutTxBlockHeight))
+	if m.ObservedOutboundBlockHeight != 0 {
+		n += 1 + sovTx(uint64(m.ObservedOutboundBlockHeight))
 	}
 	l = m.ValueReceived.Size()
 	n += 1 + l + sovTx(uint64(l))
 	if m.Status != 0 {
 		n += 1 + sovTx(uint64(m.Status))
 	}
-	if m.OutTxChain != 0 {
-		n += 1 + sovTx(uint64(m.OutTxChain))
+	if m.OutboundChain != 0 {
+		n += 1 + sovTx(uint64(m.OutboundChain))
 	}
-	if m.OutTxTssNonce != 0 {
-		n += 1 + sovTx(uint64(m.OutTxTssNonce))
+	if m.OutboundTssNonce != 0 {
+		n += 1 + sovTx(uint64(m.OutboundTssNonce))
 	}
 	if m.CoinType != 0 {
 		n += 1 + sovTx(uint64(m.CoinType))
 	}
-	if m.ObservedOutTxGasUsed != 0 {
-		n += 1 + sovTx(uint64(m.ObservedOutTxGasUsed))
+	if m.ObservedOutboundGasUsed != 0 {
+		n += 1 + sovTx(uint64(m.ObservedOutboundGasUsed))
 	}
-	l = m.ObservedOutTxEffectiveGasPrice.Size()
+	l = m.ObservedOutboundEffectiveGasPrice.Size()
 	n += 1 + l + sovTx(uint64(l))
-	if m.ObservedOutTxEffectiveGasLimit != 0 {
-		n += 1 + sovTx(uint64(m.ObservedOutTxEffectiveGasLimit))
+	if m.ObservedOutboundEffectiveGasLimit != 0 {
+		n += 1 + sovTx(uint64(m.ObservedOutboundEffectiveGasLimit))
 	}
 	return n
 }
 
-func (m *MsgVoteOnObservedOutboundTxResponse) Size() (n int) {
+func (m *MsgVoteOutboundResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3375,7 +3375,7 @@ func (m *MsgVoteOnObservedOutboundTxResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgVoteOnObservedInboundTx) Size() (n int) {
+func (m *MsgVoteInbound) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3405,7 +3405,7 @@ func (m *MsgVoteOnObservedInboundTx) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.InTxHash)
+	l = len(m.InboundHash)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -3432,7 +3432,7 @@ func (m *MsgVoteOnObservedInboundTx) Size() (n int) {
 	return n
 }
 
-func (m *MsgVoteOnObservedInboundTxResponse) Size() (n int) {
+func (m *MsgVoteInboundResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3876,7 +3876,7 @@ func (m *MsgUpdateTssAddressResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddToInTxTracker) Unmarshal(dAtA []byte) error {
+func (m *MsgAddInboundTracker) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3899,10 +3899,10 @@ func (m *MsgAddToInTxTracker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToInTxTracker: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddInboundTracker: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToInTxTracker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddInboundTracker: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4115,7 +4115,7 @@ func (m *MsgAddToInTxTracker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddToInTxTrackerResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddInboundTrackerResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4138,10 +4138,10 @@ func (m *MsgAddToInTxTrackerResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToInTxTrackerResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddInboundTrackerResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToInTxTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddInboundTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -4514,7 +4514,7 @@ func (m *MsgWhitelistERC20Response) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddToOutTxTracker) Unmarshal(dAtA []byte) error {
+func (m *MsgAddOutboundTracker) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4537,10 +4537,10 @@ func (m *MsgAddToOutTxTracker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToOutTxTracker: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddOutboundTracker: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToOutTxTracker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddOutboundTracker: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4753,7 +4753,7 @@ func (m *MsgAddToOutTxTracker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddToOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddOutboundTrackerResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4776,10 +4776,10 @@ func (m *MsgAddToOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToOutTxTrackerResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddOutboundTrackerResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToOutTxTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddOutboundTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4823,7 +4823,7 @@ func (m *MsgAddToOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveFromOutTxTracker) Unmarshal(dAtA []byte) error {
+func (m *MsgRemoveOutboundTracker) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4846,10 +4846,10 @@ func (m *MsgRemoveFromOutTxTracker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveFromOutTxTracker: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgRemoveOutboundTracker: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveFromOutTxTracker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgRemoveOutboundTracker: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4943,7 +4943,7 @@ func (m *MsgRemoveFromOutTxTracker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveFromOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgRemoveOutboundTrackerResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4966,10 +4966,10 @@ func (m *MsgRemoveFromOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveFromOutTxTrackerResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgRemoveOutboundTrackerResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveFromOutTxTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgRemoveOutboundTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -5214,7 +5214,7 @@ func (m *MsgVoteGasPriceResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
+func (m *MsgVoteOutbound) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5237,10 +5237,10 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgVoteOnObservedOutboundTx: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgVoteOutbound: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgVoteOnObservedOutboundTx: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgVoteOutbound: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5309,7 +5309,7 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutTxHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutboundHash", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5337,13 +5337,13 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ObservedOutTxHash = string(dAtA[iNdEx:postIndex])
+			m.ObservedOutboundHash = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutTxBlockHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutboundBlockHeight", wireType)
 			}
-			m.ObservedOutTxBlockHeight = 0
+			m.ObservedOutboundBlockHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5353,7 +5353,7 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ObservedOutTxBlockHeight |= uint64(b&0x7F) << shift
+				m.ObservedOutboundBlockHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5413,9 +5413,9 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 			}
 		case 7:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutTxChain", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundChain", wireType)
 			}
-			m.OutTxChain = 0
+			m.OutboundChain = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5425,16 +5425,16 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OutTxChain |= int64(b&0x7F) << shift
+				m.OutboundChain |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 8:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutTxTssNonce", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTssNonce", wireType)
 			}
-			m.OutTxTssNonce = 0
+			m.OutboundTssNonce = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5444,7 +5444,7 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OutTxTssNonce |= uint64(b&0x7F) << shift
+				m.OutboundTssNonce |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5470,9 +5470,9 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 			}
 		case 10:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutTxGasUsed", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutboundGasUsed", wireType)
 			}
-			m.ObservedOutTxGasUsed = 0
+			m.ObservedOutboundGasUsed = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5482,14 +5482,14 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ObservedOutTxGasUsed |= uint64(b&0x7F) << shift
+				m.ObservedOutboundGasUsed |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 11:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutTxEffectiveGasPrice", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutboundEffectiveGasPrice", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5517,15 +5517,15 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ObservedOutTxEffectiveGasPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ObservedOutboundEffectiveGasPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 12:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutTxEffectiveGasLimit", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservedOutboundEffectiveGasLimit", wireType)
 			}
-			m.ObservedOutTxEffectiveGasLimit = 0
+			m.ObservedOutboundEffectiveGasLimit = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5535,7 +5535,7 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ObservedOutTxEffectiveGasLimit |= uint64(b&0x7F) << shift
+				m.ObservedOutboundEffectiveGasLimit |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5561,7 +5561,7 @@ func (m *MsgVoteOnObservedOutboundTx) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgVoteOnObservedOutboundTxResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgVoteOutboundResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5584,10 +5584,10 @@ func (m *MsgVoteOnObservedOutboundTxResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgVoteOnObservedOutboundTxResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgVoteOutboundResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgVoteOnObservedOutboundTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgVoteOutboundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -5611,7 +5611,7 @@ func (m *MsgVoteOnObservedOutboundTxResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgVoteOnObservedInboundTx) Unmarshal(dAtA []byte) error {
+func (m *MsgVoteInbound) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5634,10 +5634,10 @@ func (m *MsgVoteOnObservedInboundTx) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgVoteOnObservedInboundTx: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgVoteInbound: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgVoteOnObservedInboundTx: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgVoteInbound: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5842,7 +5842,7 @@ func (m *MsgVoteOnObservedInboundTx) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 9:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InTxHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field InboundHash", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5870,7 +5870,7 @@ func (m *MsgVoteOnObservedInboundTx) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InTxHash = string(dAtA[iNdEx:postIndex])
+			m.InboundHash = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 10:
 			if wireType != 0 {
@@ -6033,7 +6033,7 @@ func (m *MsgVoteOnObservedInboundTx) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgVoteOnObservedInboundTxResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgVoteInboundResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6056,10 +6056,10 @@ func (m *MsgVoteOnObservedInboundTxResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgVoteOnObservedInboundTxResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgVoteInboundResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgVoteOnObservedInboundTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgVoteInboundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
