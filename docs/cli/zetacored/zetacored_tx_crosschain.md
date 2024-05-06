@@ -27,15 +27,15 @@ zetacored tx crosschain [flags]
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
 * [zetacored tx crosschain abort-stuck-cctx](zetacored_tx_crosschain_abort-stuck-cctx.md)	 - abort a stuck CCTX
-* [zetacored tx crosschain add-to-in-tx-tracker](zetacored_tx_crosschain_add-to-in-tx-tracker.md)	 - Add a in-tx-tracker 
+* [zetacored tx crosschain add-inbound-tracker](zetacored_tx_crosschain_add-inbound-tracker.md)	 - Add a in-tx-tracker 
 				Use 0:Zeta,1:Gas,2:ERC20
-* [zetacored tx crosschain add-to-out-tx-tracker](zetacored_tx_crosschain_add-to-out-tx-tracker.md)	 - Add a out-tx-tracker
-* [zetacored tx crosschain inbound-voter](zetacored_tx_crosschain_inbound-voter.md)	 - Broadcast message sendVoter
+* [zetacored tx crosschain add-outbound-tracker](zetacored_tx_crosschain_add-outbound-tracker.md)	 - Add a outbound-tracker
 * [zetacored tx crosschain migrate-tss-funds](zetacored_tx_crosschain_migrate-tss-funds.md)	 - Migrate TSS funds to the latest TSS address
-* [zetacored tx crosschain outbound-voter](zetacored_tx_crosschain_outbound-voter.md)	 - Broadcast message receiveConfirmation
 * [zetacored tx crosschain refund-aborted](zetacored_tx_crosschain_refund-aborted.md)	 - Refund an aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
-* [zetacored tx crosschain remove-from-out-tx-tracker](zetacored_tx_crosschain_remove-from-out-tx-tracker.md)	 - Remove a out-tx-tracker
+* [zetacored tx crosschain remove-outbound-tracker](zetacored_tx_crosschain_remove-outbound-tracker.md)	 - Remove a outbound-tracker
 * [zetacored tx crosschain update-tss-address](zetacored_tx_crosschain_update-tss-address.md)	 - Create a new TSSVoter
 * [zetacored tx crosschain vote-gas-price](zetacored_tx_crosschain_vote-gas-price.md)	 - Broadcast message to vote gas price
+* [zetacored tx crosschain vote-inbound](zetacored_tx_crosschain_vote-inbound.md)	 - Broadcast message to vote an inbound
+* [zetacored tx crosschain vote-outbound](zetacored_tx_crosschain_vote-outbound.md)	 - Broadcast message to vote an outbound
 * [zetacored tx crosschain whitelist-erc20](zetacored_tx_crosschain_whitelist-erc20.md)	 - Add a new erc20 token to whitelist
 

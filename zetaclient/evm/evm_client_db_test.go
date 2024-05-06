@@ -20,7 +20,7 @@ const NumOfEntries = 2
 type EVMClientTestSuite struct {
 	suite.Suite
 	db                        *gorm.DB
-	outTXConfirmedReceipts    map[string]*ethtypes.Receipt
+	outboundConfirmedReceipts map[string]*ethtypes.Receipt
 	outTXConfirmedTransaction map[string]*ethtypes.Transaction
 }
 
@@ -29,7 +29,7 @@ func TestEVMClient(t *testing.T) {
 }
 
 func (suite *EVMClientTestSuite) SetupTest() {
-	suite.outTXConfirmedReceipts = map[string]*ethtypes.Receipt{}
+	suite.outboundConfirmedReceipts = map[string]*ethtypes.Receipt{}
 	suite.outTXConfirmedTransaction = map[string]*ethtypes.Transaction{}
 
 	db, err := gorm.Open(sqlite.Open(TempSQLiteDbPath), &gorm.Config{})
@@ -61,7 +61,7 @@ func (suite *EVMClientTestSuite) SetupTest() {
 		r, _ := clienttypes.ToReceiptSQLType(receipt, strconv.Itoa(i))
 		dbc := suite.db.Create(r)
 		suite.NoError(dbc.Error)
-		suite.outTXConfirmedReceipts[strconv.Itoa(i)] = receipt
+		suite.outboundConfirmedReceipts[strconv.Itoa(i)] = receipt
 	}
 
 	//Create some transaction entries in the DB
@@ -82,7 +82,7 @@ func (suite *EVMClientTestSuite) TearDownSuite() {
 }
 
 func (suite *EVMClientTestSuite) TestEVMReceipts() {
-	for key, value := range suite.outTXConfirmedReceipts {
+	for key, value := range suite.outboundConfirmedReceipts {
 		var receipt clienttypes.ReceiptSQLType
 		suite.db.Where("Identifier = ?", key).First(&receipt)
 

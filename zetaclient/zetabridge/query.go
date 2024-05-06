@@ -305,13 +305,13 @@ func (b *ZetaCoreBridge) GetBallot(ballotIdentifier string) (*observertypes.Quer
 	return resp, nil
 }
 
-func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTxTracker, error) {
+func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InboundTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.InTxTrackerAllByChain(context.Background(), &types.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
+	resp, err := client.InboundTrackerAllByChain(context.Background(), &types.QueryAllInboundTrackerByChainRequest{ChainId: chainID})
 	if err != nil {
 		return nil, err
 	}
-	return resp.InTxTracker, nil
+	return resp.InboundTracker, nil
 }
 
 func (b *ZetaCoreBridge) GetCurrentTss() (observertypes.TSS, error) {
@@ -352,21 +352,21 @@ func (b *ZetaCoreBridge) GetTssHistory() ([]observertypes.TSS, error) {
 	return resp.TssList, nil
 }
 
-func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*types.OutboundTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
+	resp, err := client.OutboundTracker(context.Background(), &types.QueryGetOutboundTrackerRequest{
 		ChainID: chain.ChainId,
 		Nonce:   nonce,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &resp.OutTxTracker, nil
+	return &resp.OutboundTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]types.OutboundTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
+	resp, err := client.OutboundTrackerAllByChain(context.Background(), &types.QueryAllOutboundTrackerByChainRequest{
 		Chain: chainID,
 		Pagination: &query.PageRequest{
 			Key:        nil,
@@ -380,16 +380,16 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order interfac
 		return nil, err
 	}
 	if order == interfaces.Ascending {
-		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
-			return resp.OutTxTracker[i].Nonce < resp.OutTxTracker[j].Nonce
+		sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
+			return resp.OutboundTracker[i].Nonce < resp.OutboundTracker[j].Nonce
 		})
 	}
 	if order == interfaces.Descending {
-		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
-			return resp.OutTxTracker[i].Nonce > resp.OutTxTracker[j].Nonce
+		sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
+			return resp.OutboundTracker[i].Nonce > resp.OutboundTracker[j].Nonce
 		})
 	}
-	return resp.OutTxTracker, nil
+	return resp.OutboundTracker, nil
 }
 
 func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {

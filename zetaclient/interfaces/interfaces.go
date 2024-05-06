@@ -66,7 +66,7 @@ type ChainSigner interface {
 
 // ZetaCoreBridger is the interface to interact with ZetaCore
 type ZetaCoreBridger interface {
-	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
+	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,
 		outTxHash string,
@@ -100,13 +100,13 @@ type ZetaCoreBridger interface {
 	ListPendingCctxWithinRatelimit() ([]*crosschaintypes.CrossChainTx, uint64, int64, string, bool, error)
 	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error)
-	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
+	GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
+	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList() ([]string, error)
 	GetKeyGen() (*observertypes.Keygen, error)
 	GetBtcTssAddress(chainID int64) (string, error)
-	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
+	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InboundTracker, error)
 	GetLogger() *zerolog.Logger
 	ZetaChain() chains.Chain
 	Pause()

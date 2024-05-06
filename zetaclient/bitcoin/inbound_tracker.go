@@ -13,9 +13,9 @@ import (
 
 // WatchIntxTracker watches zetacore for bitcoin intx trackers
 func (ob *BTCChainClient) WatchIntxTracker() {
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchIntxTracker", ob.GetChainParams().InTxTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchIntxTracker", ob.GetChainParams().InboundTicker)
 	if err != nil {
-		ob.logger.InTx.Err(err).Msg("error creating ticker")
+		ob.logger.Inbound.Err(err).Msg("error creating ticker")
 		return
 	}
 
@@ -28,11 +28,11 @@ func (ob *BTCChainClient) WatchIntxTracker() {
 			}
 			err := ob.ObserveTrackerSuggestions()
 			if err != nil {
-				ob.logger.InTx.Error().Err(err).Msgf("error observing intx tracker for chain %d", ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("error observing intx tracker for chain %d", ob.chain.ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.InTx)
+			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
-			ob.logger.InTx.Info().Msgf("WatchIntxTracker stopped for chain %d", ob.chain.ChainId)
+			ob.logger.Inbound.Info().Msgf("WatchIntxTracker stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}
@@ -46,12 +46,12 @@ func (ob *BTCChainClient) ObserveTrackerSuggestions() error {
 	}
 
 	for _, tracker := range trackers {
-		ob.logger.InTx.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
+		ob.logger.Inbound.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
 		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(tracker.TxHash, true)
 		if err != nil {
 			return err
 		}
-		ob.logger.InTx.Info().Msgf("Vote submitted for inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, coin.CoinType_Gas.String())
+		ob.logger.Inbound.Info().Msgf("Vote submitted for inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, coin.CoinType_Gas.String())
 	}
 
 	return nil
@@ -83,14 +83,14 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
 
-	depositorFee := CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+	depositorFee := CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.Inbound)
 	tss, err := ob.zetaClient.GetBtcTssAddress(ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}
 
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(ob.rpcClient, *tx, tss, uint64(blockVb.Height), ob.logger.InTx, ob.netParams, depositorFee)
+	event, err := GetBtcEvent(ob.rpcClient, *tx, tss, uint64(blockVb.Height), ob.logger.Inbound, ob.netParams, depositorFee)
 	if err != nil {
 		return "", err
 	}
@@ -110,10 +110,10 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 
 	zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, zetabridge.PostVoteInboundExecutionGasLimit, msg)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msg("error posting to zeta core")
+		ob.logger.Inbound.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
 	} else if zetaHash != "" {
-		ob.logger.InTx.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+		ob.logger.Inbound.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
 			zetaHash, txHash, ballot, depositorFee)
 	}
 

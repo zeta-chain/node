@@ -315,8 +315,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		Str("SendHash", cctx.Index).
 		Logger()
 
-	params := cctx.GetCurrentOutTxParam()
-	coinType := cctx.InboundTxParams.CoinType
+	params := cctx.GetCurrentOutboundParam()
+	coinType := cctx.InboundParams.CoinType
 	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
@@ -334,12 +334,12 @@ func (signer *BTCSigner) TryProcessOutTx(
 		return
 	}
 	myid := zetaBridge.GetKeys().GetAddress()
-	outboundTxTssNonce := params.OutboundTxTssNonce
+	outboundTxTssNonce := params.TssNonce
 
-	sizelimit := params.OutboundTxGasLimit
-	gasprice, ok := new(big.Int).SetString(params.OutboundTxGasPrice, 10)
+	sizelimit := params.GasLimit
+	gasprice, ok := new(big.Int).SetString(params.GasPrice, 10)
 	if !ok || gasprice.Cmp(big.NewInt(0)) < 0 {
-		logger.Error().Msgf("cannot convert gas price  %s ", params.OutboundTxGasPrice)
+		logger.Error().Msgf("cannot convert gas price  %s ", params.GasPrice)
 		return
 	}
 
@@ -368,7 +368,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 	cancelTx := compliance.IsCctxRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(logger, signer.loggerCompliance,
-			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
+			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
 
@@ -390,7 +390,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
 	}
-	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
+	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
 
 	// FIXME: add prometheus metrics
 	_, err = zetaBridge.GetObserverList()
@@ -401,7 +401,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		outTxHash := tx.TxHash().String()
 		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", btcClient.chain.ChainName, outboundTxTssNonce, outTxHash, myid)
 		// TODO: pick a few broadcasters.
-		//if len(signers) == 0 || myid == signers[send.OutboundTxParams.Broadcaster] || myid == signers[int(send.OutboundTxParams.Broadcaster+1)%len(signers)] {
+		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 		for i := 0; i < 5; i++ {
 			// #nosec G404 randomness is not a security issue here

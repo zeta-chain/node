@@ -261,8 +261,8 @@ func LoadEVMCctxNOuttxNReceipt(
 	nonce uint64,
 	eventName string) (*crosschaintypes.CrossChainTx, *ethtypes.Transaction, *ethtypes.Receipt) {
 	cctx := LoadCctxByNonce(t, chainID, nonce)
-	coinType := cctx.GetCurrentOutTxParam().CoinType
-	txHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	coinType := cctx.GetCurrentOutboundParam().CoinType
+	txHash := cctx.GetCurrentOutboundParam().Hash
 	outtx := LoadEVMOuttx(t, chainID, txHash, coinType)
 	receipt := LoadEVMOuttxReceipt(t, chainID, txHash, coinType, eventName)
 	return cctx, outtx, receipt

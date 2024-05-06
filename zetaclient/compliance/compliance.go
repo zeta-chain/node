@@ -8,8 +8,8 @@ import (
 
 // IsCctxRestricted returns true if the cctx involves restricted addresses
 func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
-	sender := cctx.InboundTxParams.Sender
-	receiver := cctx.GetCurrentOutTxParam().Receiver
+	sender := cctx.InboundParams.Sender
+	receiver := cctx.GetCurrentOutboundParam().Receiver
 
 	return config.ContainRestrictedAddress(sender, receiver)
 }

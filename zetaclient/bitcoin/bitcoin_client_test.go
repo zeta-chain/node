@@ -199,7 +199,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 	avgGasRate := float64(32.0)
 	// #nosec G701 test - always in range
-	gasRate := int64(avgGasRate * clientcommon.BTCOuttxGasPriceMultiplier)
+	gasRate := int64(avgGasRate * clientcommon.BTCOutboundGasPriceMultiplier)
 	dynamicFee828440 := DepositorFee(gasRate)
 
 	// should return default fee if it's a regtest block
@@ -235,13 +235,13 @@ func TestCheckTSSVout(t *testing.T) {
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}})
 		require.ErrorContains(t, err, "invalid number of vouts")
@@ -251,7 +251,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// invalid TSS vout
 		rawResult.Vout[0].ScriptPubKey.Hex = "invalid script"
@@ -260,7 +260,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -269,7 +269,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
@@ -278,7 +278,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not receiver address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -287,7 +287,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not match payment amount
 		rawResult.Vout[1].Value = 0.00011000
@@ -296,7 +296,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[2].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -320,14 +320,14 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 1 or > 2", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{})
 		require.ErrorContains(t, err, "invalid number of vouts")
@@ -340,7 +340,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -352,7 +352,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
@@ -365,7 +365,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout[1].N = 1 // swap vout index
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -507,7 +507,7 @@ func TestGetBtcEvent(t *testing.T) {
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
 	// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
-	depositorFee := DepositorFee(22 * clientcommon.BTCOuttxGasPriceMultiplier)
+	depositorFee := DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
@@ -677,7 +677,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	net := &chaincfg.MainNetParams
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
-	depositorFee := DepositorFee(22 * clientcommon.BTCOuttxGasPriceMultiplier)
+	depositorFee := DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script

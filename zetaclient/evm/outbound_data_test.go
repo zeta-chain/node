@@ -14,7 +14,7 @@ import (
 func TestSigner_SetChainAndSender(t *testing.T) {
 	// setup inputs
 	cctx := getCCTX(t)
-	txData := &OutBoundTransactionData{}
+	txData := &OutboundData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetChainAndSender PendingRevert", func(t *testing.T) {
@@ -22,8 +22,8 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 		skipTx := txData.SetChainAndSender(cctx, logger)
 
 		require.False(t, skipTx)
-		require.Equal(t, ethcommon.HexToAddress(cctx.InboundTxParams.Sender), txData.to)
-		require.Equal(t, big.NewInt(cctx.InboundTxParams.SenderChainId), txData.toChainID)
+		require.Equal(t, ethcommon.HexToAddress(cctx.InboundParams.Sender), txData.to)
+		require.Equal(t, big.NewInt(cctx.InboundParams.SenderChainId), txData.toChainID)
 	})
 
 	t.Run("SetChainAndSender PendingOutBound", func(t *testing.T) {
@@ -31,8 +31,8 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 		skipTx := txData.SetChainAndSender(cctx, logger)
 
 		require.False(t, skipTx)
-		require.Equal(t, ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver), txData.to)
-		require.Equal(t, big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId), txData.toChainID)
+		require.Equal(t, ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver), txData.to)
+		require.Equal(t, big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId), txData.toChainID)
 	})
 
 	t.Run("SetChainAndSender Should skip cctx", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestSigner_SetupGas(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 
-	txData := &OutBoundTransactionData{}
+	txData := &OutboundData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetupGas_success", func(t *testing.T) {
@@ -57,14 +57,14 @@ func TestSigner_SetupGas(t *testing.T) {
 	})
 
 	t.Run("SetupGas_error", func(t *testing.T) {
-		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
+		cctx.GetCurrentOutboundParam().GasPrice = "invalidGasPrice"
 		chain := chains.BscMainnetChain
 		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})
 }
 
-func TestSigner_NewOutBoundTransactionData(t *testing.T) {
+func TestSigner_NewOutboundData(t *testing.T) {
 	// Setup evm signer
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
@@ -72,34 +72,34 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 
-	t.Run("NewOutBoundTransactionData success", func(t *testing.T) {
+	t.Run("NewOutboundData success", func(t *testing.T) {
 		cctx := getCCTX(t)
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.False(t, skip)
 		require.NoError(t, err)
 	})
 
-	t.Run("NewOutBoundTransactionData skip", func(t *testing.T) {
+	t.Run("NewOutboundData skip", func(t *testing.T) {
 		cctx := getCCTX(t)
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.NoError(t, err)
 		require.True(t, skip)
 	})
 
-	t.Run("NewOutBoundTransactionData unknown chain", func(t *testing.T) {
+	t.Run("NewOutboundData unknown chain", func(t *testing.T) {
 		cctx := getInvalidCCTX(t)
 		require.NoError(t, err)
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.ErrorContains(t, err, "unknown chain")
 		require.True(t, skip)
 	})
 
-	t.Run("NewOutBoundTransactionData setup gas error", func(t *testing.T) {
+	t.Run("NewOutboundData setup gas error", func(t *testing.T) {
 		cctx := getCCTX(t)
 		require.NoError(t, err)
-		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		cctx.GetCurrentOutboundParam().GasPrice = "invalidGasPrice"
+		_, skip, err := NewOutboundData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.True(t, skip)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})

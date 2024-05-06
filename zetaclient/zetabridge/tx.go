@@ -25,9 +25,9 @@ import (
 // GasPriceMultiplier returns the gas price multiplier for the given chain
 func GasPriceMultiplier(chainID int64) (float64, error) {
 	if chains.IsEVMChain(chainID) {
-		return clientcommon.EVMOuttxGasPriceMultiplier, nil
+		return clientcommon.EVMOutboundGasPriceMultiplier, nil
 	} else if chains.IsBitcoinChain(chainID) {
-		return clientcommon.BTCOuttxGasPriceMultiplier, nil
+		return clientcommon.BTCOutboundGasPriceMultiplier, nil
 	}
 	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chainID)
 }
@@ -91,7 +91,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 		}
 	}
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
+	msg := types.NewMsgAddOutboundTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -199,7 +199,7 @@ func (b *ZetaCoreBridge) PostVoteBlockHeader(chainID int64, blockHash []byte, he
 // PostVoteInbound posts a vote on an observed inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // it is used when the ballot is finalized and the inbound tx needs to be processed
-func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgVoteInbound) (string, string, error) {
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -232,7 +232,7 @@ func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *ty
 // MonitorVoteInboundTxResult monitors the result of a vote inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
-func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) {
+func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteInbound) {
 	var lastErr error
 
 	for i := 0; i < MonitorVoteInboundTxResultRetryCount; i++ {
@@ -323,8 +323,8 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	return b.PostVoteOutboundFromMsg(PostVoteOutboundGasLimit, retryGasLimit, msg)
 }
 
-// PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOnObservedOutboundTx
-func (b *ZetaCoreBridge) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedOutboundTx) (string, string, error) {
+// PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOutbound
+func (b *ZetaCoreBridge) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOutbound) (string, string, error) {
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -356,7 +356,7 @@ func (b *ZetaCoreBridge) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64,
 // MonitorVoteOutboundTxResult monitors the result of a vote outbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
-func (b *ZetaCoreBridge) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedOutboundTx) {
+func (b *ZetaCoreBridge) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOutbound) {
 	var lastErr error
 
 	for i := 0; i < MonitorVoteOutboundTxResultRetryCount; i++ {

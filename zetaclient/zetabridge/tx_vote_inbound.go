@@ -18,8 +18,8 @@ const (
 	PostVoteInboundMessagePassingExecutionGasLimit = 4_000_000
 )
 
-// GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
-func GetInBoundVoteMessage(
+// GetInboundVoteMessage returns a new MsgVoteInbound
+func GetInboundVoteMessage(
 	sender string,
 	senderChain int64,
 	txOrigin string,
@@ -34,7 +34,7 @@ func GetInBoundVoteMessage(
 	asset string,
 	signerAddress string,
 	eventIndex uint,
-) *types.MsgVoteOnObservedInboundTx {
+) *types.MsgVoteInbound {
 	msg := types.NewMsgVoteInbound(
 		signerAddress,
 		sender,

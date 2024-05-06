@@ -227,7 +227,7 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 	}
 
 	// #nosec G701 always in range
-	feeRate = int64(float64(feeRate) * clientcommon.BTCOuttxGasPriceMultiplier)
+	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate)
 }

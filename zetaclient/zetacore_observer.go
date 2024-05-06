@@ -266,7 +266,7 @@ func (co *CoreObserver) getAllPendingCctxWithRatelimit() (map[int64][]*types.Cro
 	// classify pending cctxs by chain id
 	cctxMap := make(map[int64][]*types.CrossChainTx)
 	for _, cctx := range cctxList {
-		chainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+		chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 		if _, found := cctxMap[chainID]; !found {
 			cctxMap[chainID] = make([]*types.CrossChainTx, 0)
 		}
@@ -294,24 +294,24 @@ func (co *CoreObserver) scheduleCctxEVM(
 	for _, v := range res {
 		trackerMap[v.Nonce] = true
 	}
-	outboundScheduleLookahead := ob.GetChainParams().OutboundTxScheduleLookahead
+	outboundScheduleLookahead := ob.GetChainParams().OutboundScheduleLookahead
 	// #nosec G701 always in range
 	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * EVMOutboundTxLookbackFactor)
 	// #nosec G701 positive
-	outboundScheduleInterval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
+	outboundScheduleInterval := uint64(ob.GetChainParams().OutboundScheduleInterval)
 
 	for idx, cctx := range cctxList {
-		params := cctx.GetCurrentOutTxParam()
-		nonce := params.OutboundTxTssNonce
+		params := cctx.GetCurrentOutboundParam()
+		nonce := params.TssNonce
 		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
-		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+outboundScheduleLookback {
+		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
-				params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce, chainID)
+				params.TssNonce, cctxList[0].GetCurrentOutboundParam().TssNonce, chainID)
 			break
 		}
 
@@ -350,7 +350,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 		// otherwise, the normal interval is used
 		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !outTxMan.IsOutTxActive(outTxID) {
 			outTxMan.StartTryProcess(outTxID)
-			co.logger.ZetaChainWatcher.Debug().Msgf("scheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutTxParam().Amount)
+			co.logger.ZetaChainWatcher.Debug().Msgf("scheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutboundParam().Amount)
 			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
 		}
 
@@ -379,13 +379,13 @@ func (co *CoreObserver) scheduleCctxBTC(
 		return
 	}
 	// #nosec G701 positive
-	interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
-	lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
+	interval := uint64(ob.GetChainParams().OutboundScheduleInterval)
+	lookahead := ob.GetChainParams().OutboundScheduleLookahead
 
 	// schedule at most one keysign per ticker
 	for idx, cctx := range cctxList {
-		params := cctx.GetCurrentOutTxParam()
-		nonce := params.OutboundTxTssNonce
+		params := cctx.GetCurrentOutboundParam()
+		nonce := params.TssNonce
 		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
@@ -409,7 +409,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 		}
 		// stop if lookahead is reached
 		if int64(idx) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-			co.logger.ZetaChainWatcher.Warn().Msgf("scheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+			co.logger.ZetaChainWatcher.Warn().Msgf("scheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
 			break
 		}
 		// try confirming the outtx or scheduling a keysign

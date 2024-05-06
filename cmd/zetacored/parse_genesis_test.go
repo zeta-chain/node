@@ -44,7 +44,7 @@ func Test_ModifyCrossChainState(t *testing.T) {
 
 		modifiedCrosschainAppState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 		require.Len(t, modifiedCrosschainAppState.CrossChainTxs, 10)
-		require.Len(t, modifiedCrosschainAppState.InTxHashToCctxList, 10)
+		require.Len(t, modifiedCrosschainAppState.InboundHashToCctxList, 10)
 		require.Len(t, modifiedCrosschainAppState.FinalizedInbounds, 10)
 	})
 
@@ -57,7 +57,7 @@ func Test_ModifyCrossChainState(t *testing.T) {
 
 		modifiedCrosschainAppState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 		require.Len(t, modifiedCrosschainAppState.CrossChainTxs, 8)
-		require.Len(t, modifiedCrosschainAppState.InTxHashToCctxList, 8)
+		require.Len(t, modifiedCrosschainAppState.InboundHashToCctxList, 8)
 		require.Len(t, modifiedCrosschainAppState.FinalizedInbounds, 8)
 	})
 }
@@ -105,7 +105,7 @@ func Test_ImportDataIntoFile(t *testing.T) {
 	// Crosschain module is in Modify list
 	crosschainStateAfterImport := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 	require.Len(t, crosschainStateAfterImport.CrossChainTxs, zetacored.MaxItemsForList)
-	require.Len(t, crosschainStateAfterImport.InTxHashToCctxList, zetacored.MaxItemsForList)
+	require.Len(t, crosschainStateAfterImport.InboundHashToCctxList, zetacored.MaxItemsForList)
 	require.Len(t, crosschainStateAfterImport.FinalizedInbounds, zetacored.MaxItemsForList)
 
 	// Bank module is in Skip list
@@ -158,15 +158,15 @@ func GetImportData(t *testing.T, cdc *codec.ProtoCodec, n int) map[string]json.R
 	// Add crosschain data to genesis state
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importData)
 	cctxList := make([]*crosschaintypes.CrossChainTx, n)
-	intxHashToCctxList := make([]crosschaintypes.InTxHashToCctx, n)
+	intxHashToCctxList := make([]crosschaintypes.InboundHashToCctx, n)
 	finalLizedInbounds := make([]string, n)
 	for i := 0; i < n; i++ {
 		cctxList[i] = sample.CrossChainTx(t, fmt.Sprintf("crosschain-%d", i))
-		intxHashToCctxList[i] = sample.InTxHashToCctx(t, fmt.Sprintf("intxHashToCctxList-%d", i))
+		intxHashToCctxList[i] = sample.InboundHashToCctx(t, fmt.Sprintf("intxHashToCctxList-%d", i))
 		finalLizedInbounds[i] = fmt.Sprintf("finalLizedInbounds-%d", i)
 	}
 	importedCrossChainGenState.CrossChainTxs = cctxList
-	importedCrossChainGenState.InTxHashToCctxList = intxHashToCctxList
+	importedCrossChainGenState.InboundHashToCctxList = intxHashToCctxList
 	importedCrossChainGenState.FinalizedInbounds = finalLizedInbounds
 	importedCrossChainStateBz, err := json.Marshal(importedCrossChainGenState)
 	require.NoError(t, err)

@@ -54,7 +54,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		// Note: other tests cases will fail if we use the original sender address because the
 		// compliance config is globally set and will impact other tests when running in parallel
 		cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		cctx.InboundTxParams.Sender = sample.EthAddress().Hex()
+		cctx.InboundParams.Sender = sample.EthAddress().Hex()
 
 		// create evm client and set outtx and receipt
 		client := MockEVMClient(t, chain, nil, nil, nil, nil, 1, chainParam)
@@ -64,7 +64,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		cfg := config.Config{
 			ComplianceConfig: config.ComplianceConfig{},
 		}
-		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundTxParams.Sender}
+		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}
 		config.LoadComplianceConfig(cfg)
 
 		// post outbound vote
@@ -152,7 +152,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 
 	t.Run("post vote outbound successfully", func(t *testing.T) {
 		// the amount and status to be used for vote
-		receiveValue := cctx.GetCurrentOutTxParam().Amount.BigInt()
+		receiveValue := cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetaBridge and post outbound vote
@@ -194,7 +194,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 	t.Run("should fail on receiver address mismatch", func(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeCctx.GetCurrentOutTxParam().Receiver = sample.EthAddress().Hex()
+		fakeCctx.GetCurrentOutboundParam().Receiver = sample.EthAddress().Hex()
 		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, revertedLog)
@@ -203,8 +203,8 @@ func Test_ParseZetaReceived(t *testing.T) {
 	t.Run("should fail on amount mismatch", func(t *testing.T) {
 		// load cctx and set amount to an arbitrary wrong value
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutTxParam().Amount.Uint64()-1)
-		fakeCctx.GetCurrentOutTxParam().Amount = fakeAmount
+		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutboundParam().Amount.Uint64()-1)
+		fakeCctx.GetCurrentOutboundParam().Amount = fakeAmount
 		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, revertedLog)
@@ -255,7 +255,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 	t.Run("should fail on receiver address mismatch", func(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeCctx.InboundTxParams.Sender = sample.EthAddress().Hex() // the receiver is the sender for reverted ccxt
+		fakeCctx.InboundParams.Sender = sample.EthAddress().Hex() // the receiver is the sender for reverted ccxt
 		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, revertedLog)
@@ -264,8 +264,8 @@ func Test_ParseZetaReverted(t *testing.T) {
 	t.Run("should fail on amount mismatch", func(t *testing.T) {
 		// load cctx and set amount to an arbitrary wrong value
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutTxParam().Amount.Uint64()-1)
-		fakeCctx.GetCurrentOutTxParam().Amount = fakeAmount
+		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutboundParam().Amount.Uint64()-1)
+		fakeCctx.GetCurrentOutboundParam().Amount = fakeAmount
 		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, revertedLog)
@@ -305,7 +305,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	t.Run("should fail on receiver address mismatch", func(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeCctx.GetCurrentOutTxParam().Receiver = sample.EthAddress().Hex()
+		fakeCctx.GetCurrentOutboundParam().Receiver = sample.EthAddress().Hex()
 		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, withdrawn)
@@ -313,7 +313,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	t.Run("should fail on asset mismatch", func(t *testing.T) {
 		// load cctx and set asset to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeCctx.InboundTxParams.Asset = sample.EthAddress().Hex()
+		fakeCctx.InboundParams.Asset = sample.EthAddress().Hex()
 		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "asset mismatch")
 		require.Nil(t, withdrawn)
@@ -321,8 +321,8 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	t.Run("should fail on amount mismatch", func(t *testing.T) {
 		// load cctx and set amount to an arbitrary wrong value
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutTxParam().Amount.Uint64()-1)
-		fakeCctx.GetCurrentOutTxParam().Amount = fakeAmount
+		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutboundParam().Amount.Uint64()-1)
+		fakeCctx.GetCurrentOutboundParam().Amount = fakeAmount
 		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, withdrawn)
@@ -347,7 +347,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		nonce := uint64(9718)
 		coinType := coin.CoinType_Zeta
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, chainID, nonce, testutils.EventZetaReceived)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
@@ -361,7 +361,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		coinType := coin.CoinType_Zeta
 		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(localChainID)
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, localChainID, nonce, testutils.EventZetaReverted)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 		value, status, err := evm.ParseOuttxReceivedValue(
 			cctx, receipt, outtx, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
 		require.NoError(t, err)
@@ -374,7 +374,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		nonce := uint64(8014)
 		coinType := coin.CoinType_ERC20
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, chainID, nonce, testutils.EventERC20Withdraw)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
@@ -386,7 +386,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		nonce := uint64(7260)
 		coinType := coin.CoinType_Gas
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, chainID, nonce, "")
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)

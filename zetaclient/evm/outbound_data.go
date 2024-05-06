@@ -40,7 +40,7 @@ type OutboundData struct {
 	cctxIndex [32]byte
 
 	// outboundParams field contains data detailing the receiver chain and outbound transaction
-	outboundParams *types.OutboundTxParams
+	outboundParams *types.OutboundParams
 }
 
 // SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
@@ -49,12 +49,12 @@ type OutboundData struct {
 func (txData *OutboundData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingRevert:
-		txData.to = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-		txData.toChainID = big.NewInt(cctx.InboundTxParams.SenderChainId)
+		txData.to = ethcommon.HexToAddress(cctx.InboundParams.Sender)
+		txData.toChainID = big.NewInt(cctx.InboundParams.SenderChainId)
 		logger.Info().Msgf("Abort: reverting inbound")
 	case types.CctxStatus_PendingOutbound:
-		txData.to = ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-		txData.toChainID = big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId)
+		txData.to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
 	default:
 		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", cctx.CctxStatus.Status)
 		return true
@@ -70,21 +70,21 @@ func (txData *OutboundData) SetupGas(
 	chain *chains.Chain,
 ) error {
 
-	txData.gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
+	txData.gasLimit = cctx.GetCurrentOutboundParam().GasLimit
 	if txData.gasLimit < MinGasLimit {
 		txData.gasLimit = MinGasLimit
-		logger.Warn().Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
+		logger.Warn().Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
 	}
 	if txData.gasLimit > MaxGasLimit {
 		txData.gasLimit = MaxGasLimit
-		logger.Warn().Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
+		logger.Warn().Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
 	}
 
 	// use dynamic gas price for ethereum chains.
 	// The code below is a fix for https://github.com/zeta-chain/node/issues/1085
-	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no OutboundTxGasPrice
-	// we should possibly remove it completely and return an error if no OutboundTxGasPrice is provided because it means no fee is processed on ZetaChain
-	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no GasPrice
+	// we should possibly remove it completely and return an error if no GasPrice is provided because it means no fee is processed on ZetaChain
+	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutboundParam().GasPrice, 10)
 	if !ok {
 		if chains.IsEthereumChain(chain.ChainId) {
 			suggested, err := client.SuggestGasPrice(context.Background())
@@ -93,7 +93,7 @@ func (txData *OutboundData) SetupGas(
 			}
 			txData.gasPrice = roundUpToNearestGwei(suggested)
 		} else {
-			return fmt.Errorf("cannot convert gas price  %s ", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+			return fmt.Errorf("cannot convert gas price  %s ", cctx.GetCurrentOutboundParam().GasPrice)
 		}
 	} else {
 		txData.gasPrice = specified
@@ -103,7 +103,7 @@ func (txData *OutboundData) SetupGas(
 
 // NewOutboundData populates transaction input fields parsed from the cctx and other parameters
 // returns
-//  1. New OutBoundTransaction Data struct or nil if an error occurred.
+//  1. New NewOutboundData Data struct or nil if an error occurred.
 //  2. bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
 //     cctx will be skipped and false otherwise.
 //  3. error
@@ -115,12 +115,12 @@ func NewOutboundData(
 	height uint64,
 ) (*OutboundData, bool, error) {
 	txData := OutboundData{}
-	txData.outboundParams = cctx.GetCurrentOutTxParam()
-	txData.amount = cctx.GetCurrentOutTxParam().Amount.BigInt()
-	txData.nonce = cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	txData.sender = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-	txData.srcChainID = big.NewInt(cctx.InboundTxParams.SenderChainId)
-	txData.asset = ethcommon.HexToAddress(cctx.InboundTxParams.Asset)
+	txData.outboundParams = cctx.GetCurrentOutboundParam()
+	txData.amount = cctx.GetCurrentOutboundParam().Amount.BigInt()
+	txData.nonce = cctx.GetCurrentOutboundParam().TssNonce
+	txData.sender = ethcommon.HexToAddress(cctx.InboundParams.Sender)
+	txData.srcChainID = big.NewInt(cctx.InboundParams.SenderChainId)
+	txData.asset = ethcommon.HexToAddress(cctx.InboundParams.Asset)
 	txData.height = height
 
 	skipTx := txData.SetChainAndSender(cctx, logger)
@@ -134,7 +134,7 @@ func NewOutboundData(
 	}
 
 	// Get nonce, Early return if the cctx is already processed
-	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
 	included, confirmed, err := evmClient.IsOutboundProcessed(cctx, logger)
 	if err != nil {
 		return nil, true, errors.New("IsOutboundProcessed failed")
@@ -151,7 +151,7 @@ func NewOutboundData(
 	}
 
 	// Get sendHash
-	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
+	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
 	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(cctxIndex) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
@@ -170,7 +170,7 @@ func NewOutboundData(
 	}
 
 	// Base64 decode message
-	if cctx.InboundTxParams.CoinType != coin.CoinType_Cmd {
+	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {
 		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 		if err != nil {
 			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)

@@ -54,7 +54,7 @@ func (ob *ChainClient) PostVoteOutbound(
 // It also posts vote to zetacore if the tx is confirmed
 func (ob *ChainClient) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	// skip if outtx is not confirmed
-	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
 	if !ob.IsTxConfirmed(nonce) {
 		return false, false, nil
 	}
@@ -75,12 +75,12 @@ func (ob *ChainClient) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, l
 	// define a few common variables
 	var receiveValue *big.Int
 	var receiveStatus chains.ReceiveStatus
-	cointype := cctx.InboundTxParams.CoinType
+	cointype := cctx.InboundParams.CoinType
 
 	// compliance check, special handling the cancelled cctx
 	if compliance.IsCctxRestricted(cctx) {
 		// use cctx's amount to bypass the amount check in zetacore
-		receiveValue = cctx.GetCurrentOutTxParam().Amount.BigInt()
+		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus := chains.ReceiveStatus_failed
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 			receiveStatus = chains.ReceiveStatus_success
@@ -109,7 +109,7 @@ func ParseAndCheckZetaEvent(
 	connectorAddr ethcommon.Address,
 	connector *zetaconnector.ZetaConnectorNonEth,
 ) (*zetaconnector.ZetaConnectorNonEthZetaReceived, *zetaconnector.ZetaConnectorNonEthZetaReverted, error) {
-	params := cctx.GetCurrentOutTxParam()
+	params := cctx.GetCurrentOutboundParam()
 	for _, vLog := range receipt.Logs {
 		// try parsing ZetaReceived event
 		received, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
@@ -139,9 +139,9 @@ func ParseAndCheckZetaEvent(
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReverted event")
 			}
-			if !strings.EqualFold(ethcommon.BytesToAddress(reverted.DestinationAddress[:]).Hex(), cctx.InboundTxParams.Sender) {
+			if !strings.EqualFold(ethcommon.BytesToAddress(reverted.DestinationAddress[:]).Hex(), cctx.InboundParams.Sender) {
 				return nil, nil, fmt.Errorf("receiver address mismatch in ZetaReverted event, want %s got %s",
-					cctx.InboundTxParams.Sender, ethcommon.BytesToAddress(reverted.DestinationAddress[:]).Hex())
+					cctx.InboundParams.Sender, ethcommon.BytesToAddress(reverted.DestinationAddress[:]).Hex())
 			}
 			if reverted.RemainingZetaValue.Cmp(params.Amount.BigInt()) != 0 {
 				return nil, nil, fmt.Errorf("amount mismatch in ZetaReverted event, want %s got %s",
@@ -164,7 +164,7 @@ func ParseAndCheckWithdrawnEvent(
 	custodyAddr ethcommon.Address,
 	custody *erc20custody.ERC20Custody,
 ) (*erc20custody.ERC20CustodyWithdrawn, error) {
-	params := cctx.GetCurrentOutTxParam()
+	params := cctx.GetCurrentOutboundParam()
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ParseWithdrawn(*vLog)
 		if err == nil {
@@ -176,9 +176,9 @@ func ParseAndCheckWithdrawnEvent(
 				return nil, fmt.Errorf("receiver address mismatch in Withdrawn event, want %s got %s",
 					params.Receiver, withdrawn.Recipient.Hex())
 			}
-			if !strings.EqualFold(withdrawn.Asset.Hex(), cctx.InboundTxParams.Asset) {
+			if !strings.EqualFold(withdrawn.Asset.Hex(), cctx.InboundParams.Asset) {
 				return nil, fmt.Errorf("asset mismatch in Withdrawn event, want %s got %s",
-					cctx.InboundTxParams.Asset, withdrawn.Asset.Hex())
+					cctx.InboundParams.Asset, withdrawn.Asset.Hex())
 			}
 			if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
 				return nil, fmt.Errorf("amount mismatch in Withdrawn event, want %s got %s",

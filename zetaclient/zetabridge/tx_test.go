@@ -397,7 +397,7 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		hash, _, err := zetabridge.PostVoteInbound(100, 200, &crosschaintypes.MsgVoteOnObservedInboundTx{
+		hash, _, err := zetabridge.PostVoteInbound(100, 200, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
 		})
 		require.NoError(t, err)
@@ -405,11 +405,11 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 	})
 }
 
-func TestZetaCoreBridge_GetInBoundVoteMessage(t *testing.T) {
+func TestZetaCoreBridge_GetInboundVoteMessage(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 	t.Run("get inbound vote message", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		msg := GetInBoundVoteMessage(
+		msg := GetInboundVoteMessage(
 			address.String(),
 			chains.EthChain.ChainId,
 			"",
@@ -436,7 +436,7 @@ func TestZetaCoreBridge_MonitorVoteInboundTxResult(t *testing.T) {
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		zetabridge.MonitorVoteInboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOnObservedInboundTx{
+		zetabridge.MonitorVoteInboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
 		})
 		// Nothing to verify against this function
@@ -489,7 +489,7 @@ func TestZetaCoreBridge_MonitorVoteOutboundTxResult(t *testing.T) {
 
 	t.Run("monitor outbound vote", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		zetabridge.MonitorVoteOutboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOnObservedOutboundTx{
+		zetabridge.MonitorVoteOutboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOutbound{
 			Creator: address.String(),
 		})
 		// Nothing to verify against this function

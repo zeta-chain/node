@@ -1,9 +1,9 @@
-# tx crosschain add-to-out-tx-tracker
+# tx crosschain vote-inbound
 
-Add a out-tx-tracker
+Broadcast message to vote an inbound
 
 ```
-zetacored tx crosschain add-to-out-tx-tracker [chain] [nonce] [tx-hash] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset] [eventIndex] [flags]
 ```
 
 ### Options
@@ -22,7 +22,7 @@ zetacored tx crosschain add-to-out-tx-tracker [chain] [nonce] [tx-hash] [flags]
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for add-to-out-tx-tracker
+  -h, --help                     help for vote-inbound
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device

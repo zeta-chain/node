@@ -190,7 +190,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 			tx.Nonce(),
 			coinType,
 		)
-		ballotExpected := cctx.GetCurrentOutTxParam().OutboundTxBallotIndex
+		ballotExpected := cctx.GetCurrentOutboundParam().BallotIndex
 		require.Equal(t, ballotExpected, msg.Digest())
 	})
 }

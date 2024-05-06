@@ -6,11 +6,11 @@ const (
 	// ZetaBlockTime is the block time of the Zeta network
 	ZetaBlockTime = 6500 * time.Millisecond
 
-	// OutTxInclusionTimeout is the timeout for waiting for an outtx to be included in a block
-	OutTxInclusionTimeout = 20 * time.Minute
+	// OutboundInclusionTimeout is the timeout for waiting for an outtx to be included in a block
+	OutboundInclusionTimeout = 20 * time.Minute
 
-	// OutTxTrackerReportTimeout is the timeout for waiting for an outtx tracker report
-	OutTxTrackerReportTimeout = 10 * time.Minute
+	// OutboundTrackerReportTimeout is the timeout for waiting for an outtx tracker report
+	OutboundTrackerReportTimeout = 10 * time.Minute
 
 	// TopicsZetaSent is the number of topics for a Zeta sent event
 	// [signature, zetaTxSenderAddress, destinationChainId]

@@ -35,7 +35,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 		require.NoError(t, err)
-		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
+		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed intx", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, coin.CoinType_Zeta)
@@ -86,7 +86,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 		require.NoError(t, err)
-		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
+		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed intx", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, coin.CoinType_ERC20)
@@ -137,7 +137,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.NoError(t, err)
-		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
+		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed intx", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, coin.CoinType_Gas)
@@ -205,7 +205,7 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	t.Run("should return vote msg for archived ZetaSent event", func(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
 		require.NotNil(t, msg)
-		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, msg.Digest())
+		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		sender := event.ZetaTxSenderAddress.Hex()
@@ -253,7 +253,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	t.Run("should return vote msg for archived Deposited event", func(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.NotNil(t, msg)
-		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, msg.Digest())
+		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender.Hex()}
@@ -300,7 +300,7 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	t.Run("should return vote msg for archived gas token transfer to TSS", func(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, ethcommon.HexToAddress(tx.From), receipt.BlockNumber.Uint64())
 		require.NotNil(t, msg)
-		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, msg.Digest())
+		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{tx.From}

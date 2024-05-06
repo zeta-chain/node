@@ -31,15 +31,15 @@ import (
 func (ob *ChainClient) WatchIntxTracker() {
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchIntxTracker_%d", ob.chain.ChainId),
-		ob.GetChainParams().InTxTicker,
+		ob.GetChainParams().InboundTicker,
 	)
 	if err != nil {
-		ob.logger.InTx.Err(err).Msg("error creating ticker")
+		ob.logger.Inbound.Err(err).Msg("error creating ticker")
 		return
 	}
 	defer ticker.Stop()
 
-	ob.logger.InTx.Info().Msgf("Intx tracker watcher started for chain %d", ob.chain.ChainId)
+	ob.logger.Inbound.Info().Msgf("Intx tracker watcher started for chain %d", ob.chain.ChainId)
 	for {
 		select {
 		case <-ticker.C():
@@ -48,11 +48,11 @@ func (ob *ChainClient) WatchIntxTracker() {
 			}
 			err := ob.ObserveIntxTrackers()
 			if err != nil {
-				ob.logger.InTx.Err(err).Msg("ObserveTrackerSuggestions error")
+				ob.logger.Inbound.Err(err).Msg("ObserveTrackerSuggestions error")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.InTx)
+			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
-			ob.logger.InTx.Info().Msg("ExternalChainWatcher for inboundTrackerSuggestions stopped")
+			ob.logger.Inbound.Info().Msg("ExternalChainWatcher for inboundTrackerSuggestions stopped")
 			return
 		}
 	}
@@ -75,7 +75,7 @@ func (ob *ChainClient) ObserveIntxTrackers() error {
 		if err != nil {
 			return errors.Wrapf(err, "error getting receipt for intx %s chain %d", tracker.TxHash, ob.chain.ChainId)
 		}
-		ob.logger.InTx.Info().Msgf("checking tracker for intx %s chain %d", tracker.TxHash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("checking tracker for intx %s chain %d", tracker.TxHash, ob.chain.ChainId)
 
 		// check and vote on inbound tx
 		switch tracker.CoinType {
@@ -109,7 +109,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, rece
 	}
 
 	// build inbound vote message and post vote
-	var msg *types.MsgVoteOnObservedInboundTx
+	var msg *types.MsgVoteInbound
 	for _, log := range receipt.Logs {
 		event, err := connector.ParseZetaSent(*log)
 		if err == nil && event != nil {
@@ -118,7 +118,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, rece
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForZetaSentEvent(event)
 			} else {
-				ob.logger.InTx.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
 				return "", err
 			}
 			break // only one event is allowed per tx
@@ -126,7 +126,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, rece
 	}
 	if msg == nil {
 		// no event, restricted tx, etc.
-		ob.logger.InTx.Info().Msgf("no ZetaSent event found for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("no ZetaSent event found for intx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return "", nil
 	}
 	if vote {
@@ -151,7 +151,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, rec
 	sender := ethcommon.HexToAddress(tx.From)
 
 	// build inbound vote message and post vote
-	var msg *types.MsgVoteOnObservedInboundTx
+	var msg *types.MsgVoteInbound
 	for _, log := range receipt.Logs {
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err == nil && zetaDeposited != nil {
@@ -160,7 +160,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, rec
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {
-				ob.logger.InTx.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
 				return "", err
 			}
 			break // only one event is allowed per tx
@@ -168,7 +168,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, rec
 	}
 	if msg == nil {
 		// no event, donation, restricted tx, etc.
-		ob.logger.InTx.Info().Msgf("no Deposited event found for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("no Deposited event found for intx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return "", nil
 	}
 	if vote {
@@ -198,7 +198,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, recei
 	msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, sender, receipt.BlockNumber.Uint64())
 	if msg == nil {
 		// donation, restricted tx, etc.
-		ob.logger.InTx.Info().Msgf("no vote message built for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("no vote message built for intx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return "", nil
 	}
 	if vote {
@@ -209,17 +209,17 @@ func (ob *ChainClient) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, recei
 }
 
 // PostVoteInbound posts a vote for the given vote message
-func (ob *ChainClient) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinType coin.CoinType, retryGasLimit uint64) (string, error) {
-	txHash := msg.InTxHash
+func (ob *ChainClient) PostVoteInbound(msg *types.MsgVoteInbound, coinType coin.CoinType, retryGasLimit uint64) (string, error) {
+	txHash := msg.InboundHash
 	chainID := ob.chain.ChainId
 	zetaHash, ballot, err := ob.zetaBridge.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, retryGasLimit, msg)
 	if err != nil {
-		ob.logger.InTx.Err(err).Msgf("intx detected: error posting vote for chain %d token %s intx %s", chainID, coinType, txHash)
+		ob.logger.Inbound.Err(err).Msgf("intx detected: error posting vote for chain %d token %s intx %s", chainID, coinType, txHash)
 		return "", err
 	} else if zetaHash != "" {
-		ob.logger.InTx.Info().Msgf("intx detected: chain %d token %s intx %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
+		ob.logger.Inbound.Info().Msgf("intx detected: chain %d token %s intx %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
 	} else {
-		ob.logger.InTx.Info().Msgf("intx detected: chain %d token %s intx %s already voted on ballot %s", chainID, coinType, txHash, ballot)
+		ob.logger.Inbound.Info().Msgf("intx detected: chain %d token %s intx %s already voted on ballot %s", chainID, coinType, txHash, ballot)
 	}
 
 	return ballot, err
@@ -232,7 +232,7 @@ func (ob *ChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHei
 }
 
 // BuildInboundVoteMsgForDepositedEvent builds a inbound vote message for a Deposited event
-func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
+func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteInbound {
 	// compliance check
 	maybeReceiver := ""
 	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(event.Message))
@@ -240,21 +240,21 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
-		compliance.PrintComplianceLog(ob.logger.InTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20")
 		return nil
 	}
 
 	// donation check
 	if bytes.Equal(event.Message, []byte(constant.DonationMessage)) {
-		ob.logger.InTx.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 		return nil
 	}
 	message := hex.EncodeToString(event.Message)
-	ob.logger.InTx.Info().Msgf("ERC20CustodyDeposited inTx detected on chain %d tx %s block %d from %s value %s message %s",
+	ob.logger.Inbound.Info().Msgf("ERC20CustodyDeposited inTx detected on chain %d tx %s block %d from %s value %s message %s",
 		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender.Hex(), event.Amount.String(), message)
 
-	return zetabridge.GetInBoundVoteMessage(
+	return zetabridge.GetInboundVoteMessage(
 		sender.Hex(),
 		ob.chain.ChainId,
 		"",
@@ -273,10 +273,10 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 }
 
 // BuildInboundVoteMsgForZetaSentEvent builds a inbound vote message for a ZetaSent event
-func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
+func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteInbound {
 	destChain := chains.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
-		ob.logger.InTx.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
+		ob.logger.Inbound.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
 		return nil
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
@@ -284,7 +284,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.
 	// compliance check
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
-		compliance.PrintComplianceLog(ob.logger.InTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender, destAddr, "Zeta")
 		return nil
 	}
@@ -292,20 +292,20 @@ func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.
 	if !destChain.IsZetaChain() {
 		paramsDest, found := ob.coreContext.GetEVMChainParams(destChain.ChainId)
 		if !found {
-			ob.logger.InTx.Warn().Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())
+			ob.logger.Inbound.Warn().Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())
 			return nil
 		}
 
 		if strings.EqualFold(destAddr, paramsDest.ZetaTokenContractAddress) {
-			ob.logger.InTx.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+			ob.logger.Inbound.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 			return nil
 		}
 	}
 	message := base64.StdEncoding.EncodeToString(event.Message)
-	ob.logger.InTx.Info().Msgf("ZetaSent inTx detected on chain %d tx %s block %d from %s value %s message %s",
+	ob.logger.Inbound.Info().Msgf("ZetaSent inTx detected on chain %d tx %s block %d from %s value %s message %s",
 		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender, event.ZetaValueAndGas.String(), message)
 
-	return zetabridge.GetInBoundVoteMessage(
+	return zetabridge.GetInboundVoteMessage(
 		sender,
 		ob.chain.ChainId,
 		event.SourceTxOriginAddress.Hex(),
@@ -324,7 +324,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.
 }
 
 // BuildInboundVoteMsgForTokenSentToTSS builds a inbound vote message for a token sent to TSS
-func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
+func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteInbound {
 	message := tx.Input
 
 	// compliance check
@@ -334,7 +334,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
-		compliance.PrintComplianceLog(ob.logger.InTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, tx.Hash, sender.Hex(), sender.Hex(), "Gas")
 		return nil
 	}
@@ -343,13 +343,13 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 	// #nosec G703 err is already checked
 	data, _ := hex.DecodeString(message)
 	if bytes.Equal(data, []byte(constant.DonationMessage)) {
-		ob.logger.InTx.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return nil
 	}
-	ob.logger.InTx.Info().Msgf("TSS inTx detected on chain %d tx %s block %d from %s value %s message %s",
+	ob.logger.Inbound.Info().Msgf("TSS inTx detected on chain %d tx %s block %d from %s value %s message %s",
 		ob.chain.ChainId, tx.Hash, blockNumber, sender.Hex(), tx.Value.String(), message)
 
-	return zetabridge.GetInBoundVoteMessage(
+	return zetabridge.GetInboundVoteMessage(
 		sender.Hex(),
 		ob.chain.ChainId,
 		sender.Hex(),
