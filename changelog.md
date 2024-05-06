@@ -31,7 +31,7 @@
 ### CI
 
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
-* []() - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
+* [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
 
 ## v16.0.0
 
