@@ -203,7 +203,7 @@ func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	func() {
 		cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 		r.Logger.Info("cctx status message: %s", cctx.CctxStatus.StatusMessage)
-		revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+		revertTxHash := cctx.GetCurrentOutboundParam().Hash
 		r.Logger.Info("EVM revert tx receipt: status %d", receipt.Status)
 
 		tx, _, err := r.EVMClient.TransactionByHash(r.Ctx, ethcommon.HexToHash(revertTxHash))

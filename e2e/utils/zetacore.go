@@ -62,8 +62,8 @@ func WaitCctxsMinedByInTxHash(
 		}
 		time.Sleep(1 * time.Second)
 
-		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
-			InTxHash: inTxHash,
+		res, err := cctxClient.InboundHashToCctxData(ctx, &crosschaintypes.QueryInboundHashToCctxDataRequest{
+			InboundHash: inTxHash,
 		})
 
 		if err != nil {

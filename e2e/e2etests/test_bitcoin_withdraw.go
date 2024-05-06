@@ -192,7 +192,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// get bitcoin tx according to the outTxHash in cctx
-	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	outTxHash := cctx.GetCurrentOutboundParam().Hash
 	hash, err := chainhash.NewHashFromStr(outTxHash)
 	if err != nil {
 		panic(err)
@@ -305,7 +305,7 @@ func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 //			panic(err)
 //		}
 //		cctx := config.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), r.CctxClient, r.Logger)
-//		outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+//		outTxHash := cctx.GetCurrentOutboundParam().Hash
 //		hash, err := chainhash.NewHashFromStr(outTxHash)
 //		if err != nil {
 //			panic(err)

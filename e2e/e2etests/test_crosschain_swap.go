@@ -116,7 +116,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		)
 	}
 
-	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutTxParam().OutboundTxHash)
+	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutboundParam().Hash)
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	utxos, err := r.BtcRPCClient.ListUnspent()
@@ -158,7 +158,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		)
 	}
 	r.Logger.Info("cctx3 index %s", cctx3.Index)
-	r.Logger.Info("  inbound tx hash %s", cctx3.InboundTxParams.InboundTxObservedHash)
+	r.Logger.Info("  inbound tx hash %s", cctx3.InboundParams.ObservedHash)
 	r.Logger.Info("  status %s", cctx3.CctxStatus.Status.String())
 	r.Logger.Info("  status msg: %s", cctx3.CctxStatus.StatusMessage)
 
@@ -171,7 +171,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		)
 	}
 	r.Logger.Info("cctx4 index %s", cctx4.Index)
-	r.Logger.Info("  outbound tx hash %s", cctx4.GetCurrentOutTxParam().OutboundTxHash)
+	r.Logger.Info("  outbound tx hash %s", cctx4.GetCurrentOutboundParam().Hash)
 	r.Logger.Info("  status %s", cctx4.CctxStatus.Status.String())
 
 	{
@@ -210,14 +210,14 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 		cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 		r.Logger.Info("cctx3 index %s", cctx.Index)
-		r.Logger.Info("  inbound tx hash %s", cctx.InboundTxParams.InboundTxObservedHash)
+		r.Logger.Info("  inbound tx hash %s", cctx.InboundParams.ObservedHash)
 		r.Logger.Info("  status %s", cctx.CctxStatus.Status.String())
 		r.Logger.Info("  status msg: %s", cctx.CctxStatus.StatusMessage)
 
 		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 			panic(fmt.Sprintf("expected reverted status; got %s", cctx.CctxStatus.Status.String()))
 		}
-		outTxHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutTxParam().OutboundTxHash)
+		outTxHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutboundParam().Hash)
 		if err != nil {
 			panic(err)
 		}

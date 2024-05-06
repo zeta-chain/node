@@ -98,7 +98,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 
 	// get revert tx
-	revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	revertTxHash := cctx.GetCurrentOutboundParam().Hash
 	receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(revertTxHash))
 	if err != nil {
 		panic(err)

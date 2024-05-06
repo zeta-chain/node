@@ -59,7 +59,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	r.Logger.Info(fmt.Sprintf("🔄 Cctx mined for contract call chain zevm %s", cctx.Index))
 
 	// On finalization the Fungible module calls the onReceive function which in turn calls the onZetaMessage function on the destination contract
-	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +133,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 
 	// On finalization the Tss address calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}
@@ -215,7 +215,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	}
 
 	// On finalization the Tss calls the onReceive function which in turn calls the onZetaMessage function on the destination contract.
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}
@@ -303,7 +303,7 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 
 	// On finalization the Fungible module calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
-	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}

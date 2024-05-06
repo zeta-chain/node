@@ -82,7 +82,7 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 			cctx.CctxStatus.StatusMessage,
 		))
 	}
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 			r.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
 			r.Logger.Info("  Zeta Value: %d", event.ZetaValue)
 			r.Logger.Info("  src chainid: %d", event.SourceChainId)
-			if event.ZetaValue.Cmp(cctx.GetCurrentOutTxParam().Amount.BigInt()) != 0 {
+			if event.ZetaValue.Cmp(cctx.GetCurrentOutboundParam().Amount.BigInt()) != 0 {
 				panic("Zeta value mismatch")
 			}
 		}
@@ -160,7 +160,7 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}
@@ -228,7 +228,7 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
-	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	outTxHash := cctx.GetCurrentOutboundParam().Hash
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outTxHash))
 	if err != nil {
 		panic(err)

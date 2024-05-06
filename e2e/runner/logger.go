@@ -116,40 +116,40 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 			l.Info("  StatusMessage: %s", cctx.CctxStatus.StatusMessage)
 		}
 	}
-	if cctx.InboundTxParams != nil {
-		l.Info(" InboundTxParams:")
-		l.Info("  TxHash: %s", cctx.InboundTxParams.InboundTxObservedHash)
-		l.Info("  TxHeight: %d", cctx.InboundTxParams.InboundTxObservedExternalHeight)
-		l.Info("  BallotIndex: %s", cctx.InboundTxParams.InboundTxBallotIndex)
-		l.Info("  Amount: %s", cctx.InboundTxParams.Amount.String())
-		l.Info("  CoinType: %s", cctx.InboundTxParams.CoinType.String())
-		l.Info("  SenderChainID: %d", cctx.InboundTxParams.SenderChainId)
-		l.Info("  Origin: %s", cctx.InboundTxParams.TxOrigin)
-		if cctx.InboundTxParams.Sender != "" {
-			l.Info("  Sender: %s", cctx.InboundTxParams.Sender)
+	if cctx.InboundParams != nil {
+		l.Info(" InboundParams:")
+		l.Info("  TxHash: %s", cctx.InboundParams.ObservedHash)
+		l.Info("  TxHeight: %d", cctx.InboundParams.ObservedExternalHeight)
+		l.Info("  BallotIndex: %s", cctx.InboundParams.BallotIndex)
+		l.Info("  Amount: %s", cctx.InboundParams.Amount.String())
+		l.Info("  CoinType: %s", cctx.InboundParams.CoinType.String())
+		l.Info("  SenderChainID: %d", cctx.InboundParams.SenderChainId)
+		l.Info("  Origin: %s", cctx.InboundParams.TxOrigin)
+		if cctx.InboundParams.Sender != "" {
+			l.Info("  Sender: %s", cctx.InboundParams.Sender)
 		}
-		if cctx.InboundTxParams.Asset != "" {
-			l.Info("  Asset: %s", cctx.InboundTxParams.Asset)
+		if cctx.InboundParams.Asset != "" {
+			l.Info("  Asset: %s", cctx.InboundParams.Asset)
 		}
 	}
 	if cctx.RelayedMessage != "" {
 		l.Info("  RelayedMessage: %s", cctx.RelayedMessage)
 	}
-	for i, outTxParam := range cctx.OutboundTxParams {
+	for i, outTxParam := range cctx.OutboundParams {
 		if i == 0 {
 			l.Info(" OutboundTxParams:")
 		} else {
 			l.Info(" RevertTxParams:")
 		}
-		l.Info("  TxHash: %s", outTxParam.OutboundTxHash)
-		l.Info("  TxHeight: %d", outTxParam.OutboundTxObservedExternalHeight)
-		l.Info("  BallotIndex: %s", outTxParam.OutboundTxBallotIndex)
-		l.Info("  TSSNonce: %d", outTxParam.OutboundTxTssNonce)
-		l.Info("  GasLimit: %d", outTxParam.OutboundTxGasLimit)
-		l.Info("  GasPrice: %s", outTxParam.OutboundTxGasPrice)
-		l.Info("  GasUsed: %d", outTxParam.OutboundTxGasUsed)
-		l.Info("  EffectiveGasPrice: %s", outTxParam.OutboundTxEffectiveGasPrice.String())
-		l.Info("  EffectiveGasLimit: %d", outTxParam.OutboundTxEffectiveGasLimit)
+		l.Info("  TxHash: %s", outTxParam.Hash)
+		l.Info("  TxHeight: %d", outTxParam.ObservedExternalHeight)
+		l.Info("  BallotIndex: %s", outTxParam.BallotIndex)
+		l.Info("  TSSNonce: %d", outTxParam.TssNonce)
+		l.Info("  GasLimit: %d", outTxParam.GasLimit)
+		l.Info("  GasPrice: %s", outTxParam.GasPrice)
+		l.Info("  GasUsed: %d", outTxParam.GasUsed)
+		l.Info("  EffectiveGasPrice: %s", outTxParam.EffectiveGasPrice.String())
+		l.Info("  EffectiveGasLimit: %d", outTxParam.EffectiveGasLimit)
 		l.Info("  Amount: %s", outTxParam.Amount.String())
 		l.Info("  CoinType: %s", outTxParam.CoinType.String())
 		l.Info("  Receiver: %s", outTxParam.Receiver)
