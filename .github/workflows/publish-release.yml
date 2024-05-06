@@ -353,8 +353,8 @@ jobs:
         run: |
           make start-upgrade-test
 
-
   publish-release:
+    if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
