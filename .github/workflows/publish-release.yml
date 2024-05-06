@@ -12,7 +12,7 @@ on:
         required: false
         default: false
         description: 'Use this to skip: gosec, gosec-cosmos, check-changelog, check-upgrade-uandler-updated, build-test, smoke-test and go straight to approval step.'
-      run_just_checks:
+      skip_release:
         type: boolean
         required: false
         default: false
@@ -23,8 +23,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  gosec:
+  check_branch:
     if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Branch
+        run: |
+          echo "${{ github.ref }}"
+
+  gosec:
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -53,7 +62,8 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   gosec-cosmos:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -80,7 +90,8 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   lint:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -112,7 +123,8 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   check-changelog:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     steps:
 
@@ -153,7 +165,8 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   check-upgrade-handler-updated:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -183,7 +196,8 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   build-test:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 15
     concurrency:
@@ -258,7 +272,8 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   smoke-test:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 25
     steps:
@@ -333,11 +348,9 @@ jobs:
         run: |
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
-
-
-
   e2e-admin-tests:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
@@ -352,7 +365,8 @@ jobs:
           make start-e2e-admin-test
 
   e2e-upgrade-test:
-    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    needs:
+      - check_branch
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
@@ -367,9 +381,7 @@ jobs:
           make start-upgrade-test
 
   publish-release:
-    if: ${{ github.event.inputs.run_just_checks == 'false' }}
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    timeout-minutes: 60
+    if: ${{ github.event.inputs.skip_release == 'false' }}
     needs:
       - gosec
       - gosec-cosmos
@@ -380,6 +392,9 @@ jobs:
       - build-test
       - e2e-admin-tests
       - e2e-upgrade-test
+      - check_branch
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    timeout-minutes: 60
     environment: release
     steps:
       - uses: actions/checkout@v3
