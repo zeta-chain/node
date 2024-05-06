@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   gosec:
-    if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -52,9 +52,8 @@ jobs:
         run: |
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
-
   gosec-cosmos:
-    if: (github.ref_name =~ /^release\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/ || github.ref_name =~ /^hotfix\/v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/) }}
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
