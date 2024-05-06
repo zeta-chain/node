@@ -103,7 +103,12 @@ func main() {
 	}
 
 	for {
-		cmd := exec.Command("zetaclientd", os.Args[1:]...)
+		ctx, cancel := context.WithCancel(ctx)
+		cmd := exec.CommandContext(ctx, "zetaclientd", os.Args[1:]...)
+		// by default, CommandContext sends SIGKILL. we want more graceful shutdown.
+		cmd.Cancel = func() error {
+			return cmd.Process.Signal(syscall.SIGINT)
+		}
 		cmd.Stdout = serializedStdout
 		cmd.Stderr = os.Stderr
 		// must reset the passwordInputBuffer every iteration because reads are stateful (seek to end)
@@ -111,7 +116,6 @@ func main() {
 		passwordInputBuffer.Write([]byte(hotkeyPassword + "\n" + tssPassword + "\n"))
 		cmd.Stdin = &passwordInputBuffer
 
-		ctx, cancel := context.WithCancel(ctx)
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(cmd.Run)
 		eg.Go(func() error {
