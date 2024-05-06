@@ -48,6 +48,8 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - /Users/tanmay/IdeaProjects/kingpinXD/genesis_export/:/root/genesis_data
 
   zetacore1:
     image: zetanode:latest
@@ -63,6 +65,7 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+
 
   zetaclient0:
     image: zetanode:latest

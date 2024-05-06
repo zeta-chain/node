@@ -9,7 +9,7 @@ ZETAE2E_CMD=$1
 OPTION=$2
 
 echo "waiting for geth RPC to start..."
-sleep 2
+sleep 420
 
 ### Create the accounts and fund them with Ether on local Ethereum network
 

@@ -60,6 +60,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	// check foreign coins cap if it has a cap
 	if !foreignCoin.LiquidityCap.IsNil() && !foreignCoin.LiquidityCap.IsZero() {
+
 		liquidityCap := foreignCoin.LiquidityCap.BigInt()
 		totalSupply, err := k.TotalSupplyZRC4(ctx, ZRC20Contract)
 		if err != nil {

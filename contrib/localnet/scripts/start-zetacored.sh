@@ -70,7 +70,7 @@ source ~/add-keys.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep 10
+  sleep 400
   echo "genesis.json created"
 fi
 
@@ -155,9 +155,12 @@ then
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
+  zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   zetacored validate-genesis
+
 # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
+      echo "Copying genesis.json to $NODE"
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done

@@ -48,7 +48,6 @@ var Copy = map[string]bool{
 	evidencetypes.ModuleName:  true,
 	vestingtypes.ModuleName:   true,
 	emissionstypes.ModuleName: true,
-	authz.ModuleName:          true,
 }
 
 // Skip represents a set of modules for which, the entire state is skipped and nothing gets imported
@@ -60,13 +59,14 @@ var Skip = map[string]bool{
 	banktypes.ModuleName:         true,
 	distributiontypes.ModuleName: true,
 	group.ModuleName:             true,
+	authz.ModuleName:             true,
+	fungibletypes.ModuleName:     true,
 }
 
 // Modify represents a set of modules for which, the state is modified before importing. Each Module should have a corresponding Modify function
 var Modify = map[string]bool{
 	crosschaintypes.ModuleName: true,
 	observertypes.ModuleName:   true,
-	fungibletypes.ModuleName:   true,
 }
 
 func CmdParseGenesisFile() *cobra.Command {
