@@ -11,21 +11,21 @@ import (
 func TestKeeper_OutTxTrackerAllByChain(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		res, err := k.OutTxTrackerAllByChain(ctx, nil)
+		res, err := k.OutboundTrackerAllByChain(ctx, nil)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 		})
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: 2,
 		})
 
-		res, err := k.OutTxTrackerAllByChain(ctx, &types.QueryAllOutboundTrackerByChainRequest{
+		res, err := k.OutboundTrackerAllByChain(ctx, &types.QueryAllOutboundTrackerByChainRequest{
 			Chain: 1,
 		})
 		require.NoError(t, err)
@@ -36,18 +36,18 @@ func TestKeeper_OutTxTrackerAllByChain(t *testing.T) {
 func TestKeeper_OutTxTrackerAll(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		res, err := k.OutTxTrackerAll(ctx, nil)
+		res, err := k.OutboundTrackerAll(ctx, nil)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 		})
 
-		res, err := k.OutTxTrackerAll(ctx, &types.QueryAllOutboundTrackerRequest{})
+		res, err := k.OutboundTrackerAll(ctx, &types.QueryAllOutboundTrackerRequest{})
 		require.NoError(t, err)
 		require.Equal(t, 1, len(res.OutboundTracker))
 	})
@@ -73,7 +73,7 @@ func TestKeeper_OutTxTracker(t *testing.T) {
 
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 			Nonce:   1,
 		})

@@ -41,9 +41,9 @@ export declare class EventInboundFinalized extends Message<EventInboundFinalized
   inboundHash: string;
 
   /**
-   * @generated from field: string in_block_height = 7;
+   * @generated from field: string inbound_block_height = 7;
    */
-  inBlockHeight: string;
+  inboundBlockHeight: string;
 
   /**
    * @generated from field: string receiver = 8;

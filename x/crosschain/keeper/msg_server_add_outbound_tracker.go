@@ -43,8 +43,8 @@ func (k msgServer) AddOutboundTracker(goCtx context.Context, msg *types.MsgAddOu
 	// tracker submission is only allowed when the cctx is pending
 	if !IsPending(cctx.CrossChainTx) {
 		// garbage tracker (for any reason) is harmful to outTx observation and should be removed if it exists
-		// it if does not exist, RemoveOutTxTracker is a no-op
-		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
+		// it if does not exist, RemoveOutboundTracker is a no-op
+		k.RemoveOutboundTrackerFromStore(ctx, msg.ChainId, msg.Nonce)
 		return &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, nil
 	}
 
@@ -68,14 +68,14 @@ func (k msgServer) AddOutboundTracker(goCtx context.Context, msg *types.MsgAddOu
 
 	// fetch the tracker
 	// if the tracker does not exist, initialize a new one
-	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
+	tracker, found := k.GetOutboundTracker(ctx, msg.ChainId, msg.Nonce)
 	hash := types.TxHashList{
 		TxHash:   msg.TxHash,
 		TxSigner: msg.Creator,
 		Proved:   isProven,
 	}
 	if !found {
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			Index:    "",
 			ChainId:  msg.ChainId,
 			Nonce:    msg.Nonce,
@@ -91,7 +91,7 @@ func (k msgServer) AddOutboundTracker(goCtx context.Context, msg *types.MsgAddOu
 			// if the hash is already in the tracker but we have a proof, mark it as proven and only keep this one in the list
 			if isProven {
 				tracker.HashList[i].Proved = true
-				k.SetOutTxTracker(ctx, tracker)
+				k.SetOutboundTracker(ctx, tracker)
 			}
 			return &types.MsgAddOutboundTrackerResponse{}, nil
 		}
@@ -109,7 +109,7 @@ func (k msgServer) AddOutboundTracker(goCtx context.Context, msg *types.MsgAddOu
 
 	// add the tracker to the list
 	tracker.HashList = append(tracker.HashList, &hash)
-	k.SetOutTxTracker(ctx, tracker)
+	k.SetOutboundTracker(ctx, tracker)
 	return &types.MsgAddOutboundTrackerResponse{}, nil
 }
 

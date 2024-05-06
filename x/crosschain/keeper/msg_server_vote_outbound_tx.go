@@ -188,8 +188,8 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIn
 	cctx.GetCurrentOutboundParam().BallotIndex = ballotIndex
 	// #nosec G701 always in range
 	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tssPubkey, receiverChain, int64(outTxTssNonce))
-	k.RemoveOutTxTracker(ctx, receiverChain, outTxTssNonce)
-	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
+	k.RemoveOutboundTrackerFromStore(ctx, receiverChain, outTxTssNonce)
+	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutboundTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
 	// This should set nonce to cctx only if a new revert is created.
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 }

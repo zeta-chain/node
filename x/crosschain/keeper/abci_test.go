@@ -344,7 +344,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
 			fungibleMock := testkeeper.GetCrosschainFungibleMock(t, k)
 			chainID := tc.cctx.GetCurrentOutboundParam().ReceiverChainId
-			previousGasPrice, err := tc.cctx.GetCurrentOutboundParam().GetGasPrice()
+			previousGasPrice, err := tc.cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 			if err != nil {
 				previousGasPrice = 0
 			}
@@ -389,7 +389,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			if !tc.expectedGasPriceIncrease.IsZero() {
 				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
 				require.True(t, found)
-				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPrice()
+				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 				require.NoError(t, err)
 				require.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
 				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)

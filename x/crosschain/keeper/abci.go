@@ -128,7 +128,7 @@ func CheckAndUpdateCctxGasPrice(
 	gasPriceIncrease := medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
 
 	// compute new gas price
-	currentGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPrice()
+	currentGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 	if err != nil {
 		return math.ZeroUint(), math.ZeroUint(), err
 	}

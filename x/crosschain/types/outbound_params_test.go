@@ -38,11 +38,11 @@ func TestOutboundTxParams_GetGasPrice(t *testing.T) {
 	outTxParams := sample.OutboundParams(r)
 
 	outTxParams.GasPrice = "42"
-	gasPrice, err := outTxParams.GetGasPrice()
+	gasPrice, err := outTxParams.GetGasPriceUInt64()
 	require.NoError(t, err)
 	require.EqualValues(t, uint64(42), gasPrice)
 
 	outTxParams.GasPrice = "invalid"
-	_, err = outTxParams.GetGasPrice()
+	_, err = outTxParams.GetGasPriceUInt64()
 	require.Error(t, err)
 }

@@ -176,7 +176,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 	cctx := testutils.LoadCctxByNonce(t, chainID, tx.Nonce())
 
 	t.Run("outtx ballot should match cctx", func(t *testing.T) {
-		msg := types.NewMsgVoteOnObservedOutboundTx(
+		msg := types.NewMsgVoteOutbound(
 			"anyCreator",
 			cctx.Index,
 			receipt.TxHash.Hex(),

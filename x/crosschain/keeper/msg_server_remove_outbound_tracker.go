@@ -17,6 +17,6 @@ func (k msgServer) RemoveOutboundTracker(goCtx context.Context, msg *types.MsgRe
 		return &types.MsgRemoveOutboundTrackerResponse{}, authoritytypes.ErrUnauthorized
 	}
 
-	k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
+	k.RemoveOutboundTrackerFromStore(ctx, msg.ChainId, msg.Nonce)
 	return &types.MsgRemoveOutboundTrackerResponse{}, nil
 }

@@ -12,7 +12,7 @@ message EventInboundFinalized {
   string tx_orgin = 4;
   string asset = 5;
   string inbound_hash = 6;
-  string in_block_height = 7;
+  string inbound_block_height = 7;
   string receiver = 8;
   string receiver_chain = 9;
   string amount = 10;

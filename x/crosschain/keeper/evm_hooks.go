@@ -153,7 +153,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	}
 
 	// gasLimit+uint64(event.Raw.Index) to generate different cctx for multiple events in the same tx.
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -227,7 +227,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,

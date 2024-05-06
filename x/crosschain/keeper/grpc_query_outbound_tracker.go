@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutboundTrackerRequest) (*types.QueryAllOutboundTrackerResponse, error) {
+func (k Keeper) OutboundTrackerAll(c context.Context, req *types.QueryAllOutboundTrackerRequest) (*types.QueryAllOutboundTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -38,7 +38,7 @@ func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutboundTr
 	return &types.QueryAllOutboundTrackerResponse{OutboundTracker: outTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOutboundTrackerByChainRequest) (*types.QueryAllOutboundTrackerByChainResponse, error) {
+func (k Keeper) OutboundTrackerAllByChain(c context.Context, req *types.QueryAllOutboundTrackerByChainRequest) (*types.QueryAllOutboundTrackerByChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -70,7 +70,7 @@ func (k Keeper) OutboundTracker(c context.Context, req *types.QueryGetOutboundTr
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	val, found := k.GetOutTxTracker(
+	val, found := k.GetOutboundTracker(
 		ctx,
 		req.ChainID,
 		req.Nonce,

@@ -54,7 +54,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     0,
 		})
 		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 0)
+		tracker, found := k.GetOutboundTracker(ctx, chainID, 0)
 		require.True(t, found)
 		require.Equal(t, hash, tracker.HashList[0].TxHash)
 	})
@@ -89,7 +89,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     0,
 		})
 		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 0)
+		tracker, found := k.GetOutboundTracker(ctx, chainID, 0)
 		require.True(t, found)
 		require.Equal(t, hash, tracker.HashList[0].TxHash)
 	})
@@ -115,7 +115,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		existinghHash := sample.Hash().Hex()
 		newHash := sample.Hash().Hex()
 
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
 			HashList: []*types.TxHashList{
@@ -135,7 +135,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     42,
 		})
 		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 42)
+		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
 		require.True(t, found)
 		require.Len(t, tracker.HashList, 2)
 		require.EqualValues(t, existinghHash, tracker.HashList[0].TxHash)
@@ -172,7 +172,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.Equal(t, &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, res)
 
 		// check if tracker is removed
-		_, found := k.GetOutTxTracker(ctx, chainID, 0)
+		_, found := k.GetOutboundTracker(ctx, chainID, 0)
 		require.False(t, found)
 	})
 
@@ -257,7 +257,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		newHash := sample.Hash().Hex()
 
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId:  chainID,
 			Nonce:    42,
 			HashList: hashes,
@@ -295,7 +295,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		existinghHash := sample.Hash().Hex()
 
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
 			HashList: []*types.TxHashList{
@@ -315,7 +315,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     42,
 		})
 		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 42)
+		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
 		require.True(t, found)
 		require.Len(t, tracker.HashList, 1)
 		require.EqualValues(t, existinghHash, tracker.HashList[0].TxHash)
@@ -357,7 +357,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     42,
 		})
 		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 42)
+		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
 		require.True(t, found)
 		require.EqualValues(t, txHash, tracker.HashList[0].TxHash)
 		require.True(t, tracker.HashList[0].Proved)
@@ -389,7 +389,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		}, nil)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
 
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
 			HashList: []*types.TxHashList{
@@ -414,7 +414,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			Nonce:     42,
 		})
 		require.NoError(t, err)
-		tracker, found := k.GetOutTxTracker(ctx, chainID, 42)
+		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
 		require.True(t, found)
 		require.Len(t, tracker.HashList, 2)
 		require.EqualValues(t, txHash, tracker.HashList[1].TxHash)

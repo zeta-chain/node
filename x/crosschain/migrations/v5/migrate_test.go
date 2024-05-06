@@ -25,11 +25,11 @@ func TestMigrateStore(t *testing.T) {
 		v4ZetaAccountingAmount := math.ZeroUint()
 		for _, cctx := range cctxList {
 			k.SetCrossChainTx(ctx, cctx)
-			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.InboundTxParams.CoinType != coin.CoinType_Zeta {
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.InboundParams.CoinType != coin.CoinType_Zeta {
 				continue
 			}
 			v5ZetaAccountingAmount = v5ZetaAccountingAmount.Add(crosschainkeeper.GetAbortedAmount(cctx))
-			v4ZetaAccountingAmount = v4ZetaAccountingAmount.Add(cctx.GetCurrentOutTxParam().Amount)
+			v4ZetaAccountingAmount = v4ZetaAccountingAmount.Add(cctx.GetCurrentOutboundParam().Amount)
 		}
 
 		require.True(t, v5ZetaAccountingAmount.GT(v4ZetaAccountingAmount))
@@ -45,9 +45,9 @@ func TestMigrateStore(t *testing.T) {
 		cctxListUpdated := k.GetAllCrossChainTx(ctx)
 		// Check refund status of the cctx
 		for _, cctx := range cctxListUpdated {
-			switch cctx.InboundTxParams.CoinType {
+			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
-				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
+				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutboundParam().ReceiverChainId)
 				require.NotNil(t, receiverChain)
 				if receiverChain.IsZetaChain() {
 					require.True(t, cctx.CctxStatus.IsAbortRefunded)
@@ -182,11 +182,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 		cctxList[i] = crosschaintypes.CrossChainTx{
 			Index:      fmt.Sprintf("%d", i),
 			CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
-			InboundTxParams: &crosschaintypes.InboundTxParams{
+			InboundParams: &crosschaintypes.InboundParams{
 				Amount:   amount.Add(math.NewUint(uint64(r.Uint32()))),
 				CoinType: coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
+			OutboundParams: []*crosschaintypes.OutboundParams{{
 				Amount:   amount,
 				CoinType: coin.CoinType_Zeta,
 			}},
@@ -196,11 +196,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
-				InboundTxParams: &crosschaintypes.InboundTxParams{
+				InboundParams: &crosschaintypes.InboundParams{
 					Amount:   amount,
 					CoinType: coin.CoinType_Zeta,
 				},
-				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
+				OutboundParams: []*crosschaintypes.OutboundParams{{
 					Amount:   math.ZeroUint(),
 					CoinType: coin.CoinType_Zeta,
 				}},
@@ -211,11 +211,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
-				InboundTxParams: &crosschaintypes.InboundTxParams{
+				InboundParams: &crosschaintypes.InboundParams{
 					Amount:   amount,
 					CoinType: coin.CoinType_ERC20,
 				},
-				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
+				OutboundParams: []*crosschaintypes.OutboundParams{{
 					Amount:          math.ZeroUint(),
 					CoinType:        coin.CoinType_ERC20,
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
@@ -227,11 +227,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
-				InboundTxParams: &crosschaintypes.InboundTxParams{
+				InboundParams: &crosschaintypes.InboundParams{
 					Amount:   amount,
 					CoinType: coin.CoinType_ERC20,
 				},
-				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
+				OutboundParams: []*crosschaintypes.OutboundParams{{
 					Amount:          math.ZeroUint(),
 					CoinType:        coin.CoinType_ERC20,
 					ReceiverChainId: chains.GoerliLocalnetChain.ChainId,
@@ -243,11 +243,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
-				InboundTxParams: &crosschaintypes.InboundTxParams{
+				InboundParams: &crosschaintypes.InboundParams{
 					Amount:   amount,
 					CoinType: coin.CoinType_Gas,
 				},
-				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
+				OutboundParams: []*crosschaintypes.OutboundParams{{
 					Amount:   amount,
 					CoinType: coin.CoinType_Gas,
 				}},

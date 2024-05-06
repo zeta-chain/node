@@ -296,7 +296,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	coinType coin.CoinType,
 ) (string, string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteOnObservedOutboundTx(
+	msg := types.NewMsgVoteOutbound(
 		signerAddress,
 		cctxIndex,
 		outTxHash,

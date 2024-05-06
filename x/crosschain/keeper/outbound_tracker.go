@@ -8,30 +8,30 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func getOutTrackerIndex(chainID int64, nonce uint64) string {
+func getOutboundTrackerIndex(chainID int64, nonce uint64) string {
 	return fmt.Sprintf("%d-%d", chainID, nonce)
 }
 
-// SetOutTxTracker set a specific outTxTracker in the store from its index
-func (k Keeper) SetOutTxTracker(ctx sdk.Context, outTxTracker types.OutboundTracker) {
-	outTxTracker.Index = getOutTrackerIndex(outTxTracker.ChainId, outTxTracker.Nonce)
+// SetOutboundTracker set a specific outTxTracker in the store from its index
+func (k Keeper) SetOutboundTracker(ctx sdk.Context, outTxTracker types.OutboundTracker) {
+	outTxTracker.Index = getOutboundTrackerIndex(outTxTracker.ChainId, outTxTracker.Nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	b := k.cdc.MustMarshal(&outTxTracker)
-	store.Set(types.OutTxTrackerKey(
+	store.Set(types.OutboundTrackerKey(
 		outTxTracker.Index,
 	), b)
 }
 
-// GetOutTxTracker returns a outTxTracker from its index
-func (k Keeper) GetOutTxTracker(
+// GetOutboundTracker returns a outTxTracker from its index
+func (k Keeper) GetOutboundTracker(
 	ctx sdk.Context,
 	chainID int64,
 	nonce uint64,
 ) (val types.OutboundTracker, found bool) {
-	index := getOutTrackerIndex(chainID, nonce)
+	index := getOutboundTrackerIndex(chainID, nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 
-	b := store.Get(types.OutTxTrackerKey(
+	b := store.Get(types.OutboundTrackerKey(
 		index,
 	))
 	if b == nil {
@@ -42,22 +42,21 @@ func (k Keeper) GetOutTxTracker(
 	return val, true
 }
 
-// RemoveOutTxTracker removes a outTxTracker from the store
-func (k Keeper) RemoveOutTxTracker(
+// RemoveOutboundTrackerFromStore removes a outbound tracker from the store
+func (k Keeper) RemoveOutboundTrackerFromStore(
 	ctx sdk.Context,
 	chainID int64,
 	nonce uint64,
-
 ) {
-	index := getOutTrackerIndex(chainID, nonce)
+	index := getOutboundTrackerIndex(chainID, nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
-	store.Delete(types.OutTxTrackerKey(
+	store.Delete(types.OutboundTrackerKey(
 		index,
 	))
 }
 
-// GetAllOutTxTracker returns all outTxTracker
-func (k Keeper) GetAllOutTxTracker(ctx sdk.Context) (list []types.OutboundTracker) {
+// GetAllOutboundTracker returns all outTxTracker
+func (k Keeper) GetAllOutboundTracker(ctx sdk.Context) (list []types.OutboundTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 

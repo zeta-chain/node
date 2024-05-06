@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-func (m OutboundParams) GetGasPrice() (uint64, error) {
+func (m OutboundParams) GetGasPriceUInt64() (uint64, error) {
 	gasPrice, err := strconv.ParseUint(m.GasPrice, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("unable to parse cctx gas price %s: %s", m.GasPrice, err.Error())

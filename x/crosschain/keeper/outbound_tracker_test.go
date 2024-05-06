@@ -20,7 +20,7 @@ func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.
 		items[i].Nonce = uint64(i)
 		items[i].Index = fmt.Sprintf("%d-%d", items[i].ChainId, items[i].Nonce)
 
-		keeper.SetOutTxTracker(ctx, items[i])
+		keeper.SetOutboundTracker(ctx, items[i])
 	}
 	return items
 }
@@ -29,7 +29,7 @@ func TestOutTxTrackerGet(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNOutTxTracker(keeper, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetOutTxTracker(ctx,
+		rst, found := keeper.GetOutboundTracker(ctx,
 			item.ChainId,
 			item.Nonce,
 		)
@@ -44,11 +44,11 @@ func TestOutTxTrackerRemove(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNOutTxTracker(k, ctx, 10)
 	for _, item := range items {
-		k.RemoveOutTxTracker(ctx,
+		k.RemoveOutboundTrackerFromStore(ctx,
 			item.ChainId,
 			item.Nonce,
 		)
-		_, found := k.GetOutTxTracker(ctx,
+		_, found := k.GetOutboundTracker(ctx,
 			item.ChainId,
 			item.Nonce,
 		)
@@ -61,6 +61,6 @@ func TestOutTxTrackerGetAll(t *testing.T) {
 	items := createNOutTxTracker(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),
-		nullify.Fill(keeper.GetAllOutTxTracker(ctx)),
+		nullify.Fill(keeper.GetAllOutboundTracker(ctx)),
 	)
 }

@@ -35,7 +35,7 @@ func GetInBoundVoteMessage(
 	signerAddress string,
 	eventIndex uint,
 ) *types.MsgVoteOnObservedInboundTx {
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		signerAddress,
 		sender,
 		senderChain,

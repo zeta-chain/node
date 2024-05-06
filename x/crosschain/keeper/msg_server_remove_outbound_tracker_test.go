@@ -16,7 +16,7 @@ func TestMsgServer_RemoveFromOutTxTracker(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 			Nonce:   1,
 		})
@@ -33,7 +33,7 @@ func TestMsgServer_RemoveFromOutTxTracker(t *testing.T) {
 		require.Error(t, err)
 		require.Empty(t, res)
 
-		_, found := k.GetOutTxTracker(ctx, 1, 1)
+		_, found := k.GetOutboundTracker(ctx, 1, 1)
 		require.True(t, found)
 	})
 
@@ -41,7 +41,7 @@ func TestMsgServer_RemoveFromOutTxTracker(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.SetOutTxTracker(ctx, types.OutboundTracker{
+		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: 1,
 			Nonce:   1,
 		})
@@ -60,7 +60,7 @@ func TestMsgServer_RemoveFromOutTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		require.Empty(t, res)
 
-		_, found := k.GetOutTxTracker(ctx, 1, 1)
+		_, found := k.GetOutboundTracker(ctx, 1, 1)
 		require.False(t, found)
 	})
 }
