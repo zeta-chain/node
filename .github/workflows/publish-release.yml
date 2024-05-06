@@ -80,6 +80,7 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   lint:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -111,6 +112,7 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   check-changelog:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-latest
     steps:
 
@@ -151,6 +153,7 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   check-upgrade-handler-updated:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -180,6 +183,7 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   build-test:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 15
     concurrency:
@@ -254,6 +258,7 @@ jobs:
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
   smoke-test:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 25
     steps:
@@ -332,6 +337,7 @@ jobs:
 
 
   e2e-admin-tests:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
@@ -346,6 +352,7 @@ jobs:
           make start-e2e-admin-test
 
   e2e-upgrade-test:
+    if: ${{ github.event.inputs.skip_checks != 'true' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
