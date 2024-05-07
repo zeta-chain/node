@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -104,4 +105,15 @@ func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
 	}
 
 	return sdkmath.ZeroUint()
+}
+
+// SortCctxsByHeightAndChainID sorts the cctxs by height (first come first serve), the chain ID doesn't really matter
+func SortCctxsByHeightAndChainID(cctxs []*types.CrossChainTx) []*types.CrossChainTx {
+	sort.Slice(cctxs, func(i, j int) bool {
+		if cctxs[i].InboundTxParams.InboundTxObservedExternalHeight == cctxs[j].InboundTxParams.InboundTxObservedExternalHeight {
+			return cctxs[i].GetCurrentOutTxParam().ReceiverChainId < cctxs[j].GetCurrentOutTxParam().ReceiverChainId
+		}
+		return cctxs[i].InboundTxParams.InboundTxObservedExternalHeight < cctxs[j].InboundTxParams.InboundTxObservedExternalHeight
+	})
+	return cctxs
 }
