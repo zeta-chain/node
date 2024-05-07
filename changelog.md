@@ -17,6 +17,7 @@
 * [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor.
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
+* [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 
 ### Tests
 
@@ -25,10 +26,12 @@
 ### Fixes
 
 * [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
+* [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
 
 ### CI
 
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
+* [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
 
 ## v16.0.0
 
