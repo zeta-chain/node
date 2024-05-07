@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	appparams "cosmossdk.io/simapp/params"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -233,7 +232,11 @@ func (ac appCreator) newApp(
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
-		app.SetMempool(mempool.NoOpMempool{})
+		app.SetMempool(NewSenderNonceMempool(
+			// should be param
+			SenderNonceMaxTxOpt(cast.ToInt(1000)),
+		))
+
 	})
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
