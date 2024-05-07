@@ -28,6 +28,7 @@
 ### Fixes
 
 * [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
+* [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
 
 ### CI
 
