@@ -19,6 +19,7 @@
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
+* [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 
 ### Tests
 
