@@ -137,39 +137,17 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 				if err != nil {
 					return err
 				}
-			case fungibletypes.ModuleName:
-				err := ModifyFungibleState(appState, importAppState, cdc)
-				if err != nil {
-					return err
-				}
 			default:
 				return fmt.Errorf("modify function for %s not found", m)
 			}
 		}
 	}
-
 	appStateJSON, err := json.Marshal(appState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal application genesis state: %w", err)
 	}
 	genDoc.AppState = appStateJSON
 
-	return nil
-}
-
-// ModifyFungibleState modifies the crosschain state before importing
-// It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
-func ModifyFungibleState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
-	importedCrossChainGenState := fungibletypes.GetGenesisStateFromAppStateLegacy(cdc, importAppState)
-	appStateGenState := fungibletypes.GetGenesisStateFromAppState(cdc, appState)
-	// The genesis state has been modified between the two versions, so we add only the required fields and leave out the rest
-	appStateGenState.ForeignCoinsList = importedCrossChainGenState.ForeignCoinsList
-	appStateGenState.SystemContract = importedCrossChainGenState.SystemContract
-	appStateBz, err := cdc.MarshalJSON(&appStateGenState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal fungible genesis state: %w", err)
-	}
-	appState[fungibletypes.ModuleName] = appStateBz
 	return nil
 }
 
