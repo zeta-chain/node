@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"

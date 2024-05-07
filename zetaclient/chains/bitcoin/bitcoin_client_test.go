@@ -29,6 +29,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
 
+// the relative path to the testdata directory
+var TestDataDir = "../../"
+
 func MockBTCClientMainnet() *BTCChainClient {
 	cfg := config.NewConfig()
 	coreContext := corecontext.NewZetaCoreContext(cfg)
@@ -44,7 +47,7 @@ func MockBTCClientMainnet() *BTCChainClient {
 // createRPCClientAndLoadTx is a helper function to load raw tx and feed it to mock rpc client
 func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHash string) *stub.MockBTCRPCClient {
 	// file name for the archived MsgTx
-	nameMsgTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
+	nameMsgTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
 
 	// load archived MsgTx
 	var msgTx wire.MsgTx
@@ -96,11 +99,11 @@ func TestConfirmationThreshold(t *testing.T) {
 func TestAvgFeeRateBlock828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 
 	// https://mempool.space/block/000000000000000000025ca01d2c1094b8fd3bacc5468cc3193ced6a14618c27
 	var blockMb testutils.MempoolBlock
-	testutils.LoadObjectFromJSONFile(t, &blockMb, path.Join("../", testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockMb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"))
 
 	gasRate, err := CalcBlockAvgFeeRate(&blockVb, &chaincfg.MainNetParams)
 	require.NoError(t, err)
@@ -110,7 +113,7 @@ func TestAvgFeeRateBlock828440(t *testing.T) {
 func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 
 	t.Run("block has no transactions", func(t *testing.T) {
 		emptyVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{}}
@@ -196,7 +199,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 func TestCalcDepositorFee828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 	avgGasRate := float64(32.0)
 	// #nosec G701 test - always in range
 	gasRate := int64(avgGasRate * clientcommon.BTCOuttxGasPriceMultiplier)
@@ -234,13 +237,13 @@ func TestCheckTSSVout(t *testing.T) {
 	btcClient := MockBTCClientMainnet()
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
-		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}})
@@ -250,7 +253,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// invalid TSS vout
@@ -259,7 +262,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.Error(t, err)
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
@@ -268,7 +271,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not match nonce mark
@@ -277,7 +280,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not receiver address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
@@ -286,7 +289,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match params receiver")
 	})
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not match payment amount
@@ -295,7 +298,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match params amount")
 	})
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
@@ -317,7 +320,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -326,7 +329,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 1 or > 2", func(t *testing.T) {
-		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{})
@@ -337,7 +340,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -349,7 +352,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -361,7 +364,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	})
 	t.Run("should fail if vout 1 is not to the TSS address", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout[1].N = 1 // swap vout index
 		rawResult.Vout = rawResult.Vout[:2]
@@ -442,7 +445,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2PKH tx
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
 		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
-		nameMsgTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chain.ChainId, txHash))
+		nameMsgTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chain.ChainId, txHash))
 		var msgTx wire.MsgTx
 		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
 
@@ -502,7 +505,7 @@ func TestGetBtcEvent(t *testing.T) {
 	chain := chains.BtcMainnetChain
 
 	// GetBtcEvent arguments
-	tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+	tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
@@ -597,7 +600,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if len(tx.Vout) < 2", func(t *testing.T) {
 		// load tx and modify the tx to have only 1 vout
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout = tx.Vout[:1]
 
 		// get BTC event
@@ -609,7 +612,7 @@ func TestGetBtcEvent(t *testing.T) {
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
 		rpcClient := stub.NewMockBTCRPCClient()
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
@@ -625,7 +628,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if receiver address is not TSS address", func(t *testing.T) {
 		// load tx and modify receiver address to any non-tss address: bc1qw8wrek2m7nlqldll66ajnwr9mh64syvkt67zlu
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "001471dc3cd95bf4fe0fb7ffd6bb29b865ddf5581196"
 
 		// get BTC event
@@ -636,7 +639,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
 
 		// get BTC event
@@ -647,7 +650,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
 		// load tx and modify memo OP_RETURN to OP_1
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
 		// get BTC event
@@ -658,7 +661,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if memo decoding fails", func(t *testing.T) {
 		// load tx and modify memo length to be 1 byte less than actual
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
 		// get BTC event
@@ -681,7 +684,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "0014invalid000000000000000000000000000000000"
 
 		// get BTC event
@@ -692,7 +695,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if len(tx.Vin) < 1", func(t *testing.T) {
 		// load tx and remove vin
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vin = nil
 
 		// get BTC event
@@ -703,7 +706,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		rpcClient := stub.NewMockBTCRPCClient()
 
 		// get BTC event

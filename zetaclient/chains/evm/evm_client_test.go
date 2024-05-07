@@ -16,14 +16,17 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
+
+// the relative path to the testdata directory
+var TestDataDir = "../../"
 
 // getAppContext creates an app context for unit tests
 func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainParams) (*appcontext.AppContext, config.EVMConfig) {
@@ -119,12 +122,12 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	chainID := int64(1)
 	coinType := coin.CoinType_Gas
 	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
-	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, chainID, outtxHash, coinType)
+	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, TestDataDir, chainID, outtxHash, coinType)
 
 	// load archived evm block
 	// https://etherscan.io/block/19363323
 	blockNumber := receipt.BlockNumber.Uint64()
-	block := testutils.LoadEVMBlock(t, chainID, blockNumber, true)
+	block := testutils.LoadEVMBlock(t, TestDataDir, chainID, blockNumber, true)
 
 	// create client
 	blockCache, err := lru.New(1000)
@@ -170,7 +173,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 	chainID := int64(1)
 	coinType := coin.CoinType_Gas
 	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
-	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, chainID, outtxHash, coinType)
+	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, TestDataDir, chainID, outtxHash, coinType)
 
 	// load archived cctx
 	cctx := testutils.LoadCctxByNonce(t, chainID, tx.Nonce())

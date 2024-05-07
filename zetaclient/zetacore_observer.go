@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"

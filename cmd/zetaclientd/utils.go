@@ -5,7 +5,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 )
 
 func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {

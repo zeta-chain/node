@@ -1,4 +1,4 @@
-package evm
+package evm_test
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
@@ -88,11 +89,11 @@ func TestCheckEvmTxLog(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fmt.Printf("check test: %s\n", tt.name)
-			err := ValidateEvmTxLog(
+			err := evm.ValidateEvmTxLog(
 				tt.vLog,
 				connectorAddr,
 				"0xb252c9e77feafdeeae25cc1f037a16c4b50fa03c494754b99a7339d816c79626",
-				TopicsZetaSent,
+				evm.TopicsZetaSent,
 			)
 			if tt.fail {
 				require.Error(t, err)
@@ -117,7 +118,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 	}{
 		{
 			name: "should pass for valid transaction",
-			tx:   testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas),
+			tx:   testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas),
 			fail: false,
 		},
 		{
@@ -129,7 +130,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for empty hash",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.Hash = ""
 				return tx
 			}(),
@@ -139,7 +140,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for negative nonce",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.Nonce = -1
 				return tx
 			}(),
@@ -149,7 +150,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for empty from address",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.From = ""
 				return tx
 			}(),
@@ -159,7 +160,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for invalid from address",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.From = "0x"
 				return tx
 			}(),
@@ -169,7 +170,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should pass for empty to address",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.To = ""
 				return tx
 			}(),
@@ -178,7 +179,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for invalid to address",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.To = "0xinvalid"
 				return tx
 			}(),
@@ -188,7 +189,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for negative value",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.Value = *big.NewInt(-1)
 				return tx
 			}(),
@@ -198,7 +199,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for negative gas",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.Gas = -1
 				return tx
 			}(),
@@ -208,7 +209,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for negative gas price",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.GasPrice = *big.NewInt(-1)
 				return tx
 			}(),
@@ -218,7 +219,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should remove '0x' prefix from input data",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				return tx
 			}(),
 			fail: false,
@@ -226,7 +227,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "nil block number should pass",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.BlockNumber = nil
 				return tx
 			}(),
@@ -235,7 +236,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for negative block number",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				negBlockNumber := -1
 				tx.BlockNumber = &negBlockNumber
 				return tx
@@ -246,7 +247,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for empty block hash",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.BlockHash = ""
 				return tx
 			}(),
@@ -256,7 +257,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "nil transaction index should fail",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.TransactionIndex = nil
 				return tx
 			}(),
@@ -266,7 +267,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for negative transaction index",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				negTransactionIndex := -1
 				tx.TransactionIndex = &negTransactionIndex
 				return tx
@@ -277,7 +278,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		{
 			name: "should fail for invalid input data",
 			tx: func() *ethrpc.Transaction {
-				tx := testutils.LoadEVMIntx(t, chainID, intxHash, coin.CoinType_Gas)
+				tx := testutils.LoadEVMIntx(t, TestDataDir, chainID, intxHash, coin.CoinType_Gas)
 				tx.Input = "03befinvalid"
 				return tx
 			}(),
@@ -288,7 +289,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateEvmTransaction(tt.tx)
+			err := evm.ValidateEvmTransaction(tt.tx)
 			if tt.fail {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tt.msg)
@@ -304,110 +305,110 @@ func TestCheckEvmTransaction(t *testing.T) {
 	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
 
 	t.Run("should pass for valid transaction", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
-		err := ValidateEvmTransaction(tx)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
+		err := evm.ValidateEvmTransaction(tx)
 		require.NoError(t, err)
 	})
 	t.Run("should fail for nil transaction", func(t *testing.T) {
-		err := ValidateEvmTransaction(nil)
+		err := evm.ValidateEvmTransaction(nil)
 		require.ErrorContains(t, err, "transaction is nil")
 	})
 	t.Run("should fail for empty hash", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.Hash = ""
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "hash is empty")
 	})
 	t.Run("should fail for negative nonce", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.Nonce = -1
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "nonce -1 is negative")
 	})
 	t.Run("should fail for empty from address", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.From = ""
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "not a valid hex address")
 	})
 	t.Run("should fail for invalid from address", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.From = "0x"
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "from 0x is not a valid hex address")
 	})
 	t.Run("should pass for empty to address", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.To = ""
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.NoError(t, err)
 	})
 	t.Run("should fail for invalid to address", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.To = "0xinvalid"
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "to 0xinvalid is not a valid hex address")
 	})
 	t.Run("should fail for negative value", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.Value = *big.NewInt(-1)
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "value -1 is negative")
 	})
 	t.Run("should fail for negative gas", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.Gas = -1
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "gas -1 is negative")
 	})
 	t.Run("should fail for negative gas price", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.GasPrice = *big.NewInt(-1)
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "gas price -1 is negative")
 	})
 	t.Run("should remove '0x' prefix from input data", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
-		err := ValidateEvmTransaction(tx)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
+		err := evm.ValidateEvmTransaction(tx)
 		require.NoError(t, err)
 		require.Equal(t, "", tx.Input)
 	})
 	t.Run("nil block number should pass", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.BlockNumber = nil
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.NoError(t, err)
 	})
 	t.Run("should fail for negative block number", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		negBlockNumber := -1
 		tx.BlockNumber = &negBlockNumber
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "block number -1 is not positive")
 	})
 	t.Run("should fail for empty block hash", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.BlockHash = ""
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "block hash is empty")
 	})
 	t.Run("nil transaction index should fail", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.TransactionIndex = nil
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "index is nil")
 	})
 	t.Run("should fail for negative transaction index", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		negTransactionIndex := -1
 		tx.TransactionIndex = &negTransactionIndex
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "index -1 is negative")
 	})
 	t.Run("should fail for invalid input data", func(t *testing.T) {
-		tx := testutils.LoadEVMIntx(t, 1, intxHash, coin.CoinType_Gas)
+		tx := testutils.LoadEVMIntx(t, TestDataDir, 1, intxHash, coin.CoinType_Gas)
 		tx.Input = "03befinvalid"
-		err := ValidateEvmTransaction(tx)
+		err := evm.ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "input data is not hex encoded")
 	})
 }

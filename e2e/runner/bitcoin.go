@@ -22,7 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
