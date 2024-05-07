@@ -103,9 +103,6 @@ type BTCInTxEvent struct {
 // BTCChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BTCChainClient struct {
-	// BlockTime contains the block time in seconds
-	BlockTime uint64
-
 	BlockCache *lru.Cache
 
 	// Mu is lock for all the maps, utxos and core params
