@@ -1,6 +1,8 @@
 package authority
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
 	"github.com/zeta-chain/zetacore/x/authority/types"
@@ -8,6 +10,7 @@ import (
 
 // InitGenesis initializes the authority module's state from a provided genesis state
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	fmt.Println("InitGenesis authority")
 	k.SetPolicies(ctx, genState.Policies)
 }
 
