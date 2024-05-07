@@ -21,6 +21,9 @@ func SetupHandlers(app *App) {
 		}
 		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 
+		VersionMigrator{v: vm}.TriggerInitGenesis(authoritytypes.ModuleName)
+		VersionMigrator{v: vm}.TriggerInitGenesis(lightclienttypes.ModuleName)
+
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
@@ -46,5 +49,10 @@ type VersionMigrator struct {
 
 func (v VersionMigrator) TriggerMigration(moduleName string) module.VersionMap {
 	v.v[moduleName] = v.v[moduleName] - 1
+	return v.v
+}
+
+func (v VersionMigrator) TriggerInitGenesis(moduleName string) module.VersionMap {
+	delete(v.v, moduleName)
 	return v.v
 }
