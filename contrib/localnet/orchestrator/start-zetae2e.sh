@@ -9,7 +9,11 @@ ZETAE2E_CMD=$1
 OPTION=$2
 
 echo "waiting for geth RPC to start..."
-sleep 420
+ if [ "$OPTION" != "import-data" ]; then
+    sleep 2
+  else
+    sleep 420
+  fi
 
 ### Create the accounts and fund them with Ether on local Ethereum network
 

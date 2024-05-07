@@ -70,7 +70,11 @@ source ~/add-keys.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep 400
+  if [ "$OPTION" != "import-data" ]; then
+    sleep 10
+  else
+    sleep 400
+  fi
   echo "genesis.json created"
 fi
 
