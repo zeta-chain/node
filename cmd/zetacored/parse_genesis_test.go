@@ -153,10 +153,10 @@ func ImportGenDoc(t *testing.T, cdc *codec.ProtoCodec, n int) *types.GenesisDoc 
 }
 
 func GetImportData(t *testing.T, cdc *codec.ProtoCodec, n int) map[string]json.RawMessage {
-	importData := sample.AppState(t)
+	importData := sample.AppStateLegacy(t)
 
 	// Add crosschain data to genesis state
-	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importData)
+	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppStateLegacy(cdc, importData)
 	cctxList := make([]*crosschaintypes.CrossChainTx, n)
 	intxHashToCctxList := make([]crosschaintypes.InTxHashToCctx, n)
 	finalLizedInbounds := make([]string, n)

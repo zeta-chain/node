@@ -59,8 +59,10 @@ var Skip = map[string]bool{
 	banktypes.ModuleName:         true,
 	distributiontypes.ModuleName: true,
 	group.ModuleName:             true,
-	authz.ModuleName:             true,
-	fungibletypes.ModuleName:     true,
+	// Skipping authz as it is not used when starting a new chain, new grants should be created based on the validator hotkeys abd operator keys
+	authz.ModuleName: true,
+	// Skipping fungible module as new fungible tokens would be created and system contract would be deployed
+	fungibletypes.ModuleName: true,
 }
 
 // Modify represents a set of modules for which, the state is modified before importing. Each Module should have a corresponding Modify function
@@ -155,7 +157,7 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 	return nil
 }
 
-// ModifyCrosschainState modifies the crosschain state before importing
+// ModifyFungibleState modifies the crosschain state before importing
 // It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
 func ModifyFungibleState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedCrossChainGenState := fungibletypes.GetGenesisStateFromAppStateLegacy(cdc, importAppState)
