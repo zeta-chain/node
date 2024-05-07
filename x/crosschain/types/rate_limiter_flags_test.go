@@ -379,7 +379,7 @@ func TestConvertCctxValue(t *testing.T) {
 			cctx.GetCurrentOutTxParam().Amount = tt.amount
 
 			// convert cctx value
-			value := types.ConvertCctxValue(tt.chainID, cctx, tt.gasAssetRates, tt.erc20AssetRates)
+			value := types.ConvertCctxValueToAzeta(tt.chainID, cctx, tt.gasAssetRates, tt.erc20AssetRates)
 			require.Equal(t, tt.expectedValue, value)
 		})
 	}

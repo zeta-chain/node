@@ -130,7 +130,7 @@ func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterI
 
 			// sum up past cctxs' value within window
 			if inWindow && isPast {
-				pastCctxsValue = pastCctxsValue.Add(types.ConvertCctxValue(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
+				pastCctxsValue = pastCctxsValue.Add(types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
 			}
 
 			// add cctx to corresponding list
@@ -141,7 +141,7 @@ func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterI
 				} else {
 					cctxsPending = append(cctxsPending, cctx)
 					// sum up non-past pending cctxs' value
-					pendingCctxsValue = pendingCctxsValue.Add(types.ConvertCctxValue(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
+					pendingCctxsValue = pendingCctxsValue.Add(types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
 				}
 			}
 		}

@@ -72,8 +72,8 @@ func BuildAssetRateMapFromList(assetRates []AssetRate) (map[int64]AssetRate, map
 	return gasAssetRateMap, erc20AssetRateMap
 }
 
-// ConvertCctxValue converts the value of the cctx to azeta using given conversion rates
-func ConvertCctxValue(
+// ConvertCctxValueToAzeta converts the value of the cctx to azeta using given conversion rates
+func ConvertCctxValueToAzeta(
 	chainID int64,
 	cctx *CrossChainTx,
 	gasAssetRateMap map[int64]AssetRate,
@@ -136,7 +136,7 @@ func RateLimitExceeded(
 	currentCctxValue *sdkmath.Int,
 	withdrawLimitInAzeta sdkmath.Int,
 ) bool {
-	amountZeta := ConvertCctxValue(chainID, cctx, gasAssetRateMap, erc20AssetRateMap)
+	amountZeta := ConvertCctxValueToAzeta(chainID, cctx, gasAssetRateMap, erc20AssetRateMap)
 	*currentCctxValue = currentCctxValue.Add(amountZeta)
 	return currentCctxValue.GT(withdrawLimitInAzeta)
 }

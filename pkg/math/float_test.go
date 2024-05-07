@@ -37,6 +37,20 @@ func TestPercentage(t *testing.T) {
 			percentage:  nil,
 			fail:        true,
 		},
+		{
+			name:        "nil numerator",
+			numerator:   nil,
+			denominator: big.NewInt(1000),
+			percentage:  nil,
+			fail:        true,
+		},
+		{
+			name:        "nil denominator",
+			numerator:   big.NewInt(165),
+			denominator: nil,
+			percentage:  nil,
+			fail:        true,
+		},
 	}
 
 	for _, tc := range testCases {
