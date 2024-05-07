@@ -9,6 +9,8 @@ ZETAE2E_CMD=$1
 OPTION=$2
 
 echo "waiting for geth RPC to start..."
+#  pause nodes other than zetacore0 to wait for zetacore0 to create genesis.json
+#  additional pause time is needed for importing data into the genesis as the export file is read into memory
  if [ "$OPTION" != "import-data" ]; then
     sleep 2
   else

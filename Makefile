@@ -206,7 +206,7 @@ start-e2e-admin-test: zetanode
 	@echo "--> Starting e2e admin test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-admin.yml up -d
 
-start-e2e-import-test: zetanode
+start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	cd contrib/localnet/  && chmod +x scripts/import-data.sh && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
 

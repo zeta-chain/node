@@ -52,13 +52,21 @@ var Copy = map[string]bool{
 
 // Skip represents a set of modules for which, the entire state is skipped and nothing gets imported
 var Skip = map[string]bool{
-	evmtypes.ModuleName:          true,
-	stakingtypes.ModuleName:      true,
-	genutiltypes.ModuleName:      true,
-	authtypes.ModuleName:         true,
-	banktypes.ModuleName:         true,
+	// Skipping evm this is done to reduce the size of the genesis file evm module uses the majority of the space due to smart contract data
+	evmtypes.ModuleName: true,
+	// Skipping staking as new validators would be created for the new chain
+	stakingtypes.ModuleName: true,
+	// Skipping genutil as new gentxs would be created
+	genutiltypes.ModuleName: true,
+	// Skipping auth as new accounts would be created for the new chain. This also needs to be done as we are skipping evm module
+	authtypes.ModuleName: true,
+	// Skipping bank module as it is not used when starting a new chain this is done to make sure the total supply invariant is maintained.
+	// This would need modification but might be possible to add in non evm based modules in the future
+	banktypes.ModuleName: true,
+	// Skipping distribution module as it is not used when starting a new chain , rewards are based on validators and delegators , and so rewards from a different chain do not hold any value
 	distributiontypes.ModuleName: true,
-	group.ModuleName:             true,
+	// Skipping group module as it is not used when starting a new chain, new groups should be created based on the validator operator keys
+	group.ModuleName: true,
 	// Skipping authz as it is not used when starting a new chain, new grants should be created based on the validator hotkeys abd operator keys
 	authz.ModuleName: true,
 	// Skipping fungible module as new fungible tokens would be created and system contract would be deployed
@@ -156,7 +164,8 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppStateLegacy(cdc, importAppState)
 	appStateGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
-	// The genesis state has been modified between the two versions , so we add only the required fields and leave out the rest
+	// The genesis state has been modified between the two versions, so we add only the required fields and leave out the rest
+	// v16 adds the rate_limiter_flags and removes params from the genesis state
 	appStateGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
 	appStateGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InTxHashToCctxList))]
 	appStateGenState.FinalizedInbounds = importedCrossChainGenState.FinalizedInbounds[:math.Min(MaxItemsForList, len(importedCrossChainGenState.FinalizedInbounds))]
