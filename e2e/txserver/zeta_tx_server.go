@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -34,8 +36,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -327,7 +327,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain.ChainId,
 		18,
 		"ETH",
 		"gETH",
@@ -342,7 +342,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.BtcRegtestChain().ChainId,
+		chains.BtcRegtestChain.ChainId,
 		8,
 		"BTC",
 		"tBTC",
@@ -357,7 +357,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		erc20Addr,
-		chains.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain.ChainId,
 		6,
 		"USDT",
 		"USDT",

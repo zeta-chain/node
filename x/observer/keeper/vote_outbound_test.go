@@ -21,7 +21,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -41,7 +41,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -88,7 +88,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -120,7 +120,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			observer,
 		)
 		require.NoError(t, err)
@@ -167,7 +167,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			observer,
 		)
 		require.Error(t, err)
@@ -208,7 +208,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			observer,
 		)
 		require.NoError(t, err)
@@ -266,7 +266,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			observer,
 		)
 		require.NoError(t, err)
@@ -322,7 +322,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			chains.ReceiveStatus_Success,
+			chains.ReceiveStatus_success,
 			observer,
 		)
 		require.NoError(t, err)

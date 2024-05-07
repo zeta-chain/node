@@ -5,7 +5,6 @@ Query the parameters (voting|tallying|deposit) of the governance process
 ### Synopsis
 
 Query the all the parameters for the governance process.
-
 Example:
 $ zetacored query gov param voting
 $ zetacored query gov param tallying
@@ -33,6 +32,7 @@ zetacored query gov param [param-type] [flags]
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

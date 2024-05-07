@@ -30,6 +30,7 @@ const (
 	flagSetupOnly         = "setup-only"
 	flagSkipSetup         = "skip-setup"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
+	flagSkipHeaderProof   = "skip-header-proof"
 )
 
 var (
@@ -57,6 +58,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(flagConfigOut, "", "config file to write the deployed contracts from the setup")
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
+	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 
 	return cmd
 }
@@ -108,6 +110,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 	skipBitcoinSetup, err := cmd.Flags().GetBool(flagSkipBitcoinSetup)
+	if err != nil {
+		panic(err)
+	}
+	skipHeaderProof, err := cmd.Flags().GetBool(flagSkipHeaderProof)
 	if err != nil {
 		panic(err)
 	}
@@ -189,8 +195,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
-		if err := deployerRunner.EnableVerificationFlags(); err != nil {
-			panic(err)
+		if !skipHeaderProof {
+			if err := deployerRunner.EnableVerificationFlags(); err != nil {
+				panic(err)
+			}
 		}
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
@@ -257,18 +265,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositNewAddressName,
 		}
 		bitcoinTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
-			e2etests.TestBitcoinWithdrawTaprootName,
-			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawP2SHName,
-			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
 			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
+			e2etests.TestBitcoinWithdrawTaprootName,
+			e2etests.TestBitcoinWithdrawLegacyName,
+			e2etests.TestBitcoinWithdrawP2SHName,
+			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
@@ -288,13 +298,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
+		// skip the header proof test if we run light test or skipHeaderProof is enabled
+		testHeader := !light && !skipHeaderProof
+
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, !light, bitcoinTests...))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, !light, ethereumTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestRateLimiterName,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,

@@ -5,18 +5,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"cosmossdk.io/simapp/params"
+
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
@@ -110,16 +107,6 @@ func NewZetaCoreBridge(
 	}, nil
 }
 
-// MakeLegacyCodec creates codec
-func MakeLegacyCodec() *codec.LegacyAmino {
-	cdc := codec.NewLegacyAmino()
-	banktypes.RegisterLegacyAminoCodec(cdc)
-	authtypes.RegisterLegacyAminoCodec(cdc)
-	sdk.RegisterLegacyAminoCodec(cdc)
-	crosschaintypes.RegisterCodec(cdc)
-	return cdc
-}
-
 func (b *ZetaCoreBridge) GetLogger() *zerolog.Logger {
 	return &b.logger
 }
@@ -200,12 +187,12 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCoreContext, init bool, sampledLogger zerolog.Logger) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get zetablock height: %w", err)
 	}
 	plan, err := b.GetUpgradePlan()
-	// if there is no active upgrade plan, plan will be nil, err will be nil as well.
 	if err != nil {
-		return err
+		// if there is no active upgrade plan, plan will be nil, err will be nil as well.
+		return fmt.Errorf("failed to get upgrade plan: %w", err)
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
 		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
@@ -215,7 +202,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 
 	chainParams, err := b.GetChainParams()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
 	newEVMParams := make(map[int64]*observertypes.ChainParams)
@@ -241,7 +228,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 
 	supportedChains, err := b.GetSupportedChains()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get supported chains: %w", err)
 	}
 	newChains := make([]chains.Chain, len(supportedChains))
 	for i, chain := range supportedChains {
@@ -250,26 +237,33 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetabridge")
-		return err
+		return fmt.Errorf("failed to get keygen: %w", err)
 	}
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {
 		b.logger.Info().Err(err).Msg("Unable to fetch TSS from zetabridge")
-		return err
+		return fmt.Errorf("failed to get current tss: %w", err)
 	}
 	tssPubKey := tss.GetTssPubkey()
 
 	crosschainFlags, err := b.GetCrosschainFlags()
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch cross-chain flags from zetabridge")
-		return err
+		return fmt.Errorf("failed to get crosschain flags: %w", err)
 	}
 
 	verificationFlags, err := b.GetVerificationFlags()
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch verification flags from zetabridge")
-		return err
+
+		// The block header functionality is currently disabled on the ZetaCore side
+		// The verification flags might not exist and we should not return an error here to prevent the ZetaClient from starting
+		// TODO: Uncomment this line when the block header functionality is enabled and we need to get the verification flags
+		// https://github.com/zeta-chain/node/issues/1717
+		// return fmt.Errorf("failed to get verification flags: %w", err)
+
+		verificationFlags = lightclienttypes.VerificationFlags{}
 	}
 
 	coreContext.Update(

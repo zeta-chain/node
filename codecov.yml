@@ -61,6 +61,7 @@ ignore:
   - "**/*.yaml"
   - "**/*.pb.go"
   - "**/*.pb.gw.go"
+  - "**/*_legacy.go"
   - "**/*.json"
   - ".github/**/*"
   - "app/**/*"

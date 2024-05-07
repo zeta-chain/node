@@ -127,7 +127,8 @@ func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, 
 
 // DepositEther sends Ethers into ZEVM
 func (runner *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
-	return runner.DepositEtherWithAmount(testHeader, big.NewInt(1000000000000000000)) // in wei (1 eth)
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
+	return runner.DepositEtherWithAmount(testHeader, amount)
 }
 
 // DepositEtherWithAmount sends Ethers into ZEVM
@@ -248,7 +249,7 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),
 		Proof:     proofs.NewEthereumProof(txProof),
-		ChainId:   chains.GoerliLocalnetChain().ChainId,
+		ChainId:   chains.GoerliLocalnetChain.ChainId,
 	})
 	if err != nil {
 		panic(err)

@@ -21,12 +21,12 @@ import (
 	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	gopeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	thorcommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keysign"
 	"github.com/zeta-chain/go-tss/p2p"
@@ -41,8 +41,8 @@ const (
 )
 
 type Key struct {
-	PubkeyInBytes  []byte // FIXME: compressed pubkey?
-	PubkeyInBech32 string // FIXME: same above
+	PubkeyInBytes  []byte
+	PubkeyInBech32 string
 	AddressInHex   string
 }
 
@@ -55,12 +55,15 @@ func NewTSSKey(pk string) (*Key, error) {
 		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", pk)
 		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
 	}
+
 	decompresspubkey, err := crypto.DecompressPubkey(pubkey.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("NewTSS: DecompressPubkey error: %w", err)
 	}
+
 	TSSKey.PubkeyInBytes = crypto.FromECDSAPub(decompresspubkey)
 	TSSKey.AddressInHex = crypto.PubkeyToAddress(*decompresspubkey).Hex()
+
 	return TSSKey, nil
 }
 
@@ -98,6 +101,7 @@ func NewTSS(
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
+
 	newTss := TSS{
 		Server:          server,
 		Keys:            make(map[string]*Key),
@@ -112,14 +116,17 @@ func NewTSS(
 	if err != nil {
 		return nil, err
 	}
+
 	_, pubkeyInBech32, err := keys.GetKeyringKeybase(appContext.Config(), hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}
+
 	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
 		bridge.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
+
 	keygenRes, err := newTss.CoreBridge.GetKeyGen()
 	if err != nil {
 		return nil, err
@@ -134,7 +141,13 @@ func NewTSS(
 	return &newTss, nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg config.Config, tssPassword string) (*tss.TssServer, error) {
+func SetupTSSServer(
+	peer p2p.AddrList,
+	privkey tmcrypto.PrivKey,
+	preParams *keygen.LocalPreParams,
+	cfg config.Config,
+	tssPassword string,
+) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
@@ -149,10 +162,12 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
+
 	IP := cfg.PublicIP
 	if len(IP) == 0 {
 		log.Info().Msg("empty public IP in config")
 	}
+
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,
 		6668,
@@ -192,7 +207,6 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 	return tssServer, nil
 }
 
-// FIXME: does it return pubkey in compressed form or uncompressed?
 func (tss *TSS) Pubkey() []byte {
 	return tss.Keys[tss.CurrentPubkey].PubkeyInBytes
 }
@@ -208,6 +222,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 	if optionalPubKey != "" {
 		tssPubkey = optionalPubKey
 	}
+
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
 	tss.KeysignsTracker.StartMsgSign()
@@ -216,6 +231,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
+
 	if ksRes.Status == thorcommon.Fail {
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
@@ -246,21 +262,25 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 		log.Warn().Err(err).Msgf("signature has length 0")
 		return [65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
+
 	if !verifySignature(tssPubkey, signature, H) {
 		log.Error().Err(err).Msgf("signature verification failure")
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
+
 	var sigbyte [65]byte
 	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature R")
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
+
 	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature S")
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
+
 	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature RecoveryID")
@@ -372,12 +392,15 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 func (tss *TSS) Validate() error {
 	evmAddress := tss.EVMAddress()
 	blankAddress := ethcommon.Address{}
+
 	if evmAddress == blankAddress {
 		return fmt.Errorf("invalid evm address : %s", evmAddress.String())
 	}
+
 	if tss.BTCAddressWitnessPubkeyHash() == nil {
 		return fmt.Errorf("invalid btc pub key hash : %s", tss.BTCAddress())
 	}
+
 	return nil
 }
 
@@ -438,6 +461,7 @@ func (tss *TSS) VerifyKeysharesForPubkeys(tssList []observertypes.TSS, granteePu
 	}
 	return nil
 }
+
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
 	if err != nil {
@@ -445,12 +469,14 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 		return err
 	}
 	found := false
+
 	var sharefiles []os.DirEntry
 	for _, file := range files {
 		if !file.IsDir() && strings.HasPrefix(filepath.Base(file.Name()), "localstate") {
 			sharefiles = append(sharefiles, file)
 		}
 	}
+
 	if len(sharefiles) > 0 {
 		sort.SliceStable(sharefiles, func(i, j int) bool {
 			fi, err := sharefiles[i].Info()
@@ -480,6 +506,7 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 			}
 		}
 	}
+
 	if !found {
 		log.Info().Msg("TSS Keyshare file NOT found")
 	}
@@ -527,6 +554,7 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
+
 	signature := ksRes.Signatures
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
 	// 32B msg hash, 32B R, 32B S, 1B RC
@@ -536,11 +564,18 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 		log.Info().Msgf("signature has length 0, skipping verify")
 		return fmt.Errorf("signature has length 0")
 	}
+
 	verifySignature(tssPubkey, signature, H.Bytes())
 	if verifySignature(tssPubkey, signature, H.Bytes()) {
 		return nil
 	}
+
 	return fmt.Errorf("verify signature fail")
+}
+
+func IsEnvFlagEnabled(flag string) bool {
+	value := os.Getenv(flag)
+	return value == "true" || value == "1"
 }
 
 func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
@@ -552,6 +587,7 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	if err != nil {
 		log.Error().Msg("get pubkey from bech32 fail")
 	}
+
 	// verify the signature of msg.
 	var sigbyte [65]byte
 	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
@@ -559,21 +595,25 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 		log.Error().Err(err).Msg("decoding signature R")
 		return false
 	}
+
 	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature S")
 		return false
 	}
+
 	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature RecoveryID")
 		return false
 	}
+
 	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
 	if err != nil {
 		log.Error().Err(err).Msg("SigToPub error in verify_signature")
 		return false
 	}
+
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
 	return bytes.Equal(pubkey.Bytes(), compressedPubkey)
@@ -610,9 +650,4 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.A
 		return nil, err
 	}
 	return addr, nil
-}
-
-func IsEnvFlagEnabled(flag string) bool {
-	value := os.Getenv(flag)
-	return value == "true" || value == "1"
 }

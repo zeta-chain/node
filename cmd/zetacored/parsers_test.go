@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/cometbft/cometbft/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/app"
 
 	//"os"
@@ -31,7 +31,6 @@ func TestParsefileToObserverMapper(t *testing.T) {
 
 func createObserverList(fp string) {
 	var listReader []ObserverInfoReader
-	//listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
 	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
 	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
 	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))

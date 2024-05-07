@@ -82,7 +82,7 @@ func TestKeeper_GetBlockRewardComponent(t *testing.T) {
 			ctx, mock.Anything, config.BaseDenom).
 			Return(sdk.NewCoin(config.BaseDenom, math.NewInt(0)), nil).Once()
 
-		reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx)
+		reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx, emissionstypes.DefaultParams())
 		require.Equal(t, sdk.ZeroDec(), reservesFactor)
 		require.Equal(t, sdk.ZeroDec(), bondFactor)
 		require.Equal(t, sdk.ZeroDec(), durationFactor)
@@ -98,90 +98,12 @@ func TestKeeper_GetBlockRewardComponent(t *testing.T) {
 			ctx, mock.Anything, config.BaseDenom).
 			Return(sdk.NewCoin(config.BaseDenom, math.NewInt(1)), nil).Once()
 
-		reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx)
+		reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx, emissionstypes.DefaultParams())
 		require.Equal(t, sdk.OneDec(), reservesFactor)
 		// bonded ratio is 0
 		require.Equal(t, sdk.ZeroDec(), bondFactor)
 		// non 0 value returned
 		require.NotEqual(t, sdk.ZeroDec(), durationFactor)
 		require.Positive(t, durationFactor.BigInt().Int64())
-	})
-}
-
-func TestKeeper_GetBondFactor(t *testing.T) {
-	t.Run("should return 0 if current bond ratio is 0", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
-
-		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
-		require.Equal(t, sdk.ZeroDec(), bondFactor)
-	})
-
-	t.Run("should return max bond factor if bond factor exceeds max bond factor", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
-			UseStakingMock: true,
-		})
-
-		params := emissionstypes.DefaultParams()
-		params.TargetBondRatio = "0.5"
-		params.MaxBondFactor = "1.1"
-		params.MinBondFactor = "0.9"
-		k.SetParams(ctx, params)
-
-		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
-		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.25"))
-		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
-		require.Equal(t, sdk.MustNewDecFromStr(params.MaxBondFactor), bondFactor)
-	})
-
-	t.Run("should return min bond factor if bond factor below min bond factor", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
-			UseStakingMock: true,
-		})
-
-		params := emissionstypes.DefaultParams()
-		params.TargetBondRatio = "0.5"
-		params.MaxBondFactor = "1.1"
-		params.MinBondFactor = "0.9"
-		k.SetParams(ctx, params)
-
-		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
-		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.75"))
-		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
-		require.Equal(t, sdk.MustNewDecFromStr(params.MinBondFactor), bondFactor)
-	})
-
-	t.Run("should return calculated bond factor if bond factor in range", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
-			UseStakingMock: true,
-		})
-
-		params := emissionstypes.DefaultParams()
-		params.TargetBondRatio = "0.5"
-		params.MaxBondFactor = "1.1"
-		params.MinBondFactor = "0.9"
-		k.SetParams(ctx, params)
-
-		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
-		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.5"))
-		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
-		require.Equal(t, sdk.OneDec(), bondFactor)
-	})
-}
-
-func TestKeeper_GetDurationFactor(t *testing.T) {
-	t.Run("should return duration factor 0 if duration factor constant is 0", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
-		params := emissionstypes.DefaultParams()
-		params.DurationFactorConstant = "0"
-		k.SetParams(ctx, params)
-		duractionFactor := k.GetDurationFactor(ctx)
-		require.Equal(t, sdk.ZeroDec(), duractionFactor)
-	})
-
-	t.Run("should return duration factor for default params", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
-		duractionFactor := k.GetDurationFactor(ctx)
-		// hardcoding actual expected value for default params, it will change if logic changes
-		require.Equal(t, sdk.MustNewDecFromStr("0.000000004346937374"), duractionFactor)
 	})
 }

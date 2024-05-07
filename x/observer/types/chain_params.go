@@ -140,7 +140,7 @@ func GetDefaultChainParams() ChainParamsList {
 
 func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.EthChain().ChainId,
+		ChainId:                     chains.EthChain.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -158,7 +158,7 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscMainnetChain().ChainId,
+		ChainId:                     chains.BscMainnetChain.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -176,7 +176,7 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcMainnetChain().ChainId,
+		ChainId:                     chains.BtcMainnetChain.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -194,7 +194,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:           chains.GoerliChain().ChainId,
+		ChainId:           chains.GoerliChain.ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
@@ -213,7 +213,7 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscTestnetChain().ChainId,
+		ChainId:                     chains.BscTestnetChain.ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -231,7 +231,7 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.MumbaiChain().ChainId,
+		ChainId:                     chains.MumbaiChain.ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -249,7 +249,7 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcTestNetChain().ChainId,
+		ChainId:                     chains.BtcTestNetChain.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -267,7 +267,7 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcRegtestChain().ChainId,
+		ChainId:                     chains.BtcRegtestChain.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -285,17 +285,17 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.GoerliLocalnetChain().ChainId,
+		ChainId:                     chains.GoerliLocalnetChain.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
 		Erc20CustodyContractAddress: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
 		InTxTicker:                  2,
-		OutTxTicker:                 2,
+		OutTxTicker:                 1,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              5,
-		OutboundTxScheduleInterval:  2,
-		OutboundTxScheduleLookahead: 5,
+		OutboundTxScheduleInterval:  1,
+		OutboundTxScheduleLookahead: 50,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -303,7 +303,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.ZetaPrivnetChain().ChainId,
+		ChainId:                     chains.ZetaPrivnetChain.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

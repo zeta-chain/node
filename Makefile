@@ -144,23 +144,27 @@ gosec:
 ###                           Generation commands  		                    ###
 ###############################################################################
 
-proto:
-	@echo "--> Removing old Go types "
-	@find . -name '*.pb.go' -type f -delete
-	@echo "--> Generating new Go types from protocol buffer files"
-	@bash ./scripts/protoc-gen-go.sh
-	@buf format -w
-.PHONY: proto
+protoVer=0.13.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user $(shell id -u):$(shell id -g) $(protoImageName)
 
-typescript:
+proto-format:
+	@echo "--> Formatting Protobuf files"
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+.PHONY: proto-format
+
+typescript: proto-format
 	@echo "--> Generating TypeScript bindings"
 	@bash ./scripts/protoc-gen-typescript.sh
 .PHONY: typescript
 
-proto-format:
-	@bash ./scripts/proto-format.sh
+proto-gen: proto-format
+	@echo "--> Removing old Go types "
+	@find . -name '*.pb.go' -type f -delete
+	@echo "--> Generating Protobuf files"
+	@$(protoImage) sh ./scripts/protoc-gen-go.sh
 
-openapi:
+openapi: proto-format
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
 .PHONY: openapi
@@ -180,7 +184,7 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto openapi specs typescript docs-zetacored
+generate: proto-gen openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
@@ -214,16 +218,19 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
-start-upgrade-test:
-	@echo "--> Starting upgrade test"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
+#TODO: replace OLD_VERSION with v16 tag once its available
+zetanode-upgrade:
+	@echo "Building zetanode-upgrade"
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION='release/v16' --build-arg NEW_VERSION=v17 .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+.PHONY: zetanode-upgrade
+
+start-upgrade-test: zetanode-upgrade
+	@echo "--> Starting upgrade test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-upgrade-test-light:
+start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade-light.yml up -d
 
 start-localnet: zetanode
@@ -285,14 +292,68 @@ release:
 ###                     Local Mainnet Development                           ###
 ###############################################################################
 
-mainnet-zetarpc-node:
-	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+#BTC
+start-bitcoin-node-mainnet:
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
-mainnet-bitcoind-node:
-	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+stop-bitcoin-node-mainnet:
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
 
-athens3-zetarpc-node:
-	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+clean-bitcoin-node-mainnet:
+	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+#ETHEREUM
+start-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+stop-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
+
+clean-eth-node-mainnet:
+	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
+
+#ZETA
+
+#FULL-NODE-RPC-FROM-BUILT-IMAGE
+start-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet image $(DOCKER_TAG)
+
+stop-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
+
+clean-zetacored-rpc-mainnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
+
+#FULL-NODE-RPC-FROM-BUILT-IMAGE
+start-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 image $(DOCKER_TAG)
+
+stop-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
+
+clean-zetacored-rpc-testnet:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
+
+#FULL-NODE-RPC-FROM-LOCAL-BUILD
+start-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet localbuild $(DOCKER_TAG)
+
+stop-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
+
+clean-zetacored-rpc-mainnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
+
+#FULL-NODE-RPC-FROM-LOCAL-BUILD
+start-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 localbuild $(DOCKER_TAG)
+
+stop-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
+
+clean-zetacored-rpc-testnet-localbuild:
+	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
+
 
 ###############################################################################
 ###                               Debug Tools                               ###

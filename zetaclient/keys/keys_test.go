@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/99designs/keyring"
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 
@@ -28,10 +28,6 @@ func Test(t *testing.T) { TestingT(t) }
 
 var _ = Suite(&KeysSuite{})
 
-func (*KeysSuite) SetUpSuite(c *C) {
-	SetupConfigForTest()
-}
-
 var (
 	password = "password"
 )
@@ -40,6 +36,21 @@ const (
 	signerNameForTest     = `jack`
 	signerPasswordForTest = `password`
 )
+
+func setupConfig() {
+	testConfig := sdk.GetConfig()
+	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
+	testConfig.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
+	testConfig.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
+	testConfig.SetFullFundraiserPath(cmd.ZetaChainHDPath)
+	sdk.SetCoinDenomRegex(func() string {
+		return cmd.DenomRegex
+	})
+}
+
+func (*KeysSuite) SetUpSuite(_ *C) {
+	setupConfig()
+}
 
 func (*KeysSuite) setupKeysForTest(c *C) string {
 	ns := strconv.Itoa(time.Now().Nanosecond())

@@ -121,11 +121,11 @@ func (z *MockZetaCoreBridge) ListPendingCctx(_ int64) ([]*cctxtypes.CrossChainTx
 	return []*cctxtypes.CrossChainTx{}, 0, nil
 }
 
-func (z *MockZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*cctxtypes.CrossChainTx, uint64, bool, error) {
+func (z *MockZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*cctxtypes.CrossChainTx, uint64, int64, string, bool, error) {
 	if z.paused {
-		return nil, 0, false, errors.New(ErrMsgPaused)
+		return nil, 0, 0, "", false, errors.New(ErrMsgPaused)
 	}
-	return []*cctxtypes.CrossChainTx{}, 0, false, nil
+	return []*cctxtypes.CrossChainTx{}, 0, 0, "", false, nil
 }
 
 func (z *MockZetaCoreBridge) GetPendingNoncesByChain(_ int64) (observerTypes.PendingNonces, error) {

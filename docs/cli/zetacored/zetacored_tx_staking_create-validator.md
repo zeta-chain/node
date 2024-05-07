@@ -12,7 +12,8 @@ zetacored tx staking create-validator [flags]
   -a, --account-number uint                 The account number of the signing account (offline mode only)
       --amount string                       Amount of coins to bond
       --aux                                 Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async|block) 
+  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async) 
+      --chain-id string                     The network chain ID
       --commission-max-change-rate string   The maximum commission change rate percentage (per day)
       --commission-max-rate string          The maximum commission rate percentage
       --commission-rate string              The initial commission rate percentage
@@ -52,10 +53,10 @@ zetacored tx staking create-validator [flags]
 ### Options inherited from parent commands
 
 ```
-      --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

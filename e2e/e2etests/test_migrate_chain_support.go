@@ -30,7 +30,7 @@ const EVM2RPCURL = "http://eth2:8545"
 
 // EVM2ChainID is the chain ID for the additional EVM localnet
 // We set Sepolia testnet although the value is not important, only used to differentiate
-var EVM2ChainID = chains.SepoliaChain().ChainId
+var EVM2ChainID = chains.SepoliaChain.ChainId
 
 func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
@@ -157,7 +157,20 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
 
 	// perform withdrawals on the new chain
-	TestZetaWithdraw(newRunner, []string{"10000000000000000000"})
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
+	newRunner.DepositAndApproveWZeta(amount)
+	tx := newRunner.WithdrawZeta(amount, true)
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "zeta withdraw")
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		panic(fmt.Errorf(
+			"expected cctx status to be %s; got %s, message %s",
+			crosschaintypes.CctxStatus_OutboundMined,
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage,
+		))
+	}
+
 	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
 
 	// finally try to deposit Zeta back
@@ -170,7 +183,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
 		adminAddr,
 		newRunner.ERC20Addr.Hex(),
-		chains.SepoliaChain().ChainId,
+		chains.SepoliaChain.ChainId,
 		"USDT",
 		"USDT",
 		18,

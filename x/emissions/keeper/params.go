@@ -5,14 +5,33 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-// GetParamsIfExists get all parameters as types.Params if they exist
-// non existent parameters will return zero values
-func (k Keeper) GetParamsIfExists(ctx sdk.Context) (params types.Params) {
-	k.paramStore.GetParamSetIfExists(ctx, &params)
-	return
+// GetParams get all parameters
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.KeyPrefix(types.ParamsKey))
+	if bz == nil {
+		return types.Params{}, false
+	}
+	err := k.cdc.Unmarshal(bz, &params)
+	if err != nil {
+		return types.Params{}, false
+	}
+
+	return params, true
 }
 
 // SetParams set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramStore.SetParamSet(ctx, &params)
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.KeyPrefix(types.ParamsKey), bz)
+	return nil
 }

@@ -17,7 +17,8 @@ zetacored tx gov submit-legacy-proposal software-upgrade [name] (--upgrade-heigh
 ```
   -a, --account-number uint      The account number of the signing account (offline mode only)
       --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async|block) 
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
       --daemon-name string       The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable 
       --deposit string           deposit of proposal
       --description string       description of proposal
@@ -52,10 +53,10 @@ zetacored tx gov submit-legacy-proposal software-upgrade [name] (--upgrade-heigh
 ### Options inherited from parent commands
 
 ```
-      --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

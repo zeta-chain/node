@@ -11,7 +11,8 @@ zetacored tx group draft-proposal [flags]
 ```
   -a, --account-number uint      The account number of the signing account (offline mode only)
       --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async|block) 
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
       --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
       --fee-granter string       Fee granter grants fees for the transaction
       --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
@@ -31,6 +32,7 @@ zetacored tx group draft-proposal [flags]
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
       --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --skip-metadata            skip metadata prompt
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -39,10 +41,10 @@ zetacored tx group draft-proposal [flags]
 ### Options inherited from parent commands
 
 ```
-      --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
