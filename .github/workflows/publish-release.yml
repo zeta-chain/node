@@ -390,7 +390,66 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         shell: bash
         run: |
+          make start-upgrade-test
+
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
+  e2e-stateful-data-test:
+    needs:
+      - check_branch
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute stateful-data-test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
           make start-e2e-import-mainnet-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id || echo "docker-ps-error")
+              if [ "$current_status" == "docker-ps-error" ]; then
+                  echo "***********************************"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "*        TESTING COMPLETE         *"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "***********************************"
+                  docker_logs=$(docker logs $container_id || echo "no logs")
+                  docker_logs_check=$(echo "${docker_logs}" | grep "e2e passed" | grep -v grep)
+                  if [ ! -z "${docker_logs_check}" ]; then
+                    docker logs $container_id || echo "no logs"
+                    echo "${docker_logs_check}"
+                    echo "Testing Succeeded."
+                    exit 0
+                  else
+                    docker logs $container_id || echo "no logs"
+                    echo "${docker_logs_check}"
+                    echo "Testing failed, didn't find th completed message in the logs."
+                    exit 1
+                  fi
+              else
+                  echo "Testing in progress still...."
+                  if [ "${{ github.event.inputs.debug }}" == "true" ]; then
+                    docker logs $container_id || echo "no logs"
+                  fi
+              fi
+              sleep 5
+          done
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -411,6 +470,7 @@ jobs:
       - e2e-admin-tests
       - e2e-upgrade-test
       - check_branch
+      - e2e-stateful-data-test
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     environment: release
