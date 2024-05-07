@@ -8,6 +8,7 @@ import (
 
 // InitGenesis initializes the authority module's state from a provided genesis state
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	ctx.Logger().Info("Initializing authority genesis state")
 	k.SetPolicies(ctx, genState.Policies)
 }
 

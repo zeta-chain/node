@@ -8,6 +8,7 @@ import (
 
 // InitGenesis initializes the lightclient module's state from a provided genesis state
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	ctx.Logger().Info("Initializing light client genesis state")
 	// set block headers
 	for _, elem := range genState.BlockHeaders {
 		k.SetBlockHeader(ctx, elem)
