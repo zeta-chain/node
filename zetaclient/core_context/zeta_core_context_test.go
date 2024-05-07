@@ -28,7 +28,7 @@ func getTestCoreContext(
 	evmChain chains.Chain,
 	evmChainParams *observertypes.ChainParams,
 	ccFlags observertypes.CrosschainFlags,
-	verificationFlags []lightclienttypes.HeaderSupportedChain,
+	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
 ) *corecontext.ZetaCoreContext {
 	// create config
 	cfg := config.NewConfig()
@@ -48,7 +48,7 @@ func getTestCoreContext(
 		nil,
 		"",
 		ccFlags,
-		verificationFlags,
+		headerSupportedChains,
 		true,
 		zerolog.Logger{},
 	)

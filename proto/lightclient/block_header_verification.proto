@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 
-// VerificationFlags is a structure containing information of weather a chain is enabled or not for block header verification
+// HeaderSupportedChain is a structure containing information of weather a chain is enabled or not for block header verification
 message HeaderSupportedChain {
   int64 chain_id = 1;
   bool enabled = 2;
