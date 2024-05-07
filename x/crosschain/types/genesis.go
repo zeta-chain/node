@@ -65,3 +65,14 @@ func GetGenesisStateFromAppState(marshaler codec.JSONCodec, appState map[string]
 	}
 	return genesisState
 }
+
+func GetGenesisStateFromAppStateLegacy(marshaler codec.JSONCodec, appState map[string]json.RawMessage) GenesisStateLegacy {
+	var genesisState GenesisStateLegacy
+	if appState[ModuleName] != nil {
+		err := marshaler.UnmarshalJSON(appState[ModuleName], &genesisState)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+		}
+	}
+	return genesisState
+}

@@ -12,3 +12,11 @@ message GenesisState {
   repeated ForeignCoins foreignCoinsList = 2 [(gogoproto.nullable) = false];
   SystemContract systemContract = 3;
 }
+
+message GenesisState_legacy {
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated ForeignCoins foreignCoinsList = 2 [(gogoproto.nullable) = false];
+  SystemContract systemContract = 3;
+}
+
+message Params {}

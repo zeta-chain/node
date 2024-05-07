@@ -25,7 +25,14 @@ num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"
 
 echo "Wait for zetacore to exchange genesis file"
-sleep 40
+#  pause nodes other than zetacore0 to wait for zetacore0 to create genesis.json
+#  additional pause time is needed for importing data into the genesis as the export file is read into memory
+if [ "$OPTION" != "import-data" ]; then
+  sleep 40
+else
+  sleep 510
+fi
+
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"
