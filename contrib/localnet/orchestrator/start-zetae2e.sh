@@ -12,7 +12,7 @@ echo "waiting for geth RPC to start..."
  if [ "$OPTION" != "import-data" ]; then
     sleep 2
   else
-    sleep 420
+    sleep 520
   fi
 
 ### Create the accounts and fund them with Ether on local Ethereum network

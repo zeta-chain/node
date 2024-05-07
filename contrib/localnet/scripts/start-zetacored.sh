@@ -73,7 +73,7 @@ then
   if [ "$OPTION" != "import-data" ]; then
     sleep 10
   else
-    sleep 400
+    sleep 500
   fi
   echo "genesis.json created"
 fi

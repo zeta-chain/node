@@ -29,7 +29,7 @@ echo "Wait for zetacore to exchange genesis file"
 if [ "$OPTION" != "import-data" ]; then
   sleep 40
 else
-  sleep 410
+  sleep 510
 fi
 
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
