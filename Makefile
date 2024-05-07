@@ -208,7 +208,7 @@ start-e2e-admin-test: zetanode
 
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
-	cd contrib/localnet/  && chmod +x scripts/import-data.sh && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
+	cd contrib/localnet/  && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
 
 start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
