@@ -130,17 +130,14 @@ func TestKeeper_RemoveObserverEmission(t *testing.T) {
 		require.Equal(t, sdkmath.ZeroInt(), we2.Amount)
 	})
 
-	t.Run("remove all observer emission successfully using amount higher that available", func(t *testing.T) {
+	t.Run("unable to remove observer emission if requested amount is higher than available", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		we := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, we)
 		err := k.RemoveWithdrawableEmission(ctx, we.Address, we.Amount.Add(sdkmath.OneInt()))
-		require.NoError(t, err)
-		we2, found := k.GetWithdrawableEmission(ctx, we.Address)
-		require.True(t, found)
-		require.Equal(t, sdkmath.ZeroInt(), we2.Amount)
+		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
+		require.ErrorContains(t, err, "amount to be removed is greater than the available withdrawable emission")
 	})
-
 	t.Run("unable to remove non-existent emission ", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		address := sample.AccAddress()
