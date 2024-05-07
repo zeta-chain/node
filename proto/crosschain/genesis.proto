@@ -12,7 +12,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-// GenesisState defines the metacore module's genesis state.
+// GenesisState defines the crosschain modules genesis state.
 message GenesisState {
   repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
   repeated GasPrice gasPriceList = 5;
@@ -25,7 +25,8 @@ message GenesisState {
   RateLimiterFlags rate_limiter_flags = 17 [(gogoproto.nullable) = false];
 }
 
-// GenesisState defines the metacore module's genesis state.
+// Remove legacy types
+// https://github.com/zeta-chain/node/issues/2139
 message GenesisState_legacy {
   Params params = 1;
   repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
