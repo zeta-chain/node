@@ -14,9 +14,7 @@
 ### Refactor
 
 * [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
-
-### Refactor
-
+* [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor.
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
@@ -28,6 +26,7 @@
 ### Fixes
 
 * [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
+* [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
 
 ### CI
 

@@ -22,6 +22,7 @@ CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
+UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
 # Environment variables used for upgrade testing
 export DAEMON_HOME=$HOME/.zetacored
@@ -121,7 +122,9 @@ then
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][2]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  
 # give balance to runner accounts to deploy contracts directly on zEVM
 # deployer
   zetacored add-genesis-account zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd 100000000000000000000000000azeta
@@ -215,7 +218,28 @@ else
   # If this is the first node, create a governance proposal for upgrade
   if [ $HOSTNAME = "zetacore0" ]
   then
-    /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from operator --deposit 100000000azeta --upgrade-height "$UPGRADE_HEIGHT" --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=2000000000000000azeta --broadcast-mode block
+    cat > upgrade.json <<EOF
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "plan": {
+        "height": "${UPGRADE_HEIGHT}",
+        "info": "",
+        "name": "${UpgradeName}",
+        "time": "0001-01-01T00:00:00Z",
+        "upgraded_client_state": null
+      },
+      "authority": "${UPGRADE_AUTHORITY_ACCOUNT}"
+    }
+  ],
+  "metadata": "",
+  "deposit": "100000000azeta",
+  "title": "${UpgradeName}",
+  "summary": "${UpgradeName}"
+}
+EOF
+    /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta
   fi
 
   # Wait for the proposal to be voted on

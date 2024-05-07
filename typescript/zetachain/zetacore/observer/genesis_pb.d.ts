@@ -9,8 +9,8 @@ import type { Ballot } from "./ballot_pb.js";
 import type { LastObserverCount, ObserverSet } from "./observer_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
+import type { ChainParamsList, Params } from "./params_pb.js";
 import type { Keygen } from "./keygen_pb.js";
-import type { ChainParamsList } from "./params_pb.js";
 import type { TSS } from "./tss_pb.js";
 import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { Blame } from "./blame_pb.js";
@@ -41,6 +41,13 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: zetachain.zetacore.observer.CrosschainFlags crosschain_flags = 4;
    */
   crosschainFlags?: CrosschainFlags;
+
+  /**
+   * Deprecated(v17) removed
+   *
+   * @generated from field: zetachain.zetacore.observer.Params params = 5;
+   */
+  params?: Params;
 
   /**
    * @generated from field: zetachain.zetacore.observer.Keygen keygen = 6;

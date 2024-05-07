@@ -16,12 +16,10 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
-const releaseVersion = "v16"
+const releaseVersion = "v17"
 
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
@@ -82,7 +80,7 @@ func SetupHandlers(app *App) {
 	}
 	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{authoritytypes.ModuleName, lightclienttypes.ModuleName, consensustypes.ModuleName, crisistypes.ModuleName},
+			Added: []string{consensustypes.ModuleName, crisistypes.ModuleName},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
