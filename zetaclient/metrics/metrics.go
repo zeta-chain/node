@@ -84,6 +84,12 @@ var (
 		Name:      "num_active_message_signs",
 		Help:      "Number of concurrent key signs",
 	})
+
+	PercentageOfRateReached = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "percentage_of_rate_reached",
+		Help:      "Percentage of the rate limiter rate reached",
+	})
 )
 
 func NewMetrics() (*Metrics, error) {

@@ -29015,6 +29015,32 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/rateLimiterInput:
+    get:
+      summary: Queries the input data of rate limiter.
+      operationId: Query_RateLimiterInput
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryRateLimiterInputResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: window
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/crosschain/zetaAccounting:
     get:
       operationId: Query_ZetaAccounting
@@ -29400,6 +29426,34 @@ paths:
           format: int64
       tags:
         - Query
+  /zeta-chain/lightclient/header_enabled_chains:
+    get:
+      operationId: Query_HeaderEnabledChains
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryHeaderEnabledChainsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/lightclient/header_supported_chains:
+    get:
+      operationId: Query_HeaderSupportedChains
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryHeaderSupportedChainsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/lightclient/prove:
     get:
       operationId: Query_Prove
@@ -29462,20 +29516,6 @@ paths:
           required: false
           type: string
           format: int64
-      tags:
-        - Query
-  /zeta-chain/lightclient/verification_flags:
-    get:
-      operationId: Query_VerificationFlags
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/lightclientQueryVerificationFlagsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/observer/TSS:
@@ -56351,8 +56391,6 @@ definitions:
         $ref: '#/definitions/chainsConsensus'
       is_external:
         type: boolean
-      is_header_supported:
-        type: boolean
   chainsChainName:
     type: string
     enum:
@@ -56829,6 +56867,32 @@ definitions:
     properties:
       rateLimiterFlags:
         $ref: '#/definitions/crosschainRateLimiterFlags'
+  crosschainQueryRateLimiterInputResponse:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+      cctxs_missed:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
+      cctxs_pending:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
+      total_pending:
+        type: string
+        format: uint64
+      past_cctxs_value:
+        type: string
+      pending_cctxs_value:
+        type: string
+      lowest_pending_cctx_height:
+        type: string
+        format: int64
   crosschainQueryZetaAccountingResponse:
     type: object
     properties:
@@ -56884,31 +56948,6 @@ definitions:
     type: object
   emissionsMsgWithdrawEmissionResponse:
     type: object
-  emissionsParams:
-    type: object
-    properties:
-      max_bond_factor:
-        type: string
-      min_bond_factor:
-        type: string
-      avg_block_time:
-        type: string
-      target_bond_ratio:
-        type: string
-      validator_emission_percentage:
-        type: string
-      observer_emission_percentage:
-        type: string
-      tss_signer_emission_percentage:
-        type: string
-      duration_factor_constant:
-        type: string
-      observer_slash_amount:
-        type: string
-      ballot_maturity_blocks:
-        type: string
-        format: int64
-    description: Params defines the parameters for the module.
   emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:
@@ -56931,7 +56970,7 @@ definitions:
     type: object
     properties:
       params:
-        $ref: '#/definitions/emissionsParams'
+        $ref: '#/definitions/zetacoreemissionsParams'
         description: params holds all the parameters of this module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   emissionsQueryShowAvailableEmissionsResponse:
@@ -57084,7 +57123,20 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
-  lightclientMsgUpdateVerificationFlagsResponse:
+  lightclientHeaderSupportedChain:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      enabled:
+        type: boolean
+    title: |-
+      HeaderSupportedChain is a structure containing information of weather a chain
+      is enabled or not for block header verification
+  lightclientMsgDisableHeaderVerificationResponse:
+    type: object
+  lightclientMsgEnableHeaderVerificationResponse:
     type: object
   lightclientQueryAllBlockHeaderResponse:
     type: object
@@ -57116,26 +57168,27 @@ definitions:
     properties:
       chain_state:
         $ref: '#/definitions/lightclientChainState'
+  lightclientQueryHeaderEnabledChainsResponse:
+    type: object
+    properties:
+      header_enabled_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
+  lightclientQueryHeaderSupportedChainsResponse:
+    type: object
+    properties:
+      header_supported_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
   lightclientQueryProveResponse:
     type: object
     properties:
       valid:
         type: boolean
-  lightclientQueryVerificationFlagsResponse:
-    type: object
-    properties:
-      verification_flags:
-        $ref: '#/definitions/lightclientVerificationFlags'
-  lightclientVerificationFlags:
-    type: object
-    properties:
-      ethTypeChainEnabled:
-        type: boolean
-      btcTypeChainEnabled:
-        type: boolean
-    title: |-
-      VerificationFlags is a structure containing information which chain types are
-      enabled for block header verification
   observerBallotStatus:
     type: string
     enum:
@@ -57730,6 +57783,31 @@ definitions:
         format: int64
       isAbortRefunded:
         type: boolean
+  zetacoreemissionsParams:
+    type: object
+    properties:
+      max_bond_factor:
+        type: string
+      min_bond_factor:
+        type: string
+      avg_block_time:
+        type: string
+      target_bond_ratio:
+        type: string
+      validator_emission_percentage:
+        type: string
+      observer_emission_percentage:
+        type: string
+      tss_signer_emission_percentage:
+        type: string
+      duration_factor_constant:
+        type: string
+      observer_slash_amount:
+        type: string
+      ballot_maturity_blocks:
+        type: string
+        format: int64
+    description: Params defines the parameters for the module.
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:

@@ -185,7 +185,7 @@ func TestIsEVMChain(t *testing.T) {
 	}
 }
 
-func TestIsHeaderSupportedEVMChain(t *testing.T) {
+func TestIsHeaderSupportedChain(t *testing.T) {
 	tests := []struct {
 		name    string
 		chainID int64
@@ -197,13 +197,13 @@ func TestIsHeaderSupportedEVMChain(t *testing.T) {
 		{"Sepolia Testnet", SepoliaChain.ChainId, true},
 		{"BSC Testnet", BscTestnetChain.ChainId, true},
 		{"BSC Mainnet", BscMainnetChain.ChainId, true},
-		{"Non-EVM", BtcMainnetChain.ChainId, false},
+		{"BTC", BtcMainnetChain.ChainId, true},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, IsHeaderSupportedEvmChain(tt.chainID))
+			require.Equal(t, tt.want, IsHeaderSupportedChain(tt.chainID))
 		})
 	}
 }

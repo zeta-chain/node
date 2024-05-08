@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
@@ -253,17 +252,10 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		return fmt.Errorf("failed to get crosschain flags: %w", err)
 	}
 
-	verificationFlags, err := b.GetVerificationFlags()
+	blockHeaderEnabledChains, err := b.GetBlockHeaderEnabledChains()
 	if err != nil {
-		b.logger.Info().Msg("Unable to fetch verification flags from zetabridge")
-
-		// The block header functionality is currently disabled on the ZetaCore side
-		// The verification flags might not exist and we should not return an error here to prevent the ZetaClient from starting
-		// TODO: Uncomment this line when the block header functionality is enabled and we need to get the verification flags
-		// https://github.com/zeta-chain/node/issues/1717
-		// return fmt.Errorf("failed to get verification flags: %w", err)
-
-		verificationFlags = lightclienttypes.VerificationFlags{}
+		b.logger.Info().Msg("Unable to fetch block header enabled chains from zetabridge")
+		return err
 	}
 
 	coreContext.Update(
@@ -273,7 +265,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		newBTCParams,
 		tssPubKey,
 		crosschainFlags,
-		verificationFlags,
+		blockHeaderEnabledChains,
 		init,
 		b.logger,
 	)

@@ -18,20 +18,19 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetChainState(ctx, elem)
 	}
 
-	// set verification flags
-	k.SetVerificationFlags(ctx, genState.VerificationFlags)
+	k.SetBlockHeaderVerification(ctx, genState.BlockHeaderVerification)
 }
 
 // ExportGenesis returns the lightclient module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	verificationFlags, found := k.GetVerificationFlags(ctx)
-	if !found {
-		verificationFlags = types.DefaultVerificationFlags()
+	blockHeaderVerification := types.DefaultBlockHeaderVerification()
+	bhv, found := k.GetBlockHeaderVerification(ctx)
+	if found {
+		blockHeaderVerification = bhv
 	}
-
 	return &types.GenesisState{
-		BlockHeaders:      k.GetAllBlockHeaders(ctx),
-		ChainStates:       k.GetAllChainStates(ctx),
-		VerificationFlags: verificationFlags,
+		BlockHeaders:            k.GetAllBlockHeaders(ctx),
+		ChainStates:             k.GetAllChainStates(ctx),
+		BlockHeaderVerification: blockHeaderVerification,
 	}
 }
