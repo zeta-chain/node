@@ -7,6 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func AzetaPerZeta() sdk.Dec {
+	return sdk.NewDec(1e18)
+}
+
 func GetCoinType(coin string) (CoinType, error) {
 	coinInt, err := strconv.ParseInt(coin, 10, 32)
 	if err != nil {

@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## Unreleased
+## v16.0.0
+
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
@@ -83,6 +84,7 @@
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
+* [2060](https://github.com/zeta-chain/node/pull/2060) - add unit test for rate limiter query
 
 ### Fixes
 

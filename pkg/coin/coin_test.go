@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_AzetaPerZeta(t *testing.T) {
+	require.Equal(t, sdk.NewDec(1e18), AzetaPerZeta())
+}
+
 func Test_GetAzetaDecFromAmountInZeta(t *testing.T) {
 	tt := []struct {
 		name        string
