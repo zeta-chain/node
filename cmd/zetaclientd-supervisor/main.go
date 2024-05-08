@@ -50,7 +50,8 @@ func main() {
 	shouldRestart := true
 	for shouldRestart {
 		ctx, cancel := context.WithCancel(ctx)
-		cmd := exec.CommandContext(ctx, "zetaclientd", os.Args[1:]...)
+		// pass args from supervisor directly to zetaclientd
+		cmd := exec.CommandContext(ctx, zetaclientdBinaryName, os.Args[1:]...) // #nosec G204
 		// by default, CommandContext sends SIGKILL. we want more graceful shutdown.
 		cmd.Cancel = func() error {
 			return cmd.Process.Signal(syscall.SIGINT)

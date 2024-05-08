@@ -22,6 +22,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+const zetaclientdBinaryName = "zetaclientd"
+
+// serializedWriter wraps an io.Writer and ensures that writes to it from multiple goroutines
+// are serialized
 type serializedWriter struct {
 	upstream io.Writer
 	lock     sync.Mutex
@@ -56,10 +60,10 @@ type zetaclientdSupervisor struct {
 	upgradePlanName string
 }
 
-func newZetaclientdSupervisor(zetaCoreUrl string, logger zerolog.Logger) (*zetaclientdSupervisor, error) {
+func newZetaclientdSupervisor(zetaCoreURL string, logger zerolog.Logger) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:9090", zetaCoreUrl),
+		fmt.Sprintf("%s:9090", zetaCoreURL),
 		grpc.WithInsecure(),
 	)
 	if err != nil {
@@ -202,22 +206,22 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 
 	s.logger.Info().Msg("downloading zetaclientd")
 
-	binKey := fmt.Sprintf("zetaclientd-%s/%s", runtime.GOOS, runtime.GOARCH)
-	binUrl, ok := config.Binaries[binKey]
+	binKey := fmt.Sprintf("%s-%s/%s", zetaclientdBinaryName, runtime.GOOS, runtime.GOARCH)
+	binURL, ok := config.Binaries[binKey]
 	if !ok {
 		return fmt.Errorf("no binary found for: %s", binKey)
 	}
 	upgradeDir := s.dirForVersion(plan.Name)
-	err = os.MkdirAll(upgradeDir, 0o770)
+	err = os.MkdirAll(upgradeDir, 0o750)
 	if err != nil {
 		return fmt.Errorf("mkdir %s: %w", upgradeDir, err)
 	}
 	upgradePath := path.Join(upgradeDir, "zetaclientd")
 	// TODO: retry?
 	// GetFile should validate checksum so long as it was provided in the url
-	err = getter.GetFile(upgradePath, binUrl, getter.WithContext(ctx), getter.WithUmask(0o750))
+	err = getter.GetFile(upgradePath, binURL, getter.WithContext(ctx), getter.WithUmask(0o750))
 	if err != nil {
-		return fmt.Errorf("get file %s: %w", binUrl, err)
+		return fmt.Errorf("get file %s: %w", binURL, err)
 	}
 
 	// ensure binary is executable
