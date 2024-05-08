@@ -28,7 +28,7 @@ func getTestCoreContext(
 	evmChain chains.Chain,
 	evmChainParams *observertypes.ChainParams,
 	ccFlags observertypes.CrosschainFlags,
-	verificationFlags lightclienttypes.VerificationFlags,
+	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
 ) *corecontext.ZetaCoreContext {
 	// create config
 	cfg := config.NewConfig()
@@ -48,7 +48,7 @@ func getTestCoreContext(
 		nil,
 		"",
 		ccFlags,
-		verificationFlags,
+		headerSupportedChains,
 		true,
 		zerolog.Logger{},
 	)
@@ -176,7 +176,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		tssPubKeyToUpdate := "tsspubkeytest"
 		loggers := clientcommon.DefaultLoggers()
 		crosschainFlags := sample.CrosschainFlags()
-		verificationFlags := sample.VerificationFlags()
+		verificationFlags := sample.HeaderSupportedChains()
 
 		require.NotNil(t, crosschainFlags)
 		zetaContext.Update(
@@ -217,7 +217,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, *crosschainFlags, ccFlags)
 
-		verFlags := zetaContext.GetVerificationFlags()
+		verFlags := zetaContext.GetAllHeaderEnabledChains()
 		require.Equal(t, verificationFlags, verFlags)
 	})
 
@@ -276,7 +276,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
 		crosschainFlags := sample.CrosschainFlags()
-		verificationFlags := sample.VerificationFlags()
+		verificationFlags := sample.HeaderSupportedChains()
 		require.NotNil(t, crosschainFlags)
 		loggers := clientcommon.DefaultLoggers()
 		zetaContext.Update(
@@ -322,7 +322,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		ccFlags := zetaContext.GetCrossChainFlags()
 		require.Equal(t, ccFlags, *crosschainFlags)
 
-		verFlags := zetaContext.GetVerificationFlags()
+		verFlags := zetaContext.GetAllHeaderEnabledChains()
 		require.Equal(t, verFlags, verificationFlags)
 	})
 }
@@ -331,7 +331,7 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
 	evmChain := chains.EthChain
 	ccFlags := *sample.CrosschainFlags()
-	verificationFlags := sample.VerificationFlags()
+	verificationFlags := sample.HeaderSupportedChains()
 	chainParams := &observertypes.ChainParams{
 		ChainId:     evmChain.ChainId,
 		IsSupported: true,
@@ -361,7 +361,7 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
 	evmChain := chains.EthChain
 	ccFlags := *sample.CrosschainFlags()
-	verificationFlags := sample.VerificationFlags()
+	verificationFlags := sample.HeaderSupportedChains()
 	chainParams := &observertypes.ChainParams{
 		ChainId:     evmChain.ChainId,
 		IsSupported: true,

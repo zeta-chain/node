@@ -24,8 +24,9 @@ type ZetaCoreContext struct {
 	currentTssPubkey   string
 	crossChainFlags    observertypes.CrosschainFlags
 
-	// verificationFlags is used to store the verification flags for the lightclient module to enable header/proof verification
-	verificationFlags lightclienttypes.VerificationFlags
+	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
+	// All chains in this list will have Enabled flag set to true
+	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
 }
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
@@ -43,12 +44,12 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	}
 
 	return &ZetaCoreContext{
-		coreContextLock:    new(sync.RWMutex),
-		chainsEnabled:      []chains.Chain{},
-		evmChainParams:     evmChainParams,
-		bitcoinChainParams: bitcoinChainParams,
-		crossChainFlags:    observertypes.CrosschainFlags{},
-		verificationFlags:  lightclienttypes.VerificationFlags{},
+		coreContextLock:          new(sync.RWMutex),
+		chainsEnabled:            []chains.Chain{},
+		evmChainParams:           evmChainParams,
+		bitcoinChainParams:       bitcoinChainParams,
+		crossChainFlags:          observertypes.CrosschainFlags{},
+		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
 	}
 }
 
@@ -142,10 +143,23 @@ func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return c.crossChainFlags
 }
 
-func (c *ZetaCoreContext) GetVerificationFlags() lightclienttypes.VerificationFlags {
+// GetAllHeaderEnabledChains returns all verification flags
+func (c *ZetaCoreContext) GetAllHeaderEnabledChains() []lightclienttypes.HeaderSupportedChain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	return c.verificationFlags
+	return c.blockHeaderEnabledChains
+}
+
+// GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
+func (c *ZetaCoreContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	for _, flags := range c.blockHeaderEnabledChains {
+		if flags.ChainId == chainID {
+			return flags, true
+		}
+	}
+	return lightclienttypes.HeaderSupportedChain{}, false
 }
 
 // Update updates core context and params for all chains
@@ -157,7 +171,7 @@ func (c *ZetaCoreContext) Update(
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
-	verificationFlags lightclienttypes.VerificationFlags,
+	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
 	init bool,
 	logger zerolog.Logger,
 ) {
@@ -200,7 +214,7 @@ func (c *ZetaCoreContext) Update(
 
 	c.chainsEnabled = newChains
 	c.crossChainFlags = crosschainFlags
-	c.verificationFlags = verificationFlags
+	c.blockHeaderEnabledChains = blockHeaderEnabledChains
 
 	// update chain params for bitcoin if it has config in file
 	if c.bitcoinChainParams != nil && btcChainParams != nil {

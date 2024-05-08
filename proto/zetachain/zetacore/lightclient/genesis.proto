@@ -2,8 +2,8 @@ syntax = "proto3";
 package zetachain.zetacore.lightclient;
 
 import "gogoproto/gogo.proto";
+import "zetachain/zetacore/lightclient/block_header_verification.proto";
 import "zetachain/zetacore/lightclient/chain_state.proto";
-import "zetachain/zetacore/lightclient/verification_flags.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
@@ -13,5 +13,6 @@ message GenesisState {
   repeated pkg.proofs.BlockHeader block_headers = 1
       [ (gogoproto.nullable) = false ];
   repeated ChainState chain_states = 2 [ (gogoproto.nullable) = false ];
-  VerificationFlags verification_flags = 3 [ (gogoproto.nullable) = false ];
+  BlockHeaderVerification block_header_verification = 3
+      [ (gogoproto.nullable) = false ];
 }

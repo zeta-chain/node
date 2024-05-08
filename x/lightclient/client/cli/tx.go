@@ -19,7 +19,8 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdUpdateVerificationFlags(),
+		CmdEnableVerificationFlags(),
+		CmdDisableVerificationFlags(),
 	)
 
 	return cmd

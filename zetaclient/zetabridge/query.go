@@ -34,6 +34,14 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 	return resp.CrosschainFlags, nil
 }
 
+func (b *ZetaCoreBridge) GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error) {
+	client := lightclienttypes.NewQueryClient(b.grpcConn)
+	resp, err := client.HeaderEnabledChains(context.Background(), &lightclienttypes.QueryHeaderEnabledChainsRequest{})
+	if err != nil {
+		return []lightclienttypes.HeaderSupportedChain{}, err
+	}
+	return resp.HeaderEnabledChains, nil
+}
 func (b *ZetaCoreBridge) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error) {
 	client := crosschaintypes.NewQueryClient(b.grpcConn)
 	resp, err := client.RateLimiterFlags(context.Background(), &crosschaintypes.QueryRateLimiterFlagsRequest{})
@@ -41,15 +49,6 @@ func (b *ZetaCoreBridge) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags
 		return crosschaintypes.RateLimiterFlags{}, err
 	}
 	return resp.RateLimiterFlags, nil
-}
-
-func (b *ZetaCoreBridge) GetVerificationFlags() (lightclienttypes.VerificationFlags, error) {
-	client := lightclienttypes.NewQueryClient(b.grpcConn)
-	resp, err := client.VerificationFlags(context.Background(), &lightclienttypes.QueryVerificationFlagsRequest{})
-	if err != nil {
-		return lightclienttypes.VerificationFlags{}, err
-	}
-	return resp.VerificationFlags, nil
 }
 
 func (b *ZetaCoreBridge) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {

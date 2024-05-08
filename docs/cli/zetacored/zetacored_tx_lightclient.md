@@ -26,5 +26,6 @@ zetacored tx lightclient [flags]
 ### SEE ALSO
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
-* [zetacored tx lightclient update-verification-flags](zetacored_tx_lightclient_update-verification-flags.md)	 - Update verification flags
+* [zetacored tx lightclient disable-header-verification](zetacored_tx_lightclient_disable-header-verification.md)	 - Disable header verification for the list of chains separated by comma
+* [zetacored tx lightclient enable-header-verification](zetacored_tx_lightclient_enable-header-verification.md)	 - Enable verification for the list of chains separated by comma
 

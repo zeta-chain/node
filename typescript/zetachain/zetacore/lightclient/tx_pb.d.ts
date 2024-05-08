@@ -5,53 +5,100 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { VerificationFlags } from "./verification_flags_pb.js";
 
 /**
- * @generated from message zetachain.zetacore.lightclient.MsgUpdateVerificationFlags
+ * @generated from message zetachain.zetacore.lightclient.MsgEnableHeaderVerification
  */
-export declare class MsgUpdateVerificationFlags extends Message<MsgUpdateVerificationFlags> {
+export declare class MsgEnableHeaderVerification extends Message<MsgEnableHeaderVerification> {
   /**
    * @generated from field: string creator = 1;
    */
   creator: string;
 
   /**
-   * @generated from field: zetachain.zetacore.lightclient.VerificationFlags verification_flags = 2;
+   * @generated from field: repeated int64 chain_id_list = 2;
    */
-  verificationFlags?: VerificationFlags;
+  chainIdList: bigint[];
 
-  constructor(data?: PartialMessage<MsgUpdateVerificationFlags>);
+  constructor(data?: PartialMessage<MsgEnableHeaderVerification>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.MsgUpdateVerificationFlags";
+  static readonly typeName = "zetachain.zetacore.lightclient.MsgEnableHeaderVerification";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateVerificationFlags;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableHeaderVerification;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateVerificationFlags;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableHeaderVerification;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateVerificationFlags;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableHeaderVerification;
 
-  static equals(a: MsgUpdateVerificationFlags | PlainMessage<MsgUpdateVerificationFlags> | undefined, b: MsgUpdateVerificationFlags | PlainMessage<MsgUpdateVerificationFlags> | undefined): boolean;
+  static equals(a: MsgEnableHeaderVerification | PlainMessage<MsgEnableHeaderVerification> | undefined, b: MsgEnableHeaderVerification | PlainMessage<MsgEnableHeaderVerification> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.MsgUpdateVerificationFlagsResponse
+ * @generated from message zetachain.zetacore.lightclient.MsgEnableHeaderVerificationResponse
  */
-export declare class MsgUpdateVerificationFlagsResponse extends Message<MsgUpdateVerificationFlagsResponse> {
-  constructor(data?: PartialMessage<MsgUpdateVerificationFlagsResponse>);
+export declare class MsgEnableHeaderVerificationResponse extends Message<MsgEnableHeaderVerificationResponse> {
+  constructor(data?: PartialMessage<MsgEnableHeaderVerificationResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.MsgUpdateVerificationFlagsResponse";
+  static readonly typeName = "zetachain.zetacore.lightclient.MsgEnableHeaderVerificationResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateVerificationFlagsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableHeaderVerificationResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateVerificationFlagsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableHeaderVerificationResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateVerificationFlagsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableHeaderVerificationResponse;
 
-  static equals(a: MsgUpdateVerificationFlagsResponse | PlainMessage<MsgUpdateVerificationFlagsResponse> | undefined, b: MsgUpdateVerificationFlagsResponse | PlainMessage<MsgUpdateVerificationFlagsResponse> | undefined): boolean;
+  static equals(a: MsgEnableHeaderVerificationResponse | PlainMessage<MsgEnableHeaderVerificationResponse> | undefined, b: MsgEnableHeaderVerificationResponse | PlainMessage<MsgEnableHeaderVerificationResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.MsgDisableHeaderVerification
+ */
+export declare class MsgDisableHeaderVerification extends Message<MsgDisableHeaderVerification> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: repeated int64 chain_id_list = 2;
+   */
+  chainIdList: bigint[];
+
+  constructor(data?: PartialMessage<MsgDisableHeaderVerification>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.MsgDisableHeaderVerification";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableHeaderVerification;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableHeaderVerification;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableHeaderVerification;
+
+  static equals(a: MsgDisableHeaderVerification | PlainMessage<MsgDisableHeaderVerification> | undefined, b: MsgDisableHeaderVerification | PlainMessage<MsgDisableHeaderVerification> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.MsgDisableHeaderVerificationResponse
+ */
+export declare class MsgDisableHeaderVerificationResponse extends Message<MsgDisableHeaderVerificationResponse> {
+  constructor(data?: PartialMessage<MsgDisableHeaderVerificationResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.MsgDisableHeaderVerificationResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableHeaderVerificationResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableHeaderVerificationResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableHeaderVerificationResponse;
+
+  static equals(a: MsgDisableHeaderVerificationResponse | PlainMessage<MsgDisableHeaderVerificationResponse> | undefined, b: MsgDisableHeaderVerificationResponse | PlainMessage<MsgDisableHeaderVerificationResponse> | undefined): boolean;
 }
 
