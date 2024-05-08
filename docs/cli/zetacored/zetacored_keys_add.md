@@ -32,13 +32,13 @@ zetacored keys add [name] [flags]
 
 ```
       --account uint32           Account number for HD derivation (less than equal 2147483647)
-      --algo string              Key signing algorithm to generate keys for 
       --coin-type uint32         coin type number for HD derivation (default 118)
       --dry-run                  Perform action, but don't add key to local keystore
       --hd-path string           Manual HD Path derivation (overrides BIP44 config) 
   -h, --help                     help for add
       --index uint32             Address index number for HD derivation (less than equal 2147483647)
   -i, --interactive              Interactively prompt user for BIP39 passphrase and mnemonic
+      --key-type string          Key signing algorithm to generate keys for 
       --ledger                   Store a local reference to a private key on a Ledger device
       --multisig strings         List of key names stored in keyring to construct a public legacy multisig key
       --multisig-threshold int   K out of N required signatures. For use in conjunction with --multisig (default 1)
@@ -56,6 +56,7 @@ zetacored keys add [name] [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
       --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
 ```

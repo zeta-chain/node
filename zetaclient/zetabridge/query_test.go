@@ -4,6 +4,7 @@ import (
 	"net"
 	"testing"
 
+	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -11,7 +12,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -102,13 +102,19 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 	require.Equal(t, expectedOutput.CrosschainFlags, resp)
 }
 
-func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: lightclienttypes.VerificationFlags{
-		EthTypeChainEnabled: true,
-		BtcTypeChainEnabled: false,
+func TestZetaCoreBridge_HeaderEnabledChains(t *testing.T) {
+	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
+		{
+			ChainId: chains.EthChain.ChainId,
+			Enabled: true,
+		},
+		{
+			ChainId: chains.BtcMainnetChain.ChainId,
+			Enabled: true,
+		},
 	}}
-	input := lightclienttypes.QueryVerificationFlagsRequest{}
-	method := "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+	input := lightclienttypes.QueryHeaderEnabledChainsRequest{}
+	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -116,14 +122,16 @@ func TestZetaCoreBridge_GetVerificationFlags(t *testing.T) {
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetVerificationFlags()
+	resp, err := zetabridge.GetBlockHeaderEnabledChains()
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.VerificationFlags, resp)
+	require.Equal(t, expectedOutput.HeaderEnabledChains, resp)
 }
 
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsForChainResponse{ChainParams: &observertypes.ChainParams{
-		ChainId: 123,
+		ChainId:               123,
+		BallotThreshold:       types.ZeroDec(),
+		MinObserverDelegation: types.ZeroDec(),
 	}}
 	input := observertypes.QueryGetChainParamsForChainRequest{ChainId: 123}
 	method := "/zetachain.zetacore.observer.Query/GetChainParamsForChain"
@@ -143,7 +151,9 @@ func TestZetaCoreBridge_GetChainParams(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 		ChainParams: []*observertypes.ChainParams{
 			{
-				ChainId: 123,
+				ChainId:               123,
+				MinObserverDelegation: types.ZeroDec(),
+				BallotThreshold:       types.ZeroDec(),
 			},
 		},
 	}}
@@ -785,7 +795,6 @@ func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 				chains.BscMainnetChain.Vm,
 				chains.BscMainnetChain.Consensus,
 				chains.BscMainnetChain.IsExternal,
-				chains.BscMainnetChain.IsHeaderSupported,
 			},
 			{
 				chains.EthChain.ChainName,
@@ -795,7 +804,6 @@ func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 				chains.EthChain.Vm,
 				chains.EthChain.Consensus,
 				chains.EthChain.IsExternal,
-				chains.EthChain.IsHeaderSupported,
 			},
 		},
 	}

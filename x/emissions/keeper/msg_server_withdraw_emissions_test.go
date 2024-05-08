@@ -114,4 +114,24 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		require.Equal(t, sdk.ZeroInt().String(), balance)
 	})
 
+	t.Run("unable to withdraw emissions if amount requested is more that available", func(t *testing.T) {
+		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		withdrawableEmission := sample.WithdrawableEmissions(t)
+		k.SetWithdrawableEmission(ctx, withdrawableEmission)
+		withdrawAmount := withdrawableEmission.Amount.Add(sdkmath.OneInt())
+		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawAmount)))
+		require.NoError(t, err)
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawAmount)))
+		require.NoError(t, err)
+
+		_, err = msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
+			Creator: withdrawableEmission.Address,
+			Amount:  withdrawAmount,
+		})
+		require.ErrorIs(t, err, types.ErrUnableToWithdrawEmissions)
+		require.ErrorContains(t, err, "amount to be removed is greater than the available withdrawable emission")
+	})
+
 }

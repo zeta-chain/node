@@ -41,7 +41,7 @@ message MsgDeployFungibleCoinZRC20 {
 	uint32 decimals = 4;
 	string name = 5;
 	string symbol = 6;
-	coin.CoinType coin_type = 7;
+	pkg.coin.CoinType coin_type = 7;
 	int64 gas_limit = 8;
 }
 ```

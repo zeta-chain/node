@@ -5,6 +5,7 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -43,5 +44,9 @@ func AuthorizationTable() map[string]authoritytypes.PolicyType {
 		sdk.MsgTypeURL(&observertypes.MsgEnableCCTXFlags{}):             authoritytypes.PolicyType_groupOperational,
 		sdk.MsgTypeURL(&observertypes.MsgDisableCCTXFlags{}):            authoritytypes.PolicyType_groupEmergency,
 		sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}): authoritytypes.PolicyType_groupOperational,
+
+		// Lightclient admin messages
+		sdk.MsgTypeURL(&lightclienttypes.MsgDisableHeaderVerification{}): authoritytypes.PolicyType_groupEmergency,
+		sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}):  authoritytypes.PolicyType_groupOperational,
 	}
 }

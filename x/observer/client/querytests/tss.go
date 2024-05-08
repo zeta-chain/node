@@ -3,8 +3,8 @@ package querytests
 import (
 	"fmt"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/x/observer/client/cli"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/status"

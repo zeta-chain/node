@@ -19,13 +19,13 @@ zetacored testnet start [flags]
 ### Options
 
 ```
-      --algo string                 Key signing algorithm to generate keys for 
       --api.address string          the address to listen on for REST API 
       --chain-id string             genesis file chain-id, if left blank will be randomly created
       --enable-logging              Enable INFO logging of tendermint validator nodes
       --grpc.address string         the gRPC server address to listen on 
   -h, --help                        help for start
       --json-rpc.address string     the JSON-RPC server address to listen on 
+      --key-type string             Key signing algorithm to generate keys for 
       --minimum-gas-prices string   Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake) 
   -o, --output-dir string           Directory to store initialization data for the testnet 
       --print-mnemonic              print mnemonic of first validator to stdout for manual testing (default true)
@@ -39,6 +39,7 @@ zetacored testnet start [flags]
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

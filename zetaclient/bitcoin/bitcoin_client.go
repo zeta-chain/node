@@ -103,9 +103,6 @@ type BTCInTxEvent struct {
 // BTCChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BTCChainClient struct {
-	// BlockTime contains the block time in seconds
-	BlockTime uint64
-
 	BlockCache *lru.Cache
 
 	// Mu is lock for all the maps, utxos and core params
@@ -476,8 +473,8 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		// add block header to zetabridge
 		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		verificationFlags := ob.coreContext.GetVerificationFlags()
-		if verificationFlags.BtcTypeChainEnabled {
+		blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
+		if found && blockHeaderVerification.Enabled {
 			err = ob.postBlockHeader(blockNumber)
 			if err != nil {
 				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)
@@ -1341,13 +1338,13 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
-	_, err = ob.zetaClient.PostVoteBlockHeader(
+	zetatxHash, err := ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,
 		proofs.NewBitcoinHeader(headerBuf.Bytes()),
 	)
-	ob.logger.InTx.Info().Msgf("posted block header %d: %s", bn, blockHash)
+	ob.logger.InTx.Info().Msgf("posted block header %d: %s, zeta tx hash :%s", bn, blockHash, zetatxHash)
 	if err != nil { // error shouldn't block the process
 		ob.logger.InTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 	}

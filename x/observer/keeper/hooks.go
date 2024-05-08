@@ -137,3 +137,7 @@ func (k Keeper) CheckAndCleanObserverDelegator(ctx sdk.Context, valAddress sdk.V
 	}
 	return nil
 }
+
+func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
+	return nil
+}

@@ -37,7 +37,7 @@ zetacored gentx [key_name] [amount] [flags]
   -a, --account-number uint                 The account number of the signing account (offline mode only)
       --amount string                       Amount of coins to bond
       --aux                                 Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async|block) 
+  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async) 
       --chain-id string                     The network chain ID
       --commission-max-change-rate string   The maximum commission change rate percentage (per day)
       --commission-max-rate string          The maximum commission rate percentage
@@ -55,7 +55,7 @@ zetacored gentx [key_name] [amount] [flags]
   -h, --help                                help for gentx
       --home string                         The application home directory 
       --identity string                     The (optional) identity signature (ex. UPort or Keybase)
-      --ip string                           The node's public IP 
+      --ip string                           The node's public P2P IP 
       --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string                  The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                              Use a connected Ledger device
@@ -65,8 +65,8 @@ zetacored gentx [key_name] [amount] [flags]
       --node-id string                      The node's NodeID
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)
-  -o, --output string                       Output format (text|json) 
       --output-document string              Write the genesis transaction JSON document to the given file instead of the default location
+      --p2p-port uint                       The node's public P2P port (default 26656)
       --pubkey string                       The validator's Protobuf JSON encoded public key
       --security-contact string             The validator's (optional) security contact email
   -s, --sequence uint                       The sequence number of the signing account (offline mode only)
@@ -82,6 +82,7 @@ zetacored gentx [key_name] [amount] [flags]
 ```
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

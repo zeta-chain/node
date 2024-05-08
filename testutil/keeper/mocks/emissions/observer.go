@@ -43,24 +43,32 @@ func (_m *EmissionObserverKeeper) GetBallot(ctx types.Context, index string) (ob
 	return r0, r1
 }
 
-// GetMaturedBallotList provides a mock function with given fields: ctx
-func (_m *EmissionObserverKeeper) GetMaturedBallotList(ctx types.Context) []string {
-	ret := _m.Called(ctx)
+// GetMaturedBallots provides a mock function with given fields: ctx, maturityBlocks
+func (_m *EmissionObserverKeeper) GetMaturedBallots(ctx types.Context, maturityBlocks int64) (observertypes.BallotListForHeight, bool) {
+	ret := _m.Called(ctx, maturityBlocks)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetMaturedBallotList")
+		panic("no return value specified for GetMaturedBallots")
 	}
 
-	var r0 []string
-	if rf, ok := ret.Get(0).(func(types.Context) []string); ok {
-		r0 = rf(ctx)
+	var r0 observertypes.BallotListForHeight
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, int64) (observertypes.BallotListForHeight, bool)); ok {
+		return rf(ctx, maturityBlocks)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, int64) observertypes.BallotListForHeight); ok {
+		r0 = rf(ctx, maturityBlocks)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
+		r0 = ret.Get(0).(observertypes.BallotListForHeight)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
+		r1 = rf(ctx, maturityBlocks)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
 // NewEmissionObserverKeeper creates a new instance of EmissionObserverKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

@@ -9,12 +9,9 @@ import (
 // DefaultGenesis returns the default lightclient genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		BlockHeaders: []proofs.BlockHeader{},
-		ChainStates:  []ChainState{},
-		VerificationFlags: VerificationFlags{
-			EthTypeChainEnabled: false,
-			BtcTypeChainEnabled: false,
-		},
+		BlockHeaders:            []proofs.BlockHeader{},
+		ChainStates:             []ChainState{},
+		BlockHeaderVerification: BlockHeaderVerification{},
 	}
 }
 
@@ -35,6 +32,11 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated chain id for chain states")
 		}
 		ChainStateMap[elem.ChainId] = true
+	}
+
+	err := gs.BlockHeaderVerification.Validate()
+	if err != nil {
+		return err
 	}
 
 	return nil

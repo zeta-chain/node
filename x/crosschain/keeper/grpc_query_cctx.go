@@ -16,6 +16,9 @@ import (
 const (
 	// MaxPendingCctxs is the maximum number of pending cctxs that can be queried
 	MaxPendingCctxs = 500
+
+	// MaxLookbackNonce is the maximum number of nonces to look back to find missed pending cctxs
+	MaxLookbackNonce = 1000
 )
 
 func (k Keeper) ZetaAccounting(c context.Context, _ *types.QueryZetaAccountingRequest) (*types.QueryZetaAccountingResponse, error) {
@@ -122,7 +125,7 @@ func (k Keeper) ListPendingCctx(c context.Context, req *types.QueryListPendingCc
 	// now query the previous nonces up to 1000 prior to find any pending cctx that we might have missed
 	// need this logic because a confirmation of higher nonce will automatically update the p.NonceLow
 	// therefore might mask some lower nonce cctx that is still pending.
-	startNonce := pendingNonces.NonceLow - 1000
+	startNonce := pendingNonces.NonceLow - MaxLookbackNonce
 	if startNonce < 0 {
 		startNonce = 0
 	}

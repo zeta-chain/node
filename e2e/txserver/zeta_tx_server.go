@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -34,8 +36,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -250,8 +250,8 @@ type intoAny interface {
 	AsAny() *codectypes.Any
 }
 
-// EnableVerificationFlags enables the verification flags for the lightclient module
-func (zts ZetaTxServer) EnableVerificationFlags(account string) error {
+// EnableHeaderVerification enables the header verification for the given chain IDs
+func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []int64) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -262,10 +262,9 @@ func (zts ZetaTxServer) EnableVerificationFlags(account string) error {
 		return err
 	}
 
-	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgUpdateVerificationFlags(
+	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
 		addr.String(),
-		true,
-		true,
+		chainIDList,
 	))
 
 	return err

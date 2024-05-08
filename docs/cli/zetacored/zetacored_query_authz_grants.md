@@ -38,6 +38,7 @@ zetacored query authz grants [granter-addr] [grantee-addr] [msg-type-url]? [flag
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 

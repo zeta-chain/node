@@ -33,11 +33,22 @@ func ChainState(chainID int64) lightclienttypes.ChainState {
 	}
 }
 
-func VerificationFlags() lightclienttypes.VerificationFlags {
-	return lightclienttypes.VerificationFlags{
-		EthTypeChainEnabled: true,
-		BtcTypeChainEnabled: true,
+func HeaderSupportedChains() []lightclienttypes.HeaderSupportedChain {
+	return []lightclienttypes.HeaderSupportedChain{
+		{
+			ChainId: 1,
+			Enabled: true,
+		},
+		{
+			ChainId: 2,
+			Enabled: true,
+		},
 	}
+}
+
+func BlockHeaderVerification() lightclienttypes.BlockHeaderVerification {
+	return lightclienttypes.BlockHeaderVerification{HeaderSupportedChains: HeaderSupportedChains()}
+
 }
 
 // Proof generates a proof and block header

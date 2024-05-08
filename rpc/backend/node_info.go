@@ -22,6 +22,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
@@ -37,7 +38,6 @@ import (
 	"github.com/evmos/ethermint/server/config"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
@@ -313,7 +313,7 @@ func (b *Backend) RPCEVMTimeout() time.Duration {
 	return b.cfg.JSONRPC.EVMTimeout
 }
 
-// RPCGasCap is the global gas cap for eth-call variants.
+// RPCTxFeeCap is the global gas cap for eth-call variants.
 func (b *Backend) RPCTxFeeCap() float64 {
 	return b.cfg.JSONRPC.TxFeeCap
 }
