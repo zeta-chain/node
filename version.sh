@@ -11,6 +11,7 @@ fi
 if ! git diff --no-ext-diff --quiet --exit-code ; then
     current_timestamp=$(date +"%s")
     echo "v0.0.${current_timestamp}-dirty"
+    exit
 fi
 
 # otherwise assume we are on a develop build and use commit timestamp for version
