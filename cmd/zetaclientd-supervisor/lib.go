@@ -49,10 +49,11 @@ func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 }
 
 type zetaclientdSupervisor struct {
-	zetacoredConn *grpc.ClientConn
-	reloadSignals chan bool
-	logger        zerolog.Logger
-	upgradesDir   string
+	zetacoredConn   *grpc.ClientConn
+	reloadSignals   chan bool
+	logger          zerolog.Logger
+	upgradesDir     string
+	upgradePlanName string
 }
 
 func newZetaclientdSupervisor(zetaCoreUrl string, logger zerolog.Logger) (*zetaclientdSupervisor, error) {
@@ -135,13 +136,17 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 
 		prevVersion = newVersion
 
-		newVersionDir := s.dirForVersion(newVersion)
+		// TODO: just use newVersion when #2135 is merged
+		// even without #2135, the version will still change and trigger the update
+		newVersionDir := s.dirForVersion(s.upgradePlanName)
 		currentLinkPath := s.dirForVersion("current")
 
-		err = atomicSymlink(currentLinkPath, newVersionDir)
+		err = atomicSymlink(newVersionDir, currentLinkPath)
 		if err != nil {
-			s.logger.Error().Err(err).Msgf("unable to update current symlink (%s -> %s)", currentLinkPath, newVersionDir)
+			s.logger.Error().Err(err).Msgf("unable to update current symlink (%s -> %s)", newVersionDir, currentLinkPath)
+			return
 		}
+		s.reloadSignals <- true
 	}
 }
 
@@ -169,6 +174,7 @@ func (s *zetaclientdSupervisor) handleCoreUpgradePlan(ctx context.Context) {
 		}
 		s.logger.Warn().Msgf("got new upgrade plan (%s)", plan.Name)
 		prevPlanName = plan.Name
+		s.upgradePlanName = plan.Name
 
 		// TODO: make optional
 		err = s.downloadZetaclientd(ctx, plan)
