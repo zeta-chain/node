@@ -46,7 +46,7 @@ func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainPar
 		nil,
 		"",
 		*sample.CrosschainFlags(),
-		sample.VerificationFlags(),
+		sample.HeaderSupportedChains(),
 		true,
 		zerolog.Logger{},
 	)

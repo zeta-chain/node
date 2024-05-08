@@ -254,7 +254,6 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 							chains.BscMainnetChain.Vm,
 							chains.BscMainnetChain.Consensus,
 							chains.BscMainnetChain.IsExternal,
-							chains.BscMainnetChain.IsHeaderSupported,
 						},
 						{
 							chains.EthChain.ChainName,
@@ -264,7 +263,6 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 							chains.EthChain.Vm,
 							chains.EthChain.Consensus,
 							chains.EthChain.IsExternal,
-							chains.EthChain.IsHeaderSupported,
 						},
 					},
 				})
@@ -305,13 +303,19 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 					BlockHeaderVerificationFlags: nil,
 				}})
 
-			method = "/zetachain.zetacore.lightclient.Query/VerificationFlags"
+			method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
-				WithPayload(lightclienttypes.QueryVerificationFlagsRequest{}).
-				Return(lightclienttypes.QueryVerificationFlagsResponse{VerificationFlags: lightclienttypes.VerificationFlags{
-					EthTypeChainEnabled: true,
-					BtcTypeChainEnabled: false,
+				WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
+				Return(lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
+					{
+						ChainId: chains.EthChain.ChainId,
+						Enabled: true,
+					},
+					{
+						ChainId: chains.BtcMainnetChain.ChainId,
+						Enabled: false,
+					},
 				}})
 		},
 	)(t)

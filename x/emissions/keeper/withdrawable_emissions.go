@@ -57,10 +57,10 @@ func (k Keeper) RemoveWithdrawableEmission(ctx sdk.Context, address string, amou
 		return types.ErrEmissionsNotFound
 	}
 	if amount.IsNegative() || amount.IsZero() {
-		return types.ErrInvalidAmount
+		return types.ErrInvalidAmount.Wrap("amount to be removed is negative or zero")
 	}
 	if amount.GT(we.Amount) {
-		amount = we.Amount
+		return types.ErrInvalidAmount.Wrap("amount to be removed is greater than the available withdrawable emission")
 	}
 	we.Amount = we.Amount.Sub(amount)
 	k.SetWithdrawableEmission(ctx, we)

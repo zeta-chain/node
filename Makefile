@@ -6,7 +6,6 @@ BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS:=""
-REPOSITORY_ROOT := $(dir $(abspath $(MAKEFILE_LIST)))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
@@ -160,6 +159,8 @@ typescript: proto-format
 .PHONY: typescript
 
 proto-gen: proto-format
+	@echo "--> Removing old Go types "
+	@find . -name '*.pb.go' -type f -delete
 	@echo "--> Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protoc-gen-go.sh
 
@@ -217,9 +218,10 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
+#TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade:
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION=v15.0.0 --build-arg NEW_VERSION=v16 .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION='release/v16' --build-arg NEW_VERSION=v17 .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 

@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { CoinType } from "../pkg/coin/coin_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.RateLimiterFlags
@@ -78,5 +79,49 @@ export declare class Conversion extends Message<Conversion> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Conversion;
 
   static equals(a: Conversion | PlainMessage<Conversion> | undefined, b: Conversion | PlainMessage<Conversion> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.AssetRate
+ */
+export declare class AssetRate extends Message<AssetRate> {
+  /**
+   * @generated from field: int64 chainId = 1;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string asset = 2;
+   */
+  asset: string;
+
+  /**
+   * @generated from field: uint32 decimals = 3;
+   */
+  decimals: number;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.coin.CoinType coin_type = 4;
+   */
+  coinType: CoinType;
+
+  /**
+   * @generated from field: string rate = 5;
+   */
+  rate: string;
+
+  constructor(data?: PartialMessage<AssetRate>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.AssetRate";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AssetRate;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AssetRate;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AssetRate;
+
+  static equals(a: AssetRate | PlainMessage<AssetRate> | undefined, b: AssetRate | PlainMessage<AssetRate> | undefined): boolean;
 }
 

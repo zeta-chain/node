@@ -313,7 +313,7 @@ func (b *Backend) RPCEVMTimeout() time.Duration {
 	return b.cfg.JSONRPC.EVMTimeout
 }
 
-// RPCGasCap is the global gas cap for eth-call variants.
+// RPCTxFeeCap is the global gas cap for eth-call variants.
 func (b *Backend) RPCTxFeeCap() float64 {
 	return b.cfg.JSONRPC.TxFeeCap
 }

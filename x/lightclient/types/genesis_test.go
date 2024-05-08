@@ -22,10 +22,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
-				VerificationFlags: types.VerificationFlags{
-					EthTypeChainEnabled: false,
-					BtcTypeChainEnabled: true,
-				},
+				BlockHeaderVerification: sample.BlockHeaderVerification(),
 				BlockHeaders: []proofs.BlockHeader{
 					sample.BlockHeader(sample.Hash().Bytes()),
 					sample.BlockHeader(sample.Hash().Bytes()),
@@ -62,6 +59,15 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.ChainState(chains.EthChain.ChainId),
 					sample.ChainState(chains.EthChain.ChainId),
 					sample.ChainState(chains.BscMainnetChain.ChainId),
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "invalid block header verification",
+			genState: &types.GenesisState{
+				BlockHeaderVerification: types.BlockHeaderVerification{
+					HeaderSupportedChains: []types.HeaderSupportedChain{{ChainId: 1, Enabled: true}, {ChainId: 1, Enabled: true}},
 				},
 			},
 			valid: false,

@@ -872,6 +872,89 @@ export declare class QueryListPendingCctxResponse extends Message<QueryListPendi
 }
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.QueryRateLimiterInputRequest
+ */
+export declare class QueryRateLimiterInputRequest extends Message<QueryRateLimiterInputRequest> {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: int64 window = 2;
+   */
+  window: bigint;
+
+  constructor(data?: PartialMessage<QueryRateLimiterInputRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryRateLimiterInputRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryRateLimiterInputRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryRateLimiterInputRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryRateLimiterInputRequest;
+
+  static equals(a: QueryRateLimiterInputRequest | PlainMessage<QueryRateLimiterInputRequest> | undefined, b: QueryRateLimiterInputRequest | PlainMessage<QueryRateLimiterInputRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryRateLimiterInputResponse
+ */
+export declare class QueryRateLimiterInputResponse extends Message<QueryRateLimiterInputResponse> {
+  /**
+   * @generated from field: int64 height = 1;
+   */
+  height: bigint;
+
+  /**
+   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx cctxs_missed = 2;
+   */
+  cctxsMissed: CrossChainTx[];
+
+  /**
+   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx cctxs_pending = 3;
+   */
+  cctxsPending: CrossChainTx[];
+
+  /**
+   * @generated from field: uint64 total_pending = 4;
+   */
+  totalPending: bigint;
+
+  /**
+   * @generated from field: string past_cctxs_value = 5;
+   */
+  pastCctxsValue: string;
+
+  /**
+   * @generated from field: string pending_cctxs_value = 6;
+   */
+  pendingCctxsValue: string;
+
+  /**
+   * @generated from field: int64 lowest_pending_cctx_height = 7;
+   */
+  lowestPendingCctxHeight: bigint;
+
+  constructor(data?: PartialMessage<QueryRateLimiterInputResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryRateLimiterInputResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryRateLimiterInputResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryRateLimiterInputResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryRateLimiterInputResponse;
+
+  static equals(a: QueryRateLimiterInputResponse | PlainMessage<QueryRateLimiterInputResponse> | undefined, b: QueryRateLimiterInputResponse | PlainMessage<QueryRateLimiterInputResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitRequest
  */
 export declare class QueryListPendingCctxWithinRateLimitRequest extends Message<QueryListPendingCctxWithinRateLimitRequest> {
