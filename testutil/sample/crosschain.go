@@ -224,12 +224,12 @@ func CustomCctxsInBlockRange(
 		nonce := i - 1
 		cctx := CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
 		cctx.CctxStatus.Status = status
-		cctx.InboundTxParams.CoinType = coinType
-		cctx.InboundTxParams.Asset = asset
-		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
-		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
-		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
+		cctx.InboundParams.CoinType = coinType
+		cctx.InboundParams.Asset = asset
+		cctx.InboundParams.ObservedExternalHeight = i
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chainID
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(amount)
+		cctx.GetCurrentOutboundParam().TssNonce = nonce
 		cctxs = append(cctxs, cctx)
 	}
 	return cctxs

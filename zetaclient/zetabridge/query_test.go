@@ -571,13 +571,8 @@ func TestZetaCoreBridge_GetInboundTrackersForChain(t *testing.T) {
 			},
 		},
 	}
-<<<<<<< HEAD
 	input := crosschainTypes.QueryAllInboundTrackerByChainRequest{ChainId: chainID}
-	method := "zetachain.zetacore.crosschain.Query/InboundTrackerAllByChain"
-=======
-	input := crosschainTypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID}
-	method := "/zetachain.zetacore.crosschain.Query/InTxTrackerAllByChain"
->>>>>>> develop
+	method := "/zetachain.zetacore.crosschain.Query/InboundTrackerAllByChain"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
