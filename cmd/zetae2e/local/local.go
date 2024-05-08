@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -190,16 +191,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	if !skipHeaderProof {
+		if err := deployerRunner.EnableHeaderVerification([]int64{
+			chains.GoerliLocalnetChain.ChainId,
+			chains.BtcRegtestChain.ChainId}); err != nil {
+			panic(err)
+		}
+	}
+
 	// setting up the networks
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
-
-		if !skipHeaderProof {
-			if err := deployerRunner.EnableVerificationFlags(); err != nil {
-				panic(err)
-			}
-		}
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
@@ -215,7 +218,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
-
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)

@@ -153,7 +153,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// parseCmdArgsToE2ETests parses command-line arguments into a slice of E2ETestRunConfig structs.
+// parseCmdArgsToE2ETestRunConfig parses command-line arguments into a slice of E2ETestRunConfig structs.
 func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, error) {
 	tests := []runner.E2ETestRunConfig{}
 	for _, arg := range args {

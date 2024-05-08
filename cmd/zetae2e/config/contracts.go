@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// setContractsFromConfigs get EVM contracts from config
+// setContractsFromConfig get EVM contracts from config
 func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	var err error
 

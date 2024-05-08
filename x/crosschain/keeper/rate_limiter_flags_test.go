@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"strings"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +10,37 @@ import (
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
+
+// createForeignCoinAndAssetRate creates foreign coin and corresponding asset rate
+func createForeignCoinAndAssetRate(
+	t *testing.T,
+	zrc20Addr string,
+	asset string,
+	chainID int64,
+	decimals uint32,
+	coinType coin.CoinType,
+	rate sdk.Dec,
+) (fungibletypes.ForeignCoins, types.AssetRate) {
+	// create foreign coin
+	foreignCoin := sample.ForeignCoins(t, zrc20Addr)
+	foreignCoin.Asset = asset
+	foreignCoin.ForeignChainId = chainID
+	foreignCoin.Decimals = decimals
+	foreignCoin.CoinType = coinType
+
+	// create corresponding asset rate
+	assetRate := sample.CustomAssetRate(
+		foreignCoin.ForeignChainId,
+		foreignCoin.Asset,
+		foreignCoin.Decimals,
+		foreignCoin.CoinType,
+		rate,
+	)
+
+	return foreignCoin, assetRate
+}
 
 func TestKeeper_GetRateLimiterFlags(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -28,14 +57,15 @@ func TestKeeper_GetRateLimiterFlags(t *testing.T) {
 	require.Equal(t, flags, r)
 }
 
-func TestKeeper_GetRateLimiterRates(t *testing.T) {
+func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
 	// create test flags
+	chainID := chains.GoerliLocalnetChain.ChainId
 	zrc20GasAddr := sample.EthAddress().Hex()
 	zrc20ERC20Addr1 := sample.EthAddress().Hex()
 	zrc20ERC20Addr2 := sample.EthAddress().Hex()
-	flags := types.RateLimiterFlags{
+	testflags := types.RateLimiterFlags{
 		Rate: sdk.NewUint(100),
 		Conversions: []types.Conversion{
 			{
@@ -53,39 +83,30 @@ func TestKeeper_GetRateLimiterRates(t *testing.T) {
 		},
 	}
 
-	chainID := chains.GoerliLocalnetChain.ChainId
-
-	// add gas coin
-	fcGas := sample.ForeignCoins(t, zrc20GasAddr)
-	fcGas.CoinType = coin.CoinType_Gas
-	fcGas.ForeignChainId = chainID
-	zk.FungibleKeeper.SetForeignCoins(ctx, fcGas)
-
-	// add two erc20 coins
-	asset1 := sample.EthAddress().Hex()
-	fcERC20 := sample.ForeignCoins(t, zrc20ERC20Addr1)
-	fcERC20.Asset = asset1
-	fcERC20.ForeignChainId = chainID
-	zk.FungibleKeeper.SetForeignCoins(ctx, fcERC20)
-
-	asset2 := sample.EthAddress().Hex()
-	fcERC20 = sample.ForeignCoins(t, zrc20ERC20Addr2)
-	fcERC20.Asset = asset2
-	fcERC20.ForeignChainId = chainID
-	zk.FungibleKeeper.SetForeignCoins(ctx, fcERC20)
+	// asset rates not found before setting flags
+	flags, assetRates, found := k.GetRateLimiterAssetRateList(ctx)
+	require.False(t, found)
+	require.Equal(t, types.RateLimiterFlags{}, flags)
+	require.Nil(t, assetRates)
 
 	// set flags
-	k.SetRateLimiterFlags(ctx, flags)
-	r, found := k.GetRateLimiterFlags(ctx)
-	require.True(t, found)
-	require.Equal(t, flags, r)
+	k.SetRateLimiterFlags(ctx, testflags)
+
+	// add gas coin
+	gasCoin, gasAssetRate := createForeignCoinAndAssetRate(t, zrc20GasAddr, "", chainID, 18, coin.CoinType_Gas, sdk.NewDec(1))
+	zk.FungibleKeeper.SetForeignCoins(ctx, gasCoin)
+
+	// add 1st erc20 coin
+	erc20Coin1, erc20AssetRate1 := createForeignCoinAndAssetRate(t, zrc20ERC20Addr1, sample.EthAddress().Hex(), chainID, 8, coin.CoinType_ERC20, sdk.NewDec(2))
+	zk.FungibleKeeper.SetForeignCoins(ctx, erc20Coin1)
+
+	// add 2nd erc20 coin
+	erc20Coin2, erc20AssetRate2 := createForeignCoinAndAssetRate(t, zrc20ERC20Addr2, sample.EthAddress().Hex(), chainID, 6, coin.CoinType_ERC20, sdk.NewDec(3))
+	zk.FungibleKeeper.SetForeignCoins(ctx, erc20Coin2)
 
 	// get rates
-	gasRates, erc20Rates := k.GetRateLimiterRates(ctx)
-	require.Equal(t, 1, len(gasRates))
-	require.Equal(t, 1, len(erc20Rates))
-	require.Equal(t, sdk.NewDec(1), gasRates[chainID])
-	require.Equal(t, 2, len(erc20Rates[chainID]))
-	require.Equal(t, sdk.NewDec(2), erc20Rates[chainID][strings.ToLower(asset1)])
-	require.Equal(t, sdk.NewDec(3), erc20Rates[chainID][strings.ToLower(asset2)])
+	flags, assetRates, found = k.GetRateLimiterAssetRateList(ctx)
+	require.True(t, found)
+	require.Equal(t, testflags, flags)
+	require.EqualValues(t, []types.AssetRate{gasAssetRate, erc20AssetRate1, erc20AssetRate2}, assetRates)
 }

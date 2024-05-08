@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
 import "gogoproto/gogo.proto";
+import "zetachain/zetacore/pkg/coin/coin.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
@@ -24,6 +25,17 @@ message RateLimiterFlags {
 message Conversion {
   string zrc20 = 1;
   string rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message AssetRate {
+  int64 chainId = 1;
+  string asset = 2;
+  uint32 decimals = 3;
+  pkg.coin.CoinType coin_type = 4;
+  string rate = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];

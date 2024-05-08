@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -21,12 +21,23 @@ import (
 )
 
 const ErrMsgPaused = "zeta core bridge is paused"
+const ErrMsgRPCFailed = "rpc failed"
 
 var _ interfaces.ZetaCoreBridger = &MockZetaCoreBridge{}
 
 type MockZetaCoreBridge struct {
 	paused    bool
 	zetaChain chains.Chain
+
+	// the mock data for testing
+	// pending cctxs
+	pendingCctxs map[int64][]*crosschaintypes.CrossChainTx
+
+	// rate limiter flags
+	rateLimiterFlags *crosschaintypes.RateLimiterFlags
+
+	// rate limiter input
+	input *crosschaintypes.QueryRateLimiterInputResponse
 }
 
 func NewMockZetaCoreBridge() *MockZetaCoreBridge {
@@ -35,12 +46,13 @@ func NewMockZetaCoreBridge() *MockZetaCoreBridge {
 		panic(err)
 	}
 	return &MockZetaCoreBridge{
-		paused:    false,
-		zetaChain: zetaChain,
+		paused:       false,
+		zetaChain:    zetaChain,
+		pendingCctxs: map[int64][]*crosschaintypes.CrossChainTx{},
 	}
 }
 
-func (z *MockZetaCoreBridge) PostVoteInbound(_, _ uint64, _ *cctxtypes.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (z *MockZetaCoreBridge) PostVoteInbound(_, _ uint64, _ *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error) {
 	if z.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
@@ -107,25 +119,35 @@ func (z *MockZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
 	return 0, nil
 }
 
-func (z *MockZetaCoreBridge) GetLastBlockHeightByChain(_ chains.Chain) (*cctxtypes.LastBlockHeight, error) {
+func (z *MockZetaCoreBridge) GetLastBlockHeightByChain(_ chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return &cctxtypes.LastBlockHeight{}, nil
+	return &crosschaintypes.LastBlockHeight{}, nil
 }
 
-func (z *MockZetaCoreBridge) ListPendingCctx(_ int64) ([]*cctxtypes.CrossChainTx, uint64, error) {
+func (z *MockZetaCoreBridge) GetRateLimiterInput(_ int64) (crosschaintypes.QueryRateLimiterInputResponse, error) {
+	if z.paused {
+		return crosschaintypes.QueryRateLimiterInputResponse{}, errors.New(ErrMsgPaused)
+	}
+	if z.input == nil {
+		return crosschaintypes.QueryRateLimiterInputResponse{}, errors.New(ErrMsgRPCFailed)
+	}
+	return *z.input, nil
+}
+
+func (z *MockZetaCoreBridge) ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error) {
 	if z.paused {
 		return nil, 0, errors.New(ErrMsgPaused)
 	}
-	return []*cctxtypes.CrossChainTx{}, 0, nil
+	return z.pendingCctxs[chainID], 0, nil
 }
 
-func (z *MockZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*cctxtypes.CrossChainTx, uint64, int64, string, bool, error) {
+func (z *MockZetaCoreBridge) ListPendingCctxWithinRatelimit() ([]*crosschaintypes.CrossChainTx, uint64, int64, string, bool, error) {
 	if z.paused {
 		return nil, 0, 0, "", false, errors.New(ErrMsgPaused)
 	}
-	return []*cctxtypes.CrossChainTx{}, 0, 0, "", false, nil
+	return []*crosschaintypes.CrossChainTx{}, 0, 0, "", false, nil
 }
 
 func (z *MockZetaCoreBridge) GetPendingNoncesByChain(_ int64) (observerTypes.PendingNonces, error) {
@@ -135,25 +157,25 @@ func (z *MockZetaCoreBridge) GetPendingNoncesByChain(_ int64) (observerTypes.Pen
 	return observerTypes.PendingNonces{}, nil
 }
 
-func (z *MockZetaCoreBridge) GetCctxByNonce(_ int64, _ uint64) (*cctxtypes.CrossChainTx, error) {
+func (z *MockZetaCoreBridge) GetCctxByNonce(_ int64, _ uint64) (*crosschaintypes.CrossChainTx, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return &cctxtypes.CrossChainTx{}, nil
+	return &crosschaintypes.CrossChainTx{}, nil
 }
 
-func (z *MockZetaCoreBridge) GetOutTxTracker(_ chains.Chain, _ uint64) (*cctxtypes.OutTxTracker, error) {
+func (z *MockZetaCoreBridge) GetOutTxTracker(_ chains.Chain, _ uint64) (*crosschaintypes.OutTxTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return &cctxtypes.OutTxTracker{}, nil
+	return &crosschaintypes.OutTxTracker{}, nil
 }
 
-func (z *MockZetaCoreBridge) GetAllOutTxTrackerByChain(_ int64, _ interfaces.Order) ([]cctxtypes.OutTxTracker, error) {
+func (z *MockZetaCoreBridge) GetAllOutTxTrackerByChain(_ int64, _ interfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return []cctxtypes.OutTxTracker{}, nil
+	return []crosschaintypes.OutTxTracker{}, nil
 }
 
 func (z *MockZetaCoreBridge) GetCrosschainFlags() (observerTypes.CrosschainFlags, error) {
@@ -161,6 +183,16 @@ func (z *MockZetaCoreBridge) GetCrosschainFlags() (observerTypes.CrosschainFlags
 		return observerTypes.CrosschainFlags{}, errors.New(ErrMsgPaused)
 	}
 	return observerTypes.CrosschainFlags{}, nil
+}
+
+func (z *MockZetaCoreBridge) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error) {
+	if z.paused {
+		return crosschaintypes.RateLimiterFlags{}, errors.New(ErrMsgPaused)
+	}
+	if z.rateLimiterFlags == nil {
+		return crosschaintypes.RateLimiterFlags{}, errors.New(ErrMsgRPCFailed)
+	}
+	return *z.rateLimiterFlags, nil
 }
 
 func (z *MockZetaCoreBridge) GetObserverList() ([]string, error) {
@@ -184,11 +216,11 @@ func (z *MockZetaCoreBridge) GetBtcTssAddress(_ int64) (string, error) {
 	return testutils.TSSAddressBTCMainnet, nil
 }
 
-func (z *MockZetaCoreBridge) GetInboundTrackersForChain(_ int64) ([]cctxtypes.InTxTracker, error) {
+func (z *MockZetaCoreBridge) GetInboundTrackersForChain(_ int64) ([]crosschaintypes.InTxTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return []cctxtypes.InTxTracker{}, nil
+	return []crosschaintypes.InTxTracker{}, nil
 }
 
 func (z *MockZetaCoreBridge) GetLogger() *zerolog.Logger {
@@ -212,4 +244,23 @@ func (z *MockZetaCoreBridge) GetZetaHotKeyBalance() (math.Int, error) {
 		return math.NewInt(0), errors.New(ErrMsgPaused)
 	}
 	return math.NewInt(0), nil
+}
+
+// ----------------------------------------------------------------------------
+// Feed data to the mock zeta bridge for testing
+// ----------------------------------------------------------------------------
+
+func (z *MockZetaCoreBridge) WithPendingCctx(chainID int64, cctxs []*crosschaintypes.CrossChainTx) *MockZetaCoreBridge {
+	z.pendingCctxs[chainID] = cctxs
+	return z
+}
+
+func (z *MockZetaCoreBridge) WithRateLimiterFlags(flags *crosschaintypes.RateLimiterFlags) *MockZetaCoreBridge {
+	z.rateLimiterFlags = flags
+	return z
+}
+
+func (z *MockZetaCoreBridge) WithRateLimiterInput(input *crosschaintypes.QueryRateLimiterInputResponse) *MockZetaCoreBridge {
+	z.input = input
+	return z
 }

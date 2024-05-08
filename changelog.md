@@ -1,9 +1,10 @@
 # CHANGELOG
 
 ## Unreleased
-
 ### Breaking Changes
-
+* `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableHeaderVerification` and `MsgDisableHeaderVerification` messages.
+ * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
+ * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
 * Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
 
 ### Features
@@ -14,11 +15,11 @@
 ### Refactor
 
 * [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
-
-### Refactor
-
+* [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor.
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
+* [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
+* [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 
 ### Tests
 
@@ -27,10 +28,12 @@
 ### Fixes
 
 * [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
+* [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
 
 ### CI
 
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
+* [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
 
 ## v16.0.0
 
@@ -77,6 +80,7 @@
 * [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
+* [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
 
 ### Features
@@ -92,6 +96,8 @@
 * [2045](https://github.com/zeta-chain/node/pull/2046) - add grpc query with outbound rate limit for zetaclient to use
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 * [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
+
+
 
 ### Tests
 
@@ -116,13 +122,14 @@
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
-* [2060](https://github.com/zeta-chain/node/pull/2060) - add unit test for rate limiter query
-
+* [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+* [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
 ### Fixes
 
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
-* [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check `IsSupported` flag to pause/unpause a specific chain
+* [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
+* * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 * [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags

@@ -33,7 +33,7 @@ func NewAddressTaproot(witnessProg []byte,
 	return newAddressTaproot(net.Bech32HRPSegwit, witnessProg)
 }
 
-// newAddressWitnessScriptHash is an internal helper function to create an
+// newAddressTaproot is an internal helper function to create an
 // AddressWitnessScriptHash with a known human-readable part, rather than
 // looking it up through its parameters.
 func newAddressTaproot(hrp string, witnessProg []byte) (*AddressTaproot, error) {

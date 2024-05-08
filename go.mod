@@ -63,6 +63,7 @@ require (
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/onrik/ethrpc v1.2.0
+	github.com/tendermint/tendermint v0.34.12
 	go.nhat.io/grpcmock v0.25.0
 )
 
