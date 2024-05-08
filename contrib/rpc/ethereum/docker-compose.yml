@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  lighthouse:
+    image: sigp/lighthouse:latest
+    command: lighthouse --network mainnet beacon --http --checkpoint-sync-url https://sync.invis.tools
+    ports:
+      - "5052:5052"
+    volumes:
+      - type: volume
+        source: lighthouse_data
+        target: /root/.lighthouse
+  geth:
+    build: .
+    ports:
+      - "18545:18545"    # JSON-RPC
+      - "18546:18546"    # WebSocket
+      - "30303:30303"  # P2P Network
+    volumes:
+      - type: volume
+        source: ethereum_data
+        target: /root/.ethereum
+    command:
+      - "--http"
+      - "--http.addr"
+      - "0.0.0.0"
+      - "--http.vhosts=*"
+      - "--http.api=admin,eth,debug,miner,net,txpool,personal,web3"
+      - "--ws"
+      - "--ws.addr"
+      - "0.0.0.0"
+      - "--ws.api=admin,eth,debug,miner,net,txpool,personal,web3"
+      - "--ws.origins=*"
+      - "--maxpeers=50"
+      - "--syncmode=snap"
+
+volumes:
+  ethereum_data:
+  lighthouse_data:

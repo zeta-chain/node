@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
@@ -10,9 +11,9 @@ import (
 
 func TestKeeper_GetParams(t *testing.T) {
 	tests := []struct {
-		name    string
-		params  emissionstypes.Params
-		isPanic string
+		name         string
+		params       emissionstypes.Params
+		constainsErr string
 	}{
 		{
 			name: "Successfully set params",
@@ -25,8 +26,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "",
+			constainsErr: "",
 		},
 		{
 			name: "negative observer slashed amount",
@@ -39,8 +41,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(-100000000000000000),
 			},
-			isPanic: "slash amount cannot be less than 0",
+			constainsErr: "slash amount cannot be less than 0",
 		},
 		{
 			name: "MaxBondFactor too high",
@@ -53,8 +56,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "max bond factor cannot be higher that 0.25",
+			constainsErr: "max bond factor cannot be higher that 1.25",
 		},
 		{
 			name: "MinBondFactor too low",
@@ -67,8 +71,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "min bond factor cannot be lower that 0.75",
+			constainsErr: "min bond factor cannot be lower that 0.75",
 		},
 		{
 			name: "invalid block time",
@@ -81,8 +86,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "invalid block time",
+			constainsErr: "invalid block time",
 		},
 		{
 			name: "invalid block time less than 0",
@@ -95,8 +101,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "block time cannot be less than or equal to 0",
+			constainsErr: "block time cannot be less than or equal to 0",
 		},
 		{
 			name: "bond ratio too high",
@@ -109,8 +116,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "target bond ratio cannot be more than 100 percent",
+			constainsErr: "target bond ratio cannot be more than 100 percent",
 		},
 		{
 			name: "bond ratio too low",
@@ -123,8 +131,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "target bond ratio cannot be less than 0 percent",
+			constainsErr: "target bond ratio cannot be less than 0 percent",
 		},
 		{
 			name: "validator emission percentage too high",
@@ -137,8 +146,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "validator emission percentage cannot be more than 100 percent",
+			constainsErr: "validator emission percentage cannot be more than 100 percent",
 		},
 		{
 			name: "validator emission percentage too low",
@@ -151,8 +161,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "validator emission percentage cannot be less than 0 percent",
+			constainsErr: "validator emission percentage cannot be less than 0 percent",
 		},
 		{
 			name: "observer percentage too low",
@@ -165,8 +176,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "-00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "observer emission percentage cannot be less than 0 percent",
+			constainsErr: "observer emission percentage cannot be less than 0 percent",
 		},
 		{
 			name: "observer percentage too high",
@@ -179,8 +191,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "150.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "observer emission percentage cannot be more than 100 percent",
+			constainsErr: "observer emission percentage cannot be more than 100 percent",
 		},
 		{
 			name: "tss signer percentage too high",
@@ -193,8 +206,9 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "102.22",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "tss emission percentage cannot be more than 100 percent",
+			constainsErr: "tss emission percentage cannot be more than 100 percent",
 		},
 		{
 			name: "tss signer percentage too low",
@@ -207,32 +221,30 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "-102.22",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
-			isPanic: "tss emission percentage cannot be less than 0 percent",
+			constainsErr: "tss emission percentage cannot be less than 0 percent",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			k, ctx, _, _ := keepertest.EmissionsKeeper(t)
-			assertPanic(t, func() {
-				k.SetParams(ctx, tt.params)
-			}, tt.isPanic)
-
-			if tt.isPanic != "" {
-				require.Equal(t, emissionstypes.DefaultParams(), k.GetParamsIfExists(ctx))
+			err := k.SetParams(ctx, tt.params)
+			if tt.constainsErr != "" {
+				require.ErrorContains(t, err, tt.constainsErr)
 			} else {
-				require.Equal(t, tt.params, k.GetParamsIfExists(ctx))
+				require.NoError(t, err)
+				params, found := k.GetParams(ctx)
+				require.True(t, found)
+				require.Equal(t, tt.params, params)
 			}
 		})
 	}
 }
 
-func assertPanic(t *testing.T, f func(), errorLog string) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			require.Contains(t, r, errorLog)
-		}
-	}()
-	f()
+func TestKeeper_GetParamsIfParamsNotSet(t *testing.T) {
+	k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{SkipSettingParams: true})
+	params, found := k.GetParams(ctx)
+	require.False(t, found)
+	require.Empty(t, params)
 }

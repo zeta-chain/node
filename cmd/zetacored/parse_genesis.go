@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"cosmossdk.io/math"
+	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,7 +28,6 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"

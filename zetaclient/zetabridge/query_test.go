@@ -4,6 +4,7 @@ import (
 	"net"
 	"testing"
 
+	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -11,7 +12,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -129,7 +129,9 @@ func TestZetaCoreBridge_HeaderEnabledChains(t *testing.T) {
 
 func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsForChainResponse{ChainParams: &observertypes.ChainParams{
-		ChainId: 123,
+		ChainId:               123,
+		BallotThreshold:       types.ZeroDec(),
+		MinObserverDelegation: types.ZeroDec(),
 	}}
 	input := observertypes.QueryGetChainParamsForChainRequest{ChainId: 123}
 	method := "/zetachain.zetacore.observer.Query/GetChainParamsForChain"
@@ -149,7 +151,9 @@ func TestZetaCoreBridge_GetChainParams(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 		ChainParams: []*observertypes.ChainParams{
 			{
-				ChainId: 123,
+				ChainId:               123,
+				MinObserverDelegation: types.ZeroDec(),
+				BallotThreshold:       types.ZeroDec(),
 			},
 		},
 	}}

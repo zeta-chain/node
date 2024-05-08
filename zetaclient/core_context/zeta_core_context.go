@@ -76,17 +76,34 @@ func (c *ZetaCoreContext) GetCurrentTssPubkey() string {
 	return c.currentTssPubkey
 }
 
+// GetEnabledChains returns all enabled chains including zetachain
 func (c *ZetaCoreContext) GetEnabledChains() []chains.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
+
 	copiedChains := make([]chains.Chain, len(c.chainsEnabled))
 	copy(copiedChains, c.chainsEnabled)
 	return copiedChains
 }
 
+// GetEnabledExternalChains returns all enabled external chains
+func (c *ZetaCoreContext) GetEnabledExternalChains() []chains.Chain {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+
+	externalChains := make([]chains.Chain, 0)
+	for _, chain := range c.chainsEnabled {
+		if chain.IsExternal {
+			externalChains = append(externalChains, chain)
+		}
+	}
+	return externalChains
+}
+
 func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
+
 	evmChainParams, found := c.evmChainParams[chainID]
 	return evmChainParams, found
 }

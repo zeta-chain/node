@@ -186,10 +186,12 @@ func TestBeginBlocker(t *testing.T) {
 		feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 		emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 
+		params, found := k.GetParams(ctx)
+		require.True(t, found)
 		blockRewards := emissionstypes.BlockReward
-		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).ObserverEmissionPercentage)).TruncateInt()
-		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).ValidatorEmissionPercentage)).TruncateInt()
-		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).TssSignerEmissionPercentage)).TruncateInt()
+		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ObserverEmissionPercentage)).TruncateInt()
+		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ValidatorEmissionPercentage)).TruncateInt()
+		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.TssSignerEmissionPercentage)).TruncateInt()
 		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
 
 		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))
@@ -357,7 +359,8 @@ func TestDistributeObserverRewards(t *testing.T) {
 			// Set the params
 			params := emissionstypes.DefaultParams()
 			params.ObserverSlashAmount = tc.slashAmount
-			k.SetParams(ctx, params)
+			err = k.SetParams(ctx, params)
+			require.NoError(t, err)
 
 			// Set the ballot list
 			ballotIdentifiers := []string{}
@@ -378,7 +381,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			ctx = ctx.WithBlockHeight(100)
 
 			// Distribute the rewards and check if the rewards are distributed correctly
-			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, tc.slashAmount)
+			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, params)
 			require.NoError(t, err)
 
 			for i, observer := range observerSet.ObserverList {

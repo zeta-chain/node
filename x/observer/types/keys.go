@@ -54,11 +54,8 @@ const (
 	// NOTE: CoreParams is old name for AllChainParams we keep it as key value for backward compatibility
 	AllChainParamsKey = "CoreParams"
 
-	ObserverMapperKey             = "Observer-value-"
-	ObserverSetKey                = "ObserverSet-value-"
-	ObserverParamsKey             = "ObserverParams"
-	AdminPolicyParamsKey          = "AdminParams"
-	BallotMaturityBlocksParamsKey = "BallotMaturityBlocksParams"
+	ObserverMapperKey = "Observer-value-"
+	ObserverSetKey    = "ObserverSet-value-"
 
 	// CrosschainFlagsKey is the key for the crosschain flags
 	// NOTE: PermissionFlags is old name for CrosschainFlags we keep it as key value for backward compatibility
@@ -78,6 +75,8 @@ const (
 	PendingNoncesKeyPrefix = "PendingNonces-value-"
 	ChainNoncesKey         = "ChainNonces-value-"
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
+
+	ParamsKey = "Params-value-"
 )
 
 func GetBlameIndex(chainID int64, nonce uint64, digest string, height uint64) string {

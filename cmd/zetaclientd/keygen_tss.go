@@ -10,10 +10,10 @@ import (
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+	"golang.org/x/crypto/sha3"
 
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/rs/zerolog"
-	"github.com/tendermint/crypto/sha3"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"

@@ -39,6 +39,7 @@ zetacored start [flags]
       --api.enable                                      Defines if Cosmos-sdk REST server should be enabled
       --api.enabled-unsafe-cors                         Defines if CORS should be enabled (unsafe - use it at your own risk)
       --app-db-backend string                           The type of database for application and snapshots databases
+      --block_sync                                      sync the block chain using the blocksync algorithm (default true)
       --consensus.create_empty_blocks                   set this to false to only produce blocks when there are txs or when the AppHash changes (default true)
       --consensus.create_empty_blocks_interval string   the possible interval between empty blocks 
       --consensus.double_sign_check_height int          how many blocks to look back to check existence of the node's consensus votes before joining consensus
@@ -47,7 +48,6 @@ zetacored start [flags]
       --db_dir string                                   database directory 
       --evm.max-tx-gas-wanted uint                      the gas wanted for each eth tx returned in ante handler in check tx mode
       --evm.tracer string                               the EVM tracer type to collect execution traces from the EVM transaction execution (json|struct|access_list|markdown)
-      --fast_sync                                       fast blockchain syncing (default true)
       --genesis_hash bytesHex                           optional SHA-256 hash of the genesis file
       --grpc-only                                       Start the node in gRPC query only mode without Tendermint process
       --grpc-web.address string                         The gRPC-Web server address to listen on 
@@ -87,9 +87,8 @@ zetacored start [flags]
       --p2p.seed_mode                                   enable/disable seed mode
       --p2p.seeds string                                comma-delimited ID@host:port seed nodes
       --p2p.unconditional_peer_ids string               comma-delimited IDs of unconditional peers
-      --p2p.upnp                                        enable/disable UPNP port forwarding
       --priv_validator_laddr string                     socket address to listen on for connections from external priv_validator process
-      --proxy_app string                                proxy app address, or one of: 'kvstore', 'persistent_kvstore', 'counter', 'e2e' or 'noop' for local testing. 
+      --proxy_app string                                proxy app address, or one of: 'kvstore', 'persistent_kvstore' or 'noop' for local testing. 
       --pruning string                                  Pruning strategy (default|nothing|everything|custom) 
       --pruning-interval uint                           Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')
       --pruning-keep-recent uint                        Number of recent heights to keep on disk (ignored if pruning is not 'custom')
@@ -114,6 +113,7 @@ zetacored start [flags]
 ```
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
 ```
 
 ### SEE ALSO

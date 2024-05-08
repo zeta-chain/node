@@ -42,21 +42,10 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	tx, err = r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
-	if err != nil {
-		panic(err)
-	}
-	r.Logger.EVMTransaction(*tx, "withdraw")
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("withdraw failed")
-	}
-	r.Logger.EVMReceipt(*receipt, "withdraw")
-	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")
+	tx = r.WithdrawEther(withdrawalAmount)
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic("cctx status is not outbound mined")

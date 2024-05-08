@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -373,4 +374,37 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		err := k.UpdateNonce(ctx, 5, &cctx)
 		require.NoError(t, err)
 	})
+}
+
+func TestKeeper_SortCctxsByHeightAndChainId(t *testing.T) {
+	// cctx1
+	cctx1 := sample.CrossChainTx(t, "1-1")
+	cctx1.GetCurrentOutTxParam().ReceiverChainId = 1
+	cctx1.InboundTxParams.InboundTxObservedExternalHeight = 10
+
+	// cctx2
+	cctx2 := sample.CrossChainTx(t, "1-2")
+	cctx2.GetCurrentOutTxParam().ReceiverChainId = 1
+	cctx2.InboundTxParams.InboundTxObservedExternalHeight = 13
+
+	// cctx3
+	cctx3 := sample.CrossChainTx(t, "56-1")
+	cctx3.GetCurrentOutTxParam().ReceiverChainId = 56
+	cctx3.InboundTxParams.InboundTxObservedExternalHeight = 13
+
+	// cctx4
+	cctx4 := sample.CrossChainTx(t, "56-2")
+	cctx4.GetCurrentOutTxParam().ReceiverChainId = 56
+	cctx4.InboundTxParams.InboundTxObservedExternalHeight = 16
+
+	// sort by height
+	cctxs := []*types.CrossChainTx{cctx1, cctx2, cctx3, cctx4}
+	keeper.SortCctxsByHeightAndChainID(cctxs)
+
+	// check order
+	require.Len(t, cctxs, 4)
+	require.Equal(t, cctx1, cctxs[0])
+	require.Equal(t, cctx2, cctxs[1])
+	require.Equal(t, cctx3, cctxs[2])
+	require.Equal(t, cctx4, cctxs[3])
 }

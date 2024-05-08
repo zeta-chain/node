@@ -1,8 +1,8 @@
 package main
 
 import (
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 var RootCmd = &cobra.Command{
