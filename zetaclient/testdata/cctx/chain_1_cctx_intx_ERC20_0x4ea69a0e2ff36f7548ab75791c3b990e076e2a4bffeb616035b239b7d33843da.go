@@ -27,7 +27,7 @@ var chain_1_cctx_intx_ERC20_0x4ea69a0 = &crosschaintypes.CrossChainTx{
 		Amount:                 sdkmath.NewUintFromString("9992000000"),
 		ObservedHash:           "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da",
 		ObservedExternalHeight: 19320188,
-		BallotIndex:            "0xd326700a1931f28853f44f8462f72588f94b1f248214d59a23c3e1b141ff5ede",
+		BallotIndex:            "0xaf8af6853ead0a6f7c6348ab91b3631e9527aa30da4b22eec199fb8c99060920",
 		FinalizedZetaHeight:    1944675,
 		TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 	},

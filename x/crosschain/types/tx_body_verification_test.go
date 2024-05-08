@@ -30,7 +30,7 @@ func TestVerifyInboundBody(t *testing.T) {
 				ChainId: chains.BtcMainnetChain.ChainId,
 			},
 			txBytes:     sample.Bytes(),
-			errContains: "cannot verify inTx body for chain",
+			errContains: "cannot verify inbound body for chain",
 		},
 		{
 			desc: "txBytes can't be unmarshaled",
@@ -176,7 +176,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
 			txBytes:     sample.Bytes(),
-			errContains: "cannot verify outTx body for chain",
+			errContains: "cannot verify outbound body for chain",
 		},
 		{
 			desc: "txBytes can't be unmarshaled",

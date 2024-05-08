@@ -40,20 +40,20 @@ func Test_InitializeCCTX(t *testing.T) {
 		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
 		msg := types.MsgVoteInbound{
-			Creator:       creator,
-			Sender:        sender.String(),
-			SenderChainId: senderChain.ChainId,
-			Receiver:      receiver.String(),
-			ReceiverChain: receiverChain.ChainId,
-			Amount:        amount,
-			Message:       message,
-			InboundHash:   inboundHash.String(),
-			InBlockHeight: inboundBlockHeight,
-			GasLimit:      gasLimit,
-			CoinType:      cointType,
-			TxOrigin:      sender.String(),
-			Asset:         asset,
-			EventIndex:    eventIndex,
+			Creator:            creator,
+			Sender:             sender.String(),
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
+			GasLimit:           gasLimit,
+			CoinType:           cointType,
+			TxOrigin:           sender.String(),
+			Asset:              asset,
+			EventIndex:         eventIndex,
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.NoError(t, err)
@@ -90,20 +90,20 @@ func Test_InitializeCCTX(t *testing.T) {
 		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
 		msg := types.MsgVoteInbound{
-			Creator:       creator,
-			Sender:        "invalid",
-			SenderChainId: senderChain.ChainId,
-			Receiver:      receiver.String(),
-			ReceiverChain: receiverChain.ChainId,
-			Amount:        amount,
-			Message:       message,
-			InboundHash:   intxHash.String(),
-			InBlockHeight: intxBlockHeight,
-			GasLimit:      gasLimit,
-			CoinType:      cointType,
-			TxOrigin:      sender.String(),
-			Asset:         asset,
-			EventIndex:    eventIndex,
+			Creator:            creator,
+			Sender:             "invalid",
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        intxHash.String(),
+			InboundBlockHeight: intxBlockHeight,
+			GasLimit:           gasLimit,
+			CoinType:           cointType,
+			TxOrigin:           sender.String(),
+			Asset:              asset,
+			EventIndex:         eventIndex,
 		}
 		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.ErrorContains(t, err, "invalid address")

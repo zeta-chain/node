@@ -41,7 +41,7 @@ var chain_1_cctx_7260 = &crosschaintypes.CrossChainTx{
 			GasLimit:               21000,
 			GasPrice:               "236882693686",
 			Hash:                   "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3",
-			BallotIndex:            "0x689d894606642a2a7964fa906ebf4998c22a00708544fa88e9c56b86c955066b",
+			BallotIndex:            "0xca4ca249ce29a6305ca88eec8957a6b74e74df3a3bdfe7cd14d7e951b7c820c8",
 			ObservedExternalHeight: 19363323,
 			GasUsed:                21000,
 			EffectiveGasPrice:      sdkmath.NewInt(236882693686),
