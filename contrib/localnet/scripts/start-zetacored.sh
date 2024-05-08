@@ -69,8 +69,15 @@ source ~/add-keys.sh
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
 then
+#  pause nodes other than zetacore0 to wait for zetacore0 to create genesis.json
+#  additional pause time is needed for importing data into the genesis as the export file is read into memory
+
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep 10
+  if [ "$OPTION" != "import-data" ]; then
+    sleep 10
+  else
+    sleep 500
+  fi
   echo "genesis.json created"
 fi
 
@@ -155,9 +162,17 @@ then
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
+
+  if [ "$OPTION" == "import-data" ]; then
+    echo "Importing data"
+    zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
+  fi
+
   zetacored validate-genesis
+
 # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
+      echo "Copying genesis.json to $NODE"
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done

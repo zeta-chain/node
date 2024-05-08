@@ -85,6 +85,7 @@
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
 * [2060](https://github.com/zeta-chain/node/pull/2060) - add unit test for rate limiter query
+* [2127](https://github.com/zeta-chain/node/pull/2127) - add import data to e2e test
 
 ### Fixes
 
