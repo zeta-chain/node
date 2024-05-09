@@ -24,7 +24,13 @@
             * `OutTxTracker` has been renamed to `OutboundTracker`
             * `OutboundTxScheduleInterval` has been renamed to `OutboundScheduleInterval`
             * `OutboundTxScheduleLookahead` has been renamed to `OutboundScheduleLookahead`
-    * Queries
+    * Messages
+        * `AddToOutTxTracker` has been renamed to `AddOutboundTracker`
+        * `AddToInTxTracker` has been renamed to `AddInboundTracker`
+        * `RemoveFromOutTxTracker` has been renamed to `RemoveOutboundTracker`
+        * `VoteOnObservedOutboundTx` has been renamed to `VoteOutbound`
+        * `VoteOnObservedInboundTx` has been renamed to `VoteInbound`
+    * The previous queries have not been removed but have been deprecated and replaced with new queries:
         * `OutTxTracker` has been renamed to `OutboundTracker`
             * `/zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}` endpoint is now `/zeta-chain/crosschain/outboundTracker/{chainID}/{nonce}`
         * `OutTxTrackerAll` has been renamed to `OutboundTrackerAll`
@@ -41,9 +47,3 @@
             * `/zeta-chain/crosschain/inTxHashToCctxData/{hash}` endpoint is now `/zeta-chain/crosschain/inboundHashToCctxData/{hash}`
         * `InTxHashToCctxAll` has been renamed to `InboundHashToCctxAll`
             * `/zeta-chain/crosschain/inTxHashToCctx` endpoint is now `/zeta-chain/crosschain/inboundHashToCctx`
-    * Messages
-        * `AddToOutTxTracker` has been renamed to `AddOutboundTracker`
-        * `AddToInTxTracker` has been renamed to `AddInboundTracker`
-        * `RemoveFromOutTxTracker` has been renamed to `RemoveOutboundTracker`
-        * `VoteOnObservedOutboundTx` has been renamed to `VoteOutbound`
-        * `VoteOnObservedInboundTx` has been renamed to `VoteInbound`
