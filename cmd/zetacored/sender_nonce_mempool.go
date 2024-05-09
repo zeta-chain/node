@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -133,10 +132,13 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 		return nil
 	}
 
-	sender, nonce, err := getSenderAndNonce(tx)
+	sendersWithNonce, err := GetSendersWithNonce(tx)
 	if err != nil {
 		return err
 	}
+
+	sender := sendersWithNonce[0].Sender
+	nonce := sendersWithNonce[0].Nonce
 
 	senderTxs, found := snm.senders[sender]
 	if !found {
@@ -193,10 +195,13 @@ func (snm *SenderNonceMempool) CountTx() int {
 // Remove removes a tx from the mempool. It returns an error if the tx does not
 // have at least one signer or the tx was not found in the pool.
 func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
-	sender, nonce, err := getSenderAndNonce(tx)
+	sendersWithNonce, err := GetSendersWithNonce(tx)
 	if err != nil {
 		return err
 	}
+
+	sender := sendersWithNonce[0].Sender
+	nonce := sendersWithNonce[0].Nonce
 
 	senderTxs, found := snm.senders[sender]
 
@@ -264,37 +269,55 @@ func removeAtIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
 }
 
-func getSenderAndNonce(tx sdk.Tx) (string, uint64, error) {
+func GetSendersWithNonce(tx sdk.Tx) ([]SenderWithNonce, error) {
 	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
 		opts := txWithExtensions.GetExtensionOptions()
 		if len(opts) > 0 && opts[0].GetTypeUrl() == "/ethermint.evm.v1.ExtensionOptionsEthereumTx" {
 			for _, msg := range tx.GetMsgs() {
 				if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
-					ethAddr := ethcommon.HexToAddress(ethMsg.From)
-					addr := sdk.AccAddress(ethAddr.Bytes())
-					return addr.String(), ethMsg.AsTransaction().Nonce(), nil
+
+					return []SenderWithNonce{
+						{
+							Sender: ethMsg.GetFrom().String(),
+							Nonce:  ethMsg.AsTransaction().Nonce(),
+						},
+					}, nil
 				}
 			}
 		}
 	}
 
-	return getSenderAndNonceDefault(tx)
+	return getSendersWithNonceDefault(tx)
 }
 
-func getSenderAndNonceDefault(tx sdk.Tx) (string, uint64, error) {
+type SenderWithNonce struct {
+	Sender string
+	Nonce  uint64
+}
+
+func getSendersWithNonceDefault(tx sdk.Tx) ([]SenderWithNonce, error) {
+	sendersWithNonce := []SenderWithNonce{}
+
 	sigTx, ok := tx.(signing.SigVerifiableTx)
 	if !ok {
-		return "", 0, fmt.Errorf("tx of type %T does not implement SigVerifiableTx", tx)
+		return nil, fmt.Errorf("tx of type %T does not implement SigVerifiableTx", tx)
 	}
 
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 
 	if len(sigs) == 0 {
-		return "", 0, fmt.Errorf("tx must have at least one signer")
+		return nil, fmt.Errorf("tx must have at least one signer")
 	}
 
-	return sigs[0].PubKey.Address().String(), sigs[0].Sequence, nil
+	for _, sig := range sigs {
+		sendersWithNonce = append(sendersWithNonce, SenderWithNonce{
+			Sender: sig.PubKey.Address().String(),
+			Nonce:  sig.Sequence,
+		})
+	}
+
+	return sendersWithNonce, nil
 }

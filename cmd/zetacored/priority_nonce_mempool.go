@@ -174,10 +174,15 @@ func (mp *PriorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 		return nil
 	}
 
-	sender, nonce, err := getSenderAndNonce(tx)
+	sendersWithNonce, err := GetSendersWithNonce(tx)
 	if err != nil {
 		return err
 	}
+
+	sender := sendersWithNonce[0].Sender
+	nonce := sendersWithNonce[0].Nonce
+
+	fmt.Println("insert tx ", sender, nonce)
 
 	sdkContext := sdk.UnwrapSDKContext(ctx)
 	priority := sdkContext.Priority()
@@ -385,10 +390,13 @@ func (mp *PriorityNonceMempool) CountTx() int {
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityNonceMempool) Remove(tx sdk.Tx) error {
-	sender, nonce, err := getSenderAndNonce(tx)
+	sendersWithNonce, err := GetSendersWithNonce(tx)
 	if err != nil {
 		return err
 	}
+
+	sender := sendersWithNonce[0].Sender
+	nonce := sendersWithNonce[0].Nonce
 
 	scoreKey := txMeta{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]

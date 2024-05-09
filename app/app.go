@@ -343,8 +343,8 @@ func New(
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
 	// DefaultProposalHandler also checks for sigs, probably will need custom
-	// customProposalHandler := NewCustomProposalHandler(bApp.Mempool(), bApp)
-	// app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
+	customProposalHandler := NewCustomProposalHandler(bApp.Mempool(), bApp)
+	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
 	// add keepers
 	// use custom Ethermint account for contracts
