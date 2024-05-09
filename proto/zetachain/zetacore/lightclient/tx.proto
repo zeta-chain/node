@@ -2,19 +2,27 @@ syntax = "proto3";
 package zetachain.zetacore.lightclient;
 
 import "gogoproto/gogo.proto";
-import "zetachain/zetacore/lightclient/verification_flags.proto";
+import "zetachain/zetacore/lightclient/block_header_verification.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc UpdateVerificationFlags(MsgUpdateVerificationFlags)
-      returns (MsgUpdateVerificationFlagsResponse);
+  rpc EnableHeaderVerification(MsgEnableHeaderVerification)
+      returns (MsgEnableHeaderVerificationResponse);
+  rpc DisableHeaderVerification(MsgDisableHeaderVerification)
+      returns (MsgDisableHeaderVerificationResponse);
 }
 
-message MsgUpdateVerificationFlags {
+message MsgEnableHeaderVerification {
   string creator = 1;
-  VerificationFlags verification_flags = 2 [ (gogoproto.nullable) = false ];
+  repeated int64 chain_id_list = 2;
 }
 
-message MsgUpdateVerificationFlagsResponse {}
+message MsgEnableHeaderVerificationResponse {}
+
+message MsgDisableHeaderVerification {
+  string creator = 1;
+  repeated int64 chain_id_list = 2;
+}
+message MsgDisableHeaderVerificationResponse {}

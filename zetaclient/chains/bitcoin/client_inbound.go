@@ -112,8 +112,8 @@ func (ob *Client) ObserveInTx() error {
 		// add block header to zetacore
 		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		verificationFlags := ob.coreContext.GetVerificationFlags()
-		if verificationFlags.BtcTypeChainEnabled {
+		blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
+		if found && blockHeaderVerification.Enabled {
 			err = ob.postBlockHeader(blockNumber)
 			if err != nil {
 				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)

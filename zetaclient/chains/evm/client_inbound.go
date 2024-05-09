@@ -353,8 +353,8 @@ func (ob *Client) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 		// post new block header (if any) to zetacore and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		verificationFlags := ob.coreContext.GetVerificationFlags()
-		if verificationFlags.EthTypeChainEnabled && chains.IsHeaderSupportedEvmChain(ob.chain.ChainId) {
+		blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
+		if found && blockHeaderVerification.Enabled {
 			// post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {

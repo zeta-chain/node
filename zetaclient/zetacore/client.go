@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -106,74 +105,74 @@ func NewClient(
 	}, nil
 }
 
-func (b *Client) UpdateChainID(chainID string) error {
-	if b.chainID != chainID {
-		b.chainID = chainID
+func (c *Client) UpdateChainID(chainID string) error {
+	if c.chainID != chainID {
+		c.chainID = chainID
 
 		zetaChain, err := chains.ZetaChainFromChainID(chainID)
 		if err != nil {
 			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
 		}
-		b.chain = zetaChain
+		c.chain = zetaChain
 	}
 
 	return nil
 }
 
 // Chain returns the Chain chain object
-func (b *Client) Chain() chains.Chain {
-	return b.chain
+func (c *Client) Chain() chains.Chain {
+	return c.chain
 }
 
-func (b *Client) GetLogger() *zerolog.Logger {
-	return &b.logger
+func (c *Client) GetLogger() *zerolog.Logger {
+	return &c.logger
 }
 
-func (b *Client) GetKeys() *keys.Keys {
-	return b.keys
+func (c *Client) GetKeys() *keys.Keys {
+	return c.keys
 }
 
-func (b *Client) Stop() {
-	b.logger.Info().Msgf("zetacore client is stopping")
-	close(b.stop) // this notifies all configupdater to stop
+func (c *Client) Stop() {
+	c.logger.Info().Msgf("zetacore client is stopping")
+	close(c.stop) // this notifies all configupdater to stop
 }
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
-func (b *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uint64, error) {
-	ctx, err := b.GetContext()
+func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uint64, error) {
+	ctx, err := c.GetContext()
 	if err != nil {
 		return 0, 0, err
 	}
-	address := b.keys.GetAddress()
+	address := c.keys.GetAddress()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
-func (b *Client) SetAccountNumber(keyType authz.KeyType) {
-	ctx, err := b.GetContext()
+func (c *Client) SetAccountNumber(keyType authz.KeyType) {
+	ctx, err := c.GetContext()
 	if err != nil {
-		b.logger.Error().Err(err).Msg("fail to get context")
+		c.logger.Error().Err(err).Msg("fail to get context")
 		return
 	}
-	address := b.keys.GetAddress()
+	address := c.keys.GetAddress()
 	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	if err != nil {
-		b.logger.Error().Err(err).Msg("fail to get account number and sequence number")
+		c.logger.Error().Err(err).Msg("fail to get account number and sequence number")
 		return
 	}
-	b.accountNumber[keyType] = accN
-	b.seqNumber[keyType] = seq
+	c.accountNumber[keyType] = accN
+	c.seqNumber[keyType] = seq
 }
 
-func (b *Client) WaitForCoreToCreateBlocks() {
+func (c *Client) WaitForCoreToCreateBlocks() {
 	retryCount := 0
 	for {
-		block, err := b.GetLatestZetaBlock()
+		block, err := c.GetLatestZetaBlock()
 		if err == nil && block.Header.Height > 1 {
-			b.logger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
+			c.logger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
 			break
 		}
 		retryCount++
-		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
+		c.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
 		if retryCount > ExtendedRetryCount {
 			panic(fmt.Sprintf("ZetaCore is not ready , Waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
 		}
@@ -183,23 +182,23 @@ func (b *Client) WaitForCoreToCreateBlocks() {
 
 // UpdateZetaCoreContext updates core context
 // zetacore stores core context for all clients
-func (b *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, init bool, sampledLogger zerolog.Logger) error {
-	bn, err := b.GetBlockHeight()
+func (c *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, init bool, sampledLogger zerolog.Logger) error {
+	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)
 	}
-	plan, err := b.GetUpgradePlan()
+	plan, err := c.GetUpgradePlan()
 	if err != nil {
 		// if there is no active upgrade plan, plan will be nil, err will be nil as well.
 		return fmt.Errorf("failed to get upgrade plan: %w", err)
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
+		c.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
 			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObserver itself
+		c.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObserver itself
 	}
 
-	chainParams, err := b.GetChainParams()
+	chainParams, err := c.GetChainParams()
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
@@ -225,7 +224,7 @@ func (b *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, ini
 		}
 	}
 
-	supportedChains, err := b.GetSupportedChains()
+	supportedChains, err := c.GetSupportedChains()
 	if err != nil {
 		return fmt.Errorf("failed to get supported chains: %w", err)
 	}
@@ -233,36 +232,29 @@ func (b *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, ini
 	for i, chain := range supportedChains {
 		newChains[i] = *chain
 	}
-	keyGen, err := b.GetKeyGen()
+	keyGen, err := c.GetKeyGen()
 	if err != nil {
-		b.logger.Info().Msg("Unable to fetch keygen from zetacore")
+		c.logger.Info().Msg("Unable to fetch keygen from zetacore")
 		return fmt.Errorf("failed to get keygen: %w", err)
 	}
 
-	tss, err := b.GetCurrentTss()
+	tss, err := c.GetCurrentTss()
 	if err != nil {
-		b.logger.Info().Err(err).Msg("Unable to fetch TSS from zetacore")
+		c.logger.Info().Err(err).Msg("Unable to fetch TSS from zetacore")
 		return fmt.Errorf("failed to get current tss: %w", err)
 	}
 	tssPubKey := tss.GetTssPubkey()
 
-	crosschainFlags, err := b.GetCrosschainFlags()
+	crosschainFlags, err := c.GetCrosschainFlags()
 	if err != nil {
-		b.logger.Info().Msg("Unable to fetch cross-chain flags from zetacore")
+		c.logger.Info().Msg("Unable to fetch cross-chain flags from zetacore")
 		return fmt.Errorf("failed to get crosschain flags: %w", err)
 	}
 
-	verificationFlags, err := b.GetVerificationFlags()
+	blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains()
 	if err != nil {
-		b.logger.Info().Msg("Unable to fetch verification flags from zetacore")
-
-		// The block header functionality is currently disabled on the ZetaCore side
-		// The verification flags might not exist and we should not return an error here to prevent the ZetaClient from starting
-		// TODO: Uncomment this line when the block header functionality is enabled and we need to get the verification flags
-		// https://github.com/zeta-chain/node/issues/1717
-		// return fmt.Errorf("failed to get verification flags: %w", err)
-
-		verificationFlags = lightclienttypes.VerificationFlags{}
+		c.logger.Info().Msg("Unable to fetch block header enabled chains from zetacore")
+		return err
 	}
 
 	coreContext.Update(
@@ -272,23 +264,23 @@ func (b *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, ini
 		newBTCParams,
 		tssPubKey,
 		crosschainFlags,
-		verificationFlags,
+		blockHeaderEnabledChains,
 		init,
-		b.logger,
+		c.logger,
 	)
 
 	return nil
 }
 
-func (b *Client) Pause() {
-	<-b.pause
+func (c *Client) Pause() {
+	<-c.pause
 }
 
-func (b *Client) Unpause() {
-	b.pause <- struct{}{}
+func (c *Client) Unpause() {
+	c.pause <- struct{}{}
 }
 
-func (b *Client) EnableMockSDKClient(client rpcclient.Client) {
-	b.mockSDKClient = client
-	b.enableMockSDKClient = true
+func (c *Client) EnableMockSDKClient(client rpcclient.Client) {
+	c.mockSDKClient = client
+	c.enableMockSDKClient = true
 }

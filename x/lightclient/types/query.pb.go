@@ -519,21 +519,21 @@ func (m *QueryProveResponse) GetValid() bool {
 	return false
 }
 
-type QueryVerificationFlagsRequest struct {
+type QueryHeaderSupportedChainsRequest struct {
 }
 
-func (m *QueryVerificationFlagsRequest) Reset()         { *m = QueryVerificationFlagsRequest{} }
-func (m *QueryVerificationFlagsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryVerificationFlagsRequest) ProtoMessage()    {}
-func (*QueryVerificationFlagsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryHeaderSupportedChainsRequest) Reset()         { *m = QueryHeaderSupportedChainsRequest{} }
+func (m *QueryHeaderSupportedChainsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryHeaderSupportedChainsRequest) ProtoMessage()    {}
+func (*QueryHeaderSupportedChainsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1ff0d7827c501c48, []int{10}
 }
-func (m *QueryVerificationFlagsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryHeaderSupportedChainsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryVerificationFlagsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryHeaderSupportedChainsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryVerificationFlagsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryHeaderSupportedChainsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -543,34 +543,34 @@ func (m *QueryVerificationFlagsRequest) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *QueryVerificationFlagsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryVerificationFlagsRequest.Merge(m, src)
+func (m *QueryHeaderSupportedChainsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryHeaderSupportedChainsRequest.Merge(m, src)
 }
-func (m *QueryVerificationFlagsRequest) XXX_Size() int {
+func (m *QueryHeaderSupportedChainsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryVerificationFlagsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryVerificationFlagsRequest.DiscardUnknown(m)
+func (m *QueryHeaderSupportedChainsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryHeaderSupportedChainsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryVerificationFlagsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryHeaderSupportedChainsRequest proto.InternalMessageInfo
 
-type QueryVerificationFlagsResponse struct {
-	VerificationFlags VerificationFlags `protobuf:"bytes,1,opt,name=verification_flags,json=verificationFlags,proto3" json:"verification_flags"`
+type QueryHeaderSupportedChainsResponse struct {
+	HeaderSupportedChains []HeaderSupportedChain `protobuf:"bytes,1,rep,name=header_supported_chains,json=headerSupportedChains,proto3" json:"header_supported_chains"`
 }
 
-func (m *QueryVerificationFlagsResponse) Reset()         { *m = QueryVerificationFlagsResponse{} }
-func (m *QueryVerificationFlagsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryVerificationFlagsResponse) ProtoMessage()    {}
-func (*QueryVerificationFlagsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryHeaderSupportedChainsResponse) Reset()         { *m = QueryHeaderSupportedChainsResponse{} }
+func (m *QueryHeaderSupportedChainsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryHeaderSupportedChainsResponse) ProtoMessage()    {}
+func (*QueryHeaderSupportedChainsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1ff0d7827c501c48, []int{11}
 }
-func (m *QueryVerificationFlagsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryHeaderSupportedChainsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryVerificationFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryHeaderSupportedChainsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryVerificationFlagsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryHeaderSupportedChainsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -580,23 +580,103 @@ func (m *QueryVerificationFlagsResponse) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *QueryVerificationFlagsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryVerificationFlagsResponse.Merge(m, src)
+func (m *QueryHeaderSupportedChainsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryHeaderSupportedChainsResponse.Merge(m, src)
 }
-func (m *QueryVerificationFlagsResponse) XXX_Size() int {
+func (m *QueryHeaderSupportedChainsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryVerificationFlagsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryVerificationFlagsResponse.DiscardUnknown(m)
+func (m *QueryHeaderSupportedChainsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryHeaderSupportedChainsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryVerificationFlagsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryHeaderSupportedChainsResponse proto.InternalMessageInfo
 
-func (m *QueryVerificationFlagsResponse) GetVerificationFlags() VerificationFlags {
+func (m *QueryHeaderSupportedChainsResponse) GetHeaderSupportedChains() []HeaderSupportedChain {
 	if m != nil {
-		return m.VerificationFlags
+		return m.HeaderSupportedChains
 	}
-	return VerificationFlags{}
+	return nil
+}
+
+type QueryHeaderEnabledChainsRequest struct {
+}
+
+func (m *QueryHeaderEnabledChainsRequest) Reset()         { *m = QueryHeaderEnabledChainsRequest{} }
+func (m *QueryHeaderEnabledChainsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryHeaderEnabledChainsRequest) ProtoMessage()    {}
+func (*QueryHeaderEnabledChainsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1ff0d7827c501c48, []int{12}
+}
+func (m *QueryHeaderEnabledChainsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryHeaderEnabledChainsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryHeaderEnabledChainsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryHeaderEnabledChainsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryHeaderEnabledChainsRequest.Merge(m, src)
+}
+func (m *QueryHeaderEnabledChainsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryHeaderEnabledChainsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryHeaderEnabledChainsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryHeaderEnabledChainsRequest proto.InternalMessageInfo
+
+type QueryHeaderEnabledChainsResponse struct {
+	HeaderEnabledChains []HeaderSupportedChain `protobuf:"bytes,1,rep,name=header_enabled_chains,json=headerEnabledChains,proto3" json:"header_enabled_chains"`
+}
+
+func (m *QueryHeaderEnabledChainsResponse) Reset()         { *m = QueryHeaderEnabledChainsResponse{} }
+func (m *QueryHeaderEnabledChainsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryHeaderEnabledChainsResponse) ProtoMessage()    {}
+func (*QueryHeaderEnabledChainsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1ff0d7827c501c48, []int{13}
+}
+func (m *QueryHeaderEnabledChainsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryHeaderEnabledChainsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryHeaderEnabledChainsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryHeaderEnabledChainsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryHeaderEnabledChainsResponse.Merge(m, src)
+}
+func (m *QueryHeaderEnabledChainsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryHeaderEnabledChainsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryHeaderEnabledChainsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryHeaderEnabledChainsResponse proto.InternalMessageInfo
+
+func (m *QueryHeaderEnabledChainsResponse) GetHeaderEnabledChains() []HeaderSupportedChain {
+	if m != nil {
+		return m.HeaderEnabledChains
+	}
+	return nil
 }
 
 func init() {
@@ -610,8 +690,10 @@ func init() {
 	proto.RegisterType((*QueryGetChainStateResponse)(nil), "zetachain.zetacore.lightclient.QueryGetChainStateResponse")
 	proto.RegisterType((*QueryProveRequest)(nil), "zetachain.zetacore.lightclient.QueryProveRequest")
 	proto.RegisterType((*QueryProveResponse)(nil), "zetachain.zetacore.lightclient.QueryProveResponse")
-	proto.RegisterType((*QueryVerificationFlagsRequest)(nil), "zetachain.zetacore.lightclient.QueryVerificationFlagsRequest")
-	proto.RegisterType((*QueryVerificationFlagsResponse)(nil), "zetachain.zetacore.lightclient.QueryVerificationFlagsResponse")
+	proto.RegisterType((*QueryHeaderSupportedChainsRequest)(nil), "zetachain.zetacore.lightclient.QueryHeaderSupportedChainsRequest")
+	proto.RegisterType((*QueryHeaderSupportedChainsResponse)(nil), "zetachain.zetacore.lightclient.QueryHeaderSupportedChainsResponse")
+	proto.RegisterType((*QueryHeaderEnabledChainsRequest)(nil), "zetachain.zetacore.lightclient.QueryHeaderEnabledChainsRequest")
+	proto.RegisterType((*QueryHeaderEnabledChainsResponse)(nil), "zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse")
 }
 
 func init() {
@@ -619,61 +701,66 @@ func init() {
 }
 
 var fileDescriptor_1ff0d7827c501c48 = []byte{
-	// 858 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x4f, 0xdb, 0x48,
-	0x14, 0xc7, 0x33, 0x40, 0xf8, 0x31, 0x81, 0x95, 0x18, 0x21, 0x6d, 0xf0, 0x2e, 0x06, 0x79, 0x97,
-	0x05, 0x65, 0x17, 0x9b, 0x64, 0x57, 0xac, 0x36, 0x68, 0x2b, 0x41, 0x25, 0x28, 0x6a, 0x2b, 0x81,
-	0xab, 0xf6, 0xd0, 0x4b, 0xe4, 0x38, 0x13, 0xc7, 0xc2, 0x78, 0x4c, 0x3c, 0x44, 0xa1, 0x88, 0x4b,
-	0x4f, 0x3d, 0x56, 0xaa, 0xfa, 0x97, 0xf4, 0x82, 0x54, 0xf5, 0xd2, 0x43, 0xc5, 0x11, 0xa9, 0x97,
-	0x1e, 0xaa, 0xaa, 0x82, 0xfe, 0x21, 0x95, 0xc7, 0x13, 0x3c, 0x49, 0x9c, 0xc6, 0x44, 0x9c, 0xb0,
-	0xc7, 0xf3, 0xde, 0xfb, 0x7c, 0xbf, 0xf3, 0xe6, 0x11, 0x98, 0x7b, 0x86, 0xa9, 0x61, 0xd6, 0x0c,
-	0xdb, 0xd5, 0xd8, 0x13, 0xa9, 0x63, 0xcd, 0xb1, 0xad, 0x1a, 0x35, 0x1d, 0x1b, 0xbb, 0x54, 0x3b,
-	0x3c, 0xc2, 0xf5, 0x63, 0xd5, 0xab, 0x13, 0x4a, 0x90, 0x7c, 0xbd, 0x57, 0x6d, 0xed, 0x55, 0x85,
-	0xbd, 0x52, 0xce, 0x24, 0xfe, 0x01, 0xf1, 0xb5, 0xb2, 0xe1, 0xe3, 0x30, 0x50, 0x6b, 0xe4, 0xcb,
-	0x98, 0x1a, 0x79, 0xcd, 0x33, 0x2c, 0xdb, 0x35, 0xa8, 0x4d, 0xdc, 0x30, 0x97, 0x34, 0x63, 0x11,
-	0x8b, 0xb0, 0x47, 0x2d, 0x78, 0xe2, 0xab, 0xbf, 0x5a, 0x84, 0x58, 0x0e, 0xd6, 0x0c, 0xcf, 0xd6,
-	0x0c, 0xd7, 0x25, 0x94, 0x85, 0xf8, 0xfc, 0xeb, 0x6a, 0x1f, 0x56, 0xf6, 0xa9, 0xe4, 0x53, 0x83,
-	0x62, 0x1e, 0xf1, 0x6f, 0x9f, 0x88, 0x06, 0xae, 0xdb, 0x55, 0xdb, 0x64, 0x55, 0x4a, 0x55, 0xc7,
-	0xb0, 0x5a, 0xa5, 0xe2, 0x6c, 0xf1, 0xf6, 0x2d, 0xcd, 0xab, 0x13, 0x52, 0xf5, 0xf9, 0x9f, 0x70,
-	0xaf, 0x52, 0x81, 0xd2, 0x5e, 0x20, 0x76, 0xc3, 0x71, 0x36, 0x1d, 0x62, 0xee, 0xdf, 0xc3, 0x46,
-	0x05, 0xd7, 0x75, 0x7c, 0x78, 0x84, 0x7d, 0x8a, 0xb6, 0x20, 0x8c, 0xc4, 0x67, 0xc1, 0x02, 0x58,
-	0xce, 0x14, 0xfe, 0x50, 0x43, 0xa7, 0xd4, 0xc0, 0x29, 0x35, 0xb4, 0x98, 0x3b, 0xa5, 0xee, 0x1a,
-	0x16, 0xe6, 0xb1, 0xba, 0x10, 0xa9, 0xbc, 0x03, 0xf0, 0x97, 0xd8, 0x32, 0xbe, 0x47, 0x5c, 0x1f,
-	0xa3, 0xc7, 0x70, 0xaa, 0x1c, 0x2c, 0x97, 0x6a, 0x6c, 0xdd, 0xcf, 0x82, 0x85, 0xe1, 0xe5, 0x4c,
-	0x21, 0xa7, 0xc6, 0x1c, 0x9a, 0xb7, 0x6f, 0xa9, 0x5c, 0x82, 0x90, 0x6a, 0x73, 0xe4, 0xfc, 0xcb,
-	0x7c, 0x4a, 0x9f, 0x2c, 0x47, 0x4b, 0x3e, 0xda, 0x6e, 0xc3, 0x1f, 0x62, 0xf8, 0x4b, 0x7d, 0xf1,
-	0x43, 0xa6, 0x36, 0xfe, 0x75, 0xee, 0xd2, 0x36, 0xa6, 0x31, 0x2e, 0xcd, 0x41, 0xc8, 0xe9, 0x0d,
-	0xbf, 0xc6, 0x5c, 0x9a, 0xd4, 0x27, 0x42, 0x10, 0xc3, 0xaf, 0x29, 0x0e, 0xd7, 0xde, 0x19, 0xcc,
-	0xb5, 0x3f, 0x84, 0x93, 0xa2, 0x76, 0xee, 0xf2, 0x0d, 0xa4, 0xeb, 0x19, 0x41, 0xb4, 0x62, 0xc2,
-	0xd9, 0x96, 0xd3, 0x77, 0x83, 0xe8, 0x47, 0x41, 0x47, 0xdd, 0xf6, 0x79, 0x9e, 0x81, 0xa8, 0x6d,
-	0xc4, 0x2a, 0x5c, 0xd2, 0x1e, 0xcc, 0x08, 0xed, 0xfc, 0xa3, 0xc3, 0x14, 0xfa, 0x59, 0x8d, 0x12,
-	0xf1, 0xc3, 0x84, 0xe6, 0xf5, 0xca, 0xed, 0x1d, 0xe5, 0x1a, 0xf7, 0x67, 0x1b, 0xd3, 0x6e, 0x7f,
-	0x66, 0xe1, 0x78, 0x08, 0x6e, 0x57, 0x98, 0x3b, 0xc3, 0xfa, 0x18, 0x7b, 0xdf, 0xa9, 0x28, 0x76,
-	0xd4, 0x02, 0x31, 0x8a, 0xef, 0x77, 0x2a, 0x06, 0x37, 0x53, 0x2c, 0x6a, 0x0d, 0x6e, 0xcb, 0x34,
-	0xab, 0xb5, 0x5b, 0x27, 0x8d, 0x04, 0x6c, 0xe8, 0x67, 0x38, 0x46, 0x9b, 0x61, 0xf7, 0x05, 0xce,
-	0x4c, 0xe8, 0xa3, 0xb4, 0x19, 0xb4, 0x1e, 0x2a, 0xc2, 0x34, 0xeb, 0x97, 0xec, 0x30, 0x03, 0xfa,
-	0xbd, 0x4f, 0x53, 0xed, 0x06, 0x7f, 0xf4, 0x30, 0xa4, 0xa3, 0xab, 0x47, 0x58, 0xde, 0xa8, 0xab,
-	0x03, 0x1c, 0xda, 0x2c, 0xd9, 0x6e, 0x05, 0x37, 0xb3, 0xe9, 0x10, 0x87, 0x36, 0x77, 0x82, 0x57,
-	0x25, 0x07, 0x91, 0x88, 0xcf, 0x2d, 0x9a, 0x81, 0xe9, 0x86, 0xe1, 0x70, 0xf8, 0x71, 0x3d, 0x7c,
-	0x51, 0xe6, 0xe1, 0x1c, 0xdb, 0xfb, 0x44, 0x18, 0x66, 0x5b, 0xc1, 0x2c, 0xe3, 0xb2, 0x95, 0x17,
-	0x00, 0xca, 0xbd, 0x76, 0xf0, 0xcc, 0x55, 0x88, 0xba, 0x67, 0x21, 0x3f, 0x83, 0x7c, 0xbf, 0x33,
-	0xe8, 0x4a, 0xcb, 0x9b, 0x6f, 0xba, 0xd1, 0xf9, 0xa1, 0xf0, 0x79, 0x1c, 0xa6, 0x19, 0x0a, 0x3a,
-	0x03, 0xf0, 0x27, 0xe1, 0x06, 0x6e, 0x38, 0x0e, 0x2a, 0xf6, 0x2b, 0xd4, 0x7b, 0xcc, 0x4a, 0xeb,
-	0x03, 0xc5, 0x86, 0xea, 0x95, 0x95, 0xe7, 0x1f, 0xbf, 0xbd, 0x1a, 0x5a, 0x42, 0x8b, 0x6c, 0xd8,
-	0xaf, 0x84, 0x73, 0x5f, 0xfc, 0x3f, 0xd1, 0x36, 0x59, 0xd1, 0x7b, 0x00, 0x33, 0x42, 0x9a, 0x84,
-	0xdc, 0xb1, 0x83, 0x2f, 0x21, 0x77, 0xfc, 0xdc, 0x53, 0x8a, 0x8c, 0xfb, 0x1f, 0x54, 0x48, 0xc4,
-	0xad, 0x9d, 0x44, 0xcd, 0x78, 0x8a, 0xde, 0x00, 0x38, 0x15, 0x5d, 0x9e, 0xc0, 0xfe, 0xff, 0x92,
-	0x5a, 0xd8, 0x75, 0xe9, 0xa5, 0xe2, 0x20, 0xa1, 0x5c, 0xc4, 0x9f, 0x4c, 0xc4, 0x22, 0xfa, 0xad,
-	0x97, 0x08, 0x61, 0x2a, 0xa0, 0xb7, 0x00, 0xc2, 0x28, 0x47, 0x42, 0xe4, 0xb8, 0x39, 0x25, 0x15,
-	0x07, 0x09, 0xe5, 0xc8, 0x6b, 0x0c, 0x79, 0x15, 0xa9, 0x09, 0x90, 0xb5, 0x93, 0xd6, 0xc8, 0x39,
-	0x45, 0xaf, 0x01, 0x4c, 0xb3, 0x1b, 0x8d, 0xf2, 0x89, 0xaa, 0x8b, 0xc3, 0x4b, 0x2a, 0xdc, 0x24,
-	0x84, 0x83, 0x2e, 0x32, 0xd0, 0x79, 0x34, 0xd7, 0x0b, 0xd4, 0x63, 0x34, 0x1f, 0x00, 0x9c, 0xee,
-	0xba, 0xc4, 0xe8, 0xff, 0x44, 0x05, 0x7b, 0x4d, 0x1d, 0xe9, 0xce, 0xa0, 0xe1, 0x9c, 0xbd, 0xc0,
-	0xd8, 0xff, 0x42, 0xb9, 0x5e, 0xec, 0xdd, 0x03, 0x6b, 0xf3, 0xc1, 0xf9, 0xa5, 0x0c, 0x2e, 0x2e,
-	0x65, 0xf0, 0xf5, 0x52, 0x06, 0x2f, 0xaf, 0xe4, 0xd4, 0xc5, 0x95, 0x9c, 0xfa, 0x74, 0x25, 0xa7,
-	0x9e, 0x16, 0x2c, 0x9b, 0xd6, 0x8e, 0xca, 0xaa, 0x49, 0x0e, 0xc4, 0x7c, 0xd7, 0x3f, 0xee, 0x9a,
-	0x6d, 0xa9, 0xe9, 0xb1, 0x87, 0xfd, 0xf2, 0x28, 0xfb, 0x7d, 0xf7, 0xf7, 0xf7, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xef, 0x15, 0xeb, 0xd1, 0x24, 0x0b, 0x00, 0x00,
+	// 929 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x8f, 0xdb, 0x44,
+	0x14, 0xc7, 0x77, 0xba, 0x4d, 0x7f, 0xbc, 0x6c, 0x91, 0x98, 0xb6, 0xea, 0xd6, 0xd0, 0xec, 0xd6,
+	0x65, 0x69, 0x15, 0xb4, 0x76, 0x13, 0x4a, 0x11, 0xa9, 0x04, 0x6c, 0x10, 0x2c, 0x15, 0x20, 0x6d,
+	0x5d, 0x71, 0xe1, 0x12, 0x39, 0xce, 0xd4, 0xb6, 0xd6, 0xf5, 0xb8, 0x9e, 0x49, 0x94, 0x52, 0xf5,
+	0xc2, 0x5f, 0x80, 0x40, 0x48, 0xfc, 0x1f, 0x5c, 0x2a, 0x21, 0x84, 0xc4, 0xa9, 0x37, 0x56, 0xe2,
+	0x00, 0x27, 0x84, 0x76, 0xf9, 0x43, 0x90, 0x67, 0x26, 0xeb, 0x49, 0xd6, 0xd9, 0x38, 0x61, 0x4f,
+	0xf1, 0x8f, 0x79, 0xef, 0x7d, 0xbe, 0xdf, 0x79, 0x79, 0x63, 0xa8, 0x7f, 0x4d, 0xb8, 0xeb, 0x05,
+	0x6e, 0x18, 0xdb, 0xe2, 0x8a, 0xa6, 0xc4, 0x8e, 0x42, 0x3f, 0xe0, 0x5e, 0x14, 0x92, 0x98, 0xdb,
+	0x4f, 0xfa, 0x24, 0x7d, 0x6a, 0x25, 0x29, 0xe5, 0x14, 0xd7, 0x0e, 0xd7, 0x5a, 0xa3, 0xb5, 0x96,
+	0xb6, 0xd6, 0xa8, 0x7b, 0x94, 0x3d, 0xa6, 0xcc, 0xee, 0xba, 0x8c, 0xc8, 0x40, 0x7b, 0xd0, 0xe8,
+	0x12, 0xee, 0x36, 0xec, 0xc4, 0xf5, 0xc3, 0xd8, 0xe5, 0x21, 0x8d, 0x65, 0x2e, 0xe3, 0x92, 0x4f,
+	0x7d, 0x2a, 0x2e, 0xed, 0xec, 0x4a, 0x3d, 0x7d, 0xdd, 0xa7, 0xd4, 0x8f, 0x88, 0xed, 0x26, 0xa1,
+	0xed, 0xc6, 0x31, 0xe5, 0x22, 0x84, 0xa9, 0xb7, 0xef, 0xcf, 0x60, 0xed, 0x46, 0xd4, 0xdb, 0xed,
+	0x04, 0xc4, 0xed, 0x91, 0xb4, 0x33, 0x20, 0x69, 0xf8, 0x28, 0xf4, 0xf4, 0x9a, 0xb7, 0x67, 0xc4,
+	0x8b, 0x57, 0x1d, 0xc6, 0x5d, 0x4e, 0x54, 0x44, 0x91, 0x3b, 0xc9, 0xae, 0x6f, 0x27, 0x29, 0xa5,
+	0x8f, 0x98, 0xfa, 0x91, 0x6b, 0xcd, 0x1e, 0x18, 0x0f, 0x32, 0xcd, 0x5b, 0x51, 0xd4, 0xce, 0x40,
+	0x3e, 0x15, 0x1c, 0x0e, 0x79, 0xd2, 0x27, 0x8c, 0xe3, 0x4f, 0x00, 0x72, 0x0f, 0x56, 0xd1, 0x3a,
+	0xba, 0x55, 0x6d, 0xbe, 0x69, 0x49, 0xc3, 0xac, 0xcc, 0x30, 0x4b, 0x3a, 0xad, 0x0c, 0xb3, 0x76,
+	0x5c, 0x9f, 0xa8, 0x58, 0x47, 0x8b, 0x34, 0x7f, 0x41, 0xf0, 0x5a, 0x61, 0x19, 0x96, 0xd0, 0x98,
+	0x11, 0xfc, 0x25, 0x5c, 0xd0, 0x6d, 0x60, 0xab, 0x68, 0x7d, 0xf9, 0x56, 0xb5, 0x59, 0xb7, 0x0a,
+	0xf6, 0x2e, 0xd9, 0xf5, 0x2d, 0x25, 0x41, 0x4b, 0xd5, 0x3e, 0xfd, 0xf2, 0xef, 0xb5, 0x25, 0x67,
+	0xa5, 0x9b, 0x3f, 0x62, 0x78, 0x7b, 0x0c, 0xff, 0x94, 0xc0, 0xbf, 0x39, 0x13, 0x5f, 0x32, 0x8d,
+	0xf1, 0xdf, 0x53, 0x2e, 0x6d, 0x13, 0x5e, 0xe0, 0xd2, 0x35, 0x00, 0x45, 0xef, 0xb2, 0x40, 0xb8,
+	0xb4, 0xe2, 0x9c, 0x97, 0x20, 0x2e, 0x0b, 0xcc, 0x48, 0x69, 0x9f, 0x0c, 0x56, 0xda, 0xbf, 0x80,
+	0x15, 0x5d, 0xbb, 0x72, 0x79, 0x0e, 0xe9, 0x4e, 0x55, 0x13, 0x6d, 0x7a, 0x70, 0x75, 0xe4, 0xf4,
+	0x47, 0x59, 0xf4, 0xc3, 0xac, 0x31, 0x4e, 0x7a, 0x3f, 0x5f, 0xa0, 0xbc, 0x6d, 0xf4, 0x2a, 0x4a,
+	0xd2, 0x03, 0xa8, 0x6a, 0x5d, 0x79, 0xdc, 0x66, 0x6a, 0x8d, 0x6c, 0xe5, 0x89, 0xd4, 0x66, 0x82,
+	0x77, 0xf8, 0xe4, 0xe4, 0xb6, 0xf2, 0xae, 0xf2, 0x67, 0x9b, 0xf0, 0xa3, 0xfe, 0x5c, 0x85, 0x73,
+	0x12, 0x3c, 0xec, 0x09, 0x77, 0x96, 0x9d, 0xb3, 0xe2, 0xfe, 0x7e, 0xcf, 0x0c, 0xf3, 0x16, 0x28,
+	0x50, 0xfc, 0xd9, 0xa4, 0x62, 0x34, 0x9f, 0x62, 0x5d, 0x6b, 0xf6, 0x6f, 0x79, 0x55, 0xd4, 0xda,
+	0x49, 0xe9, 0xa0, 0x04, 0x1b, 0xbe, 0x02, 0x67, 0xf9, 0x50, 0x76, 0x5f, 0xe6, 0xcc, 0x79, 0xe7,
+	0x0c, 0x1f, 0x66, 0xad, 0x87, 0x5b, 0x50, 0x11, 0xfd, 0xb2, 0xba, 0x2c, 0x80, 0xde, 0x98, 0xd1,
+	0x54, 0x3b, 0xd9, 0x8f, 0x23, 0x43, 0x26, 0xba, 0xfa, 0xb4, 0xc8, 0x9b, 0x77, 0x75, 0x86, 0xc3,
+	0x87, 0x9d, 0x30, 0xee, 0x91, 0xe1, 0x6a, 0x45, 0xe2, 0xf0, 0xe1, 0xfd, 0xec, 0xd6, 0xac, 0x03,
+	0xd6, 0xf1, 0x95, 0x45, 0x97, 0xa0, 0x32, 0x70, 0x23, 0x05, 0x7f, 0xce, 0x91, 0x37, 0xe6, 0x0d,
+	0xb8, 0x2e, 0xd6, 0xca, 0xee, 0x7d, 0xd8, 0x4f, 0x12, 0x9a, 0x72, 0xd2, 0x13, 0xce, 0x30, 0x25,
+	0xdd, 0xfc, 0x11, 0x81, 0x79, 0xdc, 0x2a, 0x55, 0x21, 0x85, 0x2b, 0x6a, 0x8c, 0xb2, 0xd1, 0x8a,
+	0x8e, 0x10, 0x3b, 0x9a, 0x27, 0x77, 0x66, 0x6d, 0x48, 0x51, 0x7e, 0xd5, 0x8c, 0x97, 0x83, 0xa2,
+	0xda, 0xe6, 0x75, 0x58, 0xd3, 0xc8, 0x3e, 0x8e, 0xdd, 0x6e, 0x34, 0x49, 0xff, 0x1d, 0x82, 0xf5,
+	0xe9, 0x6b, 0x14, 0x7b, 0x0c, 0xaa, 0x40, 0x87, 0xc8, 0xf7, 0x27, 0x47, 0x7e, 0x31, 0x38, 0x5a,
+	0xb7, 0xf9, 0x2b, 0x40, 0x45, 0x40, 0xe1, 0x17, 0x08, 0x5e, 0xd1, 0xa6, 0xc9, 0x56, 0x14, 0xe1,
+	0xd6, 0xac, 0x6a, 0xd3, 0x8f, 0x0c, 0xe3, 0xde, 0x42, 0xb1, 0xd2, 0x05, 0x73, 0xf3, 0x9b, 0x3f,
+	0xfe, 0xfd, 0xfe, 0xd4, 0x4d, 0xbc, 0x21, 0x0e, 0xae, 0x4d, 0x79, 0x86, 0x4d, 0x3b, 0x2c, 0x19,
+	0xfe, 0x0d, 0x41, 0x55, 0x4b, 0x53, 0x92, 0xbb, 0x70, 0x88, 0x97, 0xe4, 0x2e, 0x9e, 0xe1, 0x66,
+	0x4b, 0x70, 0xdf, 0xc1, 0xcd, 0x52, 0xdc, 0xf6, 0xb3, 0xfc, 0x8f, 0xf5, 0x1c, 0xff, 0x84, 0xe0,
+	0x42, 0x3e, 0x08, 0x32, 0xfb, 0xdf, 0x2b, 0x6b, 0xe1, 0x91, 0x01, 0x66, 0xb4, 0x16, 0x09, 0x55,
+	0x22, 0xde, 0x12, 0x22, 0x36, 0xf0, 0x8d, 0x69, 0x22, 0xb4, 0x09, 0x87, 0x7f, 0x46, 0x00, 0x79,
+	0x8e, 0x92, 0xc8, 0x45, 0x33, 0xd7, 0x68, 0x2d, 0x12, 0xaa, 0x90, 0xef, 0x0a, 0xe4, 0xdb, 0xd8,
+	0x2a, 0x81, 0x6c, 0x3f, 0x1b, 0x8d, 0xcf, 0xe7, 0xf8, 0x07, 0x04, 0x15, 0x31, 0x9d, 0x70, 0xa3,
+	0x54, 0x75, 0x7d, 0x10, 0x1b, 0xcd, 0x79, 0x42, 0x14, 0xe8, 0x86, 0x00, 0x5d, 0xc3, 0xd7, 0xa6,
+	0x81, 0x26, 0x82, 0xe6, 0x4f, 0x04, 0x97, 0x0b, 0x67, 0x1c, 0xde, 0x2a, 0x55, 0xf4, 0xb8, 0x29,
+	0x6a, 0xb4, 0xff, 0x4f, 0x0a, 0xa5, 0xe3, 0x5d, 0xa1, 0xa3, 0x81, 0xed, 0x69, 0x3a, 0xa6, 0x0c,
+	0x60, 0xfc, 0x3b, 0x82, 0x8b, 0x05, 0xf3, 0x0f, 0x7f, 0x30, 0x07, 0x54, 0xd1, 0x74, 0x35, 0x3e,
+	0x5c, 0x3c, 0x81, 0xd2, 0xf4, 0x8e, 0xd0, 0x64, 0xe3, 0xcd, 0x19, 0x9a, 0xc6, 0x07, 0x73, 0xfb,
+	0xf3, 0x97, 0xfb, 0x35, 0xb4, 0xb7, 0x5f, 0x43, 0xff, 0xec, 0xd7, 0xd0, 0xb7, 0x07, 0xb5, 0xa5,
+	0xbd, 0x83, 0xda, 0xd2, 0x5f, 0x07, 0xb5, 0xa5, 0xaf, 0x9a, 0x7e, 0xc8, 0x83, 0x7e, 0xd7, 0xf2,
+	0xe8, 0x63, 0x3d, 0xe5, 0xe1, 0xb7, 0xf8, 0x70, 0x2c, 0x3b, 0x7f, 0x9a, 0x10, 0xd6, 0x3d, 0x23,
+	0x3e, 0xc7, 0xdf, 0xfe, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x1b, 0x8a, 0xbd, 0xa3, 0xda, 0x0c, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -693,7 +780,8 @@ type QueryClient interface {
 	ChainStateAll(ctx context.Context, in *QueryAllChainStateRequest, opts ...grpc.CallOption) (*QueryAllChainStateResponse, error)
 	ChainState(ctx context.Context, in *QueryGetChainStateRequest, opts ...grpc.CallOption) (*QueryGetChainStateResponse, error)
 	Prove(ctx context.Context, in *QueryProveRequest, opts ...grpc.CallOption) (*QueryProveResponse, error)
-	VerificationFlags(ctx context.Context, in *QueryVerificationFlagsRequest, opts ...grpc.CallOption) (*QueryVerificationFlagsResponse, error)
+	HeaderSupportedChains(ctx context.Context, in *QueryHeaderSupportedChainsRequest, opts ...grpc.CallOption) (*QueryHeaderSupportedChainsResponse, error)
+	HeaderEnabledChains(ctx context.Context, in *QueryHeaderEnabledChainsRequest, opts ...grpc.CallOption) (*QueryHeaderEnabledChainsResponse, error)
 }
 
 type queryClient struct {
@@ -749,9 +837,18 @@ func (c *queryClient) Prove(ctx context.Context, in *QueryProveRequest, opts ...
 	return out, nil
 }
 
-func (c *queryClient) VerificationFlags(ctx context.Context, in *QueryVerificationFlagsRequest, opts ...grpc.CallOption) (*QueryVerificationFlagsResponse, error) {
-	out := new(QueryVerificationFlagsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Query/VerificationFlags", in, out, opts...)
+func (c *queryClient) HeaderSupportedChains(ctx context.Context, in *QueryHeaderSupportedChainsRequest, opts ...grpc.CallOption) (*QueryHeaderSupportedChainsResponse, error) {
+	out := new(QueryHeaderSupportedChainsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Query/HeaderSupportedChains", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) HeaderEnabledChains(ctx context.Context, in *QueryHeaderEnabledChainsRequest, opts ...grpc.CallOption) (*QueryHeaderEnabledChainsResponse, error) {
+	out := new(QueryHeaderEnabledChainsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -765,7 +862,8 @@ type QueryServer interface {
 	ChainStateAll(context.Context, *QueryAllChainStateRequest) (*QueryAllChainStateResponse, error)
 	ChainState(context.Context, *QueryGetChainStateRequest) (*QueryGetChainStateResponse, error)
 	Prove(context.Context, *QueryProveRequest) (*QueryProveResponse, error)
-	VerificationFlags(context.Context, *QueryVerificationFlagsRequest) (*QueryVerificationFlagsResponse, error)
+	HeaderSupportedChains(context.Context, *QueryHeaderSupportedChainsRequest) (*QueryHeaderSupportedChainsResponse, error)
+	HeaderEnabledChains(context.Context, *QueryHeaderEnabledChainsRequest) (*QueryHeaderEnabledChainsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -787,8 +885,11 @@ func (*UnimplementedQueryServer) ChainState(ctx context.Context, req *QueryGetCh
 func (*UnimplementedQueryServer) Prove(ctx context.Context, req *QueryProveRequest) (*QueryProveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Prove not implemented")
 }
-func (*UnimplementedQueryServer) VerificationFlags(ctx context.Context, req *QueryVerificationFlagsRequest) (*QueryVerificationFlagsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerificationFlags not implemented")
+func (*UnimplementedQueryServer) HeaderSupportedChains(ctx context.Context, req *QueryHeaderSupportedChainsRequest) (*QueryHeaderSupportedChainsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HeaderSupportedChains not implemented")
+}
+func (*UnimplementedQueryServer) HeaderEnabledChains(ctx context.Context, req *QueryHeaderEnabledChainsRequest) (*QueryHeaderEnabledChainsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HeaderEnabledChains not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -885,20 +986,38 @@ func _Query_Prove_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_VerificationFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryVerificationFlagsRequest)
+func _Query_HeaderSupportedChains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryHeaderSupportedChainsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).VerificationFlags(ctx, in)
+		return srv.(QueryServer).HeaderSupportedChains(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.lightclient.Query/VerificationFlags",
+		FullMethod: "/zetachain.zetacore.lightclient.Query/HeaderSupportedChains",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).VerificationFlags(ctx, req.(*QueryVerificationFlagsRequest))
+		return srv.(QueryServer).HeaderSupportedChains(ctx, req.(*QueryHeaderSupportedChainsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_HeaderEnabledChains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryHeaderEnabledChainsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).HeaderEnabledChains(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).HeaderEnabledChains(ctx, req.(*QueryHeaderEnabledChainsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -928,8 +1047,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Prove_Handler,
 		},
 		{
-			MethodName: "VerificationFlags",
-			Handler:    _Query_VerificationFlags_Handler,
+			MethodName: "HeaderSupportedChains",
+			Handler:    _Query_HeaderSupportedChains_Handler,
+		},
+		{
+			MethodName: "HeaderEnabledChains",
+			Handler:    _Query_HeaderEnabledChains_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1324,7 +1447,7 @@ func (m *QueryProveResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryVerificationFlagsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryHeaderSupportedChainsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1334,12 +1457,12 @@ func (m *QueryVerificationFlagsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryVerificationFlagsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryHeaderSupportedChainsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryVerificationFlagsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryHeaderSupportedChainsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1347,7 +1470,7 @@ func (m *QueryVerificationFlagsRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryVerificationFlagsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryHeaderSupportedChainsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1357,26 +1480,90 @@ func (m *QueryVerificationFlagsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryVerificationFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryHeaderSupportedChainsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryVerificationFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryHeaderSupportedChainsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	{
-		size, err := m.VerificationFlags.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if len(m.HeaderSupportedChains) > 0 {
+		for iNdEx := len(m.HeaderSupportedChains) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.HeaderSupportedChains[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
 		}
-		i -= size
-		i = encodeVarintQuery(dAtA, i, uint64(size))
 	}
-	i--
-	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryHeaderEnabledChainsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryHeaderEnabledChainsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryHeaderEnabledChainsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryHeaderEnabledChainsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryHeaderEnabledChainsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryHeaderEnabledChainsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.HeaderEnabledChains) > 0 {
+		for iNdEx := len(m.HeaderEnabledChains) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.HeaderEnabledChains[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1545,7 +1732,7 @@ func (m *QueryProveResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryVerificationFlagsRequest) Size() (n int) {
+func (m *QueryHeaderSupportedChainsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1554,14 +1741,42 @@ func (m *QueryVerificationFlagsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryVerificationFlagsResponse) Size() (n int) {
+func (m *QueryHeaderSupportedChainsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.VerificationFlags.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	if len(m.HeaderSupportedChains) > 0 {
+		for _, e := range m.HeaderSupportedChains {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryHeaderEnabledChainsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryHeaderEnabledChainsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.HeaderEnabledChains) > 0 {
+		for _, e := range m.HeaderEnabledChains {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -2566,7 +2781,7 @@ func (m *QueryProveResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryVerificationFlagsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryHeaderSupportedChainsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2589,10 +2804,10 @@ func (m *QueryVerificationFlagsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryVerificationFlagsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryHeaderSupportedChainsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryVerificationFlagsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryHeaderSupportedChainsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2616,7 +2831,7 @@ func (m *QueryVerificationFlagsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryHeaderSupportedChainsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2639,15 +2854,15 @@ func (m *QueryVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryVerificationFlagsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryHeaderSupportedChainsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryVerificationFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryHeaderSupportedChainsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VerificationFlags", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderSupportedChains", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2674,7 +2889,142 @@ func (m *QueryVerificationFlagsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.VerificationFlags.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.HeaderSupportedChains = append(m.HeaderSupportedChains, HeaderSupportedChain{})
+			if err := m.HeaderSupportedChains[len(m.HeaderSupportedChains)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryHeaderEnabledChainsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryHeaderEnabledChainsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryHeaderEnabledChainsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryHeaderEnabledChainsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryHeaderEnabledChainsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryHeaderEnabledChainsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderEnabledChains", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HeaderEnabledChains = append(m.HeaderEnabledChains, HeaderSupportedChain{})
+			if err := m.HeaderEnabledChains[len(m.HeaderEnabledChains)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -45,16 +45,16 @@ func BroadcastToZetaCore(client *Client, gasLimit uint64, authzWrappedMsg sdktyp
 }
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
-func (b *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
-	b.broadcastLock.Lock()
-	defer b.broadcastLock.Unlock()
+func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
+	c.broadcastLock.Lock()
+	defer c.broadcastLock.Unlock()
 	var err error
 
-	blockHeight, err := b.GetBlockHeight()
+	blockHeight, err := c.GetBlockHeight()
 	if err != nil {
 		return "", err
 	}
-	baseGasPrice, err := b.GetBaseGasPrice()
+	baseGasPrice, err := c.GetBaseGasPrice()
 	if err != nil {
 		return "", err
 	}
@@ -65,21 +65,21 @@ func (b *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 	// multiply gas price by the system tx reduction rate
 	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
 
-	if blockHeight > b.blockHeight {
-		b.blockHeight = blockHeight
-		accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber(authzSigner.KeyType)
+	if blockHeight > c.blockHeight {
+		c.blockHeight = blockHeight
+		accountNumber, seqNumber, err := c.GetAccountNumberAndSequenceNumber(authzSigner.KeyType)
 		if err != nil {
 			return "", err
 		}
-		b.accountNumber[authzSigner.KeyType] = accountNumber
-		if b.seqNumber[authzSigner.KeyType] < seqNumber {
-			b.seqNumber[authzSigner.KeyType] = seqNumber
+		c.accountNumber[authzSigner.KeyType] = accountNumber
+		if c.seqNumber[authzSigner.KeyType] < seqNumber {
+			c.seqNumber[authzSigner.KeyType] = seqNumber
 		}
 	}
 
 	flags := flag.NewFlagSet("zetaclient", 0)
 
-	ctx, err := b.GetContext()
+	ctx, err := c.GetContext()
 	if err != nil {
 		return "", err
 	}
@@ -88,8 +88,8 @@ func (b *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 		return "", err
 	}
 
-	factory = factory.WithAccountNumber(b.accountNumber[authzSigner.KeyType])
-	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
+	factory = factory.WithAccountNumber(c.accountNumber[authzSigner.KeyType])
+	factory = factory.WithSequence(c.seqNumber[authzSigner.KeyType])
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
@@ -102,7 +102,7 @@ func (b *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 	fee := sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom,
 		sdktypes.NewInt(int64(gaslimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt())))
 	builder.SetFeeAmount(fee)
-	err = b.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
+	err = c.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +114,7 @@ func (b *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 	// broadcast to a Tendermint node
 	commit, err := ctx.BroadcastTxSync(txBytes)
 	if err != nil {
-		b.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
+		c.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
 		return "", err
 	}
 
@@ -129,59 +129,59 @@ func (b *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 			}
 			expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
 			if err != nil {
-				b.logger.Warn().Msgf("cannot parse expected seq %s", matches[1])
+				c.logger.Warn().Msgf("cannot parse expected seq %s", matches[1])
 				return "", err
 			}
 			gotSeq, err := strconv.Atoi(matches[2])
 			if err != nil {
-				b.logger.Warn().Msgf("cannot parse got seq %s", matches[2])
+				c.logger.Warn().Msgf("cannot parse got seq %s", matches[2])
 				return "", err
 			}
-			b.seqNumber[authzSigner.KeyType] = expectedSeq
-			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
+			c.seqNumber[authzSigner.KeyType] = expectedSeq
+			c.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
 		}
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
 
 	// increment seqNum
-	b.seqNumber[authzSigner.KeyType] = b.seqNumber[authzSigner.KeyType] + 1
+	c.seqNumber[authzSigner.KeyType] = c.seqNumber[authzSigner.KeyType] + 1
 
 	return commit.TxHash, nil
 }
 
 // GetContext return a valid context with all relevant values set
-func (b *Client) GetContext() (client.Context, error) {
+func (c *Client) GetContext() (client.Context, error) {
 	ctx := client.Context{}
-	addr, err := b.keys.GetSignerInfo().GetAddress()
+	addr, err := c.keys.GetSignerInfo().GetAddress()
 	if err != nil {
-		b.logger.Error().Err(err).Msg("fail to get address from key")
+		c.logger.Error().Err(err).Msg("fail to get address from key")
 		return ctx, err
 	}
 
 	// if password is needed, set it as input
-	password := b.keys.GetHotkeyPassword()
+	password := c.keys.GetHotkeyPassword()
 	if password != "" {
 		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", password)))
 	}
 
-	ctx = ctx.WithKeyring(b.keys.GetKeybase())
-	ctx = ctx.WithChainID(b.chainID)
-	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
-	ctx = ctx.WithFromName(b.cfg.SignerName)
+	ctx = ctx.WithKeyring(c.keys.GetKeybase())
+	ctx = ctx.WithChainID(c.chainID)
+	ctx = ctx.WithHomeDir(c.cfg.ChainHomeFolder)
+	ctx = ctx.WithFromName(c.cfg.SignerName)
 	ctx = ctx.WithFromAddress(addr)
 	ctx = ctx.WithBroadcastMode("sync")
 
-	ctx = ctx.WithCodec(b.encodingCfg.Codec)
-	ctx = ctx.WithInterfaceRegistry(b.encodingCfg.InterfaceRegistry)
-	ctx = ctx.WithTxConfig(b.encodingCfg.TxConfig)
-	ctx = ctx.WithLegacyAmino(b.encodingCfg.Amino)
+	ctx = ctx.WithCodec(c.encodingCfg.Codec)
+	ctx = ctx.WithInterfaceRegistry(c.encodingCfg.InterfaceRegistry)
+	ctx = ctx.WithTxConfig(c.encodingCfg.TxConfig)
+	ctx = ctx.WithLegacyAmino(c.encodingCfg.Amino)
 	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
 
-	if b.enableMockSDKClient {
-		ctx = ctx.WithClient(b.mockSDKClient)
+	if c.enableMockSDKClient {
+		ctx = ctx.WithClient(c.mockSDKClient)
 	} else {
-		remote := b.cfg.ChainRPC
-		if !strings.HasPrefix(b.cfg.ChainHost, "http") {
+		remote := c.cfg.ChainRPC
+		if !strings.HasPrefix(c.cfg.ChainHost, "http") {
 			remote = fmt.Sprintf("tcp://%s", remote)
 		}
 
@@ -197,22 +197,22 @@ func (b *Client) GetContext() (client.Context, error) {
 	return ctx, nil
 }
 
-func (b *Client) SignTx(
+func (c *Client) SignTx(
 	txf clienttx.Factory,
 	name string,
 	txBuilder client.TxBuilder,
 	overwriteSig bool,
 	txConfig client.TxConfig,
 ) error {
-	if b.cfg.HsmMode {
+	if c.cfg.HsmMode {
 		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
 	}
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
 
 // QueryTxResult query the result of a tx
-func (b *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
-	ctx, err := b.GetContext()
+func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
+	ctx, err := c.GetContext()
 	if err != nil {
 		return nil, err
 	}
