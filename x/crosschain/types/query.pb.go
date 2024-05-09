@@ -2043,7 +2043,7 @@ func (m *QueryConvertGasToZetaResponse) GetProtocolFeeInZeta() string {
 	return ""
 }
 
-func (m *QueryConvertGasToZetaResponse) GetBlockHeight() uint64 {
+func (m *QueryConvertGasToZetaResponse) GetZetaBlockHeight() uint64 {
 	if m != nil {
 		return m.ZetaBlockHeight
 	}
