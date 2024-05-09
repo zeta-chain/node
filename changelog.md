@@ -1,11 +1,10 @@
 # CHANGELOG
 
 ## Unreleased
+
 ### Breaking Changes
-* `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableHeaderVerification` and `MsgDisableHeaderVerification` messages.
- * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
- * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
-* Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
+
+* [List of the breaking changes can be found in this document](docs/releases/v17_breaking_changes.md)
 
 ### Features
 
