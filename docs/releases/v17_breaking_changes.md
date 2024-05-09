@@ -15,7 +15,7 @@
 
 * All references to inTx and outTx have been replaced with `inbound` and `outbound` respectively. In consequence several structures, messages and queries have been renamed to reflect this change.
     * Structure renaming:
-        * `InTxHashToCctx` has been renamed to `InboundTxHashToCctx`
+        * `InTxHashToCctx` has been renamed to `InboundHashToCctx`
             * Field `InTxHash` has been renamed to `InboundHash`
         * `InTxTracker` has been renamed to `InboundTracker`
         * `OutTxTracker` has been renamed to `OutboundTracker`
@@ -35,11 +35,11 @@
             * `/zeta-chain/crosschain/inTxTrackerByChain/{chainID}` endpoint is now `/zeta-chain/crosschain/inboundTrackerByChain/{chainID}`
         * `InTxTrackerAll` has been renamed to `InboundTrackerAll`
             * `/zeta-chain/crosschain/inTxTracker` endpoint is now `/zeta-chain/crosschain/inboundTracker`
-        * `InTxHashToCctx` has been renamed to `InboundTxHashToCctx`
+        * `InTxHashToCctx` has been renamed to `InboundHashToCctx`
             * `/zeta-chain/crosschain/inTxHashToCctx/{hash}` endpoint is now `/zeta-chain/crosschain/inboundHashToCctx/{hash}`
-        * `InTxHashToCctxData` has been renamed to `InboundTxHashToCctxData`
+        * `InTxHashToCctxData` has been renamed to `InboundHashToCctxData`
             * `/zeta-chain/crosschain/inTxHashToCctxData/{hash}` endpoint is now `/zeta-chain/crosschain/inboundHashToCctxData/{hash}`
-        * `InTxHashToCctxAll` has been renamed to `InboundTxHashToCctxAll`
+        * `InTxHashToCctxAll` has been renamed to `InboundHashToCctxAll`
             * `/zeta-chain/crosschain/inTxHashToCctx` endpoint is now `/zeta-chain/crosschain/inboundHashToCctx`
     * Messages
         * `AddToOutTxTracker` has been renamed to `AddOutboundTracker`
