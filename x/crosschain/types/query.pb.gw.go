@@ -2083,7 +2083,7 @@ var (
 
 	pattern_Query_InboundHashToCctx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "inboundHashToCctx", "inboundHash"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_InboundHashToCctxData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "in_bound_hash_to_cctx_data", "inboundHash"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_InboundHashToCctxData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "inboundHashToCctxData", "inboundHash"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_InboundHashToCctxAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "inboundHashToCctx"}, "", runtime.AssumeColonVerbOpt(false)))
 

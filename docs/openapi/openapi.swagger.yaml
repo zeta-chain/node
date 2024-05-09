@@ -28477,26 +28477,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/in_bound_hash_to_cctx_data/{inboundHash}:
-    get:
-      summary: Queries a InboundHashToCctx data by index.
-      operationId: Query_InboundHashToCctxData
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryInboundHashToCctxDataResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: inboundHash
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
   /zeta-chain/crosschain/inboundHashToCctx:
     get:
       summary: Queries a list of InboundHashToCctx items.
@@ -28565,6 +28545,26 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/crosschainQueryGetInboundHashToCctxResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: inboundHash
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/crosschain/inboundHashToCctxData/{inboundHash}:
+    get:
+      summary: Queries a InboundHashToCctx data by index.
+      operationId: Query_InboundHashToCctxData
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryInboundHashToCctxDataResponse'
         default:
           description: An unexpected error response.
           schema:

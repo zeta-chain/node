@@ -56,7 +56,7 @@ service Query {
   rpc InboundHashToCctxData(QueryInboundHashToCctxDataRequest)
       returns (QueryInboundHashToCctxDataResponse) {
     option (google.api.http).get =
-        "/zeta-chain/crosschain/in_bound_hash_to_cctx_data/{inboundHash}";
+        "/zeta-chain/crosschain/inboundHashToCctxData/{inboundHash}";
   }
 
   // Queries a list of InboundHashToCctx items.
