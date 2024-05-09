@@ -18,6 +18,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
@@ -132,38 +133,9 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 		return nil
 	}
 
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sender, nonce, err := getSenderAndNonce(tx)
 	if err != nil {
 		return err
-	}
-
-	msgs := tx.GetMsgs()
-	unsignedSender := ""
-	unsignedNonce := uint64(0)
-	for _, msg := range msgs {
-		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-		if !ok {
-			continue
-		} else {
-			ethAddr := ethcommon.HexToAddress(ethMsg.From)
-			addr := sdk.AccAddress(ethAddr.Bytes())
-			unsignedSender = addr.String()
-			unsignedNonce = ethMsg.AsTransaction().Nonce()
-		}
-	}
-
-	var sender string
-	var nonce uint64
-	if unsignedSender != "" {
-		sender = unsignedSender
-		nonce = unsignedNonce
-	} else {
-		if len(sigs) == 0 {
-			return fmt.Errorf("tx must have at least one signer")
-		}
-		sig := sigs[0]
-		sender = sdk.AccAddress(sig.PubKey.Address()).String()
-		nonce = sig.Sequence
 	}
 
 	senderTxs, found := snm.senders[sender]
@@ -221,37 +193,9 @@ func (snm *SenderNonceMempool) CountTx() int {
 // Remove removes a tx from the mempool. It returns an error if the tx does not
 // have at least one signer or the tx was not found in the pool.
 func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sender, nonce, err := getSenderAndNonce(tx)
 	if err != nil {
 		return err
-	}
-	msgs := tx.GetMsgs()
-	unsignedSender := ""
-	unsignedNonce := uint64(0)
-	for _, msg := range msgs {
-		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-		if !ok {
-			continue
-		} else {
-			ethAddr := ethcommon.HexToAddress(ethMsg.From)
-			addr := sdk.AccAddress(ethAddr.Bytes())
-			unsignedSender = addr.String()
-			unsignedNonce = ethMsg.AsTransaction().Nonce()
-		}
-	}
-
-	var sender string
-	var nonce uint64
-	if unsignedSender != "" {
-		sender = unsignedSender
-		nonce = unsignedNonce
-	} else {
-		if len(sigs) == 0 {
-			return fmt.Errorf("tx must have at least one signer")
-		}
-		sig := sigs[0]
-		sender = sdk.AccAddress(sig.PubKey.Address()).String()
-		nonce = sig.Sequence
 	}
 
 	senderTxs, found := snm.senders[sender]
@@ -318,4 +262,39 @@ func (i *senderNonceMempoolIterator) Tx() sdk.Tx {
 
 func removeAtIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
+}
+
+func getSenderAndNonce(tx sdk.Tx) (string, uint64, error) {
+	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
+		opts := txWithExtensions.GetExtensionOptions()
+		if len(opts) > 0 && opts[0].GetTypeUrl() == "/ethermint.evm.v1.ExtensionOptionsEthereumTx" {
+			for _, msg := range tx.GetMsgs() {
+				if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
+					ethAddr := ethcommon.HexToAddress(ethMsg.From)
+					addr := sdk.AccAddress(ethAddr.Bytes())
+					return addr.String(), ethMsg.AsTransaction().Nonce(), nil
+				}
+			}
+		}
+	}
+
+	return getSenderAndNonceDefault(tx)
+}
+
+func getSenderAndNonceDefault(tx sdk.Tx) (string, uint64, error) {
+	sigTx, ok := tx.(signing.SigVerifiableTx)
+	if !ok {
+		return "", 0, fmt.Errorf("tx of type %T does not implement SigVerifiableTx", tx)
+	}
+
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return "", 0, err
+	}
+
+	if len(sigs) == 0 {
+		return "", 0, fmt.Errorf("tx must have at least one signer")
+	}
+
+	return sigs[0].PubKey.Address().String(), sigs[0].Sequence, nil
 }
