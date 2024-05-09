@@ -55,14 +55,15 @@ func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 }
 
 type zetaclientdSupervisor struct {
-	zetacoredConn   *grpc.ClientConn
-	reloadSignals   chan bool
-	logger          zerolog.Logger
-	upgradesDir     string
-	upgradePlanName string
+	zetacoredConn      *grpc.ClientConn
+	reloadSignals      chan bool
+	logger             zerolog.Logger
+	upgradesDir        string
+	upgradePlanName    string
+	enableAutoDownload bool
 }
 
-func newZetaclientdSupervisor(zetaCoreURL string, logger zerolog.Logger) (*zetaclientdSupervisor, error) {
+func newZetaclientdSupervisor(zetaCoreURL string, logger zerolog.Logger, enableAutoDownload bool) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:9090", zetaCoreURL),
@@ -73,10 +74,11 @@ func newZetaclientdSupervisor(zetaCoreURL string, logger zerolog.Logger) (*zetac
 	}
 
 	return &zetaclientdSupervisor{
-		zetacoredConn: conn,
-		logger:        logger,
-		reloadSignals: make(chan bool, 1),
-		upgradesDir:   defaultUpgradesDir,
+		zetacoredConn:      conn,
+		logger:             logger,
+		reloadSignals:      make(chan bool, 1),
+		upgradesDir:        defaultUpgradesDir,
+		enableAutoDownload: enableAutoDownload,
 	}, nil
 }
 
@@ -184,7 +186,10 @@ func (s *zetaclientdSupervisor) handleCoreUpgradePlan(ctx context.Context) {
 		prevPlanName = plan.Name
 		s.upgradePlanName = plan.Name
 
-		// TODO: make optional
+		if !s.enableAutoDownload {
+			s.logger.Warn().Msg("skipping autodownload because of configuration")
+			continue
+		}
 		err = s.downloadZetaclientd(ctx, plan)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("downloadZetaclientd failed")

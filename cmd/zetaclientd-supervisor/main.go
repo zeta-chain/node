@@ -41,7 +41,8 @@ func main() {
 		panic(fmt.Errorf("unable to get passwords: %w", err))
 	}
 
-	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger)
+	_, enableAutoDownload := os.LookupEnv("ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD")
+	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger, enableAutoDownload)
 	if err != nil {
 		panic(fmt.Errorf("unable to get supervisor: %w", err))
 	}
