@@ -22,10 +22,10 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 var debugArgs = debugArguments{}
@@ -53,7 +53,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coreContext := corecontext.NewZetaCoreContext(cfg)
+			coreContext := clientcontext.NewZetaCoreContext(cfg)
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -70,7 +70,7 @@ func DebugCmd() *cobra.Command {
 				}
 			}()
 
-			bridge, err := zetabridge.NewZetaCoreBridge(
+			client, err := zetacore.NewClient(
 				&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
 				debugArgs.zetaNode,
 				"",
@@ -81,11 +81,11 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			chainParams, err := bridge.GetChainParams()
+			chainParams, err := client.GetChainParams()
 			if err != nil {
 				return err
 			}
-			tssEthAddress, err := bridge.GetEthTssAddress()
+			tssEthAddress, err := client.GetEthTssAddress()
 			if err != nil {
 				return err
 			}
@@ -97,10 +97,10 @@ func DebugCmd() *cobra.Command {
 
 			if chains.IsEVMChain(chain.ChainId) {
 
-				ob := evm.ChainClient{
+				ob := evm.Client{
 					Mu: &sync.Mutex{},
 				}
-				ob.WithZetaBridge(bridge)
+				ob.WithZetacoreClient(client)
 				ob.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
@@ -176,10 +176,10 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if chains.IsBitcoinChain(chain.ChainId) {
-				obBtc := bitcoin.BTCChainClient{
+				obBtc := bitcoin.Client{
 					Mu: &sync.Mutex{},
 				}
-				obBtc.WithZetaClient(bridge)
+				obBtc.WithZetaCoreClient(client)
 				obBtc.WithLogger(chainLogger)
 				obBtc.WithChain(*chains.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
@@ -204,7 +204,7 @@ func DebugCmd() *cobra.Command {
 			}
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 
-			ballot, err := bridge.GetBallot(ballotIdentifier)
+			ballot, err := client.GetBallot(ballotIdentifier)
 			if err != nil {
 				return err
 			}

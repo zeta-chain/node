@@ -26,13 +26,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cryptotypes.PrivKey, cfg config.Config) error {
+func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cryptotypes.PrivKey, cfg config.Config) error {
 
 	startLogger.Warn().Msg("P2P Diagnostic mode enabled")
 	startLogger.Warn().Msgf("seed peer: %s", peers)
-	var priKey secp256k1.PrivKey
-	priKey = bridgePk.Bytes()[:32]
-	pubkeyBech32, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, bridgePk.PubKey())
+	priKey := secp256k1.PrivKey(hotkeyPk.Bytes()[:32])
+	pubkeyBech32, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, hotkeyPk.PubKey())
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Bech32ifyPubKey error")
 		return err

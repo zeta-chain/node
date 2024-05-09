@@ -3,12 +3,6 @@ package supplychecker
 import (
 	"fmt"
 
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -17,15 +11,18 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 // ZetaSupplyChecker is a utility to check the total supply of Zeta tokens
 type ZetaSupplyChecker struct {
-	coreContext      *corecontext.ZetaCoreContext
+	coreContext      *context.ZetaCoreContext
 	evmClient        map[int64]*ethclient.Client
-	zetaClient       *zetabridge.ZetaCoreBridge
+	zetaClient       *zetacore.Client
 	ticker           *clienttypes.DynamicTicker
 	stop             chan struct{}
 	logger           zerolog.Logger
@@ -36,8 +33,8 @@ type ZetaSupplyChecker struct {
 
 // NewZetaSupplyChecker creates a new ZetaSupplyChecker
 func NewZetaSupplyChecker(
-	appContext *appcontext.AppContext,
-	zetaClient *zetabridge.ZetaCoreBridge,
+	appContext *context.AppContext,
+	zetaClient *zetacore.Client,
 	logger zerolog.Logger,
 ) (ZetaSupplyChecker, error) {
 	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)

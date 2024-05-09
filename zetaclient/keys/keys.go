@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,7 +18,11 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zetaerrors "github.com/zeta-chain/zetacore/zetaclient/errors"
+)
+
+var (
+	ErrBech32ifyPubKey = errors.New("Bech32ifyPubKey fail in main")
+	ErrNewPubKey       = errors.New("NewPubKey error from string")
 )
 
 // Keys manages all the keys used by zeta client
@@ -144,11 +149,11 @@ func (k *Keys) GetPubKeySet(password string) (zetacrypto.PubKeySet, error) {
 
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pK.PubKey())
 	if err != nil {
-		return pubkeySet, zetaerrors.ErrBech32ifyPubKey
+		return pubkeySet, ErrBech32ifyPubKey
 	}
 	pubkey, err := zetacrypto.NewPubKey(s)
 	if err != nil {
-		return pubkeySet, zetaerrors.ErrNewPubKey
+		return pubkeySet, ErrNewPubKey
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil

@@ -113,7 +113,7 @@
 * [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
 * [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
 * [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
-* [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
+* [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetacore package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
