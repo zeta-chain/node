@@ -24,6 +24,8 @@ import (
 
 const zetaclientdBinaryName = "zetaclientd"
 
+var defaultUpgradesDir = os.ExpandEnv("$HOME/.zetaclientd/upgrades")
+
 // serializedWriter wraps an io.Writer and ensures that writes to it from multiple goroutines
 // are serialized
 type serializedWriter struct {
@@ -74,7 +76,7 @@ func newZetaclientdSupervisor(zetaCoreURL string, logger zerolog.Logger) (*zetac
 		zetacoredConn: conn,
 		logger:        logger,
 		reloadSignals: make(chan bool, 1),
-		upgradesDir:   os.ExpandEnv("$HOME/.zetaclientd/upgrades"),
+		upgradesDir:   defaultUpgradesDir,
 	}, nil
 }
 
@@ -159,11 +161,13 @@ func (s *zetaclientdSupervisor) handleCoreUpgradePlan(ctx context.Context) {
 
 	prevPlanName := ""
 	for {
+		// wait for either a second or context cancel
 		select {
 		case <-time.After(time.Second):
 		case <-ctx.Done():
 			return
 		}
+
 		resp, err := client.CurrentPlan(ctx, &upgradetypes.QueryCurrentPlanRequest{})
 		if err != nil {
 			s.logger.Warn().Err(err).Msg("get current upgrade plan")
@@ -216,7 +220,7 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 	if err != nil {
 		return fmt.Errorf("mkdir %s: %w", upgradeDir, err)
 	}
-	upgradePath := path.Join(upgradeDir, "zetaclientd")
+	upgradePath := path.Join(upgradeDir, zetaclientdBinaryName)
 	// TODO: retry?
 	// GetFile should validate checksum so long as it was provided in the url
 	err = getter.GetFile(upgradePath, binURL, getter.WithContext(ctx), getter.WithUmask(0o750))
