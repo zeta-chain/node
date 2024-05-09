@@ -62,7 +62,10 @@ func WaitCctxsMinedByInboundHash(
 		}
 		time.Sleep(1 * time.Second)
 
-		res, err := cctxClient.InboundHashToCctxData(ctx, &crosschaintypes.QueryInboundHashToCctxDataRequest{
+		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
+		// for the update tests
+		// TODO: replace with InboundHashToCctxData once removed
+		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInboundHashToCctxDataRequest{
 			InboundHash: inboundHash,
 		})
 
