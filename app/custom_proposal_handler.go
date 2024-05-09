@@ -5,12 +5,10 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
 )
 
 type (
@@ -103,7 +101,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 		for iterator != nil {
 			memTx := iterator.Tx()
 
-			sendersWithNonce, err := GetSendersWithNonce(memTx)
+			sendersWithNonce, err := zetamempool.GetSendersWithNonce(memTx)
 			if err != nil {
 				panic(fmt.Errorf("failed to get signatures: %w", err))
 			}
@@ -310,58 +308,4 @@ func (ts *defaultTxSelector) SelectTxForProposal(maxTxBytes, maxBlockGas uint64,
 
 	// check if we've reached capacity; if so, we cannot select any more transactions
 	return ts.totalTxBytes >= maxTxBytes || (maxBlockGas > 0 && (ts.totalTxGas >= maxBlockGas))
-}
-
-// TODO: move to common place and use in mempool too
-func GetSendersWithNonce(tx sdk.Tx) ([]SenderWithNonce, error) {
-	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
-		opts := txWithExtensions.GetExtensionOptions()
-		if len(opts) > 0 && opts[0].GetTypeUrl() == "/ethermint.evm.v1.ExtensionOptionsEthereumTx" {
-			for _, msg := range tx.GetMsgs() {
-				if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
-
-					return []SenderWithNonce{
-						{
-							Sender: ethMsg.GetFrom().String(),
-							Nonce:  ethMsg.AsTransaction().Nonce(),
-						},
-					}, nil
-				}
-			}
-		}
-	}
-
-	return getSendersWithNonceDefault(tx)
-}
-
-type SenderWithNonce struct {
-	Sender string
-	Nonce  uint64
-}
-
-func getSendersWithNonceDefault(tx sdk.Tx) ([]SenderWithNonce, error) {
-	sendersWithNonce := []SenderWithNonce{}
-
-	sigTx, ok := tx.(signing.SigVerifiableTx)
-	if !ok {
-		return nil, fmt.Errorf("tx of type %T does not implement SigVerifiableTx", tx)
-	}
-
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(sigs) == 0 {
-		return nil, fmt.Errorf("tx must have at least one signer")
-	}
-
-	for _, sig := range sigs {
-		sendersWithNonce = append(sendersWithNonce, SenderWithNonce{
-			Sender: sig.PubKey.Address().String(),
-			Nonce:  sig.Sequence,
-		})
-	}
-
-	return sendersWithNonce, nil
 }

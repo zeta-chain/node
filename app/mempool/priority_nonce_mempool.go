@@ -1,10 +1,7 @@
-// This is fork of SenderNonceMempool from cosmos sdk 0.47 (check: https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce.go)
+// This is fork of PriorityNonceMempool from cosmos sdk 0.47 (check: https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce.go)
 // only change is part where signatures are checked
 
-// this is just for illustration, if we go with similar approach we would use priority nonce mempool, which has same issue but is more complex
-// so testing with this one for now
-
-package main
+package mempool
 
 import (
 	"context"

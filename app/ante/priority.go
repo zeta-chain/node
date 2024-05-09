@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,6 +24,6 @@ func (vad SystemPriorityDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-	newCtx := ctx.WithPriority(500000000) // arbirtrary value, to be revisited, maybe relative to current context.Priority (eg. double it)
+	newCtx := ctx.WithPriority(math.MaxInt64)
 	return next(newCtx, tx, simulate)
 }

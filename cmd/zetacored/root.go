@@ -39,6 +39,7 @@ import (
 	ethermintclient "github.com/evmos/ethermint/client"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
 )
 
 const EnvPrefix = "zetacore"
@@ -232,11 +233,7 @@ func (ac appCreator) newApp(
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
-		// app.SetMempool(NewSenderNonceMempool(
-		// 	// should be param
-		// 	SenderNonceMaxTxOpt(cast.ToInt(1000)),
-		// ))
-		app.SetMempool(DefaultPriorityMempool())
+		app.SetMempool(zetamempool.DefaultPriorityMempool())
 	})
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
