@@ -82,6 +82,9 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
@@ -196,6 +199,7 @@ var (
 		ibctm.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
+		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		evm.AppModuleBasic{},
@@ -217,6 +221,7 @@ var (
 		stakingtypes.BondedPoolName:                     {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:                  {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                             {authtypes.Burner},
+		ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 		crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
 		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
@@ -272,13 +277,15 @@ type App struct {
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
 	IBCKeeper             *ibckeeper.Keeper
+	TransferKeeper        ibctransferkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	GroupKeeper           groupkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	// scoped keepers
-	ScopedIBCKeeper capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
 	// evm keepers
 	EvmKeeper       *evmkeeper.Keeper
@@ -291,6 +298,8 @@ type App struct {
 	ObserverKeeper    *observerkeeper.Keeper
 	FungibleKeeper    fungiblekeeper.Keeper
 	EmissionsKeeper   emissionskeeper.Keeper
+
+	transferModule transfer.AppModule
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -328,6 +337,7 @@ func New(
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		ibcexported.StoreKey,
+		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
 		authzkeeper.StoreKey,
 		evmtypes.StoreKey,
@@ -374,6 +384,7 @@ func New(
 	)
 
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	// add keepers
 	// use custom Ethermint account for contracts
@@ -451,6 +462,26 @@ func New(
 	)
 
 	ibcRouter := porttypes.NewRouter()
+
+	app.TransferKeeper = ibctransferkeeper.NewKeeper(
+		appCodec,
+		keys[ibctransfertypes.StoreKey],
+		app.GetSubspace(ibctransfertypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		scopedTransferKeeper,
+	)
+	app.transferModule = transfer.NewAppModule(app.TransferKeeper)
+
+	// create IBC module from bottom to top of stack
+	var transferStack porttypes.IBCModule
+	transferStack = transfer.NewIBCModule(app.TransferKeeper)
+
+	// Add transfer stack to IBC Router
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 
 	// ZetaChain keepers
 
@@ -600,6 +631,7 @@ func New(
 		app.FungibleKeeper.EVMHooks(),
 	))
 
+	// seal the IBC router
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	/****  Module Options ****/
@@ -629,7 +661,9 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+		app.transferModule,
 		ibc.NewAppModule(app.IBCKeeper),
+		transfer.NewAppModule(app.TransferKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
@@ -664,6 +698,7 @@ func New(
 		group.ModuleName,
 		vestingtypes.ModuleName,
 		ibcexported.ModuleName,
+		ibctransfertypes.ModuleName,
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
 		observertypes.ModuleName,
@@ -687,6 +722,7 @@ func New(
 		govtypes.ModuleName,
 		paramstypes.ModuleName,
 		ibcexported.ModuleName,
+		ibctransfertypes.ModuleName,
 		genutiltypes.ModuleName,
 		group.ModuleName,
 		crisistypes.ModuleName,
@@ -754,6 +790,9 @@ func New(
 			tmos.Exit(err.Error())
 		}
 	}
+
+	app.ScopedIBCKeeper = scopedIBCKeeper
+	app.ScopedTransferKeeper = scopedTransferKeeper
 
 	return app
 }
@@ -916,7 +955,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	//pkt := ibctransfertypes.ParamKeyTable().RegisterParamSet(&ibccoreclienttypes.Params{}).RegisterParamSet(&ibcconnectiontypes.Params{})
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	paramsKeeper.Subspace(group.ModuleName)
