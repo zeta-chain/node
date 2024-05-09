@@ -147,7 +147,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 		ReceiverChain:      42,
 		Amount:             math.NewUint(42),
 		Message:            sample.String(),
-		inboundHash:        sample.String(),
+		InboundHash:        sample.String(),
 		InboundBlockHeight: 42,
 		GasLimit:           42,
 		CoinType:           coin.CoinType_Zeta,
@@ -213,7 +213,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 
 	// in tx hash used
 	msg2 = msg
-	msg2.inboundHash = sample.StringRandom(r, 32)
+	msg2.InboundHash = sample.StringRandom(r, 32)
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "in tx hash should change hash")
 

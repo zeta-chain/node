@@ -254,8 +254,8 @@ func LoadEVMOutboundNReceipt(
 	return tx, receipt
 }
 
-// LoadEVMCctxNOutboudNReceipt loads archived cctx, outtx and receipt from file
-func LoadEVMCctxNOutboudNReceipt(
+// LoadEVMCctxNOutboundNReceipt loads archived cctx, outtx and receipt from file
+func LoadEVMCctxNOutboundNReceipt(
 	t *testing.T,
 	chainID int64,
 	nonce uint64,

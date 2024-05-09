@@ -217,7 +217,7 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 
 	for i := 0; i < n; i++ {
 		inboundHashToCctx := types.InboundHashToCctx{
-			inboundHash: strconv.Itoa(i),
+			InboundHash: strconv.Itoa(i),
 		}
 		nullify.Fill(&inboundHashToCctx)
 		state.InboundHashToCctxList = append(state.InboundHashToCctxList, inboundHashToCctx)

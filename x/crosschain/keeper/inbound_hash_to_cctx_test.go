@@ -16,7 +16,7 @@ import (
 func createNInboundHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.InboundHashToCctx {
 	items := make([]types.InboundHashToCctx, n)
 	for i := range items {
-		items[i].inboundHash = strconv.Itoa(i)
+		items[i].InboundHash = strconv.Itoa(i)
 
 		keeper.SetInboundHashToCctx(ctx, items[i])
 	}
@@ -28,7 +28,7 @@ func TestInTxHashToCctxGet(t *testing.T) {
 	items := createNInboundHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetInboundHashToCctx(ctx,
-			item.inboundHash,
+			item.InboundHash,
 		)
 		require.True(t, found)
 		require.Equal(t,
@@ -42,10 +42,10 @@ func TestInTxHashToCctxRemove(t *testing.T) {
 	items := createNInboundHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveInboundHashToCctx(ctx,
-			item.inboundHash,
+			item.InboundHash,
 		)
 		_, found := keeper.GetInboundHashToCctx(ctx,
-			item.inboundHash,
+			item.InboundHash,
 		)
 		require.False(t, found)
 	}
