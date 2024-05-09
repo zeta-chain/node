@@ -186,14 +186,14 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// get cctx and check status
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Errorf("cctx status is not OutboundMined"))
 	}
 
-	// get bitcoin tx according to the outTxHash in cctx
-	outTxHash := cctx.GetCurrentOutboundParam().Hash
-	hash, err := chainhash.NewHashFromStr(outTxHash)
+	// get bitcoin tx according to the outboundHash in cctx
+	outboundHash := cctx.GetCurrentOutboundParam().Hash
+	hash, err := chainhash.NewHashFromStr(outboundHash)
 	if err != nil {
 		panic(err)
 	}
@@ -304,9 +304,9 @@ func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 //		if err != nil {
 //			panic(err)
 //		}
-//		cctx := config.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), r.CctxClient, r.Logger)
-//		outTxHash := cctx.GetCurrentOutboundParam().Hash
-//		hash, err := chainhash.NewHashFromStr(outTxHash)
+//		cctx := config.WaitCctxMinedByInboundHash(receipt.TxHash.Hex(), r.CctxClient, r.Logger)
+//		outboundHash := cctx.GetCurrentOutboundParam().Hash
+//		hash, err := chainhash.NewHashFromStr(outboundHash)
 //		if err != nil {
 //			panic(err)
 //		}

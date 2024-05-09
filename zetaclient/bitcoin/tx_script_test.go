@@ -134,7 +134,7 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 	chain := chains.BtcMainnetChain
 	nonce := uint64(148)
 	net := &chaincfg.MainNetParams
-	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
+	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOutbound(chain.ChainId, nonce))
 
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
@@ -162,7 +162,7 @@ func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 	chain := chains.BtcMainnetChain
 	nonce := uint64(148)
 	net := &chaincfg.MainNetParams
-	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
+	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOutbound(chain.ChainId, nonce))
 
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
@@ -335,7 +335,7 @@ func TestDecodeOpReturnMemo(t *testing.T) {
 	chain := chains.BtcMainnetChain
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
-	rawResult := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+	rawResult := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 	require.True(t, len(rawResult.Vout) >= 2)
 	require.Equal(t, scriptHex, rawResult.Vout[1].ScriptPubKey.Hex)
 

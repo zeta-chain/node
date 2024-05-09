@@ -13,7 +13,7 @@ import (
 )
 
 // Keeper Tests
-func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.OutboundTracker {
+func createNOutboundTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.OutboundTracker {
 	items := make([]types.OutboundTracker, n)
 	for i := range items {
 		items[i].ChainId = int64(i)
@@ -25,9 +25,9 @@ func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.
 	return items
 }
 
-func TestOutTxTrackerGet(t *testing.T) {
+func TestOutboundTrackerGet(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
-	items := createNOutTxTracker(keeper, ctx, 10)
+	items := createNOutboundTracker(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetOutboundTracker(ctx,
 			item.ChainId,
@@ -40,9 +40,9 @@ func TestOutTxTrackerGet(t *testing.T) {
 		)
 	}
 }
-func TestOutTxTrackerRemove(t *testing.T) {
+func TestOutboundTrackerRemove(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-	items := createNOutTxTracker(k, ctx, 10)
+	items := createNOutboundTracker(k, ctx, 10)
 	for _, item := range items {
 		k.RemoveOutboundTrackerFromStore(ctx,
 			item.ChainId,
@@ -56,9 +56,9 @@ func TestOutTxTrackerRemove(t *testing.T) {
 	}
 }
 
-func TestOutTxTrackerGetAll(t *testing.T) {
+func TestOutboundTrackerGetAll(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
-	items := createNOutTxTracker(keeper, ctx, 10)
+	items := createNOutboundTracker(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),
 		nullify.Fill(keeper.GetAllOutboundTracker(ctx)),

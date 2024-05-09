@@ -22,7 +22,7 @@ func TestERC20Deposit(r *runner.E2ERunner, args []string) {
 	hash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
 
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 }
 

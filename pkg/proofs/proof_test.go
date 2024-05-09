@@ -52,7 +52,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validate block
-		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
+		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.Outboundid, b.TssAddress, b.Nonce)
 	}
 }
 

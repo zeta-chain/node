@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestKeeper_OutTxTrackerAllByChain(t *testing.T) {
+func TestKeeper_OutboundTrackerAllByChain(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		res, err := k.OutboundTrackerAllByChain(ctx, nil)
@@ -33,7 +33,7 @@ func TestKeeper_OutTxTrackerAllByChain(t *testing.T) {
 	})
 }
 
-func TestKeeper_OutTxTrackerAll(t *testing.T) {
+func TestKeeper_OutboundTrackerAll(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		res, err := k.OutboundTrackerAll(ctx, nil)
@@ -53,7 +53,7 @@ func TestKeeper_OutTxTrackerAll(t *testing.T) {
 	})
 }
 
-func TestKeeper_OutTxTracker(t *testing.T) {
+func TestKeeper_OutboundTracker(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		res, err := k.OutboundTracker(ctx, nil)

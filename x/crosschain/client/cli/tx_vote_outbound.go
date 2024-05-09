@@ -18,12 +18,12 @@ import (
 
 func CmdVoteOutbound() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote-outbound [sendHash] [outTxHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType]",
+		Use:   "vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType]",
 		Short: "Broadcast message to vote an outbound",
 		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSendHash := args[0]
-			argsOutTxHash := args[1]
+			argsOutboundHash := args[1]
 
 			argsOutBlockHeight, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
@@ -76,7 +76,7 @@ func CmdVoteOutbound() *cobra.Command {
 			msg := types.NewMsgVoteOutbound(
 				clientCtx.GetFromAddress().String(),
 				argsSendHash,
-				argsOutTxHash,
+				argsOutboundHash,
 				argsOutBlockHeight,
 				argsOutGasUsed,
 				argsOutEffectiveGasPrice,

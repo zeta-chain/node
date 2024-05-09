@@ -342,7 +342,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		oldOutTxParamsLen := len(cctx.OutboundParams)
+		oldOutboundParamsLen := len(cctx.OutboundParams)
 		// mock failed GetRevertGasLimit for ERC20
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 			Return(fungibletypes.ForeignCoins{
@@ -353,7 +353,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
 		// New outbound not added and the old outbound is not finalized
-		require.Len(t, cctx.OutboundParams, oldOutTxParamsLen)
+		require.Len(t, cctx.OutboundParams, oldOutboundParamsLen)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_NotFinalized)
 	})
 
@@ -399,7 +399,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		oldOutTxParamsLen := len(cctx.OutboundParams)
+		oldOutboundParamsLen := len(cctx.OutboundParams)
 		// mock successful GetRevertGasLimit for ERC20
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
@@ -413,8 +413,8 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingRevert)
 		// New outbound added for revert and the old outbound is finalized
-		require.Len(t, cctx.OutboundParams, oldOutTxParamsLen+1)
+		require.Len(t, cctx.OutboundParams, oldOutboundParamsLen+1)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_NotFinalized)
-		require.Equal(t, cctx.OutboundParams[oldOutTxParamsLen-1].TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+		require.Equal(t, cctx.OutboundParams[oldOutboundParamsLen-1].TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 }

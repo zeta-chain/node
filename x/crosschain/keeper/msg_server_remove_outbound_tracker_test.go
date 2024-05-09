@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgServer_RemoveFromOutTxTracker(t *testing.T) {
+func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 	t.Run("should error if not authorized", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,

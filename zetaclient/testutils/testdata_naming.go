@@ -24,32 +24,32 @@ func FileNameCctxByNonce(chainID int64, nonce uint64) string {
 	return fmt.Sprintf("chain_%d_cctx_%d.json", chainID, nonce)
 }
 
-// FileNameEVMIntx returns unified archive file name for inbound tx
-func FileNameEVMIntx(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
+// FileNameEVMInbound returns unified archive file name for inbound tx
+func FileNameEVMInbound(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
 	if !donation {
 		return fmt.Sprintf("chain_%d_intx_ethrpc_%s_%s.json", chainID, coinType, intxHash)
 	}
 	return fmt.Sprintf("chain_%d_intx_ethrpc_donation_%s_%s.json", chainID, coinType, intxHash)
 }
 
-// FileNameEVMIntxReceipt returns unified archive file name for inbound tx receipt
-func FileNameEVMIntxReceipt(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
+// FileNameEVMInboundReceipt returns unified archive file name for inbound tx receipt
+func FileNameEVMInboundReceipt(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
 	if !donation {
 		return fmt.Sprintf("chain_%d_intx_receipt_%s_%s.json", chainID, coinType, intxHash)
 	}
 	return fmt.Sprintf("chain_%d_intx_receipt_donation_%s_%s.json", chainID, coinType, intxHash)
 }
 
-// FileNameBTCIntx returns unified archive file name for inbound tx
-func FileNameBTCIntx(chainID int64, intxHash string, donation bool) string {
+// FileNameBTCInbound returns unified archive file name for inbound tx
+func FileNameBTCInbound(chainID int64, intxHash string, donation bool) string {
 	if !donation {
 		return fmt.Sprintf("chain_%d_intx_raw_result_%s.json", chainID, intxHash)
 	}
 	return fmt.Sprintf("chain_%d_intx_raw_result_donation_%s.json", chainID, intxHash)
 }
 
-// FileNameBTCOuttx returns unified archive file name for outbound tx
-func FileNameBTCOuttx(chainID int64, nonce uint64) string {
+// FileNameBTCOutbound returns unified archive file name for outbound tx
+func FileNameBTCOutbound(chainID int64, nonce uint64) string {
 	return fmt.Sprintf("chain_%d_outtx_raw_result_nonce_%d.json", chainID, nonce)
 }
 
@@ -64,13 +64,13 @@ func FileNameBTCMsgTx(chainID int64, txHash string) string {
 	return fmt.Sprintf("chain_%d_msgtx_%s.json", chainID, txHash)
 }
 
-// FileNameEVMOuttx returns unified archive file name for outbound tx
-func FileNameEVMOuttx(chainID int64, txHash string, coinType coin.CoinType) string {
+// FileNameEVMOutbound returns unified archive file name for outbound tx
+func FileNameEVMOutbound(chainID int64, txHash string, coinType coin.CoinType) string {
 	return fmt.Sprintf("chain_%d_outtx_%s_%s.json", chainID, coinType, txHash)
 }
 
-// FileNameEVMOuttxReceipt returns unified archive file name for outbound tx receipt
-func FileNameEVMOuttxReceipt(chainID int64, txHash string, coinType coin.CoinType, eventName string) string {
+// FileNameEVMOutboundReceipt returns unified archive file name for outbound tx receipt
+func FileNameEVMOutboundReceipt(chainID int64, txHash string, coinType coin.CoinType, eventName string) string {
 	// empty eventName is for regular transfer receipt, no event
 	if eventName == "" {
 		return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s.json", chainID, coinType, txHash)

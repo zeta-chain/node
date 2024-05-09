@@ -23,23 +23,23 @@ func (s *CliTestSuite) TestShowInboundHashToCctx() {
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
 	for _, tc := range []struct {
-		desc       string
-		idInTxHash string
+		desc          string
+		idInboundHash string
 
 		args []string
 		err  error
 		obj  types.InboundHashToCctx
 	}{
 		{
-			desc:       "found",
-			idInTxHash: objs[0].InboundHash,
+			desc:          "found",
+			idInboundHash: objs[0].InboundHash,
 
 			args: common,
 			obj:  objs[0],
 		},
 		{
-			desc:       "not found",
-			idInTxHash: strconv.Itoa(100000),
+			desc:          "not found",
+			idInboundHash: strconv.Itoa(100000),
 
 			args: common,
 			err:  status.Error(codes.NotFound, "not found"),
@@ -47,7 +47,7 @@ func (s *CliTestSuite) TestShowInboundHashToCctx() {
 	} {
 		s.Run(tc.desc, func() {
 			args := []string{
-				tc.idInTxHash,
+				tc.idInboundHash,
 			}
 			args = append(args, tc.args...)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowInboundHashToCctx(), args)

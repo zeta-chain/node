@@ -26,7 +26,7 @@ import (
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/tss"
 )
 
@@ -202,12 +202,12 @@ func (signer *BTCSigner) SignWithdrawTx(
 
 	// size checking
 	// #nosec G701 always positive
-	txSize, err := EstimateOuttxSize(uint64(len(prevOuts)), []btcutil.Address{to})
+	txSize, err := EstimateOutboundSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if err != nil {
 		return nil, err
 	}
-	if sizeLimit < BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
-		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
+	if sizeLimit < BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
+		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
 	if txSize < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
 		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, outTxBytesMin)
@@ -295,34 +295,34 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	return nil
 }
 
-func (signer *BTCSigner) TryProcessOutTx(
+func (signer *BTCSigner) TryProcessOutbound(
 	cctx *types.CrossChainTx,
-	outTxMan *outtxprocessor.Processor,
-	outTxID string,
+	outboundManager *outboundprocessor.Processor,
+	outboundID string,
 	chainclient interfaces.ChainClient,
 	zetaBridge interfaces.ZetaCoreBridger,
 	height uint64,
 ) {
 	defer func() {
-		outTxMan.EndTryProcess(outTxID)
+		outboundManager.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
-			signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, caught panic error: %v", cctx.Index, err)
+			signer.logger.Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
 		}
 	}()
 
 	logger := signer.logger.With().
-		Str("OutTxID", outTxID).
+		Str("OutboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()
 
 	params := cctx.GetCurrentOutboundParam()
 	coinType := cctx.InboundParams.CoinType
 	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
-		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
+		logger.Error().Msgf("BTC TryProcessOutbound: can only send BTC to a BTC network")
 		return
 	}
 
-	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+	logger.Info().Msgf("BTC TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
 	btcClient, ok := chainclient.(*BTCChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not a bitcoin client")
@@ -387,7 +387,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		cancelTx,
 	)
 	if err != nil {
-		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
+		logger.Warn().Err(err).Msgf("SignOutbound error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
@@ -398,8 +398,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
 	}
 	if tx != nil {
-		outTxHash := tx.TxHash().String()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", btcClient.chain.ChainName, outboundTxTssNonce, outTxHash, myid)
+		outboundHash := tx.TxHash().String()
+		logger.Info().Msgf("on chain %s nonce %d, outboundHash %s signer %s", btcClient.chain.ChainName, outboundTxTssNonce, outboundHash, myid)
 		// TODO: pick a few broadcasters.
 		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
@@ -408,18 +408,18 @@ func (signer *BTCSigner) TryProcessOutTx(
 			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, btcClient.chain.ChainName, outboundTxTssNonce, i)
+				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, btcClient.chain.ChainName, outboundTxTssNonce, i)
 				continue
 			}
-			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", outboundTxTssNonce, btcClient.chain.String(), outTxHash)
-			zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(btcClient.chain.ChainId, outboundTxTssNonce, outTxHash, nil, "", -1)
+			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTxTssNonce, btcClient.chain.String(), outboundHash)
+			zetaHash, err := zetaBridge.AddTxHashToOutboundTracker(btcClient.chain.ChainId, outboundTxTssNonce, outboundHash, nil, "", -1)
 			if err != nil {
-				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", outboundTxTssNonce, btcClient.chain.ChainName, outTxHash)
+				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outboundHash %s", outboundTxTssNonce, btcClient.chain.ChainName, outboundHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 
 			// Save successfully broadcasted transaction to btc chain client
-			btcClient.SaveBroadcastedTx(outTxHash, outboundTxTssNonce)
+			btcClient.SaveBroadcastedTx(outboundHash, outboundTxTssNonce)
 
 			break // successful broadcast; no need to retry
 		}

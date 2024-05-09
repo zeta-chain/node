@@ -74,8 +74,8 @@ status is changed to final.
 | MsgGasPriceVoter            |                      | ✅                 |
 | MsgVoteOnObservedOutboundTx |                      | ✅                 |
 | MsgVoteOnObservedInboundTx  |                      | ✅                 |
-| MsgAddToOutTxTracker        | ✅                   | ✅                 |
-| MsgRemoveFromOutTxTracker   | ✅                   |                    |
+| MsgAddOutboundTracker        | ✅                   | ✅                 |
+| MsgRemoveOutboundTracker   | ✅                   |                    |
 
 ## State
 

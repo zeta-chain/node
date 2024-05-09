@@ -41,9 +41,3 @@ func (s *SignerSuite) SetUpTest(c *C) {
 		c.Logf("TSS tx script: %x", addr.ScriptAddress())
 	}
 }
-
-func (s *SignerSuite) Test1(c *C) {
-	//tss := s.signer
-	//pkBytes := tss.Pubkey()
-	//c.Logf("len of pkBytes %d", len(pkBytes))
-}

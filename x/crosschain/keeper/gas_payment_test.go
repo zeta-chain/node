@@ -477,11 +477,11 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			ZetaFees: math.NewUint(100),
 		}
 		// gasLimit * gasPrice * 2 = 1000 * 2 * 2 = 4000
-		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutboundGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
 
 		// the output amount must be input amount - (out tx fee in zeta + protocol flat fee)
-		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutboundGasFeeInZeta))
 		inputAmount := expectedFeeInZeta.Add(math.NewUint(100000))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
 		require.NoError(t, err)
@@ -501,9 +501,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 				},
 			},
 		}
-		expectedOutTxGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutboundGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
-		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutboundGasFeeInZeta))
 		inputAmount = expectedFeeInZeta.Add(math.NewUint(100000))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
 		require.NoError(t, err)
@@ -596,9 +596,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			},
 			ZetaFees: math.NewUint(100),
 		}
-		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutboundGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
-		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutboundGasFeeInZeta))
 
 		// set input amount lower than total zeta fee
 		inputAmount := expectedFeeInZeta.Sub(math.NewUint(1))

@@ -94,7 +94,7 @@ func (z *MockZetaCoreBridge) PostBlameData(_ *blame.Blame, _ int64, _ string) (s
 	return "", nil
 }
 
-func (z *MockZetaCoreBridge) AddTxHashToOutTxTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
+func (z *MockZetaCoreBridge) AddTxHashToOutboundTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
@@ -164,14 +164,14 @@ func (z *MockZetaCoreBridge) GetCctxByNonce(_ int64, _ uint64) (*crosschaintypes
 	return &crosschaintypes.CrossChainTx{}, nil
 }
 
-func (z *MockZetaCoreBridge) GetOutTxTracker(_ chains.Chain, _ uint64) (*crosschaintypes.OutboundTracker, error) {
+func (z *MockZetaCoreBridge) GetOutboundTracker(_ chains.Chain, _ uint64) (*crosschaintypes.OutboundTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
 	return &crosschaintypes.OutboundTracker{}, nil
 }
 
-func (z *MockZetaCoreBridge) GetAllOutTxTrackerByChain(_ int64, _ interfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
+func (z *MockZetaCoreBridge) GetAllOutboundTrackerByChainbound(_ int64, _ interfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}

@@ -502,7 +502,7 @@ func TestGetBtcEvent(t *testing.T) {
 	chain := chains.BtcMainnetChain
 
 	// GetBtcEvent arguments
-	tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+	tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
@@ -512,7 +512,7 @@ func TestGetBtcEvent(t *testing.T) {
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
 	require.NoError(t, err)
-	eventExpected := &BTCInTxEvent{
+	eventExpected := &BTCInboundEvent{
 		FromAddress: "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 		ToAddress:   tssAddress,
 		Value:       tx.Vout[0].Value - depositorFee, // 7008 sataoshis
@@ -597,7 +597,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if len(tx.Vout) < 2", func(t *testing.T) {
 		// load tx and modify the tx to have only 1 vout
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout = tx.Vout[:1]
 
 		// get BTC event
@@ -609,7 +609,7 @@ func TestGetBtcEvent(t *testing.T) {
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
 		rpcClient := stub.NewMockBTCRPCClient()
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
@@ -625,7 +625,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if receiver address is not TSS address", func(t *testing.T) {
 		// load tx and modify receiver address to any non-tss address: bc1qw8wrek2m7nlqldll66ajnwr9mh64syvkt67zlu
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "001471dc3cd95bf4fe0fb7ffd6bb29b865ddf5581196"
 
 		// get BTC event
@@ -636,7 +636,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
 
 		// get BTC event
@@ -647,7 +647,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
 		// load tx and modify memo OP_RETURN to OP_1
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
 		// get BTC event
@@ -658,7 +658,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if memo decoding fails", func(t *testing.T) {
 		// load tx and modify memo length to be 1 byte less than actual
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
 		// get BTC event
@@ -681,7 +681,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "0014invalid000000000000000000000000000000000"
 
 		// get BTC event
@@ -692,7 +692,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if len(tx.Vin) < 1", func(t *testing.T) {
 		// load tx and remove vin
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		tx.Vin = nil
 
 		// get BTC event
@@ -703,7 +703,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
-		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, chain.ChainId, txHash, false)
 		rpcClient := stub.NewMockBTCRPCClient()
 
 		// get BTC event

@@ -45,7 +45,7 @@ func init() {
 
 func DebugCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-ballot-from-intx [txHash] [chainID]",
+		Use:   "get-ballot-from-inbound [txHash] [chainID]",
 		Short: "provide txHash and chainID to get the ballot status for the txHash",
 		RunE: func(_ *cobra.Command, args []string) error {
 			cobra.ExactArgs(2)

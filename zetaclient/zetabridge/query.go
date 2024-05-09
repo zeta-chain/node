@@ -379,7 +379,7 @@ func (b *ZetaCoreBridge) GetTssHistory() ([]observertypes.TSS, error) {
 	return resp.TssList, nil
 }
 
-func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error) {
+func (b *ZetaCoreBridge) GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(b.grpcConn)
 	resp, err := client.OutboundTracker(context.Background(), &crosschaintypes.QueryGetOutboundTrackerRequest{
 		ChainID: chain.ChainId,
@@ -391,7 +391,7 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain chains.Chain, nonce uint64) (*cro
 	return &resp.OutboundTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutboundTrackerByChainbound(chainID int64, order interfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(b.grpcConn)
 	resp, err := client.OutboundTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllOutboundTrackerByChainRequest{
 		Chain: chainID,

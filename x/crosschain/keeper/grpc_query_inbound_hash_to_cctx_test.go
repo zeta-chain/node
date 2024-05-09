@@ -20,10 +20,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestInTxHashToCctxQuerySingle(t *testing.T) {
+func TestInboundHashToCctxQuerySingle(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNInTxHashToCctx(keeper, ctx, 2)
+	msgs := createNInboundHashToCctx(keeper, ctx, 2)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetInboundHashToCctxRequest
@@ -74,7 +74,7 @@ func TestInTxHashToCctxQuerySingle(t *testing.T) {
 func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNInTxHashToCctx(keeper, ctx, 5)
+	msgs := createNInboundHashToCctx(keeper, ctx, 5)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllInboundHashToCctxRequest {
 		return &types.QueryAllInboundHashToCctxRequest{
@@ -136,7 +136,7 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 		cctxs[i].ZetaFees = math.OneUint()
 		cctxs[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 		cctxs[i].CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
-		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctxs[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctxs[i])
 	}
 
 	var inboundHashToCctx types.InboundHashToCctx

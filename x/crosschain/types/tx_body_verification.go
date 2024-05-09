@@ -25,7 +25,7 @@ func VerifyInboundBody(
 		return verifyInboundBodyEVM(msg, txBytes, chainParams, tss)
 	}
 
-	// TODO: implement verifyInTxBodyBTC
+	// TODO: implement verifyInboundBodyBTC
 	// https://github.com/zeta-chain/node/issues/1993
 
 	return fmt.Errorf("cannot verify inbound body for chain %d", msg.ChainId)

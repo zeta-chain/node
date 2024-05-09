@@ -75,7 +75,7 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 
 // MonitorBTCWithdraw monitors the withdraw of BTC, returns once the withdraw is complete
 func MonitorBTCWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: withdraw cctx failed with status %s, message %s, cctx index %s",

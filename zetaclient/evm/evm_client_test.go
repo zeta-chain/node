@@ -119,7 +119,7 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	chainID := int64(1)
 	coinType := coin.CoinType_Gas
 	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
-	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, chainID, outtxHash, coinType)
+	tx, receipt := testutils.LoadEVMOutboundNReceipt(t, chainID, outtxHash, coinType)
 
 	// load archived evm block
 	// https://etherscan.io/block/19363323
@@ -170,7 +170,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 	chainID := int64(1)
 	coinType := coin.CoinType_Gas
 	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
-	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, chainID, outtxHash, coinType)
+	tx, receipt := testutils.LoadEVMOutboundNReceipt(t, chainID, outtxHash, coinType)
 
 	// load archived cctx
 	cctx := testutils.LoadCctxByNonce(t, chainID, tx.Nonce())

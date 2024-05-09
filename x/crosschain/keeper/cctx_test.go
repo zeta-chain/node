@@ -33,7 +33,7 @@ func createNCctxWithStatus(keeper *keeper.Keeper, ctx sdk.Context, n int, status
 		items[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint()}}
 
-		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i])
 	}
 	return items
 }
@@ -74,7 +74,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 
-		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i])
 	}
 	return items
 }

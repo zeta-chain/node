@@ -45,7 +45,7 @@ func (s *EVMClient) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (s *EVMClient) WatchIntxTracker() {
+func (s *EVMClient) WatchInboundTracker() {
 }
 
 // ----------------------------------------------------------------------------
@@ -86,5 +86,5 @@ func (s *BTCClient) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (s *BTCClient) WatchIntxTracker() {
+func (s *BTCClient) WatchInboundTracker() {
 }

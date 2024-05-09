@@ -111,8 +111,8 @@ func NewEVMChainClient(
 	chainLogger := loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Logger{
 		Chain:      chainLogger,
-		Inbound:    chainLogger.With().Str("module", "WatchInTx").Logger(),
-		Outbound:   chainLogger.With().Str("module", "WatchOutTx").Logger(),
+		Inbound:    chainLogger.With().Str("module", "WatchInbound").Logger(),
+		Outbound:   chainLogger.With().Str("module", "WatchOutbound").Logger(),
 		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		Compliance: loggers.Compliance,
 	}
@@ -179,8 +179,8 @@ func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	defer ob.Mu.Unlock()
 	ob.logger = Logger{
 		Chain:    logger,
-		Inbound:  logger.With().Str("module", "WatchInTx").Logger(),
-		Outbound: logger.With().Str("module", "WatchOutTx").Logger(),
+		Inbound:  logger.With().Str("module", "WatchInbound").Logger(),
+		Outbound: logger.With().Str("module", "WatchOutbound").Logger(),
 		GasPrice: logger.With().Str("module", "WatchGasPrice").Logger(),
 	}
 }
@@ -270,16 +270,16 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 // Start all observation routines for the evm chain
 func (ob *ChainClient) Start() {
 	// watch evm chain for incoming txs and post votes to zetacore
-	go ob.WatchInTx()
+	go ob.WatchInbound()
 
 	// watch evm chain for outgoing txs status
-	go ob.WatchOutTx()
+	go ob.WatchOutbound()
 
 	// watch evm chain for gas prices and post to zetacore
 	go ob.WatchGasPrice()
 
 	// watch zetacore for intx trackers
-	go ob.WatchIntxTracker()
+	go ob.WatchInboundTracker()
 
 	// watch the RPC status of the evm chain
 	go ob.WatchRPCStatus()
@@ -341,25 +341,25 @@ func (ob *ChainClient) Stop() {
 	ob.logger.Chain.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-// WatchOutTx watches evm chain for outgoing txs status
-func (ob *ChainClient) WatchOutTx() {
-	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutboundTicker)
+// WatchOutbound watches evm chain for outgoing txs status
+func (ob *ChainClient) WatchOutbound() {
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchOutbound_%d", ob.chain.ChainId), ob.GetChainParams().OutboundTicker)
 	if err != nil {
 		ob.logger.Outbound.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 
-	ob.logger.Outbound.Info().Msgf("WatchOutTx started for chain %d", ob.chain.ChainId)
+	ob.logger.Outbound.Info().Msgf("WatchOutbound started for chain %d", ob.chain.ChainId)
 	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
 			if !corecontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
-				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
+				sampledLogger.Info().Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			trackers, err := ob.zetaBridge.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
+			trackers, err := ob.zetaBridge.GetAllOutboundTrackerByChainbound(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
@@ -376,22 +376,22 @@ func (ob *ChainClient) WatchOutTx() {
 						txCount++
 						outtxReceipt = receipt
 						outtx = tx
-						ob.logger.Outbound.Info().Msgf("WatchOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
+						ob.logger.Outbound.Info().Msgf("WatchOutbound: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
 						if txCount > 1 {
 							ob.logger.Outbound.Error().Msgf(
-								"WatchOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outtxReceipt, outtx)
+								"WatchOutbound: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outtxReceipt, outtx)
 						}
 					}
 				}
 				if txCount == 1 { // should be only one txHash confirmed for each nonce.
 					ob.SetTxNReceipt(nonceInt, outtxReceipt, outtx)
 				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
-					ob.logger.Outbound.Error().Msgf("WatchOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
+					ob.logger.Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.logger.Outbound)
 		case <-ob.stop:
-			ob.logger.Outbound.Info().Msg("WatchOutTx: stopped")
+			ob.logger.Outbound.Info().Msg("WatchOutbound: stopped")
 			return
 		}
 	}
@@ -489,32 +489,32 @@ func (ob *ChainClient) GetLastBlockHeight() uint64 {
 	return height
 }
 
-// WatchInTx watches evm chain for incoming txs and post votes to zetacore
-func (ob *ChainClient) WatchInTx() {
-	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchInTx_%d", ob.chain.ChainId), ob.GetChainParams().InboundTicker)
+// WatchInbound watches evm chain for incoming txs and post votes to zetacore
+func (ob *ChainClient) WatchInbound() {
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchInbound_%d", ob.chain.ChainId), ob.GetChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 	defer ticker.Stop()
 
-	ob.logger.Inbound.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
+	ob.logger.Inbound.Info().Msgf("WatchInbound started for chain %d", ob.chain.ChainId)
 	sampledLogger := ob.logger.Inbound.Sample(&zerolog.BasicSampler{N: 10})
 
 	for {
 		select {
 		case <-ticker.C():
 			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
-				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
+				sampledLogger.Info().Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			err := ob.observeInTX(sampledLogger)
+			err := ob.observeInbound(sampledLogger)
 			if err != nil {
-				ob.logger.Inbound.Err(err).Msg("WatchInTx: observeInTX error")
+				ob.logger.Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
-			ob.logger.Inbound.Info().Msgf("WatchInTx stopped for chain %d", ob.chain.ChainId)
+			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}
@@ -1020,14 +1020,14 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 	return nil
 }
 
-func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
+func (ob *ChainClient) observeInbound(sampledLogger zerolog.Logger) error {
 	// get and update latest block height
 	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
 		return err
 	}
 	if blockNumber < ob.GetLastBlockHeight() {
-		return fmt.Errorf("observeInTX: block number should not decrease: current %d last %d", blockNumber, ob.GetLastBlockHeight())
+		return fmt.Errorf("observeInbound: block number should not decrease: current %d last %d", blockNumber, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(blockNumber)
 
@@ -1036,14 +1036,14 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 
 	// skip if current height is too low
 	if blockNumber < ob.GetChainParams().ConfirmationCount {
-		return fmt.Errorf("observeInTX: skipping observer, current block number %d is too low", blockNumber)
+		return fmt.Errorf("observeInbound: skipping observer, current block number %d is too low", blockNumber)
 	}
 	confirmedBlockNum := blockNumber - ob.GetChainParams().ConfirmationCount
 
 	// skip if no new block is confirmed
 	lastScanned := ob.GetLastBlockHeightScanned()
 	if lastScanned >= confirmedBlockNum {
-		sampledLogger.Debug().Msgf("observeInTX: skipping observer, no new block is produced for chain %d", ob.chain.ChainId)
+		sampledLogger.Debug().Msgf("observeInbound: skipping observer, no new block is produced for chain %d", ob.chain.ChainId)
 		return nil
 	}
 
@@ -1071,11 +1071,11 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
 	if lastScannedLowest > lastScanned {
-		sampledLogger.Info().Msgf("observeInTX: lasstScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
+		sampledLogger.Info().Msgf("observeInbound: lasstScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
 			ob.chain.ChainId, lastScannedZetaSent, lastScannedDeposited, lastScannedTssRecvd)
 		ob.SetLastBlockHeightScanned(lastScannedLowest)
 		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(lastScannedLowest)).Error; err != nil {
-			ob.logger.Inbound.Error().Err(err).Msgf("observeInTX: error writing lastScannedLowest %d to db", lastScannedLowest)
+			ob.logger.Inbound.Error().Err(err).Msgf("observeInbound: error writing lastScannedLowest %d to db", lastScannedLowest)
 		}
 	}
 	return nil

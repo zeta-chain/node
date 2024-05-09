@@ -25,7 +25,7 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	r.DepositAndApproveWZeta(amount)
 	tx := r.WithdrawZeta(amount, true)
 
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Errorf(

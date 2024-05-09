@@ -76,7 +76,7 @@ type Block struct {
 	TssAddress   string `json:"tssAddress"`
 	Height       int    `json:"height"`
 	Nonce        uint64 `json:"nonce"`
-	OutTxid      string `json:"outTxid"`
+	Outboundid   string `json:"outTxid"`
 	HeaderBase64 string `json:"headerBase64"`
 	BlockBase64  string `json:"blockBase64"`
 }

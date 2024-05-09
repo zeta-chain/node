@@ -56,7 +56,7 @@ func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 
 // MonitorBTCDeposit monitors the deposit of BTC, returns once the deposit is complete
 func MonitorBTCDeposit(r *runner.E2ERunner, hash *chainhash.Hash, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.String(), r.CctxClient, r.Logger, r.ReceiptTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.String(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: deposit cctx failed with status %s, message %s, cctx index %s",

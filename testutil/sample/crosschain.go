@@ -247,11 +247,11 @@ func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
 	}
 }
 
-func InboundHashToCctx(t *testing.T, inTxHash string) types.InboundHashToCctx {
-	r := newRandFromStringSeed(t, inTxHash)
+func InboundHashToCctx(t *testing.T, inboundHash string) types.InboundHashToCctx {
+	r := newRandFromStringSeed(t, inboundHash)
 
 	return types.InboundHashToCctx{
-		InboundHash: inTxHash,
+		InboundHash: inboundHash,
 		CctxIndex:   []string{StringRandom(r, 32), StringRandom(r, 32)},
 	}
 }

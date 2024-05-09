@@ -11,9 +11,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
-// WatchIntxTracker watches zetacore for bitcoin intx trackers
-func (ob *BTCChainClient) WatchIntxTracker() {
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchIntxTracker", ob.GetChainParams().InboundTicker)
+// WatchInboundTracker watches zetacore for bitcoin intx trackers
+func (ob *BTCChainClient) WatchInboundTracker() {
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Err(err).Msg("error creating ticker")
 		return
@@ -32,7 +32,7 @@ func (ob *BTCChainClient) WatchIntxTracker() {
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
-			ob.logger.Inbound.Info().Msgf("WatchIntxTracker stopped for chain %d", ob.chain.ChainId)
+			ob.logger.Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}

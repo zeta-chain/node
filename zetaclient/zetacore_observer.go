@@ -17,7 +17,7 @@ import (
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/ratelimiter"
 )
 
@@ -33,9 +33,9 @@ const (
 )
 
 type ZetaCoreLog struct {
-	Observer        zerolog.Logger
-	ObserverSampled zerolog.Logger
-	OutTxProcessor  zerolog.Logger
+	Observer          zerolog.Logger
+	ObserverSampled   zerolog.Logger
+	OutboundProcessor zerolog.Logger
 }
 
 // CoreObserver wraps the zetabridge, chain clients and signers. This is the high level object used for CCTX scheduling
@@ -65,8 +65,8 @@ func NewCoreObserver(
 	// create loggers
 	chainLogger := logger.With().Str("chain", "ZetaChain").Logger()
 	co.logger = ZetaCoreLog{
-		Observer:       chainLogger.With().Str("module", "Observer").Logger(),
-		OutTxProcessor: chainLogger.With().Str("module", "OutTxProcessor").Logger(),
+		Observer:          chainLogger.With().Str("module", "Observer").Logger(),
+		OutboundProcessor: chainLogger.With().Str("module", "OutboundProcessor").Logger(),
 	}
 	co.logger.ObserverSampled = co.logger.Observer.Sample(&zerolog.BasicSampler{N: loggerSamplingRate})
 
@@ -205,7 +205,7 @@ func (co *CoreObserver) GetPendingCctxsWithinRatelimit(foreignChains []chains.Ch
 
 // StartCctxScheduler schedules keysigns for cctxs on each ZetaChain block (the ticker)
 func (co *CoreObserver) StartCctxScheduler(appContext *appcontext.AppContext) {
-	outTxMan := outtxprocessor.NewOutTxProcessorManager(co.logger.OutTxProcessor)
+	outboundManager := outboundprocessor.NewOutboundProcessorManager(co.logger.OutboundProcessor)
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
 	for {
@@ -284,9 +284,9 @@ func (co *CoreObserver) StartCctxScheduler(appContext *appcontext.AppContext) {
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
 						if chains.IsEVMChain(c.ChainId) {
-							co.ScheduleCctxEVM(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
+							co.ScheduleCctxEVM(outboundManager, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else if chains.IsBitcoinChain(c.ChainId) {
-							co.ScheduleCctxBTC(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
+							co.ScheduleCctxBTC(outboundManager, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							co.logger.Observer.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)
 							continue
@@ -304,16 +304,16 @@ func (co *CoreObserver) StartCctxScheduler(appContext *appcontext.AppContext) {
 
 // ScheduleCctxEVM schedules evm outtx keysign on each ZetaChain block (the ticker)
 func (co *CoreObserver) ScheduleCctxEVM(
-	outTxMan *outtxprocessor.Processor,
+	outboundManager *outboundprocessor.Processor,
 	zetaHeight uint64,
 	chainID int64,
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
 	signer interfaces.ChainSigner,
 ) {
-	res, err := co.bridge.GetAllOutTxTrackerByChain(chainID, interfaces.Ascending)
+	res, err := co.bridge.GetAllOutboundTrackerByChainbound(chainID, interfaces.Ascending)
 	if err != nil {
-		co.logger.Observer.Warn().Err(err).Msgf("ScheduleCctxEVM: GetAllOutTxTrackerByChain failed for chain %d", chainID)
+		co.logger.Observer.Warn().Err(err).Msgf("ScheduleCctxEVM: GetAllOutboundTrackerByChainbound failed for chain %d", chainID)
 		return
 	}
 	trackerMap := make(map[uint64]bool)
@@ -329,10 +329,10 @@ func (co *CoreObserver) ScheduleCctxEVM(
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
 		nonce := params.TssNonce
-		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
+		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
-			co.logger.Observer.Error().Msgf("ScheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
+			co.logger.Observer.Error().Msgf("ScheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
 		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
@@ -348,7 +348,7 @@ func (co *CoreObserver) ScheduleCctxEVM(
 			continue
 		}
 		if included {
-			co.logger.Observer.Info().Msgf("ScheduleCctxEVM: outtx %s already included; do not schedule keysign", outTxID)
+			co.logger.Observer.Info().Msgf("ScheduleCctxEVM: outtx %s already included; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -374,10 +374,10 @@ func (co *CoreObserver) ScheduleCctxEVM(
 		}
 
 		// otherwise, the normal interval is used
-		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !outTxMan.IsOutTxActive(outTxID) {
-			outTxMan.StartTryProcess(outTxID)
-			co.logger.Observer.Debug().Msgf("ScheduleCctxEVM: sign outbound %s with value %d\n", outTxID, cctx.GetCurrentOutboundParam().Amount)
-			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
+		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !outboundManager.IsOutboundActive(outboundID) {
+			outboundManager.StartTryProcess(outboundID)
+			co.logger.Observer.Debug().Msgf("ScheduleCctxEVM: sign outbound %s with value %d\n", outboundID, cctx.GetCurrentOutboundParam().Amount)
+			go signer.TryProcessOutbound(cctx, outboundManager, outboundID, ob, co.bridge, zetaHeight)
 		}
 
 		// #nosec G701 always in range
@@ -392,7 +392,7 @@ func (co *CoreObserver) ScheduleCctxEVM(
 // 2. schedule keysign only when nonce-mark UTXO is available
 // 3. stop keysign when lookahead is reached
 func (co *CoreObserver) ScheduleCctxBTC(
-	outTxMan *outtxprocessor.Processor,
+	outboundManager *outboundprocessor.Processor,
 	zetaHeight uint64,
 	chainID int64,
 	cctxList []*types.CrossChainTx,
@@ -412,10 +412,10 @@ func (co *CoreObserver) ScheduleCctxBTC(
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
 		nonce := params.TssNonce
-		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
+		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
-			co.logger.Observer.Error().Msgf("ScheduleCctxBTC: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
+			co.logger.Observer.Error().Msgf("ScheduleCctxBTC: outtx %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
 		// try confirming the outtx
@@ -425,7 +425,7 @@ func (co *CoreObserver) ScheduleCctxBTC(
 			continue
 		}
 		if included || confirmed {
-			co.logger.Observer.Info().Msgf("ScheduleCctxBTC: outtx %s already included; do not schedule keysign", outTxID)
+			co.logger.Observer.Info().Msgf("ScheduleCctxBTC: outtx %s already included; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -439,10 +439,10 @@ func (co *CoreObserver) ScheduleCctxBTC(
 			break
 		}
 		// try confirming the outtx or scheduling a keysign
-		if nonce%interval == zetaHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
-			outTxMan.StartTryProcess(outTxID)
-			co.logger.Observer.Debug().Msgf("ScheduleCctxBTC: sign outtx %s with value %d\n", outTxID, params.Amount)
-			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
+		if nonce%interval == zetaHeight%interval && !outboundManager.IsOutboundActive(outboundID) {
+			outboundManager.StartTryProcess(outboundID)
+			co.logger.Observer.Debug().Msgf("ScheduleCctxBTC: sign outtx %s with value %d\n", outboundID, params.Amount)
+			go signer.TryProcessOutbound(cctx, outboundManager, outboundID, ob, co.bridge, zetaHeight)
 		}
 	}
 }

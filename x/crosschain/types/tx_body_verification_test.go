@@ -263,7 +263,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 			tss:     observertypes.QueryGetTssAddressResponse{Eth: sampleFrom.Hex()},
 			txBytes: sampleEthTxBytes,
 		},
-		// TODO: Implement tests for verifyOutTxBodyBTC
+		// TODO: Implement tests for verifyOutboundBodyBTC
 		// https://github.com/zeta-chain/node/issues/1994
 	} {
 		t.Run(tc.desc, func(t *testing.T) {

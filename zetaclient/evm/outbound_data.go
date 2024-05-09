@@ -22,7 +22,7 @@ const (
 )
 
 // OutboundData is a data structure containing input fields used to construct each type of transaction.
-// This is populated using cctx and other input parameters passed to TryProcessOutTx
+// This is populated using cctx and other input parameters passed to TryProcessOutbound
 type OutboundData struct {
 	srcChainID *big.Int
 	toChainID  *big.Int

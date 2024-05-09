@@ -26,11 +26,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-// WatchIntxTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
+// WatchInboundTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
-func (ob *ChainClient) WatchIntxTracker() {
+func (ob *ChainClient) WatchInboundTracker() {
 	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchIntxTracker_%d", ob.chain.ChainId),
+		fmt.Sprintf("EVM_WatchInboundTracker_%d", ob.chain.ChainId),
 		ob.GetChainParams().InboundTicker,
 	)
 	if err != nil {
@@ -46,7 +46,7 @@ func (ob *ChainClient) WatchIntxTracker() {
 			if !corecontext.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
 				continue
 			}
-			err := ob.ObserveIntxTrackers()
+			err := ob.ObserveInboundTrackers()
 			if err != nil {
 				ob.logger.Inbound.Err(err).Msg("ObserveTrackerSuggestions error")
 			}
@@ -58,8 +58,8 @@ func (ob *ChainClient) WatchIntxTracker() {
 	}
 }
 
-// ObserveIntxTrackers observes the inbound trackers for the chain
-func (ob *ChainClient) ObserveIntxTrackers() error {
+// ObserveInboundTrackers observes the inbound trackers for the chain
+func (ob *ChainClient) ObserveInboundTrackers() error {
 	trackers, err := ob.zetaBridge.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err

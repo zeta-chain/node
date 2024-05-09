@@ -17,7 +17,7 @@ import (
 func CmdVoteInbound() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
-			"] [inTxHash] [inBlockHeight] [coinType] [asset] [eventIndex]",
+			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex]",
 		Short: "Broadcast message to vote an inbound",
 		Args:  cobra.ExactArgs(12),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,7 +36,7 @@ func CmdVoteInbound() *cobra.Command {
 			amount := math.NewUintFromString(args[5])
 
 			argsMessage := args[6]
-			argsInTxHash := args[7]
+			argsInboundHash := args[7]
 
 			argsInBlockHeight, err := strconv.ParseUint(args[8], 10, 64)
 			if err != nil {
@@ -71,7 +71,7 @@ func CmdVoteInbound() *cobra.Command {
 				argsReceiverChain,
 				amount,
 				argsMessage,
-				argsInTxHash,
+				argsInboundHash,
 				argsInBlockHeight,
 				250_000,
 				argsCoinType,

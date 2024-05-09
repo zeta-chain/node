@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestKeeper_InTxTrackerAllByChain(t *testing.T) {
+func TestKeeper_InboundTrackerAllByChain(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	k.SetInboundTracker(ctx, types.InboundTracker{
 		ChainId:  1,
@@ -30,7 +30,7 @@ func TestKeeper_InTxTrackerAllByChain(t *testing.T) {
 	require.Equal(t, 1, len(res.InboundTracker))
 }
 
-func TestKeeper_InTxTrackerAll(t *testing.T) {
+func TestKeeper_InboundTrackerAll(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	k.SetInboundTracker(ctx, types.InboundTracker{
 		ChainId:  1,

@@ -158,7 +158,7 @@ func TestZetaCoreBridge_PostGasPrice(t *testing.T) {
 	//})
 }
 
-func TestZetaCoreBridge_AddTxHashToOutTxTracker(t *testing.T) {
+func TestZetaCoreBridge_AddTxHashToOutboundTracker(t *testing.T) {
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
@@ -166,14 +166,14 @@ func TestZetaCoreBridge_AddTxHashToOutTxTracker(t *testing.T) {
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-		hash, err := zetabridge.AddTxHashToOutTxTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := zetabridge.AddTxHashToOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTestErr
-		hash, err := zetabridge.AddTxHashToOutTxTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := zetabridge.AddTxHashToOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.Error(t, err)
 		require.Equal(t, "", hash)
 	})

@@ -31,7 +31,7 @@ import (
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 	zbridge "github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
@@ -176,7 +176,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 	return signer.client.SendTransaction(ctxt, tx)
 }
 
-// SignOutboundTx
+// SignOutbound
 // function onReceive(
 //
 //	bytes calldata originSenderAddress,
@@ -187,7 +187,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 //	bytes32 internalSendHash
 //
 // ) external virtual {}
-func (signer *Signer) SignOutboundTx(txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignOutbound(txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -322,31 +322,31 @@ func (signer *Signer) SignCommandTx(txData *OutboundData, cmd string, params str
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
 }
 
-// TryProcessOutTx - signer interface implementation
+// TryProcessOutbound - signer interface implementation
 // This function will attempt to build and sign an evm transaction using the TSS signer.
 // It will then broadcast the signed transaction to the outbound chain.
-func (signer *Signer) TryProcessOutTx(
+func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
-	outTxMan *outtxprocessor.Processor,
-	outTxID string,
+	outboundManager *outboundprocessor.Processor,
+	outboundID string,
 	chainclient interfaces.ChainClient,
 	zetaBridge interfaces.ZetaCoreBridger,
 	height uint64,
 ) {
 	logger := signer.logger.Std.With().
-		Str("outTxID", outTxID).
+		Str("outboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()
-	logger.Info().Msgf("start processing outTxID %s", outTxID)
+	logger.Info().Msgf("start processing outboundID %s", outboundID)
 	logger.Info().Msgf(
-		"EVM Chain TryProcessOutTx: %s, value %d to %s",
+		"EVM Chain TryProcessOutbound: %s, value %d to %s",
 		cctx.Index,
 		cctx.GetCurrentOutboundParam().Amount.BigInt(),
 		cctx.GetCurrentOutboundParam().Receiver,
 	)
 
 	defer func() {
-		outTxMan.EndTryProcess(outTxID)
+		outboundManager.EndTryProcess(outboundID)
 	}()
 	myID := zetaBridge.GetKeys().GetOperatorAddress()
 
@@ -434,13 +434,13 @@ func (signer *Signer) TryProcessOutTx(
 			tx, err = signer.SignERC20WithdrawTx(txData)
 		case coin.CoinType_Zeta:
 			logger.Info().Msgf(
-				"SignOutboundTx: %d => %s, nonce %d, gasPrice %d",
+				"SignOutbound: %d => %s, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
 				toChain,
 				cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
-			tx, err = signer.SignOutboundTx(txData)
+			tx, err = signer.SignOutbound(txData)
 		}
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
@@ -498,13 +498,13 @@ func (signer *Signer) TryProcessOutTx(
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf(
-			"SignOutboundTx: %d => %s, nonce %d, gasPrice %d",
+			"SignOutbound: %d => %s, nonce %d, gasPrice %d",
 			cctx.InboundParams.SenderChainId,
 			toChain,
 			cctx.GetCurrentOutboundParam().TssNonce,
 			txData.gasPrice,
 		)
-		tx, err = signer.SignOutboundTx(txData)
+		tx, err = signer.SignOutbound(txData)
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
 			return
@@ -519,11 +519,11 @@ func (signer *Signer) TryProcessOutTx(
 	)
 
 	// Broadcast Signed Tx
-	signer.BroadcastOutTx(tx, cctx, logger, myID, zetaBridge, txData)
+	signer.BroadcastOutbound(tx, cctx, logger, myID, zetaBridge, txData)
 }
 
-// BroadcastOutTx signed transaction through evm rpc client
-func (signer *Signer) BroadcastOutTx(
+// BroadcastOutbound signed transaction through evm rpc client
+func (signer *Signer) BroadcastOutbound(
 	tx *ethtypes.Transaction,
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
@@ -533,25 +533,25 @@ func (signer *Signer) BroadcastOutTx(
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 	if tx == nil {
-		logger.Warn().Msgf("BroadcastOutTx: no tx to broadcast %s", cctx.Index)
+		logger.Warn().Msgf("BroadcastOutbound: no tx to broadcast %s", cctx.Index)
 	}
 	// Try to broadcast transaction
 	if tx != nil {
-		outTxHash := tx.Hash().Hex()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, cctx.GetCurrentOutboundParam().TssNonce, outTxHash, myID)
+		outboundHash := tx.Hash().Hex()
+		logger.Info().Msgf("on chain %s nonce %d, outboundHash %s signer %s", signer.chain, cctx.GetCurrentOutboundParam().TssNonce, outboundHash, myID)
 		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
 		backOff := 1000 * time.Millisecond
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 		for i := 0; i < 5; i++ {
-			logger.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, cctx.GetCurrentOutboundParam().TssNonce, i)
+			logger.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, toChain, cctx.GetCurrentOutboundParam().TssNonce, i)
 			// #nosec G404 randomness is not a security issue here
 			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) // FIXME: use backoff
 			err := signer.Broadcast(tx)
 			if err != nil {
 				log.Warn().Err(err).Msgf("Outbound Broadcast error")
-				retry, report := zbridge.HandleBroadcastError(err, strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10), toChain.String(), outTxHash)
+				retry, report := zbridge.HandleBroadcastError(err, strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10), toChain.String(), outboundHash)
 				if report {
-					signer.reportToOutTxTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outTxHash, logger)
+					signer.reportToOutboundTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 				}
 				if !retry {
 					break
@@ -559,8 +559,8 @@ func (signer *Signer) BroadcastOutTx(
 				backOff *= 2
 				continue
 			}
-			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", cctx.GetCurrentOutboundParam().TssNonce, toChain, outTxHash)
-			signer.reportToOutTxTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outTxHash, logger)
+			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", cctx.GetCurrentOutboundParam().TssNonce, toChain, outboundHash)
+			signer.reportToOutboundTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 			break // successful broadcast; no need to retry
 		}
 	}
@@ -623,7 +623,7 @@ func (signer *Signer) SignWhitelistTx(
 
 // Exported for unit tests
 
-// GetReportedTxList returns a list of outTxHash being reported
+// GetReportedTxList returns a list of outboundHash being reported
 // TODO: investigate pointer usage
 // https://github.com/zeta-chain/node/issues/2084
 func (signer *Signer) GetReportedTxList() *map[string]bool {
@@ -676,22 +676,22 @@ func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Tr
 	return tx, nil
 }
 
-// reportToOutTxTracker reports outTxHash to tracker only when tx receipt is available
-func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger, chainID int64, nonce uint64, outTxHash string, logger zerolog.Logger) {
+// reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
+func (signer *Signer) reportToOutboundTracker(zetaBridge interfaces.ZetaCoreBridger, chainID int64, nonce uint64, outboundHash string, logger zerolog.Logger) {
 	// skip if already being reported
 	signer.mu.Lock()
 	defer signer.mu.Unlock()
-	if _, found := signer.outTxHashBeingReported[outTxHash]; found {
-		logger.Info().Msgf("reportToOutTxTracker: outTxHash %s for chain %d nonce %d is being reported", outTxHash, chainID, nonce)
+	if _, found := signer.outTxHashBeingReported[outboundHash]; found {
+		logger.Info().Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
 		return
 	}
-	signer.outTxHashBeingReported[outTxHash] = true // mark as being reported
+	signer.outTxHashBeingReported[outboundHash] = true // mark as being reported
 
 	// report to outTx tracker with goroutine
 	go func() {
 		defer func() {
 			signer.mu.Lock()
-			delete(signer.outTxHashBeingReported, outTxHash)
+			delete(signer.outTxHashBeingReported, outboundHash)
 			signer.mu.Unlock()
 		}()
 
@@ -710,21 +710,21 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 				if isPending {
 					report = true // probably will be included later
 				}
-				logger.Info().Msgf("reportToOutTxTracker: timeout waiting tx inclusion for chain %d nonce %d outTxHash %s report %v", chainID, nonce, outTxHash, report)
+				logger.Info().Msgf("reportToOutboundTracker: timeout waiting tx inclusion for chain %d nonce %d outboundHash %s report %v", chainID, nonce, outboundHash, report)
 				break
 			}
 			// try getting the tx
-			_, isPending, err = signer.client.TransactionByHash(context.TODO(), ethcommon.HexToHash(outTxHash))
+			_, isPending, err = signer.client.TransactionByHash(context.TODO(), ethcommon.HexToHash(outboundHash))
 			if err != nil {
-				logger.Info().Err(err).Msgf("reportToOutTxTracker: error getting tx for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+				logger.Info().Err(err).Msgf("reportToOutboundTracker: error getting tx for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 				continue
 			}
 			// if tx is include in a block, try getting receipt
 			if !isPending {
 				report = true // included
-				receipt, err := signer.client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(outTxHash))
+				receipt, err := signer.client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(outboundHash))
 				if err != nil {
-					logger.Info().Err(err).Msgf("reportToOutTxTracker: error getting receipt for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+					logger.Info().Err(err).Msgf("reportToOutboundTracker: error getting receipt for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 				}
 				if receipt != nil {
 					blockNumber = receipt.BlockNumber.Uint64()
@@ -732,7 +732,7 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 				break
 			}
 			// keep monitoring pending tx
-			logger.Info().Msgf("reportToOutTxTracker: tx has not been included yet for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+			logger.Info().Msgf("reportToOutboundTracker: tx has not been included yet for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 		}
 
 		// try adding to outTx tracker for 10 minutes
@@ -741,27 +741,27 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 			for {
 				// give up after 10 minutes of retrying
 				if time.Since(tStart) > OutboundTrackerReportTimeout {
-					logger.Info().Msgf("reportToOutTxTracker: timeout adding outtx tracker for chain %d nonce %d outTxHash %s, please add manually", chainID, nonce, outTxHash)
+					logger.Info().Msgf("reportToOutboundTracker: timeout adding outtx tracker for chain %d nonce %d outboundHash %s, please add manually", chainID, nonce, outboundHash)
 					break
 				}
 				// stop if the cctx is already finalized
 				cctx, err := zetaBridge.GetCctxByNonce(chainID, nonce)
 				if err != nil {
-					logger.Err(err).Msgf("reportToOutTxTracker: error getting cctx for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+					logger.Err(err).Msgf("reportToOutboundTracker: error getting cctx for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 				} else if !crosschainkeeper.IsPending(cctx) {
-					logger.Info().Msgf("reportToOutTxTracker: cctx already finalized for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+					logger.Info().Msgf("reportToOutboundTracker: cctx already finalized for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 					break
 				}
 				// report to outTx tracker
-				zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(chainID, nonce, outTxHash, nil, "", -1)
+				zetaHash, err := zetaBridge.AddTxHashToOutboundTracker(chainID, nonce, outboundHash, nil, "", -1)
 				if err != nil {
-					logger.Err(err).Msgf("reportToOutTxTracker: error adding to outtx tracker for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+					logger.Err(err).Msgf("reportToOutboundTracker: error adding to outtx tracker for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 				} else if zetaHash != "" {
-					logger.Info().Msgf("reportToOutTxTracker: added outTxHash to core successful %s, chain %d nonce %d outTxHash %s block %d",
-						zetaHash, chainID, nonce, outTxHash, blockNumber)
+					logger.Info().Msgf("reportToOutboundTracker: added outboundHash to core successful %s, chain %d nonce %d outboundHash %s block %d",
+						zetaHash, chainID, nonce, outboundHash, blockNumber)
 				} else {
-					// stop if the tracker contains the outTxHash
-					logger.Info().Msgf("reportToOutTxTracker: outtx tracker contains outTxHash %s for chain %d nonce %d", outTxHash, chainID, nonce)
+					// stop if the tracker contains the outboundHash
+					logger.Info().Msgf("reportToOutboundTracker: outtx tracker contains outboundHash %s for chain %d nonce %d", outboundHash, chainID, nonce)
 					break
 				}
 				// retry otherwise

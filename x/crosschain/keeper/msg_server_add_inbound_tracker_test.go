@@ -18,7 +18,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgServer_AddToInTxTracker(t *testing.T) {
+func TestMsgServer_AddToInboundTracker(t *testing.T) {
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,

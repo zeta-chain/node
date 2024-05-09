@@ -35,7 +35,7 @@ func TestIsSystemTx(t *testing.T) {
 	//      *cctxtypes.MsgVoteGasPrice,
 	//		*cctxtypes.MsgVoteOnObservedInboundTx,
 	//		*cctxtypes.MsgVoteOnObservedOutboundTx,
-	//		*cctxtypes.MsgAddToOutTxTracker,
+	//		*cctxtypes.MsgAddOutboundTracker,
 	//		*observertypes.MsgVoteBlockHeader,
 	//		*observertypes.MsgVoteTSS,
 	//		*observertypes.MsgAddBlameVote:

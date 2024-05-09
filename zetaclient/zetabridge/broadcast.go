@@ -219,21 +219,21 @@ func (b *ZetaCoreBridge) QueryTxResult(hash string) (*sdktypes.TxResponse, error
 	return authtx.QueryTx(ctx, hash)
 }
 
-// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
+// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutboundTracker
 // returns (bool retry, bool report)
-func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
+func HandleBroadcastError(err error, nonce, toChain, outboundHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")
 		return false, false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {
-		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
 		return false, false
 	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
-		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
 		return false, true // report to tracker, because there's possibilities a successful broadcast gets this error code
 	}
 
-	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retrying...", nonce, toChain, outTxHash)
+	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outboundHash %s; retrying...", nonce, toChain, outboundHash)
 	return true, false
 }

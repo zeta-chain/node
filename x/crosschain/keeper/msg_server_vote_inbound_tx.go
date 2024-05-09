@@ -79,7 +79,7 @@ func (k msgServer) VoteInbound(goCtx context.Context, msg *types.MsgVoteInbound)
 		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, cosmoserrors.Wrap(
 				types.ErrObservedTxAlreadyFinalized,
-				fmt.Sprintf("InboundHash:%s, SenderChainID:%d, EventIndex:%d", msg.InboundHash, msg.SenderChainId, msg.EventIndex),
+				fmt.Sprintf("inboundHash:%s, SenderChainID:%d, EventIndex:%d", msg.InboundHash, msg.SenderChainId, msg.EventIndex),
 			)
 		}
 	}
@@ -109,7 +109,7 @@ func (k msgServer) VoteInbound(goCtx context.Context, msg *types.MsgVoteInbound)
     - Emits an event for the finalized inbound CCTX.
 	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
 	- Updates the CCTX with the finalized height and finalization status.
-	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via InTx tracker suggestions
+	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via Inbound tracker suggestions
 	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
 */
 
@@ -123,5 +123,5 @@ func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventInde
 	cctx.InboundParams.FinalizedZetaHeight = uint64(ctx.BlockHeight())
 	cctx.InboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	k.RemoveInboundTrackerIfExists(ctx, cctx.InboundParams.SenderChainId, cctx.InboundParams.ObservedHash)
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
 }

@@ -191,7 +191,7 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIn
 	k.RemoveOutboundTrackerFromStore(ctx, receiverChain, outTxTssNonce)
 	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutboundTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
 	// This should set nonce to cctx only if a new revert is created.
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
 }
 
 func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbound) (types.CrossChainTx, error) {

@@ -73,7 +73,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain chains.Chain, gasPrice uint64, suppl
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
+func (b *ZetaCoreBridge) AddTxHashToOutboundTracker(
 	chainID int64,
 	nonce uint64,
 	txHash string,
@@ -82,7 +82,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	txIndex int64,
 ) (string, error) {
 	// don't report if the tracker already contains the txHash
-	tracker, err := b.GetOutTxTracker(chains.Chain{ChainId: chainID}, nonce)
+	tracker, err := b.GetOutboundTracker(chains.Chain{ChainId: chainID}, nonce)
 	if err == nil {
 		for _, hash := range tracker.HashList {
 			if strings.EqualFold(hash.TxHash, txHash) {
@@ -98,7 +98,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 		return "", err
 	}
 
-	zetaTxHash, err := zetaBridgeBroadcast(b, AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
+	zetaTxHash, err := zetaBridgeBroadcast(b, AddTxHashToOutboundTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
 		return "", err
 	}
@@ -284,7 +284,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 // PostVoteOutbound posts a vote on an observed outbound tx
 func (b *ZetaCoreBridge) PostVoteOutbound(
 	cctxIndex string,
-	outTxHash string,
+	outboundHash string,
 	outBlockHeight uint64,
 	outTxGasUsed uint64,
 	outTxEffectiveGasPrice *big.Int,
@@ -299,7 +299,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	msg := types.NewMsgVoteOutbound(
 		signerAddress,
 		cctxIndex,
-		outTxHash,
+		outboundHash,
 		outBlockHeight,
 		outTxGasUsed,
 		math.NewIntFromBigInt(outTxEffectiveGasPrice),

@@ -78,7 +78,7 @@
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 * [1976](https://github.com/zeta-chain/node/pull/1976) - add lightclient module for header and proof functionality
 * [2001](https://github.com/zeta-chain/node/pull/2001) - replace broadcast mode block with sync and remove fungible params
-* [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutTxProcessed` method and add unit tests
+* [1989](https://github.com/zeta-chain/node/pull/1989) - simplify `IsSendOutboundProcessed` method and add unit tests
 * [2013](https://github.com/zeta-chain/node/pull/2013) - rename `GasPriceVoter` message to `VoteGasPrice`
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
@@ -356,7 +356,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * move pending nonces, chain nonces and nonce to cctx to observer
 * move tss related cli from crosschain to observer
 * reorganize smoke tests structure
-* Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
+* Add pagination to queries which iterate over large data sets InboundTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
 * Move observer params into core params

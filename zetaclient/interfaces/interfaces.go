@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -45,15 +45,15 @@ type ChainClient interface {
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetTxID(nonce uint64) string
-	WatchIntxTracker()
+	WatchInboundTracker()
 }
 
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
-	TryProcessOutTx(
+	TryProcessOutbound(
 		cctx *crosschaintypes.CrossChainTx,
-		outTxMan *outtxprocessor.Processor,
-		outTxID string,
+		outboundManager *outboundprocessor.Processor,
+		outboundID string,
 		evmClient ChainClient,
 		zetaBridge ZetaCoreBridger,
 		height uint64,
@@ -69,7 +69,7 @@ type ZetaCoreBridger interface {
 	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,
-		outTxHash string,
+		outboundHash string,
 		outBlockHeight uint64,
 		outTxGasUsed uint64,
 		outTxEffectiveGasPrice *big.Int,
@@ -85,7 +85,7 @@ type ZetaCoreBridger interface {
 	GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error)
 
 	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
-	AddTxHashToOutTxTracker(
+	AddTxHashToOutboundTracker(
 		chainID int64,
 		nonce uint64,
 		txHash string,
@@ -101,8 +101,8 @@ type ZetaCoreBridger interface {
 	GetRateLimiterInput(window int64) (crosschaintypes.QueryRateLimiterInputResponse, error)
 	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
-	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
+	GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
+	GetAllOutboundTrackerByChainbound(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error)
 	GetObserverList() ([]string, error)

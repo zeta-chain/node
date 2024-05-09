@@ -44,7 +44,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the cross-chain txs
 	for _, elem := range genState.CrossChainTxs {
 		if elem != nil {
-			k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
+			k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem)
 		}
 	}
 	for _, elem := range genState.FinalizedInbounds {

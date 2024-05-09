@@ -20,17 +20,17 @@
             - ZetaChainWatcher :  chain = `ZetaChain`   module=`ZetaChainWatcher`
     - BTCLogger
         - ChainLogger   : chain = `BTC`
-            - WatchInTX  : chain = `BTC`   module=`WatchInTx`
+            - WatchInbound  : chain = `BTC`   module=`WatchInbound`
             - WatchGasPrice : chain = `BTC`   module=`WatchGasPrice`
-            - ObserverOutTx : chain = `BTC`  module=`ObserveOutTx`
+            - ObserverOutbound : chain = `BTC`  module=`ObserveOutbound`
             - WatchUTXOS:chain = `BTC`  module=`WatchUTXOS`
     - EVMLoggers ( Individual sections for each EVM Chain)
         - ChainLogger   : chain = `evm_chain_name`
             - BuildBlockIndex : chain = `evm_chain_name`   module=`BuildBlockIndex`
             - ExterrnalChainWatcher  : chain = `evm_chain_name`module=`ExternalChainWatcher`
             - WatchGasPrice : chain = `evm_chain_name`   module=`WatchGasPrice`
-            - ObserverOutTx : chain = `evm_chain_name`  module=`ObserveOutTx`
+            - ObserverOutbound : chain = `evm_chain_name`  module=`ObserveOutbound`
     - BTCSigner : chain = `BTC`   module=`BTCsigner`
-        - ProcessOutTX : chain = `BTC`   module=`BTCsigner`  OutTxId = `OuttxID of cctx being signed`  SendHash = `Index of cctx being signed`
+        - ProcessOutTX : chain = `BTC`   module=`BTCsigner`  OutboundId = `OuttxID of cctx being signed`  SendHash = `Index of cctx being signed`
     - EVMSigner : chain =  `evm_chain_name` module=`EVMSigner`
-        - ProcessOutTX : chain =   `evm_chain_name` module=`BTCsigner`    OutTxId =  `OuttxID of cctx being signed` SendHash = `Index of cctx being signed`
+        - ProcessOutTX : chain =   `evm_chain_name` module=`BTCsigner`    OutboundId =  `OuttxID of cctx being signed` SendHash = `Index of cctx being signed`

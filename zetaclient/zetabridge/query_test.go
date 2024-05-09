@@ -673,7 +673,7 @@ func TestZetaCoreBridge_GetTssHistory(t *testing.T) {
 	require.Equal(t, expectedOutput.TssList, resp)
 }
 
-func TestZetaCoreBridge_GetOutTxTracker(t *testing.T) {
+func TestZetaCoreBridge_GetOutboundTracker(t *testing.T) {
 	chain := chains.BscMainnetChain
 	expectedOutput := crosschainTypes.QueryGetOutboundTrackerResponse{
 		OutboundTracker: crosschainTypes.OutboundTracker{
@@ -695,12 +695,12 @@ func TestZetaCoreBridge_GetOutTxTracker(t *testing.T) {
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetOutTxTracker(chain, 456)
+	resp, err := zetabridge.GetOutboundTracker(chain, 456)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, *resp)
 }
 
-func TestZetaCoreBridge_GetAllOutTxTrackerByChain(t *testing.T) {
+func TestZetaCoreBridge_GetAllOutboundTrackerByChainbound(t *testing.T) {
 	chain := chains.BscMainnetChain
 	expectedOutput := crosschainTypes.QueryAllOutboundTrackerByChainResponse{
 		OutboundTracker: []crosschainTypes.OutboundTracker{
@@ -730,11 +730,11 @@ func TestZetaCoreBridge_GetAllOutTxTrackerByChain(t *testing.T) {
 	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Ascending)
+	resp, err := zetabridge.GetAllOutboundTrackerByChainbound(chain.ChainId, interfaces.Ascending)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
 
-	resp, err = zetabridge.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Descending)
+	resp, err = zetabridge.GetAllOutboundTrackerByChainbound(chain.ChainId, interfaces.Descending)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
 }

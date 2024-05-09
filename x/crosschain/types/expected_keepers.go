@@ -79,7 +79,7 @@ type ObserverKeeper interface {
 		coinType coin.CoinType,
 		voter string,
 		ballotIndex string,
-		inTxHash string,
+		inboundHash string,
 	) (bool, bool, error)
 	VoteOnOutboundBallot(
 		ctx sdk.Context,

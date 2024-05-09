@@ -5,7 +5,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
 
 // ----------------------------------------------------------------------------
@@ -32,9 +32,9 @@ func NewEVMSigner(
 	}
 }
 
-func (s *EVMSigner) TryProcessOutTx(
+func (s *EVMSigner) TryProcessOutbound(
 	_ *crosschaintypes.CrossChainTx,
-	_ *outtxprocessor.Processor,
+	_ *outboundprocessor.Processor,
 	_ string,
 	_ interfaces.ChainClient,
 	_ interfaces.ZetaCoreBridger,
@@ -71,9 +71,9 @@ func NewBTCSigner() *BTCSigner {
 	return &BTCSigner{}
 }
 
-func (s *BTCSigner) TryProcessOutTx(
+func (s *BTCSigner) TryProcessOutbound(
 	_ *crosschaintypes.CrossChainTx,
-	_ *outtxprocessor.Processor,
+	_ *outboundprocessor.Processor,
 	_ string,
 	_ interfaces.ChainClient,
 	_ interfaces.ZetaCoreBridger,

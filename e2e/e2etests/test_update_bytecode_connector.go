@@ -18,7 +18,7 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
 	r.DepositAndApproveWZeta(amount)
 	tx := r.WithdrawZeta(amount, true)
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Errorf(
@@ -84,7 +84,7 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	// Can continue to interact with the connector: withdraw 10ZETA
 	r.DepositAndApproveWZeta(amount)
 	tx = r.WithdrawZeta(amount, true)
-	cctx = utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Errorf(

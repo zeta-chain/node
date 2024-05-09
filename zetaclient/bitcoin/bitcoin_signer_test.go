@@ -394,8 +394,8 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 
 func mineTxNSetNonceMark(ob *BTCChainClient, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
-	outTxID := ob.GetTxID(nonce)
-	ob.includedTxResults[outTxID] = &btcjson.GetTransactionResult{TxID: txid}
+	outboundID := ob.GetTxID(nonce)
+	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
@@ -430,7 +430,7 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "getOutTxidByNonce: cannot find outTx txid for nonce 0", err.Error())
+	require.Equal(t, "getOutboundIDByNonce: cannot find outTx txid for nonce 0", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 	// Case3: nonce = 1, should pass now

@@ -6,7 +6,7 @@ const (
 	InboundHashToCctxKeyPrefix = "InTxHashToCctx/value/"
 )
 
-// InboundHashToCctxKey returns the store key to retrieve a InTxHashToCctx from the index fields
+// InboundHashToCctxKey returns the store key to retrieve a InboundHashToCctx from the index fields
 func InboundHashToCctxKey(
 	inboundHash string,
 ) []byte {

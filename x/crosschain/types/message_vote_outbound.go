@@ -83,7 +83,7 @@ func (msg *MsgVoteOutbound) Digest() string {
 	// Set status to ReceiveStatus_created to make sure both successful and failed votes are added to the same ballot
 	m.Status = chains.ReceiveStatus_created
 
-	// Outbound and reverted txs have different digest as ObservedOutTxHash is different so they are stored in different ballots
+	// Outbound and reverted txs have different digest as ObservedOutboundHash is different so they are stored in different ballots
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }

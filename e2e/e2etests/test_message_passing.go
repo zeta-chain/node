@@ -73,7 +73,7 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 
 	r.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
 	r.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -159,7 +159,7 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 	}
 
 	// expect revert tx to fail
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
@@ -224,12 +224,12 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
-	outTxHash := cctx.GetCurrentOutboundParam().Hash
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outTxHash))
+	outboundHash := cctx.GetCurrentOutboundParam().Hash
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outboundHash))
 	if err != nil {
 		panic(err)
 	}

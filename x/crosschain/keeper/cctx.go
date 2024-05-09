@@ -10,12 +10,12 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// SetCctxAndNonceToCctxAndInTxHashToCctx does the following things in one function:
+// SetCctxAndNonceToCctxAndInboundHashToCctx does the following things in one function:
 // 1. set the cctx in the store
 // 2. set the mapping inboundHash -> cctxIndex , one inboundHash can be connected to multiple cctxindex
 // 3. set the mapping nonce => cctx
 // 4. update the zeta accounting
-func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx types.CrossChainTx) {
+func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx types.CrossChainTx) {
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return

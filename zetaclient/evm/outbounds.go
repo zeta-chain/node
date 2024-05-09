@@ -90,7 +90,7 @@ func (ob *ChainClient) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, l
 	}
 
 	// parse the received value from the outtx receipt
-	receiveValue, receiveStatus, err = ParseOuttxReceivedValue(cctx, receipt, transaction, cointype, connectorAddr, connector, custodyAddr, custody)
+	receiveValue, receiveStatus, err = ParseOutboundReceivedValue(cctx, receipt, transaction, cointype, connectorAddr, connector, custodyAddr, custody)
 	if err != nil {
 		logger.Error().Err(err).Msgf("IsOutboundProcessed: error parsing outtx event for chain %d txhash %s", ob.chain.ChainId, receipt.TxHash)
 		return false, false, err
@@ -190,9 +190,9 @@ func ParseAndCheckWithdrawnEvent(
 	return nil, errors.New("no ERC20 Withdrawn event found")
 }
 
-// ParseOuttxReceivedValue parses the received value and status from the outtx receipt
+// ParseOutboundReceivedValue parses the received value and status from the outtx receipt
 // The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
-func ParseOuttxReceivedValue(
+func ParseOutboundReceivedValue(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	transaction *ethtypes.Transaction,

@@ -23,7 +23,7 @@ func getEthereumChainID() int64 {
 // TODO: Add a test case with proof and Bitcoin chain
 // https://github.com/zeta-chain/node/issues/1994
 
-func TestMsgServer_AddToOutTxTracker(t *testing.T) {
+func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 	t.Run("admin can add tracker", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,

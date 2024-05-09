@@ -7,8 +7,8 @@ const (
 	// PostGasPriceGasLimit is the gas limit for voting new gas price
 	PostGasPriceGasLimit = 1_500_000
 
-	// AddTxHashToOutTxTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
-	AddTxHashToOutTxTrackerGasLimit = 200_000
+	// AddTxHashToOutboundTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
+	AddTxHashToOutboundTrackerGasLimit = 200_000
 
 	// PostBlameDataGasLimit is the gas limit for voting on blames
 	PostBlameDataGasLimit = 200_000

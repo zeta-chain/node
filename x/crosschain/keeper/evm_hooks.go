@@ -275,7 +275,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverCh
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
 
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 	ctx.Logger().Debug("ProcessCCTX successful \n")
 	return nil
 }
