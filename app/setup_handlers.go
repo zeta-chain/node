@@ -21,6 +21,7 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
 
 func SetupHandlers(app *App) {
@@ -88,6 +89,7 @@ func SetupHandlers(app *App) {
 				capabilitytypes.ModuleName,
 				ibcexported.ModuleName,
 				ibctransfertypes.ModuleName,
+				ibccrosschaintypes.ModuleName,
 			},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,

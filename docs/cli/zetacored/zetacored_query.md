@@ -43,6 +43,7 @@ zetacored query [flags]
 * [zetacored query group](zetacored_query_group.md)	 - Querying commands for the group module
 * [zetacored query ibc](zetacored_query_ibc.md)	 - Querying commands for the IBC module
 * [zetacored query ibc-transfer](zetacored_query_ibc-transfer.md)	 - IBC fungible token transfer query subcommands
+* [zetacored query ibccrosschain](zetacored_query_ibccrosschain.md)	 - Querying commands for the ibccrosschain module
 * [zetacored query lightclient](zetacored_query_lightclient.md)	 - Querying commands for the lightclient module
 * [zetacored query observer](zetacored_query_observer.md)	 - Querying commands for the observer module
 * [zetacored query params](zetacored_query_params.md)	 - Querying commands for the params module

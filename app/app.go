@@ -131,6 +131,10 @@ import (
 	observermodule "github.com/zeta-chain/zetacore/x/observer"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+
+	"github.com/zeta-chain/zetacore/x/ibccrosschain"
+	ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
+	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
 
 const Name = "zetacore"
@@ -207,6 +211,7 @@ var (
 		authoritymodule.AppModuleBasic{},
 		lightclientmodule.AppModuleBasic{},
 		crosschainmodule.AppModuleBasic{},
+		ibccrosschain.AppModule{},
 		observermodule.AppModuleBasic{},
 		fungiblemodule.AppModuleBasic{},
 		emissionsmodule.AppModuleBasic{},
@@ -223,6 +228,7 @@ var (
 		govtypes.ModuleName:                             {authtypes.Burner},
 		ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 		crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+		ibccrosschaintypes.ModuleName:                   nil,
 		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
 		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 		emissionstypes.ModuleName:                       nil,
@@ -284,20 +290,22 @@ type App struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	// scoped keepers
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
+	ScopedIBCCrosschainKeeper capabilitykeeper.ScopedKeeper
 
 	// evm keepers
 	EvmKeeper       *evmkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// zetachain keepers
-	AuthorityKeeper   authoritykeeper.Keeper
-	LightclientKeeper lightclientkeeper.Keeper
-	CrosschainKeeper  crosschainkeeper.Keeper
-	ObserverKeeper    *observerkeeper.Keeper
-	FungibleKeeper    fungiblekeeper.Keeper
-	EmissionsKeeper   emissionskeeper.Keeper
+	AuthorityKeeper     authoritykeeper.Keeper
+	LightclientKeeper   lightclientkeeper.Keeper
+	CrosschainKeeper    crosschainkeeper.Keeper
+	IBCCrosschainKeeper ibccrosschainkeeper.Keeper
+	ObserverKeeper      *observerkeeper.Keeper
+	FungibleKeeper      fungiblekeeper.Keeper
+	EmissionsKeeper     emissionskeeper.Keeper
 
 	transferModule transfer.AppModule
 }
@@ -345,6 +353,7 @@ func New(
 		authoritytypes.StoreKey,
 		lightclienttypes.StoreKey,
 		crosschaintypes.StoreKey,
+		ibccrosschaintypes.StoreKey,
 		observertypes.StoreKey,
 		fungibletypes.StoreKey,
 		emissionstypes.StoreKey,
@@ -586,6 +595,18 @@ func New(
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
 	)
+
+	scopedMonitoringcKeeper := app.CapabilityKeeper.ScopeToModule(ibccrosschaintypes.ModuleName)
+	app.ScopedIBCCrosschainKeeper = scopedMonitoringcKeeper
+
+	app.IBCCrosschainKeeper = *ibccrosschainkeeper.NewKeeper(
+		appCodec,
+		keys[ibccrosschaintypes.StoreKey],
+		keys[ibccrosschaintypes.MemStoreKey],
+	)
+
+	ibcRouter.AddRoute(ibccrosschaintypes.ModuleName, ibccrosschain.NewIBCModule(app.IBCCrosschainKeeper))
+
 	app.GroupKeeper = groupkeeper.NewKeeper(
 		keys[group.StoreKey],
 		appCodec,
@@ -670,6 +691,7 @@ func New(
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
+		ibccrosschain.NewAppModule(appCodec, app.IBCCrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
 		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
@@ -700,6 +722,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
+		ibccrosschaintypes.ModuleName,
 		observertypes.ModuleName,
 		fungibletypes.ModuleName,
 		emissionstypes.ModuleName,
@@ -728,6 +751,7 @@ func New(
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
+		ibccrosschaintypes.ModuleName,
 		observertypes.ModuleName,
 		fungibletypes.ModuleName,
 		emissionstypes.ModuleName,
