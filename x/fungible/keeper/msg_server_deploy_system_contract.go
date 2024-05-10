@@ -15,8 +15,9 @@ import (
 func (k msgServer) DeploySystemContracts(goCtx context.Context, msg *types.MsgDeploySystemContracts) (*types.MsgDeploySystemContractsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, "System contract deployment can only be executed by the correct policy account")
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// uniswap v2 factory

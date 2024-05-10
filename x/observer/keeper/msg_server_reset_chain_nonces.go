@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -12,8 +13,9 @@ import (
 // ResetChainNonces handles resetting chain nonces
 func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetChainNonces) (*types.MsgResetChainNoncesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return &types.MsgResetChainNoncesResponse{}, authoritytypes.ErrUnauthorized
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	tss, found := k.GetTSS(ctx)

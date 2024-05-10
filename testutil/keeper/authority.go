@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
@@ -74,8 +75,13 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 }
 
 // MockIsAuthorized mocks the IsAuthorized method of an authority keeper mock
+// TODO : https://github.com/zeta-chain/node/issues/2153
 func MockIsAuthorized(m *mock.Mock, _ string, _ types.PolicyType, isAuthorized bool) {
-	m.On("IsAuthorized", mock.Anything, mock.Anything).Return(isAuthorized).Once()
+	if isAuthorized {
+		m.On("IsAuthorized", mock.Anything, mock.Anything).Return(isAuthorized, nil).Once()
+	} else {
+		m.On("IsAuthorized", mock.Anything, mock.Anything).Return(isAuthorized, errors.New("unauthorized")).Once()
+	}
 }
 
 func SetAdminPolices(ctx sdk.Context, ak *keeper.Keeper) string {

@@ -27,7 +27,7 @@ func TestMsgServer_UpdateKeygen(t *testing.T) {
 			Creator: admin,
 		})
 		require.Error(t, err)
-		require.Equal(t, &types.MsgUpdateKeygenResponse{}, res)
+		require.Nil(t, res)
 	})
 
 	t.Run("should error if keygen not found", func(t *testing.T) {

@@ -16,10 +16,10 @@ func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgU
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check signer permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "deploy can only be executed by the correct policy account")
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
-
 	// check the zrc20 exists
 	zrc20Addr := ethcommon.HexToAddress(msg.Zrc20Address)
 	if zrc20Addr == (ethcommon.Address{}) {

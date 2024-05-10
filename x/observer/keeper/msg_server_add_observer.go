@@ -18,8 +18,9 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return &types.MsgAddObserverResponse{}, authoritytypes.ErrUnauthorized
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	pubkey, err := crypto.NewPubKey(msg.ZetaclientGranteePubkey)

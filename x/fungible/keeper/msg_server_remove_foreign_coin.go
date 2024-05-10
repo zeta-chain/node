@@ -16,8 +16,9 @@ import (
 // Authorized: admin policy group 2.
 func (k msgServer) RemoveForeignCoin(goCtx context.Context, msg *types.MsgRemoveForeignCoin) (*types.MsgRemoveForeignCoinResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Removal can only be executed by the correct policy account")
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 	index := msg.Name
 	_, found := k.GetForeignCoins(ctx, index)

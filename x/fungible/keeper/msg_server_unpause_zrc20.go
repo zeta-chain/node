@@ -11,10 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// UpdateZRC20PausedStatus updates the paused status of a ZRC20
-// The list of ZRC20s are either paused or unpaused
-//
-// Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
+// UnpauseZRC20 unpauses the ZRC20 token
 func (k msgServer) UnpauseZRC20(
 	goCtx context.Context,
 	msg *types.MsgUnpauseZRC20,
@@ -26,20 +23,10 @@ func (k msgServer) UnpauseZRC20(
 		return nil, err
 	}
 
-	// check if the sender is the admin
-	// unpausing requires operational policy
-	//requiredPolicyAccount := authoritytypes.PolicyType_groupEmergency
-	//if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
-	//	requiredPolicyAccount = authoritytypes.PolicyType_groupOperational
-	//}
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
-
-	//pausedStatus := true
-	//if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
-	//	pausedStatus = false
-	//}
 
 	// iterate all foreign coins and set paused status
 	for _, zrc20 := range msg.Zrc20Addresses {
@@ -52,7 +39,7 @@ func (k msgServer) UnpauseZRC20(
 		k.SetForeignCoins(ctx, fc)
 	}
 
-	err := ctx.EventManager().EmitTypedEvent(
+	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventZRC20PausedStatusUpdated{
 			MsgTypeUrl:     sdk.MsgTypeURL(&types.MsgUnpauseZRC20{}),
 			Action:         types.UpdatePausedStatusAction_UNPAUSE,

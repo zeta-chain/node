@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	cosmoserrors "cosmossdk.io/errors"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,8 +18,9 @@ func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeyge
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return &types.MsgUpdateKeygenResponse{}, authoritytypes.ErrUnauthorized
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	keygen, found := k.GetKeygen(ctx)

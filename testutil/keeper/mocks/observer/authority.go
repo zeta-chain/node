@@ -15,7 +15,7 @@ type ObserverAuthorityKeeper struct {
 }
 
 // IsAuthorized provides a mock function with given fields: ctx, msg
-func (_m *ObserverAuthorityKeeper) IsAuthorized(ctx types.Context, msg types.Msg) bool {
+func (_m *ObserverAuthorityKeeper) IsAuthorized(ctx types.Context, msg types.Msg) (bool, error) {
 	ret := _m.Called(ctx, msg)
 
 	if len(ret) == 0 {
@@ -23,13 +23,23 @@ func (_m *ObserverAuthorityKeeper) IsAuthorized(ctx types.Context, msg types.Msg
 	}
 
 	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, types.Msg) (bool, error)); ok {
+		return rf(ctx, msg)
+	}
 	if rf, ok := ret.Get(0).(func(types.Context, types.Msg) bool); ok {
 		r0 = rf(ctx, msg)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(types.Context, types.Msg) error); ok {
+		r1 = rf(ctx, msg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // SetPolicies provides a mock function with given fields: ctx, policies

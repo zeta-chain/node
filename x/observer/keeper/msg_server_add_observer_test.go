@@ -29,7 +29,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 			Creator: admin,
 		})
 		require.Error(t, err)
-		require.Equal(t, &types.MsgAddObserverResponse{}, res)
+		require.Nil(t, res)
 	})
 
 	t.Run("should error if pub key not valid", func(t *testing.T) {

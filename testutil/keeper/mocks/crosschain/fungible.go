@@ -214,6 +214,26 @@ func (_m *CrosschainFungibleKeeper) FundGasStabilityPool(ctx types.Context, chai
 	return r0
 }
 
+// GetAllForeignCoinMap provides a mock function with given fields: ctx
+func (_m *CrosschainFungibleKeeper) GetAllForeignCoinMap(ctx types.Context) map[int64]map[string]fungibletypes.ForeignCoins {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllForeignCoinMap")
+	}
+
+	var r0 map[int64]map[string]fungibletypes.ForeignCoins
+	if rf, ok := ret.Get(0).(func(types.Context) map[int64]map[string]fungibletypes.ForeignCoins); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[int64]map[string]fungibletypes.ForeignCoins)
+		}
+	}
+
+	return r0
+}
+
 // GetAllForeignCoins provides a mock function with given fields: ctx
 func (_m *CrosschainFungibleKeeper) GetAllForeignCoins(ctx types.Context) []fungibletypes.ForeignCoins {
 	ret := _m.Called(ctx)
@@ -248,26 +268,6 @@ func (_m *CrosschainFungibleKeeper) GetAllForeignCoinsForChain(ctx types.Context
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]fungibletypes.ForeignCoins)
-		}
-	}
-
-	return r0
-}
-
-// GetAllForeignCoinMap provides a mock function with given fields: ctx
-func (_m *CrosschainFungibleKeeper) GetAllForeignCoinMap(ctx types.Context) map[int64]map[string]fungibletypes.ForeignCoins {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllForeignCoinMap")
-	}
-
-	var r0 map[int64]map[string]fungibletypes.ForeignCoins
-	if rf, ok := ret.Get(0).(func(types.Context) map[int64]map[string]fungibletypes.ForeignCoins); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[int64]map[string]fungibletypes.ForeignCoins)
 		}
 	}
 

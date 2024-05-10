@@ -11,7 +11,7 @@ const (
 	TypeMsgDisableCCTXFlags = "disable_crosschain_flags"
 )
 
-var _ sdk.Msg = &MsgEnableCCTXFlags{}
+var _ sdk.Msg = &MsgDisableCCTXFlags{}
 
 func NewMsgDisableCCTXFlags(creator string, disableOutbound, disableInbound bool) *MsgDisableCCTXFlags {
 	return &MsgDisableCCTXFlags{

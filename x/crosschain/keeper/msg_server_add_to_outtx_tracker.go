@@ -48,7 +48,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
 	}
 
-	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	isEmergencyGroup, _ := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
 	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 	isProven := false
 

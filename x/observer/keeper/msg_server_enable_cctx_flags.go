@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -12,16 +13,18 @@ func (k msgServer) EnableCCTXFlags(goCtx context.Context, msg *types.MsgEnableCC
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return &types.MsgEnableCCTXFlagsResponse{}, authoritytypes.ErrUnauthorized
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// check if the value exists,
-	// This will also set the default values for such as GasPriceIncreaseFlags
-	// We can still use the default values as all flags are part of the same struct ,
+	// if not, set the default value for the Inbound and Outbound flags only
 	flags, isFound := k.GetCrosschainFlags(ctx)
 	if !isFound {
 		flags = *types.DefaultCrosschainFlags()
+		flags.GasPriceIncreaseFlags = nil
+		flags.BlockHeaderVerificationFlags = nil
 	}
 
 	if msg.EnableInbound {
@@ -33,7 +36,7 @@ func (k msgServer) EnableCCTXFlags(goCtx context.Context, msg *types.MsgEnableCC
 
 	k.SetCrosschainFlags(ctx, flags)
 
-	err := ctx.EventManager().EmitTypedEvents(&types.EventCrosschainFlagsUpdated{
+	err = ctx.EventManager().EmitTypedEvents(&types.EventCrosschainFlagsUpdated{
 		MsgTypeUrl:                   sdk.MsgTypeURL(&types.MsgEnableCCTXFlags{}),
 		IsInboundEnabled:             flags.IsInboundEnabled,
 		IsOutboundEnabled:            flags.IsOutboundEnabled,

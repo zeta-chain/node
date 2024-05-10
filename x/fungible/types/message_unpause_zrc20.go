@@ -9,7 +9,7 @@ import (
 
 const TypeMsgUnpauseZRC20 = "unpause_zrc20"
 
-var _ sdk.Msg = &MsgPauseZRC20{}
+var _ sdk.Msg = &MsgUnpauseZRC20{}
 
 func NewMsgUnpauseZRC20(creator string, zrc20 []string) *MsgUnpauseZRC20 {
 	return &MsgUnpauseZRC20{

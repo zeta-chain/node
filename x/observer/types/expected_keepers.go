@@ -27,7 +27,7 @@ type StakingHooks interface {
 }
 
 type AuthorityKeeper interface {
-	IsAuthorized(ctx sdk.Context, msg sdk.Msg) bool
+	IsAuthorized(ctx sdk.Context, msg sdk.Msg) (bool, error)
 
 	// SetPolicies is solely used for the migration of policies from observer to authority
 	SetPolicies(ctx sdk.Context, policies authoritytypes.Policies)

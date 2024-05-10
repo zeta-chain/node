@@ -22,8 +22,9 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// fetch account to update
@@ -53,7 +54,7 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 	// set the new CodeHash to the account
 	oldCodeHash := acct.CodeHash
 	acct.CodeHash = ethcommon.HexToHash(msg.NewCodeHash).Bytes()
-	err := k.evmKeeper.SetAccount(ctx, contractAddress, *acct)
+	err = k.evmKeeper.SetAccount(ctx, contractAddress, *acct)
 	if err != nil {
 		return nil, cosmoserror.Wrapf(
 			types.ErrSetBytecode,

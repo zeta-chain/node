@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 func TestKeeper_SetPolicies(t *testing.T) {
@@ -31,27 +32,53 @@ func TestKeeper_SetPolicies(t *testing.T) {
 	require.Equal(t, newPolicies, got)
 }
 
-//func TestKeeper_IsAuthorized(t *testing.T) {
-//	k, ctx := keepertest.AuthorityKeeper(t)
-//
-//	// Not authorized if no policies
-//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
-//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
-//
-//	policies := sample.Policies()
-//	k.SetPolicies(ctx, policies)
-//
-//	// Check policy is set
-//	got, found := k.GetPolicies(ctx)
-//	require.True(t, found)
-//	require.Equal(t, policies, got)
-//
-//	// Check policy is authorized
-//	for _, policy := range policies.Items {
-//		require.True(t, k.IsAuthorized(ctx, policy.Address, policy.PolicyType))
-//	}
-//
-//	// Check policy is not authorized
-//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
-//	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
-//}
+func TestKeeper_IsAuthorized(t *testing.T) {
+	t.Run("successfully authorized", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		admin := sample.AccAddress()
+		policies := sample.PoliciesWithAdmin(admin)
+		k.SetPolicies(ctx, policies)
+		msg := sample.AdminMessage(admin)
+		ok, err := k.IsAuthorized(ctx, msg)
+		require.True(t, ok)
+		require.NoError(t, err)
+	})
+
+	t.Run("returns error if more than 1 signer", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		msg := sample.MultipleSignerMessage()
+		ok, err := k.IsAuthorized(ctx, msg)
+		require.False(t, ok)
+		require.ErrorIs(t, err, authoritytypes.ErrSigners)
+	})
+
+	t.Run("returns error if not admin message", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		admin := sample.AccAddress()
+		policies := sample.PoliciesWithAdmin(admin)
+		k.SetPolicies(ctx, policies)
+		msg := sample.NonAdminMessage(admin)
+		ok, err := k.IsAuthorized(ctx, msg)
+		require.False(t, ok)
+		require.ErrorIs(t, err, authoritytypes.ErrMsgNotAuthorized)
+	})
+
+	t.Run("returns error if policies not found", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		msg := sample.AdminMessage(sample.AccAddress())
+		ok, err := k.IsAuthorized(ctx, msg)
+		require.False(t, ok)
+		require.ErrorIs(t, err, authoritytypes.ErrPoliciesNotFound)
+	})
+
+	t.Run("returns error if signer doesn't match", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		admin := sample.AccAddress()
+		policies := sample.PoliciesWithAdmin(admin)
+		k.SetPolicies(ctx, policies)
+		msg := sample.AdminMessage(sample.AccAddress())
+		ok, err := k.IsAuthorized(ctx, msg)
+		require.False(t, ok)
+		require.ErrorIs(t, err, authoritytypes.ErrSignerDoesntMatch)
+	})
+}

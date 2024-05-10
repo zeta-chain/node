@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -12,19 +13,21 @@ func (k msgServer) UpdateGasPriceIncreaseFlags(goCtx context.Context, msg *types
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg) {
-		return &types.MsgUpdateGasPriceIncreaseFlagsResponse{}, authoritytypes.ErrUnauthorized
+	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if !ok || err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
-
 	// check if the value exists,
-	// This will also set the default values for such as GasPriceIncreaseFlags
-	// We can still use the default values as all flags are part of the same struct ,
+	// if not, set the default value for the GasPriceIncreaseFlags only
+	// Set Inbound and Outbound flags to false
 	flags, isFound := k.GetCrosschainFlags(ctx)
 	if !isFound {
 		flags = *types.DefaultCrosschainFlags()
+		flags.IsInboundEnabled = false
+		flags.IsOutboundEnabled = false
 	}
 
-	err := msg.GasPriceIncreaseFlags.Validate()
+	err = msg.GasPriceIncreaseFlags.Validate()
 	if err != nil {
 		return &types.MsgUpdateGasPriceIncreaseFlagsResponse{}, err
 	}
