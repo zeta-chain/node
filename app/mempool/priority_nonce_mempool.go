@@ -1,5 +1,6 @@
-// This is fork of PriorityNonceMempool from cosmos sdk 0.47 (check: https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce.go)
-// only change is part where signatures are checked
+// This proposal handler is taken from https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce.go
+// Only difference is extraction of senders and nonce from tx. In latest version of cosmos, there is a way to provide adapter for this, but in 0.47.10 this is the only way.
+// TODO: remove this once we upgrade cosmos
 
 package mempool
 

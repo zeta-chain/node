@@ -1,5 +1,9 @@
 package app
 
+// This proposal handler is taken from https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/baseapp/abci_utils.go
+// Only difference is extraction of senders and nonce from tx. In latest version of cosmos, there is a way to provide adapter for this, but in 0.47.10 this is the only way.
+// TODO: remove this once we upgrade cosmos
+
 import (
 	"fmt"
 
