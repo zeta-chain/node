@@ -342,7 +342,6 @@ func New(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
-	// DefaultProposalHandler also checks for sigs, probably will need custom
 	customProposalHandler := NewCustomProposalHandler(bApp.Mempool(), bApp)
 	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
