@@ -29426,6 +29426,34 @@ paths:
           format: int64
       tags:
         - Query
+  /zeta-chain/lightclient/header_enabled_chains:
+    get:
+      operationId: Query_HeaderEnabledChains
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryHeaderEnabledChainsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/lightclient/header_supported_chains:
+    get:
+      operationId: Query_HeaderSupportedChains
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryHeaderSupportedChainsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/lightclient/prove:
     get:
       operationId: Query_Prove
@@ -29488,20 +29516,6 @@ paths:
           required: false
           type: string
           format: int64
-      tags:
-        - Query
-  /zeta-chain/lightclient/verification_flags:
-    get:
-      operationId: Query_VerificationFlags
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/lightclientQueryVerificationFlagsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/observer/TSS:
@@ -56377,8 +56391,6 @@ definitions:
         $ref: '#/definitions/chainsConsensus'
       is_external:
         type: boolean
-      is_header_supported:
-        type: boolean
   chainsChainName:
     type: string
     enum:
@@ -57111,7 +57123,20 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
-  lightclientMsgUpdateVerificationFlagsResponse:
+  lightclientHeaderSupportedChain:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      enabled:
+        type: boolean
+    title: |-
+      HeaderSupportedChain is a structure containing information of weather a chain
+      is enabled or not for block header verification
+  lightclientMsgDisableHeaderVerificationResponse:
+    type: object
+  lightclientMsgEnableHeaderVerificationResponse:
     type: object
   lightclientQueryAllBlockHeaderResponse:
     type: object
@@ -57143,26 +57168,27 @@ definitions:
     properties:
       chain_state:
         $ref: '#/definitions/lightclientChainState'
+  lightclientQueryHeaderEnabledChainsResponse:
+    type: object
+    properties:
+      header_enabled_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
+  lightclientQueryHeaderSupportedChainsResponse:
+    type: object
+    properties:
+      header_supported_chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientHeaderSupportedChain'
   lightclientQueryProveResponse:
     type: object
     properties:
       valid:
         type: boolean
-  lightclientQueryVerificationFlagsResponse:
-    type: object
-    properties:
-      verification_flags:
-        $ref: '#/definitions/lightclientVerificationFlags'
-  lightclientVerificationFlags:
-    type: object
-    properties:
-      ethTypeChainEnabled:
-        type: boolean
-      btcTypeChainEnabled:
-        type: boolean
-    title: |-
-      VerificationFlags is a structure containing information which chain types are
-      enabled for block header verification
   observerBallotStatus:
     type: string
     enum:
