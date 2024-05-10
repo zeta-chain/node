@@ -2,10 +2,17 @@
 
 ## Unreleased
 ### Breaking Changes
+* Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
 * `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableHeaderVerification` and `MsgDisableHeaderVerification` messages.
  * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
  * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
-* Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
+* `MsgUpdateZRC20` has been removed, and replaced with `MsgPauseZRC20` and `MsgUnpauseZRC20` messages.
+    * `MsgPauseZRC20` message pauses a ZRC20 token and can be triggered via `PolicyType_groupEmergency`
+    * `MsgUnpauseZRC20` message unpauses a ZRC20 token and can be triggered via `PolicyType_groupOperational`
+* `MsgUpdateCrosschainFlags` has been removed, and replaced with `MsgEnableCrosschainFlags` ,`MsgDisableCrosschainFlags` and `MsgUpdateGasPriceIncreaseFlags` messages.
+    * `MsgEnableCrosschainFlags` message enables crosschain flags for a list of chains and can be triggered via `PolicyType_groupOperational`
+    * `MsgDisableCrosschainFlags` message disables crosschain flags for a list of chains and can be triggered via `PolicyType_emergency`
+    * `MsgUpdateGasPriceIncreaseFlags` message updates the gas price increase flags for a list of chains and can be triggered via `PolicyType_groupOperational`
 
 ### Features
 
