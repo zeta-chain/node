@@ -57,7 +57,7 @@ EXPOSE 22
 FROM base-runtime AS latest-runtime
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetae2e /usr/local/bin
+COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin
 
 # optional old version build
 # use --target latest-runtime to skip

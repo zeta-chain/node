@@ -7,11 +7,9 @@ version: "3"
 
 services:
   zetacore0:
-    entrypoint: ["/root/start-zetacored.sh", "2", "upgrade"]
     image: zetanode:old
 
   zetacore1:
-    entrypoint: ["/root/start-zetacored.sh", "2", "upgrade"]
     image: zetanode:old
 
   zetaclient0:
@@ -42,7 +40,7 @@ services:
     image: zetanode:old
     container_name: upgradeorchestrator
     hostname: upgradeorchestrator
-    entrypoint: ["/root/start-upgradeorchestrator.sh", "90"]
+    entrypoint: ["/root/start-upgradeorchestrator.sh", "225"]
     networks:
       mynetwork:
         ipv4_address: 172.20.0.251

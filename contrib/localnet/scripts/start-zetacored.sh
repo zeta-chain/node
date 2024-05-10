@@ -4,8 +4,6 @@
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
 # The number of nodes is passed as an first argument to the script
-# The second argument is optional and can have the following value:
-# 1. upgrade : This is used to test the upgrade process, a proposal is created for the upgrade and the nodes are started using cosmovisor
 
 /usr/sbin/sshd
 
