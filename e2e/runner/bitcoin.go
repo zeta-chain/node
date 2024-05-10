@@ -240,9 +240,12 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		}
 	}
 
-	stx, err := signRawTransactionWithWallet2WithRetry(btcRPC, tx, inputsForSign)
+	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
 	if err != nil {
 		panic(err)
+	}
+	if signed {
+		panic("not signed")
 	}
 	txid, err := btcRPC.SendRawTransaction(stx, true)
 	if err != nil {
@@ -403,24 +406,4 @@ func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 		panic("txProof should be valid")
 	}
 	runner.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
-}
-
-// SignRawTransactionWithWallet2WithRetry signs a raw transaction with wallet2 and retries if it's not signed
-func signRawTransactionWithWallet2WithRetry(
-	btcRPC *rpcclient.Client,
-	tx *wire.MsgTx,
-	inputsForSign []btcjson.RawTxWitnessInput,
-) (*wire.MsgTx, error) {
-	for i := 0; i < 5; i++ {
-		stx, signed, err := btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
-		if err != nil {
-			return nil, err
-		}
-		if signed {
-			return stx, nil
-		}
-		time.Sleep(2 * time.Second)
-	}
-
-	return nil, fmt.Errorf("signRawTransactionWithWallet2WithRetry: not signed")
 }

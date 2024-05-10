@@ -119,6 +119,10 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutTxParam().OutboundTxHash)
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
+
+	// wait a few seconds before listing utxos
+	time.Sleep(5 * time.Second)
+
 	utxos, err := r.BtcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
