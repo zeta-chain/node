@@ -1,15 +1,9 @@
-# tx fungible update-zrc20-paused-status
+# tx observer enable-cctx-flags
 
-Broadcast message UpdateZRC20PausedStatus
-
-```
-zetacored tx fungible update-zrc20-paused-status [contractAddress1, contractAddress2, ...] [pausedStatus] [flags]
-```
-
-### Examples
+Enable inbound and outbound cross-chain flags
 
 ```
-zetacored tx fungible update-zrc20-paused-status "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" 0 
+zetacored tx observer enable-cctx-flags [enable-inbound] [enable-outbound] [flags]
 ```
 
 ### Options
@@ -28,7 +22,7 @@ zetacored tx fungible update-zrc20-paused-status "0xece40cbB54d65282c4623f141c4a
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-zrc20-paused-status
+  -h, --help                     help for enable-cctx-flags
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -55,5 +49,5 @@ zetacored tx fungible update-zrc20-paused-status "0xece40cbB54d65282c4623f141c4a
 
 ### SEE ALSO
 
-* [zetacored tx fungible](zetacored_tx_fungible.md)	 - fungible transactions subcommands
+* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
 

@@ -20,6 +20,7 @@
 * [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
+* [2114](https://github.com/zeta-chain/node/pull/2114) - refactor zetacore to create a authorizations table 
 
 ### Tests
 
