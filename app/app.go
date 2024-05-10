@@ -680,10 +680,9 @@ func New(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
+		upgradetypes.ModuleName,
 		evmtypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -710,6 +709,7 @@ func New(
 		consensusparamtypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
+		capabilitytypes.ModuleName,
 		banktypes.ModuleName,
 		authtypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -717,7 +717,6 @@ func New(
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
-		capabilitytypes.ModuleName,
 		vestingtypes.ModuleName,
 		govtypes.ModuleName,
 		paramstypes.ModuleName,
