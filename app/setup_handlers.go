@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -16,10 +17,11 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 )
-
-const releaseVersion = "v17"
 
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
@@ -50,8 +52,8 @@ func SetupHandlers(app *App) {
 		}
 	}
 	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Running upgrade handler for " + releaseVersion)
+	app.UpgradeKeeper.SetUpgradeHandler(constant.Version, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Running upgrade handler for " + constant.Version)
 		// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
 		baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 		// Updated version map to the latest consensus versions from each module
@@ -78,9 +80,15 @@ func SetupHandlers(app *App) {
 	if err != nil {
 		panic(err)
 	}
-	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == constant.Version && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{consensustypes.ModuleName, crisistypes.ModuleName},
+			Added: []string{
+				consensustypes.ModuleName,
+				crisistypes.ModuleName,
+				capabilitytypes.ModuleName,
+				ibcexported.ModuleName,
+				ibctransfertypes.ModuleName,
+			},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
