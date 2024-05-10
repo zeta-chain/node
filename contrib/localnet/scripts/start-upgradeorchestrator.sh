@@ -13,9 +13,8 @@ while ! curl -s -o /dev/null zetacore0:26657/status ; do
     sleep 1
 done
 
-CURRENT_HEIGHT=0
-
 # wait for minimum height
+CURRENT_HEIGHT=0
 while [[ $CURRENT_HEIGHT -lt 1 ]]
 do
     CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
