@@ -1,3 +1,5 @@
+// TODO: use with signer extractor once available https://github.com/zeta-chain/node/issues/2156
+
 package mempool
 
 import (
@@ -9,13 +11,16 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
+// GetSendersWithNonce is used to extract sender and nonce information txs
+// if tx is ethermint, it is extracted using from and nonce field
+// if it's cosmos tx, default cosmos way using signatures is used
 func GetSendersWithNonce(tx sdk.Tx) ([]SenderWithNonce, error) {
+	const extensionOptionsEthereumTxTypeUrl = "/ethermint.evm.v1.ExtensionOptionsEthereumTx"
 	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
 		opts := txWithExtensions.GetExtensionOptions()
-		if len(opts) > 0 && opts[0].GetTypeUrl() == "/ethermint.evm.v1.ExtensionOptionsEthereumTx" {
+		if len(opts) > 0 && opts[0].GetTypeUrl() == extensionOptionsEthereumTxTypeUrl {
 			for _, msg := range tx.GetMsgs() {
 				if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
-
 					return []SenderWithNonce{
 						{
 							Sender: ethMsg.GetFrom().String(),
@@ -35,6 +40,7 @@ type SenderWithNonce struct {
 	Nonce  uint64
 }
 
+// getSendersWithNonceDefault gets senders and nonces from signatures in cosmos txs
 func getSendersWithNonceDefault(tx sdk.Tx) ([]SenderWithNonce, error) {
 	sendersWithNonce := []SenderWithNonce{}
 

@@ -2,7 +2,7 @@ package app
 
 // This proposal handler is taken from https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/baseapp/abci_utils.go
 // Only difference is extraction of senders and nonce from tx. In latest version of cosmos, there is a way to provide adapter for this, but in 0.47.10 this is the only way.
-// TODO: remove this once we upgrade cosmos
+// TODO: remove this once cosmos is upgraded: https://github.com/zeta-chain/node/issues/2156
 
 import (
 	"fmt"
@@ -75,6 +75,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		var maxBlockGas uint64
 		if b := ctx.ConsensusParams().Block; b != nil {
+			// #nosec G701 range checked, cosmos-sdk forked code
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
@@ -90,6 +91,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 				// XXX: We pass nil as the memTx because we have no way of decoding the
 				// txBz. We'd need to break (update) the ProposalTxVerifier interface.
 				// As a result, we CANNOT account for block max gas.
+				// #nosec G701 range checked, cosmos-sdk forked code
 				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, nil, txBz)
 				if stop {
 					break
@@ -149,6 +151,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 					panic(err)
 				}
 			} else {
+				// #nosec G701 range checked, cosmos-sdk forked code
 				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
 					break
@@ -218,6 +221,7 @@ func (h *CustomProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHand
 					totalTxGas += gasTx.GetGas()
 				}
 
+				// #nosec G701 range checked, cosmos-sdk forked code
 				if totalTxGas > uint64(maxBlockGas) {
 					return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 				}
