@@ -35,8 +35,6 @@ RUN cd node && make install
 
 # Build new release from the current source
 FROM base
-ARG NEW_VERSION
-ENV NEW_VERSION=${NEW_VERSION}
 COPY go.mod /go/delivery/zeta-node/
 COPY go.sum /go/delivery/zeta-node/
 RUN cd /go/delivery/zeta-node/ && go mod download
