@@ -34,6 +34,8 @@ func TestMsgServer_DisableCCTXFlags(t *testing.T) {
 		require.True(t, found)
 		require.False(t, flags.IsInboundEnabled)
 		require.False(t, flags.IsOutboundEnabled)
+		require.Nil(t, flags.GasPriceIncreaseFlags)
+		require.Nil(t, flags.BlockHeaderVerificationFlags)
 	})
 
 	t.Run("can disable cctx flags if flags set to true", func(t *testing.T) {

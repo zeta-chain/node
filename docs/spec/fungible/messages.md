@@ -104,10 +104,7 @@ message MsgUpdateZRC20WithdrawFee {
 
 ## MsgPauseZRC20
 
-UpdateZRC20PausedStatus updates the paused status of a ZRC20
-The list of ZRC20s are either paused or unpaused
-
-Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
+PauseZRC20 pauses the ZRC20 token
 
 ```proto
 message MsgPauseZRC20 {
@@ -118,10 +115,7 @@ message MsgPauseZRC20 {
 
 ## MsgUnpauseZRC20
 
-UpdateZRC20PausedStatus updates the paused status of a ZRC20
-The list of ZRC20s are either paused or unpaused
-
-Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
+UnpauseZRC20 unpauses the ZRC20 token
 
 ```proto
 message MsgUnpauseZRC20 {

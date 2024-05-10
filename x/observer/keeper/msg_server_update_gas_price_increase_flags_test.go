@@ -35,6 +35,8 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 		flags, found := k.GetCrosschainFlags(ctx)
 		require.True(t, found)
 		require.Equal(t, updatedFlags, *flags.GasPriceIncreaseFlags)
+		require.False(t, flags.IsInboundEnabled)
+		require.False(t, flags.IsOutboundEnabled)
 	})
 
 	t.Run("cannot update invalid gas price increase flags", func(t *testing.T) {
