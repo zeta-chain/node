@@ -222,7 +222,7 @@ start-stress-test: zetanode
 #TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode:old --target old-build --build-arg OLD_VERSION='release/v16' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v16' .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 
@@ -232,7 +232,7 @@ start-upgrade-test: zetanode-upgrade
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade-light.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml -f docker-compose-upgrade-light.yml up -d
 
 start-localnet: zetanode
 	@echo "--> Starting localnet"
