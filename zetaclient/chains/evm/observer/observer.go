@@ -1,4 +1,4 @@
-package evm
+package observer
 
 import (
 	"context"
@@ -27,6 +27,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -202,6 +203,13 @@ func (ob *Observer) WithBlockCache(cache *lru.Cache) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.blockCache = cache
+}
+
+// Chain returns the chain for the observer
+func (ob *Observer) Chain() chains.Chain {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	return ob.chain
 }
 
 // SetChainParams sets the chain params for the observer
@@ -493,7 +501,7 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	if err != nil {
 		return nil, false, err
 	}
-	err = ValidateEvmTransaction(tx)
+	err = evm.ValidateEvmTransaction(tx)
 	if err != nil {
 		return nil, false, err
 	}
@@ -542,7 +550,7 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 		return nil, err
 	}
 	for i := range block.Transactions {
-		err := ValidateEvmTransaction(&block.Transactions[i])
+		err := evm.ValidateEvmTransaction(&block.Transactions[i])
 		if err != nil {
 			return nil, err
 		}
@@ -618,11 +626,6 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		}
 	}
 	return nil
-}
-
-func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.Tss.EVMAddress().String()
-	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
 
 func (ob *Observer) postBlockHeader(tip uint64) error {

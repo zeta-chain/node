@@ -1,4 +1,4 @@
-package evm_test
+package observer_test
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -178,7 +178,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 	receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_Zeta, testutils.EventZetaReceived)
 
 	t.Run("should parse ZetaReceived event from archived outtx receipt", func(t *testing.T) {
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.NoError(t, err)
 		require.NotNil(t, receivedLog)
 		require.Nil(t, revertedLog)
@@ -186,7 +186,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 	t.Run("should fail on connector address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeConnectorAddress := sample.EthAddress()
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
 		require.ErrorContains(t, err, "error validating ZetaReceived event")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -195,7 +195,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.GetCurrentOutTxParam().Receiver = sample.EthAddress().Hex()
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -205,14 +205,14 @@ func Test_ParseZetaReceived(t *testing.T) {
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutTxParam().Amount.Uint64()-1)
 		fakeCctx.GetCurrentOutTxParam().Amount = fakeAmount
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
 	})
 	t.Run("should fail on cctx index mismatch", func(t *testing.T) {
 		cctx.Index = sample.Hash().Hex() // use an arbitrary index
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "cctx index mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -221,7 +221,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 		// load receipt and remove ZetaReceived event from logs
 		receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_Zeta, testutils.EventZetaReceived)
 		receipt.Logs = receipt.Logs[:1] // the 2nd log is ZetaReceived event
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "no ZetaReceived/ZetaReverted event")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -239,7 +239,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 	receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_Zeta, testutils.EventZetaReverted)
 
 	t.Run("should parse ZetaReverted event from archived outtx receipt", func(t *testing.T) {
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.NoError(t, err)
 		require.Nil(t, receivedLog)
 		require.NotNil(t, revertedLog)
@@ -247,7 +247,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 	t.Run("should fail on connector address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeConnectorAddress := sample.EthAddress()
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
 		require.ErrorContains(t, err, "error validating ZetaReverted event")
 		require.Nil(t, receivedLog)
 		require.Nil(t, revertedLog)
@@ -256,7 +256,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.InboundTxParams.Sender = sample.EthAddress().Hex() // the receiver is the sender for reverted ccxt
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -266,14 +266,14 @@ func Test_ParseZetaReverted(t *testing.T) {
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutTxParam().Amount.Uint64()-1)
 		fakeCctx.GetCurrentOutTxParam().Amount = fakeAmount
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
 	})
 	t.Run("should fail on cctx index mismatch", func(t *testing.T) {
 		cctx.Index = sample.Hash().Hex() // use an arbitrary index to make validation fail
-		receivedLog, revertedLog, err := evm.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "cctx index mismatch")
 		require.Nil(t, receivedLog)
 		require.Nil(t, revertedLog)
@@ -291,14 +291,14 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_ERC20, testutils.EventERC20Withdraw)
 
 	t.Run("should parse ERC20 Withdrawn event from archived outtx receipt", func(t *testing.T) {
-		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
+		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 		require.NoError(t, err)
 		require.NotNil(t, withdrawn)
 	})
 	t.Run("should fail on erc20 custody address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeCustodyAddress := sample.EthAddress()
-		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(cctx, receipt, fakeCustodyAddress, custody)
+		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, fakeCustodyAddress, custody)
 		require.ErrorContains(t, err, "error validating Withdrawn event")
 		require.Nil(t, withdrawn)
 	})
@@ -306,7 +306,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.GetCurrentOutTxParam().Receiver = sample.EthAddress().Hex()
-		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
+		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, withdrawn)
 	})
@@ -314,7 +314,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		// load cctx and set asset to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.InboundTxParams.Asset = sample.EthAddress().Hex()
-		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
+		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "asset mismatch")
 		require.Nil(t, withdrawn)
 	})
@@ -323,7 +323,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutTxParam().Amount.Uint64()-1)
 		fakeCctx.GetCurrentOutTxParam().Amount = fakeAmount
-		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
+		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, withdrawn)
 	})
@@ -331,7 +331,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		// load receipt and remove Withdrawn event from logs
 		receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_ERC20, testutils.EventERC20Withdraw)
 		receipt.Logs = receipt.Logs[:1] // the 2nd log is Withdrawn event
-		withdrawn, err := evm.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
+		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "no ERC20 Withdrawn event")
 		require.Nil(t, withdrawn)
 	})
@@ -348,7 +348,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		coinType := coin.CoinType_Zeta
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
 		params := cctx.GetCurrentOutTxParam()
-		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
 		require.Equal(t, chains.ReceiveStatus_success, status)
@@ -362,7 +362,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(localChainID)
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, TestDataDir, localChainID, nonce, testutils.EventZetaReverted)
 		params := cctx.GetCurrentOutTxParam()
-		value, status, err := evm.ParseOuttxReceivedValue(
+		value, status, err := observer.ParseOuttxReceivedValue(
 			cctx, receipt, outtx, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
@@ -375,7 +375,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		coinType := coin.CoinType_ERC20
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, TestDataDir, chainID, nonce, testutils.EventERC20Withdraw)
 		params := cctx.GetCurrentOutTxParam()
-		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
 		require.Equal(t, chains.ReceiveStatus_success, status)
@@ -387,7 +387,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		coinType := coin.CoinType_Gas
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, TestDataDir, chainID, nonce, "")
 		params := cctx.GetCurrentOutTxParam()
-		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
 		require.Equal(t, chains.ReceiveStatus_success, status)
@@ -398,7 +398,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		nonce := uint64(9718)
 		coinType := coin.CoinType(5) // unknown coin type
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
-		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.ErrorContains(t, err, "unknown coin type")
 		require.Nil(t, value)
 		require.Equal(t, chains.ReceiveStatus_failed, status)
@@ -412,7 +412,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 
 		// use an arbitrary address to make event parsing fail
 		fakeConnectorAddress := sample.EthAddress()
-		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, fakeConnectorAddress, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, fakeConnectorAddress, connector, custodyAddr, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
 		require.Equal(t, chains.ReceiveStatus_failed, status)
@@ -426,7 +426,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 
 		// use an arbitrary address to make event parsing fail
 		fakeCustodyAddress := sample.EthAddress()
-		value, status, err := evm.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, fakeCustodyAddress, custody)
+		value, status, err := observer.ParseOuttxReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, fakeCustodyAddress, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
 		require.Equal(t, chains.ReceiveStatus_failed, status)

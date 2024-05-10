@@ -12,7 +12,7 @@ import (
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -405,7 +405,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 	observer interfaces.ChainObserver,
 	signer interfaces.ChainSigner,
 ) {
-	btcObserver, ok := observer.(*bitcoin.Observer)
+	btcObserver, ok := observer.(*btcobserver.Observer)
 	if !ok { // should never happen
 		oc.logger.Std.Error().Msgf("ScheduleCctxBTC: chain observer is not a bitcoin observer")
 		return

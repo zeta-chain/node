@@ -1,4 +1,4 @@
-package evm
+package signer
 
 import (
 	"math/big"
@@ -14,7 +14,7 @@ import (
 func TestSigner_SetChainAndSender(t *testing.T) {
 	// setup inputs
 	cctx := getCCTX(t)
-	txData := &OutBoundTransactionData{}
+	txData := &OutboundTransactionData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetChainAndSender PendingRevert", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestSigner_SetupGas(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 
-	txData := &OutBoundTransactionData{}
+	txData := &OutboundTransactionData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetupGas_success", func(t *testing.T) {

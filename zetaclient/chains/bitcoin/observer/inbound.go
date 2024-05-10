@@ -1,4 +1,4 @@
-package bitcoin
+package observer
 
 import (
 	"encoding/hex"
@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -104,7 +105,7 @@ func (ob *Observer) ObserveInTx() error {
 
 	if len(res.Block.Tx) > 1 {
 		// get depositor fee
-		depositorFee := CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
 
 		// filter incoming txs to TSS address
 		tssAddress := ob.Tss.BTCAddress()
@@ -122,7 +123,7 @@ func (ob *Observer) ObserveInTx() error {
 
 		if len(res.Block.Tx) > 1 {
 			// get depositor fee
-			depositorFee := CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+			depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
 
 			// filter incoming txs to TSS address
 			tssAddress := ob.Tss.BTCAddress()
@@ -274,7 +275,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
 
-	depositorFee := CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+	depositorFee := bitcoin.CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
 	tss, err := ob.coreClient.GetBtcTssAddress(ob.chain.ChainId)
 	if err != nil {
 		return "", err
@@ -410,7 +411,7 @@ func GetBtcEvent(
 		script := vout0.ScriptPubKey.Hex
 		if len(script) == 44 && script[:4] == "0014" {
 			// P2WPKH output: 0x00 + 20 bytes of pubkey hash
-			receiver, err := DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
+			receiver, err := bitcoin.DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
 			if err != nil { // should never happen
 				return nil, err
 			}
@@ -429,7 +430,7 @@ func GetBtcEvent(
 
 			// 2nd vout must be a valid OP_RETURN memo
 			vout1 := tx.Vout[1]
-			memo, found, err = DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
+			memo, found, err = bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
 			if err != nil {
 				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
 				return nil, nil

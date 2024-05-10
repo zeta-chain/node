@@ -19,8 +19,8 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -97,7 +97,7 @@ func DebugCmd() *cobra.Command {
 
 			if chains.IsEVMChain(chain.ChainId) {
 
-				evmObserver := evm.Observer{
+				evmObserver := evmobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
 				evmObserver.WithZetacoreClient(client)
@@ -176,7 +176,7 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if chains.IsBitcoinChain(chain.ChainId) {
-				btcObserver := bitcoin.Observer{
+				btcObserver := btcobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
 				btcObserver.WithZetacoreClient(client)

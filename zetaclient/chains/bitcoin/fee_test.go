@@ -432,7 +432,7 @@ func TestOuttxSizeBreakdown(t *testing.T) {
 	require.Equal(t, uint64(177), txSizeWithdrawer)
 
 	// total outtx size == (deposit fee + withdrawer fee), 245 = 68 + 177
-	require.Equal(t, outTxBytesAvg, txSizeAverage)
+	require.Equal(t, OutTxBytesAvg, txSizeAverage)
 	require.Equal(t, txSizeAverage, txSizeDepositor+txSizeWithdrawer)
 
 	// check default depositor fee
@@ -448,12 +448,12 @@ func TestOuttxSizeMinMaxError(t *testing.T) {
 	// Estimate the largest outtx size in vByte
 	sizeMax, err := EstimateOuttxSize(21, []btcutil.Address{toP2TR})
 	require.NoError(t, err)
-	require.Equal(t, outTxBytesMax, sizeMax)
+	require.Equal(t, OutTxBytesMax, sizeMax)
 
 	// Estimate the smallest outtx size in vByte
 	sizeMin, err := EstimateOuttxSize(2, []btcutil.Address{toP2WPKH})
 	require.NoError(t, err)
-	require.Equal(t, outTxBytesMin, sizeMin)
+	require.Equal(t, OutTxBytesMin, sizeMin)
 
 	// Estimate unknown address type
 	nilP2PK := (*btcutil.AddressPubKey)(nil)

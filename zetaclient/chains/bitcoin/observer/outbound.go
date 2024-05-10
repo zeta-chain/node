@@ -1,4 +1,4 @@
-package bitcoin
+package observer
 
 import (
 	"encoding/hex"
@@ -11,11 +11,18 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
+
+// GetTxID returns a unique id for outbound tx
+func (ob *Observer) GetTxID(nonce uint64) string {
+	tssAddr := ob.Tss.BTCAddress()
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+}
 
 // WatchOutTx watches Bitcoin chain for outgoing txs status
 func (ob *Observer) WatchOutTx() {
@@ -169,10 +176,175 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	return true, true, nil
 }
 
-// GetTxID returns a unique id for outbound tx
-func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.Tss.BTCAddress()
-	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+// SelectUTXOs selects a sublist of utxos to be used as inputs.
+//
+// Parameters:
+//   - amount: The desired minimum total value of the selected UTXOs.
+//   - utxos2Spend: The maximum number of UTXOs to spend.
+//   - nonce: The nonce of the outbound transaction.
+//   - consolidateRank: The rank below which UTXOs will be consolidated.
+//   - test: true for unit test only.
+//
+// Returns:
+//   - a sublist (includes previous nonce-mark) of UTXOs or an error if the qualifying sublist cannot be found.
+//   - the total value of the selected UTXOs.
+//   - the number of consolidated UTXOs.
+//   - the total value of the consolidated UTXOs.
+func (ob *Observer) SelectUTXOs(
+	amount float64,
+	utxosToSpend uint16,
+	nonce uint64,
+	consolidateRank uint16,
+	test bool,
+) ([]btcjson.ListUnspentResult, float64, uint16, float64, error) {
+	idx := -1
+	if nonce == 0 {
+		// for nonce = 0; make exception; no need to include nonce-mark utxo
+		ob.Mu.Lock()
+		defer ob.Mu.Unlock()
+	} else {
+		// for nonce > 0; we proceed only when we see the nonce-mark utxo
+		preTxid, err := ob.getOutTxidByNonce(nonce-1, test)
+		if err != nil {
+			return nil, 0, 0, 0, err
+		}
+		ob.Mu.Lock()
+		defer ob.Mu.Unlock()
+		idx, err = ob.findNonceMarkUTXO(nonce-1, preTxid)
+		if err != nil {
+			return nil, 0, 0, 0, err
+		}
+	}
+
+	// select smallest possible UTXOs to make payment
+	total := 0.0
+	left, right := 0, 0
+	for total < amount && right < len(ob.utxos) {
+		if utxosToSpend > 0 { // expand sublist
+			total += ob.utxos[right].Amount
+			right++
+			utxosToSpend--
+		} else { // pop the smallest utxo and append the current one
+			total -= ob.utxos[left].Amount
+			total += ob.utxos[right].Amount
+			left++
+			right++
+		}
+	}
+	results := make([]btcjson.ListUnspentResult, right-left)
+	copy(results, ob.utxos[left:right])
+
+	// include nonce-mark as the 1st input
+	if idx >= 0 { // for nonce > 0
+		if idx < left || idx >= right {
+			total += ob.utxos[idx].Amount
+			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
+		} else { // move nonce-mark to left
+			for i := idx - left; i > 0; i-- {
+				results[i], results[i-1] = results[i-1], results[i]
+			}
+		}
+	}
+	if total < amount {
+		return nil, 0, 0, 0, fmt.Errorf("SelectUTXOs: not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+	}
+
+	// consolidate biggest possible UTXOs to maximize consolidated value
+	// consolidation happens only when there are more than (or equal to) consolidateRank (10) UTXOs
+	utxoRank, consolidatedUtxo, consolidatedValue := uint16(0), uint16(0), 0.0
+	for i := len(ob.utxos) - 1; i >= 0 && utxosToSpend > 0; i-- { // iterate over UTXOs big-to-small
+		if i != idx && (i < left || i >= right) { // exclude nonce-mark and already selected UTXOs
+			utxoRank++
+			if utxoRank >= consolidateRank { // consolication starts from the 10-ranked UTXO based on value
+				utxosToSpend--
+				consolidatedUtxo++
+				total += ob.utxos[i].Amount
+				consolidatedValue += ob.utxos[i].Amount
+				results = append(results, ob.utxos[i])
+			}
+		}
+	}
+
+	return results, total, consolidatedUtxo, consolidatedValue, nil
+}
+
+// refreshPendingNonce tries increasing the artificial pending nonce of outTx (if lagged behind).
+// There could be many (unpredictable) reasons for a pending nonce lagging behind, for example:
+// 1. The zetaclient gets restarted.
+// 2. The tracker is missing in zetacore.
+func (ob *Observer) refreshPendingNonce() {
+	// get pending nonces from zetacore
+	p, err := ob.coreClient.GetPendingNoncesByChain(ob.chain.ChainId)
+	if err != nil {
+		ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting pending nonces")
+	}
+
+	// increase pending nonce if lagged behind
+	ob.Mu.Lock()
+	pendingNonce := ob.pendingNonce
+	ob.Mu.Unlock()
+
+	// #nosec G701 always non-negative
+	nonceLow := uint64(p.NonceLow)
+	if nonceLow > pendingNonce {
+		// get the last included outTx hash
+		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
+		if err != nil {
+			ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting last outTx txid")
+		}
+
+		// set 'NonceLow' as the new pending nonce
+		ob.Mu.Lock()
+		defer ob.Mu.Unlock()
+		ob.pendingNonce = nonceLow
+		ob.logger.Chain.Info().Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
+	}
+}
+
+func (ob *Observer) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
+
+	// There are 2 types of txids an observer can trust
+	// 1. The ones had been verified and saved by observer self.
+	// 2. The ones had been finalized in zetacore based on majority vote.
+	if res := ob.getIncludedTx(nonce); res != nil {
+		return res.TxID, nil
+	}
+	if !test { // if not unit test, get cctx from zetacore
+		send, err := ob.coreClient.GetCctxByNonce(ob.chain.ChainId, nonce)
+		if err != nil {
+			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting cctx for nonce %d", nonce)
+		}
+		txid := send.GetCurrentOutTxParam().OutboundTxHash
+		if txid == "" {
+			return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
+		}
+		// make sure it's a real Bitcoin txid
+		_, getTxResult, err := GetTxResultByHash(ob.rpcClient, txid)
+		if err != nil {
+			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting outTx result for nonce %d hash %s", nonce, txid)
+		}
+		if getTxResult.Confirmations <= 0 { // just a double check
+			return "", fmt.Errorf("getOutTxidByNonce: outTx txid %s for nonce %d is not included", txid, nonce)
+		}
+		return txid, nil
+	}
+	return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
+}
+
+func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
+	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	amount := chains.NonceMarkAmount(nonce)
+	for i, utxo := range ob.utxos {
+		sats, err := bitcoin.GetSatoshis(utxo.Amount)
+		if err != nil {
+			ob.logger.OutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
+		}
+		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid && utxo.Vout == 0 {
+			ob.logger.OutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
 }
 
 // checkIncludedTx checks if a txHash is included and returns (txResult, inMempool)
@@ -330,7 +502,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundTxParams, vouts
 			// the 2nd output is the payment to recipient
 			receiverExpected = params.Receiver
 		}
-		receiverVout, amount, err := DecodeTSSVout(vout, receiverExpected, ob.chain)
+		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, receiverExpected, ob.chain)
 		if err != nil {
 			return err
 		}
@@ -372,7 +544,7 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundTxPara
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverVout, amount, err := DecodeTSSVout(vout, tssAddress, ob.chain)
+		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.chain)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}

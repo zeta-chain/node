@@ -1,4 +1,4 @@
-package evm_test
+package observer_test
 
 import (
 	"sync"
@@ -15,18 +15,17 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
 // the relative path to the testdata directory
-var TestDataDir = "../../"
+var TestDataDir = "../../../"
 
 // getAppContext creates an app context for unit tests
 func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainParams) (*context.AppContext, config.EVMConfig) {
@@ -54,7 +53,7 @@ func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainPar
 		zerolog.Logger{},
 	)
 	// create app context
-	appCtx := appcontext.NewAppContext(coreCtx, cfg)
+	appCtx := context.NewAppContext(coreCtx, cfg)
 	return appCtx, cfg.EVMChainConfigs[evmChain.ChainId]
 }
 
@@ -67,7 +66,7 @@ func MockEVMObserver(
 	coreClient interfaces.ZetaCoreClient,
 	tss interfaces.TSSSigner,
 	lastBlock uint64,
-	params observertypes.ChainParams) *evm.Observer {
+	params observertypes.ChainParams) *observer.Observer {
 	// use default mock zetacore client if not provided
 	if coreClient == nil {
 		coreClient = mocks.NewMockZetaCoreClient()
@@ -80,7 +79,7 @@ func MockEVMObserver(
 	appCtx, evmCfg := getAppContext(chain, &params)
 
 	// create chain observer
-	client, err := evm.NewObserver(appCtx, coreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
+	client, err := observer.NewObserver(appCtx, coreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
 	require.NoError(t, err)
 	client.WithEvmClient(evmClient)
 	client.WithEvmJSONRPC(evmJSONRPC)
@@ -93,7 +92,7 @@ func Test_BlockCache(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := &evm.Observer{Mu: &sync.Mutex{}}
+	ob := &observer.Observer{Mu: &sync.Mutex{}}
 	ob.WithBlockCache(blockCache)
 
 	// delete non-existing block should not panic
@@ -132,7 +131,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := &evm.Observer{Mu: &sync.Mutex{}}
+	ob := &observer.Observer{Mu: &sync.Mutex{}}
 
 	// save block to cache
 	blockCache.Add(blockNumber, block)

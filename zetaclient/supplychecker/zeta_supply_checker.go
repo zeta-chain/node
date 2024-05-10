@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -121,7 +121,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 		zetaTokenAddressString := externalEvmChainParams.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
-		zetatokenNonEth, err := evm.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
+		zetatokenNonEth, err := observer.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {
 			return err
 		}
@@ -147,7 +147,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 	ethConnectorAddressString := evmChainParams.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
-	ethConnectorContract, err := evm.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
+	ethConnectorContract, err := observer.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
 	if err != nil {
 		return err
 	}

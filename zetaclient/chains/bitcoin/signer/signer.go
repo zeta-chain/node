@@ -1,4 +1,4 @@
-package bitcoin
+package signer
 
 import (
 	"bytes"
@@ -20,6 +20,8 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
@@ -111,14 +113,14 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	cancelTx bool,
 ) error {
 	// convert withdraw amount to satoshis
-	amountSatoshis, err := GetSatoshis(amount)
+	amountSatoshis, err := bitcoin.GetSatoshis(amount)
 	if err != nil {
 		return err
 	}
 
 	// calculate remaining btc (the change) to TSS self
 	remaining := total - amount
-	remainingSats, err := GetSatoshis(remaining)
+	remainingSats, err := bitcoin.GetSatoshis(remaining)
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 
 	// 1st output: the nonce-mark btc to TSS self
 	tssAddrP2WPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
-	payToSelfScript, err := PayToAddrScript(tssAddrP2WPKH)
+	payToSelfScript, err := bitcoin.PayToAddrScript(tssAddrP2WPKH)
 	if err != nil {
 		return err
 	}
@@ -142,7 +144,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 
 	// 2nd output: the payment to the recipient
 	if !cancelTx {
-		pkScript, err := PayToAddrScript(to)
+		pkScript, err := bitcoin.PayToAddrScript(to)
 		if err != nil {
 			return err
 		}
@@ -167,13 +169,13 @@ func (signer *Signer) SignWithdrawTx(
 	amount float64,
 	gasPrice *big.Int,
 	sizeLimit uint64,
-	observer *Observer,
+	observer *observer.Observer,
 	height uint64,
 	nonce uint64,
-	chain *chains.Chain,
+	chain chains.Chain,
 	cancelTx bool,
 ) (*wire.MsgTx, error) {
-	estimateFee := float64(gasPrice.Uint64()*outTxBytesMax) / 1e8
+	estimateFee := float64(gasPrice.Uint64()*bitcoin.OutTxBytesMax) / 1e8
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -202,20 +204,20 @@ func (signer *Signer) SignWithdrawTx(
 
 	// size checking
 	// #nosec G701 always positive
-	txSize, err := EstimateOuttxSize(uint64(len(prevOuts)), []btcutil.Address{to})
+	txSize, err := bitcoin.EstimateOuttxSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if err != nil {
 		return nil, err
 	}
-	if sizeLimit < BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
+	if sizeLimit < bitcoin.BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
 		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
-	if txSize < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
-		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, outTxBytesMin)
-		txSize = outTxBytesMin
+	if txSize < bitcoin.OutTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
+		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, bitcoin.OutTxBytesMin)
+		txSize = bitcoin.OutTxBytesMin
 	}
-	if txSize > outTxBytesMax { // in case of accident
-		signer.logger.Warn().Msgf("txSize %d is greater than outTxBytesMax %d; use outTxBytesMax", txSize, outTxBytesMax)
-		txSize = outTxBytesMax
+	if txSize > bitcoin.OutTxBytesMax { // in case of accident
+		signer.logger.Warn().Msgf("txSize %d is greater than outTxBytesMax %d; use outTxBytesMax", txSize, bitcoin.OutTxBytesMax)
+		txSize = bitcoin.OutTxBytesMax
 	}
 
 	// fee calculation
@@ -234,7 +236,7 @@ func (signer *Signer) SignWithdrawTx(
 	sigHashes := txscript.NewTxSigHashes(tx)
 	witnessHashes := make([][]byte, len(tx.TxIn))
 	for ix := range tx.TxIn {
-		amt, err := GetSatoshis(prevOuts[ix].Amount)
+		amt, err := bitcoin.GetSatoshis(prevOuts[ix].Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +254,7 @@ func (signer *Signer) SignWithdrawTx(
 	if !ok {
 		return nil, fmt.Errorf("tssSigner is not a TSS")
 	}
-	sig65Bs, err := tssSigner.SignBatch(witnessHashes, height, nonce, chain)
+	sig65Bs, err := tssSigner.SignBatch(witnessHashes, height, nonce, &chain)
 	if err != nil {
 		return nil, fmt.Errorf("SignBatch error: %v", err)
 	}
@@ -323,7 +325,7 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
-	btcObserver, ok := chainObserver.(*Observer)
+	btcObserver, ok := chainObserver.(*observer.Observer)
 	if !ok {
 		logger.Error().Msgf("chain observer is not a bitcoin observer")
 		return
@@ -333,6 +335,7 @@ func (signer *Signer) TryProcessOutTx(
 		logger.Info().Msgf("outbound is disabled")
 		return
 	}
+	chain := btcObserver.Chain()
 	myid := coreClient.GetKeys().GetAddress()
 	outboundTxTssNonce := params.OutboundTxTssNonce
 
@@ -361,19 +364,18 @@ func (signer *Signer) TryProcessOutTx(
 		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
 		return
 	}
-	satPerByte := FeeRateToSatPerByte(networkInfo.RelayFee)
+	satPerByte := bitcoin.FeeRateToSatPerByte(networkInfo.RelayFee)
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(logger, signer.loggerCompliance,
-			true, btcObserver.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
+			true, chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
-	logger.Info().Msgf("using utxos: %v", btcObserver.utxos)
 
 	tx, err := signer.SignWithdrawTx(
 		to,
@@ -383,14 +385,14 @@ func (signer *Signer) TryProcessOutTx(
 		btcObserver,
 		height,
 		outboundTxTssNonce,
-		&btcObserver.chain,
+		chain,
 		cancelTx,
 	)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
 	}
-	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, btcObserver.chain.ChainName, outboundTxTssNonce)
+	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, chain.ChainName, outboundTxTssNonce)
 
 	// FIXME: add prometheus metrics
 	_, err = coreClient.GetObserverList()
@@ -399,7 +401,7 @@ func (signer *Signer) TryProcessOutTx(
 	}
 	if tx != nil {
 		outTxHash := tx.TxHash().String()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", btcObserver.chain.ChainName, outboundTxTssNonce, outTxHash, myid)
+		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", chain.ChainName, outboundTxTssNonce, outTxHash, myid)
 		// TODO: pick a few broadcasters.
 		//if len(signers) == 0 || myid == signers[send.OutboundTxParams.Broadcaster] || myid == signers[int(send.OutboundTxParams.Broadcaster+1)%len(signers)] {
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
@@ -408,13 +410,13 @@ func (signer *Signer) TryProcessOutTx(
 			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, btcObserver.chain.ChainName, outboundTxTssNonce, i)
+				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, chain.ChainName, outboundTxTssNonce, i)
 				continue
 			}
-			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", outboundTxTssNonce, btcObserver.chain.String(), outTxHash)
-			zetaHash, err := coreClient.AddTxHashToOutTxTracker(btcObserver.chain.ChainId, outboundTxTssNonce, outTxHash, nil, "", -1)
+			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", outboundTxTssNonce, chain.String(), outTxHash)
+			zetaHash, err := coreClient.AddTxHashToOutTxTracker(chain.ChainId, outboundTxTssNonce, outTxHash, nil, "", -1)
 			if err != nil {
-				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", outboundTxTssNonce, btcObserver.chain.ChainName, outTxHash)
+				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", outboundTxTssNonce, chain.ChainName, outTxHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 

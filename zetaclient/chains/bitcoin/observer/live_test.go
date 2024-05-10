@@ -1,4 +1,4 @@
-package bitcoin
+package observer
 
 import (
 	"context"
@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -308,7 +309,7 @@ func compareAvgFeeRate(t *testing.T, client *rpcclient.Client, startBlock int, e
 			if testnet {
 				netParams = &chaincfg.TestNet3Params
 			}
-			gasRate, err := CalcBlockAvgFeeRate(blockVb, netParams)
+			gasRate, err := bitcoin.CalcBlockAvgFeeRate(blockVb, netParams)
 			require.NoError(t, err)
 
 			// compare with mempool.space

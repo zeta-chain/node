@@ -1,4 +1,4 @@
-package evm
+package signer
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 
@@ -21,9 +22,9 @@ const (
 	MaxGasLimit = 1_000_000
 )
 
-// OutBoundTransactionData is a data structure containing input fields used to construct each type of transaction.
+// OutboundTransactionData is a data structure containing input fields used to construct each type of transaction.
 // This is populated using cctx and other input parameters passed to TryProcessOutTx
-type OutBoundTransactionData struct {
+type OutboundTransactionData struct {
 	srcChainID *big.Int
 	toChainID  *big.Int
 	sender     ethcommon.Address
@@ -46,7 +47,7 @@ type OutBoundTransactionData struct {
 // SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
 // returns true if transaction should be skipped
 // returns false otherwise
-func (txData *OutBoundTransactionData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
+func (txData *OutboundTransactionData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingRevert:
 		txData.to = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
@@ -63,7 +64,7 @@ func (txData *OutBoundTransactionData) SetChainAndSender(cctx *types.CrossChainT
 }
 
 // SetupGas sets the gas limit and price
-func (txData *OutBoundTransactionData) SetupGas(
+func (txData *OutboundTransactionData) SetupGas(
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
@@ -109,12 +110,12 @@ func (txData *OutBoundTransactionData) SetupGas(
 //  3. error
 func NewOutBoundTransactionData(
 	cctx *types.CrossChainTx,
-	evmObserver *Observer,
+	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
 	logger zerolog.Logger,
 	height uint64,
-) (*OutBoundTransactionData, bool, error) {
-	txData := OutBoundTransactionData{}
+) (*OutboundTransactionData, bool, error) {
+	txData := OutboundTransactionData{}
 	txData.outboundParams = cctx.GetCurrentOutTxParam()
 	txData.amount = cctx.GetCurrentOutTxParam().Amount.BigInt()
 	txData.nonce = cctx.GetCurrentOutTxParam().OutboundTxTssNonce

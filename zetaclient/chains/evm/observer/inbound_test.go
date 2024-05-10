@@ -1,4 +1,4 @@
-package evm_test
+package observer_test
 
 import (
 	"encoding/hex"

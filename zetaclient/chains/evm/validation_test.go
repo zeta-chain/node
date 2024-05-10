@@ -14,6 +14,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
+// the relative path to the testdata directory
+var TestDataDir = "../../"
+
 func TestCheckEvmTxLog(t *testing.T) {
 	// test data
 	connectorAddr := ethcommon.HexToAddress("0x00005e3125aba53c5652f9f0ce1a4cf91d8b15ea")

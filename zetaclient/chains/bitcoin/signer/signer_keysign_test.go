@@ -1,4 +1,4 @@
-package bitcoin
+package signer
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -92,7 +93,7 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	txIn := wire.NewTxIn(outpoint, nil, nil)
 	tx.AddTxIn(txIn)
 
-	pkScript, err := PayToAddrScript(addr)
+	pkScript, err := bitcoin.PayToAddrScript(addr)
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}

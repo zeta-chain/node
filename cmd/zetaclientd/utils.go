@@ -4,8 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	btcsigner "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
+	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
+	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -68,7 +70,7 @@ func CreateSignerMap(
 		}
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
-		signer, err := evm.NewSigner(
+		signer, err := evmsigner.NewSigner(
 			evmConfig.Chain,
 			evmConfig.Endpoint,
 			tss,
@@ -88,7 +90,7 @@ func CreateSignerMap(
 	// BTC signer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		signer, err := bitcoin.NewSigner(btcConfig, tss, loggers, ts, coreContext)
+		signer, err := btcsigner.NewSigner(btcConfig, tss, loggers, ts, coreContext)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
@@ -119,7 +121,7 @@ func CreateChainObserverMap(
 			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		co, err := evm.NewObserver(appContext, coreClient, tss, dbpath, loggers, evmConfig, ts)
+		co, err := evmobserver.NewObserver(appContext, coreClient, tss, dbpath, loggers, evmConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
 			continue
@@ -129,7 +131,7 @@ func CreateChainObserverMap(
 	// BTC observer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		co, err := bitcoin.NewObserver(appContext, btcChain, coreClient, tss, dbpath, loggers, btcConfig, ts)
+		co, err := btcobserver.NewObserver(appContext, btcChain, coreClient, tss, dbpath, loggers, btcConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
 

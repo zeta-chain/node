@@ -1,4 +1,4 @@
-package evm
+package observer
 
 import (
 	"context"
@@ -19,11 +19,18 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
+
+// GetTxID returns a unique id for outbound tx
+func (ob *Observer) GetTxID(nonce uint64) string {
+	tssAddr := ob.Tss.EVMAddress().String()
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+}
 
 // WatchOutTx watches evm chain for outgoing txs status
 func (ob *Observer) WatchOutTx() {
@@ -177,7 +184,7 @@ func ParseAndCheckZetaEvent(
 		// try parsing ZetaReceived event
 		received, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 		if err == nil {
-			err = ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), TopicsZetaReceived)
+			err = evm.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), evm.TopicsZetaReceived)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReceived event")
 			}
@@ -198,7 +205,7 @@ func ParseAndCheckZetaEvent(
 		// try parsing ZetaReverted event
 		reverted, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 		if err == nil {
-			err = ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), TopicsZetaReverted)
+			err = evm.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), evm.TopicsZetaReverted)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReverted event")
 			}
@@ -231,7 +238,7 @@ func ParseAndCheckWithdrawnEvent(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ParseWithdrawn(*vLog)
 		if err == nil {
-			err = ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), TopicsWithdrawn)
+			err = evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsWithdrawn)
 			if err != nil {
 				return nil, errors.Wrap(err, "error validating Withdrawn event")
 			}

@@ -14,6 +14,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
+// the relative path to the testdata directory
+var TestDataDir = "../../"
+
 func TestDecodeVoutP2TR(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7

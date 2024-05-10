@@ -1,4 +1,4 @@
-package evm
+package signer
 
 import (
 	"testing"
@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -45,7 +46,7 @@ func getNewEvmSigner() (*Signer, error) {
 		ts)
 }
 
-func getNewEvmChainObserver() (*Observer, error) {
+func getNewEvmChainObserver() (*observer.Observer, error) {
 	logger := common.ClientLogger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
@@ -56,7 +57,7 @@ func getNewEvmChainObserver() (*Observer, error) {
 	coreCTX := context.NewZetaCoreContext(cfg)
 	appCTX := context.NewAppContext(coreCTX, cfg)
 
-	return NewObserver(appCTX, mocks.NewMockZetaCoreClient(), tss, "", logger, evmcfg, ts)
+	return observer.NewObserver(appCTX, mocks.NewMockZetaCoreClient(), tss, "", logger, evmcfg, ts)
 }
 
 func getNewOutTxProcessor() *outtxprocessor.Processor {
@@ -316,7 +317,7 @@ func TestSigner_getEVMRPC(t *testing.T) {
 func TestSigner_SignerErrorMsg(t *testing.T) {
 	cctx := getCCTX(t)
 
-	msg := SignerErrorMsg(cctx)
+	msg := ErrorMsg(cctx)
 	require.Contains(t, msg, "nonce 68270 chain 56")
 }
 
