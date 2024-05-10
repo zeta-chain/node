@@ -63,13 +63,13 @@ func MockEVMObserver(
 	chain chains.Chain,
 	evmClient interfaces.EVMRPCClient,
 	evmJSONRPC interfaces.EVMJSONRPCClient,
-	coreClient interfaces.ZetaCoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	lastBlock uint64,
 	params observertypes.ChainParams) *observer.Observer {
 	// use default mock zetacore client if not provided
-	if coreClient == nil {
-		coreClient = mocks.NewMockZetaCoreClient()
+	if zetacoreClient == nil {
+		zetacoreClient = mocks.NewMockZetaCoreClient()
 	}
 	// use default mock tss if not provided
 	if tss == nil {
@@ -79,7 +79,7 @@ func MockEVMObserver(
 	appCtx, evmCfg := getAppContext(chain, &params)
 
 	// create chain observer
-	client, err := observer.NewObserver(appCtx, coreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
+	client, err := observer.NewObserver(appCtx, zetacoreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
 	require.NoError(t, err)
 	client.WithEvmClient(evmClient)
 	client.WithEvmJSONRPC(evmJSONRPC)

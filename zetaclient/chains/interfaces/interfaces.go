@@ -52,7 +52,7 @@ type ChainSigner interface {
 		outTxProc *outtxprocessor.Processor,
 		outTxID string,
 		observer ChainObserver,
-		coreClient ZetaCoreClient,
+		zetacoreClient ZetacoreClient,
 		height uint64,
 	)
 	SetZetaConnectorAddress(address ethcommon.Address)
@@ -61,8 +61,8 @@ type ChainSigner interface {
 	GetERC20CustodyAddress() ethcommon.Address
 }
 
-// ZetaCoreClient is the client interface to interact with zetacore
-type ZetaCoreClient interface {
+// ZetacoreClient is the client interface to interact with zetacore
+type ZetacoreClient interface {
 	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,

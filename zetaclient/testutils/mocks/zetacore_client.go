@@ -19,10 +19,10 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-const ErrMsgPaused = "zeta core client is paused"
+const ErrMsgPaused = "zetacore client is paused"
 const ErrMsgRPCFailed = "rpc failed"
 
-var _ interfaces.ZetaCoreClient = &MockZetaCoreClient{}
+var _ interfaces.ZetacoreClient = &MockZetaCoreClient{}
 
 type MockZetaCoreClient struct {
 	paused    bool

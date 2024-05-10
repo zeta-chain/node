@@ -38,7 +38,7 @@ type Deposit struct {
 	Amount uint64
 }
 
-// CheckForCCTX is querying zeta core for a cctx associated with a confirmed transaction hash. If the cctx is not found,
+// CheckForCCTX is querying zetacore for a cctx associated with a confirmed transaction hash. If the cctx is not found,
 // then the transaction hash is added to the list of missed inbound transactions.
 func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 	var missedList []Deposit

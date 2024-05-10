@@ -75,7 +75,7 @@ type TSS struct {
 	CurrentPubkey   string
 	logger          zerolog.Logger
 	Signers         []string
-	CoreClient      interfaces.ZetaCoreClient
+	ZetacoreClient  interfaces.ZetacoreClient
 	KeysignsTracker *ConcurrentKeysignsTracker
 
 	// TODO: support multiple Bitcoin network, not just one network
@@ -89,7 +89,7 @@ func NewTSS(
 	peer p2p.AddrList,
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
-	client interfaces.ZetaCoreClient,
+	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
 	bitcoinChainID int64,
 	tssPassword string,
@@ -106,7 +106,7 @@ func NewTSS(
 		Keys:            make(map[string]*Key),
 		CurrentPubkey:   appContext.ZetaCoreContext().GetCurrentTssPubkey(),
 		logger:          logger,
-		CoreClient:      client,
+		ZetacoreClient:  client,
 		KeysignsTracker: NewKeysignsTracker(logger),
 		BitcoinChainID:  bitcoinChainID,
 	}
@@ -126,7 +126,7 @@ func NewTSS(
 		client.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
 
-	keygenRes, err := newTss.CoreClient.GetKeyGen()
+	keygenRes, err := newTss.ZetacoreClient.GetKeyGen()
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := hex.EncodeToString(digest)
 			index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
-			zetaHash, err := tss.CoreClient.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [65]byte{}, err
@@ -314,7 +314,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := combineDigests(digestBase64)
 			index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
-			zetaHash, err := tss.CoreClient.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [][65]byte{}, err

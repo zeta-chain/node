@@ -110,7 +110,7 @@ type Observer struct {
 	chain            chains.Chain
 	netParams        *chaincfg.Params
 	rpcClient        interfaces.BTCRPCClient
-	coreClient       interfaces.ZetaCoreClient
+	zetacoreClient   interfaces.ZetacoreClient
 	lastBlock        int64
 	lastBlockScanned int64
 	pendingNonce     uint64
@@ -137,7 +137,7 @@ type Observer struct {
 func NewObserver(
 	appcontext *context.AppContext,
 	chain chains.Chain,
-	coreClient interfaces.ZetaCoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
@@ -170,7 +170,7 @@ func NewObserver(
 		Compliance: loggers.Compliance,
 	}
 
-	ob.coreClient = coreClient
+	ob.zetacoreClient = zetacoreClient
 	ob.Tss = tss
 	ob.coreContext = appcontext.ZetaCoreContext()
 	ob.includedTxHashes = make(map[string]bool)
@@ -224,7 +224,7 @@ func NewObserver(
 func (ob *Observer) WithZetacoreClient(client *zetacore.Client) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.coreClient = client
+	ob.zetacoreClient = client
 }
 
 func (ob *Observer) WithLogger(logger zerolog.Logger) {
@@ -444,7 +444,7 @@ func (ob *Observer) PostGasPrice() error {
 		}
 
 		// #nosec G701 always in range
-		_, err = ob.coreClient.PostGasPrice(ob.chain, 1, "100", uint64(blockNumber))
+		_, err = ob.zetacoreClient.PostGasPrice(ob.chain, 1, "100", uint64(blockNumber))
 		if err != nil {
 			ob.logger.GasPrice.Err(err).Msg("PostGasPrice:")
 			return err
@@ -471,7 +471,7 @@ func (ob *Observer) PostGasPrice() error {
 	}
 
 	// #nosec G701 always positive
-	_, err = ob.coreClient.PostGasPrice(ob.chain, feeRatePerByte.Uint64(), "100", uint64(blockNumber))
+	_, err = ob.zetacoreClient.PostGasPrice(ob.chain, feeRatePerByte.Uint64(), "100", uint64(blockNumber))
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("PostGasPrice:")
 		return err
@@ -749,7 +749,7 @@ func (ob *Observer) isTssTransaction(txid string) bool {
 func (ob *Observer) postBlockHeader(tip int64) error {
 	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
-	res, err := ob.coreClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	res, err := ob.zetacoreClient.GetBlockHeaderChainState(ob.chain.ChainId)
 	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
 		bn = res.ChainState.LatestHeight + 1
 	}
@@ -768,7 +768,7 @@ func (ob *Observer) postBlockHeader(tip int64) error {
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
-	_, err = ob.coreClient.PostVoteBlockHeader(
+	_, err = ob.zetacoreClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,

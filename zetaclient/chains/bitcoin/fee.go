@@ -32,7 +32,7 @@ const (
 
 	OutTxBytesMin = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
 	OutTxBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
-	OutTxBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zeta core
+	OutTxBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
 	DynamicDepositorFeeHeight = 834500 // DynamicDepositorFeeHeight contains the starting height (Bitcoin mainnet) from which dynamic depositor fee will take effect
 )

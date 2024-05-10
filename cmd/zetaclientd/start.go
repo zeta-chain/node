@@ -93,16 +93,16 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetaCoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	coreClient, err := CreateZetaCoreClient(cfg, telemetryServer, hotkeyPass)
+	zetacoreClient, err := CreateZetaCoreClient(cfg, telemetryServer, hotkeyPass)
 	if err != nil {
 		panic(err)
 	}
-	coreClient.WaitForCoreToCreateBlocks()
+	zetacoreClient.WaitForCoreToCreateBlocks()
 	startLogger.Info().Msgf("Zetacore client is ready")
-	coreClient.SetAccountNumber(authz.ZetaClientGranteeKey)
+	zetacoreClient.SetAccountNumber(authz.ZetaClientGranteeKey)
 
 	// cross-check chainid
-	res, err := coreClient.GetNodeInfo()
+	res, err := zetacoreClient.GetNodeInfo()
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +110,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
 		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
-		err := coreClient.UpdateChainID(cfg.ChainID)
+		err := zetacoreClient.UpdateChainID(cfg.ChainID)
 		if err != nil {
 			return err
 		}
@@ -118,25 +118,25 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
 	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
-	CreateAuthzSigner(coreClient.GetKeys().GetOperatorAddress().String(), coreClient.GetKeys().GetAddress())
+	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), zetacoreClient.GetKeys().GetAddress())
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
 	appContext := context.NewAppContext(context.NewZetaCoreContext(cfg), cfg)
-	err = coreClient.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true, startLogger)
+	err = zetacoreClient.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
-	go coreClient.CoreContextUpdater(appContext)
+	go zetacoreClient.CoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
 	// After generating the key , the address is set on the zetacore
-	hotkeyPk, err := coreClient.GetKeys().GetPrivateKey(hotkeyPass)
+	hotkeyPk, err := zetacoreClient.GetKeys().GetPrivateKey(hotkeyPass)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("zetacore client GetPrivateKey error")
 	}
@@ -173,13 +173,13 @@ func start(_ *cobra.Command, _ []string) error {
 	metrics.LastStartTime.SetToCurrentTime()
 
 	var tssHistoricalList []observerTypes.TSS
-	tssHistoricalList, err = coreClient.GetTssHistory()
+	tssHistoricalList, err = zetacoreClient.GetTssHistory()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(appContext, masterLogger, coreClient, peers, priKey, telemetryServer, tssHistoricalList, tssKeyPass, hotkeyPass)
+	tss, err := GenerateTss(appContext, masterLogger, zetacoreClient, peers, priKey, telemetryServer, tssHistoricalList, tssKeyPass, hotkeyPass)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
 	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
-	currentTss, err := coreClient.GetCurrentTss()
+	currentTss, err := zetacoreClient.GetCurrentTss()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetCurrentTSS error")
 		return err
@@ -221,14 +221,14 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
-	observerList, err := coreClient.GetObserverList()
+	observerList, err := zetacoreClient.GetObserverList()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetObserverList error")
 		return err
 	}
 	isNodeActive := false
 	for _, observer := range observerList {
-		if observer == coreClient.GetKeys().GetOperatorAddress().String() {
+		if observer == zetacoreClient.GetKeys().GetOperatorAddress().String() {
 			isNodeActive = true
 			break
 		}
@@ -249,23 +249,23 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := CreateChainObserverMap(appContext, coreClient, tss, dbpath, loggers, telemetryServer)
+	observerMap, err := CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, loggers, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateChainObserverMap")
 		return err
 	}
 
 	if !isNodeActive {
-		startLogger.Error().Msgf("Node %s is not an active observer external chain observers will not be started", coreClient.GetKeys().GetOperatorAddress().String())
+		startLogger.Error().Msgf("Node %s is not an active observer external chain observers will not be started", zetacoreClient.GetKeys().GetOperatorAddress().String())
 	} else {
-		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", coreClient.GetKeys().GetOperatorAddress().String())
+		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetacoreClient.GetKeys().GetOperatorAddress().String())
 		for _, observer := range observerMap {
 			observer.Start()
 		}
 	}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := orchestrator.NewOrchestrator(coreClient, signerMap, observerMap, masterLogger, telemetryServer)
+	mo1 := orchestrator.NewOrchestrator(zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
 	mo1.MonitorCore(appContext)
 
 	// start zeta supply checker
@@ -273,7 +273,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// https://github.com/zeta-chain/node/issues/1354
 	// NOTE: this is disabled for now because we need to determine the frequency on how to handle invalid check
 	// The method uses GRPC query to the node we might need to improve for performance
-	//zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, coreClient, masterLogger)
+	//zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetacoreClient, masterLogger)
 	//if err != nil {
 	//	startLogger.Err(err).Msg("NewZetaSupplyChecker")
 	//}
@@ -292,7 +292,7 @@ func start(_ *cobra.Command, _ []string) error {
 	for _, observer := range observerMap {
 		observer.Stop()
 	}
-	coreClient.Stop()
+	zetacoreClient.Stop()
 
 	return nil
 }

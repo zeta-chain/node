@@ -56,7 +56,7 @@ func getTestCoreContext(
 }
 
 func TestNewZetaCoreContext(t *testing.T) {
-	t.Run("should create new zeta core context with empty config", func(t *testing.T) {
+	t.Run("should create new zetacore context with empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 
 		zetaContext := context.NewZetaCoreContext(testCfg)
@@ -86,7 +86,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 		require.Empty(t, allEVMChainParams)
 	})
 
-	t.Run("should create new zeta core context with config containing evm chain params", func(t *testing.T) {
+	t.Run("should create new zetacore context with config containing evm chain params", func(t *testing.T) {
 		testCfg := config.NewConfig()
 		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
@@ -120,7 +120,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 		require.Equal(t, &observertypes.ChainParams{}, evmChainParams2)
 	})
 
-	t.Run("should create new zeta core context with config containing btc config", func(t *testing.T) {
+	t.Run("should create new zetacore context with config containing btc config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 		testCfg.BitcoinConfig = config.BTCConfig{
 			RPCUsername: "test username",

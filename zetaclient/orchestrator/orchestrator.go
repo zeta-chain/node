@@ -39,7 +39,7 @@ type Log struct {
 // Orchestrator wraps the zetacore client, chain observers and signers. This is the high level object used for CCTX scheduling
 type Orchestrator struct {
 	// zetacore client
-	coreClient interfaces.ZetaCoreClient
+	zetacoreClient interfaces.ZetacoreClient
 
 	// chain signers and observers
 	signerMap   map[int64]interfaces.ChainSigner
@@ -59,7 +59,7 @@ type Orchestrator struct {
 
 // NewOrchestrator creates a new orchestrator
 func NewOrchestrator(
-	coreClient interfaces.ZetaCoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	signerMap map[int64]interfaces.ChainSigner,
 	observerMap map[int64]interfaces.ChainObserver,
 	logger zerolog.Logger,
@@ -77,14 +77,14 @@ func NewOrchestrator(
 	oc.logger.Sampled = oc.logger.Std.Sample(&zerolog.BasicSampler{N: loggerSamplingRate})
 
 	// set zetacore client, signers and chain observers
-	oc.coreClient = coreClient
+	oc.zetacoreClient = zetacoreClient
 	oc.signerMap = signerMap
 	oc.observerMap = observerMap
 
 	// create outtx processor manager
 	oc.outTxProc = outtxprocessor.NewProcessor(logger)
 
-	balance, err := coreClient.GetZetaHotKeyBalance()
+	balance, err := zetacoreClient.GetZetaHotKeyBalance()
 	if err != nil {
 		oc.logger.Std.Error().Err(err).Msg("error getting last balance of the hot key")
 	}
@@ -94,13 +94,13 @@ func NewOrchestrator(
 }
 
 func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) {
-	myid := oc.coreClient.GetKeys().GetAddress()
+	myid := oc.zetacoreClient.GetKeys().GetAddress()
 	oc.logger.Std.Info().Msgf("Starting orchestrator for %s", myid)
 	go oc.StartCctxScheduler(appContext)
 
 	go func() {
 		// query UpgradePlan from zetacore and send to its pause channel if upgrade height is reached
-		oc.coreClient.Pause()
+		oc.zetacoreClient.Pause()
 		// now stop everything
 		close(oc.stop) // this stops the startSendScheduler() loop
 		for _, c := range oc.observerMap {
@@ -167,7 +167,7 @@ func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetaCoreCon
 // GetPendingCctxsWithinRatelimit get pending cctxs across foreign chains within rate limit
 func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(foreignChains []chains.Chain) (map[int64][]*types.CrossChainTx, error) {
 	// get rate limiter flags
-	rateLimitFlags, err := oc.coreClient.GetRateLimiterFlags()
+	rateLimitFlags, err := oc.zetacoreClient.GetRateLimiterFlags()
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(foreignChains []chains.Ch
 	cctxsMap := make(map[int64][]*types.CrossChainTx)
 	if !rateLimiterUsable {
 		for _, chain := range foreignChains {
-			resp, _, err := oc.coreClient.ListPendingCctx(chain.ChainId)
+			resp, _, err := oc.zetacoreClient.ListPendingCctx(chain.ChainId)
 			if err == nil && resp != nil {
 				cctxsMap[chain.ChainId] = resp
 			}
@@ -188,7 +188,7 @@ func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(foreignChains []chains.Ch
 	}
 
 	// query rate limiter input
-	resp, err := oc.coreClient.GetRateLimiterInput(rateLimitFlags.Window)
+	resp, err := oc.zetacoreClient.GetRateLimiterInput(rateLimitFlags.Window)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 			return
 		case <-observeTicker.C:
 			{
-				bn, err := oc.coreClient.GetBlockHeight()
+				bn, err := oc.zetacoreClient.GetBlockHeight()
 				if err != nil {
 					oc.logger.Std.Error().Err(err).Msg("StartCctxScheduler: GetBlockHeight fail")
 					continue
@@ -241,7 +241,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 						oc.logger.Std.Debug().Msgf("StartCctxScheduler: ZetaCore heart beat: %d", bn)
 					}
 
-					balance, err := oc.coreClient.GetZetaHotKeyBalance()
+					balance, err := oc.zetacoreClient.GetZetaHotKeyBalance()
 					if err != nil {
 						oc.logger.Std.Error().Err(err).Msgf("couldn't get operator balance")
 					} else {
@@ -318,7 +318,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	observer interfaces.ChainObserver,
 	signer interfaces.ChainSigner,
 ) {
-	res, err := oc.coreClient.GetAllOutTxTrackerByChain(chainID, interfaces.Ascending)
+	res, err := oc.zetacoreClient.GetAllOutTxTrackerByChain(chainID, interfaces.Ascending)
 	if err != nil {
 		oc.logger.Std.Warn().Err(err).Msgf("ScheduleCctxEVM: GetAllOutTxTrackerByChain failed for chain %d", chainID)
 		return
@@ -384,7 +384,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !oc.outTxProc.IsOutTxActive(outTxID) {
 			oc.outTxProc.StartTryProcess(outTxID)
 			oc.logger.Std.Debug().Msgf("ScheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutTxParam().Amount)
-			go signer.TryProcessOutTx(cctx, oc.outTxProc, outTxID, observer, oc.coreClient, zetaHeight)
+			go signer.TryProcessOutTx(cctx, oc.outTxProc, outTxID, observer, oc.zetacoreClient, zetaHeight)
 		}
 
 		// #nosec G701 always in range
@@ -448,7 +448,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		if nonce%interval == zetaHeight%interval && !oc.outTxProc.IsOutTxActive(outTxID) {
 			oc.outTxProc.StartTryProcess(outTxID)
 			oc.logger.Std.Debug().Msgf("ScheduleCctxBTC: sign outtx %s with value %d\n", outTxID, params.Amount)
-			go signer.TryProcessOutTx(cctx, oc.outTxProc, outTxID, observer, oc.coreClient, zetaHeight)
+			go signer.TryProcessOutTx(cctx, oc.outTxProc, outTxID, observer, oc.zetacoreClient, zetaHeight)
 		}
 	}
 }

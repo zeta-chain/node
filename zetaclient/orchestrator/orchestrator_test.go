@@ -23,7 +23,7 @@ import (
 // MockOrchestrator creates a mock orchestrator for testing
 func MockOrchestrator(
 	t *testing.T,
-	coreClient interfaces.ZetaCoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	evmChain, btcChain chains.Chain,
 	evmChainParams, btcChainParams *observertypes.ChainParams,
 ) *Orchestrator {
@@ -39,7 +39,7 @@ func MockOrchestrator(
 
 	// create orchestrator
 	orchestrator := &Orchestrator{
-		coreClient: coreClient,
+		zetacoreClient: zetacoreClient,
 		signerMap: map[int64]interfaces.ChainSigner{
 			evmChain.ChainId: evmSigner,
 			btcChain.ChainId: btcSigner,

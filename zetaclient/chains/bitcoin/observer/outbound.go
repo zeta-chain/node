@@ -43,7 +43,7 @@ func (ob *Observer) WatchOutTx() {
 				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			trackers, err := ob.coreClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
+			trackers, err := ob.zetacoreClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				ob.logger.OutTx.Error().Err(err).Msgf("WatchOutTx: error GetAllOutTxTrackerByChain for chain %d", ob.chain.ChainId)
 				continue
@@ -51,7 +51,7 @@ func (ob *Observer) WatchOutTx() {
 			for _, tracker := range trackers {
 				// get original cctx parameters
 				outTxID := ob.GetTxID(tracker.Nonce)
-				cctx, err := ob.coreClient.GetCctxByNonce(ob.chain.ChainId, tracker.Nonce)
+				cctx, err := ob.zetacoreClient.GetCctxByNonce(ob.chain.ChainId, tracker.Nonce)
 				if err != nil {
 					ob.logger.OutTx.Info().Err(err).Msgf("WatchOutTx: can't find cctx for chain %d nonce %d", ob.chain.ChainId, tracker.Nonce)
 					break
@@ -153,7 +153,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	}
 
 	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
-	zetaHash, ballot, err := ob.coreClient.PostVoteOutbound(
+	zetaHash, ballot, err := ob.zetacoreClient.PostVoteOutbound(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive
@@ -274,7 +274,7 @@ func (ob *Observer) SelectUTXOs(
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce() {
 	// get pending nonces from zetacore
-	p, err := ob.coreClient.GetPendingNoncesByChain(ob.chain.ChainId)
+	p, err := ob.zetacoreClient.GetPendingNoncesByChain(ob.chain.ChainId)
 	if err != nil {
 		ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting pending nonces")
 	}
@@ -310,7 +310,7 @@ func (ob *Observer) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
 		return res.TxID, nil
 	}
 	if !test { // if not unit test, get cctx from zetacore
-		send, err := ob.coreClient.GetCctxByNonce(ob.chain.ChainId, nonce)
+		send, err := ob.zetacoreClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 		if err != nil {
 			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting cctx for nonce %d", nonce)
 		}

@@ -69,7 +69,7 @@ type Observer struct {
 	chain                      chains.Chain
 	evmClient                  interfaces.EVMRPCClient
 	evmJSONRPC                 interfaces.EVMJSONRPCClient
-	coreClient                 interfaces.ZetaCoreClient
+	zetacoreClient             interfaces.ZetacoreClient
 	lastBlockScanned           uint64
 	lastBlock                  uint64
 	db                         *gorm.DB
@@ -89,7 +89,7 @@ type Observer struct {
 // NewObserver returns a new EVM chain observer
 func NewObserver(
 	appContext *clientcontext.AppContext,
-	coreClient interfaces.ZetaCoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
@@ -119,7 +119,7 @@ func NewObserver(
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}
-	ob.coreClient = coreClient
+	ob.zetacoreClient = zetacoreClient
 	ob.Tss = tss
 	ob.outTxPendingTransactions = make(map[string]*ethtypes.Transaction)
 	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
@@ -192,10 +192,10 @@ func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 }
 
 // WithZetacoreClient attaches a new client to interact with ZetaCore to the observer
-func (ob *Observer) WithZetacoreClient(client interfaces.ZetaCoreClient) {
+func (ob *Observer) WithZetacoreClient(client interfaces.ZetacoreClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.coreClient = client
+	ob.zetacoreClient = client
 }
 
 // WithBlockCache attaches a new block cache to the observer
@@ -485,7 +485,7 @@ func (ob *Observer) PostGasPrice() error {
 	// SUPPLY
 	supply := "100" // lockedAmount on ETH, totalSupply on other chains
 
-	zetaHash, err := ob.coreClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
+	zetaHash, err := ob.zetacoreClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
 		return err
@@ -631,7 +631,7 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 func (ob *Observer) postBlockHeader(tip uint64) error {
 	bn := tip
 
-	res, err := ob.coreClient.GetBlockHeaderChainState(ob.chain.ChainId)
+	res, err := ob.zetacoreClient.GetBlockHeaderChainState(ob.chain.ChainId)
 	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
 		// #nosec G701 always positive
 		bn = uint64(res.ChainState.LatestHeight) + 1 // the next header to post
@@ -652,7 +652,7 @@ func (ob *Observer) postBlockHeader(tip uint64) error {
 		return err
 	}
 
-	_, err = ob.coreClient.PostVoteBlockHeader(
+	_, err = ob.zetacoreClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		header.Hash().Bytes(),
 		header.Number.Int64(),

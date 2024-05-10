@@ -156,12 +156,12 @@ func Test_PostVoteOutbound(t *testing.T) {
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetacore client and post outbound vote
-		coreClient := mocks.NewMockZetaCoreClient()
-		client := MockEVMObserver(t, chain, nil, nil, coreClient, nil, 1, observertypes.ChainParams{})
+		zetacoreClient := mocks.NewMockZetaCoreClient()
+		client := MockEVMObserver(t, chain, nil, nil, zetacoreClient, nil, 1, observertypes.ChainParams{})
 		client.PostVoteOutbound(cctx.Index, receipt, outtx, receiveValue, receiveStatus, nonce, coinType, zerolog.Logger{})
 
 		// pause the mock zetacore client to simulate error posting vote
-		coreClient.Pause()
+		zetacoreClient.Pause()
 		client.PostVoteOutbound(cctx.Index, receipt, outtx, receiveValue, receiveStatus, nonce, coinType, zerolog.Logger{})
 	})
 }

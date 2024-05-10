@@ -119,11 +119,11 @@ func GenerateTss(
 				}
 
 				newTss := mc.TSS{
-					Server:        tss.Server,
-					Keys:          tss.Keys,
-					CurrentPubkey: tss.CurrentPubkey,
-					Signers:       tss.Signers,
-					CoreClient:    nil,
+					Server:         tss.Server,
+					Keys:           tss.Keys,
+					CurrentPubkey:  tss.CurrentPubkey,
+					Signers:        tss.Signers,
+					ZetacoreClient: nil,
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
@@ -162,7 +162,7 @@ func keygenTss(keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Lo
 			return err
 		}
 		index := fmt.Sprintf("keygen-%s-%d", digest, keyGen.BlockNumber)
-		zetaHash, err := tss.CoreClient.PostBlameData(&res.Blame, tss.CoreClient.Chain().ChainId, index)
+		zetaHash, err := tss.ZetacoreClient.PostBlameData(&res.Blame, tss.ZetacoreClient.Chain().ChainId, index)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err

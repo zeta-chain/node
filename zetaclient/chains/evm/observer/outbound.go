@@ -50,7 +50,7 @@ func (ob *Observer) WatchOutTx() {
 				sampledLogger.Info().Msgf("WatchOutTx: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			trackers, err := ob.coreClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
+			trackers, err := ob.zetacoreClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
@@ -100,7 +100,7 @@ func (ob *Observer) PostVoteOutbound(
 	logger zerolog.Logger,
 ) {
 	chainID := ob.chain.ChainId
-	zetaTxHash, ballot, err := ob.coreClient.PostVoteOutbound(
+	zetaTxHash, ballot, err := ob.zetacoreClient.PostVoteOutbound(
 		cctxIndex,
 		receipt.TxHash.Hex(),
 		receipt.BlockNumber.Uint64(),

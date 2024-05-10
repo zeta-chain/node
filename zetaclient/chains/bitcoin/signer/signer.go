@@ -302,7 +302,7 @@ func (signer *Signer) TryProcessOutTx(
 	outTxProc *outtxprocessor.Processor,
 	outTxID string,
 	chainObserver interfaces.ChainObserver,
-	coreClient interfaces.ZetaCoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
 	defer func() {
@@ -336,7 +336,7 @@ func (signer *Signer) TryProcessOutTx(
 		return
 	}
 	chain := btcObserver.Chain()
-	myid := coreClient.GetKeys().GetAddress()
+	myid := zetacoreClient.GetKeys().GetAddress()
 	outboundTxTssNonce := params.OutboundTxTssNonce
 
 	sizelimit := params.OutboundTxGasLimit
@@ -395,7 +395,7 @@ func (signer *Signer) TryProcessOutTx(
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, chain.ChainName, outboundTxTssNonce)
 
 	// FIXME: add prometheus metrics
-	_, err = coreClient.GetObserverList()
+	_, err = zetacoreClient.GetObserverList()
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
 	}
@@ -414,7 +414,7 @@ func (signer *Signer) TryProcessOutTx(
 				continue
 			}
 			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", outboundTxTssNonce, chain.String(), outTxHash)
-			zetaHash, err := coreClient.AddTxHashToOutTxTracker(chain.ChainId, outboundTxTssNonce, outTxHash, nil, "", -1)
+			zetaHash, err := zetacoreClient.AddTxHashToOutTxTracker(chain.ChainId, outboundTxTssNonce, outTxHash, nil, "", -1)
 			if err != nil {
 				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", outboundTxTssNonce, chain.ChainName, outTxHash)
 			}

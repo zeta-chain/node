@@ -37,7 +37,7 @@ func (s *EVMSigner) TryProcessOutTx(
 	_ *outtxprocessor.Processor,
 	_ string,
 	_ interfaces.ChainObserver,
-	_ interfaces.ZetaCoreClient,
+	_ interfaces.ZetacoreClient,
 	_ uint64,
 ) {
 }
@@ -76,7 +76,7 @@ func (s *BTCSigner) TryProcessOutTx(
 	_ *outtxprocessor.Processor,
 	_ string,
 	_ interfaces.ChainObserver,
-	_ interfaces.ZetaCoreClient,
+	_ interfaces.ZetacoreClient,
 	_ uint64,
 ) {
 }

@@ -72,13 +72,13 @@ func TestNewBitcoinObserver(t *testing.T) {
 		coreContext := context.NewZetaCoreContext(cfg)
 		appContext := context.NewAppContext(coreContext, cfg)
 		chain := chains.BtcMainnetChain
-		coreClient := mocks.NewMockZetaCoreClient()
+		zetacoreClient := mocks.NewMockZetaCoreClient()
 		tss := mocks.NewMockTSS(chains.BtcTestNetChain, sample.EthAddress().String(), "")
 		loggers := clientcommon.ClientLogger{}
 		btcCfg := cfg.BitcoinConfig
 		ts := metrics.NewTelemetryServer()
 
-		client, err := NewObserver(appContext, chain, coreClient, tss, tempSQLiteDbPath, loggers, btcCfg, ts)
+		client, err := NewObserver(appContext, chain, zetacoreClient, tss, tempSQLiteDbPath, loggers, btcCfg, ts)
 		require.ErrorContains(t, err, "btc chains params not initialized")
 		require.Nil(t, client)
 	})

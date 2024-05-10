@@ -39,7 +39,7 @@ var (
 	zetacoreBroadcast BroadcastInterface = BroadcastToZetaCore
 )
 
-// BroadcastToZetaCore is the default broadcast function used to send transactions to Zeta Core
+// BroadcastToZetaCore is the default broadcast function used to send transactions to zetacore
 func BroadcastToZetaCore(client *Client, gasLimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
 	return client.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
 }

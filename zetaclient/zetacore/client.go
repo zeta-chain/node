@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ interfaces.ZetaCoreClient = &Client{}
+var _ interfaces.ZetacoreClient = &Client{}
 
 // Client is the client to send tx to ZetaCore
 type Client struct {

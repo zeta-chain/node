@@ -21,10 +21,10 @@ func MockBTCObserverMainnet() *Observer {
 	coreContext := context.NewZetaCoreContext(cfg)
 
 	return &Observer{
-		chain:       chains.BtcMainnetChain,
-		coreClient:  mocks.NewMockZetaCoreClient(),
-		Tss:         mocks.NewTSSMainnet(),
-		coreContext: coreContext,
+		chain:          chains.BtcMainnetChain,
+		zetacoreClient: mocks.NewMockZetaCoreClient(),
+		Tss:            mocks.NewTSSMainnet(),
+		coreContext:    coreContext,
 	}
 }
 

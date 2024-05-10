@@ -345,12 +345,12 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// create mock client
 	evmClient := mocks.NewMockEvmClient()
 	evmJSONRPC := mocks.NewMockJSONRPCClient()
-	coreClient := mocks.NewMockZetaCoreClient()
+	zetacoreClient := mocks.NewMockZetaCoreClient()
 	tss := mocks.NewTSSMainnet()
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
 	t.Run("should observe TSS receive in block", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 
 		// feed archived block and receipt
 		evmJSONRPC.WithBlock(block)
@@ -359,25 +359,25 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("should not observe on error getting block", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
 		// error getting block is expected because the mock JSONRPC contains no block
 		require.ErrorContains(t, err, "error getting block")
 	})
 	t.Run("should not observe on error getting receipt", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 		evmJSONRPC.WithBlock(block)
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
 		// error getting block is expected because the mock evmClient contains no receipt
 		require.ErrorContains(t, err, "error getting receipt")
 	})
 	t.Run("should not observe on error posting vote", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 
 		// feed archived block and pause zetacore client
 		evmJSONRPC.WithBlock(block)
 		evmClient.WithReceipt(receipt)
-		coreClient.Pause()
+		zetacoreClient.Pause()
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
 		// error posting vote is expected because the mock zetaClient is paused
 		require.ErrorContains(t, err, "error checking and voting")

@@ -104,7 +104,7 @@ func CreateSignerMap(
 // CreateChainObserverMap creates a map of ChainObservers for all chains in the config
 func CreateChainObserverMap(
 	appContext *appcontext.AppContext,
-	coreClient *zetacore.Client,
+	zetacoreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
@@ -121,7 +121,7 @@ func CreateChainObserverMap(
 			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		co, err := evmobserver.NewObserver(appContext, coreClient, tss, dbpath, loggers, evmConfig, ts)
+		co, err := evmobserver.NewObserver(appContext, zetacoreClient, tss, dbpath, loggers, evmConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
 			continue
@@ -131,7 +131,7 @@ func CreateChainObserverMap(
 	// BTC observer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		co, err := btcobserver.NewObserver(appContext, btcChain, coreClient, tss, dbpath, loggers, btcConfig, ts)
+		co, err := btcobserver.NewObserver(appContext, btcChain, zetacoreClient, tss, dbpath, loggers, btcConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
 
