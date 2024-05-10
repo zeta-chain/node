@@ -77,3 +77,4 @@ FROM base-runtime AS old-runtime
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
 COPY --from=old-build /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
+COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin

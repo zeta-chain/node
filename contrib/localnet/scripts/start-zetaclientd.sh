@@ -8,6 +8,7 @@
 
 HOSTNAME=$(hostname)
 OPTION=$1
+export ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD=true
 
 # sepolia is used in chain migration tests, this functions set the sepolia endpoint in the zetaclient_config.json
 set_sepolia_endpoint() {
