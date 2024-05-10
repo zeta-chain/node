@@ -3,15 +3,12 @@ FROM ethereum/client-go:v1.10.26 as geth
 FROM debian:bullseye-slim as orchestrator
 
 RUN apt update && \
-    apt install -yq jq curl tmux python3 openssh-server iputils-ping && \
+    apt install -yq jq curl tmux python3 openssh-server iputils-ping iproute2 && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=zeta /usr/local/bin/zetacored /usr/local/bin/
 COPY --from=zeta /usr/local/bin/zetaclientd /usr/local/bin/
 COPY --from=geth /usr/local/bin/geth /usr/local/bin/
-
-COPY --from=zeta /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
-COPY --from=zeta /root/.ssh/localtest.pem /root/.ssh/localtest.pem
 
 COPY contrib/localnet/orchestrator/start-zetae2e.sh /work/
 RUN chmod +x /work/*.sh

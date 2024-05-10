@@ -15,14 +15,12 @@ then
   exit 1
 fi
 NUMOFNODES=$1
-OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
-UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
 # Environment variables used for upgrade testing
 export DAEMON_HOME=$HOME/.zetacored
@@ -47,6 +45,25 @@ do
 done
 
 echo "HOSTNAME: $HOSTNAME"
+
+# init ssh keys
+# we generate keys at runtime to ensure that keys are never pushed to
+# a docker registry
+if [ $HOSTNAME == "zetacore0" ]; then
+  if [[ ! -f ~/.ssh/id_rsa ]]; then
+    ssh-keygen -t rsa -q -N "" -f ~/.ssh/id_rsa
+    cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+    # keep localtest.pem for compatibility
+    cp ~/.ssh/id_rsa ~/.ssh/localtest.pem
+    chmod 600 ~/.ssh/*
+  fi
+fi
+
+# Wait for authorized_keys file to exist (zetacore1+)
+while [ ! -f ~/.ssh/authorized_keys ]; do
+    echo "Waiting for authorized_keys file to exist..."
+    sleep 1
+done
 
 # Init a new node to generate genesis file .
 # Copy config files from existing folders which get copied via Docker Copy when building images

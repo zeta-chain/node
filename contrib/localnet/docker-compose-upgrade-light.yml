@@ -23,3 +23,14 @@ services:
   orchestrator:
     entrypoint: ["/work/start-zetae2e.sh", "local", "upgrade", "90"]
     image: orchestrator:latest
+    
+  upgradehost:
+    image: zetanode:latest
+    container_name: upgradehost
+    hostname: upgradehost
+    entrypoint: ["/root/execute-upgrade-proposal.sh"]
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.250
+    volumes:
+      - ssh:/root/.ssh
