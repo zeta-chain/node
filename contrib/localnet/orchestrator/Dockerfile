@@ -13,7 +13,6 @@ COPY --from=zeta /root/.ssh/localtest.pem /root/.ssh/localtest.pem
 
 COPY contrib/localnet/orchestrator/start-zetae2e.sh /work/
 COPY contrib/localnet/orchestrator/restart-zetaclientd.sh /work/
-COPY contrib/localnet/orchestrator/restart-zetaclientd-at-upgrade.sh /work/
 RUN chmod +x /work/*.sh
 
 ENV GOPATH /go
