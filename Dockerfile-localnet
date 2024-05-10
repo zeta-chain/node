@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7-labs
 FROM golang:1.20.14-bullseye AS base-build
 
 ENV GOPATH /go
@@ -15,7 +16,7 @@ FROM base-build AS latest-build
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-COPY . .
+COPY --exclude=contrib/* --exclude=*.md . .
 
 RUN --mount=type=cache,target="/root/.cache/go-build" make install
 RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
@@ -73,5 +74,5 @@ RUN cd node && make install
 
 FROM base-runtime AS old-runtime
 
-COPY --from=cosmovisor-builder /go/bin/cosmovisor /usr/local/bin
-COPY --from=builder /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetae2e /usr/local/bin
+COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
+COPY --from=old-build /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
