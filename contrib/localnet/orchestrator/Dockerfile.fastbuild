@@ -1,8 +1,10 @@
 FROM zetanode:latest as zeta
 FROM ethereum/client-go:v1.10.26 as geth
-FROM golang:1.20-alpine as orchestrator
+FROM debian:bullseye-slim as orchestrator
 
-RUN apk --no-cache add jq curl bash make git build-base openssh
+RUN apt update && \
+    apt install -yq jq curl tmux python3 openssh-server iputils-ping && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=zeta /usr/local/bin/zetacored /usr/local/bin/
 COPY --from=zeta /usr/local/bin/zetaclientd /usr/local/bin/

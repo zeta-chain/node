@@ -35,7 +35,6 @@ export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-export UpgradeName=$(${GOPATH}/bin/new/zetacored version)
 
 # generate node list
 START=1
@@ -180,73 +179,4 @@ then
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
-# 7 Start the nodes
-# If upgrade option is passed, use cosmovisor to start the nodes and create a governance proposal for upgrade
-if [ "$OPTION" != "upgrade" ]; then
-
-  exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
-
-else
-
-  # Setup cosmovisor
-  mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
-  mkdir -p $DAEMON_HOME/cosmovisor/upgrades/"$UpgradeName"/bin
-
-  # Genesis
-  cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
-  cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
-
-  #Upgrades
-  cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
-
-  #Permissions
-  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
-  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
-  chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
-
-  # Start the node using cosmovisor
-  cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
-  sleep 20
-  echo
-
-  # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
-  UPGRADE_HEIGHT=${3:-225}
-
-  # If this is the first node, create a governance proposal for upgrade
-  if [ $HOSTNAME = "zetacore0" ]
-  then
-    cat > upgrade.json <<EOF
-{
-  "messages": [
-    {
-      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-      "plan": {
-        "height": "${UPGRADE_HEIGHT}",
-        "info": "",
-        "name": "${UpgradeName}",
-        "time": "0001-01-01T00:00:00Z",
-        "upgraded_client_state": null
-      },
-      "authority": "${UPGRADE_AUTHORITY_ACCOUNT}"
-    }
-  ],
-  "metadata": "",
-  "deposit": "100000000azeta",
-  "title": "${UpgradeName}",
-  "summary": "${UpgradeName}"
-}
-EOF
-    /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta
-  fi
-
-  # Wait for the proposal to be voted on
-  sleep 8
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=2000000000000000azeta --broadcast-mode block
-  sleep 7
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
-
-  # We use tail -f to keep the container running. Use -n999999 to ensure we get all the context.
-  tail -n999999 -f zetanode.log
-
-fi
-
+exec cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored

@@ -194,7 +194,7 @@ generate: proto-gen openapi specs typescript docs-zetacored
 
 zetanode:
 	@echo "Building zetanode"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-localnet .
+	$(DOCKER) build -t zetanode --target latest-runtime -f ./Dockerfile-localnet .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
@@ -220,9 +220,9 @@ start-stress-test: zetanode
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
 #TODO: replace OLD_VERSION with v16 tag once its available
-zetanode-upgrade:
+zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION='release/v16' .
+	$(DOCKER) build -t zetanode:old --target old-build --build-arg OLD_VERSION='release/v16' .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 
