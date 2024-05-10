@@ -405,7 +405,7 @@ func (ob *BTCChainClient) WatchInbound() {
 			}
 			err := ob.ObserveInbound()
 			if err != nil {
-				ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
+				//ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
@@ -940,7 +940,7 @@ func (ob *BTCChainClient) WatchUTXOS() {
 			}
 			err := ob.FetchUTXOS()
 			if err != nil {
-				ob.logger.UTXOS.Error().Err(err).Msg("error fetching btc utxos")
+				//ob.logger.UTXOS.Error().Err(err).Msg("error fetching btc utxos")
 			}
 			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOS)
 		case <-ob.stop:
