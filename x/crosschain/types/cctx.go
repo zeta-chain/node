@@ -162,7 +162,7 @@ func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
 
-// NewCCTX creates a new CCTX.From a MsgVoteOnObservedInboundTx message and a TSS pubkey.
+// NewCCTX creates a new CCTX.From a MsgVoteInbound message and a TSS pubkey.
 // It also validates the created cctx
 func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainTx, error) {
 	index := msg.Digest()

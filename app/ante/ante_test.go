@@ -33,8 +33,8 @@ func (mah *MockAnteHandler) AnteHandle(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.C
 func TestIsSystemTx(t *testing.T) {
 	// system tx types:
 	//      *cctxtypes.MsgVoteGasPrice,
-	//		*cctxtypes.MsgVoteOnObservedInboundTx,
-	//		*cctxtypes.MsgVoteOnObservedOutboundTx,
+	//		*cctxtypes.MsgVoteInbound,
+	//		*cctxtypes.MsgVoteOutbound,
 	//		*cctxtypes.MsgAddOutboundTracker,
 	//		*observertypes.MsgVoteBlockHeader,
 	//		*observertypes.MsgVoteTSS,
