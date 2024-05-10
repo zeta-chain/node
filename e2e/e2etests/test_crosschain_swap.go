@@ -102,7 +102,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	stop := r.MineBlocks()
+	//stop := r.MineBlocks()
 
 	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInTxHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -119,10 +119,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutTxParam().OutboundTxHash)
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
-
-	// wait a few seconds before listing utxos
-	time.Sleep(5 * time.Second)
-
 	utxos, err := r.BtcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
@@ -239,5 +235,5 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// stop mining
-	stop <- struct{}{}
+	//stop <- struct{}{}
 }
