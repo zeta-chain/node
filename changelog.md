@@ -11,6 +11,7 @@
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
+* [2145](https://github.com/zeta-chain/node/pull/2145) - add `ibc` and `ibc-transfer` modules
 * [2135](https://github.com/zeta-chain/node/pull/2135) - add develop build version logic
 
 ### Refactor
