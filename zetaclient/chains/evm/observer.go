@@ -57,11 +57,10 @@ type Logger struct {
 	Compliance zerolog.Logger
 }
 
-var _ interfaces.ChainClient = &Client{}
+var _ interfaces.ChainObserver = &Observer{}
 
-// Client represents the chain configuration for an EVM chain
-// Filled with above constants depending on chain
-type Client struct {
+// Observer is the observer for evm chains
+type Observer struct {
 	Tss interfaces.TSSSigner
 
 	Mu *sync.Mutex
@@ -86,8 +85,8 @@ type Client struct {
 	headerCache *lru.Cache
 }
 
-// NewClient returns a new EVM chain client
-func NewClient(
+// NewObserver returns a new EVM chain observer
+func NewObserver(
 	appContext *clientcontext.AppContext,
 	coreClient interfaces.ZetaCoreClient,
 	tss interfaces.TSSSigner,
@@ -95,8 +94,8 @@ func NewClient(
 	loggers clientcommon.ClientLogger,
 	evmCfg config.EVMConfig,
 	ts *metrics.TelemetryServer,
-) (*Client, error) {
-	ob := Client{
+) (*Observer, error) {
+	ob := Observer{
 		ts: ts,
 	}
 
@@ -158,15 +157,15 @@ func NewClient(
 	return &ob, nil
 }
 
-// WithChain attaches a new chain to the chain client
-func (ob *Client) WithChain(chain chains.Chain) {
+// WithChain attaches a new chain to the observer
+func (ob *Observer) WithChain(chain chains.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
 }
 
-// WithLogger attaches a new logger to the chain client
-func (ob *Client) WithLogger(logger zerolog.Logger) {
+// WithLogger attaches a new logger to the observer
+func (ob *Observer) WithLogger(logger zerolog.Logger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.logger = Logger{
@@ -177,67 +176,67 @@ func (ob *Client) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-// WithEvmClient attaches a new evm client to the chain client
-func (ob *Client) WithEvmClient(client interfaces.EVMRPCClient) {
+// WithEvmClient attaches a new evm client to the observer
+func (ob *Observer) WithEvmClient(client interfaces.EVMRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmClient = client
 }
 
-// WithEvmJSONRPC attaches a new evm json rpc client to the chain client
-func (ob *Client) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
+// WithEvmJSONRPC attaches a new evm json rpc client to the observer
+func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmJSONRPC = client
 }
 
-// WithZetacoreClient attaches a new client to interact with ZetaCore to the chain client
-func (ob *Client) WithZetacoreClient(client interfaces.ZetaCoreClient) {
+// WithZetacoreClient attaches a new client to interact with ZetaCore to the observer
+func (ob *Observer) WithZetacoreClient(client interfaces.ZetaCoreClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.coreClient = client
 }
 
-// WithBlockCache attaches a new block cache to the chain client
-func (ob *Client) WithBlockCache(cache *lru.Cache) {
+// WithBlockCache attaches a new block cache to the observer
+func (ob *Observer) WithBlockCache(cache *lru.Cache) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.blockCache = cache
 }
 
-// SetChainParams sets the chain params for the chain client
-func (ob *Client) SetChainParams(params observertypes.ChainParams) {
+// SetChainParams sets the chain params for the observer
+func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chainParams = params
 }
 
-// GetChainParams returns the chain params for the chain client
-func (ob *Client) GetChainParams() observertypes.ChainParams {
+// GetChainParams returns the chain params for the observer
+func (ob *Observer) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.chainParams
 }
 
-func (ob *Client) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
+func (ob *Observer) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
 	contract, err := FetchConnectorContract(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *Client) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
+func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
 	contract, err := FetchConnectorContractEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *Client) GetZetaTokenNonEthContract() (ethcommon.Address, *zeta.ZetaNonEth, error) {
+func (ob *Observer) GetZetaTokenNonEthContract() (ethcommon.Address, *zeta.ZetaNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().ZetaTokenContractAddress)
 	contract, err := FetchZetaZetaNonEthTokenContract(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *Client) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
+func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
 	contract, err := FetchERC20CustodyContract(addr, ob.evmClient)
 	return addr, contract, err
@@ -260,7 +259,7 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 }
 
 // Start all observation routines for the evm chain
-func (ob *Client) Start() {
+func (ob *Observer) Start() {
 	// watch evm chain for incoming txs and post votes to zetacore
 	go ob.WatchInTx()
 
@@ -278,7 +277,7 @@ func (ob *Client) Start() {
 }
 
 // WatchRPCStatus watches the RPC status of the evm chain
-func (ob *Client) WatchRPCStatus() {
+func (ob *Observer) WatchRPCStatus() {
 	ob.logger.Chain.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
 	ticker := time.NewTicker(60 * time.Second)
 	for {
@@ -316,7 +315,7 @@ func (ob *Client) WatchRPCStatus() {
 	}
 }
 
-func (ob *Client) Stop() {
+func (ob *Observer) Stop() {
 	ob.logger.Chain.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 
@@ -334,21 +333,21 @@ func (ob *Client) Stop() {
 }
 
 // SetPendingTx sets the pending transaction in memory
-func (ob *Client) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
+func (ob *Observer) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.outTxPendingTransactions[ob.GetTxID(nonce)] = transaction
 }
 
 // GetPendingTx gets the pending transaction from memory
-func (ob *Client) GetPendingTx(nonce uint64) *ethtypes.Transaction {
+func (ob *Observer) GetPendingTx(nonce uint64) *ethtypes.Transaction {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.outTxPendingTransactions[ob.GetTxID(nonce)]
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
-func (ob *Client) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
+func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	delete(ob.outTxPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
@@ -357,7 +356,7 @@ func (ob *Client) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transac
 }
 
 // GetTxNReceipt gets the receipt and transaction from memory
-func (ob *Client) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
+func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	receipt := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
@@ -366,14 +365,14 @@ func (ob *Client) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tran
 }
 
 // IsTxConfirmed returns true if there is a confirmed tx for 'nonce'
-func (ob *Client) IsTxConfirmed(nonce uint64) bool {
+func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }
 
 // CheckTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
-func (ob *Client) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
+func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
 	block, err := ob.GetBlockByNumberCached(receipt.BlockNumber.Uint64())
 	if err != nil {
 		return errors.Wrapf(err, "GetBlockByNumberCached error for block %d txHash %s nonce %d",
@@ -397,19 +396,19 @@ func (ob *Client) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes.R
 }
 
 // SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
-func (ob *Client) SetLastBlockHeightScanned(height uint64) {
+func (ob *Observer) SetLastBlockHeightScanned(height uint64) {
 	atomic.StoreUint64(&ob.lastBlockScanned, height)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
 // GetLastBlockHeightScanned get last block height scanned (not necessarily caught up with external block; could be slow/paused)
-func (ob *Client) GetLastBlockHeightScanned() uint64 {
+func (ob *Observer) GetLastBlockHeightScanned() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
 
 // SetLastBlockHeight set external last block height
-func (ob *Client) SetLastBlockHeight(height uint64) {
+func (ob *Observer) SetLastBlockHeight(height uint64) {
 	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
@@ -417,7 +416,7 @@ func (ob *Client) SetLastBlockHeight(height uint64) {
 }
 
 // GetLastBlockHeight get external last block height
-func (ob *Client) GetLastBlockHeight() uint64 {
+func (ob *Observer) GetLastBlockHeight() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlock)
 	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
@@ -426,7 +425,7 @@ func (ob *Client) GetLastBlockHeight() uint64 {
 }
 
 // WatchGasPrice watches evm chain for gas prices and post to zetacore
-func (ob *Client) WatchGasPrice() {
+func (ob *Observer) WatchGasPrice() {
 	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
 	if err != nil {
@@ -461,7 +460,7 @@ func (ob *Client) WatchGasPrice() {
 	}
 }
 
-func (ob *Client) PostGasPrice() error {
+func (ob *Observer) PostGasPrice() error {
 
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
@@ -489,7 +488,7 @@ func (ob *Client) PostGasPrice() error {
 }
 
 // TransactionByHash query transaction by hash via JSON-RPC
-func (ob *Client) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
+func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
 	tx, err := ob.evmJSONRPC.EthGetTransactionByHash(txHash)
 	if err != nil {
 		return nil, false, err
@@ -501,7 +500,7 @@ func (ob *Client) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, e
 	return tx, tx.BlockNumber == nil, nil
 }
 
-func (ob *Client) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
+func (ob *Observer) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
 	if header, ok := ob.headerCache.Get(blockNumber); ok {
 		return header.(*ethtypes.Header), nil
 	}
@@ -515,7 +514,7 @@ func (ob *Client) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, er
 
 // GetBlockByNumberCached get block by number from cache
 // returns block, ethrpc.Block, isFallback, isSkip, error
-func (ob *Client) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, error) {
+func (ob *Observer) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, error) {
 	if block, ok := ob.blockCache.Get(blockNumber); ok {
 		return block.(*ethrpc.Block), nil
 	}
@@ -532,12 +531,12 @@ func (ob *Client) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, err
 }
 
 // RemoveCachedBlock remove block from cache
-func (ob *Client) RemoveCachedBlock(blockNumber uint64) {
+func (ob *Observer) RemoveCachedBlock(blockNumber uint64) {
 	ob.blockCache.Remove(blockNumber)
 }
 
 // BlockByNumber query block by number via JSON-RPC
-func (ob *Client) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
+func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	block, err := ob.evmJSONRPC.EthGetBlockByNumber(blockNumber, true)
 	if err != nil {
 		return nil, err
@@ -551,7 +550,7 @@ func (ob *Client) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	return block, nil
 }
 
-func (ob *Client) BuildLastBlock() error {
+func (ob *Observer) BuildLastBlock() error {
 	logger := ob.logger.Chain.With().Str("module", "BuildBlockIndex").Logger()
 	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
@@ -589,8 +588,8 @@ func (ob *Client) BuildLastBlock() error {
 	return nil
 }
 
-// LoadDB open sql database and load data into EVMChainClient
-func (ob *Client) LoadDB(dbPath string, chain chains.Chain) error {
+// LoadDB open sql database and load data into EVM observer
+func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 	if dbPath != "" {
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 			err := os.MkdirAll(dbPath, os.ModePerm)
@@ -621,12 +620,12 @@ func (ob *Client) LoadDB(dbPath string, chain chains.Chain) error {
 	return nil
 }
 
-func (ob *Client) GetTxID(nonce uint64) string {
+func (ob *Observer) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
 
-func (ob *Client) postBlockHeader(tip uint64) error {
+func (ob *Observer) postBlockHeader(tip uint64) error {
 	bn := tip
 
 	res, err := ob.coreClient.GetBlockHeaderChainState(ob.chain.ChainId)

@@ -329,7 +329,7 @@ func (signer *Signer) TryProcessOutTx(
 	cctx *types.CrossChainTx,
 	outTxProc *outtxprocessor.Processor,
 	outTxID string,
-	chainClient interfaces.ChainClient,
+	chainObserver interfaces.ChainObserver,
 	coreClient interfaces.ZetaCoreClient,
 	height uint64,
 ) {
@@ -345,14 +345,14 @@ func (signer *Signer) TryProcessOutTx(
 	}()
 	myID := coreClient.GetKeys().GetOperatorAddress()
 
-	evmClient, ok := chainClient.(*Client)
+	evmObserver, ok := chainObserver.(*Observer)
 	if !ok {
-		logger.Error().Msg("chain client is not an EVMChainClient")
+		logger.Error().Msg("chain observer is not an EVM observer")
 		return
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutBoundTransactionData(cctx, evmClient, signer.client, logger, height)
+	txData, skipTx, err := NewOutBoundTransactionData(cctx, evmObserver, signer.client, logger, height)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -371,7 +371,7 @@ func (signer *Signer) TryProcessOutTx(
 	// compliance check goes first
 	if compliance.IsCctxRestricted(cctx) {
 		compliance.PrintComplianceLog(logger, signer.logger.Compliance,
-			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
+			true, evmObserver.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
 		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))

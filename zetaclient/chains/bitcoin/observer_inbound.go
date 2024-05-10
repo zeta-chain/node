@@ -24,7 +24,7 @@ import (
 )
 
 // WatchInTx watches Bitcoin chain for incoming txs and post votes to zetacore
-func (ob *Client) WatchInTx() {
+func (ob *Observer) WatchInTx() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInTx", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.InTx.Error().Err(err).Msg("error creating ticker")
@@ -54,7 +54,7 @@ func (ob *Client) WatchInTx() {
 	}
 }
 
-func (ob *Client) ObserveInTx() error {
+func (ob *Observer) ObserveInTx() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -203,7 +203,7 @@ func (ob *Client) ObserveInTx() error {
 }
 
 // WatchIntxTracker watches zetacore for bitcoin intx trackers
-func (ob *Client) WatchIntxTracker() {
+func (ob *Observer) WatchIntxTracker() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchIntxTracker", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.InTx.Err(err).Msg("error creating ticker")
@@ -230,7 +230,7 @@ func (ob *Client) WatchIntxTracker() {
 }
 
 // ProcessInboundTrackers processes inbound trackers
-func (ob *Client) ProcessInboundTrackers() error {
+func (ob *Observer) ProcessInboundTrackers() error {
 	trackers, err := ob.coreClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (ob *Client) ProcessInboundTrackers() error {
 }
 
 // CheckReceiptForBtcTxHash checks the receipt for a btc tx hash
-func (ob *Client) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
+func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", err
@@ -344,7 +344,7 @@ func FilterAndParseIncomingTx(
 	return inTxs, nil
 }
 
-func (ob *Client) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvent) *crosschaintypes.MsgVoteOnObservedInboundTx {
+func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvent) *crosschaintypes.MsgVoteOnObservedInboundTx {
 	ob.logger.InTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
 	amount := big.NewFloat(inTx.Value)
 	amount = amount.Mul(amount, big.NewFloat(1e8))
@@ -376,7 +376,7 @@ func (ob *Client) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvent) *crossch
 }
 
 // IsInTxRestricted returns true if the inTx contains restricted addresses
-func (ob *Client) IsInTxRestricted(inTx *BTCInTxEvent) bool {
+func (ob *Observer) IsInTxRestricted(inTx *BTCInTxEvent) bool {
 	receiver := ""
 	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {

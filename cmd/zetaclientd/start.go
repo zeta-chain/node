@@ -248,10 +248,10 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
-	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(appContext, coreClient, tss, dbpath, loggers, telemetryServer)
+	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
+	observerMap, err := CreateChainObserverMap(appContext, coreClient, tss, dbpath, loggers, telemetryServer)
 	if err != nil {
-		startLogger.Err(err).Msg("CreateChainClientMap")
+		startLogger.Err(err).Msg("CreateChainObserverMap")
 		return err
 	}
 
@@ -259,13 +259,13 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("Node %s is not an active observer external chain observers will not be started", coreClient.GetKeys().GetOperatorAddress().String())
 	} else {
 		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", coreClient.GetKeys().GetOperatorAddress().String())
-		for _, v := range chainClientMap {
-			v.Start()
+		for _, observer := range observerMap {
+			observer.Start()
 		}
 	}
 
-	// CreateCoreObserver : Core observer wraps the zetacore client and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := orchestrator.NewOrchestrator(coreClient, signerMap, chainClientMap, masterLogger, telemetryServer)
+	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
+	mo1 := orchestrator.NewOrchestrator(coreClient, signerMap, observerMap, masterLogger, telemetryServer)
 	mo1.MonitorCore(appContext)
 
 	// start zeta supply checker
@@ -288,9 +288,9 @@ func start(_ *cobra.Command, _ []string) error {
 	sig := <-ch
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
-	// stop zetacore observer
-	for _, client := range chainClientMap {
-		client.Stop()
+	// stop chain observers
+	for _, observer := range observerMap {
+		observer.Stop()
 	}
 	coreClient.Stop()
 

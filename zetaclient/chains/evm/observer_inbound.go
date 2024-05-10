@@ -32,7 +32,7 @@ import (
 )
 
 // WatchInTx watches evm chain for incoming txs and post votes to zetacore
-func (ob *Client) WatchInTx() {
+func (ob *Observer) WatchInTx() {
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchInTx_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.InTx.Error().Err(err).Msg("error creating ticker")
@@ -64,7 +64,7 @@ func (ob *Client) WatchInTx() {
 
 // WatchIntxTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
-func (ob *Client) WatchIntxTracker() {
+func (ob *Observer) WatchIntxTracker() {
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchIntxTracker_%d", ob.chain.ChainId),
 		ob.GetChainParams().InTxTicker,
@@ -95,7 +95,7 @@ func (ob *Client) WatchIntxTracker() {
 }
 
 // ProcessInboundTrackers processes inbound trackers from zetacore
-func (ob *Client) ProcessInboundTrackers() error {
+func (ob *Observer) ProcessInboundTrackers() error {
 	trackers, err := ob.coreClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func (ob *Client) ProcessInboundTrackers() error {
 	return nil
 }
 
-func (ob *Client) ObserveInTX(sampledLogger zerolog.Logger) error {
+func (ob *Observer) ObserveInTX(sampledLogger zerolog.Logger) error {
 	// get and update latest block height
 	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
@@ -194,7 +194,7 @@ func (ob *Client) ObserveInTX(sampledLogger zerolog.Logger) error {
 
 // ObserveZetaSent queries the ZetaSent event from the connector contract and posts to zetacore
 // returns the last block successfully scanned
-func (ob *Client) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
+func (ob *Observer) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 	// filter ZetaSent logs
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
@@ -266,7 +266,7 @@ func (ob *Client) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 
 // ObserveERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetacore
 // returns the last block successfully scanned
-func (ob *Client) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 {
+func (ob *Observer) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 {
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
@@ -347,7 +347,7 @@ func (ob *Client) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 {
 
 // ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
-func (ob *Client) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
+func (ob *Observer) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetacore and ignore error
@@ -374,7 +374,7 @@ func (ob *Client) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 }
 
 // CheckAndVoteInboundTokenZeta checks and votes on the given inbound Zeta token
-func (ob *Client) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
+func (ob *Observer) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
 		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
@@ -415,7 +415,7 @@ func (ob *Client) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt *
 }
 
 // CheckAndVoteInboundTokenERC20 checks and votes on the given inbound ERC20 token
-func (ob *Client) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
+func (ob *Observer) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
 		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
@@ -457,7 +457,7 @@ func (ob *Client) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receipt 
 }
 
 // CheckAndVoteInboundTokenGas checks and votes on the given inbound gas token
-func (ob *Client) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
+func (ob *Observer) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
 		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
@@ -487,7 +487,7 @@ func (ob *Client) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, receipt *e
 }
 
 // PostVoteInbound posts a vote for the given vote message
-func (ob *Client) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinType coin.CoinType, retryGasLimit uint64) (string, error) {
+func (ob *Observer) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinType coin.CoinType, retryGasLimit uint64) (string, error) {
 	txHash := msg.InTxHash
 	chainID := ob.chain.ChainId
 	zetaHash, ballot, err := ob.coreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, retryGasLimit, msg)
@@ -504,13 +504,13 @@ func (ob *Client) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinTyp
 }
 
 // HasEnoughConfirmations checks if the given receipt has enough confirmations
-func (ob *Client) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
+func (ob *Observer) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
 	return lastHeight >= confHeight
 }
 
 // BuildInboundVoteMsgForDepositedEvent builds a inbound vote message for a Deposited event
-func (ob *Client) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
+func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
 	// compliance check
 	maybeReceiver := ""
 	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(event.Message))
@@ -551,7 +551,7 @@ func (ob *Client) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20
 }
 
 // BuildInboundVoteMsgForZetaSentEvent builds a inbound vote message for a ZetaSent event
-func (ob *Client) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
+func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
 	destChain := chains.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.InTx.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
@@ -602,7 +602,7 @@ func (ob *Client) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaC
 }
 
 // BuildInboundVoteMsgForTokenSentToTSS builds a inbound vote message for a token sent to TSS
-func (ob *Client) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
+func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
 	message := tx.Input
 
 	// compliance check
@@ -646,7 +646,7 @@ func (ob *Client) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, s
 }
 
 // ObserveTSSReceiveInBlock queries the incoming gas asset to TSS address in a single block and posts votes
-func (ob *Client) ObserveTSSReceiveInBlock(blockNumber uint64) error {
+func (ob *Observer) ObserveTSSReceiveInBlock(blockNumber uint64) error {
 	block, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.chain.ChainId)
@@ -670,7 +670,7 @@ func (ob *Client) ObserveTSSReceiveInBlock(blockNumber uint64) error {
 }
 
 // calcBlockRangeToScan calculates the next range of blocks to scan
-func (ob *Client) calcBlockRangeToScan(latestConfirmed, lastScanned, batchSize uint64) (uint64, uint64) {
+func (ob *Observer) calcBlockRangeToScan(latestConfirmed, lastScanned, batchSize uint64) (uint64, uint64) {
 	startBlock := lastScanned + 1
 	toBlock := lastScanned + batchSize
 	if toBlock > latestConfirmed {

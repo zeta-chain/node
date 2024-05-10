@@ -41,7 +41,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 
 	t.Run("should post vote and return true if outtx is processed", func(t *testing.T) {
 		// create evm client and set outtx and receipt
-		client := MockEVMClient(t, chain, nil, nil, nil, nil, 1, chainParam)
+		client := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		client.SetTxNReceipt(nonce, receipt, outtx)
 		// post outbound vote
 		isIncluded, isConfirmed, err := client.IsOutboundProcessed(cctx, zerolog.Logger{})
@@ -57,7 +57,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		cctx.InboundTxParams.Sender = sample.EthAddress().Hex()
 
 		// create evm client and set outtx and receipt
-		client := MockEVMClient(t, chain, nil, nil, nil, nil, 1, chainParam)
+		client := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		client.SetTxNReceipt(nonce, receipt, outtx)
 
 		// modify compliance config to restrict sender address
@@ -75,7 +75,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	})
 	t.Run("should return false if outtx is not confirmed", func(t *testing.T) {
 		// create evm client and DO NOT set outtx as confirmed
-		client := MockEVMClient(t, chain, nil, nil, nil, nil, 1, chainParam)
+		client := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		isIncluded, isConfirmed, err := client.IsOutboundProcessed(cctx, zerolog.Logger{})
 		require.NoError(t, err)
 		require.False(t, isIncluded)
@@ -83,7 +83,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm client and set outtx and receipt
-		client := MockEVMClient(t, chain, nil, nil, nil, nil, 1, chainParam)
+		client := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		client.SetTxNReceipt(nonce, receipt, outtx)
 
 		// set connector contract address to an arbitrary address to make event parsing fail
@@ -118,7 +118,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	t.Run("should fail if unable to get connector/custody contract", func(t *testing.T) {
 		// create evm client and set outtx and receipt
-		client := MockEVMClient(t, chain, nil, nil, nil, nil, 1, chainParam)
+		client := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		client.SetTxNReceipt(nonce, receipt, outtx)
 		abiConnector := zetaconnector.ZetaConnectorNonEthMetaData.ABI
 		abiCustody := erc20custody.ERC20CustodyMetaData.ABI
@@ -157,7 +157,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 
 		// create evm client using mock zetacore client and post outbound vote
 		coreClient := mocks.NewMockZetaCoreClient()
-		client := MockEVMClient(t, chain, nil, nil, coreClient, nil, 1, observertypes.ChainParams{})
+		client := MockEVMObserver(t, chain, nil, nil, coreClient, nil, 1, observertypes.ChainParams{})
 		client.PostVoteOutbound(cctx.Index, receipt, outtx, receiveValue, receiveStatus, nonce, coinType, zerolog.Logger{})
 
 		// pause the mock zetacore client to simulate error posting vote

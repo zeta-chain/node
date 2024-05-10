@@ -53,9 +53,9 @@ const (
 	bigValueConfirmationCount = 6
 )
 
-var _ interfaces.ChainClient = &Client{}
+var _ interfaces.ChainObserver = &Observer{}
 
-// Logger contains list of loggers used by Bitcoin chain client
+// Logger contains list of loggers used by Bitcoin chain observer
 // TODO: Merge this logger with the one in evm
 // https://github.com/zeta-chain/node/issues/2022
 type Logger struct {
@@ -100,9 +100,8 @@ type BTCBlockNHeader struct {
 	Block  *btcjson.GetBlockVerboseTxResult
 }
 
-// Client represents a chain configuration for Bitcoin
-// Filled with above constants depending on chain
-type Client struct {
+// Observer is the Bitcoin chain observer
+type Observer struct {
 	BlockCache *lru.Cache
 
 	// Mu is lock for all the maps, utxos and core params
@@ -136,13 +135,13 @@ type Client struct {
 	ts     *metrics.TelemetryServer
 }
 
-func (ob *Client) WithZetaCoreClient(client *zetacore.Client) {
+func (ob *Observer) WithZetacoreClient(client *zetacore.Client) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.coreClient = client
 }
 
-func (ob *Client) WithLogger(logger zerolog.Logger) {
+func (ob *Observer) WithLogger(logger zerolog.Logger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.logger = Logger{
@@ -154,32 +153,32 @@ func (ob *Client) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-func (ob *Client) WithBtcClient(client *rpcclient.Client) {
+func (ob *Observer) WithBtcClient(client *rpcclient.Client) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.rpcClient = client
 }
 
-func (ob *Client) WithChain(chain chains.Chain) {
+func (ob *Observer) WithChain(chain chains.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
 }
 
-func (ob *Client) SetChainParams(params observertypes.ChainParams) {
+func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
-func (ob *Client) GetChainParams() observertypes.ChainParams {
+func (ob *Observer) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.params
 }
 
-// NewClient returns a new Bitcoin chain client
-func NewClient(
+// NewObserver returns a new Bitcoin chain observer
+func NewObserver(
 	appcontext *context.AppContext,
 	chain chains.Chain,
 	coreClient interfaces.ZetaCoreClient,
@@ -188,9 +187,9 @@ func NewClient(
 	loggers clientcommon.ClientLogger,
 	btcCfg config.BTCConfig,
 	ts *metrics.TelemetryServer,
-) (*Client, error) {
-	// initialize the BTCChainClient
-	ob := Client{
+) (*Observer, error) {
+	// initialize the observer
+	ob := Observer{
 		ts: ts,
 	}
 	ob.stop = make(chan struct{})
@@ -257,7 +256,7 @@ func NewClient(
 		return nil, err
 	}
 
-	// load btc chain client DB
+	// load btc chain observer DB
 	err = ob.loadDB(dbpath)
 	if err != nil {
 		return nil, err
@@ -267,7 +266,7 @@ func NewClient(
 }
 
 // Start starts the Go routine to observe the Bitcoin chain
-func (ob *Client) Start() {
+func (ob *Observer) Start() {
 	ob.logger.Chain.Info().Msgf("Bitcoin client is starting")
 	go ob.WatchInTx()        // watch bitcoin chain for incoming txs and post votes to zetacore
 	go ob.WatchOutTx()       // watch bitcoin chain for outgoing txs status
@@ -278,7 +277,7 @@ func (ob *Client) Start() {
 }
 
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
-func (ob *Client) WatchRPCStatus() {
+func (ob *Observer) WatchRPCStatus() {
 	ob.logger.Chain.Info().Msgf("RPCStatus is starting")
 	ticker := time.NewTicker(60 * time.Second)
 
@@ -334,20 +333,20 @@ func (ob *Client) WatchRPCStatus() {
 	}
 }
 
-func (ob *Client) Stop() {
+func (ob *Observer) Stop() {
 	ob.logger.Chain.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	ob.logger.Chain.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-func (ob *Client) SetLastBlockHeight(height int64) {
+func (ob *Observer) SetLastBlockHeight(height int64) {
 	if height < 0 {
 		panic("lastBlock is negative")
 	}
 	atomic.StoreInt64(&ob.lastBlock, height)
 }
 
-func (ob *Client) GetLastBlockHeight() int64 {
+func (ob *Observer) GetLastBlockHeight() int64 {
 	height := atomic.LoadInt64(&ob.lastBlock)
 	if height < 0 {
 		panic("lastBlock is negative")
@@ -355,7 +354,7 @@ func (ob *Client) GetLastBlockHeight() int64 {
 	return height
 }
 
-func (ob *Client) SetLastBlockHeightScanned(height int64) {
+func (ob *Observer) SetLastBlockHeightScanned(height int64) {
 	if height < 0 {
 		panic("lastBlockScanned is negative")
 	}
@@ -363,7 +362,7 @@ func (ob *Client) SetLastBlockHeightScanned(height int64) {
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
-func (ob *Client) GetLastBlockHeightScanned() int64 {
+func (ob *Observer) GetLastBlockHeightScanned() int64 {
 	height := atomic.LoadInt64(&ob.lastBlockScanned)
 	if height < 0 {
 		panic("lastBlockScanned is negative")
@@ -371,7 +370,7 @@ func (ob *Client) GetLastBlockHeightScanned() int64 {
 	return height
 }
 
-func (ob *Client) GetPendingNonce() uint64 {
+func (ob *Observer) GetPendingNonce() uint64 {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.pendingNonce
@@ -380,12 +379,12 @@ func (ob *Client) GetPendingNonce() uint64 {
 // GetBaseGasPrice ...
 // TODO: implement
 // https://github.com/zeta-chain/node/issues/868
-func (ob *Client) GetBaseGasPrice() *big.Int {
+func (ob *Observer) GetBaseGasPrice() *big.Int {
 	return big.NewInt(0)
 }
 
 // ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
-func (ob *Client) ConfirmationsThreshold(amount *big.Int) int64 {
+func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 	if amount.Cmp(big.NewInt(bigValueSats)) >= 0 {
 		return bigValueConfirmationCount
 	}
@@ -398,7 +397,7 @@ func (ob *Client) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
-func (ob *Client) WatchGasPrice() {
+func (ob *Observer) WatchGasPrice() {
 	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
 	if err != nil {
@@ -433,7 +432,7 @@ func (ob *Client) WatchGasPrice() {
 	}
 }
 
-func (ob *Client) PostGasPrice() error {
+func (ob *Observer) PostGasPrice() error {
 	if ob.chain.ChainId == 18444 { //bitcoin regtest; hardcode here since this RPC is not available on regtest
 		blockNumber, err := ob.rpcClient.GetBlockCount()
 		if err != nil {
@@ -520,7 +519,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 }
 
 // WatchUTXOS watches bitcoin chain for UTXOs owned by the TSS address
-func (ob *Client) WatchUTXOS() {
+func (ob *Observer) WatchUTXOS() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
 		ob.logger.UTXOS.Error().Err(err).Msg("error creating ticker")
@@ -546,7 +545,7 @@ func (ob *Client) WatchUTXOS() {
 	}
 }
 
-func (ob *Client) FetchUTXOS() error {
+func (ob *Observer) FetchUTXOS() error {
 	defer func() {
 		if err := recover(); err != nil {
 			ob.logger.UTXOS.Error().Msgf("BTC fetchUTXOS: caught panic error: %v", err)
@@ -622,7 +621,7 @@ func (ob *Client) FetchUTXOS() error {
 //   - the total value of the selected UTXOs.
 //   - the number of consolidated UTXOs.
 //   - the total value of the consolidated UTXOs.
-func (ob *Client) SelectUTXOs(
+func (ob *Observer) SelectUTXOs(
 	amount float64,
 	utxosToSpend uint16,
 	nonce uint64,
@@ -701,7 +700,7 @@ func (ob *Client) SelectUTXOs(
 }
 
 // SaveBroadcastedTx saves successfully broadcasted transaction
-func (ob *Client) SaveBroadcastedTx(txHash string, nonce uint64) {
+func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outTxID := ob.GetTxID(nonce)
 	ob.Mu.Lock()
 	ob.broadcastedTx[outTxID] = txHash
@@ -756,7 +755,7 @@ func GetRawTxResult(rpcClient interfaces.BTCRPCClient, hash *chainhash.Hash, res
 	return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
 }
 
-func (ob *Client) BuildBroadcastedTxMap() error {
+func (ob *Observer) BuildBroadcastedTxMap() error {
 	var broadcastedTransactions []clienttypes.OutTxHashSQLType
 	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
 		ob.logger.Chain.Error().Err(err).Msg("error iterating over db")
@@ -768,7 +767,7 @@ func (ob *Client) BuildBroadcastedTxMap() error {
 	return nil
 }
 
-func (ob *Client) LoadLastBlock() error {
+func (ob *Observer) LoadLastBlock() error {
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
@@ -799,7 +798,7 @@ func (ob *Client) LoadLastBlock() error {
 	return nil
 }
 
-func (ob *Client) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
+func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
 	if result, ok := ob.BlockCache.Get(blockNumber); ok {
 		return result.(*BTCBlockNHeader), nil
 	}
@@ -829,7 +828,7 @@ func (ob *Client) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, e
 
 // isTssTransaction checks if a given transaction was sent by TSS itself.
 // An unconfirmed transaction is safe to spend only if it was sent by TSS and verified by ourselves.
-func (ob *Client) isTssTransaction(txid string) bool {
+func (ob *Observer) isTssTransaction(txid string) bool {
 	_, found := ob.includedTxHashes[txid]
 	return found
 }
@@ -838,7 +837,7 @@ func (ob *Client) isTssTransaction(txid string) bool {
 // There could be many (unpredictable) reasons for a pending nonce lagging behind, for example:
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
-func (ob *Client) refreshPendingNonce() {
+func (ob *Observer) refreshPendingNonce() {
 	// get pending nonces from zetacore
 	p, err := ob.coreClient.GetPendingNoncesByChain(ob.chain.ChainId)
 	if err != nil {
@@ -867,7 +866,7 @@ func (ob *Client) refreshPendingNonce() {
 	}
 }
 
-func (ob *Client) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
+func (ob *Observer) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
 
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
@@ -897,7 +896,7 @@ func (ob *Client) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
 	return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
 }
 
-func (ob *Client) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
+func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
@@ -914,7 +913,7 @@ func (ob *Client) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 }
 
 // postBlockHeader posts block header to zetacore
-func (ob *Client) postBlockHeader(tip int64) error {
+func (ob *Observer) postBlockHeader(tip int64) error {
 	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
 	res, err := ob.coreClient.GetBlockHeaderChainState(ob.chain.ChainId)
@@ -949,7 +948,7 @@ func (ob *Client) postBlockHeader(tip int64) error {
 	return err
 }
 
-func (ob *Client) loadDB(dbpath string) error {
+func (ob *Observer) loadDB(dbpath string) error {
 	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
 		err := os.MkdirAll(dbpath, os.ModePerm)
 		if err != nil {

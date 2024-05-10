@@ -14,17 +14,17 @@ import (
 const tempSQLiteDbPath = "file::memory:?cache=shared"
 const numOfEntries = 2
 
-type BitcoinClientDBTestSuite struct {
+type BitcoinObserverDBTestSuite struct {
 	suite.Suite
 	db          *gorm.DB
 	submittedTx map[string]btcjson.GetTransactionResult
 }
 
-func TestBitcoinClientDB(t *testing.T) {
-	suite.Run(t, new(BitcoinClientDBTestSuite))
+func TestBitcoinObserverDB(t *testing.T) {
+	suite.Run(t, new(BitcoinObserverDBTestSuite))
 }
 
-func (suite *BitcoinClientDBTestSuite) SetupTest() {
+func (suite *BitcoinObserverDBTestSuite) SetupTest() {
 	suite.submittedTx = map[string]btcjson.GetTransactionResult{}
 
 	db, err := gorm.Open(sqlite.Open(tempSQLiteDbPath), &gorm.Config{})
@@ -58,9 +58,9 @@ func (suite *BitcoinClientDBTestSuite) SetupTest() {
 	}
 }
 
-func (suite *BitcoinClientDBTestSuite) TearDownSuite() {}
+func (suite *BitcoinObserverDBTestSuite) TearDownSuite() {}
 
-func (suite *BitcoinClientDBTestSuite) TestSubmittedTx() {
+func (suite *BitcoinObserverDBTestSuite) TestSubmittedTx() {
 	var submittedTransactions []clienttypes.TransactionResultSQLType
 	err := suite.db.Find(&submittedTransactions).Error
 	suite.NoError(err)

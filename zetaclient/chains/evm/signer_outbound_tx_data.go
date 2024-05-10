@@ -109,7 +109,7 @@ func (txData *OutBoundTransactionData) SetupGas(
 //  3. error
 func NewOutBoundTransactionData(
 	cctx *types.CrossChainTx,
-	evmClient *Client,
+	evmObserver *Observer,
 	evmRPC interfaces.EVMRPCClient,
 	logger zerolog.Logger,
 	height uint64,
@@ -135,7 +135,7 @@ func NewOutBoundTransactionData(
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	included, confirmed, err := evmClient.IsOutboundProcessed(cctx, logger)
+	included, confirmed, err := evmObserver.IsOutboundProcessed(cctx, logger)
 	if err != nil {
 		return nil, true, errors.New("IsOutboundProcessed failed")
 	}
@@ -159,7 +159,7 @@ func NewOutBoundTransactionData(
 	copy(txData.sendHash[:32], sendHash[:32])
 
 	// In case there is a pending transaction, make sure this keysign is a transaction replacement
-	pendingTx := evmClient.GetPendingTx(nonce)
+	pendingTx := evmObserver.GetPendingTx(nonce)
 	if pendingTx != nil {
 		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
 			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)

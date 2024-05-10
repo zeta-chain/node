@@ -58,8 +58,8 @@ func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainPar
 	return appCtx, cfg.EVMChainConfigs[evmChain.ChainId]
 }
 
-// MockEVMClient creates a mock ChainClient with custom chain, TSS, params etc
-func MockEVMClient(
+// MockEVMObserver creates a mock ChainObserver with custom chain, TSS, params etc
+func MockEVMObserver(
 	t *testing.T,
 	chain chains.Chain,
 	evmClient interfaces.EVMRPCClient,
@@ -67,7 +67,7 @@ func MockEVMClient(
 	coreClient interfaces.ZetaCoreClient,
 	tss interfaces.TSSSigner,
 	lastBlock uint64,
-	params observertypes.ChainParams) *evm.Client {
+	params observertypes.ChainParams) *evm.Observer {
 	// use default mock zetacore client if not provided
 	if coreClient == nil {
 		coreClient = mocks.NewMockZetaCoreClient()
@@ -79,8 +79,8 @@ func MockEVMClient(
 	// create app context
 	appCtx, evmCfg := getAppContext(chain, &params)
 
-	// create chain client
-	client, err := evm.NewClient(appCtx, coreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
+	// create chain observer
+	client, err := evm.NewObserver(appCtx, coreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
 	require.NoError(t, err)
 	client.WithEvmClient(evmClient)
 	client.WithEvmJSONRPC(evmJSONRPC)
@@ -89,11 +89,11 @@ func MockEVMClient(
 	return client
 }
 
-func TestEVM_BlockCache(t *testing.T) {
+func Test_BlockCache(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := &evm.Client{Mu: &sync.Mutex{}}
+	ob := &evm.Observer{Mu: &sync.Mutex{}}
 	ob.WithBlockCache(blockCache)
 
 	// delete non-existing block should not panic
@@ -116,7 +116,7 @@ func TestEVM_BlockCache(t *testing.T) {
 	ob.RemoveCachedBlock(blockNumber)
 }
 
-func TestEVM_CheckTxInclusion(t *testing.T) {
+func Test_CheckTxInclusion(t *testing.T) {
 	// load archived evm outtx Gas
 	// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 	chainID := int64(1)
@@ -132,7 +132,7 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := &evm.Client{Mu: &sync.Mutex{}}
+	ob := &evm.Observer{Mu: &sync.Mutex{}}
 
 	// save block to cache
 	blockCache.Add(blockNumber, block)
@@ -167,7 +167,7 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	})
 }
 
-func TestEVM_VoteOutboundBallot(t *testing.T) {
+func Test_VoteOutboundBallot(t *testing.T) {
 	// load archived evm outtx Gas
 	// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 	chainID := int64(1)

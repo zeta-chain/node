@@ -69,12 +69,12 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 
-	mockChainClient, err := getNewEvmChainClient()
+	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
 
 	t.Run("NewOutBoundTransactionData success", func(t *testing.T) {
 		cctx := getCCTX(t)
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.False(t, skip)
 		require.NoError(t, err)
 	})
@@ -82,7 +82,7 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	t.Run("NewOutBoundTransactionData skip", func(t *testing.T) {
 		cctx := getCCTX(t)
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.NoError(t, err)
 		require.True(t, skip)
 	})
@@ -90,7 +90,7 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	t.Run("NewOutBoundTransactionData unknown chain", func(t *testing.T) {
 		cctx := getInvalidCCTX(t)
 		require.NoError(t, err)
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.ErrorContains(t, err, "unknown chain")
 		require.True(t, skip)
 	})
@@ -99,7 +99,7 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 		cctx := getCCTX(t)
 		require.NoError(t, err)
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
-		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.True(t, skip)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})

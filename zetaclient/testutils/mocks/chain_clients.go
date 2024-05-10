@@ -8,83 +8,83 @@ import (
 )
 
 // ----------------------------------------------------------------------------
-// EVMClient
+// EVMObserver
 // ----------------------------------------------------------------------------
-var _ interfaces.ChainClient = (*EVMClient)(nil)
+var _ interfaces.ChainObserver = (*EVMObserver)(nil)
 
-// EVMClient is a mock of evm chain client for testing
-type EVMClient struct {
+// EVMObserver is a mock of evm chain observer for testing
+type EVMObserver struct {
 	ChainParams observertypes.ChainParams
 }
 
-func NewEVMClient(chainParams *observertypes.ChainParams) *EVMClient {
-	return &EVMClient{
+func NewEVMObserver(chainParams *observertypes.ChainParams) *EVMObserver {
+	return &EVMObserver{
 		ChainParams: *chainParams,
 	}
 }
 
-func (s *EVMClient) Start() {
+func (ob *EVMObserver) Start() {
 }
 
-func (s *EVMClient) Stop() {
+func (ob *EVMObserver) Stop() {
 }
 
-func (s *EVMClient) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+func (ob *EVMObserver) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
 	return false, false, nil
 }
 
-func (s *EVMClient) SetChainParams(chainParams observertypes.ChainParams) {
-	s.ChainParams = chainParams
+func (ob *EVMObserver) SetChainParams(chainParams observertypes.ChainParams) {
+	ob.ChainParams = chainParams
 }
 
-func (s *EVMClient) GetChainParams() observertypes.ChainParams {
-	return s.ChainParams
+func (ob *EVMObserver) GetChainParams() observertypes.ChainParams {
+	return ob.ChainParams
 }
 
-func (s *EVMClient) GetTxID(_ uint64) string {
+func (ob *EVMObserver) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (s *EVMClient) WatchIntxTracker() {
+func (ob *EVMObserver) WatchIntxTracker() {
 }
 
 // ----------------------------------------------------------------------------
-// BTCClient
+// BTCObserver
 // ----------------------------------------------------------------------------
-var _ interfaces.ChainClient = (*BTCClient)(nil)
+var _ interfaces.ChainObserver = (*BTCObserver)(nil)
 
-// BTCClient is a mock of btc chain client for testing
-type BTCClient struct {
+// BTCObserver is a mock of btc chain observer for testing
+type BTCObserver struct {
 	ChainParams observertypes.ChainParams
 }
 
-func NewBTCClient(chainParams *observertypes.ChainParams) *BTCClient {
-	return &BTCClient{
+func NewBTCObserver(chainParams *observertypes.ChainParams) *BTCObserver {
+	return &BTCObserver{
 		ChainParams: *chainParams,
 	}
 }
 
-func (s *BTCClient) Start() {
+func (ob *BTCObserver) Start() {
 }
 
-func (s *BTCClient) Stop() {
+func (ob *BTCObserver) Stop() {
 }
 
-func (s *BTCClient) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+func (ob *BTCObserver) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
 	return false, false, nil
 }
 
-func (s *BTCClient) SetChainParams(chainParams observertypes.ChainParams) {
-	s.ChainParams = chainParams
+func (ob *BTCObserver) SetChainParams(chainParams observertypes.ChainParams) {
+	ob.ChainParams = chainParams
 }
 
-func (s *BTCClient) GetChainParams() observertypes.ChainParams {
-	return s.ChainParams
+func (ob *BTCObserver) GetChainParams() observertypes.ChainParams {
+	return ob.ChainParams
 }
 
-func (s *BTCClient) GetTxID(_ uint64) string {
+func (ob *BTCObserver) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (s *BTCClient) WatchIntxTracker() {
+func (ob *BTCObserver) WatchIntxTracker() {
 }

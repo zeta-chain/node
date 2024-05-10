@@ -17,18 +17,18 @@ import (
 const TempSQLiteDbPath = "file::memory:?cache=shared"
 const NumOfEntries = 2
 
-type EVMClientTestSuite struct {
+type ObserverDBTestSuite struct {
 	suite.Suite
 	db                        *gorm.DB
 	outTXConfirmedReceipts    map[string]*ethtypes.Receipt
 	outTXConfirmedTransaction map[string]*ethtypes.Transaction
 }
 
-func TestEVMClient(t *testing.T) {
-	suite.Run(t, new(EVMClientTestSuite))
+func TestObserverDB(t *testing.T) {
+	suite.Run(t, new(ObserverDBTestSuite))
 }
 
-func (suite *EVMClientTestSuite) SetupTest() {
+func (suite *ObserverDBTestSuite) SetupTest() {
 	suite.outTXConfirmedReceipts = map[string]*ethtypes.Receipt{}
 	suite.outTXConfirmedTransaction = map[string]*ethtypes.Transaction{}
 
@@ -74,14 +74,14 @@ func (suite *EVMClientTestSuite) SetupTest() {
 	}
 }
 
-func (suite *EVMClientTestSuite) TearDownSuite() {
+func (suite *ObserverDBTestSuite) TearDownSuite() {
 	dbInst, err := suite.db.DB()
 	suite.NoError(err)
 	err = dbInst.Close()
 	suite.NoError(err)
 }
 
-func (suite *EVMClientTestSuite) TestEVMReceipts() {
+func (suite *ObserverDBTestSuite) TestEVMReceipts() {
 	for key, value := range suite.outTXConfirmedReceipts {
 		var receipt clienttypes.ReceiptSQLType
 		suite.db.Where("Identifier = ?", key).First(&receipt)
@@ -91,7 +91,7 @@ func (suite *EVMClientTestSuite) TestEVMReceipts() {
 	}
 }
 
-func (suite *EVMClientTestSuite) TestEVMTransactions() {
+func (suite *ObserverDBTestSuite) TestEVMTransactions() {
 	for key, value := range suite.outTXConfirmedTransaction {
 		var transaction clienttypes.TransactionSQLType
 		suite.db.Where("Identifier = ?", key).First(&transaction)
@@ -105,7 +105,7 @@ func (suite *EVMClientTestSuite) TestEVMTransactions() {
 	}
 }
 
-func (suite *EVMClientTestSuite) TestEVMLastBlock() {
+func (suite *ObserverDBTestSuite) TestEVMLastBlock() {
 	lastBlockNum := uint64(12345)
 	dbc := suite.db.Create(clienttypes.ToLastBlockSQLType(lastBlockNum))
 	suite.NoError(dbc.Error)

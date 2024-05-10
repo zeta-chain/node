@@ -18,7 +18,7 @@ import (
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
-func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
+func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 	// load archived ZetaSent intx, receipt and cctx
 	// https://etherscan.io/tx/0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76
 	chain := chains.EthChain
@@ -32,7 +32,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
@@ -42,7 +42,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		_, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -52,7 +52,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -63,13 +63,13 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
 		chainID = 56 // use BSC chain connector
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, mocks.MockChainParams(chainID, confirmation))
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, mocks.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, true)
 		require.ErrorContains(t, err, "emitter address mismatch")
 	})
 }
 
-func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
+func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 	// load archived ERC20 intx, receipt and cctx
 	// https://etherscan.io/tx/0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da
 	chain := chains.EthChain
@@ -83,7 +83,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
@@ -93,7 +93,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		_, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -103,7 +103,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -114,13 +114,13 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
 		chainID = 56 // use BSC chain ERC20 custody
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, mocks.MockChainParams(chainID, confirmation))
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, mocks.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, true)
 		require.ErrorContains(t, err, "emitter address mismatch")
 	})
 }
 
-func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
+func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 	// load archived Gas intx, receipt and cctx
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
 	chain := chains.EthChain
@@ -134,7 +134,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
@@ -144,7 +144,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		_, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -154,7 +154,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.ErrorContains(t, err, "not TSS address")
 		require.Equal(t, "", ballot)
@@ -165,7 +165,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.ErrorContains(t, err, "not a successful tx")
 		require.Equal(t, "", ballot)
@@ -176,14 +176,14 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
 }
 
-func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
+func Test_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	// load archived ZetaSent receipt
 	// https://etherscan.io/tx/0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76
 	chainID := int64(1)
@@ -193,7 +193,7 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	cctx := testutils.LoadCctxByIntx(t, chainID, coin.CoinType_Zeta, intxHash)
 
 	// parse ZetaSent event
-	ob := MockEVMClient(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
 	connector := mocks.MockConnectorNonEth(chainID)
 	event := testutils.ParseReceiptZetaSent(receipt, connector)
 
@@ -230,7 +230,7 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	})
 }
 
-func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
+func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	// load archived Deposited receipt
 	// https://etherscan.io/tx/0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da
 	chain := chains.EthChain
@@ -240,7 +240,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	cctx := testutils.LoadCctxByIntx(t, chainID, coin.CoinType_ERC20, intxHash)
 
 	// parse Deposited event
-	ob := MockEVMClient(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
 	custody := mocks.MockERC20Custody(chainID)
 	event := testutils.ParseReceiptERC20Deposited(receipt, custody)
 	sender := ethcommon.HexToAddress(tx.From)
@@ -275,7 +275,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	})
 }
 
-func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
+func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	// load archived gas token transfer to TSS
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
 	chain := chains.EthChain
@@ -292,7 +292,7 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	require.NoError(t, evm.ValidateEvmTransaction(txDonation))
 
 	// create test compliance config
-	ob := MockEVMClient(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
 	cfg := config.Config{
 		ComplianceConfig: config.ComplianceConfig{},
 	}
@@ -325,7 +325,7 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	})
 }
 
-func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
+func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
 	chain := chains.EthChain
 	chainID := chain.ChainId
@@ -350,7 +350,7 @@ func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
 	t.Run("should observe TSS receive in block", func(t *testing.T) {
-		ob := MockEVMClient(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
 
 		// feed archived block and receipt
 		evmJSONRPC.WithBlock(block)
@@ -359,20 +359,20 @@ func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("should not observe on error getting block", func(t *testing.T) {
-		ob := MockEVMClient(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
 		// error getting block is expected because the mock JSONRPC contains no block
 		require.ErrorContains(t, err, "error getting block")
 	})
 	t.Run("should not observe on error getting receipt", func(t *testing.T) {
-		ob := MockEVMClient(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
 		evmJSONRPC.WithBlock(block)
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
 		// error getting block is expected because the mock evmClient contains no receipt
 		require.ErrorContains(t, err, "error getting receipt")
 	})
 	t.Run("should not observe on error posting vote", func(t *testing.T) {
-		ob := MockEVMClient(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, coreClient, tss, lastBlock, chainParam)
 
 		// feed archived block and pause zetacore client
 		evmJSONRPC.WithBlock(block)

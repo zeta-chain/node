@@ -26,12 +26,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
-type BitcoinClientTestSuite struct {
+type BitcoinObserverTestSuite struct {
 	suite.Suite
 	rpcClient *rpcclient.Client
 }
 
-func (suite *BitcoinClientTestSuite) SetupTest() {
+func (suite *BitcoinObserverTestSuite) SetupTest() {
 	// test private key with EVM address
 	//// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
 	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
@@ -45,7 +45,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	appContext := clientcontext.NewAppContext(&clientcontext.ZetaCoreContext{}, config.Config{})
-	client, err := NewClient(appContext, chains.BtcRegtestChain, nil, tss, tempSQLiteDbPath,
+	client, err := NewObserver(appContext, chains.BtcRegtestChain, nil, tss, tempSQLiteDbPath,
 		clientcommon.DefaultLoggers(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.rpcClient, err = getRPCClient(18332)
@@ -79,7 +79,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	}
 }
 
-func (suite *BitcoinClientTestSuite) TearDownSuite() {
+func (suite *BitcoinObserverTestSuite) TearDownSuite() {
 }
 
 func getRPCClient(chainID int64) (*rpcclient.Client, error) {
@@ -125,7 +125,7 @@ func getFeeRate(client *rpcclient.Client, confTarget int64, estimateMode *btcjso
 
 // All methods that begin with "Test" are run as tests within a
 // suite.
-func (suite *BitcoinClientTestSuite) Test1() {
+func (suite *BitcoinObserverTestSuite) Test1() {
 	feeResult, err := suite.rpcClient.EstimateSmartFee(1, nil)
 	suite.Require().NoError(err)
 	suite.T().Logf("fee result: %f", *feeResult.FeeRate)
@@ -168,7 +168,7 @@ func (suite *BitcoinClientTestSuite) Test1() {
 }
 
 // a tx with memo around 81B (is this allowed1?)
-func (suite *BitcoinClientTestSuite) Test2() {
+func (suite *BitcoinObserverTestSuite) Test2() {
 	hashStr := "000000000000002fd8136dbf91708898da9d6ae61d7c354065a052568e2f2888"
 	var hash chainhash.Hash
 	err := chainhash.Decode(&hash, hashStr)
@@ -193,7 +193,7 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	suite.Require().Equal(0, len(inTxs))
 }
 
-func (suite *BitcoinClientTestSuite) Test3() {
+func (suite *BitcoinObserverTestSuite) Test3() {
 	client := suite.rpcClient
 	res, err := client.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
 	suite.Require().NoError(err)
@@ -209,8 +209,8 @@ func (suite *BitcoinClientTestSuite) Test3() {
 	suite.T().Logf("block number %d", bn)
 }
 
-// TestBitcoinClientLive is a phony test to run each live test individually
-func TestBitcoinClientLive(t *testing.T) {
+// TestBitcoinObserverLive is a phony test to run each live test individually
+func TestBitcoinObserverLive(t *testing.T) {
 	// suite.Run(t, new(BitcoinClientTestSuite))
 
 	// LiveTestBitcoinFeeRate(t)

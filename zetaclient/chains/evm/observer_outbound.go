@@ -26,7 +26,7 @@ import (
 )
 
 // WatchOutTx watches evm chain for outgoing txs status
-func (ob *Client) WatchOutTx() {
+func (ob *Observer) WatchOutTx() {
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.OutTx.Error().Err(err).Msg("error creating ticker")
@@ -82,7 +82,7 @@ func (ob *Client) WatchOutTx() {
 }
 
 // PostVoteOutbound posts vote to zetacore for the confirmed outtx
-func (ob *Client) PostVoteOutbound(
+func (ob *Observer) PostVoteOutbound(
 	cctxIndex string,
 	receipt *ethtypes.Receipt,
 	transaction *ethtypes.Transaction,
@@ -115,7 +115,7 @@ func (ob *Client) PostVoteOutbound(
 
 // IsOutboundProcessed checks outtx status and returns (isIncluded, isConfirmed, error)
 // It also posts vote to zetacore if the tx is confirmed
-func (ob *Client) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	// skip if outtx is not confirmed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
 	if !ob.IsTxConfirmed(nonce) {
@@ -308,7 +308,7 @@ func ParseOuttxReceivedValue(
 
 // checkConfirmedTx checks if a txHash is confirmed
 // returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
-func (ob *Client) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
+func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 

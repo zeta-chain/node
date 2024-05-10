@@ -34,8 +34,8 @@ func MockOrchestrator(
 		ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress),
 	)
 	btcSigner := mocks.NewBTCSigner()
-	evmClient := mocks.NewEVMClient(evmChainParams)
-	btcClient := mocks.NewBTCClient(btcChainParams)
+	evmObserver := mocks.NewEVMObserver(evmChainParams)
+	btcObserver := mocks.NewBTCObserver(btcChainParams)
 
 	// create orchestrator
 	orchestrator := &Orchestrator{
@@ -44,9 +44,9 @@ func MockOrchestrator(
 			evmChain.ChainId: evmSigner,
 			btcChain.ChainId: btcSigner,
 		},
-		clientMap: map[int64]interfaces.ChainClient{
-			evmChain.ChainId: evmClient,
-			btcChain.ChainId: btcClient,
+		observerMap: map[int64]interfaces.ChainObserver{
+			evmChain.ChainId: evmObserver,
+			btcChain.ChainId: btcObserver,
 		},
 	}
 	return orchestrator
@@ -119,7 +119,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	})
 }
 
-func Test_GetUpdatedChainClient(t *testing.T) {
+func Test_GetUpdatedChainObserver(t *testing.T) {
 	// initial parameters for orchestrator creation
 	evmChain := chains.EthChain
 	btcChain := chains.BtcMainnetChain
@@ -166,34 +166,34 @@ func Test_GetUpdatedChainClient(t *testing.T) {
 		IsSupported:                 true,
 	}
 
-	t.Run("evm chain client should not be found", func(t *testing.T) {
+	t.Run("evm chain observer should not be found", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
-		// BSC chain client should not be found
-		_, err := orchestrator.GetUpdatedChainClient(coreContext, chains.BscMainnetChain.ChainId)
-		require.ErrorContains(t, err, "chain client not found")
+		// BSC chain observer should not be found
+		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BscMainnetChain.ChainId)
+		require.ErrorContains(t, err, "chain observer not found")
 	})
-	t.Run("chain params in evm chain client should be updated successfully", func(t *testing.T) {
+	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
-		// update evm chain client with new chain params
-		chainOb, err := orchestrator.GetUpdatedChainClient(coreContext, evmChain.ChainId)
+		// update evm chain observer with new chain params
+		chainOb, err := orchestrator.GetUpdatedChainObserver(coreContext, evmChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.GetChainParams()))
 	})
-	t.Run("btc chain client should not be found", func(t *testing.T) {
+	t.Run("btc chain observer should not be found", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
-		// BTC testnet chain client should not be found
-		_, err := orchestrator.GetUpdatedChainClient(coreContext, chains.BtcTestNetChain.ChainId)
-		require.ErrorContains(t, err, "chain client not found")
+		// BTC testnet chain observer should not be found
+		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BtcTestNetChain.ChainId)
+		require.ErrorContains(t, err, "chain observer not found")
 	})
-	t.Run("chain params in btc chain client should be updated successfully", func(t *testing.T) {
+	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
-		// update btc chain client with new chain params
-		chainOb, err := orchestrator.GetUpdatedChainClient(coreContext, btcChain.ChainId)
+		// update btc chain observer with new chain params
+		chainOb, err := orchestrator.GetUpdatedChainObserver(coreContext, btcChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.GetChainParams()))

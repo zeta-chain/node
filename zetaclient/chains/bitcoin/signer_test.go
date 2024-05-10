@@ -214,25 +214,25 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	fmt.Println("Transaction successfully signed")
 }
 
-// helper function to create a test BitcoinChainClient
-func createTestClient(t *testing.T) *Client {
+// helper function to create a test Bitcoin observer
+func createTestObserver(t *testing.T) *Observer {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.Nil(t, err)
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
-	return &Client{
+	return &Observer{
 		Tss:               tss,
 		Mu:                &sync.Mutex{},
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
 	}
 }
 
-// helper function to create a test BitcoinChainClient with UTXOs
-func createTestClientWithUTXOs(t *testing.T) *Client {
-	// Create BitcoinChainClient
-	client := createTestClient(t)
+// helper function to create a test Bitcoin observer with UTXOs
+func createTestObserverWithUTXOs(t *testing.T) *Observer {
+	// Create Bitcoin observer
+	client := createTestObserver(t)
 	tssAddress := client.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -391,7 +391,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	}
 }
 
-func mineTxNSetNonceMark(ob *Client, nonce uint64, txid string, preMarkIndex int) {
+func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
 	outTxID := ob.GetTxID(nonce)
 	ob.includedTxResults[outTxID] = &btcjson.GetTransactionResult{TxID: txid}
@@ -411,7 +411,7 @@ func mineTxNSetNonceMark(ob *Client, nonce uint64, txid string, preMarkIndex int
 }
 
 func TestSelectUTXOs(t *testing.T) {
-	ob := createTestClientWithUTXOs(t)
+	ob := createTestObserverWithUTXOs(t)
 	dummyTxID := "6e6f71d281146c1fc5c755b35908ee449f26786c84e2ae18f98b268de40b7ec4"
 
 	// Case1: nonce = 0, bootstrap
@@ -503,7 +503,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	dummyTxID := "6e6f71d281146c1fc5c755b35908ee449f26786c84e2ae18f98b268de40b7ec4"
 
 	t.Run("should not consolidate", func(t *testing.T) {
-		ob := createTestClientWithUTXOs(t)
+		ob := createTestObserverWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 10, amount = 0.01, nonce = 1, rank = 10
@@ -517,7 +517,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate 1 utxo", func(t *testing.T) {
-		ob := createTestClientWithUTXOs(t)
+		ob := createTestObserverWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 9, amount = 0.01, nonce = 1, rank = 9
@@ -531,7 +531,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate 3 utxos", func(t *testing.T) {
-		ob := createTestClientWithUTXOs(t)
+		ob := createTestObserverWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 5, amount = 0.01, nonce = 0, rank = 5
@@ -550,7 +550,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate all utxos using rank 1", func(t *testing.T) {
-		ob := createTestClientWithUTXOs(t)
+		ob := createTestObserverWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 12, amount = 0.01, nonce = 0, rank = 1
@@ -569,7 +569,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate 3 utxos sparse", func(t *testing.T) {
-		ob := createTestClientWithUTXOs(t)
+		ob := createTestObserverWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 5, amount = 0.13, nonce = 24105432, rank = 5
@@ -587,7 +587,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate all utxos sparse", func(t *testing.T) {
-		ob := createTestClientWithUTXOs(t)
+		ob := createTestObserverWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 12, amount = 0.13, nonce = 24105432, rank = 1

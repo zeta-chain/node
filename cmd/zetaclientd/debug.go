@@ -97,11 +97,11 @@ func DebugCmd() *cobra.Command {
 
 			if chains.IsEVMChain(chain.ChainId) {
 
-				ob := evm.Client{
+				evmObserver := evm.Observer{
 					Mu: &sync.Mutex{},
 				}
-				ob.WithZetacoreClient(client)
-				ob.WithLogger(chainLogger)
+				evmObserver.WithZetacoreClient(client)
+				evmObserver.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
 				coinType := coin.CoinType_Cmd
@@ -112,13 +112,13 @@ func DebugCmd() *cobra.Command {
 						if err != nil {
 							return err
 						}
-						ob.WithEvmClient(client)
-						ob.WithEvmJSONRPC(ethRPC)
-						ob.WithChain(*chains.GetChainFromChainID(chainID))
+						evmObserver.WithEvmClient(client)
+						evmObserver.WithEvmJSONRPC(ethRPC)
+						evmObserver.WithChain(*chains.GetChainFromChainID(chainID))
 					}
 				}
 				hash := ethcommon.HexToHash(txHash)
-				tx, isPending, err := ob.TransactionByHash(txHash)
+				tx, isPending, err := evmObserver.TransactionByHash(txHash)
 				if err != nil {
 					return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
 				}
@@ -132,7 +132,7 @@ func DebugCmd() *cobra.Command {
 
 				for _, chainParams := range chainParams {
 					if chainParams.ChainId == chainID {
-						ob.SetChainParams(observertypes.ChainParams{
+						evmObserver.SetChainParams(observertypes.ChainParams{
 							ChainId:                     chainID,
 							ConnectorContractAddress:    chainParams.ConnectorContractAddress,
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
@@ -155,19 +155,19 @@ func DebugCmd() *cobra.Command {
 
 				switch coinType {
 				case coin.CoinType_Zeta:
-					ballotIdentifier, err = ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
+					ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case coin.CoinType_ERC20:
-					ballotIdentifier, err = ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
+					ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case coin.CoinType_Gas:
-					ballotIdentifier, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
+					ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenGas(tx, receipt, false)
 					if err != nil {
 						return err
 					}
@@ -176,12 +176,12 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if chains.IsBitcoinChain(chain.ChainId) {
-				obBtc := bitcoin.Client{
+				btcObserver := bitcoin.Observer{
 					Mu: &sync.Mutex{},
 				}
-				obBtc.WithZetaCoreClient(client)
-				obBtc.WithLogger(chainLogger)
-				obBtc.WithChain(*chains.GetChainFromChainID(chainID))
+				btcObserver.WithZetacoreClient(client)
+				btcObserver.WithLogger(chainLogger)
+				btcObserver.WithChain(*chains.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
 					User:         cfg.BitcoinConfig.RPCUsername,
@@ -195,8 +195,8 @@ func DebugCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				obBtc.WithBtcClient(btcClient)
-				ballotIdentifier, err = obBtc.CheckReceiptForBtcTxHash(txHash, false)
+				btcObserver.WithBtcClient(btcClient)
+				ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(txHash, false)
 				if err != nil {
 					return err
 				}

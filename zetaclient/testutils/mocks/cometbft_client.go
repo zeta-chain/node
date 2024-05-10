@@ -10,21 +10,21 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 )
 
-type CometbftClient struct {
+type CometBFTClient struct {
 	mock.Client
 	err  error
 	code uint32
 }
 
-func (c CometbftClient) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
+func (c CometBFTClient) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
 	return nil, c.err
 }
 
-func (c CometbftClient) BroadcastTxAsync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c CometBFTClient) BroadcastTxAsync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
-func (c CometbftClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c CometBFTClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	log := ""
 	if c.err != nil {
 		log = c.err.Error()
@@ -38,7 +38,7 @@ func (c CometbftClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coret
 	}, c.err
 }
 
-func (c CometbftClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
+func (c CometBFTClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
 	return &coretypes.ResultTx{
 		Hash:   bytes.HexBytes{},
 		Height: 0,
@@ -51,7 +51,7 @@ func (c CometbftClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.Resu
 	}, c.err
 }
 
-func (c CometbftClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBlock, error) {
+func (c CometBFTClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBlock, error) {
 	return &coretypes.ResultBlock{Block: &tmtypes.Block{
 		Header:   tmtypes.Header{},
 		Data:     tmtypes.Data{},
@@ -59,8 +59,8 @@ func (c CometbftClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBlo
 	}}, c.err
 }
 
-func NewSDKClientWithErr(err error, code uint32) *CometbftClient {
-	return &CometbftClient{
+func NewSDKClientWithErr(err error, code uint32) *CometBFTClient {
+	return &CometBFTClient{
 		Client: mock.Client{},
 		err:    err,
 		code:   code,

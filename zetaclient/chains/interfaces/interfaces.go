@@ -34,8 +34,8 @@ const (
 	Descending Order = "DESC"
 )
 
-// ChainClient is the interface for chain clients
-type ChainClient interface {
+// ChainObserver is the interface for chain observer
+type ChainObserver interface {
 	Start()
 	Stop()
 	IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
@@ -51,7 +51,7 @@ type ChainSigner interface {
 		cctx *crosschaintypes.CrossChainTx,
 		outTxProc *outtxprocessor.Processor,
 		outTxID string,
-		evmClient ChainClient,
+		observer ChainObserver,
 		coreClient ZetaCoreClient,
 		height uint64,
 	)

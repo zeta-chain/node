@@ -18,7 +18,7 @@ import (
 )
 
 // WatchOutTx watches Bitcoin chain for outgoing txs status
-func (ob *Client) WatchOutTx() {
+func (ob *Observer) WatchOutTx() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutTx", ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.OutTx.Error().Err(err).Msg("error creating ticker ")
@@ -93,7 +93,7 @@ func (ob *Client) WatchOutTx() {
 }
 
 // IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
-func (ob *Client) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	params := *cctx.GetCurrentOutTxParam()
 	sendHash := cctx.Index
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
@@ -170,14 +170,14 @@ func (ob *Client) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger
 }
 
 // GetTxID returns a unique id for outbound tx
-func (ob *Client) GetTxID(nonce uint64) string {
+func (ob *Observer) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.BTCAddress()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
 
 // checkIncludedTx checks if a txHash is included and returns (txResult, inMempool)
 // Note: if txResult is nil, then inMempool flag should be ignored.
-func (ob *Client) checkIncludedTx(cctx *crosschaintypes.CrossChainTx, txHash string) (*btcjson.GetTransactionResult, bool) {
+func (ob *Observer) checkIncludedTx(cctx *crosschaintypes.CrossChainTx, txHash string) (*btcjson.GetTransactionResult, bool) {
 	outTxID := ob.GetTxID(cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 	hash, getTxResult, err := GetTxResultByHash(ob.rpcClient, txHash)
 	if err != nil {
@@ -202,7 +202,7 @@ func (ob *Client) checkIncludedTx(cctx *crosschaintypes.CrossChainTx, txHash str
 }
 
 // setIncludedTx saves included tx result in memory
-func (ob *Client) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
+func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
 	txHash := getTxResult.TxID
 	outTxID := ob.GetTxID(nonce)
 
@@ -230,14 +230,14 @@ func (ob *Client) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactio
 }
 
 // getIncludedTx gets the receipt and transaction from memory
-func (ob *Client) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
+func (ob *Observer) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.includedTxResults[ob.GetTxID(nonce)]
 }
 
 // removeIncludedTx removes included tx from memory
-func (ob *Client) removeIncludedTx(nonce uint64) {
+func (ob *Observer) removeIncludedTx(nonce uint64) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	txResult, found := ob.includedTxResults[ob.GetTxID(nonce)]
@@ -252,7 +252,7 @@ func (ob *Client) removeIncludedTx(nonce uint64) {
 //   - check if all inputs are segwit && TSS inputs
 //
 // Returns: true if outTx passes basic checks.
-func (ob *Client) checkTssOutTxResult(cctx *crosschaintypes.CrossChainTx, hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
+func (ob *Observer) checkTssOutTxResult(cctx *crosschaintypes.CrossChainTx, hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
 	params := cctx.GetCurrentOutTxParam()
 	nonce := params.OutboundTxTssNonce
 	rawResult, err := GetRawTxResult(ob.rpcClient, hash, res)
@@ -282,7 +282,7 @@ func (ob *Client) checkTssOutTxResult(cctx *crosschaintypes.CrossChainTx, hash *
 // checkTSSVin checks vin is valid if:
 //   - The first input is the nonce-mark
 //   - All inputs are from TSS address
-func (ob *Client) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
+func (ob *Observer) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 	// vins: [nonce-mark, UTXO1, UTXO2, ...]
 	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
@@ -315,7 +315,7 @@ func (ob *Client) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)
-func (ob *Client) checkTSSVout(params *crosschaintypes.OutboundTxParams, vouts []btcjson.Vout) error {
+func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundTxParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
 	if !(len(vouts) == 2 || len(vouts) == 3) {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
@@ -362,7 +362,7 @@ func (ob *Client) checkTSSVout(params *crosschaintypes.OutboundTxParams, vouts [
 // checkTSSVoutCancelled vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the change to TSS (optional)
-func (ob *Client) checkTSSVoutCancelled(params *crosschaintypes.OutboundTxParams, vouts []btcjson.Vout) error {
+func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundTxParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, change to TSS (optional)]
 	if !(len(vouts) == 1 || len(vouts) == 2) {
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))

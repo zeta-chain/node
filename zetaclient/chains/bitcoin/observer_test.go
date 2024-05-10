@@ -31,11 +31,11 @@ import (
 // the relative path to the testdata directory
 var TestDataDir = "../../"
 
-func MockBTCClientMainnet() *Client {
+func MockBTCObserverMainnet() *Observer {
 	cfg := config.NewConfig()
 	coreContext := context.NewZetaCoreContext(cfg)
 
-	return &Client{
+	return &Observer{
 		chain:       chains.BtcMainnetChain,
 		coreClient:  mocks.NewMockZetaCoreClient(),
 		Tss:         mocks.NewTSSMainnet(),
@@ -59,7 +59,7 @@ func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHash string) *mocks
 	return rpcClient
 }
 
-func TestNewBitcoinClient(t *testing.T) {
+func TestNewBitcoinObserver(t *testing.T) {
 	t.Run("should return error because zetacore doesn't update core context", func(t *testing.T) {
 		cfg := config.NewConfig()
 		coreContext := context.NewZetaCoreContext(cfg)
@@ -71,27 +71,27 @@ func TestNewBitcoinClient(t *testing.T) {
 		btcCfg := cfg.BitcoinConfig
 		ts := metrics.NewTelemetryServer()
 
-		client, err := NewClient(appContext, chain, coreClient, tss, tempSQLiteDbPath, loggers, btcCfg, ts)
+		client, err := NewObserver(appContext, chain, coreClient, tss, tempSQLiteDbPath, loggers, btcCfg, ts)
 		require.ErrorContains(t, err, "btc chains params not initialized")
 		require.Nil(t, client)
 	})
 }
 
 func TestConfirmationThreshold(t *testing.T) {
-	client := &Client{Mu: &sync.Mutex{}}
+	ob := &Observer{Mu: &sync.Mutex{}}
 	t.Run("should return confirmations in chain param", func(t *testing.T) {
-		client.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(t, int64(3), client.ConfirmationsThreshold(big.NewInt(1000)))
+		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
+		require.Equal(t, int64(3), ob.ConfirmationsThreshold(big.NewInt(1000)))
 	})
 
 	t.Run("should return big value confirmations", func(t *testing.T) {
-		client.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(t, int64(bigValueConfirmationCount), client.ConfirmationsThreshold(big.NewInt(bigValueSats)))
+		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
+		require.Equal(t, int64(bigValueConfirmationCount), ob.ConfirmationsThreshold(big.NewInt(bigValueSats)))
 	})
 
 	t.Run("big value confirmations is the upper cap", func(t *testing.T) {
-		client.SetChainParams(observertypes.ChainParams{ConfirmationCount: bigValueConfirmationCount + 1})
-		require.Equal(t, int64(bigValueConfirmationCount), client.ConfirmationsThreshold(big.NewInt(1000)))
+		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: bigValueConfirmationCount + 1})
+		require.Equal(t, int64(bigValueConfirmationCount), ob.ConfirmationsThreshold(big.NewInt(1000)))
 	})
 }
 
@@ -233,7 +233,7 @@ func TestCheckTSSVout(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	btcClient := MockBTCClientMainnet()
+	btcClient := MockBTCObserverMainnet()
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
@@ -315,7 +315,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	btcClient := MockBTCClientMainnet()
+	btcClient := MockBTCObserverMainnet()
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx

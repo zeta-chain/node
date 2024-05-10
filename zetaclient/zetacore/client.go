@@ -195,7 +195,7 @@ func (c *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, ini
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
 		c.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
 			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		c.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObserver itself
+		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 
 	chainParams, err := c.GetChainParams()

@@ -99,16 +99,17 @@ func CreateSignerMap(
 	return signerMap, nil
 }
 
-func CreateChainClientMap(
+// CreateChainObserverMap creates a map of ChainObservers for all chains in the config
+func CreateChainObserverMap(
 	appContext *appcontext.AppContext,
 	coreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
-) (map[int64]interfaces.ChainClient, error) {
-	clientMap := make(map[int64]interfaces.ChainClient)
-	// EVM clients
+) (map[int64]interfaces.ChainObserver, error) {
+	observerMap := make(map[int64]interfaces.ChainObserver)
+	// EVM observers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
@@ -118,24 +119,24 @@ func CreateChainClientMap(
 			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		co, err := evm.NewClient(appContext, coreClient, tss, dbpath, loggers, evmConfig, ts)
+		co, err := evm.NewObserver(appContext, coreClient, tss, dbpath, loggers, evmConfig, ts)
 		if err != nil {
-			loggers.Std.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
+			loggers.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
 			continue
 		}
-		clientMap[evmConfig.Chain.ChainId] = co
+		observerMap[evmConfig.Chain.ChainId] = co
 	}
-	// BTC client
+	// BTC observer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		co, err := bitcoin.NewClient(appContext, btcChain, coreClient, tss, dbpath, loggers, btcConfig, ts)
+		co, err := bitcoin.NewObserver(appContext, btcChain, coreClient, tss, dbpath, loggers, btcConfig, ts)
 		if err != nil {
-			loggers.Std.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
+			loggers.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
 
 		} else {
-			clientMap[btcChain.ChainId] = co
+			observerMap[btcChain.ChainId] = co
 		}
 	}
 
-	return clientMap, nil
+	return observerMap, nil
 }
