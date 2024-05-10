@@ -86,6 +86,7 @@ install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd-supervisor
 
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
