@@ -254,14 +254,14 @@ func promptPasswords() (string, string, error) {
 		return "", "", err
 	}
 	fmt.Print("TSS Password: ")
-	TSSKeyPass, err := reader.ReadString('\n')
+	tssKeyPass, err := reader.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
 
 	//trim delimiters
 	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
-	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
+	tssKeyPass = strings.TrimSuffix(tssKeyPass, "\n")
 
-	return hotKeyPass, TSSKeyPass, err
+	return hotKeyPass, tssKeyPass, err
 }
