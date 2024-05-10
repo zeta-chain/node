@@ -135,6 +135,12 @@ jobs:
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
 
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          cd contrib/localnet
+          docker compose logs
+
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: 8398a7/action-slack@v3
