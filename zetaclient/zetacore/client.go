@@ -23,7 +23,7 @@ import (
 
 var _ interfaces.ZetacoreClient = &Client{}
 
-// Client is the client to send tx to ZetaCore
+// Client is the client to send tx to zetacore
 type Client struct {
 	logger        zerolog.Logger
 	blockHeight   int64
@@ -168,13 +168,13 @@ func (c *Client) WaitForCoreToCreateBlocks() {
 	for {
 		block, err := c.GetLatestZetaBlock()
 		if err == nil && block.Header.Height > 1 {
-			c.logger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
+			c.logger.Info().Msgf("Zetacore height: %d", block.Header.Height)
 			break
 		}
 		retryCount++
 		c.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
 		if retryCount > ExtendedRetryCount {
-			panic(fmt.Sprintf("ZetaCore is not ready , Waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
+			panic(fmt.Sprintf("Zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}

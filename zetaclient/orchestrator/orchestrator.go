@@ -238,7 +238,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 				if bn > lastBlockNum { // we have a new block
 					bn = lastBlockNum + 1
 					if bn%10 == 0 {
-						oc.logger.Std.Debug().Msgf("StartCctxScheduler: ZetaCore heart beat: %d", bn)
+						oc.logger.Std.Debug().Msgf("StartCctxScheduler: zetacore heart beat: %d", bn)
 					}
 
 					balance, err := oc.zetacoreClient.GetZetaHotKeyBalance()

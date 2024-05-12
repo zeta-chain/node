@@ -80,7 +80,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Wait until zetacore is up
 	waitForZetaCore(cfg, startLogger)
-	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
+	startLogger.Info().Msgf("Zetacore is ready, trying to connect to %s", cfg.Peer)
 
 	telemetryServer := metrics.NewTelemetryServer()
 	go func() {
@@ -128,7 +128,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
-	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
+	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
 	go zetacoreClient.CoreContextUpdater(appContext)
 

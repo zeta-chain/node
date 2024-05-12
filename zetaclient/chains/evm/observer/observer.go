@@ -191,7 +191,7 @@ func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 	ob.evmJSONRPC = client
 }
 
-// WithZetacoreClient attaches a new client to interact with ZetaCore to the observer
+// WithZetacoreClient attaches a new client to interact with zetacore to the observer
 func (ob *Observer) WithZetacoreClient(client interfaces.ZetacoreClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()

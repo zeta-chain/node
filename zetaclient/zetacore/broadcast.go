@@ -34,7 +34,7 @@ var (
 	// gas price increase due to EIP1559 feemarket on ZetaChain
 	bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
 
-	// Variable function used by transactions to broadcast a message to ZetaCore. This will create enough flexibility
+	// Variable function used by transactions to broadcast a message to zetacore. This will create enough flexibility
 	// in the implementation to allow for more comprehensive unit testing.
 	zetacoreBroadcast BroadcastInterface = BroadcastToZetaCore
 )
