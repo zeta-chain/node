@@ -102,7 +102,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	//stop := r.MineBlocks()
+	stop := r.MineBlocks()
 
 	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInTxHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -194,7 +194,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		txid, err := r.SendToTSSFromDeployerWithMemo(
 			r.BTCTSSAddress,
 			amount,
-			utxos[0:2],
+			utxos, //[0:2],
 			r.BtcRPCClient,
 			memo,
 			r.BTCDeployerAddress,
@@ -235,5 +235,5 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// stop mining
-	//stop <- struct{}{}
+	stop <- struct{}{}
 }
