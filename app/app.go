@@ -603,9 +603,13 @@ func New(
 		appCodec,
 		keys[ibccrosschaintypes.StoreKey],
 		keys[ibccrosschaintypes.MemStoreKey],
+		&app.CrosschainKeeper,
+		app.TransferKeeper,
 	)
 
 	ibcRouter.AddRoute(ibccrosschaintypes.ModuleName, ibccrosschain.NewIBCModule(app.IBCCrosschainKeeper))
+
+	app.CrosschainKeeper.SetIBCCrosschainKeeper(app.IBCCrosschainKeeper)
 
 	app.GroupKeeper = groupkeeper.NewKeeper(
 		keys[group.StoreKey],
