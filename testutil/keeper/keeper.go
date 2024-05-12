@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	"math/rand"
 	"testing"
 	"time"
@@ -17,6 +20,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitymodule "github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -30,6 +35,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ethermint "github.com/evmos/ethermint/types"
 	evmmodule "github.com/evmos/ethermint/x/evm"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
@@ -51,7 +60,12 @@ import (
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	ibccrosschainmodule "github.com/zeta-chain/zetacore/x/ibccrosschain"
+	ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
+	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
 	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observermodule "github.com/zeta-chain/zetacore/x/observer"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -85,23 +99,31 @@ func NewContext(stateStore sdk.CommitMultiStore) sdk.Context {
 
 // SDKKeepers is a struct containing regular SDK module keepers for test purposes
 type SDKKeepers struct {
-	ParamsKeeper    paramskeeper.Keeper
-	AuthKeeper      authkeeper.AccountKeeper
-	BankKeeper      bankkeeper.Keeper
-	StakingKeeper   stakingkeeper.Keeper
-	SlashingKeeper  slashingkeeper.Keeper
-	FeeMarketKeeper feemarketkeeper.Keeper
-	EvmKeeper       *evmkeeper.Keeper
+	ParamsKeeper         paramskeeper.Keeper
+	AuthKeeper           authkeeper.AccountKeeper
+	BankKeeper           bankkeeper.Keeper
+	StakingKeeper        stakingkeeper.Keeper
+	SlashingKeeper       slashingkeeper.Keeper
+	FeeMarketKeeper      feemarketkeeper.Keeper
+	EvmKeeper            *evmkeeper.Keeper
+	CapabilityKeeper     *capabilitykeeper.Keeper
+	IBCKeeper            *ibckeeper.Keeper
+	TransferKeeper       ibctransferkeeper.Keeper
+	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+
+	IBCRouter *porttypes.Router
 }
 
 // ZetaKeepers is a struct containing Zeta module keepers for test purposes
 type ZetaKeepers struct {
-	AuthorityKeeper   *authoritykeeper.Keeper
-	CrosschainKeeper  *crosschainkeeper.Keeper
-	EmissionsKeeper   *emissionskeeper.Keeper
-	FungibleKeeper    *fungiblekeeper.Keeper
-	ObserverKeeper    *observerkeeper.Keeper
-	LightclientKeeper *lightclientkeeper.Keeper
+	AuthorityKeeper     *authoritykeeper.Keeper
+	CrosschainKeeper    *crosschainkeeper.Keeper
+	EmissionsKeeper     *emissionskeeper.Keeper
+	FungibleKeeper      *fungiblekeeper.Keeper
+	ObserverKeeper      *observerkeeper.Keeper
+	LightclientKeeper   *lightclientkeeper.Keeper
+	IBCCrosschainKeeper *ibccrosschainkeeper.Keeper
 }
 
 var moduleAccountPerms = map[string][]string{
@@ -115,6 +137,8 @@ var moduleAccountPerms = map[string][]string{
 	emissionstypes.ModuleName:                       {authtypes.Minter},
 	emissionstypes.UndistributedObserverRewardsPool: nil,
 	emissionstypes.UndistributedTssRewardsPool:      nil,
+	ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	ibccrosschaintypes.ModuleName:                   nil,
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -336,12 +360,92 @@ func EVMKeeper(
 	return k
 }
 
+// CapabilityKeeper instantiates a capability keeper for testing purposes
+func CapabilityKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+) *capabilitykeeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(capabilitytypes.StoreKey)
+	memKey := storetypes.NewMemoryStoreKey(capabilitytypes.MemStoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+
+	return capabilitykeeper.NewKeeper(cdc, storeKey, memKey)
+}
+
+// IBCKeeper instantiates an ibc keeper for testing purposes
+func IBCKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	paramKeeper paramskeeper.Keeper,
+	stakingKeeper stakingkeeper.Keeper,
+	uppgradeKeeper upgradekeeper.Keeper,
+	capabilityKeeper capabilitykeeper.Keeper,
+) *ibckeeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(ibccrosschaintypes.StoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+
+	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+
+	return ibckeeper.NewKeeper(
+		cdc,
+		storeKey,
+		paramKeeper.Subspace(ibcexported.ModuleName),
+		stakingKeeper,
+		uppgradeKeeper,
+		scopedIBCKeeper,
+	)
+}
+
+// TransferKeeper instantiates an ibc transfer keeper for testing purposes
+func TransferKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	paramKeeper paramskeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
+	authKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	capabilityKeeper capabilitykeeper.Keeper,
+	ibcRouter *porttypes.Router,
+) ibctransferkeeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(ibctransfertypes.StoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+
+	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+
+	transferKeeper := ibctransferkeeper.NewKeeper(
+		cdc,
+		storeKey,
+		paramKeeper.Subspace(ibctransfertypes.ModuleName),
+		ibcKeeper.ChannelKeeper,
+		ibcKeeper.ChannelKeeper,
+		&ibcKeeper.PortKeeper,
+		authKeeper,
+		bankKeeper,
+		scopedTransferKeeper,
+	)
+
+	// create IBC module from bottom to top of stack
+	var transferStack porttypes.IBCModule
+	transferStack = transfer.NewIBCModule(transferKeeper)
+
+	// Add transfer stack to IBC Router
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
+
+	return transferKeeper
+}
+
 // NewSDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
 func NewSDKKeepers(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) SDKKeepers {
+	ibcRouter := porttypes.NewRouter()
+
+	capabilityKeeper := CapabilityKeeper(cdc, db, ss)
 	paramsKeeper := ParamsKeeper(cdc, db, ss)
 	authKeeper := AccountKeeper(cdc, db, ss)
 	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
@@ -350,22 +454,33 @@ func NewSDKKeepers(
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper, consensusKeeper)
 	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper, consensusKeeper)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
+
+	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, stakingKeeper, UpgradeKeeper(cdc, db, ss), *capabilityKeeper)
+	transferKeeper := TransferKeeper(cdc, db, ss, paramsKeeper, ibcKeeper, authKeeper, bankKeeper, *capabilityKeeper, ibcRouter)
+
 	return SDKKeepers{
-		ParamsKeeper:    paramsKeeper,
-		AuthKeeper:      authKeeper,
-		BankKeeper:      bankKeeper,
-		StakingKeeper:   stakingKeeper,
-		FeeMarketKeeper: feeMarketKeeper,
-		EvmKeeper:       evmKeeper,
-		SlashingKeeper:  slashingKeeper,
+		CapabilityKeeper: capabilityKeeper,
+		ParamsKeeper:     paramsKeeper,
+		AuthKeeper:       authKeeper,
+		BankKeeper:       bankKeeper,
+		StakingKeeper:    stakingKeeper,
+		FeeMarketKeeper:  feeMarketKeeper,
+		EvmKeeper:        evmKeeper,
+		SlashingKeeper:   slashingKeeper,
+		IBCKeeper:        ibcKeeper,
+		TransferKeeper:   transferKeeper,
+		IBCRouter:        ibcRouter,
 	}
 }
 
 // InitGenesis initializes the test modules genesis state
 func (sdkk SDKKeepers) InitGenesis(ctx sdk.Context) {
+	capabilitymodule.InitGenesis(ctx, *sdkk.CapabilityKeeper, *capabilitytypes.DefaultGenesis())
+
 	sdkk.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
 	sdkk.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
 	sdkk.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
+
 	evmGenesis := *evmtypes.DefaultGenesisState()
 	evmGenesis.Params.EvmDenom = "azeta"
 	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, evmGenesis)
@@ -404,5 +519,11 @@ func (zk ZetaKeepers) InitGenesis(ctx sdk.Context) {
 	}
 	if zk.ObserverKeeper != nil {
 		observermodule.InitGenesis(ctx, *zk.ObserverKeeper, *observertypes.DefaultGenesis())
+	}
+	if zk.LightclientKeeper != nil {
+		lightclientmodule.InitGenesis(ctx, *zk.LightclientKeeper, *lightclienttypes.DefaultGenesis())
+	}
+	if zk.IBCCrosschainKeeper != nil {
+		ibccrosschainmodule.InitGenesis(ctx, *zk.IBCCrosschainKeeper, *ibccrosschaintypes.DefaultGenesis())
 	}
 }
