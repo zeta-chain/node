@@ -111,7 +111,6 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		errorFailedZETARevertAndCallContract := errors.New("test", 999, "failed ZETARevertAndCallContract")
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain(), "", big.NewInt(42))
 		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
 		fungibleMock.On("ZETARevertAndCallContract", mock.Anything,
 			ethcommon.HexToAddress(cctx.InboundTxParams.Sender),
