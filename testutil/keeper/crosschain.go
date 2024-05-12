@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +45,37 @@ var (
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
+
+func initCrosschainKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	stakingKeeper types.StakingKeeper,
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	observerKeeper types.ObserverKeeper,
+	fungibleKeeper types.FungibleKeeper,
+	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
+) *keeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+
+	return keeper.NewKeeper(
+		cdc,
+		storeKey,
+		memKey,
+		stakingKeeper,
+		authKeeper,
+		bankKeeper,
+		observerKeeper,
+		fungibleKeeper,
+		authorityKeeper,
+		lightclientKeeper,
+	)
+}
 
 // CrosschainKeeperWithMocks initializes a crosschain keeper for testing purposes with option to mock specific keepers
 func CrosschainKeeperWithMocks(
@@ -94,7 +126,7 @@ func CrosschainKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
 
-	// Create the fungible keeper
+	// Create the crosschain keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
