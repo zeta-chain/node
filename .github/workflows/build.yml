@@ -82,6 +82,20 @@ jobs:
           chmod a+x ./zetacored
           ./zetacored version
 
+      - name: Upload zetacored
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetacored
+          path: ~/go/bin/zetacored
+          retention-days: 30
+      
+      - name: Upload zetaclientd
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetaclientd
+          path: ~/go/bin/zetaclientd
+          retention-days: 30
+      
       - name: Clean Up Workspace
         if: always()
         shell: bash
