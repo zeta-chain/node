@@ -1,6 +1,9 @@
 #!/bin/bash
 
-upgrade_height=$1
+UPGRADE_HEIGHT=$1
+
+CHAINID="athens_101-1"
+UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
 # Wait for authorized_keys file to exist (populated by zetacore0)
 while [ ! -f ~/.ssh/authorized_keys ]; do
@@ -29,12 +32,12 @@ sed -i 's|tcp://localhost:26657|tcp://zetacore0:26657|g' ~/.zetacored/config/cli
 # get new zetacored version
 curl -o /tmp/zetacored.new http://upgradehost:8000/zetacored
 chmod +x /tmp/zetacored.new
-upgrade_name=$(/tmp/zetacored.new version)
+UPGRADE_NAME=$(/tmp/zetacored.new version)
 
 # if explicit upgrade height not provided, use dumb estimator
-if [[ -z $upgrade_height ]]; then
-    upgrade_height=$(( $(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"') + 60))
-    echo "Upgrade height was not provided. Estimating ${upgrade_height}."
+if [[ -z $UPGRADE_HEIGHT ]]; then
+    UPGRADE_HEIGHT=$(( $(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"') + 60))
+    echo "Upgrade height was not provided. Estimating ${UPGRADE_HEIGHT}."
 fi
 
 cat > upgrade.json <<EOF
@@ -43,19 +46,19 @@ cat > upgrade.json <<EOF
     {
       "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
       "plan": {
-        "height": "${upgrade_height}",
+        "height": "${UPGRADE_HEIGHT}",
         "info": "",
-        "name": "${upgrade_name}",
+        "name": "${UPGRADE_HEIGHT}",
         "time": "0001-01-01T00:00:00Z",
         "upgraded_client_state": null
       },
-      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
+      "authority": "${UPGRADE_AUTHORITY_ACCOUNT}"
     }
   ],
   "metadata": "",
   "deposit": "100000000azeta",
-  "title": "${upgrade_name}",
-  "summary": "${upgrade_name}"
+  "title": "${UPGRADE_NAME}",
+  "summary": "${UPGRADE_NAME}"
 }
 EOF
 
@@ -82,19 +85,19 @@ cat upgrade.json | jq --arg info "$(cat upgrade_plan_info.json)" '.messages[0].p
 
 echo "Submitting upgrade proposal"
 
-zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id athens_101-1 --yes --fees 2000000000000000azeta -o json | tee proposal.json
-proposal_tx_hash=$(jq -r .txhash proposal.json)
-proposal_id=""
-# WARN: this seems to be totally unstable
+zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta -o json | tee proposal.json
+PROPOSAL_TX_HASH=$(jq -r .txhash proposal.json)
+PROPOSAL_ID=""
+# WARN: this seems to be unstable
 while [[ -z $proposal_id ]]; do
     echo "waiting to get proposal_id"
     sleep 1
     # v0.47 version
-    # proposal_id=$(zetacored query tx $proposal_tx_hash -o json | jq -r '.events[] | select(.type == "submit_proposal") | .attributes[] | select(.key == "proposal_id") | .value')
+    # proposal_id=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.events[] | select(.type == "submit_proposal") | .attributes[] | select(.key == "proposal_id") | .value')
     
     # v0.46 version
-    proposal_id=$(zetacored query tx $proposal_tx_hash -o json | jq -r '.logs[0].events[] | select(.type == "proposal_deposit") | .attributes[] | select(.key == "proposal_id") | .value')
+    PROPOSAL_ID=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.logs[0].events[] | select(.type == "proposal_deposit") | .attributes[] | select(.key == "proposal_id") | .value')
 done
-echo "proposal id is ${proposal_id}"
+echo "proposal id is ${PROPOSAL_ID}"
 
-zetacored tx gov vote "${proposal_id}" yes --from operator --keyring-backend test --chain-id athens_101-1 --yes --fees=2000000000000000azeta
+zetacored tx gov vote "${PROPOSAL_ID}" yes --from operator --keyring-backend test --chain-id $CHAINID--yes --fees=2000000000000000azeta
