@@ -29,11 +29,19 @@ message EventNewObserverAdded {
   uint64 observer_last_block_count = 5;
 }
 
-message EventCrosschainFlagsUpdated {
+message EventCCTXFlagsDisabled {
   string msg_type_url = 1;
   bool isInboundEnabled = 2;
   bool isOutboundEnabled = 3;
-  GasPriceIncreaseFlags gasPriceIncreaseFlags = 4;
-  string signer = 5;
-  BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
+}
+
+message EventCCTXFlagsEnabled {
+  string msg_type_url = 1;
+  bool isInboundEnabled = 2;
+  bool isOutboundEnabled = 3;
+}
+
+message EventGasPriceIncreaseFlagsUpdated {
+  string msg_type_url = 1;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 2;
 }

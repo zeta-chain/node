@@ -8,21 +8,6 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 
 /**
- * @generated from enum zetachain.zetacore.fungible.UpdatePausedStatusAction
- */
-export declare enum UpdatePausedStatusAction {
-  /**
-   * @generated from enum value: PAUSE = 0;
-   */
-  PAUSE = 0,
-
-  /**
-   * @generated from enum value: UNPAUSE = 1;
-   */
-  UNPAUSE = 1,
-}
-
-/**
  * @generated from message zetachain.zetacore.fungible.MsgDeploySystemContracts
  */
 export declare class MsgDeploySystemContracts extends Message<MsgDeploySystemContracts> {

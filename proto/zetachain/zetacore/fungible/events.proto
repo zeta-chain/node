@@ -38,11 +38,16 @@ message EventZRC20WithdrawFeeUpdated {
   string new_gas_limit = 9;
 }
 
-message EventZRC20PausedStatusUpdated {
+message EventZRC20Paused {
   string msg_type_url = 1;
   repeated string zrc20_addresses = 2;
-  UpdatePausedStatusAction action = 3;
-  string signer = 4;
+  string signer = 3;
+}
+
+message EventZRC20UnPaused {
+  string msg_type_url = 1;
+  repeated string zrc20_addresses = 2;
+  string signer = 3;
 }
 
 message EventSystemContractsDeployed {

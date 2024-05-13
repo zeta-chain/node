@@ -38,7 +38,7 @@ export declare enum PolicyType {
   /**
    * protocol parameters or moving funds
    *
-   * Used for empty policies
+   * Used for empty policies, to represent a situation when
    *
    * @generated from enum value: emptyPolicyType = 3;
    */

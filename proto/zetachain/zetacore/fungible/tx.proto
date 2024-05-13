@@ -86,11 +86,6 @@ message MsgUpdateContractBytecode {
 
 message MsgUpdateContractBytecodeResponse {}
 
-enum UpdatePausedStatusAction {
-  PAUSE = 0;
-  UNPAUSE = 1;
-}
-
 message MsgPauseZRC20 {
   string creator = 1;
   repeated string zrc20_addresses = 2;

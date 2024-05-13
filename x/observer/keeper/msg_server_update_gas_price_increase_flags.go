@@ -35,13 +35,9 @@ func (k msgServer) UpdateGasPriceIncreaseFlags(goCtx context.Context, msg *types
 	flags.GasPriceIncreaseFlags = &msg.GasPriceIncreaseFlags
 	k.SetCrosschainFlags(ctx, flags)
 
-	err = ctx.EventManager().EmitTypedEvents(&types.EventCrosschainFlagsUpdated{
-		MsgTypeUrl:                   sdk.MsgTypeURL(&types.MsgUpdateGasPriceIncreaseFlags{}),
-		IsInboundEnabled:             flags.IsInboundEnabled,
-		IsOutboundEnabled:            flags.IsOutboundEnabled,
-		GasPriceIncreaseFlags:        flags.GasPriceIncreaseFlags,
-		BlockHeaderVerificationFlags: flags.BlockHeaderVerificationFlags,
-		Signer:                       msg.Creator,
+	err = ctx.EventManager().EmitTypedEvents(&types.EventGasPriceIncreaseFlagsUpdated{
+		MsgTypeUrl:            sdk.MsgTypeURL(&types.MsgUpdateGasPriceIncreaseFlags{}),
+		GasPriceIncreaseFlags: flags.GasPriceIncreaseFlags,
 	})
 
 	if err != nil {

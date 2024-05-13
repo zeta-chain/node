@@ -56367,7 +56367,7 @@ definitions:
       Used for administrative tasks like changing sensitive
        - emptyPolicyType: protocol parameters or moving funds
 
-      Used for empty policies
+      Used for empty policies, to represent a situation when
     title: PolicyType defines the type of policy
   authorityQueryGetPoliciesResponse:
     type: object

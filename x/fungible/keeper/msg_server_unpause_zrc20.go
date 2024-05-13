@@ -40,16 +40,15 @@ func (k msgServer) UnpauseZRC20(
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(
-		&types.EventZRC20PausedStatusUpdated{
+		&types.EventZRC20UnPaused{
 			MsgTypeUrl:     sdk.MsgTypeURL(&types.MsgUnpauseZRC20{}),
-			Action:         types.UpdatePausedStatusAction_UNPAUSE,
 			Zrc20Addresses: msg.Zrc20Addresses,
 			Signer:         msg.Creator,
 		},
 	)
 	if err != nil {
 		k.Logger(ctx).Error("failed to emit event",
-			"event", "EventZRC20PausedStatusUpdated",
+			"event", "EventZRC20UnPaused",
 			"error", err.Error(),
 		)
 		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())

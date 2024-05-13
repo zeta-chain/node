@@ -36,13 +36,10 @@ func (k msgServer) EnableCCTXFlags(goCtx context.Context, msg *types.MsgEnableCC
 
 	k.SetCrosschainFlags(ctx, flags)
 
-	err = ctx.EventManager().EmitTypedEvents(&types.EventCrosschainFlagsUpdated{
-		MsgTypeUrl:                   sdk.MsgTypeURL(&types.MsgEnableCCTXFlags{}),
-		IsInboundEnabled:             flags.IsInboundEnabled,
-		IsOutboundEnabled:            flags.IsOutboundEnabled,
-		GasPriceIncreaseFlags:        flags.GasPriceIncreaseFlags,
-		BlockHeaderVerificationFlags: flags.BlockHeaderVerificationFlags,
-		Signer:                       msg.Creator,
+	err = ctx.EventManager().EmitTypedEvents(&types.EventCCTXFlagsEnabled{
+		MsgTypeUrl:        sdk.MsgTypeURL(&types.MsgEnableCCTXFlags{}),
+		IsInboundEnabled:  flags.IsInboundEnabled,
+		IsOutboundEnabled: flags.IsOutboundEnabled,
 	})
 
 	if err != nil {
