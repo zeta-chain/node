@@ -79,7 +79,11 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 	case types.ObserverUpdateReason_AdminUpdate:
 		{
 			// Admin policy is required to update an observer for admin update
-			return k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+			err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
 		}
 	}
 	return false, nil

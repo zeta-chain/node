@@ -26,8 +26,8 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
-	if !ok || err != nil {
+	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if err != nil {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 

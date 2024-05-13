@@ -23,8 +23,8 @@ func (k msgServer) PauseZRC20(
 		return nil, err
 	}
 
-	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
-	if !ok || err != nil {
+	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 

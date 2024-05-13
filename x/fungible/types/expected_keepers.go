@@ -53,5 +53,5 @@ type EVMKeeper interface {
 }
 
 type AuthorityKeeper interface {
-	IsAuthorized(ctx sdk.Context, msg sdk.Msg) (bool, error)
+	IsAuthorized(ctx sdk.Context, msg sdk.Msg) error
 }

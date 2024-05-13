@@ -29,25 +29,25 @@ func (k Keeper) GetPolicies(ctx sdk.Context) (val types.Policies, found bool) {
 }
 
 // IsAuthorized checks if the address is authorized for the given policy type
-func (k Keeper) IsAuthorized(ctx sdk.Context, msg sdk.Msg) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, msg sdk.Msg) error {
 	// Policy transactions must have only one signer
 	if len(msg.GetSigners()) != 1 {
-		return false, errors.Wrap(types.ErrSigners, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
+		return errors.Wrap(types.ErrSigners, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
 	}
 	signer := msg.GetSigners()[0].String()
 	policyRequired, ok := authorizations.AuthorizationTable()[sdk.MsgTypeURL(msg)]
 	if !ok {
-		return false, errors.Wrap(types.ErrMsgNotAuthorized, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
+		return errors.Wrap(types.ErrMsgNotAuthorized, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
 	}
 	policies, found := k.GetPolicies(ctx)
 	if !found {
-		return false, errors.Wrap(types.ErrPoliciesNotFound, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
+		return errors.Wrap(types.ErrPoliciesNotFound, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
 	}
 	for _, policy := range policies.Items {
 		if policy.Address == signer && policy.PolicyType == policyRequired {
-			return true, nil
+			return nil
 		}
 	}
-	return false, errors.Wrap(types.ErrSignerDoesntMatch, fmt.Sprintf("signer: %s, policy required for message: %s , msg %s",
+	return errors.Wrap(types.ErrSignerDoesntMatch, fmt.Sprintf("signer: %s, policy required for message: %s , msg %s",
 		signer, policyRequired.String(), sdk.MsgTypeURL(msg)))
 }

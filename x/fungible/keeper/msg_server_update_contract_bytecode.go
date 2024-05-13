@@ -22,8 +22,8 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization
-	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
-	if !ok || err != nil {
+	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if err != nil {
 		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 

@@ -13,8 +13,8 @@ func (k msgServer) DisableCCTXFlags(goCtx context.Context, msg *types.MsgDisable
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	ok, err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
-	if !ok || err != nil {
+	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
