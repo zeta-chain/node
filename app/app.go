@@ -596,8 +596,11 @@ func New(
 		app.LightclientKeeper,
 	)
 
-	scopedMonitoringcKeeper := app.CapabilityKeeper.ScopeToModule(ibccrosschaintypes.ModuleName)
-	app.ScopedIBCCrosschainKeeper = scopedMonitoringcKeeper
+	// initialize ibccrosschain keeper and set it to the crosschain keeper
+	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
+
+	scopedIBCCrosschainKeeper := app.CapabilityKeeper.ScopeToModule(ibccrosschaintypes.ModuleName)
+	app.ScopedIBCCrosschainKeeper = scopedIBCCrosschainKeeper
 
 	app.IBCCrosschainKeeper = *ibccrosschainkeeper.NewKeeper(
 		appCodec,
