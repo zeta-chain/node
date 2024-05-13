@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/stretchr/testify/require"
 	ibccrosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/ibccrosschain"
 	"github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
@@ -33,11 +34,14 @@ func initIBCCrosschainKeeper(
 	ss store.CommitMultiStore,
 	crosschainKeeper types.CrosschainKeeper,
 	ibcTransferKeeper types.IBCTransferKeeper,
+	capabilityKeeper capabilitykeeper.Keeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+
+	capabilityKeeper.ScopeToModule(types.ModuleName)
 
 	return keeper.NewKeeper(
 		cdc,
@@ -131,6 +135,8 @@ func IBCCrosschainKeeperWithMocks(
 		ibcTransferKeeper = ibccrosschainmocks.NewLightclientTransferKeeper(t)
 	}
 
+	sdkKeepers.CapabilityKeeper.ScopeToModule(types.ModuleName)
+
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
@@ -138,6 +144,9 @@ func IBCCrosschainKeeperWithMocks(
 		crosschainKeeper,
 		ibcTransferKeeper,
 	)
+
+	// seal the IBC router
+	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }

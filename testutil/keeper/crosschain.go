@@ -24,24 +24,26 @@ import (
 )
 
 type CrosschainMockOptions struct {
-	UseBankMock        bool
-	UseAccountMock     bool
-	UseStakingMock     bool
-	UseObserverMock    bool
-	UseFungibleMock    bool
-	UseAuthorityMock   bool
-	UseLightclientMock bool
+	UseBankMock          bool
+	UseAccountMock       bool
+	UseStakingMock       bool
+	UseObserverMock      bool
+	UseFungibleMock      bool
+	UseAuthorityMock     bool
+	UseLightclientMock   bool
+	useIBCCrosschainMock bool
 }
 
 var (
 	CrosschainMocksAll = CrosschainMockOptions{
-		UseBankMock:        true,
-		UseAccountMock:     true,
-		UseStakingMock:     true,
-		UseObserverMock:    true,
-		UseFungibleMock:    true,
-		UseAuthorityMock:   true,
-		UseLightclientMock: true,
+		UseBankMock:          true,
+		UseAccountMock:       true,
+		UseStakingMock:       true,
+		UseObserverMock:      true,
+		UseFungibleMock:      true,
+		UseAuthorityMock:     true,
+		UseLightclientMock:   true,
+		useIBCCrosschainMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
@@ -167,6 +169,7 @@ func CrosschainKeeperWithMocks(
 		lightclientKeeper = crosschainmocks.NewCrosschainLightclientKeeper(t)
 	}
 
+	// create crosschain keeper
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
@@ -179,6 +182,25 @@ func CrosschainKeeperWithMocks(
 		authorityKeeper,
 		lightclientKeeper,
 	)
+
+	// initialize ibccrosschain keeper and set it to the crosschain keeper
+	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
+
+	var ibcCrosschainKeeperTmp types.IBCCrosschainKeeper = initIBCCrosschainKeeper(
+		cdc,
+		db,
+		stateStore,
+		k,
+		sdkKeepers.TransferKeeper,
+		*sdkKeepers.CapabilityKeeper,
+	)
+	if mockOptions.useIBCCrosschainMock {
+		ibcCrosschainKeeperTmp = crosschainmocks.NewCrosschainIBCCrosschainKeeper(t)
+	}
+	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
+
+	// seal the IBC router
+	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }
