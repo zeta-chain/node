@@ -34,6 +34,15 @@ export declare enum PolicyType {
    * @generated from enum value: groupAdmin = 2;
    */
   groupAdmin = 2,
+
+  /**
+   * protocol parameters or moving funds
+   *
+   * Used for empty policies
+   *
+   * @generated from enum value: emptyPolicyType = 3;
+   */
+  emptyPolicyType = 3,
 }
 
 /**

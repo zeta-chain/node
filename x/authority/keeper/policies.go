@@ -35,8 +35,8 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, msg sdk.Msg) error {
 		return errors.Wrap(types.ErrSigners, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
 	}
 	signer := msg.GetSigners()[0].String()
-	policyRequired, ok := authorizations.AuthorizationTable()[sdk.MsgTypeURL(msg)]
-	if !ok {
+	policyRequired := authorizations.GetRequiredPolicy(sdk.MsgTypeURL(msg))
+	if policyRequired == types.PolicyType_emptyPolicyType {
 		return errors.Wrap(types.ErrMsgNotAuthorized, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
 	}
 	policies, found := k.GetPolicies(ctx)

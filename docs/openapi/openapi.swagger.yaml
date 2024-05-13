@@ -56357,6 +56357,7 @@ definitions:
       - groupEmergency
       - groupOperational
       - groupAdmin
+      - emptyPolicyType
     default: groupEmergency
     description: |-
       - groupEmergency: Used for emergency situations that require immediate action
@@ -56364,6 +56365,9 @@ definitions:
        - groupAdmin: non-sensitive protocol parameters
 
       Used for administrative tasks like changing sensitive
+       - emptyPolicyType: protocol parameters or moving funds
+
+      Used for empty policies
     title: PolicyType defines the type of policy
   authorityQueryGetPoliciesResponse:
     type: object
