@@ -44,6 +44,12 @@ RUN --mount=type=cache,target="/root/.cache/go-build" cd /go/delivery/zeta-node/
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/ && \
     cp $GOPATH/bin/zetaclientd $GOPATH/bin/new/
 
+COPY --from=oldbuild ${GOPATH}/bin/zetaclientd /root/.zetaclientd/upgrades/genesis/
+RUN mkdir -p /root/.zetaclientd/upgrades/${NEW_VERSION}/ && \
+    cp ${GOPATH}/bin/zetaclientd /root/.zetaclientd/upgrades/${NEW_VERSION}/
+RUN ln -s /root/.zetaclientd/upgrades/genesis /root/.zetaclientd/upgrades/current
+ENV PATH="/root/.zetaclientd/upgrades/current:${PATH}"
+
 COPY --from=oldbuild $GOPATH/bin/zetacored $GOPATH/bin/zetaclientd $GOPATH/bin/
 COPY --from=oldbuild $GOPATH/bin/zetacored $GOPATH/bin/zetaclientd $GOPATH/bin/old
 
