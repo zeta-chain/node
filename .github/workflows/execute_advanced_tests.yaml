@@ -121,7 +121,7 @@ jobs:
           exit $(docker wait "${container_id}")
 
   e2e-stateful-data-test:
-    if: ${{ github.event.inputs.e2e-upgrade-test == 'true' || github.event_name == 'schedule' }}
+    if: ${{ github.event.inputs.e2e-stateful-data-test == 'true' || github.event_name == 'schedule' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
