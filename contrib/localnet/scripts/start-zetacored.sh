@@ -81,9 +81,16 @@ source ~/add-keys.sh
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
 then
-  echo "Waiting for zetacore0 to create genesis.json"
-  sleep 10
-  echo "genesis.json created"
+  while [ ! -f ~/.zetacored/config/genesis.json ]; do
+    echo "Waiting for genesis.json file to exist..."
+    sleep 1
+  done
+  # need to wait for zetacore0 to be up otherwise you get
+  # 
+  while ! curl -s -o /dev/null zetacore0:26657/status ; do
+    echo "Waiting for zetacore0 rpc"
+    sleep 1
+done
 fi
 
 # Genesis creation following steps
