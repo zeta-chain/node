@@ -9,14 +9,14 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func GetRequiredPolicy(msgURl string) authoritytypes.PolicyType {
-	if CheckPolicyList(msgURl, OperationalPolicyMessageList) {
+func GetRequiredPolicy(msgURL string) authoritytypes.PolicyType {
+	if CheckPolicyList(msgURL, OperationalPolicyMessageList) {
 		return authoritytypes.PolicyType_groupOperational
 	}
-	if CheckPolicyList(msgURl, EmergencyPolicyMessageList) {
+	if CheckPolicyList(msgURL, EmergencyPolicyMessageList) {
 		return authoritytypes.PolicyType_groupEmergency
 	}
-	if CheckPolicyList(msgURl, AdminPolicyMessageList) {
+	if CheckPolicyList(msgURL, AdminPolicyMessageList) {
 		return authoritytypes.PolicyType_groupAdmin
 	}
 	return authoritytypes.PolicyType_emptyPolicyType

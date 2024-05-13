@@ -28,7 +28,7 @@ func (k msgServer) UnpauseZRC20(
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
-	// iterate all foreign coins and set paused status
+	// iterate all foreign coins and set unpaused status
 	for _, zrc20 := range msg.Zrc20Addresses {
 		fc, found := k.GetForeignCoins(ctx, zrc20)
 		if !found {

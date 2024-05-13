@@ -78,7 +78,7 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 		}
 	case types.ObserverUpdateReason_AdminUpdate:
 		{
-			// Admin policy is required to update an observer for admin update
+			// Verify if the message has been signed by an authorized signer
 			err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
 			if err != nil {
 				return false, err
