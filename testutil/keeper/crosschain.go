@@ -31,7 +31,7 @@ type CrosschainMockOptions struct {
 	UseFungibleMock      bool
 	UseAuthorityMock     bool
 	UseLightclientMock   bool
-	useIBCCrosschainMock bool
+	UseIBCCrosschainMock bool
 }
 
 var (
@@ -43,7 +43,7 @@ var (
 		UseFungibleMock:      true,
 		UseAuthorityMock:     true,
 		UseLightclientMock:   true,
-		useIBCCrosschainMock: true,
+		UseIBCCrosschainMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
@@ -184,7 +184,7 @@ func CrosschainKeeperWithMocks(
 		sdkKeepers.TransferKeeper,
 		*sdkKeepers.CapabilityKeeper,
 	)
-	if mockOptions.useIBCCrosschainMock {
+	if mockOptions.UseIBCCrosschainMock {
 		ibcCrosschainKeeperTmp = crosschainmocks.NewCrosschainIBCCrosschainKeeper(t)
 	}
 	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
