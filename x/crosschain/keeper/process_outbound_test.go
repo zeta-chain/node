@@ -47,7 +47,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 
-	t.Run("successfully process failed outbound set to aborted for type zevm tx of cointype ERC20", func(t *testing.T) {
+	t.Run("set failed zevm outbound of cointype ERC20 to aborted", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
