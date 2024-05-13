@@ -79,6 +79,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, _ *run
 		fmt.Println("RegisterQueryHandlerClient err: %w", err)
 	}
 	// TODO: Uncomment once query created
+	// https://github.com/zeta-chain/node/issues/2166
 	//err = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 	//if err != nil {
 	//	fmt.Println("RegisterQueryHandlerClient err: %w", err)
