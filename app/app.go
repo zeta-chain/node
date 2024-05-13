@@ -211,7 +211,7 @@ var (
 		authoritymodule.AppModuleBasic{},
 		lightclientmodule.AppModuleBasic{},
 		crosschainmodule.AppModuleBasic{},
-		ibccrosschain.AppModule{},
+		ibccrosschain.AppModuleBasic{},
 		observermodule.AppModuleBasic{},
 		fungiblemodule.AppModuleBasic{},
 		emissionsmodule.AppModuleBasic{},
