@@ -15,7 +15,7 @@ import (
 func (k msgServer) DeploySystemContracts(goCtx context.Context, msg *types.MsgDeploySystemContracts) (*types.MsgDeploySystemContractsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

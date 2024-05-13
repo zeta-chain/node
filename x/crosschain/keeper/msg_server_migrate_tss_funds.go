@@ -27,7 +27,7 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

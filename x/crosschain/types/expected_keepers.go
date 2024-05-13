@@ -180,7 +180,7 @@ type FungibleKeeper interface {
 }
 
 type AuthorityKeeper interface {
-	IsAuthorized(ctx sdk.Context, msg sdk.Msg) error
+	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
 }
 
 type LightclientKeeper interface {

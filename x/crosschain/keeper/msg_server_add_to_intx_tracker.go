@@ -21,7 +21,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 
 	// correct policy address or observer group can submit tracker without a proof
 	isEmergencyGroup := false
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err == nil {
 		isEmergencyGroup = true
 	}

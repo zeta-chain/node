@@ -22,7 +22,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

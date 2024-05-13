@@ -74,14 +74,14 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	return &k, ctx
 }
 
-// MockIsAuthorized mocks the IsAuthorized method of an authority keeper mock
+// MockIsAuthorized mocks the CheckAuthorization method of an authority keeper mock
 // TODO : https://github.com/zeta-chain/node/issues/2153
 // Refactor this function to receive an error instead of a boolean and a message field .
 func MockIsAuthorized(m *mock.Mock, _ string, _ types.PolicyType, isAuthorized bool) {
 	if isAuthorized {
-		m.On("IsAuthorized", mock.Anything, mock.Anything).Return(nil).Once()
+		m.On("CheckAuthorization", mock.Anything, mock.Anything).Return(nil).Once()
 	} else {
-		m.On("IsAuthorized", mock.Anything, mock.Anything).Return(errors.New("unauthorized")).Once()
+		m.On("CheckAuthorization", mock.Anything, mock.Anything).Return(errors.New("unauthorized")).Once()
 	}
 }
 

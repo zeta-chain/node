@@ -18,7 +18,7 @@ func (k msgServer) EnableHeaderVerification(goCtx context.Context, msg *types.Ms
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

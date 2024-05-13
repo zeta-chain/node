@@ -23,7 +23,7 @@ func (k msgServer) AbortStuckCCTX(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

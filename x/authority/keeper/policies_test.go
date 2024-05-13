@@ -39,14 +39,14 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		policies := sample.PoliciesWithAdmin(admin)
 		k.SetPolicies(ctx, policies)
 		msg := sample.AdminMessage(admin)
-		err := k.IsAuthorized(ctx, msg)
+		err := k.CheckAuthorization(ctx, msg)
 		require.NoError(t, err)
 	})
 
 	t.Run("returns error if more than 1 signer", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		msg := sample.MultipleSignerMessage()
-		err := k.IsAuthorized(ctx, msg)
+		err := k.CheckAuthorization(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrSigners)
 	})
 
@@ -56,14 +56,14 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		policies := sample.PoliciesWithAdmin(admin)
 		k.SetPolicies(ctx, policies)
 		msg := sample.NonAdminMessage(admin)
-		err := k.IsAuthorized(ctx, msg)
+		err := k.CheckAuthorization(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrMsgNotAuthorized)
 	})
 
 	t.Run("returns error if policies not found", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		msg := sample.AdminMessage(sample.AccAddress())
-		err := k.IsAuthorized(ctx, msg)
+		err := k.CheckAuthorization(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrPoliciesNotFound)
 	})
 
@@ -73,7 +73,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		policies := sample.PoliciesWithAdmin(admin)
 		k.SetPolicies(ctx, policies)
 		msg := sample.AdminMessage(sample.AccAddress())
-		err := k.IsAuthorized(ctx, msg)
+		err := k.CheckAuthorization(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrSignerDoesntMatch)
 	})
 }

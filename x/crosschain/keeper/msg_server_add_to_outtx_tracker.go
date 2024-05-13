@@ -49,7 +49,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 
 	isEmergencyGroup := false
-	err = k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err = k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err == nil {
 		isEmergencyGroup = true
 	}

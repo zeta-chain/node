@@ -29,7 +29,7 @@ func (k Keeper) GetPolicies(ctx sdk.Context) (val types.Policies, found bool) {
 }
 
 // IsAuthorized checks if the message has been signed by an authorized policy address
-func (k Keeper) IsAuthorized(ctx sdk.Context, msg sdk.Msg) error {
+func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	// Policy transactions must have only one signer
 	if len(msg.GetSigners()) != 1 {
 		return errors.Wrap(types.ErrSigners, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))

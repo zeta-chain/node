@@ -14,11 +14,11 @@ type FungibleAuthorityKeeper struct {
 }
 
 // IsAuthorized provides a mock function with given fields: ctx, msg
-func (_m *FungibleAuthorityKeeper) IsAuthorized(ctx types.Context, msg types.Msg) error {
+func (_m *FungibleAuthorityKeeper) CheckAuthorization(ctx types.Context, msg types.Msg) error {
 	ret := _m.Called(ctx, msg)
 
 	if len(ret) == 0 {
-		panic("no return value specified for IsAuthorized")
+		panic("no return value specified for CheckAuthorization")
 	}
 
 	var r0 error

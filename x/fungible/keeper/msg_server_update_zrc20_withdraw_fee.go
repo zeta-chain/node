@@ -16,7 +16,7 @@ func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgU
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check signer permission
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

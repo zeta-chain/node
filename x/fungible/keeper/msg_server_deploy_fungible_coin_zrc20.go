@@ -40,7 +40,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	err = k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err = k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}

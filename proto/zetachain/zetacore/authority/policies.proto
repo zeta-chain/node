@@ -14,7 +14,7 @@ enum PolicyType {
                         // non-sensitive protocol parameters
   groupAdmin = 2;       // Used for administrative tasks like changing sensitive
                         // protocol parameters or moving funds
-  emptyPolicyType = 3;  // Used for empty policies
+  emptyPolicyType = 3;  // Used for empty policies, to represent a situation when the required policy does not exist
 }
 
 message Policy {

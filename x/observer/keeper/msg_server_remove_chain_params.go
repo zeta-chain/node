@@ -14,7 +14,7 @@ func (k msgServer) RemoveChainParams(goCtx context.Context, msg *types.MsgRemove
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	err := k.GetAuthorityKeeper().IsAuthorized(ctx, msg)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
