@@ -26,6 +26,8 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 }
 
 // OnChanOpenInit implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -36,10 +38,21 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = order
+	_ = connectionHops
+	_ = portID
+	_ = channelID
+	_ = chanCap
+	_ = counterparty
+
 	return version, nil
 }
 
 // OnChanOpenTry implements the IBCModule interface.
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -50,73 +63,135 @@ func (im IBCModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
+	// Set variable to blank to remove lint error so we can keep variable name for future us
+	_ = ctx
+	_ = order
+	_ = connectionHops
+	_ = portID
+	_ = channelID
+	_ = chanCap
+	_ = counterparty
+	_ = counterpartyVersion
+
 	return "", nil
 }
 
 // OnChanOpenAck implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	_ string,
+	counterpartyChannelID string,
 	counterpartyVersion string,
 ) error {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = portID
+	_ = channelID
+	_ = counterpartyChannelID
+	_ = counterpartyVersion
+
 	return nil
 }
 
 // OnChanOpenConfirm implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 ) error {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = portID
+	_ = channelID
+
 	return nil
 }
 
 // OnChanCloseInit implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 ) error {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = portID
+	_ = channelID
+
 	return nil
 }
 
 // OnChanCloseConfirm implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 ) error {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = portID
+	_ = channelID
+
 	return nil
 }
 
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
 // is returned if the packet data is successfully decoded and the receive application
-// logic returns without error.
+// logic returns without error
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = packet
+	_ = relayer
+
 	return nil
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = packet
+	_ = acknowledgement
+	_ = relayer
+
 	return nil
 }
 
 // OnTimeoutPacket implements the IBCModule interface
+// TODO: Implement the function as middleware
+// https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
+	// Set variable to blank to remove lint error so we can keep variable name for future use
+	_ = ctx
+	_ = packet
+	_ = relayer
+
 	return nil
 }
