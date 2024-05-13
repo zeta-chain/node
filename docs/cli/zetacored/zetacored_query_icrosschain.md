@@ -1,15 +1,15 @@
-# query ibccrosschain
+# query icrosschain
 
-Querying commands for the ibccrosschain module
+Querying commands for the icrosschain module
 
 ```
-zetacored query ibccrosschain [flags]
+zetacored query icrosschain [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for ibccrosschain
+  -h, --help   help for icrosschain
 ```
 
 ### Options inherited from parent commands

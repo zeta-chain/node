@@ -1,15 +1,15 @@
-# tx ibccrosschain
+# tx icrosschain
 
-ibccrosschain transactions subcommands
+icrosschain transactions subcommands
 
 ```
-zetacored tx ibccrosschain [flags]
+zetacored tx icrosschain [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for ibccrosschain
+  -h, --help   help for icrosschain
 ```
 
 ### Options inherited from parent commands

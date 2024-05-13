@@ -43,7 +43,7 @@ zetacored tx [flags]
 * [zetacored tx group](zetacored_tx_group.md)	 - Group transaction subcommands
 * [zetacored tx ibc](zetacored_tx_ibc.md)	 - IBC transaction subcommands
 * [zetacored tx ibc-transfer](zetacored_tx_ibc-transfer.md)	 - IBC fungible token transfer transaction subcommands
-* [zetacored tx ibccrosschain](zetacored_tx_ibccrosschain.md)	 - ibccrosschain transactions subcommands
+* [zetacored tx icrosschain](zetacored_tx_icrosschain.md)	 - icrosschain transactions subcommands
 * [zetacored tx lightclient](zetacored_tx_lightclient.md)	 - lightclient transactions subcommands
 * [zetacored tx multi-sign](zetacored_tx_multi-sign.md)	 - Generate multisig signatures for transactions generated offline
 * [zetacored tx multisign-batch](zetacored_tx_multisign-batch.md)	 - Assemble multisig transactions in batch from batch signatures
