@@ -115,7 +115,10 @@ then
   for NODE in "${NODELIST[@]}"; do
     INDEX=${NODE:0-1}
     ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/
-    scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json
+    while ! scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json; do
+      echo "Waiting for os_info.json from node $NODE"
+      sleep 1
+    done
     scp ~/.zetacored/os_info/os_z"$INDEX".json zetaclient"$INDEX":~/.zetacored/os.json
   done
 

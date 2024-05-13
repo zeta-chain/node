@@ -27,12 +27,14 @@ if [ "$HOTKEY_BACKEND" == "file" ]; then
     BACKEND="file"
 fi
 
-cp  /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
+cp /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
 num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"
 
-echo "Wait for zetacore to exchange genesis file"
-sleep 40
+while [ ! -f $HOME/.zetacored/os.json ]; do
+    echo "Waiting for zetacore to exchange os.json file..."
+    sleep 1
+done
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"
