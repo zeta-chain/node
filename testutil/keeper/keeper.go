@@ -368,7 +368,9 @@ func CapabilityKeeper(
 ) *capabilitykeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(capabilitytypes.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(capabilitytypes.MemStoreKey)
+
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
 
 	return capabilitykeeper.NewKeeper(cdc, storeKey, memKey)
 }
