@@ -75,9 +75,21 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort("Outbound failed")
 	} else if chains.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
-		err := k.processFailedOutboundForZEVMTx(ctx, cctx)
-		if err != nil {
-			return cosmoserrors.Wrap(err, "ProcessFailedOutboundForZEVMTx")
+		switch cctx.InboundTxParams.CoinType {
+		// Try revert if the coin-type is ZETA
+		case coin.CoinType_Zeta:
+			{
+				err := k.processFailedOutboundForZEVMTx(ctx, cctx)
+				if err != nil {
+					return cosmoserrors.Wrap(err, "ProcessFailedOutboundForZEVMTx")
+				}
+			}
+		// For all other coin-types, we do not revert, the cctx is aborted
+		default:
+			{
+				cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+				cctx.SetAbort("Outbound failed")
+			}
 		}
 	} else {
 		err := k.processFailedOutBoundForExternalChainTx(ctx, cctx, oldStatus)
