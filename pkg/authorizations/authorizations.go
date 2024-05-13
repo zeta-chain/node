@@ -33,10 +33,10 @@ func CheckPolicyList(msgURl string, msgList []string) bool {
 
 var OperationalPolicyMessageList = []string{
 	// Crosschain admin messages
-	sdk.MsgTypeURL(&crosschainTypes.MsgRefundAbortedCCTX{}),
-	sdk.MsgTypeURL(&crosschainTypes.MsgAbortStuckCCTX{}),
-	sdk.MsgTypeURL(&crosschainTypes.MsgUpdateRateLimiterFlags{}),
-	sdk.MsgTypeURL(&crosschainTypes.MsgWhitelistERC20{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgRefundAbortedCCTX{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgAbortStuckCCTX{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgUpdateRateLimiterFlags{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgWhitelistERC20{}),
 	// Fungible admin messages
 	sdk.MsgTypeURL(&fungibletypes.MsgDeployFungibleCoinZRC20{}),
 	sdk.MsgTypeURL(&fungibletypes.MsgDeploySystemContracts{}),
@@ -57,9 +57,9 @@ var OperationalPolicyMessageList = []string{
 
 var EmergencyPolicyMessageList = []string{
 	// Crosschain admin messages
-	sdk.MsgTypeURL(&crosschainTypes.MsgAddToInTxTracker{}),
-	sdk.MsgTypeURL(&crosschainTypes.MsgAddToOutTxTracker{}),
-	sdk.MsgTypeURL(&crosschainTypes.MsgRemoveFromOutTxTracker{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgAddToInTxTracker{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgAddToOutTxTracker{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgRemoveFromOutTxTracker{}),
 	// Fungible admin messages
 	sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}),
 	// Observer admin messages
@@ -71,8 +71,8 @@ var EmergencyPolicyMessageList = []string{
 
 var AdminPolicyMessageList = []string{
 	// Crosschain admin messages
-	sdk.MsgTypeURL(&crosschainTypes.MsgMigrateTssFunds{}),
-	sdk.MsgTypeURL(&crosschainTypes.MsgUpdateTssAddress{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgMigrateTssFunds{}),
+	sdk.MsgTypeURL(&crosschaintypes.MsgUpdateTssAddress{}),
 	// Fungible admin messages
 	sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 	sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
