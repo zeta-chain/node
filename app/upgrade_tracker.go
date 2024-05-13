@@ -34,7 +34,8 @@ func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.St
 	stateFilePath := path.Join(t.stateFileDir, "developupgradetracker")
 
 	currentIndex := int64(0)
-	if stateFileContents, err := os.ReadFile(stateFilePath); err == nil { // #nosec G304 -- stateFilePath is not user controllable
+	stateFileContents, err := os.ReadFile(stateFilePath) // #nosec G304 -- stateFilePath is not user controllable
+	if err == nil {
 		currentIndex, err = strconv.ParseInt(string(stateFileContents), 10, 64)
 		if err != nil {
 			return nil, nil, fmt.Errorf("unable to decode upgrade tracker: %w", err)
@@ -61,7 +62,7 @@ func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.St
 		}
 		maxIndex = index
 	}
-	err := os.WriteFile(stateFilePath, []byte(strconv.FormatInt(maxIndex, 10)), 0o600)
+	err = os.WriteFile(stateFilePath, []byte(strconv.FormatInt(maxIndex, 10)), 0o600)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to write upgrade state file: %w", err)
 	}
