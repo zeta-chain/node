@@ -385,7 +385,7 @@ func IBCKeeper(
 	uppgradeKeeper upgradekeeper.Keeper,
 	capabilityKeeper capabilitykeeper.Keeper,
 ) *ibckeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(ibccrosschaintypes.StoreKey)
+	storeKey := sdk.NewKVStoreKey(ibcexported.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)

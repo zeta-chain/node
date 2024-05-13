@@ -131,16 +131,6 @@ func CrosschainKeeperWithMocks(
 	// Create the crosschain keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	ctx := NewContext(stateStore)
-
-	// Initialize modules genesis
-	sdkKeepers.InitGenesis(ctx)
-	zetaKeepers.InitGenesis(ctx)
-
-	// Add a proposer to the context
-	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
@@ -201,6 +191,17 @@ func CrosschainKeeperWithMocks(
 
 	// seal the IBC router
 	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
+
+	// load the latest version of the state store
+	require.NoError(t, stateStore.LoadLatestVersion())
+	ctx := NewContext(stateStore)
+
+	// initialize modules genesis
+	sdkKeepers.InitGenesis(ctx)
+	zetaKeepers.InitGenesis(ctx)
+
+	// add a proposer to the context
+	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }
