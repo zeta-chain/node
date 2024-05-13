@@ -85,6 +85,7 @@
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
+* [2169](https://github.com/zeta-chain/node/pull/2169) - Limit zEVM revert transactions to coin type ZETA
 
 ### Features
 
