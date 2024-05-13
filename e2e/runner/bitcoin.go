@@ -246,7 +246,6 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	}
 	if !signed {
 		panic("btc transaction not signed")
-		g
 	}
 	txid, err := btcRPC.SendRawTransaction(stx, true)
 	if err != nil {
