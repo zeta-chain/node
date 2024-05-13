@@ -1,15 +1,15 @@
-# tx icrosschain
+# query zetaibccrosschain
 
-icrosschain transactions subcommands
+Querying commands for the zetaibccrosschain module
 
 ```
-zetacored tx icrosschain [flags]
+zetacored query zetaibccrosschain [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for icrosschain
+  -h, --help   help for zetaibccrosschain
 ```
 
 ### Options inherited from parent commands
@@ -25,5 +25,5 @@ zetacored tx icrosschain [flags]
 
 ### SEE ALSO
 
-* [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
+* [zetacored query](zetacored_query.md)	 - Querying subcommands
 

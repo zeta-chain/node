@@ -5,7 +5,7 @@ const (
 	// NOTE: module name can't have the name of another module as a prefix
 	// because of potential store key conflicts
 	// ibcblockchain or crosschainibc can't be used as module name
-	ModuleName = "icrosschain"
+	ModuleName = "zetaibccrosschain"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
