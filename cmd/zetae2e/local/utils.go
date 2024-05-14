@@ -2,10 +2,13 @@ package local
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"path/filepath"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
@@ -98,5 +101,54 @@ func waitKeygenHeight(
 			break
 		}
 		logger.Info("Last ZetaHeight: %d", response.Height)
+	}
+}
+
+func MonitorTxPriorityInBlocks(ctx context.Context, conf config.Config, logger *runner.Logger, errCh chan error) {
+	rpc, err := rpchttp.New(conf.RPCs.ZetaCoreRPC, "/websocket")
+	if err != nil {
+		errCh <- err
+	}
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			errCh <- nil
+		case <-ticker.C:
+			block, err := rpc.Block(ctx, nil)
+			if err != nil {
+				errCh <- err
+			}
+
+			// iterate txs events and check if some MsgEthereumTx is included above crosschain and observer txs
+			nonSystemTxFound := false
+			for _, tx := range block.Block.Txs {
+				txRes, err := rpc.Tx(context.Background(), tx.Hash(), false)
+				if err != nil {
+					continue
+				}
+
+				for _, ev := range txRes.TxResult.Events {
+					for _, attr := range ev.Attributes {
+						if attr.Key == "msg_type_url" {
+							if strings.Contains(attr.Value, "zetachain.zetacore.crosschain.MsgVote") ||
+								strings.Contains(attr.Value, "zetachain.zetacore.observer.MsgVote") ||
+								strings.Contains(attr.Value, "zetachain.zetacore.observer.MsgAddBlameVote") {
+								if nonSystemTxFound {
+									errCh <- errors.New("wrong tx priority, system tx not on top")
+								}
+							}
+						}
+						if attr.Key == "action" {
+							if strings.Contains(attr.Value, "ethermint.evm.v1.MsgEthereumTx") {
+								nonSystemTxFound = true
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
