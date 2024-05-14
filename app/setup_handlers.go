@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
@@ -105,6 +106,12 @@ func SetupHandlers(app *App) {
 					Added: []string{capabilitytypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName},
 				},
 			},
+			{
+				index: 1715707436,
+				storeUpgrade: &storetypes.StoreUpgrades{
+					Added: []string{ibccrosschaintypes.ModuleName},
+				},
+			},
 		},
 	}
 
@@ -140,16 +147,6 @@ func SetupHandlers(app *App) {
 		panic(err)
 	}
 	if upgradeInfo.Name == constant.Version && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				consensustypes.ModuleName,
-				crisistypes.ModuleName,
-				capabilitytypes.ModuleName,
-				ibcexported.ModuleName,
-				ibctransfertypes.ModuleName,
-				ibccrosschaintypes.ModuleName,
-			},
-		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
 		// so that new stores start with the correct version (the current height of chain),
