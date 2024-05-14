@@ -332,6 +332,7 @@ func New(
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey,
@@ -384,6 +385,9 @@ func New(
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
+
+	customProposalHandler := NewCustomProposalHandler(bApp.Mempool(), bApp)
+	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(
