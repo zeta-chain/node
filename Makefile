@@ -1,6 +1,6 @@
 .PHONY: build
 
-VERSION := $(shell git describe --tags)
+VERSION := $(shell ./version.sh)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
@@ -86,6 +86,7 @@ install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd-supervisor
 
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
@@ -221,7 +222,7 @@ start-stress-test: zetanode
 #TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade:
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION='release/v16' --build-arg NEW_VERSION=v17 .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade --build-arg OLD_VERSION='release/v16' .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 

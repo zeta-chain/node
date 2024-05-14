@@ -35,8 +35,6 @@ RUN cd node && make install
 
 # Build new release from the current source
 FROM base
-ARG NEW_VERSION
-ENV NEW_VERSION=${NEW_VERSION}
 COPY go.mod /go/delivery/zeta-node/
 COPY go.sum /go/delivery/zeta-node/
 RUN cd /go/delivery/zeta-node/ && go mod download
@@ -45,6 +43,12 @@ RUN --mount=type=cache,target="/root/.cache/go-build" cd /go/delivery/zeta-node/
 RUN --mount=type=cache,target="/root/.cache/go-build" cd /go/delivery/zeta-node/ && make install-zetae2e
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/ && \
     cp $GOPATH/bin/zetaclientd $GOPATH/bin/new/
+
+COPY --from=oldbuild ${GOPATH}/bin/zetaclientd /root/.zetaclientd/upgrades/genesis/
+RUN mkdir -p /root/.zetaclientd/upgrades/${NEW_VERSION}/ && \
+    cp ${GOPATH}/bin/zetaclientd /root/.zetaclientd/upgrades/${NEW_VERSION}/
+RUN ln -s /root/.zetaclientd/upgrades/genesis /root/.zetaclientd/upgrades/current
+ENV PATH="/root/.zetaclientd/upgrades/current:${PATH}"
 
 COPY --from=oldbuild $GOPATH/bin/zetacored $GOPATH/bin/zetaclientd $GOPATH/bin/
 COPY --from=oldbuild $GOPATH/bin/zetacored $GOPATH/bin/zetaclientd $GOPATH/bin/old
