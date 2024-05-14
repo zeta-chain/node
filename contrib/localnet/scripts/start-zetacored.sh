@@ -4,8 +4,6 @@
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
 # The number of nodes is passed as an first argument to the script
-# The second argument is optional and can have the following value:
-# 1. upgrade : This is used to test the upgrade process, a proposal is created for the upgrade and the nodes are started using cosmovisor
 
 /usr/sbin/sshd
 
@@ -15,14 +13,12 @@ then
   exit 1
 fi
 NUMOFNODES=$1
-OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
-UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
 # Environment variables used for upgrade testing
 export DAEMON_HOME=$HOME/.zetacored
@@ -35,7 +31,6 @@ export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-export UpgradeName=$(${GOPATH}/bin/new/zetacored version)
 
 # generate node list
 START=1
@@ -48,6 +43,25 @@ do
 done
 
 echo "HOSTNAME: $HOSTNAME"
+
+# init ssh keys
+# we generate keys at runtime to ensure that keys are never pushed to
+# a docker registry
+if [ $HOSTNAME == "zetacore0" ]; then
+  if [[ ! -f ~/.ssh/id_rsa ]]; then
+    ssh-keygen -t rsa -q -N "" -f ~/.ssh/id_rsa
+    cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+    # keep localtest.pem for compatibility
+    cp ~/.ssh/id_rsa ~/.ssh/localtest.pem
+    chmod 600 ~/.ssh/*
+  fi
+fi
+
+# Wait for authorized_keys file to exist (zetacore1+)
+while [ ! -f ~/.ssh/authorized_keys ]; do
+    echo "Waiting for authorized_keys file to exist..."
+    sleep 1
+done
 
 # Init a new node to generate genesis file .
 # Copy config files from existing folders which get copied via Docker Copy when building images
@@ -67,9 +81,16 @@ source ~/add-keys.sh
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
 then
-  echo "Waiting for zetacore0 to create genesis.json"
-  sleep 10
-  echo "genesis.json created"
+  while [ ! -f ~/.zetacored/config/genesis.json ]; do
+    echo "Waiting for genesis.json file to exist..."
+    sleep 1
+  done
+  # need to wait for zetacore0 to be up otherwise you get
+  # 
+  while ! curl -s -o /dev/null zetacore0:26657/status ; do
+    echo "Waiting for zetacore0 rpc"
+    sleep 1
+done
 fi
 
 # Genesis creation following steps
@@ -94,7 +115,10 @@ then
   for NODE in "${NODELIST[@]}"; do
     INDEX=${NODE:0-1}
     ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/
-    scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json
+    while ! scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json; do
+      echo "Waiting for os_info.json from node $NODE"
+      sleep 1
+    done
     scp ~/.zetacored/os_info/os_z"$INDEX".json zetaclient"$INDEX":~/.zetacored/os.json
   done
 
@@ -180,73 +204,4 @@ then
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
-# 7 Start the nodes
-# If upgrade option is passed, use cosmovisor to start the nodes and create a governance proposal for upgrade
-if [ "$OPTION" != "upgrade" ]; then
-
-  exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
-
-else
-
-  # Setup cosmovisor
-  mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
-  mkdir -p $DAEMON_HOME/cosmovisor/upgrades/"$UpgradeName"/bin
-
-  # Genesis
-  cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
-  cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
-
-  #Upgrades
-  cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
-
-  #Permissions
-  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
-  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
-  chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
-
-  # Start the node using cosmovisor
-  cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
-  sleep 20
-  echo
-
-  # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
-  UPGRADE_HEIGHT=${3:-225}
-
-  # If this is the first node, create a governance proposal for upgrade
-  if [ $HOSTNAME = "zetacore0" ]
-  then
-    cat > upgrade.json <<EOF
-{
-  "messages": [
-    {
-      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-      "plan": {
-        "height": "${UPGRADE_HEIGHT}",
-        "info": "",
-        "name": "${UpgradeName}",
-        "time": "0001-01-01T00:00:00Z",
-        "upgraded_client_state": null
-      },
-      "authority": "${UPGRADE_AUTHORITY_ACCOUNT}"
-    }
-  ],
-  "metadata": "",
-  "deposit": "100000000azeta",
-  "title": "${UpgradeName}",
-  "summary": "${UpgradeName}"
-}
-EOF
-    /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta
-  fi
-
-  # Wait for the proposal to be voted on
-  sleep 8
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=2000000000000000azeta --broadcast-mode block
-  sleep 7
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
-
-  # We use tail -f to keep the container running. Use -n999999 to ensure we get all the context.
-  tail -n999999 -f zetanode.log
-
-fi
-
+exec cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
