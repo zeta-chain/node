@@ -53,4 +53,5 @@ zetacored tx [flags]
 * [zetacored tx staking](zetacored_tx_staking.md)	 - Staking transaction subcommands
 * [zetacored tx validate-signatures](zetacored_tx_validate-signatures.md)	 - validate transactions signatures
 * [zetacored tx vesting](zetacored_tx_vesting.md)	 - Vesting transaction subcommands
+* [zetacored tx zetaibccrosschain](zetacored_tx_zetaibccrosschain.md)	 - zetaibccrosschain transactions subcommands
 
