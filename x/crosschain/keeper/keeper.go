@@ -16,13 +16,14 @@ type (
 		storeKey storetypes.StoreKey
 		memKey   storetypes.StoreKey
 
-		stakingKeeper      types.StakingKeeper
-		authKeeper         types.AccountKeeper
-		bankKeeper         types.BankKeeper
-		zetaObserverKeeper types.ObserverKeeper
-		fungibleKeeper     types.FungibleKeeper
-		authorityKeeper    types.AuthorityKeeper
-		lightclientKeeper  types.LightclientKeeper
+		stakingKeeper       types.StakingKeeper
+		authKeeper          types.AccountKeeper
+		bankKeeper          types.BankKeeper
+		zetaObserverKeeper  types.ObserverKeeper
+		fungibleKeeper      types.FungibleKeeper
+		authorityKeeper     types.AuthorityKeeper
+		lightclientKeeper   types.LightclientKeeper
+		ibcCrosschainKeeper types.IBCCrosschainKeeper
 	}
 )
 
@@ -88,6 +89,14 @@ func (k Keeper) GetAuthorityKeeper() types.AuthorityKeeper {
 
 func (k Keeper) GetLightclientKeeper() types.LightclientKeeper {
 	return k.lightclientKeeper
+}
+
+func (k Keeper) GetIBCCrosschainKeeper() types.IBCCrosschainKeeper {
+	return k.ibcCrosschainKeeper
+}
+
+func (k *Keeper) SetIBCCrosschainKeeper(ibcCrosschainKeeper types.IBCCrosschainKeeper) {
+	k.ibcCrosschainKeeper = ibcCrosschainKeeper
 }
 
 func (k Keeper) GetStoreKey() storetypes.StoreKey {

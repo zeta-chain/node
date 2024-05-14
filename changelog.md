@@ -14,6 +14,7 @@
 * [2145](https://github.com/zeta-chain/node/pull/2145) - add `ibc` and `ibc-transfer` modules
 * [2135](https://github.com/zeta-chain/node/pull/2135) - add develop build version logic
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
+* [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 
 ### Refactor
 
