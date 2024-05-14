@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for ibccrosschain module
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
