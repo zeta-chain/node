@@ -104,7 +104,7 @@ func waitKeygenHeight(
 	}
 }
 
-func MonitorTxPriorityInBlocks(ctx context.Context, conf config.Config, logger *runner.Logger, errCh chan error) {
+func MonitorTxPriorityInBlocks(ctx context.Context, conf config.Config, errCh chan error) {
 	rpc, err := rpchttp.New(conf.RPCs.ZetaCoreRPC, "/websocket")
 	if err != nil {
 		errCh <- err

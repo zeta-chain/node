@@ -29,6 +29,7 @@
 ### Tests
 
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+* [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
 
 ### Fixes
 
