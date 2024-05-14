@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for ibccrosschain module
 func GetQueryCmd(_ string) *cobra.Command {
 	// Group ibccrosschain queries under a subcommand
 	cmd := &cobra.Command{
