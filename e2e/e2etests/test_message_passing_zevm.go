@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -47,6 +48,16 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
+	// Get ZETA balance on ZEVM TestDApp
+	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EVMAuth.From)
+	if err != nil {
+		panic(err)
+	}
+
 	// Call the SendHelloWorld function on the EVM dapp Contract which would in turn create a new send, to be picked up by the zeta-clients
 	// set Do revert to false which adds a message to signal the ZEVM zetaReceiver to not revert the transaction
 	tx, err = testDAppEVM.SendHelloWorld(r.EVMAuth, destinationAddress, zEVMChainID, amount, false)
@@ -78,6 +89,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
+	// Check event emitted
 	receivedHelloWorldEvent := false
 	for _, log := range receipt.Logs {
 		_, err := testDAppZEVM.ParseHelloWorldEvent(*log)
@@ -89,10 +101,35 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	if !receivedHelloWorldEvent {
 		panic(fmt.Sprintf("expected HelloWorld event, logs: %+v", receipt.Logs))
 	}
+
+	// Check ZETA balance on ZEVM TestDApp and check new balance is previous balance + amount
+	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	if newBalanceZEVM.Cmp(big.NewInt(0).Add(previousBalanceZEVM, amount)) != 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be %s, got %s",
+			big.NewInt(0).Add(previousBalanceZEVM, amount).String(),
+			newBalanceZEVM.String()),
+		)
+	}
+
+	// Check ZETA balance on EVM TestDApp and check new balance is previous balance - amount
+	newBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EVMAuth.From)
+	if err != nil {
+		panic(err)
+	}
+	if newBalanceEVM.Cmp(big.NewInt(0).Sub(previousBalanceEVM, amount)) != 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be %s, got %s",
+			big.NewInt(0).Sub(previousBalanceEVM, amount).String(),
+			newBalanceEVM.String()),
+		)
+	}
 }
 
 func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
-
 	if len(args) != 1 {
 		panic("TestMessagePassingRevert requires exactly one argument for the amount.")
 	}
@@ -124,6 +161,16 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
 	testDAppEVM, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
+	if err != nil {
+		panic(err)
+	}
+
+	// Get ZETA balance before test
+	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
 	if err != nil {
 		panic(err)
 	}
@@ -163,6 +210,34 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 	if !receivedHelloWorldEvent {
 		panic(fmt.Sprintf("expected Reverted HelloWorld event, logs: %+v", receipt.Logs))
+	}
+
+	// Check ZETA balance on ZEVM TestDApp and check new balance is previous balance
+	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
+		panic(fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()))
+	}
+
+	// Check ZETA balance on EVM TestDApp and check new balance is between previous balance and previous balance + amount
+	// New balance is increased because ZETA are sent from the sender but sent back to the contract
+	// New balance is less than previous balance + amount because of the gas fee to pay
+	newBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceAndAmountEVM := big.NewInt(0).Add(previousBalanceEVM, amount)
+
+	// check higher than previous balance and lower than previous balance + amount
+	if newBalanceEVM.Cmp(previousBalanceEVM) <= 0 || newBalanceEVM.Cmp(previousBalanceAndAmountEVM) > 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be between %s and %s, got %s",
+			previousBalanceEVM.String(),
+			previousBalanceAndAmountEVM.String(),
+			newBalanceEVM.String()),
+		)
 	}
 }
 
@@ -215,6 +290,16 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
+	// Get previous balances
+	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	if err != nil {
+		panic(err)
+	}
+
 	// Call the SendHelloWorld function on the ZEVM dapp Contract which would in turn create a new send, to be picked up by the zetanode evm hooks
 	// set Do revert to false which adds a message to signal the EVM zetaReceiver to not revert the transaction
 	tx, err = testDAppZEVM.SendHelloWorld(r.ZEVMAuth, destinationAddress, EVMChainID, amount, false)
@@ -258,6 +343,37 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	}
 	if !receivedHelloWorldEvent {
 		panic(fmt.Sprintf("expected HelloWorld event, logs: %+v", receipt.Logs))
+	}
+
+	// Check ZETA balance on EVM TestDApp and check new balance between previous balance and previous balance + amount
+	// Contract receive less than the amount because of the gas fee to pay
+	newBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceAndAmountEVM := big.NewInt(0).Add(previousBalanceEVM, amount)
+
+	// check higher than previous balance and lower than previous balance + amount
+	if newBalanceEVM.Cmp(previousBalanceEVM) <= 0 || newBalanceEVM.Cmp(previousBalanceAndAmountEVM) > 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be between %s and %s, got %s",
+			previousBalanceEVM.String(),
+			previousBalanceAndAmountEVM.String(),
+			newBalanceEVM.String()),
+		)
+	}
+
+	// Check ZETA balance on ZEVM TestDApp and check new balance is previous balance - amount
+	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	if err != nil {
+		panic(err)
+	}
+	if newBalanceZEVM.Cmp(big.NewInt(0).Sub(previousBalanceZEVM, amount)) != 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be %s, got %s",
+			big.NewInt(0).Sub(previousBalanceZEVM, amount).String(),
+			newBalanceZEVM.String()),
+		)
 	}
 }
 
@@ -310,6 +426,16 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
+	// Get ZETA balance before test
+	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+
 	// Call the SendHelloWorld function on the ZEVM dapp Contract which would in turn create a new send, to be picked up by the zetanode evm hooks
 	// set Do revert to true which adds a message to signal the EVM zetaReceiver to revert the transaction
 	tx, err = testDAppZEVM.SendHelloWorld(r.ZEVMAuth, destinationAddress, EVMChainID, amount, true)
@@ -348,5 +474,37 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 	if !receivedHelloWorldEvent {
 		panic(fmt.Sprintf("expected Reverted HelloWorld event, logs: %+v", receipt.Logs))
+	}
+
+	// Check ZETA balance on ZEVM TestDApp and check new balance is between previous balance and previous balance + amount
+	// New balance is increased because ZETA are sent from the sender but sent back to the contract
+	// Contract receive less than the amount because of the gas fee to pay
+	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	previousBalanceAndAmountZEVM := big.NewInt(0).Add(previousBalanceZEVM, amount)
+
+	// check higher than previous balance and lower than previous balance + amount
+	if newBalanceZEVM.Cmp(previousBalanceZEVM) <= 0 || newBalanceZEVM.Cmp(previousBalanceAndAmountZEVM) > 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be between %s and %s, got %s",
+			previousBalanceZEVM.String(),
+			previousBalanceAndAmountZEVM.String(),
+			newBalanceZEVM.String()),
+		)
+	}
+
+	// Check ZETA balance on EVM TestDApp and check new balance is previous balance
+	newBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
+	if err != nil {
+		panic(err)
+	}
+	if newBalanceEVM.Cmp(previousBalanceEVM) != 0 {
+		panic(fmt.Sprintf(
+			"expected new balance to be %s, got %s",
+			previousBalanceEVM.String(),
+			newBalanceEVM.String()),
+		)
 	}
 }
