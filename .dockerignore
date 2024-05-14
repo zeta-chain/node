@@ -4,3 +4,9 @@ yarn.lock
 .github/
 .gitignore
 dist/**
+
+# dockerfiles are not needed inside the docker build
+Dockerfile
+Dockerfile-localnet
+Dockerfile-upgrade
+docker-compose*.yml
