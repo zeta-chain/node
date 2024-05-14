@@ -15,6 +15,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
 		panic("TestMessagePassing requires exactly one argument for the amount.")
 	}
+
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	if !ok {
 		panic("Invalid amount specified for TestMessagePassing.")
@@ -25,6 +26,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	destinationAddress := r.ZevmTestDAppAddr
 
 	// Contract call originates from EVM chain
@@ -32,16 +34,19 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("approve tx failed")
 	}
+
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	testDAppEVM, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
 	if err != nil {
 		panic(err)
 	}
+
 	// Call the SendHelloWorld function on the EVM dapp Contract which would in turn create a new send, to be picked up by the zeta-clients
 	// set Do revert to false which adds a message to signal the ZEVM zetaReceiver to not revert the transaction
 	tx, err = testDAppEVM.SendHelloWorld(r.EVMAuth, destinationAddress, zEVMChainID, amount, false)
@@ -49,6 +54,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// New inbound message picked up by zeta-clients and voted on by observers to initiate a contract call on zEVM
@@ -66,10 +72,12 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
+
 	testDAppZEVM, err := testdapp.NewTestDApp(r.ZevmTestDAppAddr, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
+
 	receivedHelloWorldEvent := false
 	for _, log := range receipt.Logs {
 		_, err := testDAppZEVM.ParseHelloWorldEvent(*log)
@@ -99,6 +107,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	destinationAddress := r.ZevmTestDAppAddr
 
 	// Contract call originates from EVM chain
@@ -107,15 +116,18 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
+
 	testDAppEVM, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
 	if err != nil {
 		panic(err)
 	}
+
 	// Call the SendHelloWorld function on the EVM dapp Contract which would in turn create a new send, to be picked up by the zeta-clients
 	// set Do revert to true which adds a message to signal the ZEVM zetaReceiver to revert the transaction
 	tx, err = testDAppEVM.SendHelloWorld(r.EVMAuth, destinationAddress, zEVMChainID, amount, true)
@@ -123,6 +135,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// New inbound message picked up by zeta-clients and voted on by observers to initiate a contract call on zEVM which would revert the transaction
@@ -162,6 +175,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	if !ok {
 		panic("Invalid amount specified for TestMessagePassing.")
 	}
+
 	// Set destination details
 	EVMChainID, err := r.EVMClient.ChainID(r.Ctx)
 	if err != nil {
@@ -175,6 +189,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	r.ZEVMAuth.Value = big.NewInt(0)
 	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -182,20 +197,24 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
+
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, r.ZevmTestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("wzeta approve tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("approve failed, logs: %+v", receipt.Logs))
 	}
+
 	testDAppZEVM, err := testdapp.NewTestDApp(r.ZevmTestDAppAddr, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
+
 	// Call the SendHelloWorld function on the ZEVM dapp Contract which would in turn create a new send, to be picked up by the zetanode evm hooks
 	// set Do revert to false which adds a message to signal the EVM zetaReceiver to not revert the transaction
 	tx, err = testDAppZEVM.SendHelloWorld(r.ZEVMAuth, destinationAddress, EVMChainID, amount, false)
@@ -203,6 +222,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
@@ -222,10 +242,12 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
+
 	testDAppEVM, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
 	if err != nil {
 		panic(err)
 	}
+
 	receivedHelloWorldEvent := false
 	for _, log := range receipt.Logs {
 		_, err := testDAppEVM.ParseHelloWorldEvent(*log)
@@ -262,6 +284,7 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	r.ZEVMAuth.Value = big.NewInt(0)
 	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -269,20 +292,24 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
+
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, r.ZevmTestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("wzeta approve tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("approve failed, logs: %+v", receipt.Logs))
 	}
+
 	testDAppZEVM, err := testdapp.NewTestDApp(r.ZevmTestDAppAddr, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
+
 	// Call the SendHelloWorld function on the ZEVM dapp Contract which would in turn create a new send, to be picked up by the zetanode evm hooks
 	// set Do revert to true which adds a message to signal the EVM zetaReceiver to revert the transaction
 	tx, err = testDAppZEVM.SendHelloWorld(r.ZEVMAuth, destinationAddress, EVMChainID, amount, true)
@@ -310,6 +337,7 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
+
 	receivedHelloWorldEvent := false
 	for _, log := range receipt.Logs {
 		_, err := testDAppZEVM.ParseRevertedHelloWorldEvent(*log)
