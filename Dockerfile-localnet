@@ -59,11 +59,12 @@ FROM base-runtime AS latest-runtime
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
 COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin
 
-# optional old version build
+# optional old version build. This old build is used as the genesis version in the upgrade tests.
 # use --target latest-runtime to skip
 # 
 # TODO: just download binaries from github release now that we're using glibc
 # we can't do this right now since we do not have a v16 release candidate
+# https://github.com/zeta-chain/node/issues/2179
 FROM base-build as old-build
 
 ARG OLD_VERSION

@@ -24,28 +24,28 @@ services:
     entrypoint: ["/work/start-zetae2e.sh", "local", "upgrade"]
     image: orchestrator
 
-  upgradehost:
+  upgrade-host:
     image: zetanode:latest
-    container_name: upgradehost
-    hostname: upgradehost
-    entrypoint: ["/root/start-upgradehost.sh"]
+    container_name: upgrade-host
+    hostname: upgrade-host
+    entrypoint: ["/root/start-upgrade-host.sh"]
     networks:
       mynetwork:
         ipv4_address: 172.20.0.250
     volumes:
       - ssh:/root/.ssh
 
-  upgradeorchestrator:
+  upgrade-orchestrator:
     # must run from old node for api compatibility
     image: zetanode:old
-    container_name: upgradeorchestrator
-    hostname: upgradeorchestrator
-    entrypoint: ["/root/start-upgradeorchestrator.sh", "225"]
+    container_name: upgrade-orchestrator
+    hostname: upgrade-orchestrator
+    entrypoint: ["/root/start-upgrade-orchestrator.sh", "225"]
     networks:
       mynetwork:
         ipv4_address: 172.20.0.251
     depends_on:
       - zetacore0
-      - upgradehost
+      - upgrade-host
     volumes:
       - ssh:/root/.ssh
