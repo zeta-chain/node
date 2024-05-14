@@ -331,8 +331,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 
-	// while tests are executed, monitor blocks in paralel to check
-	// if system txs are on top and they have biggest priority
+	// while tests are executed, monitor blocks in paralel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)
 	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
 	go MonitorTxPriorityInBlocks(ctx, conf, logger, txPriorityErrCh)
@@ -345,8 +344,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	// if all tests pass, cancel txs priority monitoring
-	// and check if tx priority is not correct in some blocks
+	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")
 	monitorPriorityCancel()
 	if err := <-txPriorityErrCh; err != nil {
