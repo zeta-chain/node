@@ -180,11 +180,8 @@ func (mp *PriorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	sender := sendersWithNonce[0].Sender
 	nonce := sendersWithNonce[0].Nonce
 
-	fmt.Println("insert tx ", sender, nonce)
-
 	sdkContext := sdk.UnwrapSDKContext(ctx)
 	priority := sdkContext.Priority()
-	fmt.Println("insert priority ", priority)
 	key := txMeta{nonce: nonce, priority: priority, sender: sender}
 
 	senderIndex, ok := mp.senderIndices[sender]
