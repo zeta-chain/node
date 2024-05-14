@@ -108,10 +108,17 @@ func SetupHandlers(app *App) {
 		},
 	}
 
+	var upgradeHandlerFns []upgradeHandlerFn
+	var storeUpgrades *storetypes.StoreUpgrades
+	var err error
 	_, useDevelopTracker := os.LookupEnv("ZETACORED_USE_DEVELOP_UPGRADE_TRACKER")
-	upgradeHandlerFns, storeUpgrades, err := allUpgrades.getUpgrades(useDevelopTracker)
-	if err != nil {
-		panic(err)
+	if useDevelopTracker {
+		upgradeHandlerFns, storeUpgrades, err = allUpgrades.getDevelopUpgrades()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		upgradeHandlerFns, storeUpgrades = allUpgrades.mergeAllUpgrades()
 	}
 
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {

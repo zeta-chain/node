@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
+const developUpgradeTrackerStateFile = "developupgradetracker"
+
 type upgradeHandlerFn func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error)
 
 type upgradeTrackerItem struct {
@@ -31,7 +33,7 @@ type upgradeTracker struct {
 func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades, error) {
 	neededUpgrades := &storetypes.StoreUpgrades{}
 	neededUpgradeHandlers := []upgradeHandlerFn{}
-	stateFilePath := path.Join(t.stateFileDir, "developupgradetracker")
+	stateFilePath := path.Join(t.stateFileDir, developUpgradeTrackerStateFile)
 
 	currentIndex := int64(0)
 	stateFileContents, err := os.ReadFile(stateFilePath) // #nosec G304 -- stateFilePath is not user controllable
@@ -69,7 +71,7 @@ func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.St
 	return neededUpgradeHandlers, neededUpgrades, nil
 }
 
-func (t upgradeTracker) mergeAllUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades, error) {
+func (t upgradeTracker) mergeAllUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades) {
 	upgrades := &storetypes.StoreUpgrades{}
 	upgradeHandlers := []upgradeHandlerFn{}
 	for _, item := range t.upgrades {
@@ -84,12 +86,5 @@ func (t upgradeTracker) mergeAllUpgrades() ([]upgradeHandlerFn, *storetypes.Stor
 			upgrades.Renamed = append(upgrades.Renamed, upgrade.Renamed...)
 		}
 	}
-	return upgradeHandlers, upgrades, nil
-}
-
-func (t upgradeTracker) getUpgrades(isDevelop bool) ([]upgradeHandlerFn, *storetypes.StoreUpgrades, error) {
-	if isDevelop {
-		return t.getDevelopUpgrades()
-	}
-	return t.mergeAllUpgrades()
+	return upgradeHandlers, upgrades
 }

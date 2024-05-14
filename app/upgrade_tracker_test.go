@@ -2,6 +2,7 @@ package app
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -17,6 +18,7 @@ func TestUpgradeTracker(t *testing.T) {
 
 	tmpdir, err := os.MkdirTemp("", "storeupgradetracker-*")
 	r.NoError(err)
+	defer os.RemoveAll(tmpdir)
 
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{
@@ -45,8 +47,7 @@ func TestUpgradeTracker(t *testing.T) {
 		stateFileDir: tmpdir,
 	}
 
-	upgradeHandlers, storeUpgrades, err := allUpgrades.mergeAllUpgrades()
-	r.NoError(err)
+	upgradeHandlers, storeUpgrades := allUpgrades.mergeAllUpgrades()
 	r.Len(storeUpgrades.Added, 2)
 	r.Len(storeUpgrades.Renamed, 0)
 	r.Len(storeUpgrades.Deleted, 0)
@@ -83,4 +84,24 @@ func TestUpgradeTracker(t *testing.T) {
 	r.Len(storeUpgrades.Renamed, 0)
 	r.Len(storeUpgrades.Deleted, 1)
 	r.Len(upgradeHandlers, 0)
+}
+
+func TestUpgradeTrackerBadState(t *testing.T) {
+	r := require.New(t)
+
+	tmpdir, err := os.MkdirTemp("", "storeupgradetracker-*")
+	r.NoError(err)
+	defer os.RemoveAll(tmpdir)
+
+	stateFilePath := path.Join(tmpdir, developUpgradeTrackerStateFile)
+
+	err = os.WriteFile(stateFilePath, []byte("badstate"), 0o600)
+	r.NoError(err)
+
+	allUpgrades := upgradeTracker{
+		upgrades:     []upgradeTrackerItem{},
+		stateFileDir: tmpdir,
+	}
+	_, _, err = allUpgrades.getDevelopUpgrades()
+	r.Error(err)
 }
