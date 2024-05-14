@@ -26,13 +26,12 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.200
     entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+    volumes:
+      - ssh:/root/.ssh
 
   zetacore0:
     image: zetanode:latest
     container_name: zetacore0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile-localnet
     hostname: zetacore0
     ports:
       - "1317:1317"
@@ -48,13 +47,12 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
 
   zetacore1:
     image: zetanode:latest
     container_name: zetacore1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile-localnet
     hostname: zetacore1
     networks:
       mynetwork:
@@ -63,13 +61,12 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
 
   zetaclient0:
     image: zetanode:latest
     container_name: zetaclient0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile-localnet
     hostname: zetaclient0
     networks:
       mynetwork:
@@ -79,13 +76,12 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
 
   zetaclient1:
     image: zetanode:latest
     container_name: zetaclient1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile-localnet
     hostname: zetaclient1
     networks:
       mynetwork:
@@ -95,6 +91,8 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
 
   eth:
     image: ethereum/client-go:v1.10.26
@@ -128,9 +126,6 @@ services:
     image: orchestrator:latest
     tty: true
     container_name: orchestrator
-    build:
-      context: ../../.
-      dockerfile: contrib/localnet/orchestrator/Dockerfile
     depends_on:
       - zetacore0
       - eth
@@ -139,4 +134,7 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.2
     entrypoint: ["/work/start-zetae2e.sh", "local"]
-
+    volumes:
+      - ssh:/root/.ssh
+volumes:
+  ssh:

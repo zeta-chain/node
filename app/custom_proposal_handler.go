@@ -117,7 +117,6 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			shouldAdd := true
 			txSignersSeqs := make(map[string]uint64)
 			for _, sig := range sendersWithNonce {
-				fmt.Println("prepare proposal ", sig.Sender, sig.Nonce)
 				signer := sig.Sender
 				nonce := sig.Nonce
 				seq, ok := selectedTxsSignersSeqs[signer]

@@ -52,4 +52,5 @@ zetacored query [flags]
 * [zetacored query tx](zetacored_query_tx.md)	 - Query for a transaction by hash, "[addr]/[seq]" combination or comma-separated signatures in a committed block
 * [zetacored query txs](zetacored_query_txs.md)	 - Query for paginated transactions that match a set of events
 * [zetacored query upgrade](zetacored_query_upgrade.md)	 - Querying commands for the upgrade module
+* [zetacored query zetaibccrosschain](zetacored_query_zetaibccrosschain.md)	 - Querying commands for the zetaibccrosschain module
 

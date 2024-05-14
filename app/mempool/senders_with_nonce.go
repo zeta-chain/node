@@ -19,20 +19,26 @@ func GetSendersWithNonce(tx sdk.Tx) ([]SenderWithNonce, error) {
 	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
 		opts := txWithExtensions.GetExtensionOptions()
 		if len(opts) > 0 && opts[0].GetTypeUrl() == extensionOptionsEthereumTxTypeURL {
-			for _, msg := range tx.GetMsgs() {
-				if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
-					return []SenderWithNonce{
-						{
-							Sender: ethMsg.GetFrom().String(),
-							Nonce:  ethMsg.AsTransaction().Nonce(),
-						},
-					}, nil
-				}
-			}
+			return getSendersWithNonceEthermint(tx)
 		}
 	}
 
-	return getSendersWithNonceDefault(tx)
+	return getSendersWithNonceCosmos(tx)
+}
+
+// getSendersWithNonceEthermint gets senders and nonces from signatures in ethertmint txs
+func getSendersWithNonceEthermint(tx sdk.Tx) ([]SenderWithNonce, error) {
+	for _, msg := range tx.GetMsgs() {
+		if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
+			return []SenderWithNonce{
+				{
+					Sender: ethMsg.GetFrom().String(),
+					Nonce:  ethMsg.AsTransaction().Nonce(),
+				},
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("ethermint sender with nonce not found")
 }
 
 type SenderWithNonce struct {
@@ -40,8 +46,8 @@ type SenderWithNonce struct {
 	Nonce  uint64
 }
 
-// getSendersWithNonceDefault gets senders and nonces from signatures in cosmos txs
-func getSendersWithNonceDefault(tx sdk.Tx) ([]SenderWithNonce, error) {
+// getSendersWithNonceCosmos gets senders and nonces from signatures in cosmos txs
+func getSendersWithNonceCosmos(tx sdk.Tx) ([]SenderWithNonce, error) {
 	sendersWithNonce := []SenderWithNonce{}
 
 	sigTx, ok := tx.(signing.SigVerifiableTx)

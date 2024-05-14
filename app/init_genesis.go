@@ -25,6 +25,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -52,6 +53,7 @@ func InitGenesisModuleList() []string {
 		vestingtypes.ModuleName,
 		observertypes.ModuleName,
 		crosschaintypes.ModuleName,
+		ibccrosschaintypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
 		emissionsModuleTypes.ModuleName,
 		authz.ModuleName,
