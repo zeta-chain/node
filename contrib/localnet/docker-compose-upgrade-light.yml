@@ -7,5 +7,5 @@ services:
   orchestrator:
     entrypoint: ["/work/start-zetae2e.sh", "local", "upgrade", "90"]
 
-  upgradeorchestrator:
-    entrypoint: ["/root/start-upgradeorchestrator.sh", "90"]
+  upgrade-orchestrator:
+    entrypoint: ["/root/start-upgrade-orchestrator.sh", "90"]
