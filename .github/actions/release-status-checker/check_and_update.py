@@ -72,7 +72,7 @@ def monitor_block_height(proposal_height):
 def update_github_release(proposal_title):
     github_token = os.environ["GITHUB_TOKEN"]
     g = Github(github_token)
-    repo = g.get_repo("your-github-username/your-repo-name")
+    repo = g.get_repo("zeta-chain/node")
     releases = repo.get_releases()
     for release in releases:
         if release.title == proposal_title and release.prerelease:
