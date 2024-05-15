@@ -267,6 +267,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
 			e2etests.TestZetaDepositName,
 			e2etests.TestZetaDepositNewAddressName,
 		}
