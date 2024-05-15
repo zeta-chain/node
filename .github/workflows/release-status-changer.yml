@@ -28,6 +28,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         STATUS_ENDPOINT: "https://zetachain-mainnet.g.allthatnode.com/archive/tendermint/status"
         PROPOSAL_ENDPOINT: "https://zetachain-mainnet.g.allthatnode.com/archive/rest/cosmos/gov/v1/proposals"
+        MAX_WAIT_FOR_PROCESSING_BLOCKS_CHECK: "500"
       run: |
         import requests
         import time
@@ -75,7 +76,7 @@ jobs:
             return current_time - submit_time > timedelta(weeks=1)
 
         def monitor_block_height(proposal_height):
-            max_checks = 50
+            max_checks = int(os.environ["MAX_WAIT_FOR_PROCESSING_BLOCKS_CHECK"])
             checks = 0
             while checks < max_checks:
                 current_height = get_current_block_height()
