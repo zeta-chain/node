@@ -111,7 +111,7 @@
 * [1891](https://github.com/zeta-chain/node/pull/1891) - fix typo that was introduced to docker-compose and a typo in start.sh for the docker start script for full nodes.
 * [1894](https://github.com/zeta-chain/node/pull/1894) - added download binaries and configs to the start sequence so it will download binaries that don't exist
 * [1953](https://github.com/zeta-chain/node/pull/1953) - run E2E tests for all PRs
-* []() - Updated the e2e container tests for release pipeline to observe exit status of test orchestration container.
+* [2188](https://github.com/zeta-chain/node/pull/2188) - Updated the e2e container tests for release pipeline to observe exit status of test orchestration container.
 
 ## Version: v15.0.0
 
