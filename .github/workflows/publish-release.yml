@@ -30,7 +30,6 @@ jobs:
       - name: Branch
         run: |
           echo "${{ github.ref }}"
-
   gosec:
     needs:
       - check_branch
@@ -52,7 +51,7 @@ jobs:
 
       - name: Run Gosec Security Scanner
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: securego/gosec@v2.19.0
+        uses: securego/gosec@master
         with:
           args: ./...
 
@@ -61,7 +60,7 @@ jobs:
         shell: bash
         run: |
           echo "continue"
-
+          
   gosec-cosmos:
     needs:
       - check_branch
@@ -90,7 +89,6 @@ jobs:
         shell: bash
         run: |
           echo "continue"
-
   lint:
     needs:
       - check_branch
@@ -369,6 +367,8 @@ jobs:
         shell: bash
         run: |
           make start-e2e-admin-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -391,6 +391,32 @@ jobs:
         shell: bash
         run: |
           make start-upgrade-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
+
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
+  e2e-stateful-data-test:
+    needs:
+      - check_branch
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute stateful-data-test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          make start-e2e-import-mainnet-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -411,6 +437,7 @@ jobs:
       - e2e-admin-tests
       - e2e-upgrade-test
       - check_branch
+      - e2e-stateful-data-test
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     environment: release
