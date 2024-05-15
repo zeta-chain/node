@@ -10,6 +10,11 @@
 
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
+* [2145](https://github.com/zeta-chain/node/pull/2145) - add `ibc` and `ibc-transfer` modules
+* [2135](https://github.com/zeta-chain/node/pull/2135) - add develop build version logic
+* [2152](https://github.com/zeta-chain/node/pull/2152) - custom priority nonce mempool
+* [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
+* [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 
 ### Refactor
 
@@ -82,6 +87,7 @@
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
+* [2169](https://github.com/zeta-chain/node/pull/2169) - Limit zEVM revert transactions to coin type ZETA
 
 ### Features
 

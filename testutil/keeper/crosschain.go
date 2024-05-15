@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,27 +24,60 @@ import (
 )
 
 type CrosschainMockOptions struct {
-	UseBankMock        bool
-	UseAccountMock     bool
-	UseStakingMock     bool
-	UseObserverMock    bool
-	UseFungibleMock    bool
-	UseAuthorityMock   bool
-	UseLightclientMock bool
+	UseBankMock          bool
+	UseAccountMock       bool
+	UseStakingMock       bool
+	UseObserverMock      bool
+	UseFungibleMock      bool
+	UseAuthorityMock     bool
+	UseLightclientMock   bool
+	UseIBCCrosschainMock bool
 }
 
 var (
 	CrosschainMocksAll = CrosschainMockOptions{
-		UseBankMock:        true,
-		UseAccountMock:     true,
-		UseStakingMock:     true,
-		UseObserverMock:    true,
-		UseFungibleMock:    true,
-		UseAuthorityMock:   true,
-		UseLightclientMock: true,
+		UseBankMock:          true,
+		UseAccountMock:       true,
+		UseStakingMock:       true,
+		UseObserverMock:      true,
+		UseFungibleMock:      true,
+		UseAuthorityMock:     true,
+		UseLightclientMock:   true,
+		UseIBCCrosschainMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
+
+func initCrosschainKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	stakingKeeper types.StakingKeeper,
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	observerKeeper types.ObserverKeeper,
+	fungibleKeeper types.FungibleKeeper,
+	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
+) *keeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+
+	return keeper.NewKeeper(
+		cdc,
+		storeKey,
+		memKey,
+		stakingKeeper,
+		authKeeper,
+		bankKeeper,
+		observerKeeper,
+		fungibleKeeper,
+		authorityKeeper,
+		lightclientKeeper,
+	)
+}
 
 // CrosschainKeeperWithMocks initializes a crosschain keeper for testing purposes with option to mock specific keepers
 func CrosschainKeeperWithMocks(
@@ -94,19 +128,9 @@ func CrosschainKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
 
-	// Create the fungible keeper
+	// Create the crosschain keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	ctx := NewContext(stateStore)
-
-	// Initialize modules genesis
-	sdkKeepers.InitGenesis(ctx)
-	zetaKeepers.InitGenesis(ctx)
-
-	// Add a proposer to the context
-	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
@@ -135,6 +159,7 @@ func CrosschainKeeperWithMocks(
 		lightclientKeeper = crosschainmocks.NewCrosschainLightclientKeeper(t)
 	}
 
+	// create crosschain keeper
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
@@ -147,6 +172,36 @@ func CrosschainKeeperWithMocks(
 		authorityKeeper,
 		lightclientKeeper,
 	)
+
+	// initialize ibccrosschain keeper and set it to the crosschain keeper
+	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
+
+	var ibcCrosschainKeeperTmp types.IBCCrosschainKeeper = initIBCCrosschainKeeper(
+		cdc,
+		db,
+		stateStore,
+		k,
+		sdkKeepers.TransferKeeper,
+		*sdkKeepers.CapabilityKeeper,
+	)
+	if mockOptions.UseIBCCrosschainMock {
+		ibcCrosschainKeeperTmp = crosschainmocks.NewCrosschainIBCCrosschainKeeper(t)
+	}
+	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
+
+	// seal the IBC router
+	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
+
+	// load the latest version of the state store
+	require.NoError(t, stateStore.LoadLatestVersion())
+	ctx := NewContext(stateStore)
+
+	// initialize modules genesis
+	sdkKeepers.InitGenesis(ctx)
+	zetaKeepers.InitGenesis(ctx)
+
+	// add a proposer to the context
+	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }
