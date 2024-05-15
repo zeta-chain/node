@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: |
           echo "continue"
-          
+
   gosec-cosmos:
     needs:
       - check_branch
