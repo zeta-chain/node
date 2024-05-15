@@ -52,7 +52,7 @@ jobs:
 
       - name: Run Gosec Security Scanner
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: securego/gosec@master
+        uses: securego/gosec@v2.19.0
         with:
           args: ./...
 
