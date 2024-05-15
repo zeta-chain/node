@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -11,17 +10,17 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// TestMessagePassingExternalChains tests message passing between external EVM chains
+// TestMessagePassingRevertFailExternalChains tests message passing with failing revert between external EVM chains
 // TODO: Use two external EVM chains for these tests
 // https://github.com/zeta-chain/node/issues/2185
-func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
+func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
-		panic("TestMessagePassing requires exactly one argument for the amount.")
+		panic("TestMessagePassingRevertFail requires exactly one argument for the amount.")
 	}
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	if !ok {
-		panic("Invalid amount specified for TestMessagePassing.")
+		panic("Invalid amount specified for TestMessagePassingRevertFail.")
 	}
 
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
@@ -29,13 +28,11 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
-	r.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
 	auth := r.EVMAuth
 	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
@@ -47,14 +44,13 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 		DestinationChainId:  chainID,
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
-		Message:             nil,
+		Message:             []byte("revert"), // non-empty message will cause revert, because the dest address is not a contract
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
 	})
 	if err != nil {
 		panic(err)
 	}
-
 	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
@@ -72,34 +68,17 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 		}
 	}
 
-	r.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
-	r.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
+	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf(
-			"expected cctx status to be %s; got %s, message %s",
-			cctxtypes.CctxStatus_OutboundMined,
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage,
-		))
-	}
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
-	if receipt.Status != 1 {
-		panic("tx failed")
+	// expect revert tx to fail as well
+	if receipt.Status != 0 {
+		panic("expected revert tx to fail")
 	}
-	for _, log := range receipt.Logs {
-		event, err := r.ConnectorEth.ParseZetaReceived(*log)
-		if err == nil {
-			r.Logger.Info("Received ZetaSent event:")
-			r.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
-			r.Logger.Info("  Zeta Value: %d", event.ZetaValue)
-			r.Logger.Info("  src chainid: %d", event.SourceChainId)
-			if event.ZetaValue.Cmp(cctx.GetCurrentOutTxParam().Amount.BigInt()) != 0 {
-				panic("Zeta value mismatch")
-			}
-		}
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
+		panic("expected cctx to be aborted")
 	}
 }
