@@ -61,7 +61,7 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 			switch attr.Key {
 			// if attr key is msg_type_url, check if it's one of system txs, otherwise mark it as non system tx
 			case "msg_type_url":
-				if isMsgTypeUrlSystemTx(attr) {
+				if isMsgTypeURLSystemTx(attr) {
 					// a non system tx has been found in the block before a system tx
 					if *nonSystemTxFound {
 						errCh <- errors.New("wrong tx priority, system tx not on top")
@@ -79,7 +79,7 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 	}
 }
 
-func isMsgTypeUrlSystemTx(attr types.EventAttribute) bool {
+func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 	// type urls in attr.Value are in double quotes, so it needs to be formatted like this
 	systemTxsMsgTypeUrls := []string{
 		"\"/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx\"",
