@@ -30,7 +30,7 @@ scp -r zetacore0:"~/.zetacored/config ~/.zetacored/os_info ~/.zetacored/config ~
 sed -i 's|tcp://localhost:26657|tcp://zetacore0:26657|g' ~/.zetacored/config/client.toml
 
 # get new zetacored version
-curl -o /tmp/zetacored.new http://upgradehost:8000/zetacored
+curl -o /tmp/zetacored.new http://upgrade-host:8000/zetacored
 chmod +x /tmp/zetacored.new
 UPGRADE_NAME=$(/tmp/zetacored.new version)
 
@@ -75,8 +75,8 @@ esac
 cat > upgrade_plan_info.json <<EOF
 {
     "binaries": {
-        "linux/${GOARCH}": "http://upgradehost:8000/zetacored",
-        "zetaclientd-linux/${GOARCH}": "http://upgradehost:8000/zetaclientd"
+        "linux/${GOARCH}": "http://upgrade-host:8000/zetacored",
+        "zetaclientd-linux/${GOARCH}": "http://upgrade-host:8000/zetaclientd"
     }
 }
 EOF
