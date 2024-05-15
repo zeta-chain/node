@@ -100,4 +100,4 @@ while [[ -z $PROPOSAL_ID ]]; do
 done
 echo "proposal id is ${PROPOSAL_ID}"
 
-zetacored tx gov vote "${PROPOSAL_ID}" yes --from operator --keyring-backend test --chain-id $CHAINID--yes --fees=2000000000000000azeta
+zetacored tx gov vote "${PROPOSAL_ID}" yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=2000000000000000azeta
