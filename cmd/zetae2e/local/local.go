@@ -248,7 +248,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
 			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleWithdrawsName,
+			e2etests.TestMultipleERC20WithdrawsName,
 			e2etests.TestERC20DepositAndCallRefundName,
 			e2etests.TestZRC20SwapName,
 		}
@@ -287,7 +287,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestEtherWithdrawName,
 			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
-			e2etests.TestDepositAndCallRefundName,
+			e2etests.TestEtherDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
