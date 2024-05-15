@@ -97,11 +97,12 @@ if [ "$OPTION" == "upgrade" ]; then
   OLD_VERSION=$(get_zetacored_version)
 
   CURRENT_HEIGHT=0
+  WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
   # wait for upgrade height
-  while [[ $CURRENT_HEIGHT -lt $(( $UPGRADE_HEIGHT - 1 )) ]]
+  while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
   do
     CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
-    echo current height is "$CURRENT_HEIGHT", waiting for "$UPGRADE_HEIGHT"
+    echo current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
     sleep 2
   done
 
@@ -116,6 +117,9 @@ if [ "$OPTION" == "upgrade" ]; then
   fi
 
   echo "upgrade complete: ${OLD_VERSION} -> ${NEW_VERSION}"
+
+  # wait for zevm endpoint to come up
+  sleep 10
 
   echo "running E2E command to test the network after upgrade..."
 
