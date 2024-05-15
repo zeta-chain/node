@@ -14,12 +14,12 @@ import (
 
 func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
-		panic("TestMessagePassing requires exactly one argument for the amount.")
+		panic("TestMessagePassingEVMtoZEVM requires exactly one argument for the amount.")
 	}
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	if !ok {
-		panic("Invalid amount specified for TestMessagePassing.")
+		panic("Invalid amount specified for TestMessagePassingEVMtoZEVM.")
 	}
 
 	// Set destination details
