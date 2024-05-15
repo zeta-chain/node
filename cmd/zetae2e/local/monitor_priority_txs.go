@@ -12,8 +12,8 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 )
 
-// MonitorTxPriorityInBlocks checks for transaction priorities in blocks and reports errors
-func MonitorTxPriorityInBlocks(ctx context.Context, conf config.Config, errCh chan error) {
+// monitorTxPriorityInBlocks checks for transaction priorities in blocks and reports errors
+func monitorTxPriorityInBlocks(ctx context.Context, conf config.Config, errCh chan error) {
 	rpcClient, err := rpchttp.New(conf.RPCs.ZetaCoreRPC, "/websocket")
 	if err != nil {
 		errCh <- err
