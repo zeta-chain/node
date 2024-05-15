@@ -48,7 +48,7 @@ cat > upgrade.json <<EOF
       "plan": {
         "height": "${UPGRADE_HEIGHT}",
         "info": "",
-        "name": "${UPGRADE_HEIGHT}",
+        "name": "${UPGRADE_NAME}",
         "time": "0001-01-01T00:00:00Z",
         "upgraded_client_state": null
       },
