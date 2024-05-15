@@ -89,7 +89,7 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
-	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("TestDAppNoRevert.SendHello tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
