@@ -113,14 +113,15 @@ func SetupHandlers(app *App) {
 				},
 			},
 		},
+		stateFileDir: DefaultNodeHome,
 	}
 
 	var upgradeHandlerFns []upgradeHandlerFn
 	var storeUpgrades *storetypes.StoreUpgrades
 	var err error
-	_, useDevelopTracker := os.LookupEnv("ZETACORED_USE_DEVELOP_UPGRADE_TRACKER")
-	if useDevelopTracker {
-		upgradeHandlerFns, storeUpgrades, err = allUpgrades.getDevelopUpgrades()
+	_, useIncrementalTracker := os.LookupEnv("ZETACORED_USE_INCREMENTAL_UPGRADE_TRACKER")
+	if useIncrementalTracker {
+		upgradeHandlerFns, storeUpgrades, err = allUpgrades.getIncrementalUpgrades()
 		if err != nil {
 			panic(err)
 		}

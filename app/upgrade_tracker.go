@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-const developUpgradeTrackerStateFile = "developupgradetracker"
+const incrementalUpgradeTrackerStateFile = "incrementalupgradetracker"
 
 type upgradeHandlerFn func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error)
 
@@ -26,14 +26,18 @@ type upgradeTrackerItem struct {
 
 // upgradeTracker allows us to track needed upgrades/migrations across both release and develop builds
 type upgradeTracker struct {
-	upgrades     []upgradeTrackerItem
+	upgrades []upgradeTrackerItem
+	// directory the incremental state file is stored
 	stateFileDir string
 }
 
-func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades, error) {
+// getIncrementalUpgrades gets all upgrades that have not been been applied. This is typically
+// used for developnet upgrades since we need to run migrations as the are committed rather than
+// all at once during a release
+func (t upgradeTracker) getIncrementalUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades, error) {
 	neededUpgrades := &storetypes.StoreUpgrades{}
 	neededUpgradeHandlers := []upgradeHandlerFn{}
-	stateFilePath := path.Join(t.stateFileDir, developUpgradeTrackerStateFile)
+	stateFilePath := path.Join(t.stateFileDir, incrementalUpgradeTrackerStateFile)
 
 	currentIndex := int64(0)
 	stateFileContents, err := os.ReadFile(stateFilePath) // #nosec G304 -- stateFilePath is not user controllable
@@ -50,12 +54,12 @@ func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.St
 	for _, item := range t.upgrades {
 		index := item.index
 		upgrade := item.storeUpgrade
-		versionModifier := item.upgradeHandler
+		upgradeHandler := item.upgradeHandler
 		if index <= currentIndex {
 			continue
 		}
-		if versionModifier != nil {
-			neededUpgradeHandlers = append(neededUpgradeHandlers, versionModifier)
+		if upgradeHandler != nil {
+			neededUpgradeHandlers = append(neededUpgradeHandlers, upgradeHandler)
 		}
 		if upgrade != nil {
 			neededUpgrades.Added = append(neededUpgrades.Added, upgrade.Added...)
@@ -71,6 +75,8 @@ func (t upgradeTracker) getDevelopUpgrades() ([]upgradeHandlerFn, *storetypes.St
 	return neededUpgradeHandlers, neededUpgrades, nil
 }
 
+// mergeAllUpgrades unconditionally merges all upgrades. Typically used to gather the
+// migrations used during a release upgrade.
 func (t upgradeTracker) mergeAllUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades) {
 	upgrades := &storetypes.StoreUpgrades{}
 	upgradeHandlers := []upgradeHandlerFn{}

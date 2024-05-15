@@ -54,7 +54,7 @@ func TestUpgradeTracker(t *testing.T) {
 	r.Len(upgradeHandlers, 2)
 
 	// should return all migrations on first call
-	upgradeHandlers, storeUpgrades, err = allUpgrades.getDevelopUpgrades()
+	upgradeHandlers, storeUpgrades, err = allUpgrades.getIncrementalUpgrades()
 	r.NoError(err)
 	r.Len(storeUpgrades.Added, 2)
 	r.Len(storeUpgrades.Renamed, 0)
@@ -62,7 +62,7 @@ func TestUpgradeTracker(t *testing.T) {
 	r.Len(upgradeHandlers, 2)
 
 	// should return no upgrades on second call
-	upgradeHandlers, storeUpgrades, err = allUpgrades.getDevelopUpgrades()
+	upgradeHandlers, storeUpgrades, err = allUpgrades.getIncrementalUpgrades()
 	r.NoError(err)
 	r.Len(storeUpgrades.Added, 0)
 	r.Len(storeUpgrades.Renamed, 0)
@@ -78,7 +78,7 @@ func TestUpgradeTracker(t *testing.T) {
 		},
 	})
 
-	upgradeHandlers, storeUpgrades, err = allUpgrades.getDevelopUpgrades()
+	upgradeHandlers, storeUpgrades, err = allUpgrades.getIncrementalUpgrades()
 	r.NoError(err)
 	r.Len(storeUpgrades.Added, 0)
 	r.Len(storeUpgrades.Renamed, 0)
@@ -93,7 +93,7 @@ func TestUpgradeTrackerBadState(t *testing.T) {
 	r.NoError(err)
 	defer os.RemoveAll(tmpdir)
 
-	stateFilePath := path.Join(tmpdir, developUpgradeTrackerStateFile)
+	stateFilePath := path.Join(tmpdir, incrementalUpgradeTrackerStateFile)
 
 	err = os.WriteFile(stateFilePath, []byte("badstate"), 0o600)
 	r.NoError(err)
@@ -102,6 +102,6 @@ func TestUpgradeTrackerBadState(t *testing.T) {
 		upgrades:     []upgradeTrackerItem{},
 		stateFileDir: tmpdir,
 	}
-	_, _, err = allUpgrades.getDevelopUpgrades()
+	_, _, err = allUpgrades.getIncrementalUpgrades()
 	r.Error(err)
 }
