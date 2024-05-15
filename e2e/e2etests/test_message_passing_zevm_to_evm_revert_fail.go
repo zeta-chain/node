@@ -2,10 +2,10 @@ package e2etests
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"

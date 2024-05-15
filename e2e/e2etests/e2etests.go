@@ -25,11 +25,12 @@ const (
 	TestMessagePassingExternalChainsName              = "message_passing_external_chains"
 	TestMessagePassingRevertFailExternalChainsName    = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessExternalChainsName = "message_passing_revert_success"
-	TestMessagePassingEVMtoZEVMName                   = "message_passing_zevm"
+	TestMessagePassingEVMtoZEVMName                   = "message_passing_evm_to_zevm"
 	TestMessagePassingZEVMToEVMName                   = "message_passing_zevm_to_evm"
 	TestMessagePassingZEVMtoEVMRevertName             = "message_passing_zevm_to_evm_revert"
-	TestMessagePassingEVMtoZEVMRevertName             = "message_passing_revert_zevm"
+	TestMessagePassingEVMtoZEVMRevertName             = "message_passing_evm_to_zevm_revert"
 	TestMessagePassingZEVMtoEVMRevertFailName         = "message_passing_zevm_to_evm_revert_fail"
+	TestMessagePassingEVMtoZEVMRevertFailName         = "message_passing_evm_to_zevm_revert_fail"
 
 	/*
 	 EVM gas tests
@@ -213,6 +214,15 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestMessagePassingZEVMtoEVMRevertFail,
 	),
+	runner.NewE2ETest(
+		TestMessagePassingEVMtoZEVMRevertFailName,
+		"evm -> zevm message passing contract with failing revert",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		TestMessagePassingEVMtoZEVMRevertFail,
+	),
+
 	/*
 	 EVM gas tests
 	*/

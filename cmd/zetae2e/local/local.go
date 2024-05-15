@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
@@ -14,7 +16,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -268,6 +269,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 			e2etests.TestZetaDepositName,
 			e2etests.TestZetaDepositNewAddressName,
 		}
