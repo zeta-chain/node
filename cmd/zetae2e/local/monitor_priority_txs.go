@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/cometbft/cometbft/abci/types"
@@ -56,6 +57,11 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 		for _, attr := range event.Attributes {
 			// skip attrs with empty value
 			if attr.Value == "\"\"" {
+				continue
+			}
+
+			// skip internal events with msg_type_url key, because they are not representing sdk msgs
+			if strings.Contains(attr.Value, ".internal.") {
 				continue
 			}
 			switch attr.Key {
