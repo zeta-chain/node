@@ -245,7 +245,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// run tests
 	var eg errgroup.Group
 	if !skipRegular {
-		// defines all tests, if light is enabled, only the most basic tests are run
+		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
 			e2etests.TestERC20WithdrawName,
 			e2etests.TestMultipleWithdrawsName,
@@ -257,9 +257,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaTests := []string{
 			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingRevertFailName,
-			e2etests.TestMessagePassingRevertSuccessName,
+			e2etests.TestMessagePassingExternalChainsName,
+			e2etests.TestMessagePassingRevertFailExternalChainsName,
+			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,

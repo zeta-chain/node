@@ -10,7 +10,7 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
+func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	approvedAmount := big.NewInt(1e18)
 	if len(args) != 2 {
 		panic("TestMultipleWithdraws requires exactly two arguments: the withdrawal amount and the number of withdrawals.")

@@ -13,7 +13,10 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessagePassing(r *runner.E2ERunner, args []string) {
+// TestMessagePassingExternalChains tests message passing between external EVM chains
+// TODO: Use two external EVM chains for these tests
+// https://github.com/zeta-chain/node/issues/2185
+func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
 		panic("TestMessagePassing requires exactly one argument for the amount.")
 	}
@@ -103,7 +106,10 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 	}
 }
 
-func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
+// TestMessagePassingRevertFailExternalChains tests message passing with failing revert between external EVM chains
+// TODO: Use two external EVM chains for these tests
+// https://github.com/zeta-chain/node/issues/2185
+func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
 		panic("TestMessagePassingRevertFail requires exactly one argument for the amount.")
 	}
@@ -173,7 +179,10 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 	}
 }
 
-func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
+// TestMessagePassingRevertSuccessExternalChains tests message passing with successful revert between external EVM chains
+// TODO: Use two external EVM chains for these tests
+// https://github.com/zeta-chain/node/issues/2185
+func TestMessagePassingRevertSuccessExternalChains(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
 		panic("TestMessagePassingRevertSuccess requires exactly one argument for the amount.")
 	}

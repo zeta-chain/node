@@ -150,14 +150,14 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 }
 
-func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
+func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	if len(args) != 1 {
-		panic("TestDepositAndCallRefund requires exactly one argument for the amount.")
+		panic("TestEtherDepositAndCallRefund requires exactly one argument for the amount.")
 	}
 
 	value, ok := big.NewInt(0).SetString(args[0], 10)
 	if !ok {
-		panic("Invalid amount specified for TestDepositAndCallRefund.")
+		panic("Invalid amount specified for TestEtherDepositAndCallRefund.")
 	}
 
 	evmClient := r.EVMClient
