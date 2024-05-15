@@ -89,7 +89,7 @@ zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend 
 PROPOSAL_TX_HASH=$(jq -r .txhash proposal.json)
 PROPOSAL_ID=""
 # WARN: this seems to be unstable
-while [[ -z $proposal_id ]]; do
+while [[ -z $PROPOSAL_ID ]]; do
     echo "waiting to get proposal_id"
     sleep 1
     # v0.47 version

@@ -99,9 +99,9 @@ if [ "$OPTION" == "upgrade" ]; then
   # wait for upgrade height
   while [[ $CURRENT_HEIGHT -lt $UPGRADE_HEIGHT ]]
   do
-      CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
-      echo current height is "$CURRENT_HEIGHT", waiting for "$UPGRADE_HEIGHT"
-      sleep 5
+    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
+    echo current height is "$CURRENT_HEIGHT", waiting for "$UPGRADE_HEIGHT"
+    sleep 5
   done
 
   echo "waiting 10 seconds for node to restart..."
