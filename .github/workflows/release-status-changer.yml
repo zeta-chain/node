@@ -26,8 +26,8 @@ jobs:
     - name: Run Python Script
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        STATUS_ENDPOINT: "https://zetachain-mainnet-archive.allthatnode.com:26657/status"
-        PROPOSAL_ENDPOINT: "https://zetachain-mainnet-archive.allthatnode.com:1317/cosmos/gov/v1/proposals"
+        STATUS_ENDPOINT: "https://zetachain-mainnet.g.allthatnode.com/archive/tendermint/status"
+        PROPOSAL_ENDPOINT: "https://zetachain-mainnet.g.allthatnode.com/archive/rest/cosmos/gov/v1/proposals"
       run: |
         import requests
         import time
