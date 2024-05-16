@@ -57,8 +57,7 @@ add_v17_message_authorizations() {
                 "grantee": .granteeAddress,
                 "authorization": {
                     "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                    "msg": "/zetachain.zetacore.crosschain.Msg
-                    AddInboundTracker"
+                    "msg": "/zetachain.zetacore.crosschain.MsgAddInboundTracker"
                 },
                 "expiration": null
             }
