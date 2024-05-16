@@ -20,7 +20,7 @@ done
 CURRENT_HEIGHT=0
 while [[ $CURRENT_HEIGHT -lt 1 ]]
 do
-    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
+    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
     echo "current height is ${CURRENT_HEIGHT}, waiting for 1"
     sleep 1
 done
@@ -30,7 +30,7 @@ scp -r zetacore0:"~/.zetacored/config ~/.zetacored/os_info ~/.zetacored/config ~
 sed -i 's|tcp://localhost:26657|tcp://zetacore0:26657|g' ~/.zetacored/config/client.toml
 
 # get new zetacored version
-curl -o /tmp/zetacored.new http://upgradehost:8000/zetacored
+curl -o /tmp/zetacored.new http://upgrade-host:8000/zetacored
 chmod +x /tmp/zetacored.new
 UPGRADE_NAME=$(/tmp/zetacored.new version)
 
@@ -48,7 +48,7 @@ cat > upgrade.json <<EOF
       "plan": {
         "height": "${UPGRADE_HEIGHT}",
         "info": "",
-        "name": "${UPGRADE_HEIGHT}",
+        "name": "${UPGRADE_NAME}",
         "time": "0001-01-01T00:00:00Z",
         "upgraded_client_state": null
       },
@@ -75,8 +75,8 @@ esac
 cat > upgrade_plan_info.json <<EOF
 {
     "binaries": {
-        "linux/${GOARCH}": "http://upgradehost:8000/zetacored",
-        "zetaclientd-linux/${GOARCH}": "http://upgradehost:8000/zetaclientd"
+        "linux/${GOARCH}": "http://upgrade-host:8000/zetacored",
+        "zetaclientd-linux/${GOARCH}": "http://upgrade-host:8000/zetaclientd"
     }
 }
 EOF
@@ -89,7 +89,7 @@ zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend 
 PROPOSAL_TX_HASH=$(jq -r .txhash proposal.json)
 PROPOSAL_ID=""
 # WARN: this seems to be unstable
-while [[ -z $proposal_id ]]; do
+while [[ -z $PROPOSAL_ID ]]; do
     echo "waiting to get proposal_id"
     sleep 1
     # v0.47 version
@@ -100,4 +100,4 @@ while [[ -z $proposal_id ]]; do
 done
 echo "proposal id is ${PROPOSAL_ID}"
 
-zetacored tx gov vote "${PROPOSAL_ID}" yes --from operator --keyring-backend test --chain-id $CHAINID--yes --fees=2000000000000000azeta
+zetacored tx gov vote "${PROPOSAL_ID}" yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=2000000000000000azeta
