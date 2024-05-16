@@ -66,7 +66,7 @@ func getSendersWithNonceCosmos(tx sdk.Tx) ([]SenderWithNonce, error) {
 
 	for _, sig := range sigs {
 		sendersWithNonce = append(sendersWithNonce, SenderWithNonce{
-			Sender: sig.PubKey.Address().String(),
+			Sender: sdk.AccAddress(sig.PubKey.Address()).String(),
 			Nonce:  sig.Sequence,
 		})
 	}
