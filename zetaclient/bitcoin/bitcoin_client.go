@@ -403,10 +403,9 @@ func (ob *BTCChainClient) WatchInbound() {
 				sampledLogger.Info().Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			_ = ob.ObserveInbound()
-			//if err != nil {
-			//	//ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
-			//}
+			if err := ob.ObserveInbound(); err != nil {
+				ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
+			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
 			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.chain.ChainId)
@@ -938,10 +937,9 @@ func (ob *BTCChainClient) WatchUTXOS() {
 			if !ob.GetChainParams().IsSupported {
 				continue
 			}
-			_ = ob.FetchUTXOS()
-			//if err != nil {
-			//ob.logger.UTXOS.Error().Err(err).Msg("error fetching btc utxos")
-			//}
+			if err := ob.FetchUTXOS(); err != nil {
+				ob.logger.UTXOS.Error().Err(err).Msg("error fetching btc utxos")
+			}
 			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOS)
 		case <-ob.stop:
 			ob.logger.UTXOS.Info().Msgf("WatchUTXOS stopped for chain %d", ob.chain.ChainId)
