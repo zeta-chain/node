@@ -5,8 +5,6 @@ import (
 )
 
 // List of all e2e test names to be used in zetae2e
-// TODO : E2E smoke test for abort refund
-// https://github.com/zeta-chain/node/issues/1745
 const (
 	/*
 	 ZETA tests
