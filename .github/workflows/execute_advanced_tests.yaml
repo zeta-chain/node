@@ -46,6 +46,12 @@ jobs:
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
+        
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          cd contrib/localnet
+          docker compose logs
 
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'
@@ -73,6 +79,12 @@ jobs:
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
 
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          cd contrib/localnet
+          docker compose logs
+
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'
         uses: 8398a7/action-slack@v3
@@ -99,6 +111,12 @@ jobs:
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
 
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          cd contrib/localnet
+          docker compose logs
+
   e2e-performance-test:
     if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
@@ -115,3 +133,9 @@ jobs:
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
+
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          cd contrib/localnet
+          docker compose logs

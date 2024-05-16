@@ -1,0 +1,33 @@
+name: "RELEASE:STATUS:UPDATER"
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests PyGithub
+
+    - name: Execute Status Check
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        STATUS_ENDPOINT: "https://zetachain-mainnet.g.allthatnode.com/archive/tendermint/status"
+        PROPOSAL_ENDPOINT: "https://zetachain-mainnet.g.allthatnode.com/archive/rest/cosmos/gov/v1/proposals"
+        MAX_WAIT_FOR_PROCESSING_BLOCKS_CHECK: "500"
+      run: |
+        python .github/actions/release-status-checker/check_and_update.py

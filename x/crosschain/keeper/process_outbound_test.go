@@ -47,10 +47,33 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 
+	t.Run("set failed zevm outbound of cointype ERC20 to aborted", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.NoError(t, err)
+		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
+		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+	})
+
+	t.Run("set failed zevm outbound of cointype Gas to aborted", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.NoError(t, err)
+		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
+		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+	})
+
 	t.Run("successfully process failed outbound if original sender is a address", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(cctx.InboundTxParams.Sender), *statedb.NewEmptyAccount())
 		require.NoError(t, err)
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
@@ -63,6 +86,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.Index = ""
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
@@ -73,6 +97,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.ErrorContains(t, err, "failed AddRevertOutbound")
 	})
@@ -85,6 +110,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		receiver := sample.EthAddress()
 		errorFailedZETARevertAndCallContract := errors.New("test", 999, "failed ZETARevertAndCallContract")
 		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		fungibleMock.On("ZETARevertAndCallContract", mock.Anything,
 			ethcommon.HexToAddress(cctx.InboundTxParams.Sender),
@@ -103,6 +129,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)

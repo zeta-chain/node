@@ -13,7 +13,9 @@
 * [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
 * [2145](https://github.com/zeta-chain/node/pull/2145) - add `ibc` and `ibc-transfer` modules
 * [2135](https://github.com/zeta-chain/node/pull/2135) - add develop build version logic
+* [2152](https://github.com/zeta-chain/node/pull/2152) - custom priority nonce mempool
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
+* [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 
 ### Refactor
 
@@ -38,7 +40,9 @@
 
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
 * [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
-
+* [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
+* [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
+* [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
 ## v16.0.0
 
 ### Breaking Changes
@@ -86,6 +90,7 @@
 * [2059](https://github.com/zeta-chain/node/pull/2059) - Remove unused params from all functions in zetanode
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
+* [2169](https://github.com/zeta-chain/node/pull/2169) - Limit zEVM revert transactions to coin type ZETA
 
 ### Features
 

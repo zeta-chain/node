@@ -187,3 +187,6 @@ type AuthorityKeeper interface {
 type LightclientKeeper interface {
 	VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error)
 }
+
+type IBCCrosschainKeeper interface {
+}
