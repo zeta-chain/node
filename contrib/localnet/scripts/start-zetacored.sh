@@ -12,7 +12,7 @@
 # There if the genesis is generated with a v16 binary for the upgrade tests, it will not contains authorizations for new messages
 # This function will add the missing authorizations to the genesis file
 # TODO: Remove this function when v17 is released
-#
+# https://github.com/zeta-chain/node/issues/2196
 add_v17_message_authorizations() {
     # Path to the JSON file
     json_file="/root/.zetacored/config/genesis.json"
@@ -191,6 +191,8 @@ then
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
   # In this case, we need to add authorizations for the new v17 messages to the genesis file
+  # TODO: Remove this function when v17 is released
+  # https://github.com/zeta-chain/node/issues/2196
   if jq -e 'tostring | contains("AddToOutTxTracker")' "/root/.zetacored/config/genesis.json" > /dev/null; then
     add_v17_message_authorizations
   fi
