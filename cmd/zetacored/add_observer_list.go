@@ -40,7 +40,7 @@ const (
 	tssPubKey       = "tss-pubkey"
 )
 
-func AddObserverAccountsCmd() *cobra.Command {
+func AddObserverListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer-list [observer-list.json] ",
 		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/os_info/observer_info.json",
@@ -56,22 +56,27 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if len(args) == 0 {
 				args = append(args, defaultFile)
 			}
+
 			keyGenBlock, err := cmd.Flags().GetInt64(keygenBlock)
 			if err != nil {
 				return err
 			}
+
 			tssPubkey, err := cmd.Flags().GetString(tssPubKey)
 			if err != nil {
 				return err
 			}
+
 			if keyGenBlock == 0 && tssPubkey == "" {
 				panic("TSS pubkey is required if keygen block is set to 0")
 			}
+
 			file := args[0]
 			observerInfo, err := ParsefileToObserverDetails(file)
 			if err != nil {
 				return err
 			}
+
 			var observerSet types.ObserverSet
 			var grantAuthorizations []authz.GrantAuthorization
 			var nodeAccounts []*types.NodeAccount
@@ -82,14 +87,17 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if !ok {
 				panic("Failed to parse string to int for observer")
 			}
+
 			hotkeyTokens, ok := sdk.NewIntFromString(HotkeyTokens)
 			if !ok {
 				panic("Failed to parse string to int for hotkey")
 			}
+
 			observerTokens, ok := sdk.NewIntFromString(ObserverTokens)
 			if !ok {
 				panic("Failed to parse string to int for hotkey")
 			}
+
 			ValidatorBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, validatorTokens))
 			HotkeyBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, hotkeyTokens))
 			ObserverBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, observerTokens))
@@ -119,6 +127,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 					if err != nil {
 						panic(err)
 					}
+
 					pubkeySet := crypto.PubKeySet{
 						Secp256k1: pubkey,
 						Ed25519:   "",
@@ -161,6 +170,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 					KeyGenZetaHeight:    0,
 				}
 			}
+
 			observerSet.ObserverList = removeDuplicate(observerSet.ObserverList)
 			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
@@ -193,18 +203,22 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
 			}
+
 			zetaObserverStateBz, err := json.Marshal(zetaObserverGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
 			}
+
 			err = codectypes.UnpackInterfaces(authzGenState, cdc)
 			if err != nil {
 				return fmt.Errorf("failed to authz grants into upackeder: %w", err)
 			}
+
 			authZStateBz, err := cdc.MarshalJSON(&authzGenState)
 			if err != nil {
 				return fmt.Errorf("failed to authz grants into Genesis File: %w", err)
 			}
+
 			appState[types.ModuleName] = zetaObserverStateBz
 			appState[authz.ModuleName] = authZStateBz
 			appState[crosschaintypes.ModuleName] = zetaCrossChainStateBz
@@ -212,6 +226,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
+
 			// Create new genesis file
 			appStateJSON, err := json.Marshal(modifiedAppState)
 			if err != nil {
@@ -225,6 +240,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 	}
 	cmd.Flags().Int64(keygenBlock, 20, "set keygen block , default is 20")
 	cmd.Flags().String(tssPubKey, "", "set TSS pubkey if using older keygen")
+
 	return cmd
 }
 
@@ -278,11 +294,11 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info ObserverInfoRea
 			Expiration:    nil,
 		})
 	}
+
 	return grants
 }
 
 func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
-
 	txTypes := []string{sdk.MsgTypeURL(&v1beta1.MsgVote{}),
 		sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}),
 		sdk.MsgTypeURL(&v1beta1.MsgDeposit{}),
@@ -292,6 +308,7 @@ func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []
 		sdk.MsgTypeURL(&v1.MsgDeposit{}),
 		sdk.MsgTypeURL(&v1.MsgVoteWeighted{}),
 	}
+
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
 		if err != nil {
@@ -304,6 +321,7 @@ func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []
 			Expiration:    nil,
 		})
 	}
+
 	return grants
 }
 
@@ -332,6 +350,7 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	if !ok {
 		panic("Failed to parse staking max tokens")
 	}
+
 	alllowList := stakingtypes.StakeAuthorization_AllowList{AllowList: &stakingtypes.StakeAuthorization_Validators{Address: info.StakingValidatorAllowList}}
 
 	stakingAuth, err := codectypes.NewAnyWithValue(&stakingtypes.StakeAuthorization{
@@ -342,6 +361,7 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	if err != nil {
 		panic(err)
 	}
+
 	grants = append(grants, authz.GrantAuthorization{
 		Granter:       info.ObserverAddress,
 		Grantee:       info.StakingGranteeAddress,
@@ -356,6 +376,7 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	if err != nil {
 		panic(err)
 	}
+
 	grants = append(grants, authz.GrantAuthorization{
 		Granter:       info.ObserverAddress,
 		Grantee:       info.StakingGranteeAddress,
@@ -370,12 +391,14 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	if err != nil {
 		panic(err)
 	}
+
 	grants = append(grants, authz.GrantAuthorization{
 		Granter:       info.ObserverAddress,
 		Grantee:       info.StakingGranteeAddress,
 		Authorization: reDelauth,
 		Expiration:    nil,
 	})
+
 	return grants
 
 }
@@ -418,12 +441,14 @@ func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, a
 	if err != nil {
 		return appState, fmt.Errorf("failed to convert accounts into any's: %w", err)
 	}
+
 	authGenState.Accounts = genAccs
 
 	authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
 	if err != nil {
 		return appState, fmt.Errorf("failed to marshal auth genesis state: %w", err)
 	}
+
 	appState[authtypes.ModuleName] = authGenStateBz
 	bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 	bankGenState.Balances = append(bankGenState.Balances, balances...)
@@ -434,6 +459,7 @@ func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, a
 	if err != nil {
 		return appState, fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
+
 	appState[banktypes.ModuleName] = bankGenStateBz
 
 	return appState, nil
@@ -445,5 +471,6 @@ func isValidatorOnly(isObserver string) bool {
 	} else if isObserver == "n" {
 		return true
 	}
+
 	panic("Invalid Input for isObserver field, Check observer_info.json file")
 }
