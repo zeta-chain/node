@@ -12,9 +12,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-// ZetaCoreContext contains core context params
+// ZetacoreContext contains zetacore context params
 // these are initialized and updated at runtime at every height
-type ZetaCoreContext struct {
+type ZetacoreContext struct {
 	coreContextLock    *sync.RWMutex
 	keygen             observertypes.Keygen
 	chainsEnabled      []chains.Chain
@@ -28,9 +28,9 @@ type ZetaCoreContext struct {
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
 }
 
-// NewZetaCoreContext creates and returns new ZetaCoreContext
+// NewZetacoreContext creates and returns new ZetacoreContext
 // it is initializing chain params from provided config
-func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
+func NewZetacoreContext(cfg config.Config) *ZetacoreContext {
 	evmChainParams := make(map[int64]*observertypes.ChainParams)
 	for _, e := range cfg.EVMChainConfigs {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
@@ -42,7 +42,7 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 		bitcoinChainParams = &observertypes.ChainParams{}
 	}
 
-	return &ZetaCoreContext{
+	return &ZetacoreContext{
 		coreContextLock:          new(sync.RWMutex),
 		chainsEnabled:            []chains.Chain{},
 		evmChainParams:           evmChainParams,
@@ -52,7 +52,7 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	}
 }
 
-func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
+func (c *ZetacoreContext) GetKeygen() observertypes.Keygen {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -69,14 +69,14 @@ func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 	}
 }
 
-func (c *ZetaCoreContext) GetCurrentTssPubkey() string {
+func (c *ZetacoreContext) GetCurrentTssPubkey() string {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	return c.currentTssPubkey
 }
 
 // GetEnabledChains returns all enabled chains including zetachain
-func (c *ZetaCoreContext) GetEnabledChains() []chains.Chain {
+func (c *ZetacoreContext) GetEnabledChains() []chains.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -86,7 +86,7 @@ func (c *ZetaCoreContext) GetEnabledChains() []chains.Chain {
 }
 
 // GetEnabledExternalChains returns all enabled external chains
-func (c *ZetaCoreContext) GetEnabledExternalChains() []chains.Chain {
+func (c *ZetacoreContext) GetEnabledExternalChains() []chains.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -99,7 +99,7 @@ func (c *ZetaCoreContext) GetEnabledExternalChains() []chains.Chain {
 	return externalChains
 }
 
-func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
+func (c *ZetacoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -107,7 +107,7 @@ func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.Chain
 	return evmChainParams, found
 }
 
-func (c *ZetaCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
+func (c *ZetacoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -120,7 +120,7 @@ func (c *ZetaCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainP
 	return copied
 }
 
-func (c *ZetaCoreContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
+func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -136,21 +136,21 @@ func (c *ZetaCoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 	return *chain, c.bitcoinChainParams, true
 }
 
-func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
+func (c *ZetacoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	return c.crossChainFlags
 }
 
 // GetAllHeaderEnabledChains returns all verification flags
-func (c *ZetaCoreContext) GetAllHeaderEnabledChains() []lightclienttypes.HeaderSupportedChain {
+func (c *ZetacoreContext) GetAllHeaderEnabledChains() []lightclienttypes.HeaderSupportedChain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	return c.blockHeaderEnabledChains
 }
 
 // GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
-func (c *ZetaCoreContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
+func (c *ZetacoreContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	for _, flags := range c.blockHeaderEnabledChains {
@@ -161,9 +161,9 @@ func (c *ZetaCoreContext) GetBlockHeaderEnabledChains(chainID int64) (lightclien
 	return lightclienttypes.HeaderSupportedChain{}, false
 }
 
-// Update updates core context and params for all chains
-// this must be the ONLY function that writes to core context
-func (c *ZetaCoreContext) Update(
+// Update updates zetacore context and params for all chains
+// this must be the ONLY function that writes to zetacore context
+func (c *ZetacoreContext) Update(
 	keygen *observertypes.Keygen,
 	newChains []chains.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,
@@ -235,13 +235,13 @@ func (c *ZetaCoreContext) Update(
 }
 
 // IsOutboundObservationEnabled returns true if the chain is supported and outbound flag is enabled
-func IsOutboundObservationEnabled(c *ZetaCoreContext, chainParams observertypes.ChainParams) bool {
+func IsOutboundObservationEnabled(c *ZetacoreContext, chainParams observertypes.ChainParams) bool {
 	flags := c.GetCrossChainFlags()
 	return chainParams.IsSupported && flags.IsOutboundEnabled
 }
 
 // IsInboundObservationEnabled returns true if the chain is supported and inbound flag is enabled
-func IsInboundObservationEnabled(c *ZetaCoreContext, chainParams observertypes.ChainParams) bool {
+func IsInboundObservationEnabled(c *ZetacoreContext, chainParams observertypes.ChainParams) bool {
 	flags := c.GetCrossChainFlags()
 	return chainParams.IsSupported && flags.IsInboundEnabled
 }

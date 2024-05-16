@@ -116,7 +116,7 @@ type Observer struct {
 	pendingNonce     uint64
 	utxos            []btcjson.ListUnspentResult
 	params           observertypes.ChainParams
-	coreContext      *context.ZetaCoreContext
+	coreContext      *context.ZetacoreContext
 
 	// includedTxHashes indexes included tx with tx hash
 	includedTxHashes map[string]bool
@@ -172,13 +172,13 @@ func NewObserver(
 
 	ob.zetacoreClient = zetacoreClient
 	ob.Tss = tss
-	ob.coreContext = appcontext.ZetaCoreContext()
+	ob.coreContext = appcontext.ZetacoreContext()
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
 
 	// set the Bitcoin chain params
-	_, chainParams, found := appcontext.ZetaCoreContext().GetBTCChainParams()
+	_, chainParams, found := appcontext.ZetacoreContext().GetBTCChainParams()
 	if !found {
 		return nil, fmt.Errorf("btc chains params not initialized")
 	}

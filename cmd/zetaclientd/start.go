@@ -122,15 +122,15 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	appContext := context.NewAppContext(context.NewZetaCoreContext(cfg), cfg)
-	err = zetacoreClient.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true, startLogger)
+	appContext := context.NewAppContext(context.NewZetacoreContext(cfg), cfg)
+	err = zetacoreClient.UpdateZetacoreContext(appContext.ZetacoreContext(), true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
-	go zetacoreClient.CoreContextUpdater(appContext)
+	go zetacoreClient.ZetacoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -194,7 +194,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		keyGen := appContext.ZetaCoreContext().GetKeygen()
+		keyGen := appContext.ZetacoreContext().GetKeygen()
 		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
 			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
 			continue
@@ -217,7 +217,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
 	}
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.ZetaCoreContext().GetEnabledChains()) == 0 {
+	if len(appContext.ZetacoreContext().GetEnabledChains()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 

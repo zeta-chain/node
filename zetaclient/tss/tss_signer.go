@@ -104,7 +104,7 @@ func NewTSS(
 	newTss := TSS{
 		Server:          server,
 		Keys:            make(map[string]*Key),
-		CurrentPubkey:   appContext.ZetaCoreContext().GetCurrentTssPubkey(),
+		CurrentPubkey:   appContext.ZetacoreContext().GetCurrentTssPubkey(),
 		logger:          logger,
 		ZetacoreClient:  client,
 		KeysignsTracker: NewKeysignsTracker(logger),

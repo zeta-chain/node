@@ -67,9 +67,9 @@ func setupDBTxResults(t *testing.T) (*gorm.DB, map[string]btcjson.GetTransaction
 }
 
 func TestNewBitcoinObserver(t *testing.T) {
-	t.Run("should return error because zetacore doesn't update core context", func(t *testing.T) {
+	t.Run("should return error because zetacore doesn't update zetacore context", func(t *testing.T) {
 		cfg := config.NewConfig()
-		coreContext := context.NewZetaCoreContext(cfg)
+		coreContext := context.NewZetacoreContext(cfg)
 		appContext := context.NewAppContext(coreContext, cfg)
 		chain := chains.BtcMainnetChain
 		zetacoreClient := mocks.NewMockZetaCoreClient()

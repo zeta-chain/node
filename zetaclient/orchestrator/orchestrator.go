@@ -110,7 +110,7 @@ func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) {
 }
 
 // GetUpdatedSigner returns signer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetaCoreContext, chainID int64) (interfaces.ChainSigner, error) {
+func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetacoreContext, chainID int64) (interfaces.ChainSigner, error) {
 	signer, found := oc.signerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
@@ -138,7 +138,7 @@ func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetaCoreContext, c
 }
 
 // GetUpdatedChainObserver returns chain observer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetaCoreContext, chainID int64) (interfaces.ChainObserver, error) {
+func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetacoreContext, chainID int64) (interfaces.ChainObserver, error) {
 	observer, found := oc.observerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("chain observer not found for chainID %d", chainID)
@@ -256,7 +256,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// get supported external chains
-					coreContext := appContext.ZetaCoreContext()
+					coreContext := appContext.ZetacoreContext()
 					externalChains := coreContext.GetEnabledExternalChains()
 
 					// query pending cctxs across all external chains within rate limit

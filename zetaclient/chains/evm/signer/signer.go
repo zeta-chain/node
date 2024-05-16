@@ -48,7 +48,7 @@ type Signer struct {
 	ethSigner   ethtypes.Signer
 	logger      clientcommon.ClientLogger
 	ts          *metrics.TelemetryServer
-	coreContext *clientcontext.ZetaCoreContext
+	coreContext *clientcontext.ZetacoreContext
 
 	// mu protects below fields from concurrent access
 	mu                     *sync.Mutex
@@ -67,7 +67,7 @@ func NewSigner(
 	erc20CustodyABI string,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
-	coreContext *clientcontext.ZetaCoreContext,
+	coreContext *clientcontext.ZetacoreContext,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {

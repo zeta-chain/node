@@ -18,7 +18,7 @@ import (
 
 func MockBTCObserverMainnet() *Observer {
 	cfg := config.NewConfig()
-	coreContext := context.NewZetaCoreContext(cfg)
+	coreContext := context.NewZetacoreContext(cfg)
 
 	return &Observer{
 		chain:          chains.BtcMainnetChain,

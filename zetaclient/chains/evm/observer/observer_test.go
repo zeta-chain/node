@@ -35,8 +35,8 @@ func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainPar
 		Chain:    evmChain,
 		Endpoint: "http://localhost:8545",
 	}
-	// create core context
-	coreCtx := context.NewZetaCoreContext(cfg)
+	// create zetacore context
+	coreCtx := context.NewZetacoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 

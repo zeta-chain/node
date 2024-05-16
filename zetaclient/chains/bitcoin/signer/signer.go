@@ -49,7 +49,7 @@ type Signer struct {
 	logger           zerolog.Logger
 	loggerCompliance zerolog.Logger
 	ts               *metrics.TelemetryServer
-	coreContext      *context.ZetaCoreContext
+	coreContext      *context.ZetacoreContext
 }
 
 func NewSigner(
@@ -57,7 +57,7 @@ func NewSigner(
 	tssSigner interfaces.TSSSigner,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
-	coreContext *context.ZetaCoreContext) (*Signer, error) {
+	coreContext *context.ZetacoreContext) (*Signer, error) {
 	connCfg := &rpcclient.ConnConfig{
 		Host:         cfg.RPCHost,
 		User:         cfg.RPCUsername,

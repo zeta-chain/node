@@ -197,7 +197,7 @@ func TestZetacore_SetTSS(t *testing.T) {
 	})
 }
 
-func TestZetacore_UpdateZetaCoreContext(t *testing.T) {
+func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 	//Setup server for multiple grpc calls
 	listener, err := net.Listen("tcp", "127.0.0.1:9090")
 	require.NoError(t, err)
@@ -329,11 +329,11 @@ func TestZetacore_UpdateZetaCoreContext(t *testing.T) {
 	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
 	client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 
-	t.Run("core context update success", func(t *testing.T) {
+	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.NewConfig()
-		coreCtx := context.NewZetaCoreContext(cfg)
+		coreCtx := context.NewZetacoreContext(cfg)
 		zetacoreBroadcast = MockBroadcast
-		err := client.UpdateZetaCoreContext(coreCtx, false, zerolog.Logger{})
+		err := client.UpdateZetacoreContext(coreCtx, false, zerolog.Logger{})
 		require.NoError(t, err)
 	})
 }

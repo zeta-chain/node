@@ -53,7 +53,7 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 		tss,
 		clientcommon.DefaultLoggers(),
 		&metrics.TelemetryServer{},
-		context.NewZetaCoreContext(cfg))
+		context.NewZetacoreContext(cfg))
 	c.Assert(err, IsNil)
 }
 
@@ -375,7 +375,7 @@ func TestNewBTCSigner(t *testing.T) {
 		tss,
 		clientcommon.DefaultLoggers(),
 		&metrics.TelemetryServer{},
-		context.NewZetaCoreContext(cfg))
+		context.NewZetacoreContext(cfg))
 	require.NoError(t, err)
 	require.NotNil(t, btcSigner)
 }

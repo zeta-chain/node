@@ -7,11 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
-	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
-	"golang.org/x/crypto/sha3"
-
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/rs/zerolog"
 	tsscommon "github.com/zeta-chain/go-tss/common"
@@ -19,11 +14,15 @@ import (
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"golang.org/x/crypto/sha3"
 )
 
 func GenerateTss(
-	appContext *appcontext.AppContext,
+	appContext *context.AppContext,
 	logger zerolog.Logger,
 	client *zetacore.Client,
 	peers p2p.AddrList,
@@ -74,7 +73,7 @@ func GenerateTss(
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		keyGen := appContext.ZetaCoreContext().GetKeygen()
+		keyGen := appContext.ZetacoreContext().GetKeygen()
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}

@@ -45,7 +45,7 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
-	appContext := clientcontext.NewAppContext(&clientcontext.ZetaCoreContext{}, config.Config{})
+	appContext := clientcontext.NewAppContext(&clientcontext.ZetacoreContext{}, config.Config{})
 	client, err := NewObserver(appContext, chains.BtcRegtestChain, nil, tss, tempSQLiteDbPath,
 		clientcommon.DefaultLoggers(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)

@@ -52,7 +52,7 @@ func MockOrchestrator(
 	return orchestrator
 }
 
-func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChainParams *observertypes.ChainParams) *context.ZetaCoreContext {
+func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChainParams *observertypes.ChainParams) *context.ZetacoreContext {
 	// new config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
@@ -61,8 +61,8 @@ func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChain
 	cfg.BitcoinConfig = config.BTCConfig{
 		RPCHost: "localhost",
 	}
-	// new core context
-	coreContext := context.NewZetaCoreContext(cfg)
+	// new zetacore context
+	coreContext := context.NewZetacoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 	ccFlags := sample.CrosschainFlags()
@@ -94,7 +94,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	}
 	btcChainParams := &observertypes.ChainParams{}
 
-	// new chain params in core context
+	// new chain params in zetacore context
 	evmChainParamsNew := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConnectorContractAddress:    testutils.OtherAddress1,
@@ -103,16 +103,16 @@ func Test_GetUpdatedSigner(t *testing.T) {
 
 	t.Run("signer should not be found", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		context := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC signer should not be found
-		_, err := orchestrator.GetUpdatedSigner(coreContext, chains.BscMainnetChain.ChainId)
+		_, err := orchestrator.GetUpdatedSigner(context, chains.BscMainnetChain.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		context := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// update signer with new connector and erc20 custody address
-		signer, err := orchestrator.GetUpdatedSigner(coreContext, evmChain.ChainId)
+		signer, err := orchestrator.GetUpdatedSigner(context, evmChain.ChainId)
 		require.NoError(t, err)
 		require.Equal(t, testutils.OtherAddress1, signer.GetZetaConnectorAddress().Hex())
 		require.Equal(t, testutils.OtherAddress2, signer.GetERC20CustodyAddress().Hex())
@@ -132,7 +132,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		ChainId: btcChain.ChainId,
 	}
 
-	// new chain params in core context
+	// new chain params in zetacore context
 	evmChainParamsNew := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConfirmationCount:           10,

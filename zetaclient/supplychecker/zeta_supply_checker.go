@@ -20,7 +20,7 @@ import (
 
 // ZetaSupplyChecker is a utility to check the total supply of Zeta tokens
 type ZetaSupplyChecker struct {
-	coreContext      *context.ZetaCoreContext
+	coreContext      *context.ZetacoreContext
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetacore.Client
 	ticker           *clienttypes.DynamicTicker
@@ -49,7 +49,7 @@ func NewZetaSupplyChecker(
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
-		coreContext: appContext.ZetaCoreContext(),
+		coreContext: appContext.ZetacoreContext(),
 		zetaClient:  zetaClient,
 	}
 

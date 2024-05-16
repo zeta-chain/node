@@ -163,21 +163,21 @@ func (c *Client) SetTSS(tssPubkey string, keyGenZetaHeight int64, status chains.
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-// CoreContextUpdater is a polling goroutine that checks and updates core context at every height
-func (c *Client) CoreContextUpdater(appContext *appcontext.AppContext) {
-	c.logger.Info().Msg("CoreContextUpdater started")
+// ZetacoreContextUpdater is a polling goroutine that checks and updates zetacore context at every height
+func (c *Client) ZetacoreContextUpdater(appContext *appcontext.AppContext) {
+	c.logger.Info().Msg("ZetacoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
 	sampledLogger := c.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for {
 		select {
 		case <-ticker.C:
 			c.logger.Debug().Msg("Running Updater")
-			err := c.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false, sampledLogger)
+			err := c.UpdateZetacoreContext(appContext.ZetacoreContext(), false, sampledLogger)
 			if err != nil {
-				c.logger.Err(err).Msg("CoreContextUpdater failed to update config")
+				c.logger.Err(err).Msg("ZetacoreContextUpdater failed to update config")
 			}
 		case <-c.stop:
-			c.logger.Info().Msg("CoreContextUpdater stopped")
+			c.logger.Info().Msg("ZetacoreContextUpdater stopped")
 			return
 		}
 	}

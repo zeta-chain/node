@@ -180,9 +180,9 @@ func (c *Client) WaitForCoreToCreateBlocks() {
 	}
 }
 
-// UpdateZetaCoreContext updates core context
-// zetacore stores core context for all clients
-func (c *Client) UpdateZetaCoreContext(coreContext *context.ZetaCoreContext, init bool, sampledLogger zerolog.Logger) error {
+// UpdateZetacoreContext updates zetacore context
+// zetacore stores zetacore context for all clients
+func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, init bool, sampledLogger zerolog.Logger) error {
 	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)

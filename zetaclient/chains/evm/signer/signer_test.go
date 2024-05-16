@@ -41,7 +41,7 @@ func getNewEvmSigner() (*Signer, error) {
 		config.GetERC20CustodyABI(),
 		mpiAddress,
 		erc20CustodyAddress,
-		context.NewZetaCoreContext(cfg),
+		context.NewZetacoreContext(cfg),
 		logger,
 		ts)
 }
@@ -54,7 +54,7 @@ func getNewEvmChainObserver() (*observer.Observer, error) {
 
 	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain, Endpoint: "http://localhost:8545"}
 	cfg.EVMChainConfigs[chains.BscMainnetChain.ChainId] = evmcfg
-	coreCTX := context.NewZetaCoreContext(cfg)
+	coreCTX := context.NewZetacoreContext(cfg)
 	appCTX := context.NewAppContext(coreCTX, cfg)
 
 	return observer.NewObserver(appCTX, mocks.NewMockZetaCoreClient(), tss, "", logger, evmcfg, ts)

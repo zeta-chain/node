@@ -78,7 +78,7 @@ type Observer struct {
 	outTXConfirmedTransactions map[string]*ethtypes.Transaction
 	stop                       chan struct{}
 	logger                     Logger
-	coreContext                *clientcontext.ZetaCoreContext
+	coreContext                *clientcontext.ZetacoreContext
 	chainParams                observertypes.ChainParams
 	ts                         *metrics.TelemetryServer
 
@@ -109,7 +109,7 @@ func NewObserver(
 		Compliance: loggers.Compliance,
 	}
 
-	ob.coreContext = appContext.ZetaCoreContext()
+	ob.coreContext = appContext.ZetacoreContext()
 	chainParams, found := ob.coreContext.GetEVMChainParams(evmCfg.Chain.ChainId)
 	if !found {
 		return nil, fmt.Errorf("evm chains params not initialized for chain %d", evmCfg.Chain.ChainId)

@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -50,12 +50,12 @@ func CreateZetaCoreClient(cfg config.Config, telemetry *metrics.TelemetryServer,
 }
 
 func CreateSignerMap(
-	appContext *appcontext.AppContext,
+	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
-	coreContext := appContext.ZetaCoreContext()
+	coreContext := appContext.ZetacoreContext()
 	signerMap := make(map[int64]interfaces.ChainSigner)
 
 	// EVM signers
@@ -103,7 +103,7 @@ func CreateSignerMap(
 
 // CreateChainObserverMap creates a map of ChainObservers for all chains in the config
 func CreateChainObserverMap(
-	appContext *appcontext.AppContext,
+	appContext *context.AppContext,
 	zetacoreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -116,7 +116,7 @@ func CreateChainObserverMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		_, found := appContext.ZetaCoreContext().GetEVMChainParams(evmConfig.Chain.ChainId)
+		_, found := appContext.ZetacoreContext().GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
 			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue

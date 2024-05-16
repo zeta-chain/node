@@ -29,14 +29,14 @@ func getTestCoreContext(
 	evmChainParams *observertypes.ChainParams,
 	ccFlags observertypes.CrosschainFlags,
 	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
-) *context.ZetaCoreContext {
+) *context.ZetacoreContext {
 	// create config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain: evmChain,
 	}
-	// create core context
-	coreContext := context.NewZetaCoreContext(cfg)
+	// create zetacore context
+	coreContext := context.NewZetacoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 
@@ -59,7 +59,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 	t.Run("should create new zetacore context with empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 
-		zetaContext := context.NewZetaCoreContext(testCfg)
+		zetaContext := context.NewZetacoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		// assert keygen
@@ -102,7 +102,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 				},
 			},
 		}
-		zetaContext := context.NewZetaCoreContext(testCfg)
+		zetaContext := context.NewZetacoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		// assert evm chain params
@@ -128,7 +128,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 			RPCHost:     "test host",
 			RPCParams:   "test params",
 		}
-		zetaContext := context.NewZetaCoreContext(testCfg)
+		zetaContext := context.NewZetacoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		// assert btc chain params panic because chain params are not yet updated
@@ -138,11 +138,11 @@ func TestNewZetaCoreContext(t *testing.T) {
 	})
 }
 
-func TestUpdateZetaCoreContext(t *testing.T) {
-	t.Run("should update core context after being created from empty config", func(t *testing.T) {
+func TestUpdateZetacoreContext(t *testing.T) {
+	t.Run("should update zetacore context after being created from empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 
-		zetaContext := context.NewZetaCoreContext(testCfg)
+		zetaContext := context.NewZetacoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		keyGenToUpdate := observertypes.Keygen{
@@ -221,7 +221,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		require.Equal(t, verificationFlags, verFlags)
 	})
 
-	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
+	t.Run("should update zetacore context after being created from config with evm and btc chain params", func(t *testing.T) {
 		testCfg := config.NewConfig()
 		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
@@ -244,7 +244,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			RPCParams:   "test params",
 		}
 
-		zetaContext := context.NewZetaCoreContext(testCfg)
+		zetaContext := context.NewZetacoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		keyGenToUpdate := observertypes.Keygen{
