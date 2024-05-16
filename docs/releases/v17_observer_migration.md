@@ -28,3 +28,4 @@ zetacored tx authz grant [grantee_address] generic --msg-type=/zetachain.zetacor
 zetacored tx authz grant [grantee_address] generic --msg-type=/zetachain.zetacore.crosschain.MsgAddInboundTracker
 ```
 
+Noteg: These new authorizations must be added before the v17 upgrade. These can be added anytime and doesn't require to restart the Zetaclient
