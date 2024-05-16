@@ -9,6 +9,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,7 +46,7 @@ func TestOutOfOrder(t *testing.T) {
 		for _, mtx := range outOfOrder {
 			mtxs = append(mtxs, mtx)
 		}
-		err := validateOrder(mtxs)
+		err := validateOrder(t, mtxs)
 		require.Error(t, err)
 	}
 
@@ -57,7 +58,7 @@ func TestOutOfOrder(t *testing.T) {
 		rmtxs = append(rmtxs, rtx)
 	}
 
-	require.Error(t, validateOrder(rmtxs))
+	require.Error(t, validateOrder(t, rmtxs))
 }
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
@@ -235,7 +236,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
-				c := ctx.WithPriority(tx.priority)
+				c := ctx.WithPriority(int64(ts.p))
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
@@ -244,11 +245,45 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 
 			var txOrder []int
 			for _, tx := range orderedTxs {
-				txOrder = append(txOrder, tx.(testTx).id)
+				txWithId, ok := tx.(testTxDetailsGetter)
+				require.True(t, ok)
+				txOrder = append(txOrder, txWithId.GetID())
 			}
 
 			require.Equal(t, tt.order, txOrder)
-			require.NoError(t, validateOrder(orderedTxs))
+			require.NoError(t, validateOrder(s.T(), orderedTxs))
+
+			for _, tx := range orderedTxs {
+				require.NoError(t, pool.Remove(tx))
+			}
+
+			require.NoError(t, zetamempool.IsEmpty(pool))
+		})
+	}
+
+	// NOTE: same test cases, just ethermint tx instead
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			pool := zetamempool.NewPriorityMempool()
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				tx := s.buildMockEthTx(i, int64(ts.p), common.BytesToAddress(ts.a).Hex(), uint64(ts.n))
+				c := ctx.WithPriority(int64(ts.p))
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
+
+			orderedTxs := fetchTxs(pool.Select(ctx, nil), 1000)
+
+			var txOrder []int
+			for _, tx := range orderedTxs {
+				txWithId, ok := tx.(testTxDetailsGetter)
+				require.True(t, ok)
+				txOrder = append(txOrder, txWithId.GetID())
+			}
+
+			require.Equal(t, tt.order, txOrder)
+			require.NoError(t, validateOrder(s.T(), orderedTxs))
 
 			for _, tx := range orderedTxs {
 				require.NoError(t, pool.Remove(tx))
@@ -374,13 +409,14 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 
 // validateOrder checks that the txs are ordered by priority and nonce
 // in O(n^2) time by checking each tx against all the other txs
-func validateOrder(mtxs []sdk.Tx) error {
+func validateOrder(t *testing.T, mtxs []sdk.Tx) error {
 	iterations := 0
 	var itxs []txSpec
 	for i, mtx := range mtxs {
 		iterations++
-		tx := mtx.(testTx)
-		itxs = append(itxs, txSpec{p: int(tx.priority), n: int(tx.nonce), a: tx.address, i: i})
+		tx, ok := mtx.(testTxDetailsGetter)
+		require.True(t, ok)
+		itxs = append(itxs, txSpec{p: int(tx.GetPriority()), n: int(tx.GetNonce()), a: tx.GetAddress(), i: i})
 	}
 
 	// Given 2 transactions t1 and t2, where t2.p > t1.p but t2.i < t1.i
@@ -457,7 +493,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	require.Equal(t, len(generated), len(selected))
 
 	start := time.Now()
-	require.NoError(t, validateOrder(selected))
+	require.NoError(t, validateOrder(s.T(), selected))
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
@@ -508,7 +544,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
 
 	start := time.Now()
-	require.NoError(t, validateOrder(selected), errMsg)
+	require.NoError(t, validateOrder(s.T(), selected), errMsg)
 	duration := time.Since(start)
 
 	t.Logf("seed: %d completed in %d iterations; validation in %dms\n",
