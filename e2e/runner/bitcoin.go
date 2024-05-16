@@ -22,7 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
@@ -267,7 +268,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	}
 
 	depositorFee := zetabitcoin.DefaultDepositorFee
-	events, err := zetabitcoin.FilterAndParseIncomingTx(
+	events, err := btcobserver.FilterAndParseIncomingTx(
 		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
 		0,

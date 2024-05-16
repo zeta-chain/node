@@ -25,6 +25,7 @@
 * [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
+* [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
 
 ### Tests
 
@@ -126,7 +127,7 @@
 * [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
 * [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
 * [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
-* [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
+* [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetacore package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update

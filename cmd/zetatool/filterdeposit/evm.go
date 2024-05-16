@@ -7,8 +7,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -19,6 +17,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 )
 
 const (
