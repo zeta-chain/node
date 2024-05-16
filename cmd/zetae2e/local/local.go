@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -331,8 +332,23 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 
+	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
+	txPriorityErrCh := make(chan error, 1)
+	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
+	go monitorTxPriorityInBlocks(ctx, conf, txPriorityErrCh)
+
 	if err := eg.Wait(); err != nil {
 		deployerRunner.CtxCancel()
+		monitorPriorityCancel()
+		logger.Print("❌ %v", err)
+		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
+		os.Exit(1)
+	}
+
+	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
+	logger.Print("⏳ e2e tests passed, checking tx priority")
+	monitorPriorityCancel()
+	if err := <-txPriorityErrCh; err != nil {
 		logger.Print("❌ %v", err)
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
@@ -352,4 +368,27 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	os.Exit(0)
+}
+
+// waitKeygenHeight waits for keygen height
+func waitKeygenHeight(
+	ctx context.Context,
+	cctxClient crosschaintypes.QueryClient,
+	logger *runner.Logger,
+) {
+	// wait for keygen to be completed
+	keygenHeight := int64(60)
+	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
+	for {
+		time.Sleep(2 * time.Second)
+		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		if err != nil {
+			logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			continue
+		}
+		if response.Height >= keygenHeight {
+			break
+		}
+		logger.Info("Last ZetaHeight: %d", response.Height)
+	}
 }

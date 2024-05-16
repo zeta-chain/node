@@ -36,6 +36,7 @@ func TestIsSystemTx(t *testing.T) {
 	//		*cctxtypes.MsgVoteOnObservedInboundTx,
 	//		*cctxtypes.MsgVoteOnObservedOutboundTx,
 	//		*cctxtypes.MsgAddToOutTxTracker,
+	//		*cctxtypes.MsgAddToInTxTracker,
 	//		*observertypes.MsgVoteBlockHeader,
 	//		*observertypes.MsgVoteTSS,
 	//		*observertypes.MsgAddBlameVote:
@@ -162,6 +163,24 @@ func TestIsSystemTx(t *testing.T) {
 		{
 			"MsgExec{MsgAddToOutTxTracker}",
 			buildAuthzTxFromMsg(&crosschaintypes.MsgAddToOutTxTracker{
+				Creator: sample.AccAddress(),
+			}),
+			isAuthorized,
+
+			true,
+		},
+		{
+			"MsgAddToInTxTracker",
+			buildTxFromMsg(&crosschaintypes.MsgAddToInTxTracker{
+				Creator: sample.AccAddress(),
+			}),
+			isAuthorized,
+
+			true,
+		},
+		{
+			"MsgExec{MsgAddToInTxTracker}",
+			buildAuthzTxFromMsg(&crosschaintypes.MsgAddToInTxTracker{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
