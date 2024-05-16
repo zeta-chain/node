@@ -172,6 +172,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		*crosschaintypes.MsgVoteOnObservedInboundTx,
 		*crosschaintypes.MsgVoteOnObservedOutboundTx,
 		*crosschaintypes.MsgAddToOutTxTracker,
+		*crosschaintypes.MsgAddToInTxTracker,
 		*observertypes.MsgVoteBlockHeader,
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgAddBlameVote:

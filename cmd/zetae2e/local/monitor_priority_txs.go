@@ -71,6 +71,7 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 					// a non system tx has been found in the block before a system tx
 					if *nonSystemTxFound {
 						errCh <- errors.New("wrong tx priority, system tx not on top")
+						return
 					}
 				} else {
 					*nonSystemTxFound = true
@@ -92,6 +93,7 @@ func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 		"\"/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx\"",
 		"\"/zetachain.zetacore.crosschain.MsgVoteGasPrice\"",
 		"\"/zetachain.zetacore.crosschain.MsgAddToOutTxTracker\"",
+		"\"/zetachain.zetacore.crosschain.MsgAddToInTxTracker\"",
 		"\"/zetachain.zetacore.observer.MsgVoteBlockHeader\"",
 		"\"/zetachain.zetacore.observer.MsgVoteTSS\"",
 		"\"/zetachain.zetacore.observer.MsgAddBlameVote\"",
