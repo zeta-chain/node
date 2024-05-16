@@ -28,8 +28,6 @@ import (
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
 
-const releaseVersion = "v17"
-
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
 	for _, subspace := range app.ParamsKeeper.GetSubspaces() {
@@ -129,8 +127,8 @@ func SetupHandlers(app *App) {
 		upgradeHandlerFns, storeUpgrades = allUpgrades.mergeAllUpgrades()
 	}
 
-	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Running upgrade handler for " + releaseVersion)
+	app.UpgradeKeeper.SetUpgradeHandler(constant.Version, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Running upgrade handler for " + constant.Version)
 
 		var err error
 		for _, upgradeHandler := range upgradeHandlerFns {
