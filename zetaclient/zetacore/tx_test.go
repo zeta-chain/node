@@ -297,10 +297,9 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				UnlimitedTimes().
 				WithPayload(observertypes.QueryGetCrosschainFlagsRequest{}).
 				Return(observertypes.QueryGetCrosschainFlagsResponse{CrosschainFlags: observertypes.CrosschainFlags{
-					IsInboundEnabled:             true,
-					IsOutboundEnabled:            false,
-					GasPriceIncreaseFlags:        nil,
-					BlockHeaderVerificationFlags: nil,
+					IsInboundEnabled:      true,
+					IsOutboundEnabled:     false,
+					GasPriceIncreaseFlags: nil,
 				}})
 
 			method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"

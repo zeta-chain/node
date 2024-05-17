@@ -48,9 +48,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.CrosschainFlags != nil {
 		crosschainFlags.IsOutboundEnabled = genState.CrosschainFlags.IsOutboundEnabled
 		crosschainFlags.IsInboundEnabled = genState.CrosschainFlags.IsInboundEnabled
-		if genState.CrosschainFlags.BlockHeaderVerificationFlags != nil {
-			crosschainFlags.BlockHeaderVerificationFlags = genState.CrosschainFlags.BlockHeaderVerificationFlags
-		}
 		if genState.CrosschainFlags.GasPriceIncreaseFlags != nil {
 			crosschainFlags.GasPriceIncreaseFlags = genState.CrosschainFlags.GasPriceIncreaseFlags
 		}

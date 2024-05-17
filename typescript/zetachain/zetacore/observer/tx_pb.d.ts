@@ -9,7 +9,7 @@ import type { ObserverUpdateReason } from "./observer_pb.js";
 import type { HeaderData } from "../pkg/proofs/proofs_pb.js";
 import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
-import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
+import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 
 /**
@@ -373,11 +373,6 @@ export declare class MsgUpdateCrosschainFlags extends Message<MsgUpdateCrosschai
    * @generated from field: zetachain.zetacore.observer.GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
    */
   gasPriceIncreaseFlags?: GasPriceIncreaseFlags;
-
-  /**
-   * @generated from field: zetachain.zetacore.observer.BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
-   */
-  blockHeaderVerificationFlags?: BlockHeaderVerificationFlags;
 
   constructor(data?: PartialMessage<MsgUpdateCrosschainFlags>);
 
