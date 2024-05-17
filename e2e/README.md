@@ -28,8 +28,8 @@ A config YAML file can be provided to the E2E test tool via the `--config` flag.
 - `Zevm`: RPC endpoint for the ZetaChain EVM.
 - `EVM`: RPC endpoint for the Ethereum network.
 - `Bitcoin`: RPC endpoint for the Bitcoin network.
-- `ZetaCoreGRPC`: GRPC endpoint for ZetaCore.
-- `ZetaCoreRPC`: RPC endpoint for ZetaCore.
+- `ZetaCoreGRPC`: GRPC endpoint for zetacore.
+- `ZetaCoreRPC`: RPC endpoint for zetacore.
 
 ### Contracts Configuration:
 

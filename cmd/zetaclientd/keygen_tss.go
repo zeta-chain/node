@@ -7,11 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-	"golang.org/x/crypto/sha3"
-
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/rs/zerolog"
 	tsscommon "github.com/zeta-chain/go-tss/common"
@@ -19,13 +14,17 @@ import (
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"golang.org/x/crypto/sha3"
 )
 
 func GenerateTss(
-	appContext *appcontext.AppContext,
+	appContext *context.AppContext,
 	logger zerolog.Logger,
-	zetaBridge *zetabridge.ZetaCoreBridge,
+	client *zetacore.Client,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
 	ts *metrics.TelemetryServer,
@@ -48,7 +47,7 @@ func GenerateTss(
 		peers,
 		priKey,
 		preParams,
-		zetaBridge,
+		client,
 		tssHistoricalList,
 		bitcoinChainID,
 		tssPassword,
@@ -65,7 +64,7 @@ func GenerateTss(
 	// Set TSS block to 0 using genesis file to disable this feature
 	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
-	// The votes to signify a successful TSS generation (Or unsuccessful) is signed by the operator key and broadcast to zetabridge by the zetcalientGrantee key on behalf of the operator .
+	// The votes to signify a successful TSS generation (Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
 	triedKeygenAtBlock := false
 	lastBlock := int64(0)
@@ -74,7 +73,7 @@ func GenerateTss(
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		keyGen := appContext.ZetaCoreContext().GetKeygen()
+		keyGen := appContext.ZetacoreContext().GetKeygen()
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
@@ -86,9 +85,9 @@ func GenerateTss(
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
 		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
-			currentBlock, err := zetaBridge.GetZetaBlockHeight()
+			currentBlock, err := client.GetBlockHeight()
 			if err != nil {
-				keygenLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
+				keygenLogger.Error().Err(err).Msg("GetBlockHeight RPC  error")
 				continue
 			}
 			// Reset the flag if the keygen block has passed and a new keygen block has been set . This condition is only reached if the older keygen is stuck at PendingKeygen for some reason
@@ -109,7 +108,7 @@ func GenerateTss(
 				err = keygenTss(keyGen, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
-					tssFailedVoteHash, err := zetaBridge.SetTSS("", keyGen.BlockNumber, chains.ReceiveStatus_failed)
+					tssFailedVoteHash, err := client.SetTSS("", keyGen.BlockNumber, chains.ReceiveStatus_failed)
 					if err != nil {
 						keygenLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 						return nil, err
@@ -119,15 +118,15 @@ func GenerateTss(
 				}
 
 				newTss := mc.TSS{
-					Server:        tss.Server,
-					Keys:          tss.Keys,
-					CurrentPubkey: tss.CurrentPubkey,
-					Signers:       tss.Signers,
-					CoreBridge:    nil,
+					Server:         tss.Server,
+					Keys:           tss.Keys,
+					CurrentPubkey:  tss.CurrentPubkey,
+					Signers:        tss.Signers,
+					ZetacoreClient: nil,
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := zetaBridge.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, chains.ReceiveStatus_success)
+				tssSuccessVoteHash, err := client.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, chains.ReceiveStatus_success)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err
@@ -162,7 +161,7 @@ func keygenTss(keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Lo
 			return err
 		}
 		index := fmt.Sprintf("keygen-%s-%d", digest, keyGen.BlockNumber)
-		zetaHash, err := tss.CoreBridge.PostBlameData(&res.Blame, tss.CoreBridge.ZetaChain().ChainId, index)
+		zetaHash, err := tss.ZetacoreClient.PostBlameData(&res.Blame, tss.ZetacoreClient.Chain().ChainId, index)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err
