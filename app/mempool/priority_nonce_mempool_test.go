@@ -1,3 +1,5 @@
+// Forked from here and extended to test ethermint txs https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce_test.go
+// TODO: remove this once cosmos is upgraded: https://github.com/zeta-chain/node/issues/2156
 package mempool_test
 
 import (
