@@ -30,6 +30,7 @@
 ### Tests
 
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+* [2181](https://github.com/zeta-chain/node/pull/2181) - add more assertion and test cases in ZEVM message passing E2E tests
 * [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
 * [2199](https://github.com/zeta-chain/node/pull/2199) - custom priority mempool unit tests
 
