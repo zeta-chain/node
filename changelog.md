@@ -25,7 +25,8 @@
 * [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
-* [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
+* [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly
+* [2210](https://github.com/zeta-chain/node/pull/2210) - removed uncessary panics in the zetaclientd process
 
 ### Tests
 
