@@ -41,7 +41,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
 
 		eg.Go(func() error {
-			return MonitorEtherDeposit(r, hash, i, time.Now())
+			return monitorEtherDeposit(r, hash, i, time.Now())
 		})
 	}
 
@@ -53,8 +53,8 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("all deposits completed")
 }
 
-// MonitorEtherDeposit monitors the deposit of ether, returns once the deposit is complete
-func MonitorEtherDeposit(r *runner.E2ERunner, hash ethcommon.Hash, index int, startTime time.Time) error {
+// monitorEtherDeposit monitors the deposit of ether, returns once the deposit is complete
+func monitorEtherDeposit(r *runner.E2ERunner, hash ethcommon.Hash, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

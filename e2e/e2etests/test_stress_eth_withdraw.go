@@ -57,7 +57,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
-			return MonitorEtherWithdraw(r, tx, i, time.Now())
+			return monitorEtherWithdraw(r, tx, i, time.Now())
 		})
 	}
 
@@ -69,8 +69,8 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("all withdraws completed")
 }
 
-// MonitorEtherWithdraw monitors the withdraw of ether, returns once the withdraw is complete
-func MonitorEtherWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+// monitorEtherWithdraw monitors the withdraw of ether, returns once the withdraw is complete
+func monitorEtherWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
