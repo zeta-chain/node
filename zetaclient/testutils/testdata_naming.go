@@ -14,8 +14,8 @@ func FileNameEVMBlock(chainID int64, blockNumber uint64, trimmed bool) string {
 	return fmt.Sprintf("chain_%d_block_ethrpc_trimmed_%d.json", chainID, blockNumber)
 }
 
-// FileNameCctxByIntx returns unified archive cctx file name by intx
-func FileNameCctxByIntx(chainID int64, intxHash string, coinType coin.CoinType) string {
+// FileNameCctxByInbound returns unified archive cctx file name by intx
+func FileNameCctxByInbound(chainID int64, intxHash string, coinType coin.CoinType) string {
 	return fmt.Sprintf("cctx_intx_%d_%s_%s.json", chainID, coinType, intxHash)
 }
 
@@ -50,7 +50,7 @@ func FileNameBTCInbound(chainID int64, intxHash string, donation bool) string {
 
 // FileNameBTCOutbound returns unified archive file name for outbound tx
 func FileNameBTCOutbound(chainID int64, nonce uint64) string {
-	return fmt.Sprintf("chain_%d_outtx_raw_result_nonce_%d.json", chainID, nonce)
+	return fmt.Sprintf("chain_%d_outbound_raw_result_nonce_%d.json", chainID, nonce)
 }
 
 // FileNameBTCTxByType returns unified archive file name for tx by type
@@ -66,14 +66,14 @@ func FileNameBTCMsgTx(chainID int64, txHash string) string {
 
 // FileNameEVMOutbound returns unified archive file name for outbound tx
 func FileNameEVMOutbound(chainID int64, txHash string, coinType coin.CoinType) string {
-	return fmt.Sprintf("chain_%d_outtx_%s_%s.json", chainID, coinType, txHash)
+	return fmt.Sprintf("chain_%d_outbound_%s_%s.json", chainID, coinType, txHash)
 }
 
 // FileNameEVMOutboundReceipt returns unified archive file name for outbound tx receipt
 func FileNameEVMOutboundReceipt(chainID int64, txHash string, coinType coin.CoinType, eventName string) string {
 	// empty eventName is for regular transfer receipt, no event
 	if eventName == "" {
-		return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s.json", chainID, coinType, txHash)
+		return fmt.Sprintf("chain_%d_outbound_receipt_%s_%s.json", chainID, coinType, txHash)
 	}
-	return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s_%s.json", chainID, coinType, eventName, txHash)
+	return fmt.Sprintf("chain_%d_outbound_receipt_%s_%s_%s.json", chainID, coinType, eventName, txHash)
 }

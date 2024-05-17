@@ -31,11 +31,11 @@ const (
 	// DefaultRetryInterval is the interval between retries in seconds
 	DefaultRetryInterval = 5
 
-	// MonitorVoteInboundTxResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorVoteInboundTxResultInterval = 5
+	// MonitorVoteInboundResultInterval is the interval between retries for monitoring tx result in seconds
+	MonitorVoteInboundResultInterval = 5
 
-	// MonitorVoteInboundTxResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorVoteInboundTxResultRetryCount = 20
+	// MonitorVoteInboundResultRetryCount is the number of retries to fetch monitoring tx result
+	MonitorVoteInboundResultRetryCount = 20
 
 	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx
 	PostVoteOutboundGasLimit = 400_000
@@ -44,9 +44,9 @@ const (
 	// The value needs to be higher because reverting implies interacting with the EVM to perform swaps for the gas token
 	PostVoteOutboundRevertGasLimit = 1_500_000
 
-	// MonitorVoteOutboundTxResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorVoteOutboundTxResultInterval = 5
+	// MonitorVoteOutboundResultInterval is the interval between retries for monitoring tx result in seconds
+	MonitorVoteOutboundResultInterval = 5
 
-	// MonitorVoteOutboundTxResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorVoteOutboundTxResultRetryCount = 20
+	// MonitorVoteOutboundResultRetryCount is the number of retries to fetch monitoring tx result
+	MonitorVoteOutboundResultRetryCount = 20
 )

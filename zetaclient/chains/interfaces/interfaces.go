@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"math/big"
 
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -49,8 +50,8 @@ type ChainObserver interface {
 type ChainSigner interface {
 	TryProcessOutbound(
 		cctx *crosschaintypes.CrossChainTx,
-		outTxProc *outboundprocessor.Processor,
-		outTxID string,
+		outboundProc *outboundprocessor.Processor,
+		outboundID string,
 		observer ChainObserver,
 		zetacoreClient ZetacoreClient,
 		height uint64,
@@ -68,9 +69,9 @@ type ZetacoreClient interface {
 		sendHash string,
 		outboundHash string,
 		outBlockHeight uint64,
-		outTxGasUsed uint64,
-		outTxEffectiveGasPrice *big.Int,
-		outTxEffectiveGasLimit uint64,
+		outboundGasUsed uint64,
+		outboundEffectiveGasPrice *big.Int,
+		outboundEffectiveGasLimit uint64,
 		amount *big.Int,
 		status chains.ReceiveStatus,
 		chain chains.Chain,
@@ -102,7 +103,7 @@ type ZetacoreClient interface {
 	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
 	GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
-	GetAllOutboundTrackerByChainbound(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
+	GetAllOutboundTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error)
 	GetObserverList() ([]string, error)

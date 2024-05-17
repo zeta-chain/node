@@ -1,6 +1,7 @@
 package outboundprocessor
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -16,7 +17,7 @@ type Processor struct {
 	numActiveProcessor int64
 }
 
-func NewOutboundProcessorManager(logger zerolog.Logger) *Processor {
+func NewProcessor(logger zerolog.Logger) *Processor {
 	return &Processor{
 		outboundStartTime:  make(map[string]time.Time),
 		outboundEndTime:    make(map[string]time.Time),
@@ -59,4 +60,9 @@ func (outboundManager *Processor) TimeInTryProcess(outboundID string) time.Durat
 		return time.Since(outboundManager.outboundStartTime[outboundID])
 	}
 	return 0
+}
+
+// ToOutboundID returns the outbound ID for OutboundProcessorManager to track
+func ToOutboundID(index string, receiverChainID int64, nonce uint64) string {
+	return fmt.Sprintf("%s-%d-%d", index, receiverChainID, nonce)
 }

@@ -28,8 +28,8 @@ var CCtxByNonceMap = map[int64]map[uint64]*crosschaintypes.CrossChainTx{
 	},
 }
 
-// CctxByIntxMap maps the [chainID, coinType, intxHash] to the cross chain transaction
-var CctxByIntxMap = map[int64]map[coin.CoinType]map[string]*crosschaintypes.CrossChainTx{
+// CctxByInboundMap maps the [chainID, coinType, intxHash] to the cross chain transaction
+var CctxByInboundMap = map[int64]map[coin.CoinType]map[string]*crosschaintypes.CrossChainTx{
 	// Ethereum mainnet
 	1: {
 		coin.CoinType_Zeta: {

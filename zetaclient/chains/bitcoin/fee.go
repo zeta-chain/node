@@ -30,9 +30,9 @@ const (
 	bytesPerWitness         = 108 // each additional witness incurs about 108 bytes and it may vary
 	defaultDepositorFeeRate = 20  // 20 sat/byte is the default depositor fee rate
 
-	OutTxBytesMin = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
-	OutTxBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
-	OutTxBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
+	OutboundBytesMin = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
+	OutboundBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
+	OutboundBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
 	DynamicDepositorFeeHeight = 834500 // DynamicDepositorFeeHeight contains the starting height (Bitcoin mainnet) from which dynamic depositor fee will take effect
 )

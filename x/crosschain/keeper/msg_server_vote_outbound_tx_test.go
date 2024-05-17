@@ -119,7 +119,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 	}
 }
 
-func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
+func TestKeeper_VoteOutbound(t *testing.T) {
 	t.Run("successfully vote on outbound tx with status pending outbound ,vote-type success", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,

@@ -53,15 +53,15 @@ func ComplianceConfigTest() config.ComplianceConfig {
 	}
 }
 
-// LoadCctxByIntx loads archived cctx by intx
-func LoadCctxByIntx(
+// LoadCctxByInbound loads archived cctx by intx
+func LoadCctxByInbound(
 	t *testing.T,
 	chainID int64,
 	coinType coin.CoinType,
 	intxHash string,
 ) *crosschaintypes.CrossChainTx {
 	// get cctx
-	cctx, found := testcctx.CctxByIntxMap[chainID][coinType][intxHash]
+	cctx, found := testcctx.CctxByInboundMap[chainID][coinType][intxHash]
 	require.True(t, found)
 
 	// clone cctx for each individual test
@@ -100,17 +100,17 @@ func LoadBTCTxRawResult(t *testing.T, dir string, chainID int64, txType string, 
 	return rawResult
 }
 
-// LoadBTCIntxRawResult loads archived Bitcoin intx raw result from file
-func LoadBTCIntxRawResult(t *testing.T, dir string, chainID int64, txHash string, donation bool) *btcjson.TxRawResult {
-	name := path.Join(dir, TestDataPathBTC, FileNameBTCIntx(chainID, txHash, donation))
+// LoadBTCInboundRawResult loads archived Bitcoin intx raw result from file
+func LoadBTCInboundRawResult(t *testing.T, dir string, chainID int64, txHash string, donation bool) *btcjson.TxRawResult {
+	name := path.Join(dir, TestDataPathBTC, FileNameBTCInbound(chainID, txHash, donation))
 	rawResult := &btcjson.TxRawResult{}
 	LoadObjectFromJSONFile(t, rawResult, name)
 	return rawResult
 }
 
-// LoadBTCTxRawResultNCctx loads archived Bitcoin outtx raw result and corresponding cctx
+// LoadBTCTxRawResultNCctx loads archived Bitcoin outbound raw result and corresponding cctx
 func LoadBTCTxRawResultNCctx(t *testing.T, dir string, chainID int64, nonce uint64) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
-	nameTx := path.Join(dir, TestDataPathBTC, FileNameBTCOuttx(chainID, nonce))
+	nameTx := path.Join(dir, TestDataPathBTC, FileNameBTCOutbound(chainID, nonce))
 	rawResult := &btcjson.TxRawResult{}
 	LoadObjectFromJSONFile(t, rawResult, nameTx)
 
@@ -125,7 +125,7 @@ func LoadEVMInbound(
 	chainID int64,
 	intxHash string,
 	coinType coin.CoinType) *ethrpc.Transaction {
-	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMIntx(chainID, intxHash, coinType, false))
+	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMInbound(chainID, intxHash, coinType, false))
 
 	tx := &ethrpc.Transaction{}
 	LoadObjectFromJSONFile(t, &tx, nameTx)
@@ -139,7 +139,7 @@ func LoadEVMInboundReceipt(
 	chainID int64,
 	intxHash string,
 	coinType coin.CoinType) *ethtypes.Receipt {
-	nameReceipt := path.Join(dir, TestDataPathEVM, FileNameEVMIntxReceipt(chainID, intxHash, coinType, false))
+	nameReceipt := path.Join(dir, TestDataPathEVM, FileNameEVMInboundReceipt(chainID, intxHash, coinType, false))
 
 	receipt := &ethtypes.Receipt{}
 	LoadObjectFromJSONFile(t, &receipt, nameReceipt)
@@ -154,8 +154,8 @@ func LoadEVMInboundNReceipt(
 	intxHash string,
 	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
 	// load archived intx and receipt
-	tx := LoadEVMIntx(t, dir, chainID, intxHash, coinType)
-	receipt := LoadEVMIntxReceipt(t, dir, chainID, intxHash, coinType)
+	tx := LoadEVMInbound(t, dir, chainID, intxHash, coinType)
+	receipt := LoadEVMInboundReceipt(t, dir, chainID, intxHash, coinType)
 
 	return tx, receipt
 }
@@ -167,7 +167,7 @@ func LoadEVMInboundDonation(
 	chainID int64,
 	intxHash string,
 	coinType coin.CoinType) *ethrpc.Transaction {
-	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMIntx(chainID, intxHash, coinType, true))
+	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMInbound(chainID, intxHash, coinType, true))
 
 	tx := &ethrpc.Transaction{}
 	LoadObjectFromJSONFile(t, &tx, nameTx)
@@ -181,7 +181,7 @@ func LoadEVMInboundReceiptDonation(
 	chainID int64,
 	intxHash string,
 	coinType coin.CoinType) *ethtypes.Receipt {
-	nameReceipt := path.Join(dir, TestDataPathEVM, FileNameEVMIntxReceipt(chainID, intxHash, coinType, true))
+	nameReceipt := path.Join(dir, TestDataPathEVM, FileNameEVMInboundReceipt(chainID, intxHash, coinType, true))
 
 	receipt := &ethtypes.Receipt{}
 	LoadObjectFromJSONFile(t, &receipt, nameReceipt)
@@ -196,8 +196,8 @@ func LoadEVMInboundNReceiptDonation(
 	intxHash string,
 	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
 	// load archived donation intx and receipt
-	tx := LoadEVMIntxDonation(t, dir, chainID, intxHash, coinType)
-	receipt := LoadEVMIntxReceiptDonation(t, dir, chainID, intxHash, coinType)
+	tx := LoadEVMInboundDonation(t, dir, chainID, intxHash, coinType)
+	receipt := LoadEVMInboundReceiptDonation(t, dir, chainID, intxHash, coinType)
 
 	return tx, receipt
 }
@@ -210,9 +210,9 @@ func LoadEVMInboundNReceiptNCctx(
 	intxHash string,
 	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt, *crosschaintypes.CrossChainTx) {
 	// load archived intx, receipt and cctx
-	tx := LoadEVMIntx(t, dir, chainID, intxHash, coinType)
-	receipt := LoadEVMIntxReceipt(t, dir, chainID, intxHash, coinType)
-	cctx := LoadCctxByIntx(t, chainID, coinType, intxHash)
+	tx := LoadEVMInbound(t, dir, chainID, intxHash, coinType)
+	receipt := LoadEVMInboundReceipt(t, dir, chainID, intxHash, coinType)
+	cctx := LoadCctxByInbound(t, chainID, coinType, intxHash)
 
 	return tx, receipt, cctx
 }
@@ -224,7 +224,7 @@ func LoadEVMOutbound(
 	chainID int64,
 	txHash string,
 	coinType coin.CoinType) *ethtypes.Transaction {
-	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMOuttx(chainID, txHash, coinType))
+	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMOutbound(chainID, txHash, coinType))
 
 	tx := &ethtypes.Transaction{}
 	LoadObjectFromJSONFile(t, &tx, nameTx)
@@ -239,7 +239,7 @@ func LoadEVMOutboundReceipt(
 	txHash string,
 	coinType coin.CoinType,
 	eventName string) *ethtypes.Receipt {
-	nameReceipt := path.Join(dir, TestDataPathEVM, FileNameEVMOuttxReceipt(chainID, txHash, coinType, eventName))
+	nameReceipt := path.Join(dir, TestDataPathEVM, FileNameEVMOutboundReceipt(chainID, txHash, coinType, eventName))
 
 	receipt := &ethtypes.Receipt{}
 	LoadObjectFromJSONFile(t, &receipt, nameReceipt)
@@ -254,8 +254,8 @@ func LoadEVMOutboundNReceipt(
 	txHash string,
 	coinType coin.CoinType) (*ethtypes.Transaction, *ethtypes.Receipt) {
 	// load archived evm outtx and receipt
-	tx := LoadEVMOuttx(t, dir, chainID, txHash, coinType)
-	receipt := LoadEVMOuttxReceipt(t, dir, chainID, txHash, coinType, "")
+	tx := LoadEVMOutbound(t, dir, chainID, txHash, coinType)
+	receipt := LoadEVMOutboundReceipt(t, dir, chainID, txHash, coinType, "")
 
 	return tx, receipt
 }
@@ -268,10 +268,10 @@ func LoadEVMCctxNOutboundNReceipt(
 	nonce uint64,
 	eventName string) (*crosschaintypes.CrossChainTx, *ethtypes.Transaction, *ethtypes.Receipt) {
 	cctx := LoadCctxByNonce(t, chainID, nonce)
-	coinType := cctx.GetCurrentOutTxParam().CoinType
-	txHash := cctx.GetCurrentOutTxParam().OutboundTxHash
-	outtx := LoadEVMOuttx(t, dir, chainID, txHash, coinType)
-	receipt := LoadEVMOuttxReceipt(t, dir, chainID, txHash, coinType, eventName)
+	coinType := cctx.GetCurrentOutboundParam().CoinType
+	txHash := cctx.GetCurrentOutboundParam().Hash
+	outtx := LoadEVMOutbound(t, dir, chainID, txHash, coinType)
+	receipt := LoadEVMOutboundReceipt(t, dir, chainID, txHash, coinType, eventName)
 
 	return cctx, outtx, receipt
 }

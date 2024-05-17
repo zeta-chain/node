@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	// the maximum number of inputs per outtx
+	// the maximum number of inputs per outbound
 	maxNoOfInputsPerTx = 20
 
 	// the rank below (or equal to) which we consolidate UTXOs
@@ -175,7 +175,7 @@ func (signer *Signer) SignWithdrawTx(
 	chain chains.Chain,
 	cancelTx bool,
 ) (*wire.MsgTx, error) {
-	estimateFee := float64(gasPrice.Uint64()*bitcoin.OutTxBytesMax) / 1e8
+	estimateFee := float64(gasPrice.Uint64()*bitcoin.OutboundBytesMax) / 1e8
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -209,21 +209,21 @@ func (signer *Signer) SignWithdrawTx(
 		return nil, err
 	}
 	if sizeLimit < bitcoin.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
-		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
+		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
-	if txSize < bitcoin.OutTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
-		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, bitcoin.OutTxBytesMin)
-		txSize = bitcoin.OutTxBytesMin
+	if txSize < bitcoin.OutboundBytesMin { // outbound shouldn't be blocked a low sizeLimit
+		signer.logger.Warn().Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, bitcoin.OutboundBytesMin)
+		txSize = bitcoin.OutboundBytesMin
 	}
-	if txSize > bitcoin.OutTxBytesMax { // in case of accident
-		signer.logger.Warn().Msgf("txSize %d is greater than outTxBytesMax %d; use outTxBytesMax", txSize, bitcoin.OutTxBytesMax)
-		txSize = bitcoin.OutTxBytesMax
+	if txSize > bitcoin.OutboundBytesMax { // in case of accident
+		signer.logger.Warn().Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, bitcoin.OutboundBytesMax)
+		txSize = bitcoin.OutboundBytesMax
 	}
 
 	// fee calculation
 	// #nosec G701 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
-	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
+	signer.logger.Info().Msgf("bitcoin outbound nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
 		nonce, gasPrice.String(), txSize, fees.String(), consolidatedUtxo, consolidatedValue)
 
 	// add tx outputs
@@ -297,7 +297,7 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	return nil
 }
 
-func (signer *Signer) TryProcessOutTx(
+func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,
 	outboundID string,
@@ -397,11 +397,11 @@ func (signer *Signer) TryProcessOutTx(
 	// FIXME: add prometheus metrics
 	_, err = zetacoreClient.GetObserverList()
 	if err != nil {
-		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
+		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutBoundTx.String())
 	}
 	if tx != nil {
-		outTxHash := tx.TxHash().String()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", chain.ChainName, outboundTxTssNonce, outTxHash, myid)
+		outboundHash := tx.TxHash().String()
+		logger.Info().Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, myid)
 		// TODO: pick a few broadcasters.
 		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
@@ -410,18 +410,18 @@ func (signer *Signer) TryProcessOutTx(
 			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, chain.ChainName, outboundTxTssNonce, i)
+				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
 				continue
 			}
-			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", outboundTxTssNonce, chain.String(), outTxHash)
-			zetaHash, err := zetacoreClient.AddTxHashToOutTxTracker(chain.ChainId, outboundTxTssNonce, outTxHash, nil, "", -1)
+			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
+			zetaHash, err := zetacoreClient.AddTxHashToOutboundTracker(chain.ChainId, outboundTssNonce, outboundHash, nil, "", -1)
 			if err != nil {
-				logger.Err(err).Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outTxHash %s", outboundTxTssNonce, chain.ChainName, outTxHash)
+				logger.Err(err).Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.ChainName, outboundHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 
 			// Save successfully broadcasted transaction to btc chain observer
-			btcObserver.SaveBroadcastedTx(outTxHash, outboundTxTssNonce)
+			btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)
 
 			break // successful broadcast; no need to retry
 		}

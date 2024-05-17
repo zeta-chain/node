@@ -60,8 +60,8 @@ func createObserverWithUTXOs(t *testing.T) *Observer {
 
 func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
-	outTxID := ob.GetTxID(nonce)
-	ob.includedTxResults[outTxID] = &btcjson.GetTransactionResult{TxID: txid}
+	outboundID := ob.GetTxID(nonce)
+	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
@@ -78,7 +78,7 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 }
 
 func TestCheckTSSVout(t *testing.T) {
-	// the archived outtx raw result file and cctx file
+	// the archived outbound raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BtcMainnetChain
 	chainID := chain.ChainId
@@ -89,13 +89,13 @@ func TestCheckTSSVout(t *testing.T) {
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}})
 		require.ErrorContains(t, err, "invalid number of vouts")
@@ -105,7 +105,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// invalid TSS vout
 		rawResult.Vout[0].ScriptPubKey.Hex = "invalid script"
@@ -114,7 +114,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -123,7 +123,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
@@ -132,7 +132,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not receiver address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -141,7 +141,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not match payment amount
 		rawResult.Vout[1].Value = 0.00011000
@@ -150,7 +150,7 @@ func TestCheckTSSVout(t *testing.T) {
 	})
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[2].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -160,7 +160,7 @@ func TestCheckTSSVout(t *testing.T) {
 }
 
 func TestCheckTSSVoutCancelled(t *testing.T) {
-	// the archived outtx raw result file and cctx file
+	// the archived outbound raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BtcMainnetChain
 	chainID := chain.ChainId
@@ -174,14 +174,14 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 1 or > 2", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{})
 		require.ErrorContains(t, err, "invalid number of vouts")
@@ -194,7 +194,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -206,7 +206,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
@@ -219,7 +219,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout[1].N = 1 // swap vout index
 		rawResult.Vout = rawResult.Vout[:2]
-		params := cctx.GetCurrentOutTxParam()
+		params := cctx.GetCurrentOutboundParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
@@ -247,7 +247,7 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "getOutTxidByNonce: cannot find outTx txid for nonce 0", err.Error())
+	require.Equal(t, "getOutboundidByNonce: cannot find outbound txid for nonce 0", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 	// Case3: nonce = 1, should pass now

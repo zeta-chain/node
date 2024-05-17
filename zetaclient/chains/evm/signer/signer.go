@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -50,12 +51,12 @@ type Signer struct {
 	coreContext *clientcontext.ZetacoreContext
 
 	// mu protects below fields from concurrent access
-	mu                     *sync.Mutex
-	zetaConnectorABI       abi.ABI
-	erc20CustodyABI        abi.ABI
-	zetaConnectorAddress   ethcommon.Address
-	er20CustodyAddress     ethcommon.Address
-	outTxHashBeingReported map[string]bool
+	mu                        *sync.Mutex
+	zetaConnectorABI          abi.ABI
+	erc20CustodyABI           abi.ABI
+	zetaConnectorAddress      ethcommon.Address
+	er20CustodyAddress        ethcommon.Address
+	outboundHashBeingReported map[string]bool
 }
 
 func NewSigner(
@@ -97,9 +98,9 @@ func NewSigner(
 			Std:        loggers.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
 			Compliance: loggers.Compliance,
 		},
-		ts:                     ts,
-		mu:                     &sync.Mutex{},
-		outTxHashBeingReported: make(map[string]bool),
+		ts:                        ts,
+		mu:                        &sync.Mutex{},
+		outboundHashBeingReported: make(map[string]bool),
 	}, nil
 }
 
@@ -328,8 +329,8 @@ func (signer *Signer) SignCommandTx(txData *OutboundData, cmd string, params str
 // It will then broadcast the signed transaction to the outbound chain.
 func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
-	outTxProc *outtxprocessor.Processor,
-	outTxID string,
+	outboundProc *outboundprocessor.Processor,
+	outboundID string,
 	chainObserver interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
@@ -347,7 +348,7 @@ func (signer *Signer) TryProcessOutbound(
 	)
 
 	defer func() {
-		outTxProc.EndTryProcess(outTxID)
+		outboundProc.EndTryProcess(outboundID)
 	}()
 	myID := zetacoreClient.GetKeys().GetOperatorAddress()
 
@@ -358,7 +359,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutBoundTransactionData(cctx, evmObserver, signer.client, logger, height)
+	txData, skipTx, err := NewOutboundData(cctx, evmObserver, signer.client, logger, height)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -380,7 +381,7 @@ func (signer *Signer) TryProcessOutbound(
 			logger,
 			signer.logger.Compliance,
 			true,
-			evmClient.chain.ChainId,
+			signer.chain.ChainId,
 			cctx.Index,
 			cctx.InboundParams.Sender,
 			txData.to.Hex(),
@@ -415,7 +416,7 @@ func (signer *Signer) TryProcessOutbound(
 			return
 		}
 	} else if IsSenderZetaChain(cctx, zetacoreClient, &crossChainflags) {
-		switch cctx.InboundTxParams.CoinType {
+		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msgf(
 				"SignWithdrawTx: %d => %s, nonce %d, gasPrice %d",
@@ -448,8 +449,8 @@ func (signer *Signer) TryProcessOutbound(
 			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
 			return
 		}
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundTxParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId {
-		switch cctx.InboundTxParams.CoinType {
+	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId {
+		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Zeta:
 			logger.Info().Msgf(
 				"SignRevertTx: %d => %s, nonce %d, gasPrice %d",
@@ -521,7 +522,7 @@ func (signer *Signer) TryProcessOutbound(
 	)
 
 	// Broadcast Signed Tx
-	signer.BroadcastOutTx(tx, cctx, logger, myID, zetacoreClient, txData)
+	signer.BroadcastOutbound(tx, cctx, logger, myID, zetacoreClient, txData)
 }
 
 // BroadcastOutbound signed transaction through evm rpc client
@@ -531,7 +532,7 @@ func (signer *Signer) BroadcastOutbound(
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetacoreClient interfaces.ZetacoreClient,
-	txData *OutboundTransactionData) {
+	txData *OutboundData) {
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 	if tx == nil {
@@ -550,10 +551,10 @@ func (signer *Signer) BroadcastOutbound(
 			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) // FIXME: use backoff
 			err := signer.Broadcast(tx)
 			if err != nil {
-				log.Warn().Err(err).Msgf("OutTx Broadcast error")
-				retry, report := zetacore.HandleBroadcastError(err, strconv.FormatUint(cctx.GetCurrentOutTxParam().OutboundTxTssNonce, 10), toChain.String(), outTxHash)
+				log.Warn().Err(err).Msgf("Outbound Broadcast error")
+				retry, report := zetacore.HandleBroadcastError(err, strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10), toChain.String(), outboundHash)
 				if report {
-					signer.reportToOutTxTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outTxHash, logger)
+					signer.reportToOutboundTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 				}
 				if !retry {
 					break
@@ -561,8 +562,8 @@ func (signer *Signer) BroadcastOutbound(
 				backOff *= 2
 				continue
 			}
-			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, toChain, outTxHash)
-			signer.reportToOutTxTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outTxHash, logger)
+			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", cctx.GetCurrentOutboundParam().TssNonce, toChain, outboundHash)
+			signer.reportToOutboundTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 			break // successful broadcast; no need to retry
 		}
 	}
@@ -574,7 +575,7 @@ func (signer *Signer) BroadcastOutbound(
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *Signer) SignERC20WithdrawTx(txData *OutboundTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20WithdrawTx(txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 	data, err = signer.erc20CustodyABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
@@ -629,7 +630,7 @@ func (signer *Signer) SignWhitelistTx(
 // TODO: investigate pointer usage
 // https://github.com/zeta-chain/node/issues/2084
 func (signer *Signer) GetReportedTxList() *map[string]bool {
-	return &signer.outTxHashBeingReported
+	return &signer.outboundHashBeingReported
 }
 
 func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
@@ -641,15 +642,15 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 }
 
 func IsSenderZetaChain(cctx *types.CrossChainTx, zetacoreClient interfaces.ZetacoreClient, flags *observertypes.CrosschainFlags) bool {
-	return cctx.InboundTxParams.SenderChainId == zetacoreClient.Chain().ChainId &&
+	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
 		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled
 }
 
 func ErrorMsg(cctx *types.CrossChainTx) string {
-	return fmt.Sprintf("signer SignOutbound error: nonce %d chain %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, cctx.GetCurrentOutTxParam().ReceiverChainId)
+	return fmt.Sprintf("signer SignOutbound error: nonce %d chain %d", cctx.GetCurrentOutboundParam().TssNonce, cctx.GetCurrentOutboundParam().ReceiverChainId)
 }
 
-func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundTransactionData, params string) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string) (*ethtypes.Transaction, error) {
 	outboundParams := txData.outboundParams
 	erc20 := ethcommon.HexToAddress(params)
 	if erc20 == (ethcommon.Address{}) {
@@ -670,7 +671,7 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundTransactionData, par
 	return tx, nil
 }
 
-func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Transaction, error) {
 	outboundParams := txData.outboundParams
 	tx, _, _, err := signer.Sign(nil, txData.to, txData.gasLimit, txData.gasPrice, outboundParams.TssNonce, txData.height)
 	if err != nil {
@@ -679,28 +680,28 @@ func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundTransactionData) (*
 	return tx, nil
 }
 
-// reportToOutTxTracker reports outTxHash to tracker only when tx receipt is available
-func (signer *Signer) reportToOutTxTracker(
+// reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
+func (signer *Signer) reportToOutboundTracker(
 	zetacoreClient interfaces.ZetacoreClient,
 	chainID int64,
 	nonce uint64,
-	outTxHash string,
+	outboundHash string,
 	logger zerolog.Logger,
 ) {
 	// skip if already being reported
 	signer.mu.Lock()
 	defer signer.mu.Unlock()
-	if _, found := signer.outTxHashBeingReported[outboundHash]; found {
+	if _, found := signer.outboundHashBeingReported[outboundHash]; found {
 		logger.Info().Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
 		return
 	}
-	signer.outTxHashBeingReported[outboundHash] = true // mark as being reported
+	signer.outboundHashBeingReported[outboundHash] = true // mark as being reported
 
-	// report to outTx tracker with goroutine
+	// report to outbound tracker with goroutine
 	go func() {
 		defer func() {
 			signer.mu.Lock()
-			delete(signer.outTxHashBeingReported, outboundHash)
+			delete(signer.outboundHashBeingReported, outboundHash)
 			signer.mu.Unlock()
 		}()
 
@@ -714,8 +715,8 @@ func (signer *Signer) reportToOutTxTracker(
 			// give up after 10 minutes of monitoring
 			time.Sleep(10 * time.Second)
 
-			if time.Since(tStart) > evm.OutTxInclusionTimeout {
-				// if tx is still pending after timeout, report to outTxTracker anyway as we cannot monitor forever
+			if time.Since(tStart) > evm.OutboundInclusionTimeout {
+				// if tx is still pending after timeout, report to outboundTracker anyway as we cannot monitor forever
 				if isPending {
 					report = true // probably will be included later
 				}
@@ -744,13 +745,13 @@ func (signer *Signer) reportToOutTxTracker(
 			logger.Info().Msgf("reportToOutboundTracker: tx has not been included yet for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 		}
 
-		// try adding to outTx tracker for 10 minutes
+		// try adding to outbound tracker for 10 minutes
 		if report {
 			tStart := time.Now()
 			for {
 				// give up after 10 minutes of retrying
-				if time.Since(tStart) > evm.OutTxTrackerReportTimeout {
-					logger.Info().Msgf("reportToOutTxTracker: timeout adding outtx tracker for chain %d nonce %d outTxHash %s, please add manually", chainID, nonce, outTxHash)
+				if time.Since(tStart) > evm.OutboundTrackerReportTimeout {
+					logger.Info().Msgf("reportToOutboundTracker: timeout adding outbound tracker for chain %d nonce %d outboundHash %s, please add manually", chainID, nonce, outboundHash)
 					break
 				}
 				// stop if the cctx is already finalized
@@ -761,10 +762,10 @@ func (signer *Signer) reportToOutTxTracker(
 					logger.Info().Msgf("reportToOutboundTracker: cctx already finalized for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 					break
 				}
-				// report to outTx tracker
-				zetaHash, err := zetacoreClient.AddTxHashToOutTxTracker(chainID, nonce, outTxHash, nil, "", -1)
+				// report to outbound tracker
+				zetaHash, err := zetacoreClient.AddTxHashToOutboundTracker(chainID, nonce, outboundHash, nil, "", -1)
 				if err != nil {
-					logger.Err(err).Msgf("reportToOutboundTracker: error adding to outtx tracker for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
+					logger.Err(err).Msgf("reportToOutboundTracker: error adding to outbound tracker for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 				} else if zetaHash != "" {
 					logger.Info().Msgf("reportToOutboundTracker: added outboundHash to core successful %s, chain %d nonce %d outboundHash %s block %d",
 						zetaHash, chainID, nonce, outboundHash, blockNumber)

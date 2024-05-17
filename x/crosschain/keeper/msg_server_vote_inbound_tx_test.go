@@ -45,7 +45,7 @@ func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest
 
 // TODO: Complete the test cases
 // https://github.com/zeta-chain/node/issues/1542
-func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
+func TestKeeper_VoteInbound(t *testing.T) {
 	t.Run("successfully vote on evm deposit", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)

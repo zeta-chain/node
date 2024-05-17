@@ -62,7 +62,7 @@ func getNewEvmChainObserver() (*observer.Observer, error) {
 
 func getNewOutboundProcessor() *outboundprocessor.Processor {
 	logger := zerolog.Logger{}
-	return outtxprocessor.NewProcessor(logger)
+	return outboundprocessor.NewProcessor(logger)
 }
 
 func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
@@ -104,11 +104,11 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 	cctx := getCCTX(t)
-	processorManager := getNewOutTxProcessor()
+	processorManager := getNewOutboundProcessor()
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
 
-	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockObserver, mocks.NewMockZetaCoreClient(), 123)
+	evmSigner.TryProcessOutbound(cctx, processorManager, "123", mockObserver, mocks.NewMockZetaCoreClient(), 123)
 
 	//Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
@@ -125,7 +125,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -154,7 +154,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -183,7 +183,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -212,7 +212,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -259,7 +259,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -288,7 +288,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -297,7 +297,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetaCoreClient(), txData)
+		evmSigner.BroadcastOutbound(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetaCoreClient(), txData)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()
@@ -330,7 +330,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
-	txData, skip, err := NewOutBoundTransactionData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 

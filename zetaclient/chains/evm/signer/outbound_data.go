@@ -137,7 +137,7 @@ func NewOutboundData(
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	included, confirmed, err := evmClient.IsOutboundProcessed(cctx, logger)
+	included, confirmed, err := evmObserver.IsOutboundProcessed(cctx, logger)
 	if err != nil {
 		return nil, true, errors.New("IsOutboundProcessed failed")
 	}
@@ -164,9 +164,9 @@ func NewOutboundData(
 	pendingTx := evmObserver.GetPendingTx(nonce)
 	if pendingTx != nil {
 		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
-			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
+			logger.Info().Msgf("replace pending outbound %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
 		} else {
-			logger.Info().Msgf("please wait for pending outTx %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
+			logger.Info().Msgf("please wait for pending outbound %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
 			return nil, true, nil
 		}
 	}

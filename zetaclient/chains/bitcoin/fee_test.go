@@ -401,7 +401,7 @@ func TestOutputSizeP2PKH(t *testing.T) {
 	require.Equal(t, vBytes, vBytesEstimated)
 }
 
-func TestOuttxSizeBreakdown(t *testing.T) {
+func TestOutboundSizeBreakdown(t *testing.T) {
 	// a list of all types of addresses
 	payees := []btcutil.Address{
 		getTestAddrScript(t, ScriptTypeP2TR),
@@ -432,7 +432,7 @@ func TestOuttxSizeBreakdown(t *testing.T) {
 	require.Equal(t, uint64(177), txSizeWithdrawer)
 
 	// total outtx size == (deposit fee + withdrawer fee), 245 = 68 + 177
-	require.Equal(t, OutTxBytesAvg, txSizeAverage)
+	require.Equal(t, OutboundBytesAvg, txSizeAverage)
 	require.Equal(t, txSizeAverage, txSizeDepositor+txSizeWithdrawer)
 
 	// check default depositor fee
@@ -440,7 +440,7 @@ func TestOuttxSizeBreakdown(t *testing.T) {
 	require.Equal(t, depositFee, 0.00001360)
 }
 
-func TestOuttxSizeMinMaxError(t *testing.T) {
+func TestOutboundSizeMinMaxError(t *testing.T) {
 	// P2TR output is the largest in size; P2WPKH is the smallest
 	toP2TR := getTestAddrScript(t, ScriptTypeP2TR)
 	toP2WPKH := getTestAddrScript(t, ScriptTypeP2WPKH)
@@ -448,12 +448,12 @@ func TestOuttxSizeMinMaxError(t *testing.T) {
 	// Estimate the largest outtx size in vByte
 	sizeMax, err := EstimateOutboundSize(21, []btcutil.Address{toP2TR})
 	require.NoError(t, err)
-	require.Equal(t, OutTxBytesMax, sizeMax)
+	require.Equal(t, OutboundBytesMax, sizeMax)
 
 	// Estimate the smallest outtx size in vByte
 	sizeMin, err := EstimateOutboundSize(2, []btcutil.Address{toP2WPKH})
 	require.NoError(t, err)
-	require.Equal(t, OutTxBytesMin, sizeMin)
+	require.Equal(t, OutboundBytesMin, sizeMin)
 
 	// Estimate unknown address type
 	nilP2PK := (*btcutil.AddressPubKey)(nil)

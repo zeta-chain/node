@@ -61,7 +61,7 @@ blockchains.
 
 Observers watch connected blockchains for the broadcasted outbound transactions.
 Once a transaction is "confirmed" (or "mined") on a connected blockchains,
-observers vote on ZetaChain by sending a `VoteOnObservedOutboundTx` message.
+observers vote on ZetaChain by sending a `VoteOutbound` message.
 
 After the vote passes the threshold, the voting is finalized and a transaction's
 status is changed to final.

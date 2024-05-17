@@ -223,7 +223,7 @@ func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
 // returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outboundHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
-		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")
+		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outbound confirmation")
 		return false, false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {
