@@ -54,8 +54,7 @@ const (
 	// NOTE: CoreParams is old name for AllChainParams we keep it as key value for backward compatibility
 	AllChainParamsKey = "CoreParams"
 
-	ObserverMapperKey = "Observer-value-"
-	ObserverSetKey    = "ObserverSet-value-"
+	ObserverSetKey = "ObserverSet-value-"
 
 	// CrosschainFlagsKey is the key for the crosschain flags
 	// NOTE: PermissionFlags is old name for CrosschainFlags we keep it as key value for backward compatibility
