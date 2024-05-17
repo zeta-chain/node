@@ -26,6 +26,7 @@
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
+* [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 
 ### Tests
 
