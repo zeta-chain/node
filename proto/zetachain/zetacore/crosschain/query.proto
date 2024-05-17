@@ -108,7 +108,7 @@ service Query {
         "/zeta-chain/crosschain/cctx/{chainID}/{nonce}";
   }
 
-  // Queries a list of cctxx items.
+  // Queries a list of cctx items.
   rpc CctxAll(QueryAllCctxRequest) returns (QueryAllCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctx";
   }
