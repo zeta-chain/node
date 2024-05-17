@@ -22,7 +22,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-	zevmconnectercontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
@@ -181,7 +181,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 }
 
 func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (common.Address, error) {
-	contractAddr, err := k.DeployContract(ctx, zevmconnectercontract.ZetaConnectorZEVMMetaData, wzeta)
+	contractAddr, err := k.DeployContract(ctx, zevmconnectorcontract.ZetaConnectorZEVMMetaData, wzeta)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(err, "ZetaConnectorZEVM")
 	}
@@ -324,7 +324,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	}
 	connectorAddress := common.HexToAddress(system.ConnectorZevm)
 
-	zevmConnecterAbi, err := zevmconnectercontract.ZetaConnectorZEVMMetaData.GetAbi()
+	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +336,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 
 	return k.CallEVM(
 		ctx,
-		*zevmConnecterAbi,
+		*zevmConnectorAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
 		zetaValue,
@@ -372,7 +372,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	}
 	connectorAddress := common.HexToAddress(system.ConnectorZevm)
 
-	zevmConnecterAbi, err := zevmconnectercontract.ZetaConnectorZEVMMetaData.GetAbi()
+	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +382,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	}
 	return k.CallEVM(
 		ctx,
-		*zevmConnecterAbi,
+		*zevmConnectorAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
 		remainingZetaValue,
