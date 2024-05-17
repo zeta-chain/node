@@ -13,7 +13,7 @@ import (
 func CmdRemoveOutboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-outbound-tracker [chain] [nonce]",
-		Short: "Remove a outbound-tracker",
+		Short: "Remove an outbound tracker",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argChain, err := strconv.ParseInt(args[0], 10, 64)
