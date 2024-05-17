@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"bytes"
+	"math/big"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -9,6 +10,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -23,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	zetaapp "github.com/zeta-chain/zetacore/app"
 	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
 )
@@ -116,6 +119,15 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 		{tx: buildMsg(s.T(), txConfig, []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
 		{tx: buildMsg(s.T(), txConfig, []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
 		{tx: buildMsg(s.T(), txConfig, []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
+		// test 5, (same as test 1, but ethermint txs)
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`0`), [][]byte{secret1}, []uint64{1}), priority: 10},
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1}, []uint64{2}), priority: 10},
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`22`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`32`), [][]byte{secret2}, []uint64{1}), priority: 8},
+		// test 6, (same as test 4, but ethermint txs)
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
+		{tx: buildEthMsg(s.T(), txConfig, []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
 	}
 
 	for i := range testTxs {
@@ -135,6 +147,16 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 	s.Require().Equal(testTxs[7].size, 196)
 	s.Require().Equal(testTxs[8].size, 196)
 
+	// ethermint txs
+	s.Require().Equal(testTxs[15].size, 247)
+	s.Require().Equal(testTxs[16].size, 257)
+	s.Require().Equal(testTxs[17].size, 248)
+	s.Require().Equal(testTxs[18].size, 248)
+
+	s.Require().Equal(testTxs[19].size, 259)
+	s.Require().Equal(testTxs[20].size, 248)
+	s.Require().Equal(testTxs[21].size, 248)
+
 	testCases := map[string]struct {
 		ctx         sdk.Context
 		txInputs    []testTx
@@ -149,6 +171,14 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 				MaxTxBytes: 111 + 112,
 			},
 			expectedTxs: []int{0, 3},
+		},
+		"(eth tx) skip same-sender non-sequential sequence and then add others txs": {
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[15], testTxs[16], testTxs[17], testTxs[18]},
+			req: abci.RequestPrepareProposal{
+				MaxTxBytes: 247 + 248,
+			},
+			expectedTxs: []int{15, 18},
 		},
 		"skip multi-signers msg non-sequential sequence": {
 			ctx:      s.ctx,
@@ -174,6 +204,16 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},
 			req: abci.RequestPrepareProposal{
 				MaxTxBytes: 112,
+			},
+			expectedTxs: []int{},
+		},
+		"(eth tx) no txs added": {
+			// Becasuse the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
+			// the rest of the txs fail because they have a seq of 4.
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[19], testTxs[20], testTxs[21]},
+			req: abci.RequestPrepareProposal{
+				MaxTxBytes: 248,
 			},
 			expectedTxs: []int{},
 		},
@@ -226,6 +266,35 @@ func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]
 		})
 	}
 	setTxSignatureWithSecret(t, builder, signatures...)
+	return builder.GetTx()
+}
+
+func buildEthMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]byte, nonces []uint64) sdk.Tx {
+	t.Helper()
+	msgEthereumTx := evmtypes.NewTx(
+		big.NewInt(1),
+		nonces[0],
+		nil,
+		nil,
+		0,
+		nil,
+		nil,
+		nil,
+		value,
+		nil,
+	)
+
+	privKey := secp256k1.GenPrivKeyFromSecret(secrets[0])
+	addr := sdk.AccAddress(privKey.PubKey().Address())
+	msgEthereumTx.From = common.BytesToAddress(addr.Bytes()).Hex()
+	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
+	require.NoError(t, err)
+	builder, ok := txConfig.NewTxBuilder().(authtx.ExtensionOptionsTxBuilder)
+	require.True(t, ok)
+
+	builder.SetExtensionOptions(option)
+	builder.SetMsgs(msgEthereumTx)
+
 	return builder.GetTx()
 }
 
