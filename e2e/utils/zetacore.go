@@ -65,6 +65,7 @@ func WaitCctxsMinedByInboundHash(
 		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
 		// for the update tests
 		// TODO: replace with InboundHashToCctxData once removed
+		// https://github.com/zeta-chain/node/issues/2200
 		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInboundHashToCctxDataRequest{
 			InboundHash: inboundHash,
 		})

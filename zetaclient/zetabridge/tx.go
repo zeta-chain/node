@@ -311,9 +311,6 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 		coinType,
 	)
 
-	digest := msg.Digest()
-	_ = digest
-
 	// when an outbound fails and a revert is required, the gas limit needs to be higher
 	// this is because the revert tx needs to interact with the EVM to perform swaps for the gas token
 	// the higher gas limit is only necessary when the vote is finalized and the outbound is processed

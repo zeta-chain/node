@@ -31,6 +31,6 @@
             - WatchGasPrice : chain = `evm_chain_name`   module=`WatchGasPrice`
             - ObserverOutbound : chain = `evm_chain_name`  module=`ObserveOutbound`
     - BTCSigner : chain = `BTC`   module=`BTCsigner`
-        - ProcessOutTX : chain = `BTC`   module=`BTCsigner`  OutboundId = `OuttxID of cctx being signed`  SendHash = `Index of cctx being signed`
+        - ProcessOutTX : chain = `BTC`   module=`BTCsigner`  OutboundId = `OutboundID of cctx being signed`  SendHash = `Index of cctx being signed`
     - EVMSigner : chain =  `evm_chain_name` module=`EVMSigner`
-        - ProcessOutTX : chain =   `evm_chain_name` module=`BTCsigner`    OutboundId =  `OuttxID of cctx being signed` SendHash = `Index of cctx being signed`
+        - ProcessOutTX : chain =   `evm_chain_name` module=`BTCsigner`    OutboundId =  `OutboundID of cctx being signed` SendHash = `Index of cctx being signed`
