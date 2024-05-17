@@ -128,6 +128,17 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 		{tx: buildEthMsg(s.T(), txConfig, []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
 		{tx: buildEthMsg(s.T(), txConfig, []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
 		{tx: buildEthMsg(s.T(), txConfig, []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
+		// large cosmos tx to test with eth txs
+		{
+			tx: buildMsg(
+				s.T(),
+				txConfig,
+				[]byte(`1252345678910125234567891012523456789101252345678910125234567891012523456789101252345678910125234567891012523456789101252345678912343`),
+				[][]byte{secret2},
+				[]uint64{1},
+			),
+			priority: 8,
+		},
 	}
 
 	for i := range testTxs {
@@ -157,6 +168,8 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 	s.Require().Equal(testTxs[20].size, 248)
 	s.Require().Equal(testTxs[21].size, 248)
 
+	s.Require().Equal(testTxs[22].size, 248)
+
 	testCases := map[string]struct {
 		ctx         sdk.Context
 		txInputs    []testTx
@@ -179,6 +192,14 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 				MaxTxBytes: 247 + 248,
 			},
 			expectedTxs: []int{15, 18},
+		},
+		"(eth tx + cosmos tx) skip same-sender non-sequential sequence and then add others txs": {
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[15], testTxs[16], testTxs[17], testTxs[22]},
+			req: abci.RequestPrepareProposal{
+				MaxTxBytes: 247 + 248,
+			},
+			expectedTxs: []int{15, 22},
 		},
 		"skip multi-signers msg non-sequential sequence": {
 			ctx:      s.ctx,
