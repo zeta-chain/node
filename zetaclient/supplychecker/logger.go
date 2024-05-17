@@ -3,7 +3,7 @@ package supplychecker
 import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 )
 
 // ZetaSupplyCheckLogs is a struct to log the output of the ZetaSupplyChecker

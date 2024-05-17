@@ -59,7 +59,7 @@ func ethereumDepositPerformanceRoutine(
 		}
 
 		if err := r.RunE2ETests(tests); err != nil {
-			return fmt.Errorf("misc tests failed: %v", err)
+			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
 		}
 
 		r.Logger.Print("🍾 Ethereum deposit performance test completed in %s", time.Since(startTime).String())
@@ -117,7 +117,7 @@ func ethereumWithdrawPerformanceRoutine(
 		}
 
 		if err := r.RunE2ETests(tests); err != nil {
-			return fmt.Errorf("misc tests failed: %v", err)
+			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
 		}
 
 		r.Logger.Print("🍾 Ethereum withdraw performance test completed in %s", time.Since(startTime).String())
