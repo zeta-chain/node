@@ -2,10 +2,7 @@ package interfaces
 
 import (
 	"context"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"math/big"
-
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
@@ -23,8 +20,10 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
 
 type Order string

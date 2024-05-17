@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -34,6 +33,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
