@@ -313,7 +313,7 @@ func TestDecodeVoutP2PKHErrors(t *testing.T) {
 }
 
 func TestDecodeOpReturnMemo(t *testing.T) {
-	// load archived intx raw result
+	// load archived inbound raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	chain := chains.BtcMainnetChain
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"

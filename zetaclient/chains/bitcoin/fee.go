@@ -38,10 +38,10 @@ const (
 )
 
 var (
-	// BtcOutboundBytesDepositor is the outtx size incurred by the depositor: 68vB
+	// BtcOutboundBytesDepositor is the outbound size incurred by the depositor: 68vB
 	BtcOutboundBytesDepositor = OutboundSizeDepositor()
 
-	// BtcOutboundBytesWithdrawer is the outtx size incurred by the withdrawer: 177vB
+	// BtcOutboundBytesWithdrawer is the outbound size incurred by the withdrawer: 177vB
 	BtcOutboundBytesWithdrawer = OutboundSizeWithdrawer()
 
 	// DefaultDepositorFee is the default depositor fee is 0.00001360 BTC (20 * 68vB / 100000000)
@@ -126,12 +126,12 @@ func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 	}
 }
 
-// OutboundSizeDepositor returns outtx size (68vB) incurred by the depositor
+// OutboundSizeDepositor returns outbound size (68vB) incurred by the depositor
 func OutboundSizeDepositor() uint64 {
 	return bytesPerInput + bytesPerWitness/blockchain.WitnessScaleFactor
 }
 
-// OutboundSizeWithdrawer returns outtx size (177vB) incurred by the withdrawer (1 input, 3 outputs)
+// OutboundSizeWithdrawer returns outbound size (177vB) incurred by the withdrawer (1 input, 3 outputs)
 func OutboundSizeWithdrawer() uint64 {
 	bytesWiredTx := WiredTxSize(1, 3)
 	bytesInput := uint64(1) * bytesPerInput         // nonce mark

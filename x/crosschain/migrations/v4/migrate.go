@@ -172,7 +172,7 @@ func MoveTssToObserverModule(ctx sdk.Context,
 	}
 }
 
-// SetBitcoinFinalizedInbound sets the finalized inbound for bitcoin chains to prevent new ballots from being created with same intxhash
+// SetBitcoinFinalizedInbound sets the finalized inbound for bitcoin chains to prevent new ballots from being created with same inboundhash
 func SetBitcoinFinalizedInbound(ctx sdk.Context, crosschainKeeper crosschainKeeper) {
 	for _, cctx := range crosschainKeeper.GetAllCrossChainTx(ctx) {
 		if cctx.InboundParams != nil {

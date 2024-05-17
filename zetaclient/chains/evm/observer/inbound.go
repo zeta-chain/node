@@ -105,14 +105,14 @@ func (ob *Observer) ProcessInboundTrackers() error {
 		// query tx and receipt
 		tx, _, err := ob.TransactionByHash(tracker.TxHash)
 		if err != nil {
-			return errors.Wrapf(err, "error getting transaction for intx %s chain %d", tracker.TxHash, ob.chain.ChainId)
+			return errors.Wrapf(err, "error getting transaction for inbound %s chain %d", tracker.TxHash, ob.chain.ChainId)
 		}
 
 		receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tracker.TxHash))
 		if err != nil {
-			return errors.Wrapf(err, "error getting receipt for intx %s chain %d", tracker.TxHash, ob.chain.ChainId)
+			return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tracker.TxHash, ob.chain.ChainId)
 		}
-		ob.logger.Inbound.Info().Msgf("checking tracker for intx %s chain %d", tracker.TxHash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.chain.ChainId)
 
 		// check and vote on inbound tx
 		switch tracker.CoinType {
@@ -123,10 +123,10 @@ func (ob *Observer) ProcessInboundTrackers() error {
 		case coin.CoinType_Gas:
 			_, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, true)
 		default:
-			return fmt.Errorf("unknown coin type %s for intx %s chain %d", tracker.CoinType, tx.Hash, ob.chain.ChainId)
+			return fmt.Errorf("unknown coin type %s for inbound %s chain %d", tracker.CoinType, tx.Hash, ob.chain.ChainId)
 		}
 		if err != nil {
-			return errors.Wrapf(err, "error checking and voting for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+			return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 		}
 	}
 	return nil
@@ -322,7 +322,7 @@ func (ob *Observer) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 {
 		tx, _, err := ob.TransactionByHash(event.Raw.TxHash.Hex())
 		if err != nil {
 			ob.logger.Inbound.Error().Err(err).Msgf(
-				"ObserveERC20Deposited: error getting transaction for intx %s chain %d", event.Raw.TxHash, ob.chain.ChainId)
+				"ObserveERC20Deposited: error getting transaction for inbound %s chain %d", event.Raw.TxHash, ob.chain.ChainId)
 			return beingScanned - 1 // we have to re-scan from this block next time
 		}
 		sender := ethcommon.HexToAddress(tx.From)
@@ -378,7 +378,7 @@ func (ob *Observer) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 func (ob *Observer) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
-		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
+		return "", fmt.Errorf("inbound %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
 	}
 
 	// get zeta connector contract
@@ -397,7 +397,7 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForZetaSentEvent(event)
 			} else {
-				ob.logger.Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 				return "", err
 			}
 			break // only one event is allowed per tx
@@ -405,7 +405,7 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt
 	}
 	if msg == nil {
 		// no event, restricted tx, etc.
-		ob.logger.Inbound.Info().Msgf("no ZetaSent event found for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("no ZetaSent event found for inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 		return "", nil
 	}
 	if vote {
@@ -419,7 +419,7 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt
 func (ob *Observer) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
-		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
+		return "", fmt.Errorf("inbound %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
 	}
 
 	// get erc20 custody contract
@@ -439,7 +439,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receip
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {
-				ob.logger.Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 				return "", err
 			}
 			break // only one event is allowed per tx
@@ -447,7 +447,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receip
 	}
 	if msg == nil {
 		// no event, donation, restricted tx, etc.
-		ob.logger.Inbound.Info().Msgf("no Deposited event found for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("no Deposited event found for inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 		return "", nil
 	}
 	if vote {
@@ -461,7 +461,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receip
 func (ob *Observer) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
-		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
+		return "", fmt.Errorf("inbound %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
 	}
 
 	// checks receiver and tx status
@@ -477,7 +477,7 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, receipt 
 	msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, sender, receipt.BlockNumber.Uint64())
 	if msg == nil {
 		// donation, restricted tx, etc.
-		ob.logger.Inbound.Info().Msgf("no vote message built for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+		ob.logger.Inbound.Info().Msgf("no vote message built for inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 		return "", nil
 	}
 	if vote {
@@ -493,12 +493,12 @@ func (ob *Observer) PostVoteInbound(msg *types.MsgVoteInbound, coinType coin.Coi
 	chainID := ob.chain.ChainId
 	zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, retryGasLimit, msg)
 	if err != nil {
-		ob.logger.Inbound.Err(err).Msgf("intx detected: error posting vote for chain %d token %s intx %s", chainID, coinType, txHash)
+		ob.logger.Inbound.Err(err).Msgf("inbound detected: error posting vote for chain %d token %s inbound %s", chainID, coinType, txHash)
 		return "", err
 	} else if zetaHash != "" {
-		ob.logger.Inbound.Info().Msgf("intx detected: chain %d token %s intx %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
+		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
 	} else {
-		ob.logger.Inbound.Info().Msgf("intx detected: chain %d token %s intx %s already voted on ballot %s", chainID, coinType, txHash, ballot)
+		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s already voted on ballot %s", chainID, coinType, txHash, ballot)
 	}
 
 	return ballot, err
@@ -658,12 +658,12 @@ func (ob *Observer) ObserveTSSReceiveInBlock(blockNumber uint64) error {
 		if ethcommon.HexToAddress(tx.To) == ob.Tss.EVMAddress() {
 			receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tx.Hash))
 			if err != nil {
-				return errors.Wrapf(err, "error getting receipt for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 			}
 
 			_, err = ob.CheckAndVoteInboundTokenGas(&tx, receipt, true)
 			if err != nil {
-				return errors.Wrapf(err, "error checking and voting inbound gas asset for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+				return errors.Wrapf(err, "error checking and voting inbound gas asset for inbound %s chain %d", tx.Hash, ob.chain.ChainId)
 			}
 		}
 	}

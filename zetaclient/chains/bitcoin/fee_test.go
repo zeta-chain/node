@@ -411,7 +411,7 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 		getTestAddrScript(t, ScriptTypeP2PKH),
 	}
 
-	// add all outtx sizes paying to each address
+	// add all outbound sizes paying to each address
 	txSizeTotal := uint64(0)
 	for _, payee := range payees {
 		sizeOutput, err := EstimateOutboundSize(2, []btcutil.Address{payee})
@@ -419,7 +419,7 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 		txSizeTotal += sizeOutput
 	}
 
-	// calculate the average outtx size
+	// calculate the average outbound size
 	// #nosec G701 always in range
 	txSizeAverage := uint64((float64(txSizeTotal))/float64(len(payees)) + 0.5)
 
@@ -431,7 +431,7 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 	txSizeWithdrawer := OutboundSizeWithdrawer()
 	require.Equal(t, uint64(177), txSizeWithdrawer)
 
-	// total outtx size == (deposit fee + withdrawer fee), 245 = 68 + 177
+	// total outbound size == (deposit fee + withdrawer fee), 245 = 68 + 177
 	require.Equal(t, OutboundBytesAvg, txSizeAverage)
 	require.Equal(t, txSizeAverage, txSizeDepositor+txSizeWithdrawer)
 
@@ -445,12 +445,12 @@ func TestOutboundSizeMinMaxError(t *testing.T) {
 	toP2TR := getTestAddrScript(t, ScriptTypeP2TR)
 	toP2WPKH := getTestAddrScript(t, ScriptTypeP2WPKH)
 
-	// Estimate the largest outtx size in vByte
+	// Estimate the largest outbound size in vByte
 	sizeMax, err := EstimateOutboundSize(21, []btcutil.Address{toP2TR})
 	require.NoError(t, err)
 	require.Equal(t, OutboundBytesMax, sizeMax)
 
-	// Estimate the smallest outtx size in vByte
+	// Estimate the smallest outbound size in vByte
 	sizeMin, err := EstimateOutboundSize(2, []btcutil.Address{toP2WPKH})
 	require.NoError(t, err)
 	require.Equal(t, OutboundBytesMin, sizeMin)

@@ -28,18 +28,18 @@ var CCtxByNonceMap = map[int64]map[uint64]*crosschaintypes.CrossChainTx{
 	},
 }
 
-// CctxByInboundMap maps the [chainID, coinType, intxHash] to the cross chain transaction
+// CctxByInboundMap maps the [chainID, coinType, inboundHash] to the cross chain transaction
 var CctxByInboundMap = map[int64]map[coin.CoinType]map[string]*crosschaintypes.CrossChainTx{
 	// Ethereum mainnet
 	1: {
 		coin.CoinType_Zeta: {
-			chain_1_cctx_intx_Zeta_0xf393520.InboundParams.ObservedHash: chain_1_cctx_intx_Zeta_0xf393520,
+			chain_1_cctx_inbound_Zeta_0xf393520.InboundParams.ObservedHash: chain_1_cctx_inbound_Zeta_0xf393520,
 		},
 		coin.CoinType_ERC20: {
-			chain_1_cctx_intx_ERC20_0x4ea69a0.InboundParams.ObservedHash: chain_1_cctx_intx_ERC20_0x4ea69a0,
+			chain_1_cctx_inbound_ERC20_0x4ea69a0.InboundParams.ObservedHash: chain_1_cctx_inbound_ERC20_0x4ea69a0,
 		},
 		coin.CoinType_Gas: {
-			chain_1_cctx_intx_Gas_0xeaec67d.InboundParams.ObservedHash: chain_1_cctx_intx_Gas_0xeaec67d,
+			chain_1_cctx_inbound_Gas_0xeaec67d.InboundParams.ObservedHash: chain_1_cctx_inbound_Gas_0xeaec67d,
 		},
 	},
 	// BSC mainnet

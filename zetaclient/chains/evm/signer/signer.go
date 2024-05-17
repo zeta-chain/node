@@ -771,7 +771,7 @@ func (signer *Signer) reportToOutboundTracker(
 						zetaHash, chainID, nonce, outboundHash, blockNumber)
 				} else {
 					// stop if the tracker contains the outboundHash
-					logger.Info().Msgf("reportToOutboundTracker: outtx tracker contains outboundHash %s for chain %d nonce %d", outboundHash, chainID, nonce)
+					logger.Info().Msgf("reportToOutboundTracker: outbound tracker contains outboundHash %s for chain %d nonce %d", outboundHash, chainID, nonce)
 					break
 				}
 				// retry otherwise

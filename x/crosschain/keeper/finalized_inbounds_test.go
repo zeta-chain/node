@@ -12,18 +12,18 @@ import (
 func TestKeeper_IsFinalizedInbound(t *testing.T) {
 	t.Run("check true for finalized inbound", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		intxHash := sample.Hash().String()
+		inboundHash := sample.Hash().String()
 		chainID := sample.Chain(5).ChainId
 		eventIndex := sample.EventIndex()
-		k.AddFinalizedInbound(ctx, intxHash, chainID, eventIndex)
-		require.True(t, k.IsFinalizedInbound(ctx, intxHash, chainID, eventIndex))
+		k.AddFinalizedInbound(ctx, inboundHash, chainID, eventIndex)
+		require.True(t, k.IsFinalizedInbound(ctx, inboundHash, chainID, eventIndex))
 	})
 	t.Run("check false for non-finalized inbound", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		intxHash := sample.Hash().String()
+		inboundHash := sample.Hash().String()
 		chainID := sample.Chain(5).ChainId
 		eventIndex := sample.EventIndex()
-		require.False(t, k.IsFinalizedInbound(ctx, intxHash, chainID, eventIndex))
+		require.False(t, k.IsFinalizedInbound(ctx, inboundHash, chainID, eventIndex))
 	})
 	t.Run("check true for finalized inbound list", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -46,11 +46,11 @@ func TestKeeper_IsFinalizedInbound(t *testing.T) {
 func TestKeeper_AddFinalizedInbound(t *testing.T) {
 	t.Run("check add finalized inbound", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		intxHash := sample.Hash().String()
+		inboundHash := sample.Hash().String()
 		chainID := sample.Chain(5).ChainId
 		eventIndex := sample.EventIndex()
-		k.AddFinalizedInbound(ctx, intxHash, chainID, eventIndex)
-		require.True(t, k.IsFinalizedInbound(ctx, intxHash, chainID, eventIndex))
+		k.AddFinalizedInbound(ctx, inboundHash, chainID, eventIndex)
+		require.True(t, k.IsFinalizedInbound(ctx, inboundHash, chainID, eventIndex))
 	})
 }
 

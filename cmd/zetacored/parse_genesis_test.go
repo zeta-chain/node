@@ -158,15 +158,15 @@ func GetImportData(t *testing.T, cdc *codec.ProtoCodec, n int) map[string]json.R
 	// Add crosschain data to genesis state
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importData)
 	cctxList := make([]*crosschaintypes.CrossChainTx, n)
-	intxHashToCctxList := make([]crosschaintypes.InboundHashToCctx, n)
+	inboundHashToCctxList := make([]crosschaintypes.InboundHashToCctx, n)
 	finalLizedInbounds := make([]string, n)
 	for i := 0; i < n; i++ {
 		cctxList[i] = sample.CrossChainTx(t, fmt.Sprintf("crosschain-%d", i))
-		intxHashToCctxList[i] = sample.InboundHashToCctx(t, fmt.Sprintf("intxHashToCctxList-%d", i))
+		inboundHashToCctxList[i] = sample.InboundHashToCctx(t, fmt.Sprintf("inboundHashToCctxList-%d", i))
 		finalLizedInbounds[i] = fmt.Sprintf("finalLizedInbounds-%d", i)
 	}
 	importedCrossChainGenState.CrossChainTxs = cctxList
-	importedCrossChainGenState.InboundHashToCctxList = intxHashToCctxList
+	importedCrossChainGenState.InboundHashToCctxList = inboundHashToCctxList
 	importedCrossChainGenState.FinalizedInbounds = finalLizedInbounds
 	importedCrossChainStateBz, err := json.Marshal(importedCrossChainGenState)
 	require.NoError(t, err)

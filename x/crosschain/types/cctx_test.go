@@ -82,8 +82,8 @@ func Test_InitializeCCTX(t *testing.T) {
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
 		message := "test"
-		intxBlockHeight := uint64(420)
-		intxHash := sample.Hash()
+		inboundBlockHeight := uint64(420)
+		inboundHash := sample.Hash()
 		gasLimit := uint64(100)
 		asset := "test-asset"
 		eventIndex := uint64(1)
@@ -97,8 +97,8 @@ func Test_InitializeCCTX(t *testing.T) {
 			ReceiverChain:      receiverChain.ChainId,
 			Amount:             amount,
 			Message:            message,
-			InboundHash:        intxHash.String(),
-			InboundBlockHeight: intxBlockHeight,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
 			GasLimit:           gasLimit,
 			CoinType:           cointType,
 			TxOrigin:           sender.String(),

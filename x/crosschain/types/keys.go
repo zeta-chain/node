@@ -84,8 +84,8 @@ func (m CrossChainTx) LogIdentifierForCCTX() string {
 	return fmt.Sprintf("%s-%d-%d-%d", m.InboundParams.Sender, m.InboundParams.SenderChainId, outTx.ReceiverChainId, outTx.TssNonce)
 }
 
-func FinalizedInboundKey(intxHash string, chainID int64, eventIndex uint64) string {
-	return fmt.Sprintf("%d-%s-%d", chainID, intxHash, eventIndex)
+func FinalizedInboundKey(inboundHash string, chainID int64, eventIndex uint64) string {
+	return fmt.Sprintf("%d-%s-%d", chainID, inboundHash, eventIndex)
 }
 
 var (

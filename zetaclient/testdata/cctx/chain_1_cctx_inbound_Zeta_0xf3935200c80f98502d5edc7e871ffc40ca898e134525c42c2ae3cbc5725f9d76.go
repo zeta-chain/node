@@ -7,7 +7,7 @@ import (
 )
 
 // https://zetachain-mainnet-archive.allthatnode.com:1317/zeta-chain/crosschain/cctx/0x477544c4b8c8be544b23328b21286125c89cd6bb5d1d6d388d91eea8ea1a6f1f
-var chain_1_cctx_intx_Zeta_0xf393520 = &crosschaintypes.CrossChainTx{
+var chain_1_cctx_inbound_Zeta_0xf393520 = &crosschaintypes.CrossChainTx{
 	Creator:        "zeta1p0uwsq4naus5r4l7l744upy0k8ezzj84mn40nf",
 	Index:          "0x477544c4b8c8be544b23328b21286125c89cd6bb5d1d6d388d91eea8ea1a6f1f",
 	ZetaFees:       sdkmath.NewUintFromString("0"),

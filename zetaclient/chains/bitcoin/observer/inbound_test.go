@@ -291,7 +291,7 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 }
 
 func TestGetBtcEvent(t *testing.T) {
-	// load archived intx P2WPKH raw result
+	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	chain := chains.BtcMainnetChain
@@ -316,7 +316,7 @@ func TestGetBtcEvent(t *testing.T) {
 		TxHash:      tx.Txid,
 	}
 
-	t.Run("should get BTC intx event from P2WPKH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2WPKH sender", func(t *testing.T) {
 		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
 		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
 		tx.Vin[0].Txid = preHash
@@ -330,7 +330,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2TR sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2TR sender", func(t *testing.T) {
 		// replace vin with a P2TR vin, so the sender address will change
 		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 		preHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
@@ -345,7 +345,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2WSH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2WSH sender", func(t *testing.T) {
 		// replace vin with a P2WSH vin, so the sender address will change
 		// https://mempool.space/tx/d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016
 		preHash := "d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016"
@@ -360,7 +360,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2SH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2SH sender", func(t *testing.T) {
 		// replace vin with a P2SH vin, so the sender address will change
 		// https://mempool.space/tx/211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a
 		preHash := "211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a"
@@ -375,7 +375,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2PKH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2PKH sender", func(t *testing.T) {
 		// replace vin with a P2PKH vin, so the sender address will change
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
 		preHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
@@ -465,7 +465,7 @@ func TestGetBtcEvent(t *testing.T) {
 }
 
 func TestGetBtcEventErrors(t *testing.T) {
-	// load archived intx P2WPKH raw result
+	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	chain := chains.BtcMainnetChain

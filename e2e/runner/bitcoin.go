@@ -280,7 +280,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	runner.Logger.Info("bitcoin intx events:")
+	runner.Logger.Info("bitcoin inbound events:")
 	for _, event := range events {
 		runner.Logger.Info("  TxHash: %s", event.TxHash)
 		runner.Logger.Info("  From: %s", event.FromAddress)

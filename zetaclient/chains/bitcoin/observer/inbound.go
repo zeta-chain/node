@@ -203,7 +203,7 @@ func (ob *Observer) ObserveInbound() error {
 	return nil
 }
 
-// WatchInboundTracker watches zetacore for bitcoin intx trackers
+// WatchInboundTracker watches zetacore for bitcoin inbound trackers
 func (ob *Observer) WatchInboundTracker() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
 	if err != nil {
@@ -220,7 +220,7 @@ func (ob *Observer) WatchInboundTracker() {
 			}
 			err := ob.ProcessInboundTrackers()
 			if err != nil {
-				ob.logger.Inbound.Error().Err(err).Msgf("error observing intx tracker for chain %d", ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("error observing inbound tracker for chain %d", ob.chain.ChainId)
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
@@ -440,12 +440,12 @@ func GetBtcEvent(
 	// event found, get sender address
 	if found {
 		if len(tx.Vin) == 0 { // should never happen
-			return nil, fmt.Errorf("GetBtcEvent: no input found for intx: %s", tx.Txid)
+			return nil, fmt.Errorf("GetBtcEvent: no input found for inbound: %s", tx.Txid)
 		}
 
 		fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error getting sender address for intx: %s", tx.Txid)
+			return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 		}
 
 		return &BTCInboundEvent{

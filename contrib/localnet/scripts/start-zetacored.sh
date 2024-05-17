@@ -8,7 +8,7 @@
 /usr/sbin/sshd
 
 # This function add authz observer authorizations for inbound/outbound votes and tracker messages
-# These messages have been renamed for v17: https://github.com/zeta-chain/node/blob/refactor/rename-outbound-inbound/docs/releases/v17_breaking_changes.md#intx-and-outtx-renaming
+# These messages have been renamed for v17: https://github.com/zeta-chain/node/blob/refactor/rename-outbound-inbound/docs/releases/v17_breaking_changes.md#inbound-and-outtx-renaming
 # There if the genesis is generated with a v16 binary for the upgrade tests, it will not contains authorizations for new messages
 # This function will add the missing authorizations to the genesis file
 # TODO: Remove this function when v17 is released

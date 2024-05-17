@@ -276,7 +276,7 @@ func (ob *Observer) Start() {
 	go ob.WatchOutbound()       // watch bitcoin chain for outgoing txs status
 	go ob.WatchUTXOS()          // watch bitcoin chain for UTXOs owned by the TSS address
 	go ob.WatchGasPrice()       // watch bitcoin chain for gas rate and post to zetacore
-	go ob.WatchInboundTracker() // watch zetacore for bitcoin intx trackers
+	go ob.WatchInboundTracker() // watch zetacore for bitcoin inbound trackers
 	go ob.WatchRPCStatus()      // watch the RPC status of the bitcoin chain
 }
 

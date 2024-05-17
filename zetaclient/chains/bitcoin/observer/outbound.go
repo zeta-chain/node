@@ -419,7 +419,7 @@ func (ob *Observer) removeIncludedTx(nonce uint64) {
 	}
 }
 
-// Basic TSS outTX checks:
+// Basic TSS outbound checks:
 //   - should be able to query the raw tx
 //   - check if all inputs are segwit && TSS inputs
 //

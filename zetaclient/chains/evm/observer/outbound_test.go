@@ -290,7 +290,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOutboundReceipt(t, TestDataDir, chainID, outboundHash, coin.CoinType_ERC20, testutils.EventERC20Withdraw)
 
-	t.Run("should parse ERC20 Withdrawn event from archived outtx receipt", func(t *testing.T) {
+	t.Run("should parse ERC20 Withdrawn event from archived outbound receipt", func(t *testing.T) {
 		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 		require.NoError(t, err)
 		require.NotNil(t, withdrawn)
@@ -341,47 +341,47 @@ func Test_ParseOutboundReceivedValue(t *testing.T) {
 	chainID := chains.EthChain.ChainId
 	connector, connectorAddr, custody, custodyAddr := getContractsByChainID(chainID)
 
-	t.Run("should parse and check ZetaReceived event from archived outtx receipt", func(t *testing.T) {
-		// load archived outtx receipt that contains ZetaReceived event
+	t.Run("should parse and check ZetaReceived event from archived outbound receipt", func(t *testing.T) {
+		// load archived outbound receipt that contains ZetaReceived event
 		// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
 		nonce := uint64(9718)
 		coinType := coin.CoinType_Zeta
-		cctx, outtx, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
+		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
 		params := cctx.GetCurrentOutboundParam()
-		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outbound, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
 		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
-	t.Run("should parse and check ZetaReverted event from archived outtx receipt", func(t *testing.T) {
-		// load archived outtx receipt that contains ZetaReverted event
+	t.Run("should parse and check ZetaReverted event from archived outbound receipt", func(t *testing.T) {
+		// load archived outbound receipt that contains ZetaReverted event
 		// use local network tx: 0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7
 		localChainID := chains.GoerliLocalnetChain.ChainId
 		nonce := uint64(14)
 		coinType := coin.CoinType_Zeta
 		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(localChainID)
-		cctx, outtx, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, localChainID, nonce, testutils.EventZetaReverted)
+		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, localChainID, nonce, testutils.EventZetaReverted)
 		params := cctx.GetCurrentOutboundParam()
 		value, status, err := observer.ParseOutboundReceivedValue(
-			cctx, receipt, outtx, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
+			cctx, receipt, outbound, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
 		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
-	t.Run("should parse and check ERC20 Withdrawn event from archived outtx receipt", func(t *testing.T) {
-		// load archived outtx receipt that contains ERC20 Withdrawn event
+	t.Run("should parse and check ERC20 Withdrawn event from archived outbound receipt", func(t *testing.T) {
+		// load archived outbound receipt that contains ERC20 Withdrawn event
 		// https://etherscan.io/tx/0xd2eba7ac3da1b62800165414ea4bcaf69a3b0fb9b13a0fc32f4be11bfef79146
 		nonce := uint64(8014)
 		coinType := coin.CoinType_ERC20
-		cctx, outtx, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventERC20Withdraw)
+		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventERC20Withdraw)
 		params := cctx.GetCurrentOutboundParam()
-		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outbound, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.NoError(t, err)
 		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
 		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("nothing to parse if coinType is Gas", func(t *testing.T) {
-		// load archived outtx receipt of Gas token transfer
+		// load archived outbound receipt of Gas token transfer
 		// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 		nonce := uint64(7260)
 		coinType := coin.CoinType_Gas
@@ -393,40 +393,40 @@ func Test_ParseOutboundReceivedValue(t *testing.T) {
 		require.Equal(t, chains.ReceiveStatus_success, status)
 	})
 	t.Run("should fail on unknown coin type", func(t *testing.T) {
-		// load archived outtx receipt that contains ZetaReceived event
+		// load archived outbound receipt that contains ZetaReceived event
 		// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
 		nonce := uint64(9718)
 		coinType := coin.CoinType(5) // unknown coin type
-		cctx, outtx, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
-		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, custodyAddr, custody)
+		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
+		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outbound, coinType, connectorAddr, connector, custodyAddr, custody)
 		require.ErrorContains(t, err, "unknown coin type")
 		require.Nil(t, value)
 		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
-		// load archived outtx receipt that contains ZetaReceived event
+		// load archived outbound receipt that contains ZetaReceived event
 		// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
 		nonce := uint64(9718)
 		coinType := coin.CoinType_Zeta
-		cctx, outtx, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
+		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventZetaReceived)
 
 		// use an arbitrary address to make event parsing fail
 		fakeConnectorAddress := sample.EthAddress()
-		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outtx, coinType, fakeConnectorAddress, connector, custodyAddr, custody)
+		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outbound, coinType, fakeConnectorAddress, connector, custodyAddr, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
 		require.Equal(t, chains.ReceiveStatus_failed, status)
 	})
 	t.Run("should fail if unable to parse ERC20 Withdrawn event", func(t *testing.T) {
-		// load archived outtx receipt that contains ERC20 Withdrawn event
+		// load archived outbound receipt that contains ERC20 Withdrawn event
 		// https://etherscan.io/tx/0xd2eba7ac3da1b62800165414ea4bcaf69a3b0fb9b13a0fc32f4be11bfef79146
 		nonce := uint64(8014)
 		coinType := coin.CoinType_ERC20
-		cctx, outtx, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventERC20Withdraw)
+		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, testutils.EventERC20Withdraw)
 
 		// use an arbitrary address to make event parsing fail
 		fakeCustodyAddress := sample.EthAddress()
-		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outtx, coinType, connectorAddr, connector, fakeCustodyAddress, custody)
+		value, status, err := observer.ParseOutboundReceivedValue(cctx, receipt, outbound, coinType, connectorAddr, connector, fakeCustodyAddress, custody)
 		require.Error(t, err)
 		require.Nil(t, value)
 		require.Equal(t, chains.ReceiveStatus_failed, status)
