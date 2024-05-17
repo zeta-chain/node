@@ -292,6 +292,44 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			require.NoError(t, zetamempool.IsEmpty(pool))
 		})
 	}
+
+	// NOTE: same test cases, just cosmos + ethermint txs instead
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			pool := zetamempool.NewPriorityMempool()
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				var tx sdk.Tx
+				// combine etheremint and cosmos txs
+				if i%2 == 0 {
+					tx = s.buildMockEthTx(i, int64(ts.p), common.BytesToAddress(ts.a).Hex(), uint64(ts.n))
+				} else {
+					tx = testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				}
+				c := ctx.WithPriority(int64(ts.p))
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
+
+			orderedTxs := fetchTxs(pool.Select(ctx, nil), 1000)
+
+			var txOrder []int
+			for _, tx := range orderedTxs {
+				txWithId, ok := tx.(testTxDetailsGetter)
+				require.True(t, ok)
+				txOrder = append(txOrder, txWithId.GetID())
+			}
+
+			require.Equal(t, tt.order, txOrder)
+			require.NoError(t, validateOrder(s.T(), orderedTxs))
+
+			for _, tx := range orderedTxs {
+				require.NoError(t, pool.Remove(tx))
+			}
+
+			require.NoError(t, zetamempool.IsEmpty(pool))
+		})
+	}
 }
 
 func (s *MempoolTestSuite) TestIterator() {
@@ -347,6 +385,54 @@ func (s *MempoolTestSuite) TestIterator() {
 				iterator = iterator.Next()
 			}
 		})
+		t.Run(fmt.Sprintf("eth case %d", i), func(t *testing.T) {
+			pool := zetamempool.DefaultPriorityMempool()
+
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				tx := s.buildMockEthTx(i, int64(ts.p), common.BytesToAddress(ts.a).Hex(), uint64(ts.n))
+				c := ctx.WithPriority(tx.priority)
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
+
+			// iterate through txs
+			iterator := pool.Select(ctx, nil)
+			for iterator != nil {
+				tx := iterator.Tx().(testEthTx)
+				require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
+				require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
+				require.Equal(t, tt.txs[tx.id].a, tx.address)
+				iterator = iterator.Next()
+			}
+		})
+		t.Run(fmt.Sprintf("cosmos + eth case %d", i), func(t *testing.T) {
+			pool := zetamempool.DefaultPriorityMempool()
+
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				var tx sdk.Tx
+				// combine etheremint and cosmos txs
+				if i%2 == 0 {
+					tx = s.buildMockEthTx(i, int64(ts.p), common.BytesToAddress(ts.a).Hex(), uint64(ts.n))
+				} else {
+					tx = testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				}
+				c := ctx.WithPriority(int64(ts.p))
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
+
+			// iterate through txs
+			iterator := pool.Select(ctx, nil)
+			for iterator != nil {
+				tx := iterator.Tx().(testTxDetailsGetter)
+				require.Equal(t, tt.txs[tx.GetID()].p, int(tx.GetPriority()))
+				require.Equal(t, tt.txs[tx.GetID()].n, int(tx.GetNonce()))
+				require.Equal(t, tt.txs[tx.GetID()].a, tx.GetAddress())
+				iterator = iterator.Next()
+			}
+		})
 	}
 }
 
@@ -390,6 +476,72 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 		for _, tx := range selected {
 			ttx := tx.(testTx)
 			ts := txSpec{p: int(ttx.priority), n: int(ttx.nonce), a: ttx.address}
+			orderedTxs = append(orderedTxs, ts)
+		}
+		s.Equal(txSet, orderedTxs)
+	}
+
+	// eth txs
+	for i := 0; i < 100; i++ {
+		s.mempool = zetamempool.NewPriorityMempool()
+		var shuffled []txSpec
+		for _, t := range txSet {
+			tx := txSpec{
+				p: t.p,
+				n: t.n,
+				a: t.a,
+			}
+			shuffled = append(shuffled, tx)
+		}
+		rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+
+		for _, ts := range shuffled {
+			tx := s.buildMockEthTx(i, int64(ts.p), common.BytesToAddress(ts.a).Hex(), uint64(ts.n))
+			c := ctx.WithPriority(tx.priority)
+			err := s.mempool.Insert(c, tx)
+			s.NoError(err)
+		}
+		selected := fetchTxs(s.mempool.Select(ctx, nil), 1000)
+		var orderedTxs []txSpec
+		for _, tx := range selected {
+			ttx := tx.(testEthTx)
+			ts := txSpec{p: int(ttx.priority), n: int(ttx.nonce), a: ttx.address}
+			orderedTxs = append(orderedTxs, ts)
+		}
+		s.Equal(txSet, orderedTxs)
+	}
+
+	// cosmos + eth txs
+	for i := 0; i < 100; i++ {
+		s.mempool = zetamempool.NewPriorityMempool()
+		var shuffled []txSpec
+		for _, t := range txSet {
+			tx := txSpec{
+				p: t.p,
+				n: t.n,
+				a: t.a,
+			}
+			shuffled = append(shuffled, tx)
+		}
+		rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+
+		for _, ts := range shuffled {
+			var tx sdk.Tx
+			// combine etheremint and cosmos txs
+			if i%2 == 0 {
+				tx = s.buildMockEthTx(i, int64(ts.p), common.BytesToAddress(ts.a).Hex(), uint64(ts.n))
+			} else {
+				tx = testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+			}
+			c := ctx.WithPriority(int64(ts.p))
+			err := s.mempool.Insert(c, tx)
+			s.NoError(err)
+		}
+		selected := fetchTxs(s.mempool.Select(ctx, nil), 1000)
+		var orderedTxs []txSpec
+		for _, tx := range selected {
+			ttx := tx.(testTxDetailsGetter)
+			ts := txSpec{p: int(ttx.GetPriority()), n: int(ttx.GetNonce()), a: ttx.GetAddress()}
 			orderedTxs = append(orderedTxs, ts)
 		}
 		s.Equal(txSet, orderedTxs)
