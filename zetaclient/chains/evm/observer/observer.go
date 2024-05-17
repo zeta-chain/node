@@ -417,19 +417,12 @@ func (ob *Observer) GetLastBlockHeightScanned() uint64 {
 
 // SetLastBlockHeight set external last block height
 func (ob *Observer) SetLastBlockHeight(height uint64) {
-	if height >= math.MaxInt64 {
-		panic("lastBlock is too large")
-	}
 	atomic.StoreUint64(&ob.lastBlock, height)
 }
 
 // GetLastBlockHeight get external last block height
 func (ob *Observer) GetLastBlockHeight() uint64 {
-	height := atomic.LoadUint64(&ob.lastBlock)
-	if height >= math.MaxInt64 {
-		panic("lastBlock is too large")
-	}
-	return height
+	return atomic.LoadUint64(&ob.lastBlock)
 }
 
 // WatchGasPrice watches evm chain for gas prices and post to zetacore
@@ -608,7 +601,8 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		path := fmt.Sprintf("%s/%s", dbPath, chain.ChainName.String()) //Use "file::memory:?cache=shared" for temp db
 		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 		if err != nil {
-			panic("failed to connect database")
+			ob.logger.Chain.Error().Err(err).Msg("error opening db")
+			return err
 		}
 
 		err = db.AutoMigrate(&clienttypes.ReceiptSQLType{},

@@ -416,7 +416,7 @@ BLOCKLOOP:
 					continue BLOCKLOOP // retry the block
 				}
 				if senderAddr != mpvin.Prevout.ScriptpubkeyAddress {
-					panic(fmt.Sprintf("block %d, tx %s, vout %d: want %s, got %s\n", bn, vin.Txid, vin.Vout, mpvin.Prevout.ScriptpubkeyAddress, senderAddr))
+					t.Errorf("block %d, tx %s, vout %d: want %s, got %s\n", bn, vin.Txid, vin.Vout, mpvin.Prevout.ScriptpubkeyAddress, senderAddr)
 				} else {
 					fmt.Printf("block: %d sender address type: %s\n", bn, mpvin.Prevout.ScriptpubkeyType)
 				}

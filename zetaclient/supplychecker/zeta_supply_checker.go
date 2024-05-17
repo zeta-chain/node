@@ -162,7 +162,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return fmt.Errorf("error parsing eth locked amount")
 	}
 
-	zetaInTransit := zs.GetAmountOfZetaInTransit()
+	zetaInTransit, err := zs.GetAmountOfZetaInTransit()
+	if err != nil {
+		return err
+	}
 	zetaTokenSupplyOnNode, err := zs.zetaClient.GetZetaTokenSupplyOnNode()
 	if err != nil {
 		return err
@@ -190,7 +193,7 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
-func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
+func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
 	cctxs := zs.GetPendingCCTXInTransit(chainsToCheck)
@@ -201,10 +204,10 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
 	}
 	amountInt, ok := sdkmath.NewIntFromString(amount.String())
 	if !ok {
-		panic("error parsing amount")
+		return sdkmath.ZeroInt(), fmt.Errorf("error parsing amount %s", amount.String())
 	}
 
-	return amountInt
+	return amountInt, nil
 }
 
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {

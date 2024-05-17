@@ -55,7 +55,7 @@ func setupZetacoreClient() (*Client, error) {
 	return NewClient(
 		&keys.Keys{},
 		"127.0.0.1",
-		"",
+		testSigner,
 		"zetachain_7000-1",
 		false,
 		&metrics.TelemetryServer{})
@@ -960,9 +960,16 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "", "")
 
+	// should be able to get balance of signer
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "bob", "")
 	resp, err := client.GetZetaHotKeyBalance()
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Balance.Amount, resp)
+
+	// should return error on empty signer
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "", "")
+	resp, err = client.GetZetaHotKeyBalance()
+	require.Error(t, err)
+	require.Equal(t, types.ZeroInt(), resp)
 }

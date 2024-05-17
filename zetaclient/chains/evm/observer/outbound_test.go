@@ -19,10 +19,10 @@ import (
 )
 
 // getContractsByChainID is a helper func to get contracts and addresses by chainID
-func getContractsByChainID(chainID int64) (*zetaconnector.ZetaConnectorNonEth, ethcommon.Address, *erc20custody.ERC20Custody, ethcommon.Address) {
-	connector := mocks.MockConnectorNonEth(chainID)
+func getContractsByChainID(t *testing.T, chainID int64) (*zetaconnector.ZetaConnectorNonEth, ethcommon.Address, *erc20custody.ERC20Custody, ethcommon.Address) {
+	connector := mocks.MockConnectorNonEth(t, chainID)
 	connectorAddress := testutils.ConnectorAddresses[chainID]
-	custody := mocks.MockERC20Custody(chainID)
+	custody := mocks.MockERC20Custody(t, chainID)
 	custodyAddress := testutils.CustodyAddresses[chainID]
 	return connector, connectorAddress, custody, custodyAddress
 }
@@ -172,7 +172,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 	chainID := chains.EthChain.ChainId
 	nonce := uint64(9718)
 	outtxHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
-	connector := mocks.MockConnectorNonEth(chainID)
+	connector := mocks.MockConnectorNonEth(t, chainID)
 	connectorAddress := testutils.ConnectorAddresses[chainID]
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_Zeta, testutils.EventZetaReceived)
@@ -233,7 +233,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 	chainID := chains.GoerliLocalnetChain.ChainId
 	nonce := uint64(14)
 	outtxHash := "0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7"
-	connector := mocks.MockConnectorNonEth(chainID)
+	connector := mocks.MockConnectorNonEth(t, chainID)
 	connectorAddress := testutils.ConnectorAddresses[chainID]
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_Zeta, testutils.EventZetaReverted)
@@ -285,7 +285,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	chainID := chains.EthChain.ChainId
 	nonce := uint64(8014)
 	outtxHash := "0xd2eba7ac3da1b62800165414ea4bcaf69a3b0fb9b13a0fc32f4be11bfef79146"
-	custody := mocks.MockERC20Custody(chainID)
+	custody := mocks.MockERC20Custody(t, chainID)
 	custodyAddress := testutils.CustodyAddresses[chainID]
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOuttxReceipt(t, TestDataDir, chainID, outtxHash, coin.CoinType_ERC20, testutils.EventERC20Withdraw)
@@ -339,7 +339,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 
 func Test_ParseOuttxReceivedValue(t *testing.T) {
 	chainID := chains.EthChain.ChainId
-	connector, connectorAddr, custody, custodyAddr := getContractsByChainID(chainID)
+	connector, connectorAddr, custody, custodyAddr := getContractsByChainID(t, chainID)
 
 	t.Run("should parse and check ZetaReceived event from archived outtx receipt", func(t *testing.T) {
 		// load archived outtx receipt that contains ZetaReceived event
@@ -359,7 +359,7 @@ func Test_ParseOuttxReceivedValue(t *testing.T) {
 		localChainID := chains.GoerliLocalnetChain.ChainId
 		nonce := uint64(14)
 		coinType := coin.CoinType_Zeta
-		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(localChainID)
+		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(t, localChainID)
 		cctx, outtx, receipt := testutils.LoadEVMCctxNOuttxNReceipt(t, TestDataDir, localChainID, nonce, testutils.EventZetaReverted)
 		params := cctx.GetCurrentOutTxParam()
 		value, status, err := observer.ParseOuttxReceivedValue(

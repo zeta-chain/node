@@ -121,46 +121,6 @@ func (ob *Observer) ObserveInTx() error {
 			}
 		}
 
-		if len(res.Block.Tx) > 1 {
-			// get depositor fee
-			depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
-
-			// filter incoming txs to TSS address
-			tssAddress := ob.Tss.BTCAddress()
-			// #nosec G701 always positive
-			inTxs, err := FilterAndParseIncomingTx(
-				ob.rpcClient,
-				res.Block.Tx,
-				uint64(res.Block.Height),
-				tssAddress,
-				ob.logger.InTx,
-				ob.netParams,
-				depositorFee,
-			)
-			if err != nil {
-				ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error filtering incoming txs for block %d", blockNumber)
-				return err // we have to re-scan this block next time
-			}
-
-			// post inbound vote message to zetacore
-			for _, inTx := range inTxs {
-				msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-				if msg != nil {
-					zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
-					if err != nil {
-						ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zetacore for tx %s", inTx.TxHash)
-						return err // we have to re-scan this block next time
-					} else if zetaHash != "" {
-						ob.logger.InTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
-							zetaHash, inTx.TxHash, ballot, depositorFee)
-					}
-				}
-			}
-		}
-
-		// Save LastBlockHeight
-		ob.SetLastBlockHeightScanned(blockNumber)
-
 		// #nosec G701 always positive
 		inTxs, err := FilterAndParseIncomingTx(
 			ob.rpcClient,

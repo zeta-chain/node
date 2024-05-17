@@ -336,9 +336,14 @@ func (signer *Signer) TryProcessOutTx(
 		return
 	}
 	chain := btcObserver.Chain()
-	myid := zetacoreClient.GetKeys().GetAddress()
 	outboundTxTssNonce := params.OutboundTxTssNonce
+	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot get signer address")
+		return
+	}
 
+	// get size limit and gas price
 	sizelimit := params.OutboundTxGasLimit
 	gasprice, ok := new(big.Int).SetString(params.OutboundTxGasPrice, 10)
 	if !ok || gasprice.Cmp(big.NewInt(0)) < 0 {
@@ -374,9 +379,9 @@ func (signer *Signer) TryProcessOutTx(
 			true, chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
-
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
 
+	// sign withdraw tx
 	tx, err := signer.SignWithdrawTx(
 		to,
 		amount,
@@ -401,7 +406,7 @@ func (signer *Signer) TryProcessOutTx(
 	}
 	if tx != nil {
 		outTxHash := tx.TxHash().String()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", chain.ChainName, outboundTxTssNonce, outTxHash, myid)
+		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", chain.ChainName, outboundTxTssNonce, outTxHash, signerAddress)
 		// TODO: pick a few broadcasters.
 		//if len(signers) == 0 || myid == signers[send.OutboundTxParams.Broadcaster] || myid == signers[int(send.OutboundTxParams.Broadcaster+1)%len(signers)] {
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error

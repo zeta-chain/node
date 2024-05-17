@@ -91,24 +91,31 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
-	// CreateZetaCoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
+	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetaCoreClient(cfg, telemetryServer, hotkeyPass)
+	zetacoreClient, err := CreateZetacoreClient(cfg, telemetryServer, hotkeyPass)
 	if err != nil {
-		panic(err)
+		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
+		return err
 	}
-	zetacoreClient.WaitForCoreToCreateBlocks()
+
+	// Wait until zetacore is ready to create blocks
+	ready := zetacoreClient.WaitForZetacoreToCreateBlocks()
+	if !ready {
+		return errors.New("Zetacore is not ready")
+	}
 	startLogger.Info().Msgf("Zetacore client is ready")
 	zetacoreClient.SetAccountNumber(authz.ZetaClientGranteeKey)
 
 	// cross-check chainid
 	res, err := zetacoreClient.GetNodeInfo()
 	if err != nil {
-		panic(err)
+		startLogger.Error().Err(err).Msg("GetNodeInfo error")
+		return err
 	}
 
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
-		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
+		startLogger.Warn().Msgf("chain id mismatch, zetacore chain id %s, zetaclient configured chain id %s; reset zetaclient chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
 		err := zetacoreClient.UpdateChainID(cfg.ChainID)
 		if err != nil {
@@ -118,7 +125,12 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
 	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
-	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), zetacoreClient.GetKeys().GetAddress())
+	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
+	if err != nil {
+		startLogger.Error().Err(err).Msg("error getting signer address")
+		return err
+	}
+	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore

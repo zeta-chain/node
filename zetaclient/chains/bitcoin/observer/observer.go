@@ -344,34 +344,24 @@ func (ob *Observer) Stop() {
 }
 
 func (ob *Observer) SetLastBlockHeight(height int64) {
-	if height < 0 {
-		panic("lastBlock is negative")
-	}
 	atomic.StoreInt64(&ob.lastBlock, height)
 }
 
 func (ob *Observer) GetLastBlockHeight() int64 {
-	height := atomic.LoadInt64(&ob.lastBlock)
-	if height < 0 {
-		panic("lastBlock is negative")
-	}
-	return height
+	return atomic.LoadInt64(&ob.lastBlock)
 }
 
 func (ob *Observer) SetLastBlockHeightScanned(height int64) {
 	if height < 0 {
-		panic("lastBlockScanned is negative")
+		ob.logger.Chain.Error().Msgf("lastBlockScanned for chain %d is negative: %d", ob.chain.ChainId, height)
+		return
 	}
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
 func (ob *Observer) GetLastBlockHeightScanned() int64 {
-	height := atomic.LoadInt64(&ob.lastBlockScanned)
-	if height < 0 {
-		panic("lastBlockScanned is negative")
-	}
-	return height
+	return atomic.LoadInt64(&ob.lastBlockScanned)
 }
 
 func (ob *Observer) GetPendingNonce() uint64 {
@@ -552,7 +542,7 @@ func (ob *Observer) WatchUTXOS() {
 func (ob *Observer) FetchUTXOS() error {
 	defer func() {
 		if err := recover(); err != nil {
-			ob.logger.UTXOS.Error().Msgf("BTC fetchUTXOS: caught panic error: %v", err)
+			ob.logger.UTXOS.Error().Msgf("BTC FetchUTXOS: caught panic error: %v", err)
 		}
 	}()
 
@@ -791,7 +781,8 @@ func (ob *Observer) loadDB(dbpath string) error {
 	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
-		panic("failed to connect database")
+		ob.logger.Chain.Error().Err(err).Msg("failed to open database")
+		return err
 	}
 	ob.db = db
 

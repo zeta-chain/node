@@ -66,7 +66,7 @@ func (suite *ObserverDBTestSuite) SetupTest() {
 
 	//Create some transaction entries in the DB
 	for i := 0; i < NumOfEntries; i++ {
-		transaction := legacyTx(i)
+		transaction := suite.legacyTx(i)
 		trans, _ := clienttypes.ToTransactionSQLType(transaction, strconv.Itoa(i))
 		dbc := suite.db.Create(trans)
 		suite.NoError(dbc.Error)
@@ -125,33 +125,26 @@ func (suite *ObserverDBTestSuite) TestEVMLastBlock() {
 	suite.Equal(lastBlockNum, lastBlockDB.Num)
 }
 
-func legacyTx(nonce int) *ethtypes.Transaction {
+func (suite *ObserverDBTestSuite) legacyTx(nonce int) *ethtypes.Transaction {
 	gasPrice, err := hexutil.DecodeBig("0x2bd0875aed")
-	if err != nil {
-		panic(err)
-	}
+	suite.NoError(err)
+
 	gas, err := hexutil.DecodeUint64("0x5208")
-	if err != nil {
-		panic(err)
-	}
+	suite.NoError(err)
+
 	to := common.HexToAddress("0x2f14582947e292a2ecd20c430b46f2d27cfe213c")
 	value, err := hexutil.DecodeBig("0x2386f26fc10000")
-	if err != nil {
-		panic(err)
-	}
+	suite.NoError(err)
+
 	data := common.Hex2Bytes("0x")
 	v, err := hexutil.DecodeBig("0x1")
-	if err != nil {
-		panic(err)
-	}
+	suite.NoError(err)
+
 	r, err := hexutil.DecodeBig("0x56b5bf9222ce26c3239492173249696740bc7c28cd159ad083a0f4940baf6d03")
-	if err != nil {
-		panic(err)
-	}
+	suite.NoError(err)
+
 	s, err := hexutil.DecodeBig("0x5fcd608b3b638950d3fe007b19ca8c4ead37237eaf89a8426777a594fd245c2a")
-	if err != nil {
-		panic(err)
-	}
+	suite.NoError(err)
 
 	newLegacyTx := ethtypes.NewTx(&ethtypes.LegacyTx{
 		Nonce:    uint64(nonce),

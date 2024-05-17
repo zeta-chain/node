@@ -94,8 +94,12 @@ func NewOrchestrator(
 }
 
 func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) {
-	myid := oc.zetacoreClient.GetKeys().GetAddress()
-	oc.logger.Std.Info().Msgf("Starting orchestrator for %s", myid)
+	signerAddress, err := oc.zetacoreClient.GetKeys().GetAddress()
+	if err != nil {
+		oc.logger.Std.Error().Err(err).Msg("failed to get signer address")
+		return
+	}
+	oc.logger.Std.Info().Msgf("Starting orchestrator for %s", signerAddress)
 	go oc.StartCctxScheduler(appContext)
 
 	go func() {

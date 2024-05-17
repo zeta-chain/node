@@ -14,15 +14,15 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	chaininterfaces "github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
 const ErrMsgPaused = "zetacore client is paused"
 const ErrMsgRPCFailed = "rpc failed"
 
-var _ interfaces.ZetacoreClient = &MockZetaCoreClient{}
+var _ chaininterfaces.ZetacoreClient = &MockZetaCoreClient{}
 
 type MockZetaCoreClient struct {
 	paused    bool
@@ -40,13 +40,9 @@ type MockZetaCoreClient struct {
 }
 
 func NewMockZetaCoreClient() *MockZetaCoreClient {
-	zetaChain, err := chains.ZetaChainFromChainID("zetachain_7000-1")
-	if err != nil {
-		panic(err)
-	}
 	return &MockZetaCoreClient{
 		paused:       false,
-		zetaChain:    zetaChain,
+		zetaChain:    chains.ZetaChainMainnet,
 		pendingCctxs: map[int64][]*crosschaintypes.CrossChainTx{},
 	}
 }
@@ -108,8 +104,8 @@ func (z *MockZetaCoreClient) GetLogger() *zerolog.Logger {
 	return nil
 }
 
-func (z *MockZetaCoreClient) GetKeys() *keys.Keys {
-	return &keys.Keys{}
+func (z *MockZetaCoreClient) GetKeys() keyinterfaces.ObserverKeys {
+	return nil
 }
 
 func (z *MockZetaCoreClient) GetKeyGen() (*observerTypes.Keygen, error) {
@@ -178,7 +174,7 @@ func (z *MockZetaCoreClient) GetOutTxTracker(_ chains.Chain, _ uint64) (*crossch
 	return &crosschaintypes.OutTxTracker{}, nil
 }
 
-func (z *MockZetaCoreClient) GetAllOutTxTrackerByChain(_ int64, _ interfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
+func (z *MockZetaCoreClient) GetAllOutTxTrackerByChain(_ int64, _ chaininterfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
