@@ -141,7 +141,7 @@ then
   # these parameters will normally be migrated but is needed for localnet genesis
   # set the parameters only if params field is defined in gov
   # in the case of sdk v0.46 during upgrade test, the params field is not defined
-  if jq '.app_state.gov | has("params")' "$HOME/.zetacored/config/genesis.json"; then
+  if jq -e '.app_state.gov | has("params")' "$HOME/.zetacored/config/genesis.json" > /dev/null; then
     cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
     cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   fi
