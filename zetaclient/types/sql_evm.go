@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// EVM Chain client types ----------------------------------->
+// EVM Chain observer types ----------------------------------->
 
 const LastBlockNumID = 0xBEEF
 

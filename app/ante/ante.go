@@ -169,9 +169,10 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 	}
 	switch innerMsg.(type) {
 	case *crosschaintypes.MsgVoteGasPrice,
-		*crosschaintypes.MsgVoteInbound,
 		*crosschaintypes.MsgVoteOutbound,
+		*crosschaintypes.MsgVoteInbound,
 		*crosschaintypes.MsgAddOutboundTracker,
+		*crosschaintypes.MsgAddInboundTracker,
 		*observertypes.MsgVoteBlockHeader,
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgAddBlameVote:

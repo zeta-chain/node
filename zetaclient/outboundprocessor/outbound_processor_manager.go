@@ -1,7 +1,6 @@
 package outboundprocessor
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -60,9 +59,4 @@ func (outboundManager *Processor) TimeInTryProcess(outboundID string) time.Durat
 		return time.Since(outboundManager.outboundStartTime[outboundID])
 	}
 	return 0
-}
-
-// ToOutboundID returns the outboundID for OutboundProcessorManager to track
-func ToOutboundID(index string, receiverChainID int64, nonce uint64) string {
-	return fmt.Sprintf("%s-%d-%d", index, receiverChainID, nonce)
 }
