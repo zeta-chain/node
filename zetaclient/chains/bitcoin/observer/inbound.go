@@ -112,17 +112,6 @@ func (ob *Observer) ObserveInTx() error {
 		// filter incoming txs to TSS address
 		tssAddress := ob.Tss.BTCAddress()
 
-		// add block header to zetacore
-		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
-		// https://github.com/zeta-chain/node/issues/1847
-		blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
-		if found && blockHeaderVerification.Enabled {
-			err = ob.postBlockHeader(blockNumber)
-			if err != nil {
-				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)
-			}
-		}
-
 		// #nosec G701 always positive
 		inTxs, err := FilterAndParseIncomingTx(
 			ob.rpcClient,
