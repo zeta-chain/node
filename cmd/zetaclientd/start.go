@@ -277,8 +277,12 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := orchestrator.NewOrchestrator(zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
-	mo1.MonitorCore(appContext)
+	orchestrator := orchestrator.NewOrchestrator(zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
+	err = orchestrator.MonitorCore(appContext)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("Orchestrator failed to start")
+		return err
+	}
 
 	// start zeta supply checker
 	// TODO: enable

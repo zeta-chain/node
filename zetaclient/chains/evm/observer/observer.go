@@ -601,7 +601,7 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		path := fmt.Sprintf("%s/%s", dbPath, chain.ChainName.String()) //Use "file::memory:?cache=shared" for temp db
 		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 		if err != nil {
-			ob.logger.Chain.Error().Err(err).Msg("error opening db")
+			ob.logger.Chain.Error().Err(err).Msgf("failed to open observer database for %s", ob.chain.ChainName.String())
 			return err
 		}
 

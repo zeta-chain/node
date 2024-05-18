@@ -781,7 +781,7 @@ func (ob *Observer) loadDB(dbpath string) error {
 	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
-		ob.logger.Chain.Error().Err(err).Msg("failed to open database")
+		ob.logger.Chain.Error().Err(err).Msgf("failed to open observer database for %s", ob.chain.ChainName.String())
 		return err
 	}
 	ob.db = db

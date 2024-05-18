@@ -93,24 +93,29 @@ func NewOrchestrator(
 	return &oc
 }
 
-func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) {
+func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) error {
 	signerAddress, err := oc.zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
-		oc.logger.Std.Error().Err(err).Msg("failed to get signer address")
-		return
+		return fmt.Errorf("failed to get signer address: %w", err)
 	}
-	oc.logger.Std.Info().Msgf("Starting orchestrator for %s", signerAddress)
+	oc.logger.Std.Info().Msgf("Starting orchestrator for signer: %s", signerAddress)
+
+	// start cctx scheduler
 	go oc.StartCctxScheduler(appContext)
 
+	// watch for upgrade plan from zetacore
 	go func() {
-		// query UpgradePlan from zetacore and send to its pause channel if upgrade height is reached
+		// wait for upgrade plan signal to arrive
 		oc.zetacoreClient.Pause()
-		// now stop everything
-		close(oc.stop) // this stops the startSendScheduler() loop
+
+		// now stop orchestrator and all observers
+		close(oc.stop)
 		for _, c := range oc.observerMap {
 			c.Stop()
 		}
 	}()
+
+	return nil
 }
 
 // GetUpdatedSigner returns signer with updated chain parameters
