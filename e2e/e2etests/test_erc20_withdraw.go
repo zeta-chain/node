@@ -3,10 +3,8 @@ package e2etests
 import (
 	"math/big"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
@@ -41,28 +39,4 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	// verify the withdraw value
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
-}
-
-// verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on EVM
-func verifyTransferAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
-	r.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
-
-	receipt, err := r.EVMClient.TransactionReceipt(
-		r.Ctx,
-		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
-	)
-	if err != nil {
-		panic(err)
-	}
-	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-	for _, log := range receipt.Logs {
-		event, err := r.ERC20.ParseTransfer(*log)
-		if err != nil {
-			continue
-		}
-		r.Logger.Info("  logs: from %s, to %s, value %d", event.From.Hex(), event.To.Hex(), event.Value)
-		if event.Value.Int64() != amount {
-			panic("value is not correct")
-		}
-	}
 }
