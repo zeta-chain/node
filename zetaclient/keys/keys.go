@@ -18,12 +18,15 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 )
 
 var (
 	ErrBech32ifyPubKey = errors.New("Bech32ifyPubKey fail in main")
 	ErrNewPubKey       = errors.New("NewPubKey error from string")
 )
+
+var _ interfaces.ObserverKeys = &Keys{}
 
 // Keys manages all the keys used by zeta client
 type Keys struct {

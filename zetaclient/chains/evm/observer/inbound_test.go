@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -345,7 +346,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// create mock client
 	evmClient := mocks.NewMockEvmClient()
 	evmJSONRPC := mocks.NewMockJSONRPCClient()
-	zetacoreClient := mocks.NewMockZetaCoreClient()
+	zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
 	tss := mocks.NewTSSMainnet()
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -379,7 +380,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		evmClient.WithReceipt(receipt)
 		zetacoreClient.Pause()
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
-		// error posting vote is expected because the mock zetaClient is paused
+		// error posting vote is expected because the mock zetacoreClient is paused
 		require.ErrorContains(t, err, "error checking and voting")
 	})
 }

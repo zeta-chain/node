@@ -22,7 +22,7 @@ func MockBTCObserverMainnet() *Observer {
 
 	return &Observer{
 		chain:          chains.BtcMainnetChain,
-		zetacoreClient: mocks.NewMockZetaCoreClient(),
+		zetacoreClient: mocks.NewMockZetacoreClient(),
 		Tss:            mocks.NewTSSMainnet(),
 		coreContext:    coreContext,
 	}
