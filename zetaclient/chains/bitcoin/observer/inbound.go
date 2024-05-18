@@ -95,8 +95,10 @@ func (ob *Observer) ObserveInTx() error {
 	// add block header to zetacore
 	// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
 	// https://github.com/zeta-chain/node/issues/1847
-	flags := ob.coreContext.GetCrossChainFlags()
-	if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+	// TODO: move this logic in its own routine
+	// https://github.com/zeta-chain/node/issues/2204
+	blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
+	if found && blockHeaderVerification.Enabled {
 		err = ob.postBlockHeader(blockNumber)
 		if err != nil {
 			ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)
@@ -109,17 +111,6 @@ func (ob *Observer) ObserveInTx() error {
 
 		// filter incoming txs to TSS address
 		tssAddress := ob.Tss.BTCAddress()
-
-		// add block header to zetacore
-		// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
-		// https://github.com/zeta-chain/node/issues/1847
-		blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
-		if found && blockHeaderVerification.Enabled {
-			err = ob.postBlockHeader(blockNumber)
-			if err != nil {
-				ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)
-			}
-		}
 
 		if len(res.Block.Tx) > 1 {
 			// get depositor fee

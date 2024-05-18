@@ -84,10 +84,9 @@ func TestZetacore_GetBallot(t *testing.T) {
 
 func TestZetacore_GetCrosschainFlags(t *testing.T) {
 	expectedOutput := observertypes.QueryGetCrosschainFlagsResponse{CrosschainFlags: observertypes.CrosschainFlags{
-		IsInboundEnabled:             true,
-		IsOutboundEnabled:            false,
-		GasPriceIncreaseFlags:        nil,
-		BlockHeaderVerificationFlags: nil,
+		IsInboundEnabled:      true,
+		IsOutboundEnabled:     false,
+		GasPriceIncreaseFlags: nil,
 	}}
 	input := observertypes.QueryGetCrosschainFlagsRequest{}
 	method := "/zetachain.zetacore.observer.Query/CrosschainFlags"

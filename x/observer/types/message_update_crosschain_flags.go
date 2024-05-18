@@ -83,9 +83,5 @@ func (msg *MsgUpdateCrosschainFlags) GetRequiredPolicyType() authoritytypes.Poli
 	if msg.GasPriceIncreaseFlags != nil {
 		return authoritytypes.PolicyType_groupOperational
 	}
-	if msg.BlockHeaderVerificationFlags != nil && (msg.BlockHeaderVerificationFlags.IsEthTypeChainEnabled || msg.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled) {
-		return authoritytypes.PolicyType_groupOperational
-
-	}
 	return authoritytypes.PolicyType_groupEmergency
 }

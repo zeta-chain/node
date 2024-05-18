@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
+import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.EventBallotCreated
@@ -157,11 +157,6 @@ export declare class EventCrosschainFlagsUpdated extends Message<EventCrosschain
    * @generated from field: string signer = 5;
    */
   signer: string;
-
-  /**
-   * @generated from field: zetachain.zetacore.observer.BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
-   */
-  blockHeaderVerificationFlags?: BlockHeaderVerificationFlags;
 
   constructor(data?: PartialMessage<EventCrosschainFlagsUpdated>);
 

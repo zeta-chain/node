@@ -22,13 +22,6 @@ enum ObserverUpdateReason {
   AdminUpdate = 2;
 }
 
-// Deprecated: Use ObserverSet instead to get the list of observers
-message ObserverMapper {
-  string index = 1;
-  pkg.chains.Chain observer_chain = 2;
-  repeated string observer_list = 4;
-}
-
 message ObserverSet { repeated string observer_list = 1; }
 
 message LastObserverCount {
