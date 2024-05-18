@@ -16,21 +16,46 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-/* ProcessSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
+// ProcessOutbound processes the finalization of an outbound transaction based on the ballot status
+// The state is committed only if the individual steps are successful
+func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotStatus observertypes.BallotStatus, valueReceived string) error {
+	tmpCtx, commit := ctx.CacheContext()
+	err := func() error {
+		switch ballotStatus {
+		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
+			k.ProcessSuccessfulOutbound(tmpCtx, cctx, valueReceived)
+		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
+			err := k.ProcessFailedOutbound(tmpCtx, cctx, valueReceived)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}()
+	if err != nil {
+		return err
+	}
+	err = cctx.Validate()
+	if err != nil {
+		return err
+	}
+	commit()
+	return nil
+}
 
-	1. Change the status of the CCTX from
-	 - PendingRevert to Reverted
-     - PendingOutbound to OutboundMined
-
-	2. Set the finalization status of the current outbound tx to executed
-
-	3. Emit an event for the successful outbound transaction
-*/
-
+// ProcessSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
+//
+//  1. Change the status of the CCTX from
+//     - PendingRevert to Reverted
+//     - PendingOutbound to OutboundMined
+//
+//  2. Set the finalization status of the current outbound tx to executed
+//
+//  3. Emit an event for the successful outbound transaction
+//
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
 // For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the ProcessFailedOutbound function, so we can just return and error to trigger that
-
 func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) {
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
@@ -46,20 +71,18 @@ func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
 }
 
-/*
-ProcessFailedOutbound processes a failed outbound transaction. It does the following things in one function:
-
- 1. For Admin Tx or a withdrawal from Zeta chain, it aborts the CCTX
-
- 2. For other CCTX
-    - If the CCTX is in PendingOutbound, it creates a revert tx and sets the finalization status of the current outbound tx to executed
-    - If the CCTX is in PendingRevert, it sets the Status to Aborted
-
- 3. Emit an event for the failed outbound transaction
-
- 4. Set the finalization status of the current outbound tx to executed. If a revert tx is is created, the finalization status is not set, it would get set when the revert is processed via a subsequent transaction
-*/
-
+// ProcessFailedOutbound processes a failed outbound transaction. It does the following things in one function:
+//
+// 1. For Admin Tx or a withdrawal from Zeta chain, it aborts the CCTX
+//
+// 2. For other CCTX
+//   - If the CCTX is in PendingOutbound, it creates a revert tx and sets the finalization status of the current outbound tx to executed
+//   - If the CCTX is in PendingRevert, it sets the Status to Aborted
+//
+// 3. Emit an event for the failed outbound transaction
+//
+// 4. Set the finalization status of the current outbound tx to executed. If a revert tx is is created, the finalization status is not set, it would get set when the revert is processed via a subsequent transaction
+//
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
 // For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the ProcessFailedOutbound function, so we can just return and error to trigger that
@@ -79,7 +102,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		// Try revert if the coin-type is ZETA
 		case coin.CoinType_Zeta:
 			{
-				err := k.processFailedOutboundForZEVMTx(ctx, cctx)
+				err := k.processFailedOutboundForZEVM(ctx, cctx)
 				if err != nil {
 					return cosmoserrors.Wrap(err, "ProcessFailedOutboundForZEVMTx")
 				}
@@ -92,7 +115,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			}
 		}
 	} else {
-		err := k.processFailedOutBoundForExternalChainTx(ctx, cctx, oldStatus)
+		err := k.processFailedOutboundForExternalChainTx(ctx, cctx, oldStatus)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "ProcessFailedOutBoundForExternalChainTx")
 		}
@@ -102,7 +125,8 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 	return nil
 }
 
-func (k Keeper) processFailedOutBoundForExternalChainTx(ctx sdk.Context, cctx *types.CrossChainTx, oldStatus types.CctxStatus) error {
+// processFailedOutboundForExternalChainTx processes the failed outbound transaction for external chain tx
+func (k Keeper) processFailedOutboundForExternalChainTx(ctx sdk.Context, cctx *types.CrossChainTx, oldStatus types.CctxStatus) error {
 	switch oldStatus {
 	case types.CctxStatus_PendingOutbound:
 
@@ -143,7 +167,9 @@ func (k Keeper) processFailedOutBoundForExternalChainTx(ctx sdk.Context, cctx *t
 	}
 	return nil
 }
-func (k Keeper) processFailedOutboundForZEVMTx(ctx sdk.Context, cctx *types.CrossChainTx) error {
+
+// processFailedOutboundForZEVM processes the failed outbound transaction for ZEVM
+func (k Keeper) processFailedOutboundForZEVM(ctx sdk.Context, cctx *types.CrossChainTx) error {
 	indexBytes, err := cctx.GetCCTXIndexBytes()
 	if err != nil {
 		// Return err to save the failed outbound ad set to aborted
@@ -177,17 +203,23 @@ func (k Keeper) processFailedOutboundForZEVMTx(ctx sdk.Context, cctx *types.Cros
 		originalReceiver = ethcommon.HexToAddress(cctx.OutboundTxParams[0].Receiver)
 		orginalReceiverChainID = cctx.OutboundTxParams[0].ReceiverChainId
 	}
+
 	// Call evm to revert the transaction
-	_, err = k.fungibleKeeper.ZETARevertAndCallContract(ctx,
+	// If revert fails, we set it to abort directly there is no way to refund here as the revert failed
+	_, err = k.fungibleKeeper.ZETARevertAndCallContract(
+		ctx,
 		originalSender,
 		originalReceiver,
 		cctx.InboundTxParams.SenderChainId,
 		orginalReceiverChainID,
-		cctx.GetCurrentOutTxParam().Amount.BigInt(), data, indexBytes)
-	// If revert fails, we set it to abort directly there is no way to refund here as the revert failed
+		cctx.GetCurrentOutTxParam().Amount.BigInt(),
+		data,
+		indexBytes,
+	)
 	if err != nil {
 		return fmt.Errorf("failed ZETARevertAndCallContract: %s", err.Error())
 	}
+
 	cctx.SetReverted("Outbound failed, revert executed")
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
@@ -198,32 +230,5 @@ func (k Keeper) processFailedOutboundForZEVMTx(ctx sdk.Context, cctx *types.Cros
 		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-	return nil
-}
-
-// ProcessOutbound processes the finalization of an outbound transaction based on the ballot status
-// The state is committed only if the individual steps are successful
-func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotStatus observertypes.BallotStatus, valueReceived string) error {
-	tmpCtx, commit := ctx.CacheContext()
-	err := func() error {
-		switch ballotStatus {
-		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
-			k.ProcessSuccessfulOutbound(tmpCtx, cctx, valueReceived)
-		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
-			err := k.ProcessFailedOutbound(tmpCtx, cctx, valueReceived)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}()
-	if err != nil {
-		return err
-	}
-	err = cctx.Validate()
-	if err != nil {
-		return err
-	}
-	commit()
 	return nil
 }

@@ -61,7 +61,7 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
-			return MonitorBTCWithdraw(r, tx, i, time.Now())
+			return monitorBTCWithdraw(r, tx, i, time.Now())
 		})
 	}
 
@@ -73,8 +73,8 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("all withdraws completed")
 }
 
-// MonitorBTCWithdraw monitors the withdraw of BTC, returns once the withdraw is complete
-func MonitorBTCWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+// monitorBTCWithdraw monitors the withdraw of BTC, returns once the withdraw is complete
+func monitorBTCWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
