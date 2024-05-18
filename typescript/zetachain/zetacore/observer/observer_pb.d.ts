@@ -5,7 +5,6 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Chain } from "../pkg/chains/chains_pb.js";
 
 /**
  * @generated from enum zetachain.zetacore.observer.ObservationType
@@ -55,42 +54,6 @@ export declare enum ObserverUpdateReason {
    * @generated from enum value: AdminUpdate = 2;
    */
   AdminUpdate = 2,
-}
-
-/**
- * Deprecated: Use ObserverSet instead to get the list of observers
- *
- * @generated from message zetachain.zetacore.observer.ObserverMapper
- */
-export declare class ObserverMapper extends Message<ObserverMapper> {
-  /**
-   * @generated from field: string index = 1;
-   */
-  index: string;
-
-  /**
-   * @generated from field: zetachain.zetacore.pkg.chains.Chain observer_chain = 2;
-   */
-  observerChain?: Chain;
-
-  /**
-   * @generated from field: repeated string observer_list = 4;
-   */
-  observerList: string[];
-
-  constructor(data?: PartialMessage<ObserverMapper>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.ObserverMapper";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverMapper;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverMapper;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverMapper;
-
-  static equals(a: ObserverMapper | PlainMessage<ObserverMapper> | undefined, b: ObserverMapper | PlainMessage<ObserverMapper> | undefined): boolean;
 }
 
 /**

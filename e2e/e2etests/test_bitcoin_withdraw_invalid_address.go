@@ -28,10 +28,10 @@ func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner, args []string) {
 
 	r.SetBtcAddress(r.Name, false)
 
-	WithdrawToInvalidAddress(r, amount)
+	withdrawToInvalidAddress(r, amount)
 }
 
-func WithdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
+func withdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	approvalAmount := 1000000000000000000
 	// approve the ZRC20 contract to spend approvalAmount BTC from the deployer address.
 	// the actual amount transferred is provided as test arg BTC, but we approve more to cover withdraw fee

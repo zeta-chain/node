@@ -20,17 +20,20 @@
 ### Refactor
 
 * [2094](https://github.com/zeta-chain/node/pull/2094) - upgrade go-tss to use cosmos v0.47
-* [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor.
+* [2110](https://github.com/zeta-chain/node/pull/2110) - move non-query rate limiter logic to zetaclient side and code refactor
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly
 * [2210](https://github.com/zeta-chain/node/pull/2210) - removed uncessary panics in the zetaclientd process
+* [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 
 ### Tests
 
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+* [2181](https://github.com/zeta-chain/node/pull/2181) - add more assertion and test cases in ZEVM message passing E2E tests
+* [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
 
 ### Fixes
 

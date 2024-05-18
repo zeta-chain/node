@@ -21,21 +21,11 @@ var DefaultGasPriceIncreaseFlags = GasPriceIncreaseFlags{
 	MaxPendingCctxs: 500,
 }
 
-// DefaultBlockHeaderVerificationFlags returns the default block header verification flags used when not defined
-// Deprecated(v16): VerificationFlags are now read in the `lightclient` module
-var DefaultBlockHeaderVerificationFlags = BlockHeaderVerificationFlags{
-	IsEthTypeChainEnabled: true,
-	IsBtcTypeChainEnabled: true,
-}
-
 // DefaultCrosschainFlags returns the default crosschain flags used when not defined
 func DefaultCrosschainFlags() *CrosschainFlags {
 	return &CrosschainFlags{
 		IsInboundEnabled:      true,
 		IsOutboundEnabled:     true,
 		GasPriceIncreaseFlags: &DefaultGasPriceIncreaseFlags,
-
-		// Deprecated(v16): VerificationFlags are now read in the `lightclient` module
-		BlockHeaderVerificationFlags: &DefaultBlockHeaderVerificationFlags,
 	}
 }

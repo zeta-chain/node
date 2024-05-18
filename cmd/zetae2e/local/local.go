@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
@@ -14,7 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"golang.org/x/sync/errgroup"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const (
@@ -245,10 +247,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// run tests
 	var eg errgroup.Group
 	if !skipRegular {
-		// defines all tests, if light is enabled, only the most basic tests are run
+		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
 			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleWithdrawsName,
+			e2etests.TestMultipleERC20WithdrawsName,
 			e2etests.TestERC20DepositAndCallRefundName,
 			e2etests.TestZRC20SwapName,
 		}
@@ -257,9 +259,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaTests := []string{
 			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingRevertFailName,
-			e2etests.TestMessagePassingRevertSuccessName,
+			e2etests.TestMessagePassingExternalChainsName,
+			e2etests.TestMessagePassingRevertFailExternalChainsName,
+			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,
@@ -267,6 +269,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 			e2etests.TestZetaDepositName,
 			e2etests.TestZetaDepositNewAddressName,
 		}
@@ -287,7 +291,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestEtherWithdrawName,
 			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
-			e2etests.TestDepositAndCallRefundName,
+			e2etests.TestEtherDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
@@ -331,8 +335,23 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 
+	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
+	txPriorityErrCh := make(chan error, 1)
+	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
+	go monitorTxPriorityInBlocks(ctx, conf, txPriorityErrCh)
+
 	if err := eg.Wait(); err != nil {
 		deployerRunner.CtxCancel()
+		monitorPriorityCancel()
+		logger.Print("❌ %v", err)
+		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
+		os.Exit(1)
+	}
+
+	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
+	logger.Print("⏳ e2e tests passed, checking tx priority")
+	monitorPriorityCancel()
+	if err := <-txPriorityErrCh; err != nil {
 		logger.Print("❌ %v", err)
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
@@ -352,4 +371,27 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	os.Exit(0)
+}
+
+// waitKeygenHeight waits for keygen height
+func waitKeygenHeight(
+	ctx context.Context,
+	cctxClient crosschaintypes.QueryClient,
+	logger *runner.Logger,
+) {
+	// wait for keygen to be completed
+	keygenHeight := int64(60)
+	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
+	for {
+		time.Sleep(2 * time.Second)
+		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		if err != nil {
+			logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			continue
+		}
+		if response.Height >= keygenHeight {
+			break
+		}
+		logger.Info("Last ZetaHeight: %d", response.Height)
+	}
 }
