@@ -126,16 +126,18 @@ func TestZetacore_GetRateLimiterFlags(t *testing.T) {
 }
 
 func TestZetacore_HeaderEnabledChains(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
-		{
-			ChainId: chains.EthChain.ChainId,
-			Enabled: true,
+	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{
+		HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
+			{
+				ChainId: chains.EthChain.ChainId,
+				Enabled: true,
+			},
+			{
+				ChainId: chains.BtcMainnetChain.ChainId,
+				Enabled: true,
+			},
 		},
-		{
-			ChainId: chains.BtcMainnetChain.ChainId,
-			Enabled: true,
-		},
-	}}
+	}
 	input := lightclienttypes.QueryHeaderEnabledChainsRequest{}
 	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
@@ -242,7 +244,9 @@ func TestZetacore_GetCctxByHash(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryGetCctxResponse{CrossChainTx: &crosschainTypes.CrossChainTx{
 		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
 	}}
-	input := crosschainTypes.QueryGetCctxRequest{Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"}
+	input := crosschainTypes.QueryGetCctxRequest{
+		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
+	}
 	method := "/zetachain.zetacore.crosschain.Query/Cctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()

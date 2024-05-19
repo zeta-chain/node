@@ -91,7 +91,10 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	}
 
 	// On finalization the Tss calls the onReceive function which in turn calls the onZetaMessage function on the destination contract.
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(
+		r.Ctx,
+		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
+	)
 	if err != nil {
 		panic(err)
 	}

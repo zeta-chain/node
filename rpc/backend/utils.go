@@ -61,7 +61,12 @@ func (s sortGasAndReward) Less(i, j int) bool {
 // If the pending value is true, it will iterate over the mempool (pending)
 // txs in order to compute and return the pending tx sequence.
 // Todo: include the ability to specify a blockNumber
-func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height int64, logger log.Logger) (uint64, error) {
+func (b *Backend) getAccountNonce(
+	accAddr common.Address,
+	pending bool,
+	height int64,
+	logger log.Logger,
+) (uint64, error) {
 	queryClient := authtypes.NewQueryClient(b.clientCtx)
 	adr := sdk.AccAddress(accAddr.Bytes()).String()
 	ctx := types.ContextWithHeight(height)
@@ -152,7 +157,11 @@ func (b *Backend) processBlock(
 	gasusedfloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
 
 	if gasLimitUint64 <= 0 {
-		return fmt.Errorf("gasLimit of block height %d should be bigger than 0 , current gaslimit %d", blockHeight, gasLimitUint64)
+		return fmt.Errorf(
+			"gasLimit of block height %d should be bigger than 0 , current gaslimit %d",
+			blockHeight,
+			gasLimitUint64,
+		)
 	}
 
 	gasUsedRatio := gasusedfloat / float64(gasLimitUint64)

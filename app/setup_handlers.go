@@ -127,19 +127,22 @@ func SetupHandlers(app *App) {
 		upgradeHandlerFns, storeUpgrades = allUpgrades.mergeAllUpgrades()
 	}
 
-	app.UpgradeKeeper.SetUpgradeHandler(constant.Version, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Running upgrade handler for " + constant.Version)
+	app.UpgradeKeeper.SetUpgradeHandler(
+		constant.Version,
+		func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			app.Logger().Info("Running upgrade handler for " + constant.Version)
 
-		var err error
-		for _, upgradeHandler := range upgradeHandlerFns {
-			vm, err = upgradeHandler(ctx, vm)
-			if err != nil {
-				return vm, err
+			var err error
+			for _, upgradeHandler := range upgradeHandlerFns {
+				vm, err = upgradeHandler(ctx, vm)
+				if err != nil {
+					return vm, err
+				}
 			}
-		}
 
-		return app.mm.RunMigrations(ctx, app.configurator, vm)
-	})
+			return app.mm.RunMigrations(ctx, app.configurator, vm)
+		},
+	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {

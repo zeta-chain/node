@@ -12,7 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutTxTrackerRequest) (*types.QueryAllOutTxTrackerResponse, error) {
+func (k Keeper) OutTxTrackerAll(
+	c context.Context,
+	req *types.QueryAllOutTxTrackerRequest,
+) (*types.QueryAllOutTxTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -38,7 +41,10 @@ func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutTxTrack
 	return &types.QueryAllOutTxTrackerResponse{OutTxTracker: outTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOutTxTrackerByChainRequest) (*types.QueryAllOutTxTrackerByChainResponse, error) {
+func (k Keeper) OutTxTrackerAllByChain(
+	c context.Context,
+	req *types.QueryAllOutTxTrackerByChainRequest,
+) (*types.QueryAllOutTxTrackerByChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -65,7 +71,10 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 	return &types.QueryAllOutTxTrackerByChainResponse{OutTxTracker: outTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerRequest) (*types.QueryGetOutTxTrackerResponse, error) {
+func (k Keeper) OutTxTracker(
+	c context.Context,
+	req *types.QueryGetOutTxTrackerRequest,
+) (*types.QueryGetOutTxTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

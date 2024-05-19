@@ -71,7 +71,10 @@ func TestMigrateStore(t *testing.T) {
 		}
 		store = prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.NonceToCctxKeyPrefix))
 		for _, nonce := range nonceToCctxList {
-			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonce.Tss, nonce.ChainId, nonce.Nonce)), k.GetCodec().MustMarshal(&nonce))
+			store.Set(
+				types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonce.Tss, nonce.ChainId, nonce.Nonce)),
+				k.GetCodec().MustMarshal(&nonce),
+			)
 		}
 		err := v4.MigrateStore(ctx, k.GetObserverKeeper(), k)
 		require.NoError(t, err)

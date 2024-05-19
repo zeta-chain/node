@@ -21,7 +21,10 @@ const (
 	MaxLookbackNonce = 1000
 )
 
-func (k Keeper) ZetaAccounting(c context.Context, _ *types.QueryZetaAccountingRequest) (*types.QueryZetaAccountingResponse, error) {
+func (k Keeper) ZetaAccounting(
+	c context.Context,
+	_ *types.QueryZetaAccountingRequest,
+) (*types.QueryZetaAccountingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	amount, found := k.GetZetaAccounting(ctx)
 	if !found {
@@ -72,7 +75,10 @@ func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.
 	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
 }
 
-func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceRequest) (*types.QueryGetCctxResponse, error) {
+func (k Keeper) CctxByNonce(
+	c context.Context,
+	req *types.QueryGetCctxByNonceRequest,
+) (*types.QueryGetCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -92,7 +98,10 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 
 // ListPendingCctx returns a list of pending cctxs and the total number of pending cctxs
 // a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
-func (k Keeper) ListPendingCctx(c context.Context, req *types.QueryListPendingCctxRequest) (*types.QueryListPendingCctxResponse, error) {
+func (k Keeper) ListPendingCctx(
+	c context.Context,
+	req *types.QueryListPendingCctxRequest,
+) (*types.QueryListPendingCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -164,10 +173,19 @@ func (k Keeper) ListPendingCctx(c context.Context, req *types.QueryListPendingCc
 }
 
 // getCctxByChainIDAndNonce returns the cctx by chainID and nonce
-func getCctxByChainIDAndNonce(k Keeper, ctx sdk.Context, tssPubkey string, chainID int64, nonce int64) (*types.CrossChainTx, error) {
+func getCctxByChainIDAndNonce(
+	k Keeper,
+	ctx sdk.Context,
+	tssPubkey string,
+	chainID int64,
+	nonce int64,
+) (*types.CrossChainTx, error) {
 	nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, nonce)
 	if !found {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: chainid %d, nonce %d", chainID, nonce))
+		return nil, status.Error(
+			codes.Internal,
+			fmt.Sprintf("nonceToCctx not found: chainid %d, nonce %d", chainID, nonce),
+		)
 	}
 	cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
 	if !found {

@@ -107,7 +107,16 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	return tx, txSigHashes, int(0), int64(65236), pkScript, &privKey, wif.CompressPubKey, nil
 }
 
-func getWalletTX(tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt int64, subscript []byte, hashType txscript.SigHashType, privKey *btcec.PrivateKey, compress bool) (string, error) {
+func getWalletTX(
+	tx *wire.MsgTx,
+	sigHashes *txscript.TxSigHashes,
+	idx int,
+	amt int64,
+	subscript []byte,
+	hashType txscript.SigHashType,
+	privKey *btcec.PrivateKey,
+	compress bool,
+) (string, error) {
 	txWitness, err := txscript.WitnessSignature(tx, sigHashes, idx, amt, subscript, hashType, privKey, compress)
 	if err != nil {
 		return "", err
@@ -123,7 +132,15 @@ func getWalletTX(tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt i
 	return walletTx, nil
 }
 
-func getTSSTX(tss interfaces.TSSSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt int64, subscript []byte, hashType txscript.SigHashType) (string, error) {
+func getTSSTX(
+	tss interfaces.TSSSigner,
+	tx *wire.MsgTx,
+	sigHashes *txscript.TxSigHashes,
+	idx int,
+	amt int64,
+	subscript []byte,
+	hashType txscript.SigHashType,
+) (string, error) {
 	witnessHash, err := txscript.CalcWitnessSigHash(subscript, sigHashes, txscript.SigHashAll, tx, idx, amt)
 	if err != nil {
 		return "", err

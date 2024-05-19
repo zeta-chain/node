@@ -52,7 +52,11 @@ func (msg *MsgAddToInTxTracker) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
 	if msg.Proof != nil && !chain.SupportMerkleProof() {
-		return errorsmod.Wrapf(ErrProofVerificationFail, "chain id %d does not support proof-based trackers", msg.ChainId)
+		return errorsmod.Wrapf(
+			ErrProofVerificationFail,
+			"chain id %d does not support proof-based trackers",
+			msg.ChainId,
+		)
 	}
 	_, ok := coin.CoinType_value[msg.CoinType.String()]
 	if !ok {

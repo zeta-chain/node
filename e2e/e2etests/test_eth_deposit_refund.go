@@ -103,7 +103,13 @@ func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 		// we check that the value is still greater than 0
 		if tx.Value().Cmp(value) != -1 || tx.Value().Cmp(big.NewInt(0)) != 1 {
 			printTxInfo()
-			panic(fmt.Sprintf("expected tx value %s; should be non-null and lower than %s", tx.Value().String(), value.String()))
+			panic(
+				fmt.Sprintf(
+					"expected tx value %s; should be non-null and lower than %s",
+					tx.Value().String(),
+					value.String(),
+				),
+			)
 		}
 
 		r.Logger.Info("REVERT tx receipt: %d", receipt.Status)

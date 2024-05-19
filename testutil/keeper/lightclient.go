@@ -41,7 +41,10 @@ func initLightclientKeeper(
 }
 
 // LightclientKeeperWithMocks instantiates a lightclient keeper for testing purposes with the option to mock specific keepers
-func LightclientKeeperWithMocks(t testing.TB, mockOptions LightclientMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
+func LightclientKeeperWithMocks(
+	t testing.TB,
+	mockOptions LightclientMockOptions,
+) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 

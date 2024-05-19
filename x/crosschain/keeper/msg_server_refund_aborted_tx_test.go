@@ -57,7 +57,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundTxParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -328,7 +336,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundTxParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -491,7 +507,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		_ = setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundTxParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -552,7 +576,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		_ = setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundTxParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,

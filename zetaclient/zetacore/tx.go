@@ -210,7 +210,12 @@ func (c *Client) PostBlameData(blame *blame.Blame, chainID int64, index string) 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
-func (c *Client) PostVoteBlockHeader(chainID int64, blockHash []byte, height int64, header proofs.HeaderData) (string, error) {
+func (c *Client) PostVoteBlockHeader(
+	chainID int64,
+	blockHash []byte,
+	height int64,
+	header proofs.HeaderData,
+) (string, error) {
 	signerAddress := c.keys.GetOperatorAddress().String()
 
 	msg := observertypes.NewMsgVoteBlockHeader(signerAddress, chainID, blockHash, height, header)
@@ -235,7 +240,10 @@ func (c *Client) PostVoteBlockHeader(chainID int64, blockHash []byte, height int
 // PostVoteInbound posts a vote on an observed inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // it is used when the ballot is finalized and the inbound tx needs to be processed
-func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (c *Client) PostVoteInbound(
+	gasLimit, retryGasLimit uint64,
+	msg *types.MsgVoteOnObservedInboundTx,
+) (string, string, error) {
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -245,7 +253,12 @@ func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgV
 	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ballotIndex, msg.Creator)
 	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostVoteInbound: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+		return "", ballotIndex, errors.Wrapf(
+			err,
+			"PostVoteInbound: unable to check if already voted for ballot %s voter %s",
+			ballotIndex,
+			msg.Creator,
+		)
 	}
 	if hasVoted {
 		return "", ballotIndex, nil
@@ -268,7 +281,11 @@ func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgV
 // MonitorVoteInboundTxResult monitors the result of a vote inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
-func (c *Client) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) {
+func (c *Client) MonitorVoteInboundTxResult(
+	zetaTxHash string,
+	retryGasLimit uint64,
+	msg *types.MsgVoteOnObservedInboundTx,
+) {
 	var lastErr error
 
 	for i := 0; i < MonitorVoteInboundTxResultRetryCount; i++ {
@@ -360,7 +377,10 @@ func (c *Client) PostVoteOutbound(
 }
 
 // PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOnObservedOutboundTx
-func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedOutboundTx) (string, string, error) {
+func (c *Client) PostVoteOutboundFromMsg(
+	gasLimit, retryGasLimit uint64,
+	msg *types.MsgVoteOnObservedOutboundTx,
+) (string, string, error) {
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -370,7 +390,12 @@ func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *ty
 	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ballotIndex, msg.Creator)
 	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostVoteOutbound: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+		return "", ballotIndex, errors.Wrapf(
+			err,
+			"PostVoteOutbound: unable to check if already voted for ballot %s voter %s",
+			ballotIndex,
+			msg.Creator,
+		)
 	}
 	if hasVoted {
 		return "", ballotIndex, nil
@@ -392,7 +417,11 @@ func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *ty
 // MonitorVoteOutboundTxResult monitors the result of a vote outbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
-func (c *Client) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedOutboundTx) {
+func (c *Client) MonitorVoteOutboundTxResult(
+	zetaTxHash string,
+	retryGasLimit uint64,
+	msg *types.MsgVoteOnObservedOutboundTx,
+) {
 	var lastErr error
 
 	for i := 0; i < MonitorVoteOutboundTxResultRetryCount; i++ {

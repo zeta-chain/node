@@ -52,14 +52,32 @@ func Setup(isCheckTx bool) *app.App {
 func setup(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) {
 	db := tmdb.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
-	a := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{})
+	a := app.New(
+		log.NewNopLogger(),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		invCheckPeriod,
+		encCdc,
+		simtestutil.EmptyAppOptions{},
+	)
 	if withGenesis {
 		return a, app.NewDefaultGenesisState(encCdc.Codec)
 	}
 	return a, app.GenesisState{}
 }
 
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAccs []authtypes.GenesisAccount, bondAmt sdk.Int, emissionParams types2.Params, genDelBalances []banktypes.Balance, genBalances []banktypes.Balance) *app.App {
+func SetupWithGenesisValSet(
+	t *testing.T,
+	valSet *tmtypes.ValidatorSet,
+	genDelAccs []authtypes.GenesisAccount,
+	bondAmt sdk.Int,
+	emissionParams types2.Params,
+	genDelBalances []banktypes.Balance,
+	genBalances []banktypes.Balance,
+) *app.App {
 	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genDelAccs)
@@ -88,7 +106,10 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 			MinSelfDelegation: sdk.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genDelAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(
+			delegations,
+			stakingtypes.NewDelegation(genDelAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()),
+		)
 	}
 
 	emissionsGenesis := types2.DefaultGenesis()
@@ -124,7 +145,13 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 
 	// update total supply
 
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, totalBalances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
+	bankGenesis := banktypes.NewGenesisState(
+		banktypes.DefaultGenesisState().Params,
+		totalBalances,
+		totalSupply,
+		[]banktypes.Metadata{},
+		[]banktypes.SendEnabled{},
+	)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -164,7 +191,13 @@ func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...ba
 		totalSupply = totalSupply.Add(b.Coins...)
 	}
 
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
+	bankGenesis := banktypes.NewGenesisState(
+		banktypes.DefaultGenesisState().Params,
+		balances,
+		totalSupply,
+		[]banktypes.Metadata{},
+		[]banktypes.SendEnabled{},
+	)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")

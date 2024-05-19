@@ -83,7 +83,10 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 			cctx.CctxStatus.StatusMessage,
 		))
 	}
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(
+		r.Ctx,
+		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
+	)
 	if err != nil {
 		panic(err)
 	}

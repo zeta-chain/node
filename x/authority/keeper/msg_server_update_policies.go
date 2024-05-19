@@ -10,7 +10,10 @@ import (
 )
 
 // UpdatePolicies updates policies
-func (k msgServer) UpdatePolicies(goCtx context.Context, msg *types.MsgUpdatePolicies) (*types.MsgUpdatePoliciesResponse, error) {
+func (k msgServer) UpdatePolicies(
+	goCtx context.Context,
+	msg *types.MsgUpdatePolicies,
+) (*types.MsgUpdatePoliciesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check called by governance

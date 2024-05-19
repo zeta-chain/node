@@ -54,7 +54,10 @@ import (
 // ```
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
+func (k msgServer) VoteOnObservedOutboundTx(
+	goCtx context.Context,
+	msg *types.MsgVoteOnObservedOutboundTx,
+) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Validate the message params to verify it against an existing cctx
@@ -107,12 +110,17 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// Fund the gas stability pool with the remaining funds
 	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutTxParam(), cctx.GetCurrentOutTxParam().ReceiverChainId); err != nil {
-		ctx.Logger().Error(fmt.Sprintf("VoteOnObservedOutboundTx: CCTX: %s Can't fund the gas stability pool with remaining fees %s", cctx.Index, err.Error()))
+		ctx.Logger().
+			Error(fmt.Sprintf("VoteOnObservedOutboundTx: CCTX: %s Can't fund the gas stability pool with remaining fees %s", cctx.Index, err.Error()))
 	}
 }
 
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
-func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundTxParams types.OutboundTxParams, chainID int64) error {
+func (k Keeper) FundGasStabilityPoolFromRemainingFees(
+	ctx sdk.Context,
+	outboundTxParams types.OutboundTxParams,
+	chainID int64,
+) error {
 	gasUsed := outboundTxParams.OutboundTxGasUsed
 	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
@@ -189,19 +197,33 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIn
 	// #nosec G701 always in range
 	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tssPubkey, receiverChain, int64(outTxTssNonce))
 	k.RemoveOutTxTracker(ctx, receiverChain, outTxTssNonce)
-	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
+	ctx.Logger().
+		Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
 	// This should set nonce to cctx only if a new revert is created.
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 }
 
-func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOnObservedOutboundTx) (types.CrossChainTx, error) {
+func (k Keeper) ValidateOutboundMessage(
+	ctx sdk.Context,
+	msg types.MsgVoteOnObservedOutboundTx,
+) (types.CrossChainTx, error) {
 	// check if CCTX exists and if the nonce matches
 	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
 	if !found {
-		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
+		return types.CrossChainTx{}, cosmoserrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			fmt.Sprintf("CCTX %s does not exist", msg.CctxHash),
+		)
 	}
 	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
-		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
+		return types.CrossChainTx{}, cosmoserrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			fmt.Sprintf(
+				"OutTxTssNonce %d does not match CCTX OutTxTssNonce %d",
+				msg.OutTxTssNonce,
+				cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
+			),
+		)
 	}
 	// do not process an outbound vote if TSS is not found
 	_, found = k.zetaObserverKeeper.GetTSS(ctx)
@@ -209,7 +231,14 @@ func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOnObse
 		return types.CrossChainTx{}, types.ErrCannotFindTSSKeys
 	}
 	if cctx.GetCurrentOutTxParam().ReceiverChainId != msg.OutTxChain {
-		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxChain %d does not match CCTX OutTxChain %d", msg.OutTxChain, cctx.GetCurrentOutTxParam().ReceiverChainId))
+		return types.CrossChainTx{}, cosmoserrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			fmt.Sprintf(
+				"OutTxChain %d does not match CCTX OutTxChain %d",
+				msg.OutTxChain,
+				cctx.GetCurrentOutTxParam().ReceiverChainId,
+			),
+		)
 	}
 	return cctx, nil
 }

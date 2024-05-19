@@ -12,7 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) LastBlockHeightAll(c context.Context, req *types.QueryAllLastBlockHeightRequest) (*types.QueryAllLastBlockHeightResponse, error) {
+func (k Keeper) LastBlockHeightAll(
+	c context.Context,
+	req *types.QueryAllLastBlockHeightRequest,
+) (*types.QueryAllLastBlockHeightResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -40,7 +43,10 @@ func (k Keeper) LastBlockHeightAll(c context.Context, req *types.QueryAllLastBlo
 	return &types.QueryAllLastBlockHeightResponse{LastBlockHeight: lastBlockHeights, Pagination: pageRes}, nil
 }
 
-func (k Keeper) LastBlockHeight(c context.Context, req *types.QueryGetLastBlockHeightRequest) (*types.QueryGetLastBlockHeightResponse, error) {
+func (k Keeper) LastBlockHeight(
+	c context.Context,
+	req *types.QueryGetLastBlockHeightRequest,
+) (*types.QueryGetLastBlockHeightResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

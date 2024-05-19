@@ -31,7 +31,14 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	txhash := multipleDeposits(r, depositAmount, numberOfDeposits)
-	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, txhash.Hex(), r.CctxClient, int(numberOfDeposits.Int64()), r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInTxHash(
+		r.Ctx,
+		txhash.Hex(),
+		r.CctxClient,
+		int(numberOfDeposits.Int64()),
+		r.Logger,
+		r.CctxTimeout,
+	)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}

@@ -52,7 +52,10 @@ import (
 // ```
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
+func (k msgServer) VoteOnObservedInboundTx(
+	goCtx context.Context,
+	msg *types.MsgVoteOnObservedInboundTx,
+) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	index := msg.Digest()
 
@@ -79,7 +82,12 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		if k.IsFinalizedInbound(tmpCtx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, cosmoserrors.Wrap(
 				types.ErrObservedTxAlreadyFinalized,
-				fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex),
+				fmt.Sprintf(
+					"InTxHash:%s, SenderChainID:%d, EventIndex:%d",
+					msg.InTxHash,
+					msg.SenderChainId,
+					msg.EventIndex,
+				),
 			)
 		}
 	}

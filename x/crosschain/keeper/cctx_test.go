@@ -19,7 +19,12 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func createNCctxWithStatus(keeper *keeper.Keeper, ctx sdk.Context, n int, status types.CctxStatus) []types.CrossChainTx {
+func createNCctxWithStatus(
+	keeper *keeper.Keeper,
+	ctx sdk.Context,
+	n int,
+	status types.CctxStatus,
+) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
@@ -30,7 +35,10 @@ func createNCctxWithStatus(keeper *keeper.Keeper, ctx sdk.Context, n int, status
 			LastUpdateTimestamp: 0,
 		}
 		items[i].ZetaFees = math.OneUint()
-		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
+		items[i].InboundTxParams = &types.InboundTxParams{
+			InboundTxObservedHash: fmt.Sprintf("%d", i),
+			Amount:                math.OneUint(),
+		}
 		items[i].OutboundTxParams = []*types.OutboundTxParams{{Amount: math.ZeroUint()}}
 
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
@@ -118,11 +126,19 @@ func TestSends(t *testing.T) {
 			keeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
 			var sends []types.CrossChainTx
 			zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert)...)
+			sends = append(
+				sends,
+				createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound)...)
+			sends = append(
+				sends,
+				createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound)...)
+			sends = append(
+				sends,
+				createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined)...)
+			sends = append(
+				sends,
+				createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted)...)
 			//require.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
 			//require.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))

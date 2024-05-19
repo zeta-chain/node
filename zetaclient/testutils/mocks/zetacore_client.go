@@ -51,14 +51,29 @@ func NewMockZetaCoreClient() *MockZetaCoreClient {
 	}
 }
 
-func (z *MockZetaCoreClient) PostVoteInbound(_, _ uint64, _ *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (z *MockZetaCoreClient) PostVoteInbound(
+	_, _ uint64,
+	_ *crosschaintypes.MsgVoteOnObservedInboundTx,
+) (string, string, error) {
 	if z.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
 	return "", "", nil
 }
 
-func (z *MockZetaCoreClient) PostVoteOutbound(_ string, _ string, _ uint64, _ uint64, _ *big.Int, _ uint64, _ *big.Int, _ chains.ReceiveStatus, _ chains.Chain, _ uint64, _ coin.CoinType) (string, string, error) {
+func (z *MockZetaCoreClient) PostVoteOutbound(
+	_ string,
+	_ string,
+	_ uint64,
+	_ uint64,
+	_ *big.Int,
+	_ uint64,
+	_ *big.Int,
+	_ chains.ReceiveStatus,
+	_ chains.Chain,
+	_ uint64,
+	_ coin.CoinType,
+) (string, string, error) {
 	if z.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
@@ -93,7 +108,14 @@ func (z *MockZetaCoreClient) PostBlameData(_ *blame.Blame, _ int64, _ string) (s
 	return "", nil
 }
 
-func (z *MockZetaCoreClient) AddTxHashToOutTxTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
+func (z *MockZetaCoreClient) AddTxHashToOutTxTracker(
+	_ int64,
+	_ uint64,
+	_ string,
+	_ *proofs.Proof,
+	_ string,
+	_ int64,
+) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
@@ -178,7 +200,10 @@ func (z *MockZetaCoreClient) GetOutTxTracker(_ chains.Chain, _ uint64) (*crossch
 	return &crosschaintypes.OutTxTracker{}, nil
 }
 
-func (z *MockZetaCoreClient) GetAllOutTxTrackerByChain(_ int64, _ interfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
+func (z *MockZetaCoreClient) GetAllOutTxTrackerByChain(
+	_ int64,
+	_ interfaces.Order,
+) ([]crosschaintypes.OutTxTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
@@ -252,7 +277,9 @@ func (z *MockZetaCoreClient) WithRateLimiterFlags(flags *crosschaintypes.RateLim
 	return z
 }
 
-func (z *MockZetaCoreClient) WithRateLimiterInput(input *crosschaintypes.QueryRateLimiterInputResponse) *MockZetaCoreClient {
+func (z *MockZetaCoreClient) WithRateLimiterInput(
+	input *crosschaintypes.QueryRateLimiterInputResponse,
+) *MockZetaCoreClient {
 	z.input = input
 	return z
 }

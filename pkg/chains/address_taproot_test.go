@@ -70,6 +70,10 @@ func TestAddressTaproot(t *testing.T) {
 		addrStr := "bc1p6pls9gpm24g8ntl37pajpjtuhd3y08hs5rnf9a4n0wq595hwdh9suw7m2h"
 		addr, err := DecodeTaprootAddress(addrStr)
 		require.Nil(t, err)
-		require.Equal(t, "d07f02a03b555079aff1f07b20c97cbb62479ef0a0e692f6b37b8142d2ee6dcb", hex.EncodeToString(addr.ScriptAddress()))
+		require.Equal(
+			t,
+			"d07f02a03b555079aff1f07b20c97cbb62479ef0a0e692f6b37b8142d2ee6dcb",
+			hex.EncodeToString(addr.ScriptAddress()),
+		)
 	}
 }

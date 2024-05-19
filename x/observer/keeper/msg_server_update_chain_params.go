@@ -12,7 +12,10 @@ import (
 // Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
 // connector and ERC20 custody contract addresses, etc.
 // Only the admin policy account is authorized to broadcast this message.
-func (k msgServer) UpdateChainParams(goCtx context.Context, msg *types.MsgUpdateChainParams) (*types.MsgUpdateChainParamsResponse, error) {
+func (k msgServer) UpdateChainParams(
+	goCtx context.Context,
+	msg *types.MsgUpdateChainParams,
+) (*types.MsgUpdateChainParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission

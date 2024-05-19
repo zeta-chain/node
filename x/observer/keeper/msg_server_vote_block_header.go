@@ -10,7 +10,10 @@ import (
 )
 
 // VoteBlockHeader vote for a new block header to the storers
-func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBlockHeader) (*types.MsgVoteBlockHeaderResponse, error) {
+func (k msgServer) VoteBlockHeader(
+	goCtx context.Context,
+	msg *types.MsgVoteBlockHeader,
+) (*types.MsgVoteBlockHeaderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if the chain is enabled

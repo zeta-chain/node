@@ -11,7 +11,10 @@ import (
 // RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
 //
 // Authorized: admin policy group 1.
-func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
+func (k msgServer) RemoveFromOutTxTracker(
+	goCtx context.Context,
+	msg *types.MsgRemoveFromOutTxTracker,
+) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
 		return &types.MsgRemoveFromOutTxTrackerResponse{}, authoritytypes.ErrUnauthorized

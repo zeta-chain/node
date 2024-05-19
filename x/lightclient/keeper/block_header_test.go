@@ -325,43 +325,46 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		require.EqualValues(t, bh.ChainId, chainState.ChainId)
 	})
 
-	t.Run("should add a block header and update chain state if exists and set earliest height if 0", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+	t.Run(
+		"should add a block header and update chain state if exists and set earliest height if 0",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			HeaderSupportedChains: []types.HeaderSupportedChain{
-				{
-					ChainId: chains.SepoliaChain.ChainId,
-					Enabled: true,
+			k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+				HeaderSupportedChains: []types.HeaderSupportedChain{
+					{
+						ChainId: chains.SepoliaChain.ChainId,
+						Enabled: true,
+					},
 				},
-			},
-		})
+			})
 
-		bh, _, _ := sepoliaBlockHeaders(t)
+			bh, _, _ := sepoliaBlockHeaders(t)
 
-		k.SetChainState(ctx, types.ChainState{
-			ChainId:         bh.ChainId,
-			LatestHeight:    bh.Height - 1,
-			EarliestHeight:  0,
-			LatestBlockHash: bh.ParentHash,
-		})
+			k.SetChainState(ctx, types.ChainState{
+				ChainId:         bh.ChainId,
+				LatestHeight:    bh.Height - 1,
+				EarliestHeight:  0,
+				LatestBlockHash: bh.ParentHash,
+			})
 
-		k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
+			k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
 
-		retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
-		require.True(t, found)
-		require.EqualValues(t, bh.Header, retrieved.Header)
-		require.EqualValues(t, bh.Height, retrieved.Height)
-		require.EqualValues(t, bh.Hash, retrieved.Hash)
-		require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
-		require.EqualValues(t, bh.ChainId, retrieved.ChainId)
+			retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
+			require.True(t, found)
+			require.EqualValues(t, bh.Header, retrieved.Header)
+			require.EqualValues(t, bh.Height, retrieved.Height)
+			require.EqualValues(t, bh.Hash, retrieved.Hash)
+			require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
+			require.EqualValues(t, bh.ChainId, retrieved.ChainId)
 
-		// Check chain state
-		chainState, found := k.GetChainState(ctx, bh.ChainId)
-		require.True(t, found)
-		require.EqualValues(t, bh.Height, chainState.LatestHeight)
-		require.EqualValues(t, bh.Height, chainState.EarliestHeight)
-		require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
-		require.EqualValues(t, bh.ChainId, chainState.ChainId)
-	})
+			// Check chain state
+			chainState, found := k.GetChainState(ctx, bh.ChainId)
+			require.True(t, found)
+			require.EqualValues(t, bh.Height, chainState.LatestHeight)
+			require.EqualValues(t, bh.Height, chainState.EarliestHeight)
+			require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
+			require.EqualValues(t, bh.ChainId, chainState.ChainId)
+		},
+	)
 }

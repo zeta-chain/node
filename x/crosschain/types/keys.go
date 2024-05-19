@@ -77,7 +77,13 @@ func (m CrossChainTx) LogIdentifierForCCTX() string {
 	}
 	i := len(m.OutboundTxParams) - 1
 	outTx := m.OutboundTxParams[i]
-	return fmt.Sprintf("%s-%d-%d-%d", m.InboundTxParams.Sender, m.InboundTxParams.SenderChainId, outTx.ReceiverChainId, outTx.OutboundTxTssNonce)
+	return fmt.Sprintf(
+		"%s-%d-%d-%d",
+		m.InboundTxParams.Sender,
+		m.InboundTxParams.SenderChainId,
+		outTx.ReceiverChainId,
+		outTx.OutboundTxTssNonce,
+	)
 }
 
 func FinalizedInboundKey(intxHash string, chainID int64, eventIndex uint64) string {

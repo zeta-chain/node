@@ -12,7 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GasPriceAll(c context.Context, req *types.QueryAllGasPriceRequest) (*types.QueryAllGasPriceResponse, error) {
+func (k Keeper) GasPriceAll(
+	c context.Context,
+	req *types.QueryAllGasPriceRequest,
+) (*types.QueryAllGasPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -40,7 +43,10 @@ func (k Keeper) GasPriceAll(c context.Context, req *types.QueryAllGasPriceReques
 	return &types.QueryAllGasPriceResponse{GasPrice: gasPrices, Pagination: pageRes}, nil
 }
 
-func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) (*types.QueryGetGasPriceResponse, error) {
+func (k Keeper) GasPrice(
+	c context.Context,
+	req *types.QueryGetGasPriceRequest,
+) (*types.QueryGetGasPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

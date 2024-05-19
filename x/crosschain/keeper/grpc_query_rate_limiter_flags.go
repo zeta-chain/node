@@ -10,7 +10,10 @@ import (
 )
 
 // RateLimiterFlags queries the rate limiter flags
-func (k Keeper) RateLimiterFlags(c context.Context, req *types.QueryRateLimiterFlagsRequest) (*types.QueryRateLimiterFlagsResponse, error) {
+func (k Keeper) RateLimiterFlags(
+	c context.Context,
+	req *types.QueryRateLimiterFlagsRequest,
+) (*types.QueryRateLimiterFlagsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

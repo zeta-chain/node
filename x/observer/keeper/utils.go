@@ -8,7 +8,12 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot types.Ballot, address string, observationType types.VoteType) (types.Ballot, error) {
+func (k Keeper) AddVoteToBallot(
+	ctx sdk.Context,
+	ballot types.Ballot,
+	address string,
+	observationType types.VoteType,
+) (types.Ballot, error) {
 	ballot, err := ballot.AddVote(address, observationType)
 	if err != nil {
 		return ballot, err

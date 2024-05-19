@@ -52,7 +52,10 @@ func MockOrchestrator(
 	return orchestrator
 }
 
-func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChainParams *observertypes.ChainParams) *context.ZetacoreContext {
+func CreateCoreContext(
+	evmChain, btcChain chains.Chain,
+	evmChainParams, btcChainParams *observertypes.ChainParams,
+) *context.ZetacoreContext {
 	// new config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
@@ -214,13 +217,49 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	btcChainParams := &observertypes.ChainParams{ChainId: btcChain.ChainId}
 
 	// create 10 missed and 90 pending cctxs for eth chain, the coinType/amount does not matter for this test
-	ethCctxsMissed := sample.CustomCctxsInBlockRange(t, 1, 10, ethChain.ChainId, coin.CoinType_Gas, "", uint64(2e14), crosschaintypes.CctxStatus_PendingOutbound)
-	ethCctxsPending := sample.CustomCctxsInBlockRange(t, 11, 100, ethChain.ChainId, coin.CoinType_Gas, "", uint64(2e14), crosschaintypes.CctxStatus_PendingOutbound)
+	ethCctxsMissed := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		10,
+		ethChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		uint64(2e14),
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
+	ethCctxsPending := sample.CustomCctxsInBlockRange(
+		t,
+		11,
+		100,
+		ethChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		uint64(2e14),
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
 	ethCctxsAll := append(append([]*crosschaintypes.CrossChainTx{}, ethCctxsMissed...), ethCctxsPending...)
 
 	// create 10 missed and 90 pending cctxs for btc chain, the coinType/amount does not matter for this test
-	btcCctxsMissed := sample.CustomCctxsInBlockRange(t, 1, 10, btcChain.ChainId, coin.CoinType_Gas, "", 2000, crosschaintypes.CctxStatus_PendingOutbound)
-	btcCctxsPending := sample.CustomCctxsInBlockRange(t, 11, 100, btcChain.ChainId, coin.CoinType_Gas, "", 2000, crosschaintypes.CctxStatus_PendingOutbound)
+	btcCctxsMissed := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		10,
+		btcChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		2000,
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
+	btcCctxsPending := sample.CustomCctxsInBlockRange(
+		t,
+		11,
+		100,
+		btcChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		2000,
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
 	btcCctxsAll := append(append([]*crosschaintypes.CrossChainTx{}, btcCctxsMissed...), btcCctxsPending...)
 
 	// all missed cctxs and all pending cctxs across all foreign chains

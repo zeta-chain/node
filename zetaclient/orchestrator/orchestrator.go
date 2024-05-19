@@ -110,7 +110,10 @@ func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) {
 }
 
 // GetUpdatedSigner returns signer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetacoreContext, chainID int64) (interfaces.ChainSigner, error) {
+func (oc *Orchestrator) GetUpdatedSigner(
+	coreContext *context.ZetacoreContext,
+	chainID int64,
+) (interfaces.ChainSigner, error) {
 	signer, found := oc.signerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
@@ -138,7 +141,10 @@ func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetacoreContext, c
 }
 
 // GetUpdatedChainObserver returns chain observer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetacoreContext, chainID int64) (interfaces.ChainObserver, error) {
+func (oc *Orchestrator) GetUpdatedChainObserver(
+	coreContext *context.ZetacoreContext,
+	chainID int64,
+) (interfaces.ChainObserver, error) {
 	observer, found := oc.observerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("chain observer not found for chainID %d", chainID)
@@ -165,7 +171,9 @@ func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetacoreCon
 }
 
 // GetPendingCctxsWithinRatelimit get pending cctxs across foreign chains within rate limit
-func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(foreignChains []chains.Chain) (map[int64][]*types.CrossChainTx, error) {
+func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(
+	foreignChains []chains.Chain,
+) (map[int64][]*types.CrossChainTx, error) {
 	// get rate limiter flags
 	rateLimitFlags, err := oc.zetacoreClient.GetRateLimiterFlags()
 	if err != nil {
@@ -277,12 +285,16 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 						// update chain parameters for signer and chain observer
 						signer, err := oc.GetUpdatedSigner(coreContext, c.ChainId)
 						if err != nil {
-							oc.logger.Std.Error().Err(err).Msgf("StartCctxScheduler: GetUpdatedSigner failed for chain %d", c.ChainId)
+							oc.logger.Std.Error().
+								Err(err).
+								Msgf("StartCctxScheduler: GetUpdatedSigner failed for chain %d", c.ChainId)
 							continue
 						}
 						ob, err := oc.GetUpdatedChainObserver(coreContext, c.ChainId)
 						if err != nil {
-							oc.logger.Std.Error().Err(err).Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
+							oc.logger.Std.Error().
+								Err(err).
+								Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
 							continue
 						}
 						if !context.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
@@ -339,7 +351,8 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
-			oc.logger.Std.Error().Msgf("ScheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
+			oc.logger.Std.Error().
+				Msgf("ScheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
 		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+outboundScheduleLookback {
@@ -351,7 +364,9 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		// try confirming the outtx
 		included, _, err := observer.IsOutboundProcessed(cctx, oc.logger.Std)
 		if err != nil {
-			oc.logger.Std.Error().Err(err).Msgf("ScheduleCctxEVM: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+			oc.logger.Std.Error().
+				Err(err).
+				Msgf("ScheduleCctxEVM: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if included {
@@ -381,9 +396,11 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		}
 
 		// otherwise, the normal interval is used
-		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !oc.outTxProc.IsOutTxActive(outTxID) {
+		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval &&
+			!oc.outTxProc.IsOutTxActive(outTxID) {
 			oc.outTxProc.StartTryProcess(outTxID)
-			oc.logger.Std.Debug().Msgf("ScheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutTxParam().Amount)
+			oc.logger.Std.Debug().
+				Msgf("ScheduleCctxEVM: sign outtx %s with value %d\n", outTxID, cctx.GetCurrentOutTxParam().Amount)
 			go signer.TryProcessOutTx(cctx, oc.outTxProc, outTxID, observer, oc.zetacoreClient, zetaHeight)
 		}
 
@@ -421,13 +438,16 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
-			oc.logger.Std.Error().Msgf("ScheduleCctxBTC: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
+			oc.logger.Std.Error().
+				Msgf("ScheduleCctxBTC: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
 		// try confirming the outtx
 		included, confirmed, err := btcObserver.IsOutboundProcessed(cctx, oc.logger.Std)
 		if err != nil {
-			oc.logger.Std.Error().Err(err).Msgf("ScheduleCctxBTC: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+			oc.logger.Std.Error().
+				Err(err).
+				Msgf("ScheduleCctxBTC: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if included || confirmed {
@@ -440,8 +460,11 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 			break
 		}
 		// stop if lookahead is reached
-		if int64(idx) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-			oc.logger.Std.Warn().Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+		if int64(
+			idx,
+		) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
+			oc.logger.Std.Warn().
+				Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
 			break
 		}
 		// try confirming the outtx or scheduling a keysign

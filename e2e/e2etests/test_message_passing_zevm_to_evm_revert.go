@@ -91,7 +91,10 @@ func TestMessagePassingZEVMtoEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 
 	// On finalization the Fungible module calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
-	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.ZEVMClient.TransactionReceipt(
+		r.Ctx,
+		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
+	)
 	if err != nil {
 		panic(err)
 	}

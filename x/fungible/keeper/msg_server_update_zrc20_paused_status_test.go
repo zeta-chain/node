@@ -34,7 +34,12 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		}
 
 		// setup zrc20
-		zrc20A, zrc20B, zrc20C := sample.EthAddress().String(), sample.EthAddress().String(), sample.EthAddress().String()
+		zrc20A, zrc20B, zrc20C := sample.EthAddress().
+			String(),
+			sample.EthAddress().
+				String(),
+			sample.EthAddress().
+				String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20B))
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20C))

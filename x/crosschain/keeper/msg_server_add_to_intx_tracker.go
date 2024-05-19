@@ -12,7 +12,10 @@ import (
 )
 
 // AddToInTxTracker adds a new record to the inbound transaction tracker.
-func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
+func (k msgServer) AddToInTxTracker(
+	goCtx context.Context,
+	msg *types.MsgAddToInTxTracker,
+) (*types.MsgAddToInTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {

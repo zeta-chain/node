@@ -114,14 +114,17 @@ func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 }
 
 func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
-	t.Run("should fail to get uniswapfactory contract address if system contracts are not deployed", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	t.Run(
+		"should fail to get uniswapfactory contract address if system contracts are not deployed",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.FungibleKeeper(t)
+			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		_, err := k.GetUniswapV2FactoryAddress(ctx)
-		require.Error(t, err)
-		require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-	})
+			_, err := k.GetUniswapV2FactoryAddress(ctx)
+			require.Error(t, err)
+			require.ErrorIs(t, err, types.ErrStateVariableNotFound)
+		},
+	)
 
 	t.Run("should get uniswapfactory contract address if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
@@ -401,7 +404,11 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 
 		amountToSwap, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, tokenAmount, zrc20)
 		require.NoError(t, err)
-		err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))))
+		err = sdkk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))),
+		)
 		require.NoError(t, err)
 
 		amounts, err := k.CallUniswapV2RouterSwapExactETHForToken(
@@ -507,7 +514,11 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 
 		amountToSwap, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, tokenAmount, zrc20)
 		require.NoError(t, err)
-		err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))))
+		err = sdkk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))),
+		)
 		require.NoError(t, err)
 
 		amounts, err := k.CallUniswapV2RouterSwapEthForExactToken(
@@ -827,7 +838,14 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
-			ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+			ctx,
+			types.ModuleAddressEVM,
+			types.ModuleAddressEVM,
+			big.NewInt(1),
+			sample.EthAddress(),
+			sample.EthAddress(),
+			true,
+		)
 		require.Error(t, err)
 
 		// deploy system contracts except router
@@ -855,7 +873,14 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
-			ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+			ctx,
+			types.ModuleAddressEVM,
+			types.ModuleAddressEVM,
+			big.NewInt(1),
+			sample.EthAddress(),
+			sample.EthAddress(),
+			true,
+		)
 		require.Error(t, err)
 
 		// deploy system contracts except router
@@ -966,7 +991,12 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(t *testing.T) {
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
-		_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress(), sample.EthAddress())
+		_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(
+			ctx,
+			big.NewInt(1),
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 
@@ -980,7 +1010,12 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(t *testing.T) {
 			DeployUniswapV2Router:  true,
 		})
 
-		_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress(), sample.EthAddress())
+		_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(
+			ctx,
+			big.NewInt(1),
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 	})
 
@@ -994,7 +1029,12 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(t *testing.T) {
 			DeployUniswapV2Router:  false,
 		})
 
-		_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress(), sample.EthAddress())
+		_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(
+			ctx,
+			big.NewInt(1),
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 	})
 }
@@ -1026,7 +1066,14 @@ func TestKeeper_CallZRC20Approve(t *testing.T) {
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 		mockEVMKeeper.MockEVMFailCallOnce()
-		err := k.CallZRC20Approve(ctx, types.ModuleAddressEVM, sample.EthAddress(), types.ModuleAddressEVM, big.NewInt(1), false)
+		err := k.CallZRC20Approve(
+			ctx,
+			types.ModuleAddressEVM,
+			sample.EthAddress(),
+			types.ModuleAddressEVM,
+			big.NewInt(1),
+			false,
+		)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 }
@@ -1042,7 +1089,13 @@ func TestKeeper_CallZRC20Deposit(t *testing.T) {
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 		mockEVMKeeper.MockEVMFailCallOnce()
-		err := k.CallZRC20Deposit(ctx, types.ModuleAddressEVM, sample.EthAddress(), types.ModuleAddressEVM, big.NewInt(1))
+		err := k.CallZRC20Deposit(
+			ctx,
+			types.ModuleAddressEVM,
+			sample.EthAddress(),
+			types.ModuleAddressEVM,
+			big.NewInt(1),
+		)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 }

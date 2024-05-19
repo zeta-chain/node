@@ -12,11 +12,17 @@ import (
 // DeploySystemContracts deploy new instances of the system contracts
 //
 // Authorized: admin policy group 2.
-func (k msgServer) DeploySystemContracts(goCtx context.Context, msg *types.MsgDeploySystemContracts) (*types.MsgDeploySystemContractsResponse, error) {
+func (k msgServer) DeploySystemContracts(
+	goCtx context.Context,
+	msg *types.MsgDeploySystemContracts,
+) (*types.MsgDeploySystemContractsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, "System contract deployment can only be executed by the correct policy account")
+		return nil, cosmoserror.Wrap(
+			authoritytypes.ErrUnauthorized,
+			"System contract deployment can only be executed by the correct policy account",
+		)
 	}
 
 	// uniswap v2 factory

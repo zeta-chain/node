@@ -11,14 +11,20 @@ import (
 )
 
 // UpdateTssAddress updates the TSS address.
-func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateTssAddress) (*types.MsgUpdateTssAddressResponse, error) {
+func (k msgServer) UpdateTssAddress(
+	goCtx context.Context,
+	msg *types.MsgUpdateTssAddress,
+) (*types.MsgUpdateTssAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
 	// TODO : Add a new policy type for updating the TSS address
 	// https://github.com/zeta-chain/node/issues/1715
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
+		return nil, errorsmod.Wrap(
+			authoritytypes.ErrUnauthorized,
+			"Update can only be executed by the correct policy account",
+		)
 	}
 
 	currentTss, found := k.zetaObserverKeeper.GetTSS(ctx)
@@ -37,7 +43,10 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
 	// Each connected chain should have its own tss migrator
 	if len(k.zetaObserverKeeper.GetSupportedChains(ctx)) != len(tssMigrators) {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot update tss address not enough migrations have been created and completed")
+		return nil, errorsmod.Wrap(
+			types.ErrUnableToUpdateTss,
+			"cannot update tss address not enough migrations have been created and completed",
+		)
 	}
 
 	// GetAllTssFundMigrators would return the migrators created for the current migration
@@ -49,8 +58,11 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 			return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "migration cross chain tx not found")
 		}
 		if migratorTx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-			return nil, errorsmod.Wrapf(types.ErrUnableToUpdateTss,
-				"cannot update tss address while there are pending migrations , current status of migration cctx : %s ", migratorTx.CctxStatus.Status.String())
+			return nil, errorsmod.Wrapf(
+				types.ErrUnableToUpdateTss,
+				"cannot update tss address while there are pending migrations , current status of migration cctx : %s ",
+				migratorTx.CctxStatus.Status.String(),
+			)
 		}
 
 	}

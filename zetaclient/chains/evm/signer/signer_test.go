@@ -297,7 +297,14 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetaCoreClient(), txData)
+		evmSigner.BroadcastOutTx(
+			tx,
+			cctx,
+			zerolog.Logger{},
+			sdktypes.AccAddress{},
+			mocks.NewMockZetaCoreClient(),
+			txData,
+		)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()

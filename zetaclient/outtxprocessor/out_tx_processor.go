@@ -43,7 +43,8 @@ func (outTxProc *Processor) EndTryProcess(outTxID string) {
 	outTxProc.outTxEndTime[outTxID] = time.Now()
 	delete(outTxProc.outTxActive, outTxID)
 	outTxProc.numActiveProcessor--
-	outTxProc.Logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxProc.numActiveProcessor, time.Since(outTxProc.outTxStartTime[outTxID]))
+	outTxProc.Logger.Info().
+		Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxProc.numActiveProcessor, time.Since(outTxProc.outTxStartTime[outTxID]))
 }
 
 func (outTxProc *Processor) IsOutTxActive(outTxID string) bool {

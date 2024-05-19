@@ -10,14 +10,20 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVote) (*types.MsgAddBlameVoteResponse, error) {
+func (k msgServer) AddBlameVote(
+	goCtx context.Context,
+	vote *types.MsgAddBlameVote,
+) (*types.MsgAddBlameVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := types.ObservationType_TSSKeySign
 
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
 	observationChain := k.GetSupportedChainFromChainID(ctx, vote.ChainId)
 	if observationChain == nil {
-		return nil, cosmoserrors.Wrap(crosschainTypes.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId))
+		return nil, cosmoserrors.Wrap(
+			crosschainTypes.ErrUnsupportedChain,
+			fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId),
+		)
 	}
 
 	if ok := k.IsNonTombstonedObserver(ctx, vote.Creator); !ok {

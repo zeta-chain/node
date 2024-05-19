@@ -11,7 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) ShowAvailableEmissions(goCtx context.Context, req *types.QueryShowAvailableEmissionsRequest) (*types.QueryShowAvailableEmissionsResponse, error) {
+func (k Keeper) ShowAvailableEmissions(
+	goCtx context.Context,
+	req *types.QueryShowAvailableEmissionsRequest,
+) (*types.QueryShowAvailableEmissionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

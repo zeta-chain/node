@@ -108,7 +108,8 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
-		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
+		startLogger.Warn().
+			Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
 		err := zetacoreClient.UpdateChainID(cfg.ChainID)
 		if err != nil {
@@ -179,7 +180,17 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(appContext, masterLogger, zetacoreClient, peers, priKey, telemetryServer, tssHistoricalList, tssKeyPass, hotkeyPass)
+	tss, err := GenerateTss(
+		appContext,
+		masterLogger,
+		zetacoreClient,
+		peers,
+		priKey,
+		telemetryServer,
+		tssHistoricalList,
+		tssKeyPass,
+		hotkeyPass,
+	)
 	if err != nil {
 		return err
 	}
@@ -216,7 +227,8 @@ func start(_ *cobra.Command, _ []string) error {
 	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
 	}
-	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
+	startLogger.Info().
+		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 	if len(appContext.ZetacoreContext().GetEnabledChains()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
@@ -256,7 +268,8 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	if !isNodeActive {
-		startLogger.Error().Msgf("Node %s is not an active observer external chain observers will not be started", zetacoreClient.GetKeys().GetOperatorAddress().String())
+		startLogger.Error().
+			Msgf("Node %s is not an active observer external chain observers will not be started", zetacoreClient.GetKeys().GetOperatorAddress().String())
 	} else {
 		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetacoreClient.GetKeys().GetOperatorAddress().String())
 		for _, observer := range observerMap {

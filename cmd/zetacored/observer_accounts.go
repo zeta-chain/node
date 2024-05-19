@@ -228,7 +228,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 	return cmd
 }
 
-func removeDuplicate[T string | int](sliceList []T) []T {
+func removeDuplicate(sliceList []T) []T {
 	allKeys := make(map[T]bool)
 	list := []T{}
 	for _, item := range sliceList {
@@ -332,7 +332,9 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	if !ok {
 		panic("Failed to parse staking max tokens")
 	}
-	alllowList := stakingtypes.StakeAuthorization_AllowList{AllowList: &stakingtypes.StakeAuthorization_Validators{Address: info.StakingValidatorAllowList}}
+	alllowList := stakingtypes.StakeAuthorization_AllowList{
+		AllowList: &stakingtypes.StakeAuthorization_Validators{Address: info.StakingValidatorAllowList},
+	}
 
 	stakingAuth, err := codectypes.NewAnyWithValue(&stakingtypes.StakeAuthorization{
 		MaxTokens:         &sdk.Coin{Denom: config.BaseDenom, Amount: stakingMaxTokens},
@@ -380,7 +382,11 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 
 }
 
-func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, appState map[string]json.RawMessage) (map[string]json.RawMessage, error) {
+func AddGenesisAccount(
+	clientCtx client.Context,
+	balances []banktypes.Balance,
+	appState map[string]json.RawMessage,
+) (map[string]json.RawMessage, error) {
 	var genAccount authtypes.GenesisAccount
 	totalBalanceAdded := sdk.Coins{}
 	genAccounts := make([]authtypes.GenesisAccount, len(balances))

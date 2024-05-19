@@ -20,7 +20,10 @@ func CmdGasStabilityPoolAddress() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GasStabilityPoolAddress(context.Background(), &types.QueryGetGasStabilityPoolAddress{})
+			res, err := queryClient.GasStabilityPoolAddress(
+				context.Background(),
+				&types.QueryGetGasStabilityPoolAddress{},
+			)
 			if err != nil {
 				return err
 			}
@@ -79,7 +82,10 @@ func CmdGasStabilityPoolBalances() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GasStabilityPoolBalanceAll(context.Background(), &types.QueryAllGasStabilityPoolBalance{})
+			res, err := queryClient.GasStabilityPoolBalanceAll(
+				context.Background(),
+				&types.QueryAllGasStabilityPoolBalance{},
+			)
 			if err != nil {
 				return err
 			}

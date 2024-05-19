@@ -25,7 +25,11 @@ func TestParsefileToObserverMapper(t *testing.T) {
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	require.NoError(t, err)
 	for _, obs := range obsListReadFromFile {
-		require.Equal(t, obs.ZetaClientGranteeAddress, sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String())
+		require.Equal(
+			t,
+			obs.ZetaClientGranteeAddress,
+			sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String(),
+		)
 	}
 }
 

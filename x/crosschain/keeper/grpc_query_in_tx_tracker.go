@@ -10,7 +10,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) InTxTrackerAllByChain(goCtx context.Context, request *types.QueryAllInTxTrackerByChainRequest) (*types.QueryAllInTxTrackerByChainResponse, error) {
+func (k Keeper) InTxTrackerAllByChain(
+	goCtx context.Context,
+	request *types.QueryAllInTxTrackerByChainRequest,
+) (*types.QueryAllInTxTrackerByChainResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var inTxTrackers []types.InTxTracker
 	inTxTrackers, pageRes, err := k.GetAllInTxTrackerForChainPaginated(ctx, request.ChainId, request.Pagination)
@@ -20,7 +23,10 @@ func (k Keeper) InTxTrackerAllByChain(goCtx context.Context, request *types.Quer
 	return &types.QueryAllInTxTrackerByChainResponse{InTxTracker: inTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) InTxTrackerAll(goCtx context.Context, req *types.QueryAllInTxTrackersRequest) (*types.QueryAllInTxTrackersResponse, error) {
+func (k Keeper) InTxTrackerAll(
+	goCtx context.Context,
+	req *types.QueryAllInTxTrackersRequest,
+) (*types.QueryAllInTxTrackersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var inTxTrackers []types.InTxTracker
 	inTxTrackers, pageRes, err := k.GetAllInTxTrackerPaginated(ctx, req.Pagination)

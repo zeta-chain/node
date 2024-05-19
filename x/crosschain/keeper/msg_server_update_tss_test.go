@@ -74,7 +74,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -111,7 +115,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -121,7 +129,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		require.True(t, found)
 		require.Equal(t, tssOld, tss)
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 	})
 
 	t.Run("old tss pubkey provided", func(t *testing.T) {
@@ -147,7 +159,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssOld.TssPubkey,
@@ -157,7 +173,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		require.True(t, found)
 		require.Equal(t, tssOld, tss)
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 	})
 
 	t.Run("unable to update tss when not enough migrators are present", func(t *testing.T) {
@@ -231,7 +251,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -270,7 +294,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 			})
 		}
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
+		require.Equal(
+			t,
+			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
+			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+		)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,

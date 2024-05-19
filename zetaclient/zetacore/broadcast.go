@@ -40,7 +40,12 @@ var (
 )
 
 // BroadcastToZetaCore is the default broadcast function used to send transactions to zetacore
-func BroadcastToZetaCore(client *Client, gasLimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
+func BroadcastToZetaCore(
+	client *Client,
+	gasLimit uint64,
+	authzWrappedMsg sdktypes.Msg,
+	authzSigner authz.Signer,
+) (string, error) {
 	return client.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
 }
 
@@ -138,7 +143,8 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 				return "", err
 			}
 			c.seqNumber[authzSigner.KeyType] = expectedSeq
-			c.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
+			c.logger.Warn().
+				Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
 		}
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
@@ -223,7 +229,9 @@ func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
 // returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
-		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")
+		log.Warn().
+			Err(err).
+			Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")
 		return false, false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {

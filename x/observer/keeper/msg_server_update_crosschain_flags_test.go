@@ -126,7 +126,11 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.IsOutboundEnabled)
 		require.Equal(t, types.DefaultGasPriceIncreaseFlags.EpochLength, flags.GasPriceIncreaseFlags.EpochLength)
 		require.Equal(t, types.DefaultGasPriceIncreaseFlags.RetryInterval, flags.GasPriceIncreaseFlags.RetryInterval)
-		require.Equal(t, types.DefaultGasPriceIncreaseFlags.GasPriceIncreasePercent, flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
+		require.Equal(
+			t,
+			types.DefaultGasPriceIncreaseFlags.GasPriceIncreasePercent,
+			flags.GasPriceIncreaseFlags.GasPriceIncreasePercent,
+		)
 	})
 
 	t.Run("cannot update crosschain flags if not authorized", func(t *testing.T) {

@@ -11,7 +11,16 @@ const TypeMsgDeployFungibleCoinZRC20 = "deploy_fungible_coin_zrc_20"
 
 var _ sdk.Msg = &MsgDeployFungibleCoinZRC20{}
 
-func NewMsgDeployFungibleCoinZRC20(creator string, ERC20 string, foreignChainID int64, decimals uint32, name string, symbol string, coinType coin.CoinType, gasLimit int64) *MsgDeployFungibleCoinZRC20 {
+func NewMsgDeployFungibleCoinZRC20(
+	creator string,
+	ERC20 string,
+	foreignChainID int64,
+	decimals uint32,
+	name string,
+	symbol string,
+	coinType coin.CoinType,
+	gasLimit int64,
+) *MsgDeployFungibleCoinZRC20 {
 	return &MsgDeployFungibleCoinZRC20{
 		Creator:        creator,
 		ERC20:          ERC20,

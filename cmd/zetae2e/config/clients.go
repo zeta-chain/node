@@ -41,7 +41,9 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(conf.RPCs.ZetaCoreGRPC)
+	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
+		conf.RPCs.ZetaCoreGRPC,
+	)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
 	}

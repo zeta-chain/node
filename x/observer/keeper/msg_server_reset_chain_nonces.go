@@ -10,7 +10,10 @@ import (
 )
 
 // ResetChainNonces handles resetting chain nonces
-func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetChainNonces) (*types.MsgResetChainNoncesResponse, error) {
+func (k msgServer) ResetChainNonces(
+	goCtx context.Context,
+	msg *types.MsgResetChainNonces,
+) (*types.MsgResetChainNoncesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
 		return &types.MsgResetChainNoncesResponse{}, authoritytypes.ErrUnauthorized

@@ -12,22 +12,36 @@ import (
 )
 
 // UpdateZRC20WithdrawFee updates the withdraw fee and gas limit of a zrc20 token
-func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
+func (k msgServer) UpdateZRC20WithdrawFee(
+	goCtx context.Context,
+	msg *types.MsgUpdateZRC20WithdrawFee,
+) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check signer permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "deploy can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(
+			authoritytypes.ErrUnauthorized,
+			"deploy can only be executed by the correct policy account",
+		)
 	}
 
 	// check the zrc20 exists
 	zrc20Addr := ethcommon.HexToAddress(msg.Zrc20Address)
 	if zrc20Addr == (ethcommon.Address{}) {
-		return nil, cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", msg.Zrc20Address)
+		return nil, cosmoserrors.Wrapf(
+			sdkerrors.ErrInvalidAddress,
+			"invalid zrc20 contract address (%s)",
+			msg.Zrc20Address,
+		)
 	}
 	coin, found := k.GetForeignCoins(ctx, msg.Zrc20Address)
 	if !found {
-		return nil, cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
+		return nil, cosmoserrors.Wrapf(
+			types.ErrForeignCoinNotFound,
+			"no foreign coin match requested zrc20 address (%s)",
+			msg.Zrc20Address,
+		)
 	}
 
 	// get the previous fee
@@ -45,13 +59,21 @@ func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgU
 	if !msg.NewWithdrawFee.IsNil() {
 		_, err = k.UpdateZRC20ProtocolFlatFee(tmpCtx, zrc20Addr, msg.NewWithdrawFee.BigInt())
 		if err != nil {
-			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateProtocolFlatFee method (%s)", err.Error())
+			return nil, cosmoserrors.Wrapf(
+				types.ErrContractCall,
+				"failed to call zrc20 contract updateProtocolFlatFee method (%s)",
+				err.Error(),
+			)
 		}
 	}
 	if !msg.NewGasLimit.IsNil() {
 		_, err = k.UpdateZRC20GasLimit(tmpCtx, zrc20Addr, msg.NewGasLimit.BigInt())
 		if err != nil {
-			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateGasLimit method (%s)", err.Error())
+			return nil, cosmoserrors.Wrapf(
+				types.ErrContractCall,
+				"failed to call zrc20 contract updateGasLimit method (%s)",
+				err.Error(),
+			)
 		}
 	}
 

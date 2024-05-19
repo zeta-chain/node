@@ -134,7 +134,10 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 		cctxs[i].Creator = "any"
 		cctxs[i].Index = fmt.Sprintf("0x123%d", i)
 		cctxs[i].ZetaFees = math.OneUint()
-		cctxs[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
+		cctxs[i].InboundTxParams = &types.InboundTxParams{
+			InboundTxObservedHash: fmt.Sprintf("%d", i),
+			Amount:                math.OneUint(),
+		}
 		cctxs[i].CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctxs[i])
 	}

@@ -53,7 +53,10 @@ func (c *Client) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error)
 
 func (c *Client) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
-	resp, err := client.GetChainParamsForChain(context.Background(), &observertypes.QueryGetChainParamsForChainRequest{ChainId: externalChainID})
+	resp, err := client.GetChainParamsForChain(
+		context.Background(),
+		&observertypes.QueryGetChainParamsForChainRequest{ChainId: externalChainID},
+	)
 	if err != nil {
 		return &observertypes.ChainParams{}, err
 	}
@@ -252,7 +255,10 @@ func (c *Client) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 
 func (c *Client) GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.LastBlockHeight(context.Background(), &crosschaintypes.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
+	resp, err := client.LastBlockHeight(
+		context.Background(),
+		&crosschaintypes.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +295,10 @@ func (c *Client) GetBallotByID(id string) (*observertypes.QueryBallotByIdentifie
 
 func (c *Client) GetNonceByChain(chain chains.Chain) (observertypes.ChainNonces, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
-	resp, err := client.ChainNonces(context.Background(), &observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
+	resp, err := client.ChainNonces(
+		context.Background(),
+		&observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()},
+	)
 	if err != nil {
 		return observertypes.ChainNonces{}, err
 	}
@@ -333,7 +342,10 @@ func (c *Client) GetBallot(ballotIdentifier string) (*observertypes.QueryBallotB
 
 func (c *Client) GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.InTxTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
+	resp, err := client.InTxTrackerAllByChain(
+		context.Background(),
+		&crosschaintypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -390,18 +402,24 @@ func (c *Client) GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaint
 	return &resp.OutTxTracker, nil
 }
 
-func (c *Client) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
+func (c *Client) GetAllOutTxTrackerByChain(
+	chainID int64,
+	order interfaces.Order,
+) ([]crosschaintypes.OutTxTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.OutTxTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllOutTxTrackerByChainRequest{
-		Chain: chainID,
-		Pagination: &query.PageRequest{
-			Key:        nil,
-			Offset:     0,
-			Limit:      2000,
-			CountTotal: false,
-			Reverse:    false,
+	resp, err := client.OutTxTrackerAllByChain(
+		context.Background(),
+		&crosschaintypes.QueryAllOutTxTrackerByChainRequest{
+			Chain: chainID,
+			Pagination: &query.PageRequest{
+				Key:        nil,
+				Offset:     0,
+				Limit:      2000,
+				CountTotal: false,
+				Reverse:    false,
+			},
 		},
-	})
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -420,7 +438,10 @@ func (c *Client) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order
 
 func (c *Client) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
-	resp, err := client.PendingNoncesByChain(context.Background(), &observertypes.QueryPendingNoncesByChainRequest{ChainId: chainID})
+	resp, err := client.PendingNoncesByChain(
+		context.Background(),
+		&observertypes.QueryPendingNoncesByChainRequest{ChainId: chainID},
+	)
 	if err != nil {
 		return observertypes.PendingNonces{}, err
 	}
@@ -454,7 +475,13 @@ func (c *Client) GetPendingNonces() (*observertypes.QueryAllPendingNoncesRespons
 	return resp, nil
 }
 
-func (c *Client) Prove(blockHash string, txHash string, txIndex int64, proof *proofs.Proof, chainID int64) (bool, error) {
+func (c *Client) Prove(
+	blockHash string,
+	txHash string,
+	txIndex int64,
+	proof *proofs.Proof,
+	chainID int64,
+) (bool, error) {
 	client := lightclienttypes.NewQueryClient(c.grpcConn)
 	resp, err := client.Prove(context.Background(), &lightclienttypes.QueryProveRequest{
 		BlockHash: blockHash,

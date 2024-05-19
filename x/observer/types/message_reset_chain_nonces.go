@@ -14,7 +14,12 @@ const TypeMsgResetChainNonces = "reset_chain_nonces"
 
 var _ sdk.Msg = &MsgResetChainNonces{}
 
-func NewMsgResetChainNonces(creator string, chainID int64, chainNonceLow int64, chainNonceHigh int64) *MsgResetChainNonces {
+func NewMsgResetChainNonces(
+	creator string,
+	chainID int64,
+	chainNonceLow int64,
+	chainNonceHigh int64,
+) *MsgResetChainNonces {
 	return &MsgResetChainNonces{
 		Creator:        creator,
 		ChainId:        chainID,

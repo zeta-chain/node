@@ -182,7 +182,11 @@ func (c *Client) WaitForCoreToCreateBlocks() {
 
 // UpdateZetacoreContext updates zetacore context
 // zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, init bool, sampledLogger zerolog.Logger) error {
+func (c *Client) UpdateZetacoreContext(
+	coreContext *context.ZetacoreContext,
+	init bool,
+	sampledLogger zerolog.Logger,
+) error {
 	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)
@@ -193,8 +197,9 @@ func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, ini
 		return fmt.Errorf("failed to get upgrade plan: %w", err)
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		c.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
-			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
+		c.logger.Warn().
+			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
+				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
 		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 

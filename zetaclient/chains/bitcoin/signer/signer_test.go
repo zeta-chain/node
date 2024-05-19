@@ -173,7 +173,16 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	c.Assert(err, IsNil)
 
 	{
-		txWitness, err := txscript.WitnessSignature(redeemTx, txSigHashes, 0, 100000000, pkScript, txscript.SigHashAll, privKey, true)
+		txWitness, err := txscript.WitnessSignature(
+			redeemTx,
+			txSigHashes,
+			0,
+			100000000,
+			pkScript,
+			txscript.SigHashAll,
+			privKey,
+			true,
+		)
 		c.Assert(err, IsNil)
 		redeemTx.TxIn[0].Witness = txWitness
 		// Prove that the transaction has been validly signed by executing the
@@ -190,7 +199,14 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	}
 
 	{
-		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, txSigHashes, txscript.SigHashAll, redeemTx, 0, 100000000)
+		witnessHash, err := txscript.CalcWitnessSigHash(
+			pkScript,
+			txSigHashes,
+			txscript.SigHashAll,
+			redeemTx,
+			0,
+			100000000,
+		)
 		c.Assert(err, IsNil)
 		sig, err := privKey.Sign(witnessHash)
 		c.Assert(err, IsNil)
@@ -213,7 +229,13 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer, err := NewSigner(config.BTCConfig{}, mocks.NewTSSMainnet(), clientcommon.DefaultLoggers(), &metrics.TelemetryServer{}, nil)
+	signer, err := NewSigner(
+		config.BTCConfig{},
+		mocks.NewTSSMainnet(),
+		clientcommon.DefaultLoggers(),
+		&metrics.TelemetryServer{},
+		nil,
+	)
 	require.NoError(t, err)
 
 	// tss address and script

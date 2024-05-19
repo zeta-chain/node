@@ -13,7 +13,10 @@ import (
 // "pending keygen".
 //
 // Authorized: admin policy group 1.
-func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeygen) (*types.MsgUpdateKeygenResponse, error) {
+func (k msgServer) UpdateKeygen(
+	goCtx context.Context,
+	msg *types.MsgUpdateKeygen,
+) (*types.MsgUpdateKeygenResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
