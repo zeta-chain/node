@@ -27,6 +27,7 @@
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
+* [2213](https://github.com/zeta-chain/node/pull/2213) - use golines tool to refactor Go files to use 120 as max line length
 
 ### Tests
 
