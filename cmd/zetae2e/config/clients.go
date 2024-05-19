@@ -91,20 +91,20 @@ func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
 func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to dial evm client: %w", err)
 	}
 
 	chainid, err := evmClient.ChainID(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get chain id: %w", err)
 	}
 	deployerPrivkey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get deployer privkey: %w", err)
 	}
 	evmAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get keyed transactor: %w", err)
 	}
 
 	return evmClient, evmAuth, nil

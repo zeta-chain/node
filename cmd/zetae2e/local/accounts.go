@@ -18,8 +18,8 @@ var (
 	UserZetaTestPrivateKey = "729a6cdc5c925242e7df92fdeeb94dadbf2d0b9950d4db8f034ab27a3b114ba7" // #nosec G101 - used for testing
 
 	// UserZEVMMPTestAddress is the address of the account for testing ZEVM Message Passing
-	UserZEVMMPTestAddress    = ethcommon.HexToAddress("0x9880B47b58B1926623Db9c7CEb9615D1b6430a80")
-	UserZEVMMPTestPrivateKey = "03f9432cae16eca701dfb13d1fcbd78fe27fc9f741dca7b78761f64ad0c0b8eaab" // #nosec G101 - used for testing
+	UserZEVMMPTestAddress    = ethcommon.HexToAddress("0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c")
+	UserZEVMMPTestPrivateKey = "105460aebf71b10bfdb710ef5aa6d2932ee6ff6fc317ac9c24e0979903b10a5d" // #nosec G101 - used for testing
 
 	// UserBitcoinAddress is the address of the account for testing Bitcoin
 	UserBitcoinAddress    = ethcommon.HexToAddress("0x283d810090EdF4043E75247eAeBcE848806237fD")

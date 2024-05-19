@@ -47,8 +47,8 @@ echo "funding deployer address 0x5cC2fBb200A929B372e3016F1925DcF988E081fd with 1
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd", value: web3.toWei(10000,"ether")})' attach http://eth:8545
 
 # unlock zevm message passing tester accounts
-echo "funding deployer address 0x9880B47b58B1926623Db9c7CEb9615D1b6430a80 with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x9880B47b58B1926623Db9c7CEb9615D1b6430a80", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+echo "funding deployer address 0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c with 10000 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c", value: web3.toWei(10000,"ether")})' attach http://eth:8545
 
 # unlock bitcoin tester accounts
 echo "funding deployer address 0x283d810090EdF4043E75247eAeBcE848806237fD with 10000 Ether"
