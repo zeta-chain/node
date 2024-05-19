@@ -46,6 +46,11 @@
 * [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
+
+### Chores
+
+* [2211](https://github.com/zeta-chain/node/pull/2211) - Standardize go imports format with `goimports-reviser`
+
 ## v16.0.0
 
 ### Breaking Changes
