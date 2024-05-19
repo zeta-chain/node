@@ -185,7 +185,12 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto-gen openapi specs typescript docs-zetacored mocks
+fmt-golines:
+	@echo "--> Formatting Go lines"
+	@bash ./scripts/fmt-golines.sh
+.PHONY: fmt-golines
+
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-golines
 .PHONY: generate
 
 ###############################################################################
