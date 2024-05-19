@@ -125,7 +125,7 @@ test-cctx:
 	./standalone-network/cctx-creator.sh
 
 ###############################################################################
-###                                 Linting            	                    ###
+###                            	Linting				       	     		    ###
 ###############################################################################
 
 lint-pre:
@@ -185,7 +185,10 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto-gen openapi specs typescript docs-zetacored mocks
+fmt-import:
+	@bash ./scripts/fmt-imports.sh
+
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-import
 .PHONY: generate
 
 ###############################################################################
