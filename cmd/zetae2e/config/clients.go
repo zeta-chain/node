@@ -10,12 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc"
 )
 
 // getClientsFromConfig get clients from config

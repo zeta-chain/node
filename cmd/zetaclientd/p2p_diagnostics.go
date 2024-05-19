@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	libp2p "github.com/libp2p/go-libp2p"
@@ -22,8 +20,10 @@ import (
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/p2p"
+
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cryptotypes.PrivKey, cfg config.Config) error {

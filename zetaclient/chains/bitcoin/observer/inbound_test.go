@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"

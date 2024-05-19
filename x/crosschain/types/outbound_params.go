@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 

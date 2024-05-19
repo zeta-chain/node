@@ -25,6 +25,7 @@ import (
 	"github.com/zeta-chain/go-tss/keysign"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"

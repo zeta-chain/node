@@ -36,6 +36,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"

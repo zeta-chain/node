@@ -15,6 +15,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
+
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"

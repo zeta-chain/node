@@ -13,6 +13,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 )

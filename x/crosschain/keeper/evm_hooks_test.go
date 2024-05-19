@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

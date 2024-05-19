@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"

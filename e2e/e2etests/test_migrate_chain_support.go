@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"

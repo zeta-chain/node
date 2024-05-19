@@ -34,6 +34,7 @@ import (
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 	"github.com/zeta-chain/zetacore/server/config"
 )

@@ -1,14 +1,14 @@
 package types_test
 
 import (
-	"testing"
-
 	"math/rand"
+	"testing"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"

@@ -15,6 +15,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	observermocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"

@@ -15,15 +15,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/node"
-	tmclient "github.com/cometbft/cometbft/rpc/client"
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"google.golang.org/grpc"
-
 	"cosmossdk.io/math"
 	tmlog "github.com/cometbft/cometbft/libs/log"
-
+	"github.com/cometbft/cometbft/node"
+	tmclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -45,6 +40,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 )
 
 // package-wide network lock to only allow one test network at a time

@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
+
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"

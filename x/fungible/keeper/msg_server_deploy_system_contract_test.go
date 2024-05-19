@@ -9,6 +9,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"

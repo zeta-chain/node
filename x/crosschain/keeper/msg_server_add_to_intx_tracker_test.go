@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

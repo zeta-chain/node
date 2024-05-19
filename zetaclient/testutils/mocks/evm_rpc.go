@@ -7,8 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"golang.org/x/net/context"
+
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 
 const EVMRPCEnabled = "MockEVMRPCEnabled"

@@ -8,18 +8,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 var ErrSample = errors.New("sample error")

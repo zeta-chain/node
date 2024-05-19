@@ -10,6 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"

@@ -13,6 +13,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"

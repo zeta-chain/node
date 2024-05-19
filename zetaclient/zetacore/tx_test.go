@@ -16,6 +16,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/go-tss/blame"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -27,8 +30,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"go.nhat.io/grpcmock"
-	"go.nhat.io/grpcmock/planner"
 )
 
 const (

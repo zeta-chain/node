@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )

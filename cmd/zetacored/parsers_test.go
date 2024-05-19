@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"testing"
 
 	"github.com/cometbft/cometbft/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/app"
 
-	//"os"
-	"testing"
+	"github.com/zeta-chain/zetacore/app"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {

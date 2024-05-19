@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	zetachains "github.com/zeta-chain/zetacore/pkg/chains"
-
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	zetachains "github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )

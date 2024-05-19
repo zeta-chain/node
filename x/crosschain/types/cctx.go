@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 

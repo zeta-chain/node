@@ -6,7 +6,6 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
-
 	. "gopkg.in/check.v1"
 )
 

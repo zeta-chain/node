@@ -2,14 +2,13 @@ package e2etests
 
 import (
 	"fmt"
-	"strconv"
-
 	"math/big"
+	"strconv"
 	"time"
 
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"golang.org/x/sync/errgroup"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"

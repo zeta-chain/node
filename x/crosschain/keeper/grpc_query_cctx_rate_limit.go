@@ -6,10 +6,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // RateLimiterInput collects the input data for the rate limiter

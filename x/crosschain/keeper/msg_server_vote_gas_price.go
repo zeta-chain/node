@@ -9,8 +9,8 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )

@@ -3,6 +3,7 @@ package main
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	btcsigner "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"

@@ -4,17 +4,16 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
-	"cosmossdk.io/math"
-
-	"github.com/stretchr/testify/require"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 var (

@@ -15,6 +15,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"

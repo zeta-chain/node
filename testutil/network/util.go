@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -13,8 +14,6 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	tmtypes "github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
-
-	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"

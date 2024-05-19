@@ -32,6 +32,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/pkg/errors"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 

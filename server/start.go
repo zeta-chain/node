@@ -26,15 +26,9 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
-	"github.com/spf13/cobra"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/tools/rosetta"
+	crgserver "cosmossdk.io/tools/rosetta/lib/server"
 	dbm "github.com/cometbft/cometbft-db"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -45,25 +39,25 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/rpc/client/local"
-
-	"cosmossdk.io/tools/rosetta"
-	crgserver "cosmossdk.io/tools/rosetta/lib/server"
-
-	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
-
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
 	"github.com/evmos/ethermint/indexer"
 	ethermint "github.com/evmos/ethermint/types"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	ethdebug "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
 	"github.com/zeta-chain/zetacore/server/config"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"

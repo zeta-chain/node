@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 

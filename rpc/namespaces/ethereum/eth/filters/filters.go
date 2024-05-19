@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	"github.com/zeta-chain/zetacore/rpc/types"
 )

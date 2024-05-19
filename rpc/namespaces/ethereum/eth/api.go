@@ -25,6 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )

@@ -3,10 +3,10 @@ package v3_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/exported"
 	v3 "github.com/zeta-chain/zetacore/x/emissions/migrations/v3"

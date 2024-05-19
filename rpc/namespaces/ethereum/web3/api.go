@@ -21,6 +21,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 

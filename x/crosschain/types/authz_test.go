@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 

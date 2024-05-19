@@ -29,7 +29,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 

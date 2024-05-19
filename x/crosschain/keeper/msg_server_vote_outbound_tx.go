@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 )

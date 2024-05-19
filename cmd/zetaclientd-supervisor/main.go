@@ -10,9 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"golang.org/x/sync/errgroup"
 )
 
 func main() {

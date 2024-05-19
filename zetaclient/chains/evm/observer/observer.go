@@ -24,6 +24,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -34,8 +37,6 @@ import (
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 // Logger is the logger for evm chains

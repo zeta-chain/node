@@ -5,6 +5,7 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"

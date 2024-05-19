@@ -15,6 +15,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	. "gopkg.in/check.v1"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -22,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	. "gopkg.in/check.v1"
 )
 
 type BTCSignerSuite struct {

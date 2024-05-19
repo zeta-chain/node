@@ -36,6 +36,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	stderrors "github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )

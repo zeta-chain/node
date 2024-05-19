@@ -6,8 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/zetacore/x/observer/types"
 	. "gopkg.in/check.v1"
+
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestChainParamsList_Validate(t *testing.T) {

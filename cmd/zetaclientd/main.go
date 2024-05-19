@@ -1,27 +1,22 @@
 package main
 
 import (
+	"math/rand"
+	"os"
 	"path/filepath"
-
-	"github.com/rs/zerolog/log"
+	"time"
 
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/rs/zerolog"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-
-	"github.com/zeta-chain/zetacore/cmd"
-
-	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
-
-	"math/rand"
-	"os"
-	"time"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/cmd"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 const (

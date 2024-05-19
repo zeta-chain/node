@@ -4,9 +4,10 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
 // HeaderSupportedChains implements the Query/HeaderEnabledChains gRPC method

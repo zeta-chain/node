@@ -9,10 +9,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/huandu/skiplist"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/huandu/skiplist"
 )
 
 var (

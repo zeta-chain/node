@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"

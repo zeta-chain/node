@@ -3,6 +3,7 @@ package keeper
 import (
 	cosmoserror "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"

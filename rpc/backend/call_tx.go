@@ -32,9 +32,10 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // Resend accepts an existing transaction and a new gas price and limit. It will remove

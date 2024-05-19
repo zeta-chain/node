@@ -15,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
+
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"

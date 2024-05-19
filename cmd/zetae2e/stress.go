@@ -16,13 +16,14 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"google.golang.org/grpc"
 )
 
 const (

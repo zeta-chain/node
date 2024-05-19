@@ -4,9 +4,10 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBlameByIdentifierRequest) (*types.QueryBlameByIdentifierResponse, error) {

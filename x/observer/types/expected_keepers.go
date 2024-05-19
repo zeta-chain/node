@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )

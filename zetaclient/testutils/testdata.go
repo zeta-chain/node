@@ -11,6 +11,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"

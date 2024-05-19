@@ -19,8 +19,6 @@ package ante
 import (
 	"fmt"
 
-	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,6 +32,8 @@ import (
 	ethante "github.com/evmos/ethermint/app/ante"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 )
 
 type HandlerOptions struct {

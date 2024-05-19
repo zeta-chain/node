@@ -47,6 +47,7 @@ import (
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"

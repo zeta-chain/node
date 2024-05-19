@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	keystone "github.com/zeta-chain/keystone/keys"
+
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"

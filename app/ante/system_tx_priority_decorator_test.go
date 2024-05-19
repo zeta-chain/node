@@ -9,6 +9,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/testutil/sample"

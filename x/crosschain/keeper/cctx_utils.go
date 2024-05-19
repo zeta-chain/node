@@ -6,10 +6,10 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"github.com/pkg/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"

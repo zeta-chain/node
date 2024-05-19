@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 

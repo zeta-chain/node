@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 

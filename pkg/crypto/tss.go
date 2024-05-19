@@ -5,6 +5,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 

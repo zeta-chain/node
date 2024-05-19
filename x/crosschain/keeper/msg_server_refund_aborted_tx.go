@@ -6,10 +6,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"golang.org/x/net/context"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/net/context"
 )
 
 // RefundAbortedCCTX refunds the aborted CCTX.

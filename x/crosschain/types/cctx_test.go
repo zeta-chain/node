@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

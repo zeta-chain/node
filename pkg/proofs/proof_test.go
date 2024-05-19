@@ -1,25 +1,24 @@
 package proofs
 
 import (
-	"errors"
-	"testing"
-
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
-	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+	"testing"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
+	"github.com/zeta-chain/zetacore/pkg/testdata"
 )
 
 const (

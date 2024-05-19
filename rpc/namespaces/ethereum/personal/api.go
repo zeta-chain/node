@@ -31,6 +31,7 @@ import (
 	"github.com/evmos/ethermint/crypto/hd"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 )
 

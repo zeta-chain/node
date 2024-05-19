@@ -2,6 +2,7 @@ package observer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"

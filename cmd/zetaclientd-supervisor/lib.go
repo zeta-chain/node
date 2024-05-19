@@ -18,8 +18,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc"
+
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 const zetaclientdBinaryName = "zetaclientd"

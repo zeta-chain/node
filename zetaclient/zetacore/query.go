@@ -14,6 +14,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -21,7 +23,6 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"google.golang.org/grpc"
 )
 
 func (c *Client) GetCrosschainFlags() (observertypes.CrosschainFlags, error) {

@@ -3,8 +3,6 @@ package app
 import (
 	"os"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"golang.org/x/exp/slices"
+
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"

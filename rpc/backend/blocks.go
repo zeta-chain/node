@@ -32,9 +32,10 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // BlockNumber returns the current block number in abci app state. Because abci

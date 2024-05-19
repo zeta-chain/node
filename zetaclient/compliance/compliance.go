@@ -2,6 +2,7 @@ package compliance
 
 import (
 	"github.com/rs/zerolog"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )

@@ -3,9 +3,9 @@ package keeper
 import (
 	"strconv"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 

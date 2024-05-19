@@ -9,6 +9,8 @@ import (
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -18,7 +20,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"google.golang.org/grpc"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}

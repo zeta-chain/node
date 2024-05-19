@@ -6,6 +6,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"

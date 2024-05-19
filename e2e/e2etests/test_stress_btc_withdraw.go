@@ -8,10 +8,11 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // TestStressBTCWithdraw tests the stressing withdraw of btc

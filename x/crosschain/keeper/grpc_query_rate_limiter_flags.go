@@ -4,9 +4,10 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // RateLimiterFlags queries the rate limiter flags

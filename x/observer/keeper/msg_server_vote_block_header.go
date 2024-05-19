@@ -5,6 +5,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )

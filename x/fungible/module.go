@@ -5,17 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/fungible/client/cli"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"

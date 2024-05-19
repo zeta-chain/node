@@ -7,6 +7,7 @@ import (
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 

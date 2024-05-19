@@ -40,6 +40,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/zetacore/rpc/types"

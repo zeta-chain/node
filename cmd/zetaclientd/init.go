@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )

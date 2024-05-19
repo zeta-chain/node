@@ -8,10 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // WithdrawType is the type of withdraw to perform in the test

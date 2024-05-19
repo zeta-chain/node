@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 

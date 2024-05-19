@@ -31,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/rpc/types"
 )
 

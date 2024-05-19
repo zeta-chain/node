@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
+
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"

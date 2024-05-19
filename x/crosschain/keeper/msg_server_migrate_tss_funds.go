@@ -11,12 +11,12 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/pkg/gas"
-
-	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"

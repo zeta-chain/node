@@ -21,6 +21,10 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -32,9 +36,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 const (

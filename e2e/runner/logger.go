@@ -5,10 +5,10 @@ import (
 	"sync"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
 	"github.com/fatih/color"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const (

@@ -12,13 +12,14 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"
+	"golang.org/x/crypto/sha3"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
-	"golang.org/x/crypto/sha3"
 )
 
 func GenerateTss(

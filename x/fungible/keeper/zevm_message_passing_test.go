@@ -10,6 +10,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

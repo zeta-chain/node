@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 

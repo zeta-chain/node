@@ -12,6 +12,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -23,8 +26,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"go.nhat.io/grpcmock"
-	"go.nhat.io/grpcmock/planner"
 )
 
 func setupMockServer(t *testing.T, serviceFunc any, method string, input any, expectedOutput any) *grpcmock.Server {

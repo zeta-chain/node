@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 
-	"github.com/zeta-chain/zetacore/x/emissions/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 func (k Keeper) ListPoolAddresses(_ context.Context, req *types.QueryListPoolAddressesRequest) (*types.QueryListPoolAddressesResponse, error) {

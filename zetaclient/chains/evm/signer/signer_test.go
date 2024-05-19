@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
