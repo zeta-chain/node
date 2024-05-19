@@ -288,7 +288,13 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	// load archived gas token donation to TSS
 	// https://etherscan.io/tx/0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155
 	inTxHashDonation := "0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155"
-	txDonation, receiptDonation := testutils.LoadEVMIntxNReceiptDonation(t, TestDataDir, chainID, inTxHashDonation, coin.CoinType_Gas)
+	txDonation, receiptDonation := testutils.LoadEVMIntxNReceiptDonation(
+		t,
+		TestDataDir,
+		chainID,
+		inTxHashDonation,
+		coin.CoinType_Gas,
+	)
 	require.NoError(t, evm.ValidateEvmTransaction(txDonation))
 
 	// create test compliance config
@@ -298,14 +304,22 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	}
 
 	t.Run("should return vote msg for archived gas token transfer to TSS", func(t *testing.T) {
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, ethcommon.HexToAddress(tx.From), receipt.BlockNumber.Uint64())
+		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+			tx,
+			ethcommon.HexToAddress(tx.From),
+			receipt.BlockNumber.Uint64(),
+		)
 		require.NotNil(t, msg)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{tx.From}
 		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, ethcommon.HexToAddress(tx.From), receipt.BlockNumber.Uint64())
+		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+			tx,
+			ethcommon.HexToAddress(tx.From),
+			receipt.BlockNumber.Uint64(),
+		)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
@@ -315,7 +329,11 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 		txCopy.Input = message // use other address as receiver
 		cfg.ComplianceConfig.RestrictedAddresses = []string{testutils.OtherAddress1}
 		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(txCopy, ethcommon.HexToAddress(txCopy.From), receipt.BlockNumber.Uint64())
+		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+			txCopy,
+			ethcommon.HexToAddress(txCopy.From),
+			receipt.BlockNumber.Uint64(),
+		)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg on donation transaction", func(t *testing.T) {

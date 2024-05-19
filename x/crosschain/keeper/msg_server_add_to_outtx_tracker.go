@@ -19,7 +19,10 @@ const MaxOutTxTrackerHashes = 2
 // AddToOutTxTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 // If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
-func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
+func (k msgServer) AddToOutTxTracker(
+	goCtx context.Context,
+	msg *types.MsgAddToOutTxTracker,
+) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check the chain is supported
@@ -37,7 +40,12 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, err.Error())
 	}
 	if cctx == nil || cctx.CrossChainTx == nil {
-		return nil, cosmoserrors.Wrapf(types.ErrCannotFindCctx, "no corresponding cctx found for chain %d, nonce %d", msg.ChainId, msg.Nonce)
+		return nil, cosmoserrors.Wrapf(
+			types.ErrCannotFindCctx,
+			"no corresponding cctx found for chain %d, nonce %d",
+			msg.ChainId,
+			msg.Nonce,
+		)
 	}
 
 	// tracker submission is only allowed when the cctx is pending

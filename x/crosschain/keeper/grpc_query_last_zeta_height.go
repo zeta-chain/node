@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) LastZetaHeight(goCtx context.Context, req *types.QueryLastZetaHeightRequest) (*types.QueryLastZetaHeightResponse, error) {
+func (k Keeper) LastZetaHeight(
+	goCtx context.Context,
+	req *types.QueryLastZetaHeightRequest,
+) (*types.QueryLastZetaHeightResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

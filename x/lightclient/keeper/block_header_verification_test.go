@@ -52,7 +52,11 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 
 		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BtcMainnetChain.ChainId)
 		require.Error(t, err)
-		require.ErrorContains(t, err, fmt.Sprintf("proof verification is disabled for chain %d", chains.BtcMainnetChain.ChainId))
+		require.ErrorContains(
+			t,
+			err,
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.BtcMainnetChain.ChainId),
+		)
 
 		err = k.CheckBlockHeaderVerificationEnabled(ctx, 1000)
 		require.Error(t, err)
@@ -72,7 +76,11 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 
 		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.EthChain.ChainId)
 		require.Error(t, err)
-		require.ErrorContains(t, err, fmt.Sprintf("proof verification is disabled for chain %d", chains.EthChain.ChainId))
+		require.ErrorContains(
+			t,
+			err,
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.EthChain.ChainId),
+		)
 
 		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BtcMainnetChain.ChainId)
 		require.NoError(t, err)
@@ -103,6 +111,10 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 		})
 
 		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.EthChain.ChainId)
-		require.ErrorContains(t, err, fmt.Sprintf("proof verification is disabled for chain %d", chains.EthChain.ChainId))
+		require.ErrorContains(
+			t,
+			err,
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.EthChain.ChainId),
+		)
 	})
 }

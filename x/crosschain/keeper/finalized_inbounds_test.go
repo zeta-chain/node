@@ -77,6 +77,10 @@ func TestKeeper_GetAllFinalizedInbound(t *testing.T) {
 		for i := 0; i < listSize; i++ {
 			require.Contains(t, list, types.FinalizedInboundKey(txHashList[i], chainIdList[i], eventIndexList[i]))
 		}
-		require.NotContains(t, list, types.FinalizedInboundKey(sample.Hash().String(), sample.Chain(5).ChainId, sample.EventIndex()))
+		require.NotContains(
+			t,
+			list,
+			types.FinalizedInboundKey(sample.Hash().String(), sample.Chain(5).ChainId, sample.EventIndex()),
+		)
 	})
 }

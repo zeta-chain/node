@@ -74,11 +74,13 @@ func (txData *OutboundTransactionData) SetupGas(
 	txData.gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
 	if txData.gasLimit < MinGasLimit {
 		txData.gasLimit = MinGasLimit
-		logger.Warn().Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
+		logger.Warn().
+			Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
 	}
 	if txData.gasLimit > MaxGasLimit {
 		txData.gasLimit = MaxGasLimit
-		logger.Warn().Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
+		logger.Warn().
+			Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
 	}
 
 	// use dynamic gas price for ethereum chains.
@@ -152,7 +154,8 @@ func NewOutBoundTransactionData(
 	}
 
 	// Get sendHash
-	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
+	logger.Info().
+		Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
 	sendHash, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(sendHash) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
@@ -163,7 +166,8 @@ func NewOutBoundTransactionData(
 	pendingTx := evmObserver.GetPendingTx(nonce)
 	if pendingTx != nil {
 		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
-			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
+			logger.Info().
+				Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
 		} else {
 			logger.Info().Msgf("please wait for pending outTx %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
 			return nil, true, nil

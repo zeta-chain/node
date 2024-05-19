@@ -12,7 +12,10 @@ import (
 )
 
 // BlockHeaderAll queries all block headers
-func (k Keeper) BlockHeaderAll(c context.Context, req *types.QueryAllBlockHeaderRequest) (*types.QueryAllBlockHeaderResponse, error) {
+func (k Keeper) BlockHeaderAll(
+	c context.Context,
+	req *types.QueryAllBlockHeaderRequest,
+) (*types.QueryAllBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -37,7 +40,10 @@ func (k Keeper) BlockHeaderAll(c context.Context, req *types.QueryAllBlockHeader
 }
 
 // BlockHeader queries block header by hash
-func (k Keeper) BlockHeader(c context.Context, req *types.QueryGetBlockHeaderRequest) (*types.QueryGetBlockHeaderResponse, error) {
+func (k Keeper) BlockHeader(
+	c context.Context,
+	req *types.QueryGetBlockHeaderRequest,
+) (*types.QueryGetBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

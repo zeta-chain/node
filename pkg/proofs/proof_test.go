@@ -136,11 +136,26 @@ func BitcoinMerkleProofLiveTest(t *testing.T) {
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, "", "", 0)
 
-		fmt.Printf("Verification succeeded for block: %d hash: %s root: %s target: %064x transactions: %d\n", height, blockHash, header.MerkleRoot, target, len(blockVerbose.Tx))
+		fmt.Printf(
+			"Verification succeeded for block: %d hash: %s root: %s target: %064x transactions: %d\n",
+			height,
+			blockHash,
+			header.MerkleRoot,
+			target,
+			len(blockVerbose.Tx),
+		)
 	}
 }
 
-func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string, nonce uint64) {
+func validateBitcoinBlock(
+	t *testing.T,
+	_ *wire.BlockHeader,
+	headerBytes []byte,
+	blockVerbose *btcjson.GetBlockVerboseTxResult,
+	outTxid string,
+	tssAddress string,
+	nonce uint64,
+) {
 	// Deserialization should work for each transaction in the block
 	txns := []*btcutil.Tx{}
 	txBodies := [][]byte{}

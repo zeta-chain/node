@@ -38,7 +38,10 @@ func TestKeeper_PendingNoncesAll(t *testing.T) {
 			k.SetPendingNonces(ctx, nonce)
 		}
 		offset := 10
-		rst, pageRes, err := k.GetAllPendingNoncesPaginated(ctx, &query.PageRequest{Offset: uint64(offset), CountTotal: true})
+		rst, pageRes, err := k.GetAllPendingNoncesPaginated(
+			ctx,
+			&query.PageRequest{Offset: uint64(offset), CountTotal: true},
+		)
 		require.NoError(t, err)
 		sort.SliceStable(rst, func(i, j int) bool {
 			return rst[i].ChainId < rst[j].ChainId

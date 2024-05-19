@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetEmissionsFactors(goCtx context.Context, _ *types.QueryGetEmissionsFactorsRequest) (*types.QueryGetEmissionsFactorsResponse, error) {
+func (k Keeper) GetEmissionsFactors(
+	goCtx context.Context,
+	_ *types.QueryGetEmissionsFactorsRequest,
+) (*types.QueryGetEmissionsFactorsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	params, found := k.GetParams(ctx)
 	if !found {

@@ -76,7 +76,10 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	r.Logger.Info(fmt.Sprintf("🔄 Cctx mined for contract call chain zevm %s", cctx.Index))
 
 	// On finalization the Fungible module calls the onReceive function which in turn calls the onZetaMessage function on the destination contract
-	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.ZEVMClient.TransactionReceipt(
+		r.Ctx,
+		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
+	)
 	if err != nil {
 		panic(err)
 	}

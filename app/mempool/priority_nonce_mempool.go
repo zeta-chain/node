@@ -103,7 +103,9 @@ func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption 
 // PriorityNonceWithTxReplacement sets a callback to be called when duplicated
 // transaction nonce detected during mempool insert. An application can define a
 // transaction replacement rule based on tx priority or certain transaction fields.
-func PriorityNonceWithTxReplacement(txReplacementRule func(op, np int64, oTx, nTx sdk.Tx) bool) PriorityNonceMempoolOption {
+func PriorityNonceWithTxReplacement(
+	txReplacementRule func(op, np int64, oTx, nTx sdk.Tx) bool,
+) PriorityNonceMempoolOption {
 	return func(mp *PriorityNonceMempool) {
 		mp.txReplacement = txReplacementRule
 	}
@@ -203,7 +205,8 @@ func (mp *PriorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	// changes.
 	sk := txMeta{nonce: nonce, sender: sender}
 	if oldScore, txExists := mp.scores[sk]; txExists {
-		if mp.txReplacement != nil && !mp.txReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
+		if mp.txReplacement != nil &&
+			!mp.txReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
 			return fmt.Errorf(
 				"tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v, oldTx: %v, newTx: %v",
 				oldScore.priority,

@@ -176,8 +176,24 @@ func TestChainListByNetworkType(t *testing.T) {
 		networkType NetworkType
 		expected    []Chain
 	}{
-		{"MainnetChainList", NetworkType_mainnet, []Chain{ZetaChainMainnet, BtcMainnetChain, BscMainnetChain, EthChain, PolygonChain}},
-		{"TestnetChainList", NetworkType_testnet, []Chain{ZetaTestnetChain, BtcTestNetChain, MumbaiChain, AmoyChain, BscTestnetChain, GoerliChain, SepoliaChain}},
+		{
+			"MainnetChainList",
+			NetworkType_mainnet,
+			[]Chain{ZetaChainMainnet, BtcMainnetChain, BscMainnetChain, EthChain, PolygonChain},
+		},
+		{
+			"TestnetChainList",
+			NetworkType_testnet,
+			[]Chain{
+				ZetaTestnetChain,
+				BtcTestNetChain,
+				MumbaiChain,
+				AmoyChain,
+				BscTestnetChain,
+				GoerliChain,
+				SepoliaChain,
+			},
+		},
 		{"PrivnetChainList", NetworkType_privnet, []Chain{ZetaPrivnetChain, BtcRegtestChain, GoerliLocalnetChain}},
 	}
 
@@ -233,8 +249,46 @@ func TestChainListFunctions(t *testing.T) {
 		function func() []*Chain
 		expected []Chain
 	}{
-		{"DefaultChainsList", DefaultChainsList, []Chain{BtcMainnetChain, BscMainnetChain, EthChain, BtcTestNetChain, MumbaiChain, AmoyChain, BscTestnetChain, GoerliChain, SepoliaChain, BtcRegtestChain, GoerliLocalnetChain, ZetaChainMainnet, ZetaTestnetChain, ZetaMocknetChain, ZetaPrivnetChain, PolygonChain}},
-		{"ExternalChainList", ExternalChainList, []Chain{BtcMainnetChain, BscMainnetChain, EthChain, BtcTestNetChain, MumbaiChain, AmoyChain, BscTestnetChain, GoerliChain, SepoliaChain, BtcRegtestChain, GoerliLocalnetChain, PolygonChain}},
+		{
+			"DefaultChainsList",
+			DefaultChainsList,
+			[]Chain{
+				BtcMainnetChain,
+				BscMainnetChain,
+				EthChain,
+				BtcTestNetChain,
+				MumbaiChain,
+				AmoyChain,
+				BscTestnetChain,
+				GoerliChain,
+				SepoliaChain,
+				BtcRegtestChain,
+				GoerliLocalnetChain,
+				ZetaChainMainnet,
+				ZetaTestnetChain,
+				ZetaMocknetChain,
+				ZetaPrivnetChain,
+				PolygonChain,
+			},
+		},
+		{
+			"ExternalChainList",
+			ExternalChainList,
+			[]Chain{
+				BtcMainnetChain,
+				BscMainnetChain,
+				EthChain,
+				BtcTestNetChain,
+				MumbaiChain,
+				AmoyChain,
+				BscTestnetChain,
+				GoerliChain,
+				SepoliaChain,
+				BtcRegtestChain,
+				GoerliLocalnetChain,
+				PolygonChain,
+			},
+		},
 	}
 
 	for _, lt := range listTests {

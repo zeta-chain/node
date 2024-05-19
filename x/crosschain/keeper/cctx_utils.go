@@ -26,24 +26,36 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
-		return cosmoserrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
+		return cosmoserrors.Wrap(
+			types.ErrCannotFindReceiverNonce,
+			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()),
+		)
 	}
 
 	// SET nonce
 	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
 	tss, found := k.GetObserverKeeper().GetTSS(ctx)
 	if !found {
-		return cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
+		return cosmoserrors.Wrap(
+			types.ErrCannotFindTSSKeys,
+			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()),
+		)
 	}
 
 	p, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, receiveChainID)
 	if !found {
-		return cosmoserrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
+		return cosmoserrors.Wrap(
+			types.ErrCannotFindPendingNonces,
+			fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce),
+		)
 	}
 
 	// #nosec G701 always in range
 	if p.NonceHigh != int64(nonce.Nonce) {
-		return cosmoserrors.Wrap(types.ErrNonceMismatch, fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce))
+		return cosmoserrors.Wrap(
+			types.ErrNonceMismatch,
+			fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce),
+		)
 	}
 
 	nonce.Nonce++
@@ -89,7 +101,8 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 
 func IsPending(cctx *types.CrossChainTx) bool {
 	// pending inbound is not considered a "pending" state because it has not reached consensus yet
-	return cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
+	return cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
+		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
 }
 
 // GetAbortedAmount returns the amount to refund for a given CCTX .

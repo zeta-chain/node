@@ -17,7 +17,9 @@ import (
 // TestStressBTCWithdraw tests the stressing withdraw of btc
 func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	if len(args) != 2 {
-		panic("TestStressBTCWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+		panic(
+			"TestStressBTCWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.",
+		)
 	}
 
 	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)

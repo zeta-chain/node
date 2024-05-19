@@ -29,8 +29,20 @@ func PrintComplianceLog(
 	if outbound {
 		// we print cctx for outbound tx
 		logMsg = "Restricted address detected in cctx"
-		inboundLoggerWithFields = inboundLogger.With().Int64("chain", chainID).Str("cctx", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
-		complianceLoggerWithFields = complianceLogger.With().Int64("chain", chainID).Str("cctx", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+		inboundLoggerWithFields = inboundLogger.With().
+			Int64("chain", chainID).
+			Str("cctx", identifier).
+			Str("sender", sender).
+			Str("receiver", receiver).
+			Str("token", token).
+			Logger()
+		complianceLoggerWithFields = complianceLogger.With().
+			Int64("chain", chainID).
+			Str("cctx", identifier).
+			Str("sender", sender).
+			Str("receiver", receiver).
+			Str("token", token).
+			Logger()
 	} else {
 		// we print intx for inbound tx
 		logMsg = "Restricted address detected in intx"

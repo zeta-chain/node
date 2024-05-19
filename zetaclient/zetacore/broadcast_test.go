@@ -79,7 +79,13 @@ func TestBroadcast(t *testing.T) {
 		client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 		blockHash, err := hex.DecodeString(ethBlockHash)
 		require.NoError(t, err)
-		msg := observerTypes.NewMsgVoteBlockHeader(address.String(), chains.EthChain.ChainId, blockHash, 18495266, getHeaderData(t))
+		msg := observerTypes.NewMsgVoteBlockHeader(
+			address.String(),
+			chains.EthChain.ChainId,
+			blockHash,
+			18495266,
+			getHeaderData(t),
+		)
 		authzMsg, authzSigner, err := client.WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
 		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)
@@ -87,10 +93,18 @@ func TestBroadcast(t *testing.T) {
 	})
 
 	t.Run("broadcast failed", func(t *testing.T) {
-		client.EnableMockSDKClient(mocks.NewSDKClientWithErr(errors.New("account sequence mismatch, expected 5 got 4"), 32))
+		client.EnableMockSDKClient(
+			mocks.NewSDKClientWithErr(errors.New("account sequence mismatch, expected 5 got 4"), 32),
+		)
 		blockHash, err := hex.DecodeString(ethBlockHash)
 		require.NoError(t, err)
-		msg := observerTypes.NewMsgVoteBlockHeader(address.String(), chains.EthChain.ChainId, blockHash, 18495266, getHeaderData(t))
+		msg := observerTypes.NewMsgVoteBlockHeader(
+			address.String(),
+			chains.EthChain.ChainId,
+			blockHash,
+			18495266,
+			getHeaderData(t),
+		)
 		authzMsg, authzSigner, err := client.WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
 		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)

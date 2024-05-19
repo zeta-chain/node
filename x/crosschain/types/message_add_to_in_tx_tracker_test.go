@@ -48,7 +48,11 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 				CoinType: coin.CoinType_Gas,
 				Proof:    &proofs.Proof{},
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", chains.ZetaTestnetChain.ChainId),
+			err: errorsmod.Wrapf(
+				types.ErrProofVerificationFail,
+				"chain id %d does not support proof-based trackers",
+				chains.ZetaTestnetChain.ChainId,
+			),
 		},
 		{
 			name: "invalid coin type",

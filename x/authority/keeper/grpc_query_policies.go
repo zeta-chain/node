@@ -10,7 +10,10 @@ import (
 )
 
 // Policies queries policies
-func (k Keeper) Policies(c context.Context, req *types.QueryGetPoliciesRequest) (*types.QueryGetPoliciesResponse, error) {
+func (k Keeper) Policies(
+	c context.Context,
+	req *types.QueryGetPoliciesRequest,
+) (*types.QueryGetPoliciesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

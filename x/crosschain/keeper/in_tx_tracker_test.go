@@ -56,7 +56,11 @@ func TestKeeper_GetAllInTxTrackerForChain(t *testing.T) {
 	t.Run("Get all InTx trackers for chain paginated by limit", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := createNInTxTracker(keeper, ctx, 100, 6)
-		rst, pageRes, err := keeper.GetAllInTxTrackerForChainPaginated(ctx, 6, &query.PageRequest{Limit: 10, CountTotal: true})
+		rst, pageRes, err := keeper.GetAllInTxTrackerForChainPaginated(
+			ctx,
+			6,
+			&query.PageRequest{Limit: 10, CountTotal: true},
+		)
 		require.NoError(t, err)
 		require.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
 		require.Equal(t, len(intxTrackers), int(pageRes.Total))
@@ -64,7 +68,11 @@ func TestKeeper_GetAllInTxTrackerForChain(t *testing.T) {
 	t.Run("Get all InTx trackers for chain paginated by offset", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := createNInTxTracker(keeper, ctx, 100, 6)
-		rst, pageRes, err := keeper.GetAllInTxTrackerForChainPaginated(ctx, 6, &query.PageRequest{Offset: 10, CountTotal: true})
+		rst, pageRes, err := keeper.GetAllInTxTrackerForChainPaginated(
+			ctx,
+			6,
+			&query.PageRequest{Offset: 10, CountTotal: true},
+		)
 		require.NoError(t, err)
 		require.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
 		require.Equal(t, len(intxTrackers), int(pageRes.Total))

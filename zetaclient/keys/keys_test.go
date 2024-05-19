@@ -67,7 +67,13 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	kb, err := cKeys.New(sdk.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
 
-	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(
+		GetGranteeKeyName(signerNameForTest),
+		cKeys.English,
+		cmd.ZetaChainHDPath,
+		password,
+		hd.Secp256k1,
+	)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }

@@ -9,7 +9,10 @@ import (
 )
 
 // RemoveChainParams removes chain parameters for a specific chain.
-func (k msgServer) RemoveChainParams(goCtx context.Context, msg *types.MsgRemoveChainParams) (*types.MsgRemoveChainParamsResponse, error) {
+func (k msgServer) RemoveChainParams(
+	goCtx context.Context,
+	msg *types.MsgRemoveChainParams,
+) (*types.MsgRemoveChainParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission

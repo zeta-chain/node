@@ -29,7 +29,11 @@ func CmdUpdateCrosschainFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgUpdateCrosschainFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled, arsIsOutboundEnabled)
+			msg := types.NewMsgUpdateCrosschainFlags(
+				clientCtx.GetFromAddress().String(),
+				argIsInboundEnabled,
+				arsIsOutboundEnabled,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

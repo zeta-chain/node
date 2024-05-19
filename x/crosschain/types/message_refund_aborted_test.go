@@ -31,7 +31,11 @@ func TestMsgRefundAbortedCCTX_ValidateBasic(t *testing.T) {
 	})
 	t.Run("invalid refund address 2", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
-		msg := types.NewMsgRefundAbortedCCTX(sample.AccAddress(), cctx.Index, "0x91da5bf3F8Eb72724E6f50Ec6C3D199C6355c59")
+		msg := types.NewMsgRefundAbortedCCTX(
+			sample.AccAddress(),
+			cctx.Index,
+			"0x91da5bf3F8Eb72724E6f50Ec6C3D199C6355c59",
+		)
 		require.ErrorContains(t, msg.ValidateBasic(), "invalid address")
 	})
 }

@@ -14,7 +14,10 @@ import (
 // UpdateObserver handles updating an observer address
 // Authorized: admin policy (admin update), old observer address (if the
 // reason is that the observer was tombstoned).
-func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObserver) (*types.MsgUpdateObserverResponse, error) {
+func (k msgServer) UpdateObserver(
+	goCtx context.Context,
+	msg *types.MsgUpdateObserver,
+) (*types.MsgUpdateObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	ok, err := k.CheckUpdateReason(ctx, msg)
@@ -22,12 +25,18 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, err.Error())
 	}
 	if !ok {
-		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason))
+		return nil, errorsmod.Wrap(
+			types.ErrUpdateObserver,
+			fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason),
+		)
 	}
 
 	// We do not use IsNonTombstonedObserver here because we want to allow tombstoned observers to be updated
 	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
-		return nil, errorsmod.Wrap(types.ErrNotObserver, fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress))
+		return nil, errorsmod.Wrap(
+			types.ErrNotObserver,
+			fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress),
+		)
 	}
 
 	err = k.IsValidator(ctx, msg.NewObserverAddress)
@@ -44,7 +53,10 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 	// Update the node account with the new operator address
 	nodeAccount, found := k.GetNodeAccount(ctx, msg.OldObserverAddress)
 	if !found {
-		return nil, errorsmod.Wrap(types.ErrNodeAccountNotFound, fmt.Sprintf("Observer node account not found : %s", msg.OldObserverAddress))
+		return nil, errorsmod.Wrap(
+			types.ErrNodeAccountNotFound,
+			fmt.Sprintf("Observer node account not found : %s", msg.OldObserverAddress),
+		)
 	}
 	newNodeAccount := nodeAccount
 	newNodeAccount.Operator = msg.NewObserverAddress
@@ -74,7 +86,12 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 	case types.ObserverUpdateReason_Tombstoned:
 		{
 			if msg.Creator != msg.OldObserverAddress {
-				return false, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Creator address and old observer address need to be same for updating tombstoned observer"))
+				return false, errorsmod.Wrap(
+					types.ErrUpdateObserver,
+					fmt.Sprintf(
+						"Creator address and old observer address need to be same for updating tombstoned observer",
+					),
+				)
 			}
 			return k.IsOperatorTombstoned(ctx, msg.Creator)
 		}

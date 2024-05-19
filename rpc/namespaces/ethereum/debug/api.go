@@ -79,7 +79,10 @@ func (a *API) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (
 
 // TraceBlockByNumber returns the structured logs created during the execution of
 // EVM and returns them as a JSON object.
-func (a *API) TraceBlockByNumber(height rpctypes.BlockNumber, config *evmtypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
+func (a *API) TraceBlockByNumber(
+	height rpctypes.BlockNumber,
+	config *evmtypes.TraceConfig,
+) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByNumber", "height", height)
 	if height == 0 {
 		return nil, errors.New("genesis is not traceable")

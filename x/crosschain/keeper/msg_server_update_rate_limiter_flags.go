@@ -12,7 +12,10 @@ import (
 
 // UpdateRateLimiterFlags updates the rate limiter flags.
 // Authorized: admin policy operational.
-func (k msgServer) UpdateRateLimiterFlags(goCtx context.Context, msg *types.MsgUpdateRateLimiterFlags) (*types.MsgUpdateRateLimiterFlagsResponse, error) {
+func (k msgServer) UpdateRateLimiterFlags(
+	goCtx context.Context,
+	msg *types.MsgUpdateRateLimiterFlags,
+) (*types.MsgUpdateRateLimiterFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {

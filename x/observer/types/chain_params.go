@@ -76,27 +76,51 @@ func ValidateChainParams(params *ChainParams) error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutTxTicker %d out of range", params.OutTxTicker)
 	}
 	if params.OutboundTxScheduleInterval == 0 || params.OutboundTxScheduleInterval > 100 { // 600 secs
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTxScheduleInterval %d out of range", params.OutboundTxScheduleInterval)
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"OutboundTxScheduleInterval %d out of range",
+			params.OutboundTxScheduleInterval,
+		)
 	}
 	if params.OutboundTxScheduleLookahead == 0 || params.OutboundTxScheduleLookahead > 500 { // 500 cctxs
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTxScheduleLookahead %d out of range", params.OutboundTxScheduleLookahead)
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"OutboundTxScheduleLookahead %d out of range",
+			params.OutboundTxScheduleLookahead,
+		)
 	}
 
 	// chain type specific checks
 	if chains.IsBitcoinChain(params.ChainId) {
 		if params.WatchUtxoTicker == 0 || params.WatchUtxoTicker > 300 {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "WatchUtxoTicker %d out of range", params.WatchUtxoTicker)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"WatchUtxoTicker %d out of range",
+				params.WatchUtxoTicker,
+			)
 		}
 	}
 	if chains.IsEVMChain(params.ChainId) {
 		if !validChainContractAddress(params.ZetaTokenContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ZetaTokenContractAddress %s", params.ZetaTokenContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid ZetaTokenContractAddress %s",
+				params.ZetaTokenContractAddress,
+			)
 		}
 		if !validChainContractAddress(params.ConnectorContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ConnectorContractAddress %s", params.ConnectorContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid ConnectorContractAddress %s",
+				params.ConnectorContractAddress,
+			)
 		}
 		if !validChainContractAddress(params.Erc20CustodyContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid Erc20CustodyContractAddress %s", params.Erc20CustodyContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid Erc20CustodyContractAddress %s",
+				params.Erc20CustodyContractAddress,
+			)
 		}
 	}
 

@@ -18,7 +18,12 @@ import (
 
 // ProcessOutbound processes the finalization of an outbound transaction based on the ballot status
 // The state is committed only if the individual steps are successful
-func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotStatus observertypes.BallotStatus, valueReceived string) error {
+func (k Keeper) ProcessOutbound(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	ballotStatus observertypes.BallotStatus,
+	valueReceived string,
+) error {
 	tmpCtx, commit := ctx.CacheContext()
 	err := func() error {
 		switch ballotStatus {
@@ -126,7 +131,11 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 }
 
 // processFailedOutboundForExternalChainTx processes the failed outbound transaction for external chain tx
-func (k Keeper) processFailedOutboundForExternalChainTx(ctx sdk.Context, cctx *types.CrossChainTx, oldStatus types.CctxStatus) error {
+func (k Keeper) processFailedOutboundForExternalChainTx(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	oldStatus types.CctxStatus,
+) error {
 	switch oldStatus {
 	case types.CctxStatus_PendingOutbound:
 

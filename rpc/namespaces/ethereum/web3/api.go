@@ -34,7 +34,13 @@ func NewPublicAPI() *PublicAPI {
 
 // ClientVersion returns the client version in the Web3 user agent format.
 func (a *PublicAPI) ClientVersion() string {
-	return fmt.Sprintf("%s/%s/%s/%s", constant.Name, constant.Version, runtime.GOOS+"-"+runtime.GOARCH, runtime.Version())
+	return fmt.Sprintf(
+		"%s/%s/%s/%s",
+		constant.Name,
+		constant.Version,
+		runtime.GOOS+"-"+runtime.GOARCH,
+		runtime.Version(),
+	)
 }
 
 // Sha3 returns the keccak-256 hash of the passed-in input.

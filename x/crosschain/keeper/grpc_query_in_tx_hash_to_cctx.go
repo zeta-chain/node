@@ -11,7 +11,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) InTxHashToCctxAll(c context.Context, req *types.QueryAllInTxHashToCctxRequest) (*types.QueryAllInTxHashToCctxResponse, error) {
+func (k Keeper) InTxHashToCctxAll(
+	c context.Context,
+	req *types.QueryAllInTxHashToCctxRequest,
+) (*types.QueryAllInTxHashToCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -39,7 +42,10 @@ func (k Keeper) InTxHashToCctxAll(c context.Context, req *types.QueryAllInTxHash
 	return &types.QueryAllInTxHashToCctxResponse{InTxHashToCctx: inTxHashToCctxs, Pagination: pageRes}, nil
 }
 
-func (k Keeper) InTxHashToCctx(c context.Context, req *types.QueryGetInTxHashToCctxRequest) (*types.QueryGetInTxHashToCctxResponse, error) {
+func (k Keeper) InTxHashToCctx(
+	c context.Context,
+	req *types.QueryGetInTxHashToCctxRequest,
+) (*types.QueryGetInTxHashToCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

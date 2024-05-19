@@ -65,7 +65,11 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 
 	// Set nonce mark
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(chains.NonceMarkAmount(nonce)) * 1e-8}
+	nonceMark := btcjson.ListUnspentResult{
+		TxID:    txid,
+		Address: tssAddress,
+		Amount:  float64(chains.NonceMarkAmount(nonce)) * 1e-8,
+	}
 	if preMarkIndex >= 0 { // replace nonce-mark utxo
 		ob.utxos[preMarkIndex] = nonceMark
 
@@ -314,7 +318,11 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64", err.Error())
+	require.Equal(
+		t,
+		"SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64",
+		err.Error(),
+	)
 }
 
 func TestUTXOConsolidation(t *testing.T) {
@@ -388,7 +396,12 @@ func TestUTXOConsolidation(t *testing.T) {
 
 	t.Run("should consolidate 3 utxos sparse", func(t *testing.T) {
 		ob := createObserverWithUTXOs(t)
-		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
+		mineTxNSetNonceMark(
+			ob,
+			24105431,
+			dummyTxID,
+			-1,
+		) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 5, amount = 0.13, nonce = 24105432, rank = 5
 		// output: [0.24107431, 0.01, 0.12, 1.26, 0.5, 0.24], 2.37107431
@@ -406,7 +419,12 @@ func TestUTXOConsolidation(t *testing.T) {
 
 	t.Run("should consolidate all utxos sparse", func(t *testing.T) {
 		ob := createObserverWithUTXOs(t)
-		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
+		mineTxNSetNonceMark(
+			ob,
+			24105431,
+			dummyTxID,
+			-1,
+		) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 12, amount = 0.13, nonce = 24105432, rank = 1
 		// output: [0.24107431, 0.01, 0.12, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18], 22.68107431

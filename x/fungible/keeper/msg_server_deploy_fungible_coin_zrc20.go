@@ -30,7 +30,10 @@ import (
 // * The coin is added to the list of foreign coins in the module's state
 //
 // Authorized: admin policy group 2.
-func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC20) (*types.MsgDeployFungibleCoinZRC20Response, error) {
+func (k msgServer) DeployFungibleCoinZRC20(
+	goCtx context.Context,
+	msg *types.MsgDeployFungibleCoinZRC20,
+) (*types.MsgDeployFungibleCoinZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var address common.Address
@@ -41,12 +44,22 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 	}
 
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(
+			authoritytypes.ErrUnauthorized,
+			"Deploy can only be executed by the correct policy account",
+		)
 	}
 
 	if msg.CoinType == coin.CoinType_Gas {
 		// #nosec G701 always in range
-		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals), big.NewInt(msg.GasLimit))
+		address, err = k.SetupChainGasCoinAndPool(
+			ctx,
+			msg.ForeignChainId,
+			msg.Name,
+			msg.Symbol,
+			uint8(msg.Decimals),
+			big.NewInt(msg.GasLimit),
+		)
 		if err != nil {
 			return nil, cosmoserrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}

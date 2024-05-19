@@ -99,7 +99,8 @@ func GenerateTss(
 				if currentBlock != keyGen.BlockNumber {
 					if currentBlock > lastBlock {
 						lastBlock = currentBlock
-						keygenLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, appContext.Config().ChainID)
+						keygenLogger.Info().
+							Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, appContext.Config().ChainID)
 					}
 					continue
 				}
@@ -126,7 +127,11 @@ func GenerateTss(
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := client.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, chains.ReceiveStatus_success)
+				tssSuccessVoteHash, err := client.SetTSS(
+					newTss.CurrentPubkey,
+					keyGen.BlockNumber,
+					chains.ReceiveStatus_success,
+				)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err
@@ -143,7 +148,8 @@ func GenerateTss(
 				continue
 			}
 		}
-		keygenLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", keyGen.BlockNumber)
+		keygenLogger.Debug().
+			Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", keyGen.BlockNumber)
 	}
 	return nil, errors.New("unexpected state for TSS generation")
 }

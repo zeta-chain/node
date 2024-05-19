@@ -27,7 +27,10 @@ func (k Keeper) HasVoted(goCtx context.Context, req *types.QueryHasVotedRequest)
 	}, nil
 }
 
-func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallotByIdentifierRequest) (*types.QueryBallotByIdentifierResponse, error) {
+func (k Keeper) BallotByIdentifier(
+	goCtx context.Context,
+	req *types.QueryBallotByIdentifierRequest,
+) (*types.QueryBallotByIdentifierResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

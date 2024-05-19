@@ -22,11 +22,21 @@ func TestAddress(t *testing.T) {
 	require.True(t, addr.IsEmpty())
 
 	addr = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab635a")
-	require.EqualValuesf(t, "0x90f2b1ae50e6018230e90a33f98c7844a0ab635a", addr.String(), "address string should be equal")
+	require.EqualValuesf(
+		t,
+		"0x90f2b1ae50e6018230e90a33f98c7844a0ab635a",
+		addr.String(),
+		"address string should be equal",
+	)
 	require.False(t, addr.IsEmpty())
 
 	addr2 := NewAddress("0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5")
-	require.EqualValuesf(t, "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5", addr2.String(), "address string should be equal")
+	require.EqualValuesf(
+		t,
+		"0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+		addr2.String(),
+		"address string should be equal",
+	)
 	require.False(t, addr.IsEmpty())
 
 	require.False(t, addr.Equals(addr2))
@@ -74,11 +84,17 @@ func TestDecodeBtcAddress(t *testing.T) {
 	})
 
 	t.Run("taproot address with correct params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c", BtcMainnetChain.ChainId)
+		_, err := DecodeBtcAddress(
+			"bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c",
+			BtcMainnetChain.ChainId,
+		)
 		require.NoError(t, err)
 	})
 	t.Run("taproot address with incorrect params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c", BtcTestNetChain.ChainId)
+		_, err := DecodeBtcAddress(
+			"bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c",
+			BtcTestNetChain.ChainId,
+		)
 		require.ErrorContains(t, err, "not for network testnet")
 	})
 }

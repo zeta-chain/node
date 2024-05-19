@@ -54,7 +54,11 @@ func (msg *MsgEnableHeaderVerification) ValidateBasic() error {
 	}
 	for _, chainID := range msg.ChainIdList {
 		if !chains.ChainIDInChainList(chainID, chainListForHeaderSupport) {
-			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id header not supported (%d)", chainID)
+			return cosmoserrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid chain id header not supported (%d)",
+				chainID,
+			)
 		}
 	}
 

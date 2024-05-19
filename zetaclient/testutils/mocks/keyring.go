@@ -54,7 +54,12 @@ func (m Keyring) Rename(_ string, _ string) error {
 	return nil
 }
 
-func (m Keyring) NewMnemonic(_ string, _ ckeys.Language, _, _ string, _ ckeys.SignatureAlgo) (*ckeys.Record, string, error) {
+func (m Keyring) NewMnemonic(
+	_ string,
+	_ ckeys.Language,
+	_, _ string,
+	_ ckeys.SignatureAlgo,
+) (*ckeys.Record, string, error) {
 	return nil, "", nil
 }
 

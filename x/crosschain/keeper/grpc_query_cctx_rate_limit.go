@@ -13,7 +13,10 @@ import (
 )
 
 // RateLimiterInput collects the input data for the rate limiter
-func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterInputRequest) (res *types.QueryRateLimiterInputResponse, err error) {
+func (k Keeper) RateLimiterInput(
+	c context.Context,
+	req *types.QueryRateLimiterInputRequest,
+) (res *types.QueryRateLimiterInputResponse, err error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -130,7 +133,9 @@ func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterI
 
 			// sum up past cctxs' value within window
 			if inWindow && isPast {
-				pastCctxsValue = pastCctxsValue.Add(types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
+				pastCctxsValue = pastCctxsValue.Add(
+					types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap),
+				)
 			}
 
 			// add cctx to corresponding list
@@ -171,7 +176,10 @@ func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterI
 
 // ListPendingCctxWithinRateLimit returns a list of pending cctxs that do not exceed the outbound rate limit
 // a limit for the number of cctxs to return can be specified or the default is MaxPendingCctxs
-func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.QueryListPendingCctxWithinRateLimitRequest) (res *types.QueryListPendingCctxWithinRateLimitResponse, err error) {
+func (k Keeper) ListPendingCctxWithinRateLimit(
+	c context.Context,
+	req *types.QueryListPendingCctxWithinRateLimitRequest,
+) (res *types.QueryListPendingCctxWithinRateLimitResponse, err error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -203,7 +211,10 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// fallback to non-rate-limited query if rate limiter is disabled
 	if !applyLimit {
 		for _, chain := range chains {
-			resp, err := k.ListPendingCctx(ctx, &types.QueryListPendingCctxRequest{ChainId: chain.ChainId, Limit: limit})
+			resp, err := k.ListPendingCctx(
+				ctx,
+				&types.QueryListPendingCctxRequest{ChainId: chain.ChainId, Limit: limit},
+			)
 			if err == nil {
 				cctxs = append(cctxs, resp.CrossChainTx...)
 				totalPending += resp.TotalPending
@@ -314,7 +325,15 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 				break
 			}
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if inWindow && types.RateLimitExceeded(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
+			if inWindow &&
+				types.RateLimitExceeded(
+					chain.ChainId,
+					cctx,
+					gasAssetRateMap,
+					erc20AssetRateMap,
+					&totalWithdrawInAzeta,
+					withdrawLimitInAzeta,
+				) {
 				limitExceeded = true
 				continue
 			}
@@ -347,7 +366,14 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 			}
 
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if types.RateLimitExceeded(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap, &totalWithdrawInAzeta, withdrawLimitInAzeta) {
+			if types.RateLimitExceeded(
+				chain.ChainId,
+				cctx,
+				gasAssetRateMap,
+				erc20AssetRateMap,
+				&totalWithdrawInAzeta,
+				withdrawLimitInAzeta,
+			) {
 				limitExceeded = true
 				continue
 			}

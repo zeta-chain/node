@@ -57,7 +57,11 @@ func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(t, err, fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId))
+				require.ErrorContains(
+					t,
+					err,
+					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId),
+				)
 			},
 		},
 		{

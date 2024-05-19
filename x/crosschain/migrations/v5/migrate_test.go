@@ -25,7 +25,8 @@ func TestMigrateStore(t *testing.T) {
 		v4ZetaAccountingAmount := math.ZeroUint()
 		for _, cctx := range cctxList {
 			k.SetCrossChainTx(ctx, cctx)
-			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.InboundTxParams.CoinType != coin.CoinType_Zeta {
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted ||
+				cctx.InboundTxParams.CoinType != coin.CoinType_Zeta {
 				continue
 			}
 			v5ZetaAccountingAmount = v5ZetaAccountingAmount.Add(crosschainkeeper.GetAbortedAmount(cctx))
@@ -47,7 +48,10 @@ func TestMigrateStore(t *testing.T) {
 		for _, cctx := range cctxListUpdated {
 			switch cctx.InboundTxParams.CoinType {
 			case coin.CoinType_ERC20:
-				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
+				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(
+					ctx,
+					cctx.GetCurrentOutTxParam().ReceiverChainId,
+				)
 				require.NotNil(t, receiverChain)
 				if receiverChain.IsZetaChain() {
 					require.True(t, cctx.CctxStatus.IsAbortRefunded)
@@ -67,7 +71,12 @@ func TestMigrateStore(t *testing.T) {
 func TestResetTestnetNonce(t *testing.T) {
 	t.Run("reset only testnet nonce without changing mainnet chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		testnetChains := []chains.Chain{chains.GoerliChain, chains.MumbaiChain, chains.BscTestnetChain, chains.BtcTestNetChain}
+		testnetChains := []chains.Chain{
+			chains.GoerliChain,
+			chains.MumbaiChain,
+			chains.BscTestnetChain,
+			chains.BtcTestNetChain,
+		}
 		mainnetChains := []chains.Chain{chains.EthChain, chains.BscMainnetChain, chains.BtcMainnetChain}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)

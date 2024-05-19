@@ -301,7 +301,12 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		wzeta, uniswapV2Factory, uniswapV2Router, _, _ := deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+		wzeta, uniswapV2Factory, uniswapV2Router, _, _ := deploySystemContractsWithMockEvmKeeper(
+			t,
+			ctx,
+			k,
+			mockEVMKeeper,
+		)
 		mockFailedContractDeployment(ctx, t, k)
 
 		res, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
@@ -388,7 +393,11 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		require.Equal(t, int64(0), balance.Int64())
 
 		amount := big.NewInt(100)
-		err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+		err = sdkk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))),
+		)
 		require.NoError(t, err)
 
 		err = k.CallWZetaDeposit(ctx, types.ModuleAddressEVM, amount)
@@ -1343,7 +1352,15 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		data := []byte("message")
 		internalSendHash := [32]byte{}
 
-		_, err = k.CallOnReceiveZevmConnector(ctx, senderAddress, sourceChainID, destinationAddress, zetaValue, data, internalSendHash)
+		_, err = k.CallOnReceiveZevmConnector(
+			ctx,
+			senderAddress,
+			sourceChainID,
+			destinationAddress,
+			zetaValue,
+			data,
+			internalSendHash,
+		)
 		require.NoError(t, err)
 
 		require.NoError(t, err)
@@ -1420,7 +1437,16 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		zetaValue := big.NewInt(45)
 		data := []byte("message")
 		internalSendHash := [32]byte{}
-		_, err = k.CallOnRevertZevmConnector(ctx, senderAddress, sourceChainID, destinationAddress, destinationChainID, zetaValue, data, internalSendHash)
+		_, err = k.CallOnRevertZevmConnector(
+			ctx,
+			senderAddress,
+			sourceChainID,
+			destinationAddress,
+			destinationChainID,
+			zetaValue,
+			data,
+			internalSendHash,
+		)
 		require.NoError(t, err)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()

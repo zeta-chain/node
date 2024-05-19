@@ -73,7 +73,11 @@ func InitLogger(cfg config.Config) (clientcommon.ClientLogger, error) {
 		logger = zerolog.New(os.Stdout).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 		loggerCompliance = zerolog.New(file).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	case "text":
-		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
+			Level(zerolog.Level(cfg.LogLevel)).
+			With().
+			Timestamp().
+			Logger()
 		loggerCompliance = zerolog.New(file).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	default:
 		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})

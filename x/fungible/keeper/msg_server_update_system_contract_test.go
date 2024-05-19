@@ -34,7 +34,17 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		queryZRC20SystemContract := func(contract common.Address) string {
 			abi, err := zrc20.ZRC20MetaData.GetAbi()
 			require.NoError(t, err)
-			res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, keeper.BigIntZero, nil, false, false, "SYSTEM_CONTRACT_ADDRESS")
+			res, err := k.CallEVM(
+				ctx,
+				*abi,
+				types.ModuleAddressEVM,
+				contract,
+				keeper.BigIntZero,
+				nil,
+				false,
+				false,
+				"SYSTEM_CONTRACT_ADDRESS",
+			)
 			require.NoError(t, err)
 			unpacked, err := abi.Unpack("SYSTEM_CONTRACT_ADDRESS", res.Ret)
 			require.NoError(t, err)

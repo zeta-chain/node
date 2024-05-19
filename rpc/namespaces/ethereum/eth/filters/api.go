@@ -89,7 +89,12 @@ type PublicFilterAPI struct {
 }
 
 // NewPublicAPI returns a new PublicFilterAPI instance.
-func NewPublicAPI(logger log.Logger, clientCtx client.Context, tmWSClient *rpcclient.WSClient, backend Backend) *PublicFilterAPI {
+func NewPublicAPI(
+	logger log.Logger,
+	clientCtx client.Context,
+	tmWSClient *rpcclient.WSClient,
+	backend Backend,
+) *PublicFilterAPI {
 	logger = logger.With("api", "filter")
 	api := &PublicFilterAPI{
 		logger:    logger,
@@ -285,7 +290,12 @@ func (api *PublicFilterAPI) NewBlockFilter() rpc.ID {
 		return rpc.ID(fmt.Sprintf("error creating block filter: %s", err.Error()))
 	}
 
-	api.filters[headerSub.ID()] = &filter{typ: filters.BlocksSubscription, deadline: time.NewTimer(deadline), hashes: []common.Hash{}, s: headerSub}
+	api.filters[headerSub.ID()] = &filter{
+		typ:      filters.BlocksSubscription,
+		deadline: time.NewTimer(deadline),
+		hashes:   []common.Hash{},
+		s:        headerSub,
+	}
 
 	go func(headersCh <-chan coretypes.ResultEvent, errCh <-chan error) {
 		defer cancelSubs()
@@ -423,7 +433,13 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit filters.FilterCriteri
 					return
 				}
 
-				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
+				logs := FilterLogs(
+					evmtypes.LogsToEthereum(txResponse.Logs),
+					crit.FromBlock,
+					crit.ToBlock,
+					crit.Addresses,
+					crit.Topics,
+				)
 
 				for _, log := range logs {
 					err = notifier.Notify(rpcSub.ID, log)
@@ -509,7 +525,13 @@ func (api *PublicFilterAPI) NewFilter(criteria filters.FilterCriteria) (rpc.ID, 
 					return
 				}
 
-				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), criteria.FromBlock, criteria.ToBlock, criteria.Addresses, criteria.Topics)
+				logs := FilterLogs(
+					evmtypes.LogsToEthereum(txResponse.Logs),
+					criteria.FromBlock,
+					criteria.ToBlock,
+					criteria.Addresses,
+					criteria.Topics,
+				)
 
 				api.filtersMu.Lock()
 				if f, found := api.filters[filterID]; found {

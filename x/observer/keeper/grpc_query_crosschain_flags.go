@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) CrosschainFlags(c context.Context, req *types.QueryGetCrosschainFlagsRequest) (*types.QueryGetCrosschainFlagsResponse, error) {
+func (k Keeper) CrosschainFlags(
+	c context.Context,
+	req *types.QueryGetCrosschainFlagsRequest,
+) (*types.QueryGetCrosschainFlagsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

@@ -16,7 +16,13 @@ const (
 	TypeMsgVoteBlockHeader = "vote_block_header"
 )
 
-func NewMsgVoteBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header proofs.HeaderData) *MsgVoteBlockHeader {
+func NewMsgVoteBlockHeader(
+	creator string,
+	chainID int64,
+	blockHash []byte,
+	height int64,
+	header proofs.HeaderData,
+) *MsgVoteBlockHeader {
 	return &MsgVoteBlockHeader{
 		Creator:   creator,
 		ChainId:   chainID,

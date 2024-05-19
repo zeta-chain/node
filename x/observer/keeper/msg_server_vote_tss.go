@@ -28,7 +28,10 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	// checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 	_, found := k.GetNodeAccount(ctx, msg.Creator)
 	if !found {
-		return nil, errorsmod.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s does not have a node account set", msg.Creator))
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrorInvalidSigner,
+			fmt.Sprintf("signer %s does not have a node account set", msg.Creator),
+		)
 	}
 	// no need to create a ballot if keygen does not exist
 	keygen, found := k.GetKeygen(ctx)

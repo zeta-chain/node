@@ -11,7 +11,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) NodeAccountAll(c context.Context, req *types.QueryAllNodeAccountRequest) (*types.QueryAllNodeAccountResponse, error) {
+func (k Keeper) NodeAccountAll(
+	c context.Context,
+	req *types.QueryAllNodeAccountRequest,
+) (*types.QueryAllNodeAccountResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -39,7 +42,10 @@ func (k Keeper) NodeAccountAll(c context.Context, req *types.QueryAllNodeAccount
 	return &types.QueryAllNodeAccountResponse{NodeAccount: nodeAccounts, Pagination: pageRes}, nil
 }
 
-func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountRequest) (*types.QueryGetNodeAccountResponse, error) {
+func (k Keeper) NodeAccount(
+	c context.Context,
+	req *types.QueryGetNodeAccountRequest,
+) (*types.QueryGetNodeAccountResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

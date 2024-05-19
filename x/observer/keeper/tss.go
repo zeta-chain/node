@@ -79,7 +79,10 @@ func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 	return
 }
 
-func (k Keeper) GetAllTSSPaginated(ctx sdk.Context, pagination *query.PageRequest) (list []types.TSS, pageRes *query.PageResponse, err error) {
+func (k Keeper) GetAllTSSPaginated(
+	ctx sdk.Context,
+	pagination *query.PageRequest,
+) (list []types.TSS, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var tss types.TSS

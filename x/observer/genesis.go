@@ -66,7 +66,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		for _, ballot := range genState.Ballots {
 			if ballot != nil {
 				k.SetBallot(ctx, ballot)
-				ballotListForHeight[ballot.BallotCreationHeight] = append(ballotListForHeight[ballot.BallotCreationHeight], ballot.BallotIdentifier)
+				ballotListForHeight[ballot.BallotCreationHeight] = append(
+					ballotListForHeight[ballot.BallotCreationHeight],
+					ballot.BallotIdentifier,
+				)
 			}
 		}
 	}

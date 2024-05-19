@@ -58,7 +58,13 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 	expectedBalance := initialBal.Add(initialBal, amount)
 	if newBalance.Cmp(expectedBalance) != 0 {
-		panic(fmt.Sprintf("expected balance to be %s after refund; got %s", expectedBalance.String(), newBalance.String()))
+		panic(
+			fmt.Sprintf(
+				"expected balance to be %s after refund; got %s",
+				expectedBalance.String(),
+				newBalance.String(),
+			),
+		)
 	}
 	r.Logger.Info("CCTX has been aborted on ZetaChain")
 

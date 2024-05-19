@@ -28,7 +28,10 @@ import (
 var TestDataDir = "../../../"
 
 // getAppContext creates an app context for unit tests
-func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainParams) (*context.AppContext, config.EVMConfig) {
+func getAppContext(
+	evmChain chains.Chain,
+	evmChainParams *observertypes.ChainParams,
+) (*context.AppContext, config.EVMConfig) {
 	// create config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{

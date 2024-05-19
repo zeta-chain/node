@@ -76,7 +76,10 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	}
 
 	// On finalization the Tss address calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(
+		r.Ctx,
+		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +104,9 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
-		panic(fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()))
+		panic(
+			fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()),
+		)
 	}
 
 	// Check ZETA balance on EVM TestDApp and check new balance is between previous balance and previous balance + amount

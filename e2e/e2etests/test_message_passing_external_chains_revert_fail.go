@@ -44,9 +44,11 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 		DestinationChainId:  chainID,
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
-		Message:             []byte("revert"), // non-empty message will cause revert, because the dest address is not a contract
-		ZetaValueAndGas:     amount,
-		ZetaParams:          nil,
+		Message: []byte(
+			"revert",
+		), // non-empty message will cause revert, because the dest address is not a contract
+		ZetaValueAndGas: amount,
+		ZetaParams:      nil,
 	})
 	if err != nil {
 		panic(err)
@@ -70,7 +72,10 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(
+		r.Ctx,
+		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
+	)
 	if err != nil {
 		panic(err)
 	}

@@ -46,7 +46,10 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 				return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal evm transaction: %s", err))
 			}
 			if txx.Hash().Hex() != req.TxHash {
-				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("tx hash mismatch: %s != %s", txx.Hash().Hex(), req.TxHash))
+				return nil, status.Error(
+					codes.InvalidArgument,
+					fmt.Sprintf("tx hash mismatch: %s != %s", txx.Hash().Hex(), req.TxHash),
+				)
 			}
 			proven = true
 		} else if chains.IsBitcoinChain(req.ChainId) {

@@ -39,11 +39,19 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 	_, err := b.clientCtx.Keyring.KeyByAddress(sdk.AccAddress(args.GetFrom().Bytes()))
 	if err != nil {
 		b.logger.Error("failed to find key in keyring", "address", args.GetFrom(), "error", err.Error())
-		return common.Hash{}, fmt.Errorf("failed to find key in the node's keyring; %s; %s", keystore.ErrNoMatch, err.Error())
+		return common.Hash{}, fmt.Errorf(
+			"failed to find key in the node's keyring; %s; %s",
+			keystore.ErrNoMatch,
+			err.Error(),
+		)
 	}
 
 	if args.ChainID != nil && (b.chainID).Cmp((*big.Int)(args.ChainID)) != 0 {
-		return common.Hash{}, fmt.Errorf("chainId does not match node's (have=%v, want=%v)", args.ChainID, (*hexutil.Big)(b.chainID))
+		return common.Hash{}, fmt.Errorf(
+			"chainId does not match node's (have=%v, want=%v)",
+			args.ChainID,
+			(*hexutil.Big)(b.chainID),
+		)
 	}
 
 	args, err = b.SetTxDefaults(args)

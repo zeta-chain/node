@@ -52,7 +52,12 @@ func RateLimiterFlags() types.RateLimiterFlags {
 }
 
 // CustomRateLimiterFlags creates a custom rate limiter flags with the given parameters
-func CustomRateLimiterFlags(enabled bool, window int64, rate math.Uint, conversions []types.Conversion) types.RateLimiterFlags {
+func CustomRateLimiterFlags(
+	enabled bool,
+	window int64,
+	rate math.Uint,
+	conversions []types.Conversion,
+) types.RateLimiterFlags {
 	return types.RateLimiterFlags{
 		Enabled:     enabled,
 		Window:      window,
@@ -74,7 +79,13 @@ func AssetRate() types.AssetRate {
 }
 
 // CustomAssetRate creates a custom asset rate with the given parameters
-func CustomAssetRate(chainID int64, asset string, decimals uint32, coinType coin.CoinType, rate sdk.Dec) types.AssetRate {
+func CustomAssetRate(
+	chainID int64,
+	asset string,
+	decimals uint32,
+	coinType coin.CoinType,
+	rate sdk.Dec,
+) types.AssetRate {
 	return types.AssetRate{
 		ChainId:  chainID,
 		Asset:    strings.ToLower(asset),

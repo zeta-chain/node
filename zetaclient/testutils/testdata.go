@@ -109,7 +109,12 @@ func LoadBTCIntxRawResult(t *testing.T, dir string, chainID int64, txHash string
 }
 
 // LoadBTCTxRawResultNCctx loads archived Bitcoin outtx raw result and corresponding cctx
-func LoadBTCTxRawResultNCctx(t *testing.T, dir string, chainID int64, nonce uint64) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
+func LoadBTCTxRawResultNCctx(
+	t *testing.T,
+	dir string,
+	chainID int64,
+	nonce uint64,
+) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
 	nameTx := path.Join(dir, TestDataPathBTC, FileNameBTCOuttx(chainID, nonce))
 	rawResult := &btcjson.TxRawResult{}
 	LoadObjectFromJSONFile(t, rawResult, nameTx)

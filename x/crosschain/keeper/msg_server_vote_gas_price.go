@@ -20,7 +20,10 @@ import (
 // median index is updated.
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) VoteGasPrice(goCtx context.Context, msg *types.MsgVoteGasPrice) (*types.MsgVoteGasPriceResponse, error) {
+func (k msgServer) VoteGasPrice(
+	goCtx context.Context,
+	msg *types.MsgVoteGasPrice,
+) (*types.MsgVoteGasPriceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)

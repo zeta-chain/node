@@ -13,7 +13,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryConvertGasToZetaRequest) (*types.QueryConvertGasToZetaResponse, error) {
+func (k Keeper) ConvertGasToZeta(
+	context context.Context,
+	request *types.QueryConvertGasToZetaRequest,
+) (*types.QueryConvertGasToZetaResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
 	chain := chains.GetChainFromChainID(request.ChainId)
 
@@ -42,7 +45,10 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	}, nil
 }
 
-func (k Keeper) ProtocolFee(_ context.Context, _ *types.QueryMessagePassingProtocolFeeRequest) (*types.QueryMessagePassingProtocolFeeResponse, error) {
+func (k Keeper) ProtocolFee(
+	_ context.Context,
+	_ *types.QueryMessagePassingProtocolFeeRequest,
+) (*types.QueryMessagePassingProtocolFeeResponse, error) {
 	return &types.QueryMessagePassingProtocolFeeResponse{
 		FeeInZeta: types.GetProtocolFee().String(),
 	}, nil

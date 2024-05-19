@@ -31,7 +31,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		senderChainId := int64(0)
 
 		// expect DepositCoinZeta to be called
-		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).Return(nil, nil)
+		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
+			Return(nil, nil)
 
 		// call HandleEVMDeposit
 		cctx := sample.CrossChainTx(t, "foo")
@@ -62,8 +63,10 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		// expect DepositCoinZeta to be called
 		errDeposit := errors.New("deposit failed")
-		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).Return(nil, errDeposit)
-		// call HandleEVMDeposit
+		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
+			Return(nil, errDeposit)
+
+			// call HandleEVMDeposit
 
 		cctx.InboundTxParams.Sender = sender.String()
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
@@ -122,125 +125,131 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.AssertExpectations(t)
 	})
 
-	t.Run("should error on processing ERC20 deposit calling fungible method for contract call if process logs fails", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseFungibleMock: true,
-		})
+	t.Run(
+		"should error on processing ERC20 deposit calling fungible method for contract call if process logs fails",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+				UseFungibleMock: true,
+			})
 
-		senderChain := getValidEthChainID()
+			senderChain := getValidEthChainID()
 
-		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
-		receiver := sample.EthAddress()
-		amount := big.NewInt(42)
+			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+			receiver := sample.EthAddress()
+			amount := big.NewInt(42)
 
-		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
-		fungibleMock.On(
-			"ZRC20DepositAndCallContract",
-			ctx,
-			mock.Anything,
-			receiver,
-			amount,
-			senderChain,
-			mock.Anything,
-			coin.CoinType_ERC20,
-			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{
-			Logs: []*evmtypes.Log{
-				{
-					Address:     receiver.Hex(),
-					Topics:      []string{},
-					Data:        []byte{},
-					BlockNumber: uint64(ctx.BlockHeight()),
-					TxHash:      sample.Hash().Hex(),
-					TxIndex:     1,
-					BlockHash:   sample.Hash().Hex(),
-					Index:       1,
+			// expect DepositCoinZeta to be called
+			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+			fungibleMock.On(
+				"ZRC20DepositAndCallContract",
+				ctx,
+				mock.Anything,
+				receiver,
+				amount,
+				senderChain,
+				mock.Anything,
+				coin.CoinType_ERC20,
+				mock.Anything,
+			).Return(&evmtypes.MsgEthereumTxResponse{
+				Logs: []*evmtypes.Log{
+					{
+						Address:     receiver.Hex(),
+						Topics:      []string{},
+						Data:        []byte{},
+						BlockNumber: uint64(ctx.BlockHeight()),
+						TxHash:      sample.Hash().Hex(),
+						TxIndex:     1,
+						BlockHash:   sample.Hash().Hex(),
+						Index:       1,
+					},
 				},
-			},
-		}, true, nil)
+			}, true, nil)
 
-		fungibleMock.On("GetSystemContract", mock.Anything).Return(fungibletypes.SystemContract{}, false)
+			fungibleMock.On("GetSystemContract", mock.Anything).Return(fungibletypes.SystemContract{}, false)
 
-		// call HandleEVMDeposit
-		cctx := sample.CrossChainTx(t, "foo")
-		cctx.InboundTxParams.TxOrigin = ""
-		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
-		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
-		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
-		cctx.GetInboundTxParams().SenderChainId = senderChain
-		cctx.RelayedMessage = ""
-		cctx.GetInboundTxParams().Asset = ""
-		reverted, err := k.HandleEVMDeposit(
-			ctx,
-			cctx,
-		)
-		require.Error(t, err)
-		require.False(t, reverted)
-		fungibleMock.AssertExpectations(t)
-	})
+			// call HandleEVMDeposit
+			cctx := sample.CrossChainTx(t, "foo")
+			cctx.InboundTxParams.TxOrigin = ""
+			cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+			cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
+			cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
+			cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+			cctx.GetInboundTxParams().SenderChainId = senderChain
+			cctx.RelayedMessage = ""
+			cctx.GetInboundTxParams().Asset = ""
+			reverted, err := k.HandleEVMDeposit(
+				ctx,
+				cctx,
+			)
+			require.Error(t, err)
+			require.False(t, reverted)
+			fungibleMock.AssertExpectations(t)
+		},
+	)
 
-	t.Run("can process ERC20 deposit calling fungible method for contract call if process logs doesnt fail", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseFungibleMock: true,
-		})
+	t.Run(
+		"can process ERC20 deposit calling fungible method for contract call if process logs doesnt fail",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+				UseFungibleMock: true,
+			})
 
-		senderChain := getValidEthChainID()
+			senderChain := getValidEthChainID()
 
-		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
-		receiver := sample.EthAddress()
-		amount := big.NewInt(42)
+			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+			receiver := sample.EthAddress()
+			amount := big.NewInt(42)
 
-		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
-		fungibleMock.On(
-			"ZRC20DepositAndCallContract",
-			ctx,
-			mock.Anything,
-			receiver,
-			amount,
-			senderChain,
-			mock.Anything,
-			coin.CoinType_ERC20,
-			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{
-			Logs: []*evmtypes.Log{
-				{
-					Address:     receiver.Hex(),
-					Topics:      []string{},
-					Data:        []byte{},
-					BlockNumber: uint64(ctx.BlockHeight()),
-					TxHash:      sample.Hash().Hex(),
-					TxIndex:     1,
-					BlockHash:   sample.Hash().Hex(),
-					Index:       1,
+			// expect DepositCoinZeta to be called
+			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+			fungibleMock.On(
+				"ZRC20DepositAndCallContract",
+				ctx,
+				mock.Anything,
+				receiver,
+				amount,
+				senderChain,
+				mock.Anything,
+				coin.CoinType_ERC20,
+				mock.Anything,
+			).Return(&evmtypes.MsgEthereumTxResponse{
+				Logs: []*evmtypes.Log{
+					{
+						Address:     receiver.Hex(),
+						Topics:      []string{},
+						Data:        []byte{},
+						BlockNumber: uint64(ctx.BlockHeight()),
+						TxHash:      sample.Hash().Hex(),
+						TxIndex:     1,
+						BlockHash:   sample.Hash().Hex(),
+						Index:       1,
+					},
 				},
-			},
-		}, true, nil)
+			}, true, nil)
 
-		fungibleMock.On("GetSystemContract", mock.Anything).Return(fungibletypes.SystemContract{
-			ConnectorZevm: sample.EthAddress().Hex(),
-		}, true)
+			fungibleMock.On("GetSystemContract", mock.Anything).Return(fungibletypes.SystemContract{
+				ConnectorZevm: sample.EthAddress().Hex(),
+			}, true)
 
-		// call HandleEVMDeposit
-		cctx := sample.CrossChainTx(t, "foo")
-		cctx.InboundTxParams.TxOrigin = ""
-		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
-		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
-		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
-		cctx.GetInboundTxParams().SenderChainId = senderChain
-		cctx.RelayedMessage = ""
-		cctx.GetInboundTxParams().Asset = ""
-		reverted, err := k.HandleEVMDeposit(
-			ctx,
-			cctx,
-		)
-		require.NoError(t, err)
-		require.False(t, reverted)
-		fungibleMock.AssertExpectations(t)
-	})
+			// call HandleEVMDeposit
+			cctx := sample.CrossChainTx(t, "foo")
+			cctx.InboundTxParams.TxOrigin = ""
+			cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+			cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
+			cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
+			cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+			cctx.GetInboundTxParams().SenderChainId = senderChain
+			cctx.RelayedMessage = ""
+			cctx.GetInboundTxParams().Asset = ""
+			reverted, err := k.HandleEVMDeposit(
+				ctx,
+				cctx,
+			)
+			require.NoError(t, err)
+			require.False(t, reverted)
+			fungibleMock.AssertExpectations(t)
+		},
+	)
 
 	t.Run("should error if invalid sender", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
@@ -442,46 +451,49 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.AssertExpectations(t)
 	})
 
-	t.Run("should return error with reverted if deposit ERC20 fails with calling a non-contract address", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseFungibleMock: true,
-		})
+	t.Run(
+		"should return error with reverted if deposit ERC20 fails with calling a non-contract address",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+				UseFungibleMock: true,
+			})
 
-		senderChain := getValidEthChainID()
+			senderChain := getValidEthChainID()
 
-		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
-		receiver := sample.EthAddress()
-		amount := big.NewInt(42)
+			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+			receiver := sample.EthAddress()
+			amount := big.NewInt(42)
 
-		fungibleMock.On(
-			"ZRC20DepositAndCallContract",
-			ctx,
-			mock.Anything,
-			receiver,
-			amount,
-			senderChain,
-			mock.Anything,
-			coin.CoinType_ERC20,
-			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrCallNonContract)
+			fungibleMock.On(
+				"ZRC20DepositAndCallContract",
+				ctx,
+				mock.Anything,
+				receiver,
+				amount,
+				senderChain,
+				mock.Anything,
+				coin.CoinType_ERC20,
+				mock.Anything,
+			).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrCallNonContract)
 
-		// call HandleEVMDeposit
-		cctx := sample.CrossChainTx(t, "foo")
-		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
-		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
-		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
-		cctx.GetInboundTxParams().SenderChainId = senderChain
-		cctx.RelayedMessage = ""
-		cctx.GetInboundTxParams().Asset = ""
-		reverted, err := k.HandleEVMDeposit(
-			ctx,
-			cctx,
-		)
-		require.ErrorIs(t, err, fungibletypes.ErrCallNonContract)
-		require.True(t, reverted)
-		fungibleMock.AssertExpectations(t)
-	})
+			// call HandleEVMDeposit
+			cctx := sample.CrossChainTx(t, "foo")
+			cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+			cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
+			cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
+			cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+			cctx.GetInboundTxParams().SenderChainId = senderChain
+			cctx.RelayedMessage = ""
+			cctx.GetInboundTxParams().Asset = ""
+			reverted, err := k.HandleEVMDeposit(
+				ctx,
+				cctx,
+			)
+			require.ErrorIs(t, err, fungibletypes.ErrCallNonContract)
+			require.True(t, reverted)
+			fungibleMock.AssertExpectations(t)
+		},
+	)
 
 	t.Run("should fail if can't parse address and data", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{

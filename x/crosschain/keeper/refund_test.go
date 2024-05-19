@@ -90,7 +90,8 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 			Zrc20ContractAddress: sample.EthAddress().Hex(),
 		}, true)
 
-		fungibleMock.On("DepositZRC20", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New(""))
+		fungibleMock.On("DepositZRC20", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, errors.New(""))
 
 		err := k.RefundAmountOnZetaChainGas(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -370,9 +371,10 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 			UseFungibleMock: true,
 		})
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
-		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{
-			Zrc20ContractAddress: "0x",
-		}, true)
+		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
+			Return(fungibletypes.ForeignCoins{
+				Zrc20ContractAddress: "0x",
+			}, true)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		asset := sample.EthAddress().String()
 		sender := sample.EthAddress()
@@ -405,11 +407,13 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		sender := sample.EthAddress()
 		chainID := getValidEthChainID()
 
-		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{
-			Zrc20ContractAddress: sample.EthAddress().Hex(),
-		}, true)
+		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
+			Return(fungibletypes.ForeignCoins{
+				Zrc20ContractAddress: sample.EthAddress().Hex(),
+			}, true)
 
-		fungibleMock.On("DepositZRC20", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New(""))
+		fungibleMock.On("DepositZRC20", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, errors.New(""))
 
 		err := k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{

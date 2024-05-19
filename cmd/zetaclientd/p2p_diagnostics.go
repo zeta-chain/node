@@ -26,7 +26,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cryptotypes.PrivKey, cfg config.Config) error {
+func RunDiagnostics(
+	startLogger zerolog.Logger,
+	peers p2p.AddrList,
+	hotkeyPk cryptotypes.PrivKey,
+	cfg config.Config,
+) error {
 
 	startLogger.Warn().Msg("P2P Diagnostic mode enabled")
 	startLogger.Warn().Msgf("seed peer: %s", peers)
@@ -177,7 +182,12 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cry
 					startLogger.Error().Err(err).Msgf("fail to create stream to peer %s", peer)
 					continue
 				}
-				message := fmt.Sprintf("round %d %s => %s", round, host.ID().String()[len(host.ID().String())-5:], peer.ID.String()[len(peer.ID.String())-5:])
+				message := fmt.Sprintf(
+					"round %d %s => %s",
+					round,
+					host.ID().String()[len(host.ID().String())-5:],
+					peer.ID.String()[len(peer.ID.String())-5:],
+				)
 				_, err = stream.Write([]byte(message))
 				if err != nil {
 					startLogger.Error().Err(err).Msgf("fail to write to stream to peer %s", peer)
@@ -206,13 +216,15 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cry
 				}
 
 				if string(buf[:nr]) != message {
-					startLogger.Error().Msgf("ping-pong failed with peer #(%d): %s; want %s got %s", peerCount, peer, message, string(buf[:nr]))
+					startLogger.Error().
+						Msgf("ping-pong failed with peer #(%d): %s; want %s got %s", peerCount, peer, message, string(buf[:nr]))
 					continue
 				}
 				startLogger.Info().Msgf("ping-pong success with peer #(%d): %s;", peerCount, peer)
 				okPingPongCount++
 			}
-			startLogger.Info().Msgf("Expect %d peers in total; successful pings (%d/%d)", peerCount, okPingPongCount, peerCount-1)
+			startLogger.Info().
+				Msgf("Expect %d peers in total; successful pings (%d/%d)", peerCount, okPingPongCount, peerCount-1)
 		}
 	}
 }

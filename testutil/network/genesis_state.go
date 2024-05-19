@@ -21,7 +21,13 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string, setupChainNonces bool) {
+func SetupZetaGenesisState(
+	t *testing.T,
+	genesisState map[string]json.RawMessage,
+	codec codec.Codec,
+	observerList []string,
+	setupChainNonces bool,
+) {
 
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
@@ -119,7 +125,13 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	genesisState[authoritytypes.ModuleName] = authorityGenesisBz
 }
 
-func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {
+func AddObserverData(
+	t *testing.T,
+	n int,
+	genesisState map[string]json.RawMessage,
+	codec codec.Codec,
+	ballots []*observertypes.Ballot,
+) *observertypes.GenesisState {
 	state := observertypes.GenesisState{}
 	require.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
 
@@ -166,7 +178,10 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 	state.CrosschainFlags = crosschainFlags
 
 	for i := 0; i < n; i++ {
-		state.ChainNonces = append(state.ChainNonces, observertypes.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
+		state.ChainNonces = append(
+			state.ChainNonces,
+			observertypes.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}},
+		)
 	}
 
 	// check genesis state validity
@@ -178,7 +193,13 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 	genesisState[observertypes.ModuleName] = buf
 	return &state
 }
-func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec) *types.GenesisState {
+
+func AddCrosschainData(
+	t *testing.T,
+	n int,
+	genesisState map[string]json.RawMessage,
+	codec codec.Codec,
+) *types.GenesisState {
 	state := types.GenesisState{}
 	require.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &state))
 	// TODO : Fix add EVM balance to deploy contracts
@@ -191,17 +212,33 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 				StatusMessage:       "",
 				LastUpdateTimestamp: 0,
 			},
-			InboundTxParams:  &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i), Amount: math.OneUint()},
+			InboundTxParams: &types.InboundTxParams{
+				InboundTxObservedHash: fmt.Sprintf("Hash-%d", i),
+				Amount:                math.OneUint(),
+			},
 			OutboundTxParams: []*types.OutboundTxParams{},
 			ZetaFees:         math.OneUint()},
 		)
 	}
 
 	for i := 0; i < n; i++ {
-		state.GasPriceList = append(state.GasPriceList, &types.GasPrice{Creator: "ANY", ChainId: int64(i), Index: strconv.Itoa(i), Prices: []uint64{}, BlockNums: []uint64{}, Signers: []string{}})
+		state.GasPriceList = append(
+			state.GasPriceList,
+			&types.GasPrice{
+				Creator:   "ANY",
+				ChainId:   int64(i),
+				Index:     strconv.Itoa(i),
+				Prices:    []uint64{},
+				BlockNums: []uint64{},
+				Signers:   []string{},
+			},
+		)
 	}
 	for i := 0; i < n; i++ {
-		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.LastBlockHeightList = append(
+			state.LastBlockHeightList,
+			&types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)},
+		)
 	}
 
 	for i := 0; i < n; i++ {

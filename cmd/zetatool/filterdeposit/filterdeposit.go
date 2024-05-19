@@ -27,7 +27,8 @@ func NewFilterDepositCmd() *cobra.Command {
 	cmd.AddCommand(NewEvmCmd())
 
 	// Required for TSS address query
-	cmd.PersistentFlags().String(BTCChainIDFlag, "8332", "chain id used on zetachain to identify bitcoin - default: 8332")
+	cmd.PersistentFlags().
+		String(BTCChainIDFlag, "8332", "chain id used on zetachain to identify bitcoin - default: 8332")
 
 	return cmd
 }

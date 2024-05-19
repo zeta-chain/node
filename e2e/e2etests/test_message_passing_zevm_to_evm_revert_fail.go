@@ -120,6 +120,8 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
-		panic(fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()))
+		panic(
+			fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()),
+		)
 	}
 }

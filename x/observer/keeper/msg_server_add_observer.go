@@ -14,7 +14,10 @@ import (
 )
 
 // AddObserver adds an observer address to the observer set
-func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
+func (k msgServer) AddObserver(
+	goCtx context.Context,
+	msg *types.MsgAddObserver,
+) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
@@ -53,7 +56,13 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	observerSet, _ := k.GetObserverSet(ctx)
 
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
-	EmitEventAddObserver(ctx, observerSet.LenUint(), msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
+	EmitEventAddObserver(
+		ctx,
+		observerSet.LenUint(),
+		msg.ObserverAddress,
+		granteeAddress.String(),
+		msg.ZetaclientGranteePubkey,
+	)
 
 	return &types.MsgAddObserverResponse{}, nil
 }

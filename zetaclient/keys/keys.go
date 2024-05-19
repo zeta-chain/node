@@ -34,7 +34,12 @@ type Keys struct {
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string, hotkeyPassword string) *Keys {
+func NewKeysWithKeybase(
+	kb ckeys.Keyring,
+	granterAddress sdk.AccAddress,
+	granteeName string,
+	hotkeyPassword string,
+) *Keys {
 	return &Keys{
 		signerName:      granteeName,
 		kb:              kb,
@@ -76,7 +81,8 @@ func GetKeyringKeybase(cfg config.Config, hotkeyPassword string) (ckeys.Keyring,
 	}()
 	os.Stdin = nil
 
-	logger.Debug().Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
+	logger.Debug().
+		Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
 	rc, err := kb.Key(granteeName)
 	if err != nil {
 		return nil, "", fmt.Errorf("key not in backend %s present with name (%s): %w", kb.Backend(), granteeName, err)

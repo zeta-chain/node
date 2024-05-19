@@ -160,7 +160,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("error"))
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, errors.New("error"))
 
 		txHash := "string"
 		chainID := getValidEthChainID()
@@ -193,7 +194,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(sample.Bytes(), nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(sample.Bytes(), nil)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(nil, false)
 
 		txHash := "string"
@@ -227,8 +229,10 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(sample.Bytes(), nil)
-		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(sample.ChainParams(chains.EthChain.ChainId), true)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(sample.Bytes(), nil)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
+			Return(sample.ChainParams(chains.EthChain.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(nil, errors.New("error"))
 
 		txHash := "string"
@@ -263,13 +267,15 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(sample.ChainParams(chains.EthChain.ChainId), true)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
+			Return(sample.ChainParams(chains.EthChain.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: sample.EthAddress().Hex(),
 		}, nil)
 
 		// verifying the body will fail because the bytes are tried to be unmarshaled but they are not valid
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]byte("invalid"), nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return([]byte("invalid"), nil)
 
 		txHash := "string"
 		chainID := getValidEthChainID()
@@ -309,11 +315,13 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(sample.ChainParams(chains.EthChain.ChainId), true)
+		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
+			Return(sample.ChainParams(chains.EthChain.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: tssAddress.Hex(),
 		}, nil)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ethTxBytes, nil)
 
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,

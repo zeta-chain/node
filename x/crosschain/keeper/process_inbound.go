@@ -21,9 +21,13 @@ func (k Keeper) ProcessInbound(ctx sdk.Context, cctx *types.CrossChainTx) {
 
 /*
 processZEVMDeposit processes the EVM deposit CCTX. A deposit is a cctx which has Zetachain as the receiver chain.It trasnsitions state according to the following rules:
+
   - If the deposit is successful, the CCTX status is changed to OutboundMined.
+
   - If the deposit returns an internal error i.e if HandleEVMDeposit() returns an error, but isContractReverted is false, the CCTX status is changed to Aborted.
+
   - If the deposit is reverted, the function tries to create a revert cctx with status PendingRevert.
+
   - If the creation of revert tx also fails it changes the status to Aborted.
 
 Note : Aborted CCTXs are not refunded in this function. The refund is done using a separate refunding mechanism.
@@ -91,9 +95,12 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 
 /*
 processCrosschainMsgPassing processes the CCTX for crosschain message passing. A crosschain message passing is a cctx which has a non-Zetachain as the receiver chain.It trasnsitions state according to the following rules:
+
   - If the crosschain message passing is successful, the CCTX status is changed to PendingOutbound.
+
   - If the crosschain message passing returns an error, the CCTX status is changed to Aborted.
     We do not return an error from this function, as all changes need to be persisted to the state.
+
     Instead, we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to PendingOutbound.
 */
 func (k Keeper) processCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossChainTx) {

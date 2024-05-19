@@ -25,7 +25,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if totalObserverCountCurrentBlock == lastBlockObserverCount.Count {
 		return
 	}
-	ctx.Logger().Error("LastBlockObserverCount does not match the number of observers found at current height", ctx.BlockHeight())
+	ctx.Logger().
+		Error("LastBlockObserverCount does not match the number of observers found at current height", ctx.BlockHeight())
 	for _, observer := range allObservers.ObserverList {
 		ctx.Logger().Error("Observer :  ", observer)
 	}
@@ -34,5 +35,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	// #nosec G701 always positive
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock, LastChangeHeight: ctx.BlockHeight()})
+	k.SetLastObserverCount(
+		ctx,
+		&types.LastObserverCount{Count: totalObserverCountCurrentBlock, LastChangeHeight: ctx.BlockHeight()},
+	)
 }

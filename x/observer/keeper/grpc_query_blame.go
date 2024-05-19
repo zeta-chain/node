@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBlameByIdentifierRequest) (*types.QueryBlameByIdentifierResponse, error) {
+func (k Keeper) BlameByIdentifier(
+	goCtx context.Context,
+	request *types.QueryBlameByIdentifierRequest,
+) (*types.QueryBlameByIdentifierResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -24,7 +27,10 @@ func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBla
 	}, nil
 }
 
-func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAllBlameRecordsRequest) (*types.QueryAllBlameRecordsResponse, error) {
+func (k Keeper) GetAllBlameRecords(
+	goCtx context.Context,
+	request *types.QueryAllBlameRecordsRequest,
+) (*types.QueryAllBlameRecordsResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -40,7 +46,10 @@ func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAl
 	}, nil
 }
 
-func (k Keeper) BlamesByChainAndNonce(goCtx context.Context, request *types.QueryBlameByChainAndNonceRequest) (*types.QueryBlameByChainAndNonceResponse, error) {
+func (k Keeper) BlamesByChainAndNonce(
+	goCtx context.Context,
+	request *types.QueryBlameByChainAndNonceRequest,
+) (*types.QueryBlameByChainAndNonceResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

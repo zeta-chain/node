@@ -63,7 +63,10 @@ type ChainSigner interface {
 
 // ZetacoreClient is the client interface to interact with zetacore
 type ZetacoreClient interface {
-	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
+	PostVoteInbound(
+		gasLimit, retryGasLimit uint64,
+		msg *crosschaintypes.MsgVoteOnObservedInboundTx,
+	) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,
 		outTxHash string,
@@ -144,7 +147,12 @@ type EVMRPCClient interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*ethtypes.Header, error)
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
-	TransactionSender(ctx context.Context, tx *ethtypes.Transaction, block ethcommon.Hash, index uint) (ethcommon.Address, error)
+	TransactionSender(
+		ctx context.Context,
+		tx *ethtypes.Transaction,
+		block ethcommon.Hash,
+		index uint,
+	) (ethcommon.Address, error)
 }
 
 // EVMJSONRPCClient is the interface for EVM JSON RPC client

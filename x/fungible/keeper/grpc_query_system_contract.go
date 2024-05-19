@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) SystemContract(c context.Context, req *types.QueryGetSystemContractRequest) (*types.QueryGetSystemContractResponse, error) {
+func (k Keeper) SystemContract(
+	c context.Context,
+	req *types.QueryGetSystemContractRequest,
+) (*types.QueryGetSystemContractResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

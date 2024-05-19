@@ -22,17 +22,27 @@ import (
 // and emit a crosschain tx to whitelist the ERC20 on the external chain
 //
 // Authorized: admin policy group 1.
-func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC20) (*types.MsgWhitelistERC20Response, error) {
+func (k msgServer) WhitelistERC20(
+	goCtx context.Context,
+	msg *types.MsgWhitelistERC20,
+) (*types.MsgWhitelistERC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, errorsmod.Wrap(
+			authoritytypes.ErrUnauthorized,
+			"Deploy can only be executed by the correct policy account",
+		)
 	}
 
 	erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
 	if erc20Addr == (ethcommon.Address{}) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
+		return nil, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidAddress,
+			"invalid ERC20 contract address (%s)",
+			msg.Erc20Address,
+		)
 	}
 
 	// check if the erc20 is already whitelisted
@@ -98,7 +108,11 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, msg.ChainId)
 	if !isFound {
-		return nil, errorsmod.Wrapf(types.ErrUnableToGetGasPrice, "median gas price not found for chain id (%d)", msg.ChainId)
+		return nil, errorsmod.Wrapf(
+			types.ErrUnableToGetGasPrice,
+			"median gas price not found for chain id (%d)",
+			msg.ChainId,
+		)
 	}
 	medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
 

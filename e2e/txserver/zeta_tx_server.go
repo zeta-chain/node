@@ -272,7 +272,9 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
 // returns the addresses of uniswap factory, router and erc20 zrc20
-func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string) (string, string, string, string, string, error) {
+func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
+	account, erc20Addr string,
+) (string, string, string, string, string, error) {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -291,7 +293,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 
 	systemContractAddress, err := FetchAttributeFromTxResponse(res, "system_contract")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch system contract address: %s; rawlog %s", err.Error(), res.RawLog)
+		return "", "", "", "", "", fmt.Errorf(
+			"failed to fetch system contract address: %s; rawlog %s",
+			err.Error(),
+			res.RawLog,
+		)
 	}
 
 	// get system contract
@@ -313,13 +319,21 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	// get zevm connector address
 	zevmConnectorAddr, err := FetchAttributeFromTxResponse(res, "connector_zevm")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch zevm connector address: %s, txResponse: %s", err.Error(), res.String())
+		return "", "", "", "", "", fmt.Errorf(
+			"failed to fetch zevm connector address: %s, txResponse: %s",
+			err.Error(),
+			res.String(),
+		)
 	}
 
 	// get wzeta address
 	wzetaAddr, err := FetchAttributeFromTxResponse(res, "wzeta")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch wzeta address: %s, txResponse: %s", err.Error(), res.String())
+		return "", "", "", "", "", fmt.Errorf(
+			"failed to fetch wzeta address: %s, txResponse: %s",
+			err.Error(),
+			res.String(),
+		)
 	}
 
 	// deploy eth zrc20

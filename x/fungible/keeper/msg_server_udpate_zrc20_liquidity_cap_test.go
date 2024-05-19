@@ -54,7 +54,12 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
 		require.True(t, found)
-		require.True(t, coin.LiquidityCap.Equal(math.NewUint(4200000)), "invalid liquidity cap", coin.LiquidityCap.String())
+		require.True(
+			t,
+			coin.LiquidityCap.Equal(math.NewUint(4200000)),
+			"invalid liquidity cap",
+			coin.LiquidityCap.String(),
+		)
 
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 

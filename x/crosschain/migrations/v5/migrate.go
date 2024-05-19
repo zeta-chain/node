@@ -97,9 +97,13 @@ func SetZetaAccounting(
 			switch cctx.InboundTxParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
-					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
+					receiverChain := observerKeeper.GetSupportedChainFromChainID(
+						ctx,
+						cctx.GetCurrentOutTxParam().ReceiverChainId,
+					)
 					if receiverChain == nil {
-						ctx.Logger().Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutTxParam().ReceiverChainId), cctx.Index)
+						ctx.Logger().
+							Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutTxParam().ReceiverChainId), cctx.Index)
 						continue
 					}
 					// There is a chance that this cctx has already been refunded, so we set the isRefunded flag to true.

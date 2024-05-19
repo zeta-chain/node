@@ -46,7 +46,18 @@ func TestZetaSupplyChecker_ValidateZetaSupply(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
-			tc.validate(t, ValidateZetaSupply(logger, tc.abortedTxAmount, tc.zetaInTransit, tc.genesisAmounts, tc.externalChainTotalSupply, tc.zetaTokenSupplyOnNode, tc.ethLockedAmount))
+			tc.validate(
+				t,
+				ValidateZetaSupply(
+					logger,
+					tc.abortedTxAmount,
+					tc.zetaInTransit,
+					tc.genesisAmounts,
+					tc.externalChainTotalSupply,
+					tc.zetaTokenSupplyOnNode,
+					tc.ethLockedAmount,
+				),
+			)
 		})
 	}
 }

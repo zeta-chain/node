@@ -37,7 +37,10 @@ func (k Keeper) TssHistory(c context.Context, _ *types.QueryTssHistoryRequest) (
 	return &types.QueryTssHistoryResponse{TssList: tssList}, nil
 }
 
-func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddressRequest) (*types.QueryGetTssAddressResponse, error) {
+func (k Keeper) GetTssAddress(
+	goCtx context.Context,
+	req *types.QueryGetTssAddressRequest,
+) (*types.QueryGetTssAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -68,7 +71,10 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	}, nil
 }
 
-func (k Keeper) GetTssAddressByFinalizedHeight(goCtx context.Context, req *types.QueryGetTssAddressByFinalizedHeightRequest) (*types.QueryGetTssAddressByFinalizedHeightResponse, error) {
+func (k Keeper) GetTssAddressByFinalizedHeight(
+	goCtx context.Context,
+	req *types.QueryGetTssAddressByFinalizedHeightRequest,
+) (*types.QueryGetTssAddressByFinalizedHeightResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
