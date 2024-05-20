@@ -321,7 +321,7 @@ func (ob *Observer) getOutboundidByNonce(nonce uint64, test bool) (string, error
 		// make sure it's a real Bitcoin txid
 		_, getTxResult, err := GetTxResultByHash(ob.rpcClient, txid)
 		if err != nil {
-			return "", errors.Wrapf(err, "getOutboundidByNonce: error getting outbound result for nonce %d hash %s", nonce, txid)
+			return "", errors.Wrapf(err, "getOutboundIDByNonce: error getting outbound result for nonce %d hash %s", nonce, txid)
 		}
 		if getTxResult.Confirmations <= 0 { // just a double check
 			return "", fmt.Errorf("getOutboundidByNonce: outbound txid %s for nonce %d is not included", txid, nonce)
