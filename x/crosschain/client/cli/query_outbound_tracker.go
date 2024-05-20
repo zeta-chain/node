@@ -13,7 +13,7 @@ import (
 func CmdListOutboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-outbound-tracker",
-		Short: "list all OutboundTracker",
+		Short: "list all outbound trackers",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
