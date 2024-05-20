@@ -483,7 +483,7 @@ export declare class MsgVoteOutbound extends Message<MsgVoteOutbound> {
   observedOutboundHash: string;
 
   /**
-   * @generated from field: uint64 observed_outbound_blockHeight = 4;
+   * @generated from field: uint64 observed_outbound_block_height = 4;
    */
   observedOutboundBlockHeight: bigint;
 

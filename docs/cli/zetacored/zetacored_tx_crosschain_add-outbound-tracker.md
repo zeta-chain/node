@@ -1,6 +1,6 @@
 # tx crosschain add-outbound-tracker
 
-Add a outbound-tracker
+Add an outbound tracker
 
 ```
 zetacored tx crosschain add-outbound-tracker [chain] [nonce] [tx-hash] [flags]

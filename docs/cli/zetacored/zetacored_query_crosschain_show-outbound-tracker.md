@@ -1,6 +1,6 @@
 # query crosschain show-outbound-tracker
 
-shows a OutboundTracker
+shows an outbound tracker
 
 ```
 zetacored query crosschain show-outbound-tracker [chainId] [nonce] [flags]

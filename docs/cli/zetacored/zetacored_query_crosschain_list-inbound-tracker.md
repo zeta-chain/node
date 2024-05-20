@@ -1,6 +1,6 @@
 # query crosschain list-inbound-tracker
 
-shows a list of inbound tracker by chainId
+shows a list of inbound trackers by chainId
 
 ```
 zetacored query crosschain list-inbound-tracker [chainId] [flags]

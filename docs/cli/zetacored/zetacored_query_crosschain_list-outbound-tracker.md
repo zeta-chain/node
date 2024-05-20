@@ -1,6 +1,6 @@
 # query crosschain list-outbound-tracker
 
-list all OutboundTracker
+list all outbound trackers
 
 ```
 zetacored query crosschain list-outbound-tracker [flags]

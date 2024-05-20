@@ -1,6 +1,6 @@
 # tx crosschain add-inbound-tracker
 
-Add a in-tx-tracker 
+Add an inbound tracker 
 				Use 0:Zeta,1:Gas,2:ERC20
 
 ```

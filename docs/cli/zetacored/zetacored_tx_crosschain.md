@@ -27,9 +27,9 @@ zetacored tx crosschain [flags]
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
 * [zetacored tx crosschain abort-stuck-cctx](zetacored_tx_crosschain_abort-stuck-cctx.md)	 - abort a stuck CCTX
-* [zetacored tx crosschain add-inbound-tracker](zetacored_tx_crosschain_add-inbound-tracker.md)	 - Add a in-tx-tracker 
+* [zetacored tx crosschain add-inbound-tracker](zetacored_tx_crosschain_add-inbound-tracker.md)	 - Add an inbound tracker 
 				Use 0:Zeta,1:Gas,2:ERC20
-* [zetacored tx crosschain add-outbound-tracker](zetacored_tx_crosschain_add-outbound-tracker.md)	 - Add a outbound-tracker
+* [zetacored tx crosschain add-outbound-tracker](zetacored_tx_crosschain_add-outbound-tracker.md)	 - Add an outbound tracker
 * [zetacored tx crosschain migrate-tss-funds](zetacored_tx_crosschain_migrate-tss-funds.md)	 - Migrate TSS funds to the latest TSS address
 * [zetacored tx crosschain refund-aborted](zetacored_tx_crosschain_refund-aborted.md)	 - Refund an aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
 * [zetacored tx crosschain remove-outbound-tracker](zetacored_tx_crosschain_remove-outbound-tracker.md)	 - Remove an outbound tracker
