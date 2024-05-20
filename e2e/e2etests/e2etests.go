@@ -435,7 +435,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test Ether withdrawal",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "count", DefaultValue: "10"},
+			{Description: "count", DefaultValue: "100"},
 		},
 		TestStressEtherWithdraw,
 	),
@@ -453,7 +453,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test Ether deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "count", DefaultValue: "10"},
+			{Description: "count", DefaultValue: "100"},
 		},
 		TestStressEtherDeposit,
 	),
