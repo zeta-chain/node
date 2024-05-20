@@ -28,7 +28,7 @@ func NewProcessor(logger zerolog.Logger) *Processor {
 	}
 }
 
-func (outboundManager *Processor) StartTryProcess(outboundID string) {
+func (processor *Processor) StartTryProcess(outboundID string) {
 	outboundManager.mu.Lock()
 	defer outboundManager.mu.Unlock()
 	outboundManager.outboundStartTime[outboundID] = time.Now()
