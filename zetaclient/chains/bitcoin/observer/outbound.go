@@ -312,7 +312,7 @@ func (ob *Observer) getOutboundidByNonce(nonce uint64, test bool) (string, error
 	if !test { // if not unit test, get cctx from zetacore
 		send, err := ob.zetacoreClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 		if err != nil {
-			return "", errors.Wrapf(err, "getOutboundidByNonce: error getting cctx for nonce %d", nonce)
+			return "", errors.Wrapf(err, "getOutboundIDByNonce: error getting cctx for nonce %d", nonce)
 		}
 		txid := send.GetCurrentOutboundParam().Hash
 		if txid == "" {
