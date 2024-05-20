@@ -116,7 +116,7 @@ message MsgVoteOutbound {
   string creator = 1;
   string cctx_hash = 2;
   string observed_outbound_hash = 3;
-  uint64 observed_outbound_blockHeight = 4;
+  uint64 observed_outbound_block_height = 4;
   uint64 observed_outbound_gas_used = 10;
   string observed_outbound_effective_gas_price = 11 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
