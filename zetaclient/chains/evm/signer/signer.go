@@ -763,7 +763,7 @@ func (signer *Signer) reportToOutboundTracker(
 					break
 				}
 				// report to outbound tracker
-				zetaHash, err := zetacoreClient.AddTxHashToOutboundTracker(chainID, nonce, outboundHash, nil, "", -1)
+				zetaHash, err := zetacoreClient.AddOutboundTracker(chainID, nonce, outboundHash, nil, "", -1)
 				if err != nil {
 					logger.Err(err).Msgf("reportToOutboundTracker: error adding to outbound tracker for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
 				} else if zetaHash != "" {

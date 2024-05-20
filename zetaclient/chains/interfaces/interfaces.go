@@ -82,7 +82,7 @@ type ZetacoreClient interface {
 	GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error)
 
 	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
-	AddTxHashToOutboundTracker(
+	AddOutboundTracker(
 		chainID int64,
 		nonce uint64,
 		txHash string,

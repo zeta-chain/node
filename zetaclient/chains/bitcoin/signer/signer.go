@@ -414,7 +414,7 @@ func (signer *Signer) TryProcessOutbound(
 				continue
 			}
 			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
-			zetaHash, err := zetacoreClient.AddTxHashToOutboundTracker(chain.ChainId, outboundTssNonce, outboundHash, nil, "", -1)
+			zetaHash, err := zetacoreClient.AddOutboundTracker(chain.ChainId, outboundTssNonce, outboundHash, nil, "", -1)
 			if err != nil {
 				logger.Err(err).Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.ChainName, outboundHash)
 			}

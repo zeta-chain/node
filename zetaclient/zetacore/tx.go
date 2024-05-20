@@ -109,7 +109,7 @@ func (c *Client) PostGasPrice(chain chains.Chain, gasPrice uint64, supply string
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (c *Client) AddTxHashToOutboundTracker(
+func (c *Client) AddOutboundTracker(
 	chainID int64,
 	nonce uint64,
 	txHash string,
@@ -135,7 +135,7 @@ func (c *Client) AddTxHashToOutboundTracker(
 		return "", err
 	}
 
-	zetaTxHash, err := zetacoreBroadcast(c, AddTxHashToOutboundTrackerGasLimit, authzMsg, authzSigner)
+	zetaTxHash, err := zetacoreBroadcast(c, AddOutboundTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
 		return "", err
 	}

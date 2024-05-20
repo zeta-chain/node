@@ -93,7 +93,7 @@ func (z *MockZetaCoreClient) PostBlameData(_ *blame.Blame, _ int64, _ string) (s
 	return "", nil
 }
 
-func (z *MockZetaCoreClient) AddTxHashToOutboundTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
+func (z *MockZetaCoreClient) AddOutboundTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}

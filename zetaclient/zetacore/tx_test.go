@@ -158,7 +158,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	//})
 }
 
-func TestZetacore_AddTxHashToOutboundTracker(t *testing.T) {
+func TestZetacore_AddOutboundTracker(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
@@ -166,14 +166,14 @@ func TestZetacore_AddTxHashToOutboundTracker(t *testing.T) {
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		hash, err := client.AddTxHashToOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := client.AddOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcastError
-		hash, err := client.AddTxHashToOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := client.AddOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.Error(t, err)
 		require.Equal(t, "", hash)
 	})

@@ -219,7 +219,7 @@ func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
 	return authtx.QueryTx(ctx, hash)
 }
 
-// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutboundTracker
+// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddOutboundTracker
 // returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outboundHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
