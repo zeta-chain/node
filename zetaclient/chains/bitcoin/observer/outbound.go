@@ -301,7 +301,7 @@ func (ob *Observer) refreshPendingNonce() {
 	}
 }
 
-func (ob *Observer) getOutboundidByNonce(nonce uint64, test bool) (string, error) {
+func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error) {
 
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
