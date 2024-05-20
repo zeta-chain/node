@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Start Test
         run: make start-e2e-admin-test
@@ -68,7 +68,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Start Test
         run: make start-upgrade-test
@@ -100,7 +100,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Start Test
         run: make start-upgrade-test-light
@@ -123,7 +123,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Start Test
         run: make start-e2e-performance-test
