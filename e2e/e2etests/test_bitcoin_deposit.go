@@ -24,7 +24,7 @@ func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 	txHash := r.DepositBTCWithAmount(depositAmount)
 
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(

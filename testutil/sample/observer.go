@@ -89,14 +89,14 @@ func ChainParams(chainID int64) *types.ChainParams {
 		ConfirmationCount: r.Uint64(),
 
 		GasPriceTicker:              Uint64InRange(1, 300),
-		InTxTicker:                  Uint64InRange(1, 300),
-		OutTxTicker:                 Uint64InRange(1, 300),
+		InboundTicker:               Uint64InRange(1, 300),
+		OutboundTicker:              Uint64InRange(1, 300),
 		WatchUtxoTicker:             Uint64InRange(1, 300),
 		ZetaTokenContractAddress:    EthAddress().String(),
 		ConnectorContractAddress:    EthAddress().String(),
 		Erc20CustodyContractAddress: EthAddress().String(),
-		OutboundTxScheduleInterval:  Int64InRange(1, 100),
-		OutboundTxScheduleLookahead: Int64InRange(1, 500),
+		OutboundScheduleInterval:    Int64InRange(1, 100),
+		OutboundScheduleLookahead:   Int64InRange(1, 500),
 		BallotThreshold:             fiftyPercent,
 		MinObserverDelegation:       sdk.NewDec(r.Int63()),
 		IsSupported:                 false,
@@ -215,26 +215,6 @@ func NonceToCctxList(t *testing.T, index string, count int) []types.NonceToCctx 
 		}
 	}
 	return list
-}
-
-func LegacyObserverMapper(t *testing.T, index string, observerList []string) *types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
-
-	return &types.ObserverMapper{
-		Index:         index,
-		ObserverChain: Chain(r.Int63()),
-		ObserverList:  observerList,
-	}
-}
-
-func LegacyObserverMapperList(t *testing.T, n int, index string) []*types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
-	observerList := []string{AccAddress(), AccAddress()}
-	observerMapperList := make([]*types.ObserverMapper, n)
-	for i := 0; i < n; i++ {
-		observerMapperList[i] = LegacyObserverMapper(t, fmt.Sprintf("%d-%s", r.Int63(), index), observerList)
-	}
-	return observerMapperList
 }
 
 func BallotList(n int, observerSet []string) []types.Ballot {

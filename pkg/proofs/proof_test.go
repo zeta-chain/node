@@ -52,7 +52,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validate block
-		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
+		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutboundID, b.TssAddress, b.Nonce)
 	}
 }
 
@@ -140,7 +140,7 @@ func BitcoinMerkleProofLiveTest(t *testing.T) {
 	}
 }
 
-func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string, nonce uint64) {
+func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outboundID string, tssAddress string, nonce uint64) {
 	// Deserialization should work for each transaction in the block
 	txns := []*btcutil.Tx{}
 	txBodies := [][]byte{}

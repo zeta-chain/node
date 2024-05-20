@@ -96,51 +96,51 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		// set some cctxs with Bitcoin and non-Bitcoin chains
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "0",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.GoerliChain.ChainId,
-				InboundTxObservedHash: "0xaaa",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.GoerliChain.ChainId,
+				ObservedHash:  "0xaaa",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "1",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcMainnetChain.ChainId,
-				InboundTxObservedHash: "0x111",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BtcMainnetChain.ChainId,
+				ObservedHash:  "0x111",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "2",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.EthChain.ChainId,
-				InboundTxObservedHash: "0xbbb",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.EthChain.ChainId,
+				ObservedHash:  "0xbbb",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "3",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcTestNetChain.ChainId,
-				InboundTxObservedHash: "0x222",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BtcTestNetChain.ChainId,
+				ObservedHash:  "0x222",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "4",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcTestNetChain.ChainId,
-				InboundTxObservedHash: "0x333",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BtcTestNetChain.ChainId,
+				ObservedHash:  "0x333",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "5",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.MumbaiChain.ChainId,
-				InboundTxObservedHash: "0xccc",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.MumbaiChain.ChainId,
+				ObservedHash:  "0xccc",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "6",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcRegtestChain.ChainId,
-				InboundTxObservedHash: "0x444",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BtcRegtestChain.ChainId,
+				ObservedHash:  "0x444",
 			},
 		})
 
@@ -169,10 +169,10 @@ func SetRandomCctx(ctx sdk.Context, k keeper.Keeper) sdkmath.Uint {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index:      fmt.Sprintf("%d", i),
 			CctxStatus: &types.Status{Status: types.CctxStatus_Aborted},
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{{
+			OutboundParams: []*types.OutboundParams{{
 				Amount:   amount,
 				CoinType: coin.CoinType_Zeta,
 			}},

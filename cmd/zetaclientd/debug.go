@@ -19,13 +19,13 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 var debugArgs = debugArguments{}
@@ -45,7 +45,7 @@ func init() {
 
 func DebugCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-ballot-from-intx [txHash] [chainID]",
+		Use:   "get-inbound-ballot [inboundHash] [chainID]",
 		Short: "provide txHash and chainID to get the ballot status for the txHash",
 		RunE: func(_ *cobra.Command, args []string) error {
 			cobra.ExactArgs(2)
@@ -53,12 +53,12 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coreContext := corecontext.NewZetaCoreContext(cfg)
+			coreContext := clientcontext.NewZetacoreContext(cfg)
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
-			txHash := args[0]
+			inboundHash := args[0]
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
@@ -70,7 +70,7 @@ func DebugCmd() *cobra.Command {
 				}
 			}()
 
-			bridge, err := zetabridge.NewZetaCoreBridge(
+			client, err := zetacore.NewClient(
 				&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
 				debugArgs.zetaNode,
 				"",
@@ -81,11 +81,11 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			chainParams, err := bridge.GetChainParams()
+			chainParams, err := client.GetChainParams()
 			if err != nil {
 				return err
 			}
-			tssEthAddress, err := bridge.GetEthTssAddress()
+			tssEthAddress, err := client.GetEthTssAddress()
 			if err != nil {
 				return err
 			}
@@ -97,11 +97,11 @@ func DebugCmd() *cobra.Command {
 
 			if chains.IsEVMChain(chain.ChainId) {
 
-				ob := evm.ChainClient{
+				evmObserver := evmobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
-				ob.WithZetaBridge(bridge)
-				ob.WithLogger(chainLogger)
+				evmObserver.WithZetacoreClient(client)
+				evmObserver.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
 				coinType := coin.CoinType_Cmd
@@ -112,13 +112,13 @@ func DebugCmd() *cobra.Command {
 						if err != nil {
 							return err
 						}
-						ob.WithEvmClient(client)
-						ob.WithEvmJSONRPC(ethRPC)
-						ob.WithChain(*chains.GetChainFromChainID(chainID))
+						evmObserver.WithEvmClient(client)
+						evmObserver.WithEvmJSONRPC(ethRPC)
+						evmObserver.WithChain(*chains.GetChainFromChainID(chainID))
 					}
 				}
-				hash := ethcommon.HexToHash(txHash)
-				tx, isPending, err := ob.TransactionByHash(txHash)
+				hash := ethcommon.HexToHash(inboundHash)
+				tx, isPending, err := evmObserver.TransactionByHash(inboundHash)
 				if err != nil {
 					return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
 				}
@@ -132,7 +132,7 @@ func DebugCmd() *cobra.Command {
 
 				for _, chainParams := range chainParams {
 					if chainParams.ChainId == chainID {
-						ob.SetChainParams(observertypes.ChainParams{
+						evmObserver.SetChainParams(observertypes.ChainParams{
 							ChainId:                     chainID,
 							ConnectorContractAddress:    chainParams.ConnectorContractAddress,
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
@@ -155,19 +155,19 @@ func DebugCmd() *cobra.Command {
 
 				switch coinType {
 				case coin.CoinType_Zeta:
-					ballotIdentifier, err = ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
+					ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case coin.CoinType_ERC20:
-					ballotIdentifier, err = ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
+					ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case coin.CoinType_Gas:
-					ballotIdentifier, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
+					ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenGas(tx, receipt, false)
 					if err != nil {
 						return err
 					}
@@ -176,12 +176,12 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if chains.IsBitcoinChain(chain.ChainId) {
-				obBtc := bitcoin.BTCChainClient{
+				btcObserver := btcobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
-				obBtc.WithZetaClient(bridge)
-				obBtc.WithLogger(chainLogger)
-				obBtc.WithChain(*chains.GetChainFromChainID(chainID))
+				btcObserver.WithZetacoreClient(client)
+				btcObserver.WithLogger(chainLogger)
+				btcObserver.WithChain(*chains.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
 					User:         cfg.BitcoinConfig.RPCUsername,
@@ -195,8 +195,8 @@ func DebugCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				obBtc.WithBtcClient(btcClient)
-				ballotIdentifier, err = obBtc.CheckReceiptForBtcTxHash(txHash, false)
+				btcObserver.WithBtcClient(btcClient)
+				ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(inboundHash, false)
 				if err != nil {
 					return err
 				}
@@ -204,7 +204,7 @@ func DebugCmd() *cobra.Command {
 			}
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 
-			ballot, err := bridge.GetBallot(ballotIdentifier)
+			ballot, err := client.GetBallot(ballotIdentifier)
 			if err != nil {
 				return err
 			}

@@ -8,7 +8,7 @@ The E2E testing project is organized into several packages, each with a specific
 - `config`: Provides general configuration for E2E tests, including RPC addresses for connected networks, addresses of deployed smart contracts, and account details for test transactions.
 - `contracts`: Includes sample Solidity smart contracts used in testing scenarios.
 - `runner`: Responsible for executing E2E tests, handling interactions with various network clients.
-- `e2etests`: Houses a collection of E2E tests that can be run against the ZetaChain network.
+- `e2etests`: Houses a collection of E2E tests that can be run against the ZetaChain network. Each test is implemented as a separate Go file prefixed with `test_`.
 - `txserver`: A minimalistic client for interacting with the ZetaChain RPC interface.
 - `utils`: Offers utility functions to facilitate interactions with the different blockchain networks involved in testing.
 
@@ -28,8 +28,8 @@ A config YAML file can be provided to the E2E test tool via the `--config` flag.
 - `Zevm`: RPC endpoint for the ZetaChain EVM.
 - `EVM`: RPC endpoint for the Ethereum network.
 - `Bitcoin`: RPC endpoint for the Bitcoin network.
-- `ZetaCoreGRPC`: GRPC endpoint for ZetaCore.
-- `ZetaCoreRPC`: RPC endpoint for ZetaCore.
+- `ZetaCoreGRPC`: GRPC endpoint for zetacore.
+- `ZetaCoreRPC`: RPC endpoint for zetacore.
 
 ### Contracts Configuration:
 

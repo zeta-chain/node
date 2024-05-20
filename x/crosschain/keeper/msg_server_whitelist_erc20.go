@@ -121,31 +121,31 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			StatusMessage:       "",
 			LastUpdateTimestamp: 0,
 		},
-		InboundTxParams: &types.InboundTxParams{
-			Sender:                          "",
-			SenderChainId:                   0,
-			TxOrigin:                        "",
-			CoinType:                        coin.CoinType_Cmd,
-			Asset:                           "",
-			Amount:                          math.Uint{},
-			InboundTxObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
-			InboundTxObservedExternalHeight: 0,
-			InboundTxBallotIndex:            "",
-			InboundTxFinalizedZetaHeight:    0,
+		InboundParams: &types.InboundParams{
+			Sender:                 "",
+			SenderChainId:          0,
+			TxOrigin:               "",
+			CoinType:               coin.CoinType_Cmd,
+			Asset:                  "",
+			Amount:                 math.Uint{},
+			ObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
+			ObservedExternalHeight: 0,
+			BallotIndex:            "",
+			FinalizedZetaHeight:    0,
 		},
-		OutboundTxParams: []*types.OutboundTxParams{
+		OutboundParams: []*types.OutboundParams{
 			{
-				Receiver:                         param.Erc20CustodyContractAddress,
-				ReceiverChainId:                  msg.ChainId,
-				CoinType:                         coin.CoinType_Cmd,
-				Amount:                           math.NewUint(0),
-				OutboundTxTssNonce:               0,
-				OutboundTxGasLimit:               100_000,
-				OutboundTxGasPrice:               medianGasPrice.String(),
-				OutboundTxHash:                   "",
-				OutboundTxBallotIndex:            "",
-				OutboundTxObservedExternalHeight: 0,
-				TssPubkey:                        tss.TssPubkey,
+				Receiver:               param.Erc20CustodyContractAddress,
+				ReceiverChainId:        msg.ChainId,
+				CoinType:               coin.CoinType_Cmd,
+				Amount:                 math.NewUint(0),
+				TssNonce:               0,
+				GasLimit:               100_000,
+				GasPrice:               medianGasPrice.String(),
+				Hash:                   "",
+				BallotIndex:            "",
+				ObservedExternalHeight: 0,
+				TssPubkey:              tss.TssPubkey,
 			},
 		},
 	}
@@ -167,7 +167,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		GasLimit: uint64(msg.GasLimit),
 	}
 	k.fungibleKeeper.SetForeignCoins(ctx, foreignCoin)
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 
 	commit()
 

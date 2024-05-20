@@ -79,7 +79,7 @@ type ObserverKeeper interface {
 		coinType coin.CoinType,
 		voter string,
 		ballotIndex string,
-		inTxHash string,
+		inboundHash string,
 	) (bool, bool, error)
 	VoteOnOutboundBallot(
 		ctx sdk.Context,
@@ -186,4 +186,7 @@ type AuthorityKeeper interface {
 
 type LightclientKeeper interface {
 	VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error)
+}
+
+type IBCCrosschainKeeper interface {
 }

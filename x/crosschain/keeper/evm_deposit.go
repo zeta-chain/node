@@ -21,21 +21,21 @@ import (
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
 func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (bool, error) {
-	to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-	sender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+	to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	var ethTxHash ethcommon.Hash
-	inboundAmount := cctx.GetInboundTxParams().Amount.BigInt()
-	inboundSender := cctx.GetInboundTxParams().Sender
-	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
-	inboundCoinType := cctx.InboundTxParams.CoinType
+	inboundAmount := cctx.GetInboundParams().Amount.BigInt()
+	inboundSender := cctx.GetInboundParams().Sender
+	inboundSenderChainID := cctx.GetInboundParams().SenderChainId
+	inboundCoinType := cctx.InboundParams.CoinType
 
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 		ethTxHash = ethcommon.BytesToHash(hash)
-		cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		cctx.GetCurrentOutboundParam().Hash = ethTxHash.String()
 		// #nosec G701 always positive
-		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
+		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 
 	if inboundCoinType == coin.CoinType_Zeta {
@@ -80,7 +80,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			inboundSenderChainID,
 			data,
 			inboundCoinType,
-			cctx.InboundTxParams.Asset,
+			cctx.InboundParams.Asset,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
@@ -94,7 +94,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			if len(logs) > 0 {
 				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-				txOrigin := cctx.InboundTxParams.TxOrigin
+				txOrigin := cctx.InboundParams.TxOrigin
 				if txOrigin == "" {
 					txOrigin = inboundSender
 				}

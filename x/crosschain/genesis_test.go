@@ -14,15 +14,15 @@ import (
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		ZetaAccounting: sample.ZetaAccounting(t, "sample"),
-		OutTxTrackerList: []types.OutTxTracker{
-			sample.OutTxTracker(t, "0"),
-			sample.OutTxTracker(t, "1"),
-			sample.OutTxTracker(t, "2"),
+		OutboundTrackerList: []types.OutboundTracker{
+			sample.OutboundTracker(t, "0"),
+			sample.OutboundTracker(t, "1"),
+			sample.OutboundTracker(t, "2"),
 		},
-		InTxTrackerList: []types.InTxTracker{
-			sample.InTxTracker(t, "0"),
-			sample.InTxTracker(t, "1"),
-			sample.InTxTracker(t, "2"),
+		InboundTrackerList: []types.InboundTracker{
+			sample.InboundTracker(t, "0"),
+			sample.InboundTracker(t, "1"),
+			sample.InboundTracker(t, "2"),
 		},
 		FinalizedInbounds: []string{
 			sample.Hash().String(),
@@ -44,10 +44,10 @@ func TestGenesis(t *testing.T) {
 			sample.LastBlockHeight(t, "1"),
 			sample.LastBlockHeight(t, "2"),
 		},
-		InTxHashToCctxList: []types.InTxHashToCctx{
-			sample.InTxHashToCctx(t, "0x0"),
-			sample.InTxHashToCctx(t, "0x1"),
-			sample.InTxHashToCctx(t, "0x2"),
+		InboundHashToCctxList: []types.InboundHashToCctx{
+			sample.InboundHashToCctx(t, "0x0"),
+			sample.InboundHashToCctx(t, "0x1"),
+			sample.InboundHashToCctx(t, "0x2"),
 		},
 		RateLimiterFlags: sample.RateLimiterFlags(),
 	}

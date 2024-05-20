@@ -22,7 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
@@ -128,7 +129,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	runner.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
-	cctx := utils.WaitCctxMinedByInTxHash(runner.Ctx, txHash2.String(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(runner.Ctx, txHash2.String(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected mined status; got %s, message: %s",
@@ -267,7 +268,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	}
 
 	depositorFee := zetabitcoin.DefaultDepositorFee
-	events, err := zetabitcoin.FilterAndParseIncomingTx(
+	events, err := btcobserver.FilterAndParseIncomingTx(
 		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
 		0,
@@ -279,7 +280,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	runner.Logger.Info("bitcoin intx events:")
+	runner.Logger.Info("bitcoin inbound events:")
 	for _, event := range events {
 		runner.Logger.Info("  TxHash: %s", event.TxHash)
 		runner.Logger.Info("  From: %s", event.FromAddress)

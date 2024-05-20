@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,27 +24,60 @@ import (
 )
 
 type CrosschainMockOptions struct {
-	UseBankMock        bool
-	UseAccountMock     bool
-	UseStakingMock     bool
-	UseObserverMock    bool
-	UseFungibleMock    bool
-	UseAuthorityMock   bool
-	UseLightclientMock bool
+	UseBankMock          bool
+	UseAccountMock       bool
+	UseStakingMock       bool
+	UseObserverMock      bool
+	UseFungibleMock      bool
+	UseAuthorityMock     bool
+	UseLightclientMock   bool
+	UseIBCCrosschainMock bool
 }
 
 var (
 	CrosschainMocksAll = CrosschainMockOptions{
-		UseBankMock:        true,
-		UseAccountMock:     true,
-		UseStakingMock:     true,
-		UseObserverMock:    true,
-		UseFungibleMock:    true,
-		UseAuthorityMock:   true,
-		UseLightclientMock: true,
+		UseBankMock:          true,
+		UseAccountMock:       true,
+		UseStakingMock:       true,
+		UseObserverMock:      true,
+		UseFungibleMock:      true,
+		UseAuthorityMock:     true,
+		UseLightclientMock:   true,
+		UseIBCCrosschainMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
+
+func initCrosschainKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	stakingKeeper types.StakingKeeper,
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	observerKeeper types.ObserverKeeper,
+	fungibleKeeper types.FungibleKeeper,
+	authorityKeeper types.AuthorityKeeper,
+	lightclientKeeper types.LightclientKeeper,
+) *keeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+
+	return keeper.NewKeeper(
+		cdc,
+		storeKey,
+		memKey,
+		stakingKeeper,
+		authKeeper,
+		bankKeeper,
+		observerKeeper,
+		fungibleKeeper,
+		authorityKeeper,
+		lightclientKeeper,
+	)
+}
 
 // CrosschainKeeperWithMocks initializes a crosschain keeper for testing purposes with option to mock specific keepers
 func CrosschainKeeperWithMocks(
@@ -94,19 +128,9 @@ func CrosschainKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
 
-	// Create the fungible keeper
+	// Create the crosschain keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	ctx := NewContext(stateStore)
-
-	// Initialize modules genesis
-	sdkKeepers.InitGenesis(ctx)
-	zetaKeepers.InitGenesis(ctx)
-
-	// Add a proposer to the context
-	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
@@ -135,6 +159,7 @@ func CrosschainKeeperWithMocks(
 		lightclientKeeper = crosschainmocks.NewCrosschainLightclientKeeper(t)
 	}
 
+	// create crosschain keeper
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
@@ -147,6 +172,36 @@ func CrosschainKeeperWithMocks(
 		authorityKeeper,
 		lightclientKeeper,
 	)
+
+	// initialize ibccrosschain keeper and set it to the crosschain keeper
+	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
+
+	var ibcCrosschainKeeperTmp types.IBCCrosschainKeeper = initIBCCrosschainKeeper(
+		cdc,
+		db,
+		stateStore,
+		k,
+		sdkKeepers.TransferKeeper,
+		*sdkKeepers.CapabilityKeeper,
+	)
+	if mockOptions.UseIBCCrosschainMock {
+		ibcCrosschainKeeperTmp = crosschainmocks.NewCrosschainIBCCrosschainKeeper(t)
+	}
+	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
+
+	// seal the IBC router
+	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
+
+	// load the latest version of the state store
+	require.NoError(t, stateStore.LoadLatestVersion())
+	ctx := NewContext(stateStore)
+
+	// initialize modules genesis
+	sdkKeepers.InitGenesis(ctx)
+	zetaKeepers.InitGenesis(ctx)
+
+	// add a proposer to the context
+	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }
@@ -285,12 +340,12 @@ func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, 
 }
 
 func MockVoteOnOutboundSuccessBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
 		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).Once()
 }
 
 func MockVoteOnOutboundFailedBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
 		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).Once()
 }
 
@@ -300,14 +355,14 @@ func MockGetOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Contex
 
 func MockSaveOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, tss observertypes.TSS) {
 	m.On("RemoveFromPendingNonces",
-		ctx, tss.TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, mock.Anything).
+		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Once()
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
 func MockSaveOutBoundNewRevertCreated(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, tss observertypes.TSS) {
 	m.On("RemoveFromPendingNonces",
-		ctx, tss.TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, mock.Anything).
+		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Once()
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()

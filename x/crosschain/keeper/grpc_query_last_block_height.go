@@ -50,10 +50,10 @@ func (k Keeper) LastBlockHeight(c context.Context, req *types.QueryGetLastBlockH
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
-	if val.LastSendHeight >= math.MaxInt64 {
+	if val.LastOutboundHeight >= math.MaxInt64 {
 		return nil, status.Error(codes.OutOfRange, "invalid last send height")
 	}
-	if val.LastReceiveHeight >= math.MaxInt64 {
+	if val.LastInboundHeight >= math.MaxInt64 {
 		return nil, status.Error(codes.OutOfRange, "invalid last recv height")
 	}
 

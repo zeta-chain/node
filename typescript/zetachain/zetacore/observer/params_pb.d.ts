@@ -5,24 +5,6 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Chain } from "../pkg/chains/chains_pb.js";
-
-/**
- * Deprecated(v14):Moved into the authority module
- *
- * @generated from enum zetachain.zetacore.observer.Policy_Type
- */
-export declare enum Policy_Type {
-  /**
-   * @generated from enum value: group1 = 0;
-   */
-  group1 = 0,
-
-  /**
-   * @generated from enum value: group2 = 1;
-   */
-  group2 = 1,
-}
 
 /**
  * @generated from message zetachain.zetacore.observer.ChainParamsList
@@ -68,14 +50,14 @@ export declare class ChainParams extends Message<ChainParams> {
   gasPriceTicker: bigint;
 
   /**
-   * @generated from field: uint64 in_tx_ticker = 3;
+   * @generated from field: uint64 inbound_ticker = 3;
    */
-  inTxTicker: bigint;
+  inboundTicker: bigint;
 
   /**
-   * @generated from field: uint64 out_tx_ticker = 4;
+   * @generated from field: uint64 outbound_ticker = 4;
    */
-  outTxTicker: bigint;
+  outboundTicker: bigint;
 
   /**
    * @generated from field: uint64 watch_utxo_ticker = 5;
@@ -98,14 +80,14 @@ export declare class ChainParams extends Message<ChainParams> {
   erc20CustodyContractAddress: string;
 
   /**
-   * @generated from field: int64 outbound_tx_schedule_interval = 12;
+   * @generated from field: int64 outbound_schedule_interval = 12;
    */
-  outboundTxScheduleInterval: bigint;
+  outboundScheduleInterval: bigint;
 
   /**
-   * @generated from field: int64 outbound_tx_schedule_lookahead = 13;
+   * @generated from field: int64 outbound_schedule_lookahead = 13;
    */
-  outboundTxScheduleLookahead: bigint;
+  outboundScheduleLookahead: bigint;
 
   /**
    * @generated from field: string ballot_threshold = 14;
@@ -138,97 +120,11 @@ export declare class ChainParams extends Message<ChainParams> {
 }
 
 /**
- * Deprecated(v13): Use ChainParamsList
- *
- * @generated from message zetachain.zetacore.observer.ObserverParams
- */
-export declare class ObserverParams extends Message<ObserverParams> {
-  /**
-   * @generated from field: zetachain.zetacore.pkg.chains.Chain chain = 1;
-   */
-  chain?: Chain;
-
-  /**
-   * @generated from field: string ballot_threshold = 3;
-   */
-  ballotThreshold: string;
-
-  /**
-   * @generated from field: string min_observer_delegation = 4;
-   */
-  minObserverDelegation: string;
-
-  /**
-   * @generated from field: bool is_supported = 5;
-   */
-  isSupported: boolean;
-
-  constructor(data?: PartialMessage<ObserverParams>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.ObserverParams";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverParams;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverParams;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverParams;
-
-  static equals(a: ObserverParams | PlainMessage<ObserverParams> | undefined, b: ObserverParams | PlainMessage<ObserverParams> | undefined): boolean;
-}
-
-/**
- * Deprecated(v14):Moved into the authority module
- *
- * @generated from message zetachain.zetacore.observer.Admin_Policy
- */
-export declare class Admin_Policy extends Message<Admin_Policy> {
-  /**
-   * @generated from field: zetachain.zetacore.observer.Policy_Type policy_type = 1;
-   */
-  policyType: Policy_Type;
-
-  /**
-   * @generated from field: string address = 2;
-   */
-  address: string;
-
-  constructor(data?: PartialMessage<Admin_Policy>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.Admin_Policy";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Admin_Policy;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Admin_Policy;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Admin_Policy;
-
-  static equals(a: Admin_Policy | PlainMessage<Admin_Policy> | undefined, b: Admin_Policy | PlainMessage<Admin_Policy> | undefined): boolean;
-}
-
-/**
- * Deprecated
+ * Deprecated(v17)
  *
  * @generated from message zetachain.zetacore.observer.Params
  */
 export declare class Params extends Message<Params> {
-  /**
-   * Deprecated(v13): Use ChainParamsList
-   *
-   * @generated from field: repeated zetachain.zetacore.observer.ObserverParams observer_params = 1;
-   */
-  observerParams: ObserverParams[];
-
-  /**
-   * Deprecated(v14):Moved into the authority module
-   *
-   * @generated from field: repeated zetachain.zetacore.observer.Admin_Policy admin_policy = 2;
-   */
-  adminPolicy: Admin_Policy[];
-
   /**
    * Deprecated(v17):Moved into the emissions module
    *

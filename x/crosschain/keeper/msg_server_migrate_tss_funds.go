@@ -99,33 +99,33 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			StatusMessage:       "",
 			LastUpdateTimestamp: 0,
 		},
-		InboundTxParams: &types.InboundTxParams{
-			Sender:                          "",
-			SenderChainId:                   chainID,
-			TxOrigin:                        "",
-			CoinType:                        coin.CoinType_Cmd,
-			Asset:                           "",
-			Amount:                          amount,
-			InboundTxObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
-			InboundTxObservedExternalHeight: 0,
-			InboundTxBallotIndex:            "",
-			InboundTxFinalizedZetaHeight:    0,
+		InboundParams: &types.InboundParams{
+			Sender:                 "",
+			SenderChainId:          chainID,
+			TxOrigin:               "",
+			CoinType:               coin.CoinType_Cmd,
+			Asset:                  "",
+			Amount:                 amount,
+			ObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
+			ObservedExternalHeight: 0,
+			BallotIndex:            "",
+			FinalizedZetaHeight:    0,
 		},
-		OutboundTxParams: []*types.OutboundTxParams{{
-			Receiver:                         "",
-			ReceiverChainId:                  chainID,
-			CoinType:                         coin.CoinType_Cmd,
-			Amount:                           amount,
-			OutboundTxTssNonce:               0,
-			OutboundTxGasLimit:               1_000_000,
-			OutboundTxGasPrice:               medianGasPrice.MulUint64(2).String(),
-			OutboundTxHash:                   "",
-			OutboundTxBallotIndex:            "",
-			OutboundTxObservedExternalHeight: 0,
-			OutboundTxGasUsed:                0,
-			OutboundTxEffectiveGasPrice:      sdkmath.Int{},
-			OutboundTxEffectiveGasLimit:      0,
-			TssPubkey:                        currentTss.TssPubkey,
+		OutboundParams: []*types.OutboundParams{{
+			Receiver:               "",
+			ReceiverChainId:        chainID,
+			CoinType:               coin.CoinType_Cmd,
+			Amount:                 amount,
+			TssNonce:               0,
+			GasLimit:               1_000_000,
+			GasPrice:               medianGasPrice.MulUint64(2).String(),
+			Hash:                   "",
+			BallotIndex:            "",
+			ObservedExternalHeight: 0,
+			GasUsed:                0,
+			EffectiveGasPrice:      sdkmath.Int{},
+			EffectiveGasLimit:      0,
+			TssPubkey:              currentTss.TssPubkey,
 		}}}
 	// Set the sender and receiver addresses for EVM chain
 	if chains.IsEVMChain(chainID) {
@@ -137,21 +137,21 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		if err != nil {
 			return err
 		}
-		cctx.InboundTxParams.Sender = ethAddressOld.String()
-		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
+		cctx.InboundParams.Sender = ethAddressOld.String()
+		cctx.GetCurrentOutboundParam().Receiver = ethAddressNew.String()
 		// Tss migration is a send transaction, so the gas limit is set to 21000
-		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = gas.EVMSend
+		cctx.GetCurrentOutboundParam().GasLimit = gas.EVMSend
 		// Multiple current gas price with standard multiplier to add some buffer
 		multipliedGasPrice, err := gas.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
 		if err != nil {
 			return err
 		}
-		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = multipliedGasPrice.String()
-		evmFee := sdkmath.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit).Mul(multipliedGasPrice)
+		cctx.GetCurrentOutboundParam().GasPrice = multipliedGasPrice.String()
+		evmFee := sdkmath.NewUint(cctx.GetCurrentOutboundParam().GasLimit).Mul(multipliedGasPrice)
 		if evmFee.GT(amount) {
 			return errorsmod.Wrap(types.ErrInsufficientFundsTssMigration, fmt.Sprintf("insufficient funds to pay for gas fee, amount: %s, gas fee: %s, chainid: %d", amount.String(), evmFee.String(), chainID))
 		}
-		cctx.GetCurrentOutTxParam().Amount = amount.Sub(evmFee)
+		cctx.GetCurrentOutboundParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
 	if chains.IsBitcoinChain(chainID) {
@@ -167,11 +167,11 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		if err != nil {
 			return err
 		}
-		cctx.InboundTxParams.Sender = btcAddressOld
-		cctx.GetCurrentOutTxParam().Receiver = btcAddressNew
+		cctx.InboundParams.Sender = btcAddressOld
+		cctx.GetCurrentOutboundParam().Receiver = btcAddressNew
 	}
 
-	if cctx.GetCurrentOutTxParam().Receiver == "" {
+	if cctx.GetCurrentOutboundParam().Receiver == "" {
 		return errorsmod.Wrap(types.ErrReceiverIsEmpty, fmt.Sprintf("chain %d is not supported", chainID))
 	}
 
@@ -192,7 +192,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		}
 	}
 
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 	k.zetaObserverKeeper.SetFundMigrator(ctx, observertypes.TssFundMigratorInfo{
 		ChainId:            chainID,
 		MigrationCctxIndex: index,

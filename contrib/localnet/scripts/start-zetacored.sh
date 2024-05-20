@@ -4,10 +4,66 @@
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
 # The number of nodes is passed as an first argument to the script
-# The second argument is optional and can have the following value:
-# 1. upgrade : This is used to test the upgrade process, a proposal is created for the upgrade and the nodes are started using cosmovisor
 
 /usr/sbin/sshd
+
+# This function add authz observer authorizations for inbound/outbound votes and tracker messages
+# These messages have been renamed for v17: https://github.com/zeta-chain/node/blob/refactor/rename-outbound-inbound/docs/releases/v17_breaking_changes.md#inbound-and-outtx-renaming
+# There if the genesis is generated with a v16 binary for the upgrade tests, it will not contains authorizations for new messages
+# This function will add the missing authorizations to the genesis file
+# TODO: Remove this function when v17 is released
+# https://github.com/zeta-chain/node/issues/2196
+add_v17_message_authorizations() {
+    # Path to the JSON file
+    json_file="/root/.zetacored/config/genesis.json"
+
+    # Using jq to parse JSON, create new entries, and append them to the authorization array
+    jq '
+        # Store the nodeAccountList array
+        .app_state.observer.nodeAccountList as $list |
+
+        # Iterate over the stored list to construct new objects and append to the authorization array
+        .app_state.authz.authorization += [
+            $list[] |
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgVoteInbound"
+                },
+                "expiration": null
+            },
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgVoteOutbound"
+                },
+                "expiration": null
+            },
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgAddOutboundTracker"
+                },
+                "expiration": null
+            },
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgAddInboundTracker"
+                },
+                "expiration": null
+            }
+        ]
+    ' $json_file > temp.json && mv temp.json $json_file
+}
 
 if [ $# -lt 1 ]
 then
@@ -15,14 +71,12 @@ then
   exit 1
 fi
 NUMOFNODES=$1
-OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
-UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
 # Environment variables used for upgrade testing
 export DAEMON_HOME=$HOME/.zetacored
@@ -35,7 +89,6 @@ export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-export UpgradeName=$(${GOPATH}/bin/new/zetacored version)
 
 # generate node list
 START=1
@@ -48,6 +101,25 @@ do
 done
 
 echo "HOSTNAME: $HOSTNAME"
+
+# init ssh keys
+# we generate keys at runtime to ensure that keys are never pushed to
+# a docker registry
+if [ $HOSTNAME == "zetacore0" ]; then
+  if [[ ! -f ~/.ssh/id_rsa ]]; then
+    ssh-keygen -t rsa -q -N "" -f ~/.ssh/id_rsa
+    cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+    # keep localtest.pem for compatibility
+    cp ~/.ssh/id_rsa ~/.ssh/localtest.pem
+    chmod 600 ~/.ssh/*
+  fi
+fi
+
+# Wait for authorized_keys file to exist (zetacore1+)
+while [ ! -f ~/.ssh/authorized_keys ]; do
+    echo "Waiting for authorized_keys file to exist..."
+    sleep 1
+done
 
 # Init a new node to generate genesis file .
 # Copy config files from existing folders which get copied via Docker Copy when building images
@@ -67,9 +139,16 @@ source ~/add-keys.sh
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
 then
-  echo "Waiting for zetacore0 to create genesis.json"
-  sleep 10
-  echo "genesis.json created"
+  while [ ! -f ~/.zetacored/config/genesis.json ]; do
+    echo "Waiting for genesis.json file to exist..."
+    sleep 1
+  done
+  # need to wait for zetacore0 to be up otherwise you get
+  # 
+  while ! curl -s -o /dev/null zetacore0:26657/status ; do
+    echo "Waiting for zetacore0 rpc"
+    sleep 1
+done
 fi
 
 # Genesis creation following steps
@@ -94,7 +173,10 @@ then
   for NODE in "${NODELIST[@]}"; do
     INDEX=${NODE:0-1}
     ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/
-    scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json
+    while ! scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json; do
+      echo "Waiting for os_info.json from node $NODE"
+      sleep 1
+    done
     scp ~/.zetacored/os_info/os_z"$INDEX".json zetaclient"$INDEX":~/.zetacored/os.json
   done
 
@@ -104,6 +186,16 @@ then
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 55
+
+  # Check for the existence of "AddToOutTxTracker" string in the genesis file
+  # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
+  # In this case, we need to add authorizations for the new v17 messages to the genesis file
+  # TODO: Remove this function when v17 is released
+  # https://github.com/zeta-chain/node/issues/2196
+  if jq -e 'tostring | contains("AddToOutTxTracker")' "/root/.zetacored/config/genesis.json" > /dev/null; then
+    add_v17_message_authorizations
+  fi
+
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
@@ -113,15 +205,22 @@ then
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["feemarket"]["params"]["min_gas_price"]="10000000000.0000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
+  # set governance parameters in new params module for sdk v0.47+
+  # these parameters will normally be migrated but is needed for localnet genesis
+  # set the parameters only if params field is defined in gov
+  # in the case of sdk v0.46 during upgrade test, the params field is not defined
+  if jq -e '.app_state.gov | has("params")' "$HOME/.zetacored/config/genesis.json" > /dev/null; then
+    cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+    cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  fi
+
 # set admin account
   zetacored add-genesis-account zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk 100000000000000000000000000azeta
   zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][2]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  
+
 # give balance to runner accounts to deploy contracts directly on zEVM
 # deployer
   zetacored add-genesis-account zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd 100000000000000000000000000azeta
@@ -180,73 +279,4 @@ then
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
-# 7 Start the nodes
-# If upgrade option is passed, use cosmovisor to start the nodes and create a governance proposal for upgrade
-if [ "$OPTION" != "upgrade" ]; then
-
-  exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
-
-else
-
-  # Setup cosmovisor
-  mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
-  mkdir -p $DAEMON_HOME/cosmovisor/upgrades/"$UpgradeName"/bin
-
-  # Genesis
-  cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
-  cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
-
-  #Upgrades
-  cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
-
-  #Permissions
-  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
-  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
-  chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
-
-  # Start the node using cosmovisor
-  cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
-  sleep 20
-  echo
-
-  # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
-  UPGRADE_HEIGHT=${3:-225}
-
-  # If this is the first node, create a governance proposal for upgrade
-  if [ $HOSTNAME = "zetacore0" ]
-  then
-    cat > upgrade.json <<EOF
-{
-  "messages": [
-    {
-      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-      "plan": {
-        "height": "${UPGRADE_HEIGHT}",
-        "info": "",
-        "name": "${UpgradeName}",
-        "time": "0001-01-01T00:00:00Z",
-        "upgraded_client_state": null
-      },
-      "authority": "${UPGRADE_AUTHORITY_ACCOUNT}"
-    }
-  ],
-  "metadata": "",
-  "deposit": "100000000azeta",
-  "title": "${UpgradeName}",
-  "summary": "${UpgradeName}"
-}
-EOF
-    /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta
-  fi
-
-  # Wait for the proposal to be voted on
-  sleep 8
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=2000000000000000azeta --broadcast-mode block
-  sleep 7
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
-
-  # We use tail -f to keep the container running. Use -n999999 to ensure we get all the context.
-  tail -n999999 -f zetanode.log
-
-fi
-
+cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored

@@ -10,7 +10,7 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
+func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	approvedAmount := big.NewInt(1e18)
 	if len(args) != 2 {
 		panic("TestMultipleWithdraws requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
@@ -87,7 +87,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 		panic("withdraw failed")
 	}
 
-	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, int(numberOfWithdrawals.Int64()), r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, int(numberOfWithdrawals.Int64()), r.Logger, r.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}

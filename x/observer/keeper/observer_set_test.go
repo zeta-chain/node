@@ -113,9 +113,9 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		k.SetObserverSet(ctx, observerSet)
 		err := k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
 		require.NoError(t, err)
-		observerMappers, found := k.GetObserverSet(ctx)
+		observerSet, found := k.GetObserverSet(ctx)
 		require.True(t, found)
-		require.Equal(t, newObserverAddress, observerMappers.ObserverList[len(observerMappers.ObserverList)-1])
+		require.Equal(t, newObserverAddress, observerSet.ObserverList[len(observerSet.ObserverList)-1])
 	})
 	t.Run("update observer address short observerList", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
@@ -126,8 +126,8 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		k.SetObserverSet(ctx, observerSet)
 		err := k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
 		require.NoError(t, err)
-		observerMappers, found := k.GetObserverSet(ctx)
+		observerSet, found := k.GetObserverSet(ctx)
 		require.True(t, found)
-		require.Equal(t, newObserverAddress, observerMappers.ObserverList[len(observerMappers.ObserverList)-1])
+		require.Equal(t, newObserverAddress, observerSet.ObserverList[len(observerSet.ObserverList)-1])
 	})
 }

@@ -155,7 +155,7 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
-	importedCrossChainGenState.InTxHashToCctxList = importedCrossChainGenState.InTxHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InTxHashToCctxList))]
+	importedCrossChainGenState.InboundHashToCctxList = importedCrossChainGenState.InboundHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InboundHashToCctxList))]
 	importedCrossChainGenState.FinalizedInbounds = importedCrossChainGenState.FinalizedInbounds[:math.Min(MaxItemsForList, len(importedCrossChainGenState.FinalizedInbounds))]
 	importedCrossChainStateBz, err := json.Marshal(importedCrossChainGenState)
 	if err != nil {

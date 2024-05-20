@@ -106,7 +106,7 @@ func CheckAndUpdateCctxGasPrice(
 	flags observertypes.GasPriceIncreaseFlags,
 ) (math.Uint, math.Uint, error) {
 	// skip if gas price or gas limit is not set
-	if cctx.GetCurrentOutTxParam().OutboundTxGasPrice == "" || cctx.GetCurrentOutTxParam().OutboundTxGasLimit == 0 {
+	if cctx.GetCurrentOutboundParam().GasPrice == "" || cctx.GetCurrentOutboundParam().GasLimit == 0 {
 		return math.ZeroUint(), math.ZeroUint(), nil
 	}
 
@@ -117,7 +117,7 @@ func CheckAndUpdateCctxGasPrice(
 	}
 
 	// compute gas price increase
-	chainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
@@ -128,7 +128,7 @@ func CheckAndUpdateCctxGasPrice(
 	gasPriceIncrease := medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
 
 	// compute new gas price
-	currentGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
+	currentGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 	if err != nil {
 		return math.ZeroUint(), math.ZeroUint(), err
 	}
@@ -145,7 +145,7 @@ func CheckAndUpdateCctxGasPrice(
 	}
 
 	// withdraw additional fees from the gas stability pool
-	gasLimit := math.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
+	gasLimit := math.NewUint(cctx.GetCurrentOutboundParam().GasLimit)
 	additionalFees := gasLimit.Mul(gasPriceIncrease)
 	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
@@ -155,7 +155,7 @@ func CheckAndUpdateCctxGasPrice(
 	}
 
 	// set new gas price and last update timestamp
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = newGasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPrice = newGasPrice.String()
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 

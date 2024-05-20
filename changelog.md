@@ -1,11 +1,10 @@
 # CHANGELOG
 
 ## Unreleased
+
 ### Breaking Changes
-* `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableHeaderVerification` and `MsgDisableHeaderVerification` messages.
- * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
- * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
-* Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
+
+* [List of the breaking changes can be found in this document](docs/releases/v17_breaking_changes.md)
 
 ### Features
 
@@ -13,7 +12,9 @@
 * [2100](https://github.com/zeta-chain/node/pull/2100) - cosmos v0.47 upgrade
 * [2145](https://github.com/zeta-chain/node/pull/2145) - add `ibc` and `ibc-transfer` modules
 * [2135](https://github.com/zeta-chain/node/pull/2135) - add develop build version logic
+* [2152](https://github.com/zeta-chain/node/pull/2152) - custom priority nonce mempool
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
+* [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 
 ### Refactor
 
@@ -22,11 +23,16 @@
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
+* [2118](https://github.com/zeta-chain/node/pull/2118) - consolidate inbound and outbound naming
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
+* [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
+* [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 
 ### Tests
 
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+* [2181](https://github.com/zeta-chain/node/pull/2181) - add more assertion and test cases in ZEVM message passing E2E tests
+* [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
 
 ### Fixes
 
@@ -37,7 +43,9 @@
 
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
 * [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
-
+* [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
+* [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
+* [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
 ## v16.0.0
 
 ### Breaking Changes
@@ -122,7 +130,7 @@
 * [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
 * [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
 * [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
-* [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
+* [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetacore package
 * [1985](https://github.com/zeta-chain/node/pull/1985) - improve fungible module coverage
 * [1992](https://github.com/zeta-chain/node/pull/1992) - remove setupKeeper from crosschain module
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update

@@ -1,31 +1,47 @@
-FROM golang:1.20-alpine3.18
+# syntax=docker/dockerfile:1.7-labs
+FROM golang:1.20.14-bullseye AS base-build
 
 ENV GOPATH /go
 ENV GOOS=linux
 ENV CGO_ENABLED=1
 ENV GOCACHE=/root/.cache/go-build
 
-RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl tmux python3 py3-pip
-RUN pip install requests
-RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
+RUN apt update && \
+    apt install -yq libusb-dev
 
 WORKDIR /go/delivery/zeta-node
+
+FROM base-build AS latest-build
+
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-COPY . .
+COPY version.sh .
+COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
 
 RUN --mount=type=cache,target="/root/.cache/go-build" make install
 RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
 
-RUN ssh-keygen -A
-WORKDIR /root
+FROM golang:1.20.14-bullseye AS cosmovisor-build
+RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
-RUN cp /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
+FROM debian:bullseye-slim AS base-runtime
 
-RUN cp /go/bin/zetaclientd /usr/local/bin
-RUN cp /go/bin/zetacored /usr/local/bin
-RUN cp /go/bin/zetae2e /usr/local/bin
+RUN apt update && \
+    apt install -yq jq curl tmux python3 openssh-server iputils-ping iproute2 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN ssh-keygen -A && \ 
+    mkdir -p /var/run/sshd
+
+RUN mkdir -p /root/.zetacored/cosmovisor/genesis/bin && \
+    ln -s /usr/local/bin/zetacored /root/.zetacored/cosmovisor/genesis/bin/zetacored && \
+    ln -s /root/.zetacored/cosmovisor/genesis /root/.zetacored/cosmovisor/current && \
+    mkdir -p /root/.zetaclientd/upgrades/genesis && \
+    ln -s /usr/local/bin/zetaclientd /root/.zetaclientd/upgrades/genesis/zetacored && \
+    ln -s /root/.zetaclientd/upgrades/genesis /root/.zetaclientd/upgrades/current
+
+ENV PATH /root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/current/:${PATH}
 
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/preparams /root/preparams
@@ -34,11 +50,32 @@ COPY contrib/localnet/zetacored /root/zetacored
 COPY contrib/localnet/tss /root/tss
 
 RUN chmod 755 /root/*.sh
-RUN chmod 700 /root/.ssh
-RUN chmod 600 /root/.ssh/*
 
 WORKDIR /usr/local/bin
-ENV SHELL /bin/sh
 EXPOSE 22
 
-ENTRYPOINT ["/usr/sbin/sshd", "-D"]
+FROM base-runtime AS latest-runtime
+
+COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
+COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin
+
+# optional old version build. This old build is used as the genesis version in the upgrade tests.
+# use --target latest-runtime to skip
+# 
+# TODO: just download binaries from github release now that we're using glibc
+# we can't do this right now since we do not have a v16 release candidate
+# https://github.com/zeta-chain/node/issues/2179
+FROM base-build as old-build
+
+ARG OLD_VERSION
+RUN git clone https://github.com/zeta-chain/node.git
+RUN cd node && git fetch
+
+RUN cd node && git checkout ${OLD_VERSION}
+RUN cd node && make install
+
+FROM base-runtime AS old-runtime
+
+COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
+COPY --from=old-build /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
+COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
