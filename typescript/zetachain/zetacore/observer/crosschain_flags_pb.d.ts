@@ -57,37 +57,6 @@ export declare class GasPriceIncreaseFlags extends Message<GasPriceIncreaseFlags
 }
 
 /**
- * Deprecated(v16): Use VerificationFlags in the lightclient module instead
- *
- * @generated from message zetachain.zetacore.observer.BlockHeaderVerificationFlags
- */
-export declare class BlockHeaderVerificationFlags extends Message<BlockHeaderVerificationFlags> {
-  /**
-   * @generated from field: bool isEthTypeChainEnabled = 1;
-   */
-  isEthTypeChainEnabled: boolean;
-
-  /**
-   * @generated from field: bool isBtcTypeChainEnabled = 2;
-   */
-  isBtcTypeChainEnabled: boolean;
-
-  constructor(data?: PartialMessage<BlockHeaderVerificationFlags>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.BlockHeaderVerificationFlags";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): BlockHeaderVerificationFlags;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): BlockHeaderVerificationFlags;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): BlockHeaderVerificationFlags;
-
-  static equals(a: BlockHeaderVerificationFlags | PlainMessage<BlockHeaderVerificationFlags> | undefined, b: BlockHeaderVerificationFlags | PlainMessage<BlockHeaderVerificationFlags> | undefined): boolean;
-}
-
-/**
  * @generated from message zetachain.zetacore.observer.CrosschainFlags
  */
 export declare class CrosschainFlags extends Message<CrosschainFlags> {
@@ -105,13 +74,6 @@ export declare class CrosschainFlags extends Message<CrosschainFlags> {
    * @generated from field: zetachain.zetacore.observer.GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
    */
   gasPriceIncreaseFlags?: GasPriceIncreaseFlags;
-
-  /**
-   * Deprecated(v16): Use VerificationFlags in the lightclient module instead
-   *
-   * @generated from field: zetachain.zetacore.observer.BlockHeaderVerificationFlags blockHeaderVerificationFlags = 4;
-   */
-  blockHeaderVerificationFlags?: BlockHeaderVerificationFlags;
 
   constructor(data?: PartialMessage<CrosschainFlags>);
 

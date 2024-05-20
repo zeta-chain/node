@@ -185,7 +185,7 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto-gen openapi specs typescript docs-zetacored
+generate: proto-gen openapi specs typescript docs-zetacored mocks
 .PHONY: generate
 
 ###############################################################################

@@ -57208,14 +57208,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerBlockHeaderVerificationFlags:
-    type: object
-    properties:
-      isEthTypeChainEnabled:
-        type: boolean
-      isBtcTypeChainEnabled:
-        type: boolean
-    title: 'Deprecated(v16): Use VerificationFlags in the lightclient module instead'
   observerChainNonces:
     type: object
     properties:
@@ -57292,9 +57284,6 @@ definitions:
         type: boolean
       gasPriceIncreaseFlags:
         $ref: '#/definitions/observerGasPriceIncreaseFlags'
-      blockHeaderVerificationFlags:
-        $ref: '#/definitions/observerBlockHeaderVerificationFlags'
-        title: 'Deprecated(v16): Use VerificationFlags in the lightclient module instead'
   observerGasPriceIncreaseFlags:
     type: object
     properties:

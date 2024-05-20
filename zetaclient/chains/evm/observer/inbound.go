@@ -357,6 +357,8 @@ func (ob *Observer) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 		blockHeaderVerification, found := ob.coreContext.GetBlockHeaderEnabledChains(ob.chain.ChainId)
 		if found && blockHeaderVerification.Enabled {
 			// post block header for supported chains
+			// TODO: move this logic in its own routine
+			// https://github.com/zeta-chain/node/issues/2204
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {
 				ob.logger.InTx.Error().Err(err).Msg("error posting block header")
