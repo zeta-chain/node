@@ -92,12 +92,10 @@ func (tx testTx) String() string {
 
 // testEthTx is a dummy implementation of Tx used for testing.
 type testEthTx struct {
-	id       int
-	priority int64
-	nonce    uint64
-	address  sdk.AccAddress
-	// useful for debugging
-	strAddress      string
+	id              int
+	priority        int64
+	nonce           uint64
+	address         sdk.AccAddress
 	extensionOption *codectypes.Any
 	msgs            []sdk.Msg
 }

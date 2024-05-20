@@ -72,10 +72,12 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	sc := accounts[2].Address
 
 	tests := []struct {
+		name  string
 		txs   []txSpec
 		order []int
 	}{
 		{
+			name: "test priority tx order - both senders nonce 1 has biggest priority",
 			txs: []txSpec{
 				{p: 21, n: 4, a: sa},
 				{p: 8, n: 3, a: sa},
@@ -86,6 +88,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{4, 3, 2, 1, 0},
 		},
 		{
+			name: "test priority tx order - biggest priority (9) last because of nonce",
 			txs: []txSpec{
 				{p: 3, n: 0, a: sa},
 				{p: 5, n: 1, a: sa},
@@ -97,6 +100,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{3, 4, 5, 0, 1, 2},
 		},
 		{
+			name: "test priority tx order - biggest priority (21) not first because of nonce",
 			txs: []txSpec{
 				{p: 21, n: 4, a: sa},
 				{p: 15, n: 1, a: sb},
@@ -105,6 +109,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{2, 0, 1},
 		},
 		{
+			name: "test priority tx order - biggest priority (50) last because of nonce",
 			txs: []txSpec{
 				{p: 50, n: 3, a: sa},
 				{p: 30, n: 2, a: sa},
@@ -115,6 +120,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{3, 4, 2, 1, 0},
 		},
 		{
+			name: "test priority tx order - biggest priority (99) first with nonce 1",
 			txs: []txSpec{
 				{p: 50, n: 3, a: sa},
 				{p: 10, n: 2, a: sa},
@@ -125,6 +131,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{2, 3, 1, 0, 4},
 		},
 		{
+			name: "test priority tx order - sa has bigger priority per nonce with 2 senders",
 			txs: []txSpec{
 				{p: 30, a: sa, n: 2},
 				{p: 20, a: sb, n: 1},
@@ -137,8 +144,9 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{3, 2, 0, 4, 1, 5, 6},
 		},
 		{
+			name: "test priority tx order - sa has bigger priority per nonce with 3 senders",
 			txs: []txSpec{
-				{p: 30, n: 2, a: sa},
+				{p: 30, a: sa, n: 2},
 				{p: 20, a: sb, n: 1},
 				{p: 15, a: sa, n: 1},
 				{p: 10, a: sa, n: 0},
@@ -151,6 +159,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{3, 2, 0, 4, 1, 5, 6, 7, 8},
 		},
 		{
+			name: "test priority tx order - sa has bigger priority per nonce 1, even if nonce 2 for sb has biggest priority",
 			txs: []txSpec{
 				{p: 6, n: 1, a: sa},
 				{p: 10, n: 2, a: sa},
@@ -160,6 +169,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{0, 1, 2, 3},
 		},
 		{
+			name: "test priority tx order - same priority sorted lexically by sender address and nonce",
 			// If all txs have the same priority they will be ordered lexically sender
 			// address, and nonce with the sender.
 			txs: []txSpec{
@@ -188,6 +198,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			which exercises the actions required to resolve priority ties.
 		*/
 		{
+			name: "test priority tx order - priority ties between 2 senders",
 			txs: []txSpec{
 				{p: 5, n: 1, a: sa},
 				{p: 10, n: 2, a: sa},
@@ -197,6 +208,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{2, 3, 0, 1},
 		},
 		{
+			name: "test priority tx order - priority ties between 3 senders",
 			txs: []txSpec{
 				{p: 5, n: 1, a: sa},
 				{p: 10, n: 2, a: sa},
@@ -208,6 +220,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{5, 4, 3, 2, 0, 1},
 		},
 		{
+			name: "test priority tx order - priority ties between 3 senders with different tx order",
 			txs: []txSpec{
 				{p: 5, n: 1, a: sa},
 				{p: 10, n: 2, a: sa},
@@ -219,6 +232,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{4, 5, 2, 3, 0, 1},
 		},
 		{
+			name: "test priority tx order - priority ties between 3 senders with different senders order",
 			txs: []txSpec{
 				{p: 5, n: 1, a: sa},
 				{p: 10, n: 2, a: sa},
@@ -230,8 +244,8 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			order: []int{4, 5, 2, 3, 0, 1},
 		},
 	}
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("cosmos tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.NewPriorityMempool()
 
 			// create test txs and insert into mempool
@@ -262,9 +276,8 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 		})
 	}
 
-	// NOTE: same test cases, just ethermint tx instead
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("ethermint tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.NewPriorityMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
@@ -294,9 +307,8 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 		})
 	}
 
-	// NOTE: same test cases, just cosmos + ethermint txs instead
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("cosmos + ethermint tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.NewPriorityMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
@@ -341,10 +353,11 @@ func (s *MempoolTestSuite) TestIterator() {
 	sb := accounts[1].Address
 
 	tests := []struct {
+		name string
 		txs  []txSpec
-		fail bool
 	}{
 		{
+			name: "test iterator",
 			txs: []txSpec{
 				{p: 20, n: 1, a: sa},
 				{p: 15, n: 1, a: sb},
@@ -354,6 +367,7 @@ func (s *MempoolTestSuite) TestIterator() {
 			},
 		},
 		{
+			name: "test iterator including min priority",
 			txs: []txSpec{
 				{p: 20, n: 1, a: sa},
 				{p: 15, n: 1, a: sb},
@@ -364,8 +378,8 @@ func (s *MempoolTestSuite) TestIterator() {
 		},
 	}
 
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("cosmos tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.DefaultPriorityMempool()
 
 			// create test txs and insert into mempool
@@ -386,7 +400,7 @@ func (s *MempoolTestSuite) TestIterator() {
 				iterator = iterator.Next()
 			}
 		})
-		t.Run(fmt.Sprintf("eth case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("ethermint tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.DefaultPriorityMempool()
 
 			// create test txs and insert into mempool
@@ -407,7 +421,7 @@ func (s *MempoolTestSuite) TestIterator() {
 				iterator = iterator.Next()
 			}
 		})
-		t.Run(fmt.Sprintf("cosmos + eth case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("cosmos + ethermint tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.DefaultPriorityMempool()
 
 			// create test txs and insert into mempool
