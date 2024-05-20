@@ -28,36 +28,36 @@ func NewProcessor(logger zerolog.Logger) *Processor {
 	}
 }
 
-func (processor *Processor) StartTryProcess(outboundID string) {
-	outboundManager.mu.Lock()
-	defer outboundManager.mu.Unlock()
-	outboundManager.outboundStartTime[outboundID] = time.Now()
-	outboundManager.outboundActive[outboundID] = struct{}{}
-	outboundManager.numActiveProcessor++
-	outboundManager.Logger.Info().Msgf("StartTryProcess %s, numActiveProcessor %d", outboundID, outboundManager.numActiveProcessor)
+func (p *Processor) StartTryProcess(outboundID string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.outboundStartTime[outboundID] = time.Now()
+	p.outboundActive[outboundID] = struct{}{}
+	p.numActiveProcessor++
+	p.Logger.Info().Msgf("StartTryProcess %s, numActiveProcessor %d", outboundID, p.numActiveProcessor)
 }
 
-func (outboundManager *Processor) EndTryProcess(outboundID string) {
-	outboundManager.mu.Lock()
-	defer outboundManager.mu.Unlock()
-	outboundManager.outboundEndTime[outboundID] = time.Now()
-	delete(outboundManager.outboundActive, outboundID)
-	outboundManager.numActiveProcessor--
-	outboundManager.Logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outboundID, outboundManager.numActiveProcessor, time.Since(outboundManager.outboundStartTime[outboundID]))
+func (p *Processor) EndTryProcess(outboundID string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.outboundEndTime[outboundID] = time.Now()
+	delete(p.outboundActive, outboundID)
+	p.numActiveProcessor--
+	p.Logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outboundID, p.numActiveProcessor, time.Since(p.outboundStartTime[outboundID]))
 }
 
-func (outboundManager *Processor) IsOutboundActive(outboundID string) bool {
-	outboundManager.mu.Lock()
-	defer outboundManager.mu.Unlock()
-	_, found := outboundManager.outboundActive[outboundID]
+func (p *Processor) IsOutboundActive(outboundID string) bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	_, found := p.outboundActive[outboundID]
 	return found
 }
 
-func (outboundManager *Processor) TimeInTryProcess(outboundID string) time.Duration {
-	outboundManager.mu.Lock()
-	defer outboundManager.mu.Unlock()
-	if _, found := outboundManager.outboundActive[outboundID]; found {
-		return time.Since(outboundManager.outboundStartTime[outboundID])
+func (p *Processor) TimeInTryProcess(outboundID string) time.Duration {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if _, found := p.outboundActive[outboundID]; found {
+		return time.Since(p.outboundStartTime[outboundID])
 	}
 	return 0
 }
