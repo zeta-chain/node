@@ -32,7 +32,7 @@ func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	}()
 	runner.Lock()
 
-	cctx := utils.WaitCctxMinedByInTxHash(runner.Ctx, txHash.Hex(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(runner.Ctx, txHash.Hex(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
 			cctx.CctxStatus.Status.String(),

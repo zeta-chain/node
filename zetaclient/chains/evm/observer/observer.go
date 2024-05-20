@@ -45,11 +45,11 @@ type Logger struct {
 	// Chain is the parent logger for the chain
 	Chain zerolog.Logger
 
-	// InTx is the logger for incoming transactions
-	InTx zerolog.Logger
+	// Inbound is the logger for incoming transactions
+	Inbound zerolog.Logger
 
-	// OutTx is the logger for outgoing transactions
-	OutTx zerolog.Logger
+	// Outbound is the logger for outgoing transactions
+	Outbound zerolog.Logger
 
 	// GasPrice is the logger for gas prices
 	GasPrice zerolog.Logger
@@ -66,21 +66,21 @@ type Observer struct {
 
 	Mu *sync.Mutex
 
-	chain                      chains.Chain
-	evmClient                  interfaces.EVMRPCClient
-	evmJSONRPC                 interfaces.EVMJSONRPCClient
-	zetacoreClient             interfaces.ZetacoreClient
-	lastBlockScanned           uint64
-	lastBlock                  uint64
-	db                         *gorm.DB
-	outTxPendingTransactions   map[string]*ethtypes.Transaction
-	outTXConfirmedReceipts     map[string]*ethtypes.Receipt
-	outTXConfirmedTransactions map[string]*ethtypes.Transaction
-	stop                       chan struct{}
-	logger                     Logger
-	coreContext                *clientcontext.ZetacoreContext
-	chainParams                observertypes.ChainParams
-	ts                         *metrics.TelemetryServer
+	chain                         chains.Chain
+	evmClient                     interfaces.EVMRPCClient
+	evmJSONRPC                    interfaces.EVMJSONRPCClient
+	zetacoreClient                interfaces.ZetacoreClient
+	lastBlockScanned              uint64
+	lastBlock                     uint64
+	db                            *gorm.DB
+	outboundPendingTransactions   map[string]*ethtypes.Transaction
+	outboundConfirmedReceipts     map[string]*ethtypes.Receipt
+	outboundConfirmedTransactions map[string]*ethtypes.Transaction
+	stop                          chan struct{}
+	logger                        Logger
+	coreContext                   *clientcontext.ZetacoreContext
+	chainParams                   observertypes.ChainParams
+	ts                            *metrics.TelemetryServer
 
 	blockCache  *lru.Cache
 	headerCache *lru.Cache
@@ -103,8 +103,8 @@ func NewObserver(
 	chainLogger := loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Logger{
 		Chain:      chainLogger,
-		InTx:       chainLogger.With().Str("module", "WatchInTx").Logger(),
-		OutTx:      chainLogger.With().Str("module", "WatchOutTx").Logger(),
+		Inbound:    chainLogger.With().Str("module", "WatchInbound").Logger(),
+		Outbound:   chainLogger.With().Str("module", "WatchOutbound").Logger(),
 		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		Compliance: loggers.Compliance,
 	}
@@ -121,9 +121,9 @@ func NewObserver(
 	ob.Mu = &sync.Mutex{}
 	ob.zetacoreClient = zetacoreClient
 	ob.Tss = tss
-	ob.outTxPendingTransactions = make(map[string]*ethtypes.Transaction)
-	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
-	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
+	ob.outboundPendingTransactions = make(map[string]*ethtypes.Transaction)
+	ob.outboundConfirmedReceipts = make(map[string]*ethtypes.Receipt)
+	ob.outboundConfirmedTransactions = make(map[string]*ethtypes.Transaction)
 
 	ob.logger.Chain.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
 	client, err := ethclient.Dial(evmCfg.Endpoint)
@@ -171,8 +171,8 @@ func (ob *Observer) WithLogger(logger zerolog.Logger) {
 	defer ob.Mu.Unlock()
 	ob.logger = Logger{
 		Chain:    logger,
-		InTx:     logger.With().Str("module", "WatchInTx").Logger(),
-		OutTx:    logger.With().Str("module", "WatchOutTx").Logger(),
+		Inbound:  logger.With().Str("module", "WatchInbound").Logger(),
+		Outbound: logger.With().Str("module", "WatchOutbound").Logger(),
 		GasPrice: logger.With().Str("module", "WatchGasPrice").Logger(),
 	}
 }
@@ -269,16 +269,16 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 // Start all observation routines for the evm chain
 func (ob *Observer) Start() {
 	// watch evm chain for incoming txs and post votes to zetacore
-	go ob.WatchInTx()
+	go ob.WatchInbound()
 
 	// watch evm chain for outgoing txs status
-	go ob.WatchOutTx()
+	go ob.WatchOutbound()
 
 	// watch evm chain for gas prices and post to zetacore
 	go ob.WatchGasPrice()
 
-	// watch zetacore for intx trackers
-	go ob.WatchIntxTracker()
+	// watch zetacore for inbound trackers
+	go ob.WatchInboundTracker()
 
 	// watch the RPC status of the evm chain
 	go ob.WatchRPCStatus()
@@ -344,31 +344,31 @@ func (ob *Observer) Stop() {
 func (ob *Observer) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.outTxPendingTransactions[ob.GetTxID(nonce)] = transaction
+	ob.outboundPendingTransactions[ob.GetTxID(nonce)] = transaction
 }
 
 // GetPendingTx gets the pending transaction from memory
 func (ob *Observer) GetPendingTx(nonce uint64) *ethtypes.Transaction {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	return ob.outTxPendingTransactions[ob.GetTxID(nonce)]
+	return ob.outboundPendingTransactions[ob.GetTxID(nonce)]
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
 func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	delete(ob.outTxPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
-	ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] = receipt
-	ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] = transaction
+	delete(ob.outboundPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
+	ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] = receipt
+	ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] = transaction
 }
 
 // GetTxNReceipt gets the receipt and transaction from memory
 func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	receipt := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
-	transaction := ob.outTXConfirmedTransactions[ob.GetTxID(nonce)]
+	receipt := ob.outboundConfirmedReceipts[ob.GetTxID(nonce)]
+	transaction := ob.outboundConfirmedTransactions[ob.GetTxID(nonce)]
 	return receipt, transaction
 }
 
@@ -376,7 +376,7 @@ func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tr
 func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
+	return ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }
 
 // CheckTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
@@ -643,12 +643,12 @@ func (ob *Observer) postBlockHeader(tip uint64) error {
 
 	header, err := ob.GetBlockHeaderCached(bn)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
+		ob.logger.Inbound.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
 		return err
 	}
 	headerRLP, err := rlp.EncodeToBytes(header)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msgf("postBlockHeader: error encoding block header: %d", bn)
+		ob.logger.Inbound.Error().Err(err).Msgf("postBlockHeader: error encoding block header: %d", bn)
 		return err
 	}
 
@@ -659,7 +659,7 @@ func (ob *Observer) postBlockHeader(tip uint64) error {
 		proofs.NewEthereumHeader(headerRLP),
 	)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msgf("postBlockHeader: error posting block header: %d", bn)
+		ob.logger.Inbound.Error().Err(err).Msgf("postBlockHeader: error posting block header: %d", bn)
 		return err
 	}
 	return nil

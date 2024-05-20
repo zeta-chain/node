@@ -144,7 +144,8 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 	avgGasRate := float64(32.0)
 	// #nosec G701 test - always in range
-	gasRate := int64(avgGasRate * clientcommon.BTCOuttxGasPriceMultiplier)
+
+	gasRate := int64(avgGasRate * clientcommon.BTCOutboundGasPriceMultiplier)
 	dynamicFee828440 := bitcoin.DepositorFee(gasRate)
 
 	// should return default fee if it's a regtest block
@@ -290,23 +291,23 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 }
 
 func TestGetBtcEvent(t *testing.T) {
-	// load archived intx P2WPKH raw result
+	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	chain := chains.BtcMainnetChain
 
 	// GetBtcEvent arguments
-	tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+	tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
 	// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
-	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOuttxGasPriceMultiplier)
+	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
 	require.NoError(t, err)
-	eventExpected := &BTCInTxEvent{
+	eventExpected := &BTCInboundEvent{
 		FromAddress: "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 		ToAddress:   tssAddress,
 		Value:       tx.Vout[0].Value - depositorFee, // 7008 sataoshis
@@ -315,7 +316,7 @@ func TestGetBtcEvent(t *testing.T) {
 		TxHash:      tx.Txid,
 	}
 
-	t.Run("should get BTC intx event from P2WPKH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2WPKH sender", func(t *testing.T) {
 		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
 		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
 		tx.Vin[0].Txid = preHash
@@ -329,7 +330,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2TR sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2TR sender", func(t *testing.T) {
 		// replace vin with a P2TR vin, so the sender address will change
 		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 		preHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
@@ -344,7 +345,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2WSH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2WSH sender", func(t *testing.T) {
 		// replace vin with a P2WSH vin, so the sender address will change
 		// https://mempool.space/tx/d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016
 		preHash := "d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016"
@@ -359,7 +360,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2SH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2SH sender", func(t *testing.T) {
 		// replace vin with a P2SH vin, so the sender address will change
 		// https://mempool.space/tx/211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a
 		preHash := "211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a"
@@ -374,7 +375,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
-	t.Run("should get BTC intx event from P2PKH sender", func(t *testing.T) {
+	t.Run("should get BTC inbound event from P2PKH sender", func(t *testing.T) {
 		// replace vin with a P2PKH vin, so the sender address will change
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
 		preHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
@@ -391,7 +392,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if len(tx.Vout) < 2", func(t *testing.T) {
 		// load tx and modify the tx to have only 1 vout
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout = tx.Vout[:1]
 
 		// get BTC event
@@ -403,7 +404,7 @@ func TestGetBtcEvent(t *testing.T) {
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
 		rpcClient := mocks.NewMockBTCRPCClient()
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
@@ -419,7 +420,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if receiver address is not TSS address", func(t *testing.T) {
 		// load tx and modify receiver address to any non-tss address: bc1qw8wrek2m7nlqldll66ajnwr9mh64syvkt67zlu
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "001471dc3cd95bf4fe0fb7ffd6bb29b865ddf5581196"
 
 		// get BTC event
@@ -430,7 +431,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
 
 		// get BTC event
@@ -441,7 +442,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
 		// load tx and modify memo OP_RETURN to OP_1
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
 		// get BTC event
@@ -452,7 +453,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if memo decoding fails", func(t *testing.T) {
 		// load tx and modify memo length to be 1 byte less than actual
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
 		// get BTC event
@@ -464,18 +465,18 @@ func TestGetBtcEvent(t *testing.T) {
 }
 
 func TestGetBtcEventErrors(t *testing.T) {
-	// load archived intx P2WPKH raw result
+	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	chain := chains.BtcMainnetChain
 	net := &chaincfg.MainNetParams
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
-	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOuttxGasPriceMultiplier)
+	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "0014invalid000000000000000000000000000000000"
 
 		// get BTC event
@@ -486,7 +487,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if len(tx.Vin) < 1", func(t *testing.T) {
 		// load tx and remove vin
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vin = nil
 
 		// get BTC event
@@ -497,7 +498,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
-		tx := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		rpcClient := mocks.NewMockBTCRPCClient()
 
 		// get BTC event

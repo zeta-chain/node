@@ -21,7 +21,7 @@ type ZetacoreContext struct {
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
 	currentTssPubkey   string
-	crossChainFlags    observertypes.CrosschainFlags
+	crosschainFlags    observertypes.CrosschainFlags
 
 	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
 	// All chains in this list will have Enabled flag set to true
@@ -47,7 +47,7 @@ func NewZetacoreContext(cfg config.Config) *ZetacoreContext {
 		chainsEnabled:            []chains.Chain{},
 		evmChainParams:           evmChainParams,
 		bitcoinChainParams:       bitcoinChainParams,
-		crossChainFlags:          observertypes.CrosschainFlags{},
+		crosschainFlags:          observertypes.CrosschainFlags{},
 		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
 	}
 }
@@ -139,7 +139,7 @@ func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 func (c *ZetacoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	return c.crossChainFlags
+	return c.crosschainFlags
 }
 
 // GetAllHeaderEnabledChains returns all verification flags
@@ -212,7 +212,7 @@ func (c *ZetacoreContext) Update(
 	}
 
 	c.chainsEnabled = newChains
-	c.crossChainFlags = crosschainFlags
+	c.crosschainFlags = crosschainFlags
 	c.blockHeaderEnabledChains = blockHeaderEnabledChains
 
 	// update chain params for bitcoin if it has config in file

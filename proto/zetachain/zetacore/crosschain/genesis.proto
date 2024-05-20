@@ -3,10 +3,10 @@ package zetachain.zetacore.crosschain;
 
 import "zetachain/zetacore/crosschain/cross_chain_tx.proto";
 import "zetachain/zetacore/crosschain/gas_price.proto";
-import "zetachain/zetacore/crosschain/in_tx_hash_to_cctx.proto";
-import "zetachain/zetacore/crosschain/in_tx_tracker.proto";
+import "zetachain/zetacore/crosschain/inbound_hash_to_cctx.proto";
+import "zetachain/zetacore/crosschain/inbound_tracker.proto";
 import "zetachain/zetacore/crosschain/last_block_height.proto";
-import "zetachain/zetacore/crosschain/out_tx_tracker.proto";
+import "zetachain/zetacore/crosschain/outbound_tracker.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 
@@ -14,13 +14,15 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-  repeated OutTxTracker outTxTrackerList = 2 [ (gogoproto.nullable) = false ];
+  repeated OutboundTracker outboundTrackerList = 2
+      [ (gogoproto.nullable) = false ];
   repeated GasPrice gasPriceList = 5;
   repeated CrossChainTx CrossChainTxs = 7;
   repeated LastBlockHeight lastBlockHeightList = 8;
-  repeated InTxHashToCctx inTxHashToCctxList = 9
+  repeated InboundHashToCctx inboundHashToCctxList = 9
       [ (gogoproto.nullable) = false ];
-  repeated InTxTracker in_tx_tracker_list = 11 [ (gogoproto.nullable) = false ];
+  repeated InboundTracker inbound_tracker_list = 11
+      [ (gogoproto.nullable) = false ];
   ZetaAccounting zeta_accounting = 12 [ (gogoproto.nullable) = false ];
   repeated string FinalizedInbounds = 16;
   RateLimiterFlags rate_limiter_flags = 17 [ (gogoproto.nullable) = false ];

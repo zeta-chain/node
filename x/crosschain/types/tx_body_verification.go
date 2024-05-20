@@ -13,27 +13,27 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// VerifyInTxBody validates the tx body for a inbound tx
-func VerifyInTxBody(
-	msg MsgAddToInTxTracker,
+// VerifyInboundBody validates the tx body for an inbound
+func VerifyInboundBody(
+	msg MsgAddInboundTracker,
 	txBytes []byte,
 	chainParams observertypes.ChainParams,
 	tss observertypes.QueryGetTssAddressResponse,
 ) error {
 	// verify message against transaction body
 	if chains.IsEVMChain(msg.ChainId) {
-		return verifyInTxBodyEVM(msg, txBytes, chainParams, tss)
+		return verifyInboundBodyEVM(msg, txBytes, chainParams, tss)
 	}
 
-	// TODO: implement verifyInTxBodyBTC
+	// TODO: implement verifyInboundBodyBTC
 	// https://github.com/zeta-chain/node/issues/1993
 
-	return fmt.Errorf("cannot verify inTx body for chain %d", msg.ChainId)
+	return fmt.Errorf("cannot verify inbound body for chain %d", msg.ChainId)
 }
 
-// verifyInTxBodyEVM validates the chain id and connector contract address for Zeta, ERC20 custody contract address for ERC20 and TSS address for Gas.
-func verifyInTxBodyEVM(
-	msg MsgAddToInTxTracker,
+// verifyInboundBodyEVM validates the chain id and connector contract address for Zeta, ERC20 custody contract address for ERC20 and TSS address for Gas.
+func verifyInboundBodyEVM(
+	msg MsgAddInboundTracker,
 	txBytes []byte,
 	chainParams observertypes.ChainParams,
 	tss observertypes.QueryGetTssAddressResponse,
@@ -75,19 +75,19 @@ func verifyInTxBodyEVM(
 	return nil
 }
 
-// VerifyOutTxBody verifies the tx body for a outbound tx
-func VerifyOutTxBody(msg MsgAddToOutTxTracker, txBytes []byte, tss observertypes.QueryGetTssAddressResponse) error {
+// VerifyOutboundBody verifies the tx body for an outbound
+func VerifyOutboundBody(msg MsgAddOutboundTracker, txBytes []byte, tss observertypes.QueryGetTssAddressResponse) error {
 	// verify message against transaction body
 	if chains.IsEVMChain(msg.ChainId) {
-		return verifyOutTxBodyEVM(msg, txBytes, tss.Eth)
+		return verifyOutboundBodyEVM(msg, txBytes, tss.Eth)
 	} else if chains.IsBitcoinChain(msg.ChainId) {
-		return verifyOutTxBodyBTC(msg, txBytes, tss.Btc)
+		return verifyOutboundBodyBTC(msg, txBytes, tss.Btc)
 	}
-	return fmt.Errorf("cannot verify outTx body for chain %d", msg.ChainId)
+	return fmt.Errorf("cannot verify outbound body for chain %d", msg.ChainId)
 }
 
-// verifyOutTxBodyEVM validates the sender address, nonce, chain id and tx hash.
-func verifyOutTxBodyEVM(msg MsgAddToOutTxTracker, txBytes []byte, tssEth string) error {
+// verifyOutboundBodyEVM validates the sender address, nonce, chain id and tx hash.
+func verifyOutboundBodyEVM(msg MsgAddOutboundTracker, txBytes []byte, tssEth string) error {
 	var txx ethtypes.Transaction
 	err := txx.UnmarshalBinary(txBytes)
 	if err != nil {
@@ -117,10 +117,10 @@ func verifyOutTxBodyEVM(msg MsgAddToOutTxTracker, txBytes []byte, tssEth string)
 	return nil
 }
 
-// verifyOutTxBodyBTC validates the SegWit sender address, nonce and chain id and tx hash
+// verifyOutboundBodyBTC validates the SegWit sender address, nonce and chain id and tx hash
 // TODO: Implement tests for the function
 // https://github.com/zeta-chain/node/issues/1994
-func verifyOutTxBodyBTC(msg MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
+func verifyOutboundBodyBTC(msg MsgAddOutboundTracker, txBytes []byte, tssBtc string) error {
 	if !chains.IsBitcoinChain(msg.ChainId) {
 		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
 	}

@@ -19,7 +19,7 @@ Zetacore Daemon (server)
 * [zetacored add-observer-list](zetacored_add-observer-list.md)	 - Add a list of observers to the observer mapper ,default path is ~/.zetacored/os_info/observer_info.json
 * [zetacored addr-conversion](zetacored_addr-conversion.md)	 - convert a zeta1xxx address to validator operator address zetavaloper1xxx
 * [zetacored collect-gentxs](zetacored_collect-gentxs.md)	 - Collect genesis txs and output a genesis.json file
-* [zetacored collect-observer-info](zetacored_collect-observer-info.md)	 - collect observer info from a folder , default path is ~/.zetacored/os_info/ 
+* [zetacored collect-observer-info](zetacored_collect-observer-info.md)	 - collect observer info into the genesis from a folder , default path is ~/.zetacored/os_info/ 
 
 * [zetacored config](zetacored_config.md)	 - Create or query an application CLI configuration file
 * [zetacored debug](zetacored_debug.md)	 - Tool for helping with debugging your application

@@ -19,9 +19,9 @@ const NumOfEntries = 2
 
 type ObserverDBTestSuite struct {
 	suite.Suite
-	db                        *gorm.DB
-	outTXConfirmedReceipts    map[string]*ethtypes.Receipt
-	outTXConfirmedTransaction map[string]*ethtypes.Transaction
+	db                           *gorm.DB
+	outboundConfirmedReceipts    map[string]*ethtypes.Receipt
+	outboundConfirmedTransaction map[string]*ethtypes.Transaction
 }
 
 func TestObserverDB(t *testing.T) {
@@ -29,8 +29,8 @@ func TestObserverDB(t *testing.T) {
 }
 
 func (suite *ObserverDBTestSuite) SetupTest() {
-	suite.outTXConfirmedReceipts = map[string]*ethtypes.Receipt{}
-	suite.outTXConfirmedTransaction = map[string]*ethtypes.Transaction{}
+	suite.outboundConfirmedReceipts = map[string]*ethtypes.Receipt{}
+	suite.outboundConfirmedTransaction = map[string]*ethtypes.Transaction{}
 
 	db, err := gorm.Open(sqlite.Open(TempSQLiteDbPath), &gorm.Config{})
 	suite.NoError(err)
@@ -61,7 +61,7 @@ func (suite *ObserverDBTestSuite) SetupTest() {
 		r, _ := clienttypes.ToReceiptSQLType(receipt, strconv.Itoa(i))
 		dbc := suite.db.Create(r)
 		suite.NoError(dbc.Error)
-		suite.outTXConfirmedReceipts[strconv.Itoa(i)] = receipt
+		suite.outboundConfirmedReceipts[strconv.Itoa(i)] = receipt
 	}
 
 	//Create some transaction entries in the DB
@@ -70,7 +70,7 @@ func (suite *ObserverDBTestSuite) SetupTest() {
 		trans, _ := clienttypes.ToTransactionSQLType(transaction, strconv.Itoa(i))
 		dbc := suite.db.Create(trans)
 		suite.NoError(dbc.Error)
-		suite.outTXConfirmedTransaction[strconv.Itoa(i)] = transaction
+		suite.outboundConfirmedTransaction[strconv.Itoa(i)] = transaction
 	}
 }
 
@@ -82,7 +82,7 @@ func (suite *ObserverDBTestSuite) TearDownSuite() {
 }
 
 func (suite *ObserverDBTestSuite) TestEVMReceipts() {
-	for key, value := range suite.outTXConfirmedReceipts {
+	for key, value := range suite.outboundConfirmedReceipts {
 		var receipt clienttypes.ReceiptSQLType
 		suite.db.Where("Identifier = ?", key).First(&receipt)
 
@@ -92,7 +92,7 @@ func (suite *ObserverDBTestSuite) TestEVMReceipts() {
 }
 
 func (suite *ObserverDBTestSuite) TestEVMTransactions() {
-	for key, value := range suite.outTXConfirmedTransaction {
+	for key, value := range suite.outboundConfirmedTransaction {
 		var transaction clienttypes.TransactionSQLType
 		suite.db.Where("Identifier = ?", key).First(&transaction)
 

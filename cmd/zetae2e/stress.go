@@ -260,21 +260,21 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 			}
 			sends := cctxResp.CrossChainTx
 			sort.Slice(sends, func(i, j int) bool {
-				return sends[i].GetCurrentOutTxParam().OutboundTxTssNonce < sends[j].GetCurrentOutTxParam().OutboundTxTssNonce
+				return sends[i].GetCurrentOutboundParam().TssNonce < sends[j].GetCurrentOutboundParam().TssNonce
 			})
 			if len(sends) > 0 {
-				fmt.Printf("pending nonces %d to %d\n", sends[0].GetCurrentOutTxParam().OutboundTxTssNonce, sends[len(sends)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
+				fmt.Printf("pending nonces %d to %d\n", sends[0].GetCurrentOutboundParam().TssNonce, sends[len(sends)-1].GetCurrentOutboundParam().TssNonce)
 			} else {
 				continue
 			}
 			//
 			// Get all trackers
-			trackerResp, err := runner.CctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
+			trackerResp, err := runner.CctxClient.OutboundTrackerAll(context.Background(), &crosschaintypes.QueryAllOutboundTrackerRequest{})
 			if err != nil {
 				continue
 			}
 
-			currentMinedTxns := sends[0].GetCurrentOutTxParam().OutboundTxTssNonce
+			currentMinedTxns := sends[0].GetCurrentOutboundParam().TssNonce
 			newMinedTxCnt := currentMinedTxns - previousMinedTxns
 			previousMinedTxns = currentMinedTxns
 
@@ -291,7 +291,7 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 			rate := totalMinedTxns
 
 			numPending := len(cctxResp.CrossChainTx)
-			numTrackers := len(trackerResp.OutTxTracker)
+			numTrackers := len(trackerResp.OutboundTracker)
 
 			fmt.Println("Network Stat => Num of Pending cctx: ", numPending, "Num active trackers: ", numTrackers, "Tx Rate: ", rate, " tx/min")
 		}

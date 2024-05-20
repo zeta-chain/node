@@ -22,7 +22,7 @@ import (
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
-// GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
+// GetInBoundVoteMessage returns a new MsgVoteInbound
 func GetInBoundVoteMessage(
 	sender string,
 	senderChain int64,
@@ -31,15 +31,15 @@ func GetInBoundVoteMessage(
 	receiverChain int64,
 	amount math.Uint,
 	message string,
-	inTxHash string,
+	inboundHash string,
 	inBlockHeight uint64,
 	gasLimit uint64,
 	coinType coin.CoinType,
 	asset string,
 	signerAddress string,
 	eventIndex uint,
-) *types.MsgVoteOnObservedInboundTx {
-	msg := types.NewMsgVoteOnObservedInboundTx(
+) *types.MsgVoteInbound {
+	msg := types.NewMsgVoteInbound(
 		signerAddress,
 		sender,
 		senderChain,
@@ -48,7 +48,7 @@ func GetInBoundVoteMessage(
 		receiverChain,
 		amount,
 		message,
-		inTxHash,
+		inboundHash,
 		inBlockHeight,
 		gasLimit,
 		coinType,
@@ -61,9 +61,9 @@ func GetInBoundVoteMessage(
 // GasPriceMultiplier returns the gas price multiplier for the given chain
 func GasPriceMultiplier(chainID int64) (float64, error) {
 	if chains.IsEVMChain(chainID) {
-		return clientcommon.EVMOuttxGasPriceMultiplier, nil
+		return clientcommon.EVMOutboundGasPriceMultiplier, nil
 	} else if chains.IsBitcoinChain(chainID) {
-		return clientcommon.BTCOuttxGasPriceMultiplier, nil
+		return clientcommon.BTCOutboundGasPriceMultiplier, nil
 	}
 	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chainID)
 }
@@ -109,7 +109,7 @@ func (c *Client) PostGasPrice(chain chains.Chain, gasPrice uint64, supply string
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (c *Client) AddTxHashToOutTxTracker(
+func (c *Client) AddOutboundTracker(
 	chainID int64,
 	nonce uint64,
 	txHash string,
@@ -118,7 +118,7 @@ func (c *Client) AddTxHashToOutTxTracker(
 	txIndex int64,
 ) (string, error) {
 	// don't report if the tracker already contains the txHash
-	tracker, err := c.GetOutTxTracker(chains.Chain{ChainId: chainID}, nonce)
+	tracker, err := c.GetOutboundTracker(chains.Chain{ChainId: chainID}, nonce)
 	if err == nil {
 		for _, hash := range tracker.HashList {
 			if strings.EqualFold(hash.TxHash, txHash) {
@@ -126,15 +126,16 @@ func (c *Client) AddTxHashToOutTxTracker(
 			}
 		}
 	}
+
 	signerAddress := c.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
+	msg := types.NewMsgAddOutboundTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", err
 	}
 
-	zetaTxHash, err := zetacoreBroadcast(c, AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
+	zetaTxHash, err := zetacoreBroadcast(c, AddOutboundTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
 		return "", err
 	}
@@ -235,7 +236,7 @@ func (c *Client) PostVoteBlockHeader(chainID int64, blockHash []byte, height int
 // PostVoteInbound posts a vote on an observed inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // it is used when the ballot is finalized and the inbound tx needs to be processed
-func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgVoteInbound) (string, string, error) {
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -255,7 +256,7 @@ func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgV
 		zetaTxHash, err := zetacoreBroadcast(c, gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			// monitor the result of the transaction and resend if necessary
-			go c.MonitorVoteInboundTxResult(zetaTxHash, retryGasLimit, msg)
+			go c.MonitorVoteInboundResult(zetaTxHash, retryGasLimit, msg)
 
 			return zetaTxHash, ballotIndex, nil
 		}
@@ -265,14 +266,14 @@ func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgV
 	return "", ballotIndex, fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
-// MonitorVoteInboundTxResult monitors the result of a vote inbound tx
+// MonitorVoteInboundResult monitors the result of a vote inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
-func (c *Client) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) {
+func (c *Client) MonitorVoteInboundResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteInbound) {
 	var lastErr error
 
-	for i := 0; i < MonitorVoteInboundTxResultRetryCount; i++ {
-		time.Sleep(MonitorVoteInboundTxResultInterval * time.Second)
+	for i := 0; i < MonitorVoteInboundResultRetryCount; i++ {
+		time.Sleep(MonitorVoteInboundResultInterval * time.Second)
 
 		// query tx result from ZetaChain
 		txResult, err := c.QueryTxResult(zetaTxHash)
@@ -282,29 +283,29 @@ func (c *Client) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uin
 				// the inbound vote tx shouldn't fail to execute
 				// this shouldn't happen
 				c.logger.Error().Msgf(
-					"MonitorInboundTxResult: failed to execute vote, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+					"MonitorInboundResult: failed to execute vote, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 			} else if strings.Contains(txResult.RawLog, "out of gas") {
 				// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
 				c.logger.Debug().Msgf(
-					"MonitorInboundTxResult: out of gas, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+					"MonitorInboundResult: out of gas, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 				if retryGasLimit > 0 {
 					// new retryGasLimit set to 0 to prevent reentering this function
 					_, _, err := c.PostVoteInbound(retryGasLimit, 0, msg)
 					if err != nil {
 						c.logger.Error().Err(err).Msgf(
-							"MonitorInboundTxResult: failed to resend tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+							"MonitorInboundResult: failed to resend tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 						)
 					} else {
 						c.logger.Info().Msgf(
-							"MonitorInboundTxResult: successfully resent tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+							"MonitorInboundResult: successfully resent tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 						)
 					}
 				}
 			} else {
 				c.logger.Debug().Msgf(
-					"MonitorInboundTxResult: successful txHash %s, log %s", zetaTxHash, txResult.RawLog,
+					"MonitorInboundResult: successful txHash %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 			}
 			return
@@ -313,18 +314,18 @@ func (c *Client) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uin
 	}
 
 	c.logger.Error().Err(lastErr).Msgf(
-		"MonitorInboundTxResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
+		"MonitorInboundResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
 	)
 }
 
 // PostVoteOutbound posts a vote on an observed outbound tx
 func (c *Client) PostVoteOutbound(
 	cctxIndex string,
-	outTxHash string,
+	outboundHash string,
 	outBlockHeight uint64,
-	outTxGasUsed uint64,
-	outTxEffectiveGasPrice *big.Int,
-	outTxEffectiveGasLimit uint64,
+	outboundGasUsed uint64,
+	outboundEffectiveGasPrice *big.Int,
+	outboundEffectiveGasLimit uint64,
 	amount *big.Int,
 	status chains.ReceiveStatus,
 	chain chains.Chain,
@@ -332,14 +333,14 @@ func (c *Client) PostVoteOutbound(
 	coinType coin.CoinType,
 ) (string, string, error) {
 	signerAddress := c.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteOnObservedOutboundTx(
+	msg := types.NewMsgVoteOutbound(
 		signerAddress,
 		cctxIndex,
-		outTxHash,
+		outboundHash,
 		outBlockHeight,
-		outTxGasUsed,
-		math.NewIntFromBigInt(outTxEffectiveGasPrice),
-		outTxEffectiveGasLimit,
+		outboundGasUsed,
+		math.NewIntFromBigInt(outboundEffectiveGasPrice),
+		outboundEffectiveGasLimit,
 		math.NewUintFromBigInt(amount),
 		status,
 		chain.ChainId,
@@ -359,8 +360,8 @@ func (c *Client) PostVoteOutbound(
 	return c.PostVoteOutboundFromMsg(PostVoteOutboundGasLimit, retryGasLimit, msg)
 }
 
-// PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOnObservedOutboundTx
-func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedOutboundTx) (string, string, error) {
+// PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOutbound
+func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOutbound) (string, string, error) {
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -379,7 +380,7 @@ func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *ty
 		zetaTxHash, err := zetacoreBroadcast(c, gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			// monitor the result of the transaction and resend if necessary
-			go c.MonitorVoteOutboundTxResult(zetaTxHash, retryGasLimit, msg)
+			go c.MonitorVoteOutboundResult(zetaTxHash, retryGasLimit, msg)
 
 			return zetaTxHash, ballotIndex, nil
 		}
@@ -389,14 +390,14 @@ func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *ty
 	return "", ballotIndex, fmt.Errorf("post receive failed after %d retries", DefaultRetryCount)
 }
 
-// MonitorVoteOutboundTxResult monitors the result of a vote outbound tx
+// MonitorVoteOutboundResult monitors the result of a vote outbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
-func (c *Client) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedOutboundTx) {
+func (c *Client) MonitorVoteOutboundResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOutbound) {
 	var lastErr error
 
-	for i := 0; i < MonitorVoteOutboundTxResultRetryCount; i++ {
-		time.Sleep(MonitorVoteOutboundTxResultInterval * time.Second)
+	for i := 0; i < MonitorVoteOutboundResultRetryCount; i++ {
+		time.Sleep(MonitorVoteOutboundResultInterval * time.Second)
 
 		// query tx result from ZetaChain
 		txResult, err := c.QueryTxResult(zetaTxHash)
@@ -406,12 +407,12 @@ func (c *Client) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit ui
 				// the inbound vote tx shouldn't fail to execute
 				// this shouldn't happen
 				c.logger.Error().Msgf(
-					"MonitorVoteOutboundTxResult: failed to execute vote, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+					"MonitorVoteOutboundResult: failed to execute vote, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 			} else if strings.Contains(txResult.RawLog, "out of gas") {
 				// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
 				c.logger.Debug().Msgf(
-					"MonitorVoteOutboundTxResult: out of gas, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+					"MonitorVoteOutboundResult: out of gas, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 				if retryGasLimit > 0 {
 					// new retryGasLimit set to 0 to prevent reentering this function
@@ -419,17 +420,17 @@ func (c *Client) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit ui
 
 					if err != nil {
 						c.logger.Error().Err(err).Msgf(
-							"MonitorVoteOutboundTxResult: failed to resend tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+							"MonitorVoteOutboundResult: failed to resend tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 						)
 					} else {
 						c.logger.Info().Msgf(
-							"MonitorVoteOutboundTxResult: successfully resent tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
+							"MonitorVoteOutboundResult: successfully resent tx, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 						)
 					}
 				}
 			} else {
 				c.logger.Debug().Msgf(
-					"MonitorVoteOutboundTxResult: successful txHash %s, log %s", zetaTxHash, txResult.RawLog,
+					"MonitorVoteOutboundResult: successful txHash %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 			}
 			return
@@ -438,6 +439,6 @@ func (c *Client) MonitorVoteOutboundTxResult(zetaTxHash string, retryGasLimit ui
 	}
 
 	c.logger.Error().Err(lastErr).Msgf(
-		"MonitorVoteOutboundTxResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
+		"MonitorVoteOutboundResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
 	)
 }

@@ -32,44 +32,44 @@ func Test_InitializeCCTX(t *testing.T) {
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
 		message := "test"
-		intxBlockHeight := uint64(420)
-		intxHash := sample.Hash()
+		inboundBlockHeight := uint64(420)
+		inboundHash := sample.Hash()
 		gasLimit := uint64(100)
 		asset := "test-asset"
 		eventIndex := uint64(1)
 		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
-		msg := types.MsgVoteOnObservedInboundTx{
-			Creator:       creator,
-			Sender:        sender.String(),
-			SenderChainId: senderChain.ChainId,
-			Receiver:      receiver.String(),
-			ReceiverChain: receiverChain.ChainId,
-			Amount:        amount,
-			Message:       message,
-			InTxHash:      intxHash.String(),
-			InBlockHeight: intxBlockHeight,
-			GasLimit:      gasLimit,
-			CoinType:      cointType,
-			TxOrigin:      sender.String(),
-			Asset:         asset,
-			EventIndex:    eventIndex,
+		msg := types.MsgVoteInbound{
+			Creator:            creator,
+			Sender:             sender.String(),
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
+			GasLimit:           gasLimit,
+			CoinType:           cointType,
+			TxOrigin:           sender.String(),
+			Asset:              asset,
+			EventIndex:         eventIndex,
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.NoError(t, err)
-		require.Equal(t, receiver.String(), cctx.GetCurrentOutTxParam().Receiver)
-		require.Equal(t, receiverChain.ChainId, cctx.GetCurrentOutTxParam().ReceiverChainId)
-		require.Equal(t, sender.String(), cctx.GetInboundTxParams().Sender)
-		require.Equal(t, senderChain.ChainId, cctx.GetInboundTxParams().SenderChainId)
-		require.Equal(t, amount, cctx.GetInboundTxParams().Amount)
+		require.Equal(t, receiver.String(), cctx.GetCurrentOutboundParam().Receiver)
+		require.Equal(t, receiverChain.ChainId, cctx.GetCurrentOutboundParam().ReceiverChainId)
+		require.Equal(t, sender.String(), cctx.GetInboundParams().Sender)
+		require.Equal(t, senderChain.ChainId, cctx.GetInboundParams().SenderChainId)
+		require.Equal(t, amount, cctx.GetInboundParams().Amount)
 		require.Equal(t, message, cctx.RelayedMessage)
-		require.Equal(t, intxHash.String(), cctx.GetInboundTxParams().InboundTxObservedHash)
-		require.Equal(t, intxBlockHeight, cctx.GetInboundTxParams().InboundTxObservedExternalHeight)
-		require.Equal(t, gasLimit, cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-		require.Equal(t, asset, cctx.GetInboundTxParams().Asset)
-		require.Equal(t, cointType, cctx.InboundTxParams.CoinType)
-		require.Equal(t, uint64(0), cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
-		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutTxParam().Amount)
+		require.Equal(t, inboundHash.String(), cctx.GetInboundParams().ObservedHash)
+		require.Equal(t, inboundBlockHeight, cctx.GetInboundParams().ObservedExternalHeight)
+		require.Equal(t, gasLimit, cctx.GetCurrentOutboundParam().GasLimit)
+		require.Equal(t, asset, cctx.GetInboundParams().Asset)
+		require.Equal(t, cointType, cctx.InboundParams.CoinType)
+		require.Equal(t, uint64(0), cctx.GetCurrentOutboundParam().TssNonce)
+		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutboundParam().Amount)
 		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
 	})
@@ -82,28 +82,28 @@ func Test_InitializeCCTX(t *testing.T) {
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
 		message := "test"
-		intxBlockHeight := uint64(420)
-		intxHash := sample.Hash()
+		inboundBlockHeight := uint64(420)
+		inboundHash := sample.Hash()
 		gasLimit := uint64(100)
 		asset := "test-asset"
 		eventIndex := uint64(1)
 		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
-		msg := types.MsgVoteOnObservedInboundTx{
-			Creator:       creator,
-			Sender:        "invalid",
-			SenderChainId: senderChain.ChainId,
-			Receiver:      receiver.String(),
-			ReceiverChain: receiverChain.ChainId,
-			Amount:        amount,
-			Message:       message,
-			InTxHash:      intxHash.String(),
-			InBlockHeight: intxBlockHeight,
-			GasLimit:      gasLimit,
-			CoinType:      cointType,
-			TxOrigin:      sender.String(),
-			Asset:         asset,
-			EventIndex:    eventIndex,
+		msg := types.MsgVoteInbound{
+			Creator:            creator,
+			Sender:             "invalid",
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
+			GasLimit:           gasLimit,
+			CoinType:           cointType,
+			TxOrigin:           sender.String(),
+			Asset:              asset,
+			EventIndex:         eventIndex,
 		}
 		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.ErrorContains(t, err, "invalid address")
@@ -112,73 +112,73 @@ func Test_InitializeCCTX(t *testing.T) {
 
 func TestCrossChainTx_Validate(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "foo")
-	cctx.InboundTxParams = nil
+	cctx.InboundParams = nil
 	require.ErrorContains(t, cctx.Validate(), "inbound tx params cannot be nil")
 	cctx = sample.CrossChainTx(t, "foo")
-	cctx.OutboundTxParams = nil
+	cctx.OutboundParams = nil
 	require.ErrorContains(t, cctx.Validate(), "outbound tx params cannot be nil")
 	cctx = sample.CrossChainTx(t, "foo")
 	cctx.CctxStatus = nil
 	require.ErrorContains(t, cctx.Validate(), "cctx status cannot be nil")
 	cctx = sample.CrossChainTx(t, "foo")
-	cctx.OutboundTxParams = make([]*types.OutboundTxParams, 3)
+	cctx.OutboundParams = make([]*types.OutboundParams, 3)
 	require.ErrorContains(t, cctx.Validate(), "outbound tx params cannot be more than 2")
 	cctx = sample.CrossChainTx(t, "foo")
 	cctx.Index = "0"
 	require.ErrorContains(t, cctx.Validate(), "invalid index length 1")
 	cctx = sample.CrossChainTx(t, "foo")
-	cctx.InboundTxParams = sample.InboundTxParamsValidChainID(rand.New(rand.NewSource(42)))
-	cctx.InboundTxParams.SenderChainId = 1000
+	cctx.InboundParams = sample.InboundParamsValidChainID(rand.New(rand.NewSource(42)))
+	cctx.InboundParams.SenderChainId = 1000
 	require.ErrorContains(t, cctx.Validate(), "invalid sender chain id 1000")
 	cctx = sample.CrossChainTx(t, "foo")
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParamsValidChainID(rand.New(rand.NewSource(42)))}
-	cctx.InboundTxParams = sample.InboundTxParamsValidChainID(rand.New(rand.NewSource(42)))
-	cctx.InboundTxParams.InboundTxObservedHash = sample.Hash().String()
-	cctx.InboundTxParams.InboundTxBallotIndex = sample.ZetaIndex(t)
-	cctx.OutboundTxParams[0].ReceiverChainId = 1000
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParamsValidChainID(rand.New(rand.NewSource(42)))}
+	cctx.InboundParams = sample.InboundParamsValidChainID(rand.New(rand.NewSource(42)))
+	cctx.InboundParams.ObservedHash = sample.Hash().String()
+	cctx.InboundParams.BallotIndex = sample.ZetaIndex(t)
+	cctx.OutboundParams[0].ReceiverChainId = 1000
 	require.ErrorContains(t, cctx.Validate(), "invalid receiver chain id 1000")
 }
 
-func TestCrossChainTx_GetCurrentOutTxParam(t *testing.T) {
+func TestCrossChainTx_GetCurrentOutboundParam(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 	cctx := sample.CrossChainTx(t, "foo")
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{}
-	require.Equal(t, &types.OutboundTxParams{}, cctx.GetCurrentOutTxParam())
+	cctx.OutboundParams = []*types.OutboundParams{}
+	require.Equal(t, &types.OutboundParams{}, cctx.GetCurrentOutboundParam())
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r)}
-	require.Equal(t, cctx.OutboundTxParams[0], cctx.GetCurrentOutTxParam())
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r)}
+	require.Equal(t, cctx.OutboundParams[0], cctx.GetCurrentOutboundParam())
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r), sample.OutboundTxParams(r)}
-	require.Equal(t, cctx.OutboundTxParams[1], cctx.GetCurrentOutTxParam())
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r), sample.OutboundParams(r)}
+	require.Equal(t, cctx.OutboundParams[1], cctx.GetCurrentOutboundParam())
 }
 
-func TestCrossChainTx_IsCurrentOutTxRevert(t *testing.T) {
+func TestCrossChainTx_IsCurrentOutboundRevert(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 	cctx := sample.CrossChainTx(t, "foo")
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{}
-	require.False(t, cctx.IsCurrentOutTxRevert())
+	cctx.OutboundParams = []*types.OutboundParams{}
+	require.False(t, cctx.IsCurrentOutboundRevert())
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r)}
-	require.False(t, cctx.IsCurrentOutTxRevert())
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r)}
+	require.False(t, cctx.IsCurrentOutboundRevert())
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r), sample.OutboundTxParams(r)}
-	require.True(t, cctx.IsCurrentOutTxRevert())
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r), sample.OutboundParams(r)}
+	require.True(t, cctx.IsCurrentOutboundRevert())
 }
 
 func TestCrossChainTx_OriginalDestinationChainID(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 	cctx := sample.CrossChainTx(t, "foo")
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{}
+	cctx.OutboundParams = []*types.OutboundParams{}
 	require.Equal(t, int64(-1), cctx.OriginalDestinationChainID())
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r)}
-	require.Equal(t, cctx.OutboundTxParams[0].ReceiverChainId, cctx.OriginalDestinationChainID())
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r)}
+	require.Equal(t, cctx.OutboundParams[0].ReceiverChainId, cctx.OriginalDestinationChainID())
 
-	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r), sample.OutboundTxParams(r)}
-	require.Equal(t, cctx.OutboundTxParams[0].ReceiverChainId, cctx.OriginalDestinationChainID())
+	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r), sample.OutboundParams(r)}
+	require.Equal(t, cctx.OutboundParams[0].ReceiverChainId, cctx.OriginalDestinationChainID())
 }
 
 func TestCrossChainTx_AddOutbound(t *testing.T) {
@@ -187,20 +187,20 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		err := cctx.AddOutbound(ctx, types.MsgVoteOnObservedOutboundTx{
-			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: sdkmath.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
+		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+			ObservedOutboundHash:              hash,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundGasUsed:           100,
+			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
+			ObservedOutboundEffectiveGasLimit: 20,
 		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxHash, hash)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasUsed, uint64(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice, sdkmath.NewInt(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit, uint64(20))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight, uint64(10))
+		require.Equal(t, cctx.GetCurrentOutboundParam().Hash, hash)
+		require.Equal(t, cctx.GetCurrentOutboundParam().GasUsed, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
+		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
 		require.Equal(t, cctx.CctxStatus.LastUpdateTimestamp, ctx.BlockHeader().Time.Unix())
 	})
 
@@ -209,19 +209,19 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		err := cctx.AddOutbound(ctx, types.MsgVoteOnObservedOutboundTx{
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: sdkmath.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
+		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+			ObservedOutboundHash:              hash,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundGasUsed:           100,
+			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
+			ObservedOutboundEffectiveGasLimit: 20,
 		}, observertypes.BallotStatus_BallotFinalized_FailureObservation)
 		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxHash, hash)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasUsed, uint64(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice, sdkmath.NewInt(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit, uint64(20))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight, uint64(10))
+		require.Equal(t, cctx.GetCurrentOutboundParam().Hash, hash)
+		require.Equal(t, cctx.GetCurrentOutboundParam().GasUsed, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
+		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
 		require.Equal(t, cctx.CctxStatus.LastUpdateTimestamp, ctx.BlockHeader().Time.Unix())
 	})
 
@@ -231,13 +231,13 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		err := cctx.AddOutbound(ctx, types.MsgVoteOnObservedOutboundTx{
-			ValueReceived:                  sdkmath.NewUint(100),
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: sdkmath.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
+		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+			ValueReceived:                     sdkmath.NewUint(100),
+			ObservedOutboundHash:              hash,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundGasUsed:           100,
+			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
+			ObservedOutboundEffectiveGasLimit: 20,
 		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
@@ -246,16 +246,16 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 func Test_SetRevertOutboundValues(t *testing.T) {
 	t.Run("successfully set revert outbound values", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
-		cctx.OutboundTxParams = cctx.OutboundTxParams[:1]
+		cctx.OutboundParams = cctx.OutboundParams[:1]
 		err := cctx.AddRevertOutbound(100)
 		require.NoError(t, err)
-		require.Len(t, cctx.OutboundTxParams, 2)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Receiver, cctx.InboundTxParams.Sender)
-		require.Equal(t, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.InboundTxParams.SenderChainId)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.OutboundTxParams[0].Amount)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasLimit, uint64(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().TssPubkey, cctx.OutboundTxParams[0].TssPubkey)
-		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
+		require.Len(t, cctx.OutboundParams, 2)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.InboundParams.Sender)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
+		require.Equal(t, cctx.GetCurrentOutboundParam().GasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
 	})
 
 	t.Run("failed to set revert outbound values if revert outbound already exists", func(t *testing.T) {
@@ -266,7 +266,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 
 	t.Run("failed to set revert outbound values if revert outbound already exists", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
-		cctx.OutboundTxParams = make([]*types.OutboundTxParams, 0)
+		cctx.OutboundParams = make([]*types.OutboundParams, 0)
 		err := cctx.AddRevertOutbound(100)
 		require.ErrorContains(t, err, "cannot revert before trying to process an outbound tx")
 	})

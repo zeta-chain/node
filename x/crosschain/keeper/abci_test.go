@@ -127,11 +127,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 1000,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        1000,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -150,11 +150,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 1000,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        1000,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -178,11 +178,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 1000,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        1000,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -206,11 +206,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 1000,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        1000,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -233,11 +233,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 100,
-						OutboundTxGasPrice: "",
+						ReceiverChainId: 42,
+						GasLimit:        100,
+						GasPrice:        "",
 					},
 				},
 			},
@@ -255,11 +255,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 0,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        0,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -277,11 +277,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 0,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        0,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -299,11 +299,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 1000,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        1000,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -320,11 +320,11 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				CctxStatus: &types.Status{
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
-				OutboundTxParams: []*types.OutboundTxParams{
+				OutboundParams: []*types.OutboundParams{
 					{
-						ReceiverChainId:    42,
-						OutboundTxGasLimit: 1000,
-						OutboundTxGasPrice: "100",
+						ReceiverChainId: 42,
+						GasLimit:        1000,
+						GasPrice:        "100",
 					},
 				},
 			},
@@ -343,8 +343,8 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
 			fungibleMock := testkeeper.GetCrosschainFungibleMock(t, k)
-			chainID := tc.cctx.GetCurrentOutTxParam().ReceiverChainId
-			previousGasPrice, err := tc.cctx.GetCurrentOutTxParam().GetGasPrice()
+			chainID := tc.cctx.GetCurrentOutboundParam().ReceiverChainId
+			previousGasPrice, err := tc.cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 			if err != nil {
 				previousGasPrice = 0
 			}
@@ -389,7 +389,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			if !tc.expectedGasPriceIncrease.IsZero() {
 				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
 				require.True(t, found)
-				newGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
+				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 				require.NoError(t, err)
 				require.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
 				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)

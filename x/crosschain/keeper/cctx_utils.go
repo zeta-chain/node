@@ -30,7 +30,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 	}
 
 	// SET nonce
-	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
+	cctx.GetCurrentOutboundParam().TssNonce = nonce.Nonce
 	tss, found := k.GetObserverKeeper().GetTSS(ctx)
 	if !found {
 		return cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
@@ -56,13 +56,13 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 // GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
 // It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
 func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
-	if cctx.InboundTxParams == nil {
+	if cctx.InboundParams == nil {
 		return 0, nil
 	}
 
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Gas {
+	if cctx.InboundParams.CoinType == coin.CoinType_Gas {
 		// get the gas limit of the gas token
-		fc, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, cctx.InboundTxParams.SenderChainId)
+		fc, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, cctx.InboundParams.SenderChainId)
 		if !found {
 			return 0, types.ErrForeignCoinNotFound
 		}
@@ -71,9 +71,9 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
 		}
 		return gasLimit.Uint64(), nil
-	} else if cctx.InboundTxParams.CoinType == coin.CoinType_ERC20 {
+	} else if cctx.InboundParams.CoinType == coin.CoinType_ERC20 {
 		// get the gas limit of the associated asset
-		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, cctx.InboundTxParams.SenderChainId)
+		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundParams.Asset, cctx.InboundParams.SenderChainId)
 		if !found {
 			return 0, types.ErrForeignCoinNotFound
 		}
@@ -94,14 +94,14 @@ func IsPending(cctx *types.CrossChainTx) bool {
 
 // GetAbortedAmount returns the amount to refund for a given CCTX .
 // If the CCTX has an outbound transaction, it returns the amount of the outbound transaction.
-// If OutTxParams is nil or the amount is zero, it returns the amount of the inbound transaction.
+// If OutboundParams is nil or the amount is zero, it returns the amount of the inbound transaction.
 // This is because there might be a case where the transaction is set to be aborted before paying gas or creating an outbound transaction.In such a situation we can refund the entire amount that has been locked in connector or TSS
 func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
-	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
-		return cctx.GetCurrentOutTxParam().Amount
+	if cctx.OutboundParams != nil && !cctx.GetCurrentOutboundParam().Amount.IsZero() {
+		return cctx.GetCurrentOutboundParam().Amount
 	}
-	if cctx.InboundTxParams != nil {
-		return cctx.InboundTxParams.Amount
+	if cctx.InboundParams != nil {
+		return cctx.InboundParams.Amount
 	}
 
 	return sdkmath.ZeroUint()
@@ -110,10 +110,10 @@ func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
 // SortCctxsByHeightAndChainID sorts the cctxs by height (first come first serve), the chain ID doesn't really matter
 func SortCctxsByHeightAndChainID(cctxs []*types.CrossChainTx) []*types.CrossChainTx {
 	sort.Slice(cctxs, func(i, j int) bool {
-		if cctxs[i].InboundTxParams.InboundTxObservedExternalHeight == cctxs[j].InboundTxParams.InboundTxObservedExternalHeight {
-			return cctxs[i].GetCurrentOutTxParam().ReceiverChainId < cctxs[j].GetCurrentOutTxParam().ReceiverChainId
+		if cctxs[i].InboundParams.ObservedExternalHeight == cctxs[j].InboundParams.ObservedExternalHeight {
+			return cctxs[i].GetCurrentOutboundParam().ReceiverChainId < cctxs[j].GetCurrentOutboundParam().ReceiverChainId
 		}
-		return cctxs[i].InboundTxParams.InboundTxObservedExternalHeight < cctxs[j].InboundTxParams.InboundTxObservedExternalHeight
+		return cctxs[i].InboundParams.ObservedExternalHeight < cctxs[j].InboundParams.ObservedExternalHeight
 	})
 	return cctxs
 }

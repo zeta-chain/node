@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-func (m InboundTxParams) Validate() error {
+func (m InboundParams) Validate() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender cannot be empty")
 	}
@@ -28,12 +28,12 @@ func (m InboundTxParams) Validate() error {
 	if m.Amount.IsNil() {
 		return fmt.Errorf("amount cannot be nil")
 	}
-	err = ValidateHashForChain(m.InboundTxObservedHash, m.SenderChainId)
+	err = ValidateHashForChain(m.ObservedHash, m.SenderChainId)
 	if err != nil {
 		return errors.Wrap(err, "invalid inbound tx observed hash")
 	}
-	if m.InboundTxBallotIndex != "" {
-		err = ValidateZetaIndex(m.InboundTxBallotIndex)
+	if m.BallotIndex != "" {
+		err = ValidateZetaIndex(m.BallotIndex)
 		if err != nil {
 			return errors.Wrap(err, "invalid inbound tx ballot index")
 		}

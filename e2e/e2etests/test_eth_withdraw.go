@@ -43,7 +43,7 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	tx = r.WithdrawEther(withdrawalAmount)
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic("cctx status is not outbound mined")

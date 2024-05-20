@@ -30,10 +30,10 @@ func createNCctxWithStatus(keeper *keeper.Keeper, ctx sdk.Context, n int, status
 			LastUpdateTimestamp: 0,
 		}
 		items[i].ZetaFees = math.OneUint()
-		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
-		items[i].OutboundTxParams = []*types.OutboundTxParams{{Amount: math.ZeroUint()}}
+		items[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
+		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint()}}
 
-		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i])
 	}
 	return items
 }
@@ -43,44 +43,44 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
-		items[i].InboundTxParams = &types.InboundTxParams{
-			Sender:                          fmt.Sprintf("%d", i),
-			SenderChainId:                   int64(i),
-			TxOrigin:                        fmt.Sprintf("%d", i),
-			Asset:                           fmt.Sprintf("%d", i),
-			CoinType:                        coin.CoinType_Zeta,
-			InboundTxObservedHash:           fmt.Sprintf("%d", i),
-			InboundTxObservedExternalHeight: uint64(i),
-			InboundTxFinalizedZetaHeight:    uint64(i),
+		items[i].InboundParams = &types.InboundParams{
+			Sender:                 fmt.Sprintf("%d", i),
+			SenderChainId:          int64(i),
+			TxOrigin:               fmt.Sprintf("%d", i),
+			Asset:                  fmt.Sprintf("%d", i),
+			CoinType:               coin.CoinType_Zeta,
+			ObservedHash:           fmt.Sprintf("%d", i),
+			ObservedExternalHeight: uint64(i),
+			FinalizedZetaHeight:    uint64(i),
 		}
-		items[i].OutboundTxParams = []*types.OutboundTxParams{{
-			Receiver:                         fmt.Sprintf("%d", i),
-			ReceiverChainId:                  int64(i),
-			OutboundTxHash:                   fmt.Sprintf("%d", i),
-			OutboundTxTssNonce:               uint64(i),
-			OutboundTxGasLimit:               uint64(i),
-			OutboundTxGasPrice:               fmt.Sprintf("%d", i),
-			OutboundTxBallotIndex:            fmt.Sprintf("%d", i),
-			OutboundTxObservedExternalHeight: uint64(i),
-			CoinType:                         coin.CoinType_Zeta,
+		items[i].OutboundParams = []*types.OutboundParams{{
+			Receiver:               fmt.Sprintf("%d", i),
+			ReceiverChainId:        int64(i),
+			Hash:                   fmt.Sprintf("%d", i),
+			TssNonce:               uint64(i),
+			GasLimit:               uint64(i),
+			GasPrice:               fmt.Sprintf("%d", i),
+			BallotIndex:            fmt.Sprintf("%d", i),
+			ObservedExternalHeight: uint64(i),
+			CoinType:               coin.CoinType_Zeta,
 		}}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
 			StatusMessage:       "any",
 			LastUpdateTimestamp: 0,
 		}
-		items[i].InboundTxParams.Amount = math.OneUint()
+		items[i].InboundParams.Amount = math.OneUint()
 
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 
-		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i])
 	}
 	return items
 }
 
-func TestSends(t *testing.T) {
-	sendsTest := []struct {
+func TestCCTXs(t *testing.T) {
+	cctxsTest := []struct {
 		TestName        string
 		PendingInbound  int
 		PendingOutbound int
@@ -111,7 +111,7 @@ func TestSends(t *testing.T) {
 			Reverted:        rand.Intn(300-10) + 10,
 		},
 	}
-	for _, tt := range sendsTest {
+	for _, tt := range cctxsTest {
 		tt := tt
 		t.Run(tt.TestName, func(t *testing.T) {
 			keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -138,7 +138,7 @@ func TestSends(t *testing.T) {
 	}
 }
 
-func TestSendGetAll(t *testing.T) {
+func TestCCTXGetAll(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	items := createNCctx(keeper, ctx, 10)
@@ -152,7 +152,7 @@ func TestSendGetAll(t *testing.T) {
 
 // Querier Tests
 
-func TestSendQuerySingle(t *testing.T) {
+func TestCCTXQuerySingle(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	wctx := sdk.WrapSDKContext(ctx)
@@ -195,7 +195,7 @@ func TestSendQuerySingle(t *testing.T) {
 	}
 }
 
-func TestSendQueryPaginated(t *testing.T) {
+func TestCCTXQueryPaginated(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	wctx := sdk.WrapSDKContext(ctx)

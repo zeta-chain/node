@@ -96,7 +96,7 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 	}
 
 	// The revert tx will fail, the cctx state should be aborted
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
 		panic("expected cctx to be reverted")
 	}

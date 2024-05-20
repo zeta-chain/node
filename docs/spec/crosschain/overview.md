@@ -32,7 +32,7 @@ Any votes cast after the ballot has been finalized are discarded.
 
 Inbound transactions are cross-chain transactions observed on connected chains.
 To vote on an inbound transaction an observer broadcasts
-`MsgVoteOnObservedInboundTx`.
+`MsgVoteInbound`.
 
 The last vote that moves the ballot to the "finalized" state triggers execution
 of the cross-chain transaction.
@@ -61,7 +61,7 @@ blockchains.
 
 Observers watch connected blockchains for the broadcasted outbound transactions.
 Once a transaction is "confirmed" (or "mined") on a connected blockchains,
-observers vote on ZetaChain by sending a `VoteOnObservedOutboundTx` message.
+observers vote on ZetaChain by sending a `VoteOutbound` message.
 
 After the vote passes the threshold, the voting is finalized and a transaction's
 status is changed to final.
@@ -72,10 +72,10 @@ status is changed to final.
 |-----------------------------| -------------------- | ------------------ |
 | MsgVoteTSS                  |                      | ✅                 |
 | MsgGasPriceVoter            |                      | ✅                 |
-| MsgVoteOnObservedOutboundTx |                      | ✅                 |
-| MsgVoteOnObservedInboundTx  |                      | ✅                 |
-| MsgAddToOutTxTracker        | ✅                   | ✅                 |
-| MsgRemoveFromOutTxTracker   | ✅                   |                    |
+| MsgVoteOutbound |                      | ✅                 |
+| MsgVoteInbound  |                      | ✅                 |
+| MsgAddOutboundTracker        | ✅                   | ✅                 |
+| MsgRemoveOutboundTracker   | ✅                   |                    |
 
 ## State
 

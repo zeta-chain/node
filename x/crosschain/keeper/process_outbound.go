@@ -66,7 +66,7 @@ func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	default:
 		return
 	}
-	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	newStatus := cctx.CctxStatus.Status.String()
 	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
 }
@@ -93,12 +93,12 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 	// For transactions which originated from ZEVM , we can process the outbound in the same block as there is no TSS signing required for the revert
 	// For all other transactions we need to create a revert tx and set the status to pending revert
 
-	if cctx.InboundTxParams.CoinType == coin.CoinType_Cmd {
+	if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
 		// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
-		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort("Outbound failed")
-	} else if chains.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
-		switch cctx.InboundTxParams.CoinType {
+	} else if chains.IsZetaChain(cctx.InboundParams.SenderChainId) {
+		switch cctx.InboundParams.CoinType {
 		// Try revert if the coin-type is ZETA
 		case coin.CoinType_Zeta:
 			{
@@ -110,7 +110,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		// For all other coin-types, we do not revert, the cctx is aborted
 		default:
 			{
-				cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+				cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 				cctx.SetAbort("Outbound failed")
 			}
 		}
@@ -136,10 +136,10 @@ func (k Keeper) processFailedOutboundForExternalChainTx(ctx sdk.Context, cctx *t
 		}
 		if gasLimit == 0 {
 			// use same gas limit of outbound as a fallback -- should not happen
-			gasLimit = cctx.OutboundTxParams[0].OutboundTxGasLimit
+			gasLimit = cctx.OutboundParams[0].GasLimit
 		}
 
-		// create new OutboundTxParams for the revert
+		// create new OutboundParams for the revert
 		err = cctx.AddRevertOutbound(gasLimit)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "AddRevertOutbound")
@@ -147,22 +147,22 @@ func (k Keeper) processFailedOutboundForExternalChainTx(ctx sdk.Context, cctx *t
 
 		err = k.PayGasAndUpdateCctx(
 			ctx,
-			cctx.InboundTxParams.SenderChainId,
+			cctx.InboundParams.SenderChainId,
 			cctx,
-			cctx.OutboundTxParams[0].Amount,
+			cctx.OutboundParams[0].Amount,
 			false,
 		)
 		if err != nil {
 			return err
 		}
-		err = k.UpdateNonce(ctx, cctx.InboundTxParams.SenderChainId, cctx)
+		err = k.UpdateNonce(ctx, cctx.InboundParams.SenderChainId, cctx)
 		if err != nil {
 			return err
 		}
 		// Not setting the finalization status here, the required changes have been made while creating the revert tx
 		cctx.SetPendingRevert("Outbound failed, start revert")
 	case types.CctxStatus_PendingRevert:
-		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort("Outbound failed: revert failed; abort TX")
 	}
 	return nil
@@ -176,9 +176,9 @@ func (k Keeper) processFailedOutboundForZEVM(ctx sdk.Context, cctx *types.CrossC
 		return fmt.Errorf("failed reverting GetCCTXIndexBytes: %s", err.Error())
 	}
 	// Finalize the older outbound tx
-	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 
-	// create new OutboundTxParams for the revert. We use the fixed gas limit for revert when calling zEVM
+	// create new OutboundParams for the revert. We use the fixed gas limit for revert when calling zEVM
 	err = cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64())
 	if err != nil {
 		// Return err to save the failed outbound ad set to aborted
@@ -193,15 +193,15 @@ func (k Keeper) processFailedOutboundForZEVM(ctx sdk.Context, cctx *types.CrossC
 	}
 
 	// Fetch the original sender and receiver from the CCTX , since this is a revert the sender with be the receiver in the new tx
-	originalSender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+	originalSender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	// This transaction will always have two outbounds, the following logic is just an added precaution.
 	// The contract call or token deposit would go the original sender.
-	originalReceiver := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-	orginalReceiverChainID := cctx.GetCurrentOutTxParam().ReceiverChainId
-	if len(cctx.OutboundTxParams) == 2 {
+	originalReceiver := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+	orginalReceiverChainID := cctx.GetCurrentOutboundParam().ReceiverChainId
+	if len(cctx.OutboundParams) == 2 {
 		// If there are 2 outbound tx, then the original receiver is the receiver in the first outbound tx
-		originalReceiver = ethcommon.HexToAddress(cctx.OutboundTxParams[0].Receiver)
-		orginalReceiverChainID = cctx.OutboundTxParams[0].ReceiverChainId
+		originalReceiver = ethcommon.HexToAddress(cctx.OutboundParams[0].Receiver)
+		orginalReceiverChainID = cctx.OutboundParams[0].ReceiverChainId
 	}
 
 	// Call evm to revert the transaction
@@ -210,9 +210,9 @@ func (k Keeper) processFailedOutboundForZEVM(ctx sdk.Context, cctx *types.CrossC
 		ctx,
 		originalSender,
 		originalReceiver,
-		cctx.InboundTxParams.SenderChainId,
+		cctx.InboundParams.SenderChainId,
 		orginalReceiverChainID,
-		cctx.GetCurrentOutTxParam().Amount.BigInt(),
+		cctx.GetCurrentOutboundParam().Amount.BigInt(),
 		data,
 		indexBytes,
 	)
@@ -225,10 +225,10 @@ func (k Keeper) processFailedOutboundForZEVM(ctx sdk.Context, cctx *types.CrossC
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 		ethTxHash := ethcommon.BytesToHash(hash)
-		cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		cctx.GetCurrentOutboundParam().Hash = ethTxHash.String()
 		// #nosec G701 always positive
-		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
+		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
-	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	return nil
 }

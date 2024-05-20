@@ -1,6 +1,6 @@
 # collect-observer-info
 
-collect observer info from a folder , default path is ~/.zetacored/os_info/ 
+collect observer info into the genesis from a folder , default path is ~/.zetacored/os_info/ 
 
 
 ```

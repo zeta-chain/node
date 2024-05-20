@@ -81,9 +81,9 @@ export declare enum TxFinalizationStatus {
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.InboundTxParams
+ * @generated from message zetachain.zetacore.crosschain.InboundParams
  */
-export declare class InboundTxParams extends Message<InboundTxParams> {
+export declare class InboundParams extends Message<InboundParams> {
   /**
    * this address is the immediate contract/EOA that calls
    *
@@ -123,43 +123,43 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
   amount: string;
 
   /**
-   * @generated from field: string inbound_tx_observed_hash = 7;
+   * @generated from field: string observed_hash = 7;
    */
-  inboundTxObservedHash: string;
+  observedHash: string;
 
   /**
-   * @generated from field: uint64 inbound_tx_observed_external_height = 8;
+   * @generated from field: uint64 observed_external_height = 8;
    */
-  inboundTxObservedExternalHeight: bigint;
+  observedExternalHeight: bigint;
 
   /**
-   * @generated from field: string inbound_tx_ballot_index = 9;
+   * @generated from field: string ballot_index = 9;
    */
-  inboundTxBallotIndex: string;
+  ballotIndex: string;
 
   /**
-   * @generated from field: uint64 inbound_tx_finalized_zeta_height = 10;
+   * @generated from field: uint64 finalized_zeta_height = 10;
    */
-  inboundTxFinalizedZetaHeight: bigint;
+  finalizedZetaHeight: bigint;
 
   /**
    * @generated from field: zetachain.zetacore.crosschain.TxFinalizationStatus tx_finalization_status = 11;
    */
   txFinalizationStatus: TxFinalizationStatus;
 
-  constructor(data?: PartialMessage<InboundTxParams>);
+  constructor(data?: PartialMessage<InboundParams>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.InboundTxParams";
+  static readonly typeName = "zetachain.zetacore.crosschain.InboundParams";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): InboundTxParams;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): InboundParams;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): InboundTxParams;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): InboundParams;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): InboundTxParams;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): InboundParams;
 
-  static equals(a: InboundTxParams | PlainMessage<InboundTxParams> | undefined, b: InboundTxParams | PlainMessage<InboundTxParams> | undefined): boolean;
+  static equals(a: InboundParams | PlainMessage<InboundParams> | undefined, b: InboundParams | PlainMessage<InboundParams> | undefined): boolean;
 }
 
 /**
@@ -190,9 +190,9 @@ export declare class ZetaAccounting extends Message<ZetaAccounting> {
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.OutboundTxParams
+ * @generated from message zetachain.zetacore.crosschain.OutboundParams
  */
-export declare class OutboundTxParams extends Message<OutboundTxParams> {
+export declare class OutboundParams extends Message<OutboundParams> {
   /**
    * @generated from field: string receiver = 1;
    */
@@ -214,52 +214,52 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
   amount: string;
 
   /**
-   * @generated from field: uint64 outbound_tx_tss_nonce = 5;
+   * @generated from field: uint64 tss_nonce = 5;
    */
-  outboundTxTssNonce: bigint;
+  tssNonce: bigint;
 
   /**
-   * @generated from field: uint64 outbound_tx_gas_limit = 6;
+   * @generated from field: uint64 gas_limit = 6;
    */
-  outboundTxGasLimit: bigint;
+  gasLimit: bigint;
 
   /**
-   * @generated from field: string outbound_tx_gas_price = 7;
+   * @generated from field: string gas_price = 7;
    */
-  outboundTxGasPrice: string;
+  gasPrice: string;
 
   /**
    * the above are commands for zetaclients
    * the following fields are used when the outbound tx is mined
    *
-   * @generated from field: string outbound_tx_hash = 8;
+   * @generated from field: string hash = 8;
    */
-  outboundTxHash: string;
+  hash: string;
 
   /**
-   * @generated from field: string outbound_tx_ballot_index = 9;
+   * @generated from field: string ballot_index = 9;
    */
-  outboundTxBallotIndex: string;
+  ballotIndex: string;
 
   /**
-   * @generated from field: uint64 outbound_tx_observed_external_height = 10;
+   * @generated from field: uint64 observed_external_height = 10;
    */
-  outboundTxObservedExternalHeight: bigint;
+  observedExternalHeight: bigint;
 
   /**
-   * @generated from field: uint64 outbound_tx_gas_used = 20;
+   * @generated from field: uint64 gas_used = 20;
    */
-  outboundTxGasUsed: bigint;
+  gasUsed: bigint;
 
   /**
-   * @generated from field: string outbound_tx_effective_gas_price = 21;
+   * @generated from field: string effective_gas_price = 21;
    */
-  outboundTxEffectiveGasPrice: string;
+  effectiveGasPrice: string;
 
   /**
-   * @generated from field: uint64 outbound_tx_effective_gas_limit = 22;
+   * @generated from field: uint64 effective_gas_limit = 22;
    */
-  outboundTxEffectiveGasLimit: bigint;
+  effectiveGasLimit: bigint;
 
   /**
    * @generated from field: string tss_pubkey = 11;
@@ -271,19 +271,19 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
    */
   txFinalizationStatus: TxFinalizationStatus;
 
-  constructor(data?: PartialMessage<OutboundTxParams>);
+  constructor(data?: PartialMessage<OutboundParams>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.OutboundTxParams";
+  static readonly typeName = "zetachain.zetacore.crosschain.OutboundParams";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): OutboundTxParams;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): OutboundParams;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): OutboundTxParams;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): OutboundParams;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): OutboundTxParams;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): OutboundParams;
 
-  static equals(a: OutboundTxParams | PlainMessage<OutboundTxParams> | undefined, b: OutboundTxParams | PlainMessage<OutboundTxParams> | undefined): boolean;
+  static equals(a: OutboundParams | PlainMessage<OutboundParams> | undefined, b: OutboundParams | PlainMessage<OutboundParams> | undefined): boolean;
 }
 
 /**
@@ -357,14 +357,14 @@ export declare class CrossChainTx extends Message<CrossChainTx> {
   cctxStatus?: Status;
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.InboundTxParams inbound_tx_params = 9;
+   * @generated from field: zetachain.zetacore.crosschain.InboundParams inbound_params = 9;
    */
-  inboundTxParams?: InboundTxParams;
+  inboundParams?: InboundParams;
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.OutboundTxParams outbound_tx_params = 10;
+   * @generated from field: repeated zetachain.zetacore.crosschain.OutboundParams outbound_params = 10;
    */
-  outboundTxParams: OutboundTxParams[];
+  outboundParams: OutboundParams[];
 
   constructor(data?: PartialMessage<CrossChainTx>);
 
