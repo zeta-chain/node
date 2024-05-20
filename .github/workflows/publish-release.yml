@@ -40,13 +40,13 @@ jobs:
     steps:
       - name: Checkout Source
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -71,13 +71,13 @@ jobs:
     steps:
       - name: Checkout Source
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -101,13 +101,13 @@ jobs:
     steps:
       - name: Checkout Source
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -133,7 +133,7 @@ jobs:
 
       - name: Checkout code
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -174,7 +174,7 @@ jobs:
     timeout-minutes: 10
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         with:
           fetch-depth: 0
@@ -209,7 +209,7 @@ jobs:
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set CPU Architecture
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -284,7 +284,7 @@ jobs:
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set CPU Architecture
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -362,7 +362,7 @@ jobs:
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Execute e2e-admin-tests
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -384,7 +384,7 @@ jobs:
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Execute upgrade-test
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -415,7 +415,7 @@ jobs:
     timeout-minutes: 60
     environment: release
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
