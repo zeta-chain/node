@@ -316,7 +316,7 @@ func (ob *Observer) getOutboundidByNonce(nonce uint64, test bool) (string, error
 		}
 		txid := send.GetCurrentOutboundParam().Hash
 		if txid == "" {
-			return "", fmt.Errorf("getOutboundidByNonce: cannot find outbound txid for nonce %d", nonce)
+			return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 		}
 		// make sure it's a real Bitcoin txid
 		_, getTxResult, err := GetTxResultByHash(ob.rpcClient, txid)
