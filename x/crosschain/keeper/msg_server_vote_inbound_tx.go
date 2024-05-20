@@ -11,7 +11,7 @@ import (
 
 // FIXME: use more specific error types & codes
 
-// VoteOnObservedInboundTx casts a vote on an inbound transaction observed on a connected chain. If this
+// VoteInbound casts a vote on an inbound transaction observed on a connected chain. If this
 // is the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 // created.
@@ -52,7 +52,7 @@ import (
 // ```
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
+func (k msgServer) VoteInbound(goCtx context.Context, msg *types.MsgVoteInbound) (*types.MsgVoteInboundResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	index := msg.Digest()
 
@@ -66,7 +66,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		msg.CoinType,
 		msg.Creator,
 		index,
-		msg.InTxHash,
+		msg.InboundHash,
 	)
 	if err != nil {
 		return nil, err
@@ -76,17 +76,17 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
 	// This check prevents double spending
 	if isNew {
-		if k.IsFinalizedInbound(tmpCtx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, cosmoserrors.Wrap(
 				types.ErrObservedTxAlreadyFinalized,
-				fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex),
+				fmt.Sprintf("inboundHash:%s, SenderChainID:%d, EventIndex:%d", msg.InboundHash, msg.SenderChainId, msg.EventIndex),
 			)
 		}
 	}
 	commit()
 	// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
-		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		return &types.MsgVoteInboundResponse{}, nil
 	}
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if !tssFound {
@@ -102,26 +102,26 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	k.ProcessInbound(ctx, &cctx)
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveInbound(ctx, &cctx, msg.EventIndex)
-	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+	return &types.MsgVoteInboundResponse{}, nil
 }
 
 /* SaveInbound saves the inbound CCTX to the store.It does the following:
     - Emits an event for the finalized inbound CCTX.
 	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
 	- Updates the CCTX with the finalized height and finalization status.
-	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via InTx tracker suggestions
+	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via Inbound tracker suggestions
 	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
 */
 
 func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	EmitEventInboundFinalized(ctx, cctx)
 	k.AddFinalizedInbound(ctx,
-		cctx.GetInboundTxParams().InboundTxObservedHash,
-		cctx.GetInboundTxParams().SenderChainId,
+		cctx.GetInboundParams().ObservedHash,
+		cctx.GetInboundParams().SenderChainId,
 		eventIndex)
 	// #nosec G701 always positive
-	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
-	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
-	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+	cctx.InboundParams.FinalizedZetaHeight = uint64(ctx.BlockHeight())
+	cctx.InboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	k.RemoveInboundTrackerIfExists(ctx, cctx.InboundParams.SenderChainId, cctx.InboundParams.ObservedHash)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
 }

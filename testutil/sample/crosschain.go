@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -84,20 +84,20 @@ func CustomAssetRate(chainID int64, asset string, decimals uint32, coinType coin
 	}
 }
 
-func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
+func OutboundTracker(t *testing.T, index string) types.OutboundTracker {
 	r := newRandFromStringSeed(t, index)
 
-	return types.OutTxTracker{
+	return types.OutboundTracker{
 		Index:   index,
 		ChainId: r.Int63(),
 		Nonce:   r.Uint64(),
 	}
 }
 
-func InTxTracker(t *testing.T, index string) types.InTxTracker {
+func InboundTracker(t *testing.T, index string) types.InboundTracker {
 	r := newRandFromStringSeed(t, index)
 
-	return types.InTxTracker{
+	return types.InboundTracker{
 		ChainId:  r.Int63(),
 		CoinType: coin.CoinType_Zeta,
 		TxHash:   Hash().Hex(),
@@ -118,65 +118,65 @@ func GasPrice(t *testing.T, index string) *types.GasPrice {
 	}
 }
 
-func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
-	return &types.InboundTxParams{
-		Sender:                          EthAddress().String(),
-		SenderChainId:                   r.Int63(),
-		TxOrigin:                        EthAddress().String(),
-		CoinType:                        coin.CoinType(r.Intn(100)),
-		Asset:                           StringRandom(r, 32),
-		Amount:                          math.NewUint(uint64(r.Int63())),
-		InboundTxObservedHash:           StringRandom(r, 32),
-		InboundTxObservedExternalHeight: r.Uint64(),
-		InboundTxBallotIndex:            StringRandom(r, 32),
-		InboundTxFinalizedZetaHeight:    r.Uint64(),
+func InboundParams(r *rand.Rand) *types.InboundParams {
+	return &types.InboundParams{
+		Sender:                 EthAddress().String(),
+		SenderChainId:          r.Int63(),
+		TxOrigin:               EthAddress().String(),
+		CoinType:               coin.CoinType(r.Intn(100)),
+		Asset:                  StringRandom(r, 32),
+		Amount:                 math.NewUint(uint64(r.Int63())),
+		ObservedHash:           StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		BallotIndex:            StringRandom(r, 32),
+		FinalizedZetaHeight:    r.Uint64(),
 	}
 }
 
-func InboundTxParamsValidChainID(r *rand.Rand) *types.InboundTxParams {
-	return &types.InboundTxParams{
-		Sender:                          EthAddress().String(),
-		SenderChainId:                   chains.GoerliChain.ChainId,
-		TxOrigin:                        EthAddress().String(),
-		Asset:                           StringRandom(r, 32),
-		Amount:                          math.NewUint(uint64(r.Int63())),
-		InboundTxObservedHash:           StringRandom(r, 32),
-		InboundTxObservedExternalHeight: r.Uint64(),
-		InboundTxBallotIndex:            StringRandom(r, 32),
-		InboundTxFinalizedZetaHeight:    r.Uint64(),
+func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
+	return &types.InboundParams{
+		Sender:                 EthAddress().String(),
+		SenderChainId:          chains.GoerliChain.ChainId,
+		TxOrigin:               EthAddress().String(),
+		Asset:                  StringRandom(r, 32),
+		Amount:                 math.NewUint(uint64(r.Int63())),
+		ObservedHash:           StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		BallotIndex:            StringRandom(r, 32),
+		FinalizedZetaHeight:    r.Uint64(),
 	}
 }
 
-func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
-	return &types.OutboundTxParams{
-		Receiver:                         EthAddress().String(),
-		ReceiverChainId:                  r.Int63(),
-		CoinType:                         coin.CoinType(r.Intn(100)),
-		Amount:                           math.NewUint(uint64(r.Int63())),
-		OutboundTxTssNonce:               r.Uint64(),
-		OutboundTxGasLimit:               r.Uint64(),
-		OutboundTxGasPrice:               math.NewUint(uint64(r.Int63())).String(),
-		OutboundTxHash:                   StringRandom(r, 32),
-		OutboundTxBallotIndex:            StringRandom(r, 32),
-		OutboundTxObservedExternalHeight: r.Uint64(),
-		OutboundTxGasUsed:                r.Uint64(),
-		OutboundTxEffectiveGasPrice:      math.NewInt(r.Int63()),
+func OutboundParams(r *rand.Rand) *types.OutboundParams {
+	return &types.OutboundParams{
+		Receiver:               EthAddress().String(),
+		ReceiverChainId:        r.Int63(),
+		CoinType:               coin.CoinType(r.Intn(100)),
+		Amount:                 math.NewUint(uint64(r.Int63())),
+		TssNonce:               r.Uint64(),
+		GasLimit:               r.Uint64(),
+		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		Hash:                   StringRandom(r, 32),
+		BallotIndex:            StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		GasUsed:                r.Uint64(),
+		EffectiveGasPrice:      math.NewInt(r.Int63()),
 	}
 }
 
-func OutboundTxParamsValidChainID(r *rand.Rand) *types.OutboundTxParams {
-	return &types.OutboundTxParams{
-		Receiver:                         EthAddress().String(),
-		ReceiverChainId:                  chains.GoerliChain.ChainId,
-		Amount:                           math.NewUint(uint64(r.Int63())),
-		OutboundTxTssNonce:               r.Uint64(),
-		OutboundTxGasLimit:               r.Uint64(),
-		OutboundTxGasPrice:               math.NewUint(uint64(r.Int63())).String(),
-		OutboundTxHash:                   StringRandom(r, 32),
-		OutboundTxBallotIndex:            StringRandom(r, 32),
-		OutboundTxObservedExternalHeight: r.Uint64(),
-		OutboundTxGasUsed:                r.Uint64(),
-		OutboundTxEffectiveGasPrice:      math.NewInt(r.Int63()),
+func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
+	return &types.OutboundParams{
+		Receiver:               EthAddress().String(),
+		ReceiverChainId:        chains.GoerliChain.ChainId,
+		Amount:                 math.NewUint(uint64(r.Int63())),
+		TssNonce:               r.Uint64(),
+		GasLimit:               r.Uint64(),
+		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		Hash:                   StringRandom(r, 32),
+		BallotIndex:            StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		GasUsed:                r.Uint64(),
+		EffectiveGasPrice:      math.NewInt(r.Int63()),
 	}
 }
 
@@ -198,13 +198,13 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	r := newRandFromStringSeed(t, index)
 
 	return &types.CrossChainTx{
-		Creator:          AccAddress(),
-		Index:            GetCctxIndexFromString(index),
-		ZetaFees:         math.NewUint(uint64(r.Int63())),
-		RelayedMessage:   StringRandom(r, 32),
-		CctxStatus:       Status(t, index),
-		InboundTxParams:  InboundTxParams(r),
-		OutboundTxParams: []*types.OutboundTxParams{OutboundTxParams(r), OutboundTxParams(r)},
+		Creator:        AccAddress(),
+		Index:          GetCctxIndexFromString(index),
+		ZetaFees:       math.NewUint(uint64(r.Int63())),
+		RelayedMessage: StringRandom(r, 32),
+		CctxStatus:     Status(t, index),
+		InboundParams:  InboundParams(r),
+		OutboundParams: []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
 	}
 }
 
@@ -224,12 +224,12 @@ func CustomCctxsInBlockRange(
 		nonce := i - 1
 		cctx := CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
 		cctx.CctxStatus.Status = status
-		cctx.InboundTxParams.CoinType = coinType
-		cctx.InboundTxParams.Asset = asset
-		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
-		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
-		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
-		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
+		cctx.InboundParams.CoinType = coinType
+		cctx.InboundParams.Asset = asset
+		cctx.InboundParams.ObservedExternalHeight = i
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chainID
+		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(amount)
+		cctx.GetCurrentOutboundParam().TssNonce = nonce
 		cctxs = append(cctxs, cctx)
 	}
 	return cctxs
@@ -239,20 +239,20 @@ func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
 	r := newRandFromStringSeed(t, index)
 
 	return &types.LastBlockHeight{
-		Creator:           AccAddress(),
-		Index:             index,
-		Chain:             StringRandom(r, 32),
-		LastSendHeight:    r.Uint64(),
-		LastReceiveHeight: r.Uint64(),
+		Creator:            AccAddress(),
+		Index:              index,
+		Chain:              StringRandom(r, 32),
+		LastInboundHeight:  r.Uint64(),
+		LastOutboundHeight: r.Uint64(),
 	}
 }
 
-func InTxHashToCctx(t *testing.T, inTxHash string) types.InTxHashToCctx {
-	r := newRandFromStringSeed(t, inTxHash)
+func InboundHashToCctx(t *testing.T, inboundHash string) types.InboundHashToCctx {
+	r := newRandFromStringSeed(t, inboundHash)
 
-	return types.InTxHashToCctx{
-		InTxHash:  inTxHash,
-		CctxIndex: []string{StringRandom(r, 32), StringRandom(r, 32)},
+	return types.InboundHashToCctx{
+		InboundHash: inboundHash,
+		CctxIndex:   []string{StringRandom(r, 32), StringRandom(r, 32)},
 	}
 }
 
@@ -263,22 +263,22 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 	}
 }
 
-func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteOnObservedInboundTx {
-	return types.MsgVoteOnObservedInboundTx{
-		Creator:       "",
-		Sender:        EthAddress().String(),
-		SenderChainId: Chain(from).GetChainId(),
-		Receiver:      EthAddress().String(),
-		ReceiverChain: Chain(to).GetChainId(),
-		Amount:        UintInRange(10000000, 1000000000),
-		Message:       base64.StdEncoding.EncodeToString(Bytes()),
-		InBlockHeight: Uint64InRange(1, 10000),
-		GasLimit:      1000000000,
-		InTxHash:      Hash().String(),
-		CoinType:      coinType,
-		TxOrigin:      EthAddress().String(),
-		Asset:         "",
-		EventIndex:    EventIndex(),
+func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
+	return types.MsgVoteInbound{
+		Creator:            "",
+		Sender:             EthAddress().String(),
+		SenderChainId:      Chain(from).GetChainId(),
+		Receiver:           EthAddress().String(),
+		ReceiverChain:      Chain(to).GetChainId(),
+		Amount:             UintInRange(10000000, 1000000000),
+		Message:            base64.StdEncoding.EncodeToString(Bytes()),
+		InboundBlockHeight: Uint64InRange(1, 10000),
+		GasLimit:           1000000000,
+		InboundHash:        Hash().String(),
+		CoinType:           coinType,
+		TxOrigin:           EthAddress().String(),
+		Asset:              "",
+		EventIndex:         EventIndex(),
 	}
 }
 

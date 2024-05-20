@@ -68,7 +68,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s", cctx.CctxStatus.Status))
 	}
@@ -118,7 +118,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 		panic("tx failed")
 	}
 
-	cctx = utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
 	}

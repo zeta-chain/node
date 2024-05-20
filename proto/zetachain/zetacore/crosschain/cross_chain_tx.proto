@@ -26,7 +26,7 @@ enum TxFinalizationStatus {
   Finalized = 1;    // the corresponding tx is finalized but not executed yet
   Executed = 2;     // the corresponding tx is executed
 }
-message InboundTxParams {
+message InboundParams {
   string sender = 1; // this address is the immediate contract/EOA that calls
                      // the Connector.send()
   int64 sender_chain_id = 2;
@@ -38,10 +38,10 @@ message InboundTxParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
-  string inbound_tx_observed_hash = 7;
-  uint64 inbound_tx_observed_external_height = 8;
-  string inbound_tx_ballot_index = 9;
-  uint64 inbound_tx_finalized_zeta_height = 10;
+  string observed_hash = 7;
+  uint64 observed_external_height = 8;
+  string ballot_index = 9;
+  uint64 finalized_zeta_height = 10;
   TxFinalizationStatus tx_finalization_status = 11;
 }
 
@@ -54,7 +54,7 @@ message ZetaAccounting {
   ];
 }
 
-message OutboundTxParams {
+message OutboundParams {
   string receiver = 1;
   int64 receiver_chainId = 2;
   pkg.coin.CoinType coin_type = 3;
@@ -62,20 +62,20 @@ message OutboundTxParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
-  uint64 outbound_tx_tss_nonce = 5;
-  uint64 outbound_tx_gas_limit = 6;
-  string outbound_tx_gas_price = 7;
+  uint64 tss_nonce = 5;
+  uint64 gas_limit = 6;
+  string gas_price = 7;
   // the above are commands for zetaclients
   // the following fields are used when the outbound tx is mined
-  string outbound_tx_hash = 8;
-  string outbound_tx_ballot_index = 9;
-  uint64 outbound_tx_observed_external_height = 10;
-  uint64 outbound_tx_gas_used = 20;
-  string outbound_tx_effective_gas_price = 21 [
+  string hash = 8;
+  string ballot_index = 9;
+  uint64 observed_external_height = 10;
+  uint64 gas_used = 20;
+  string effective_gas_price = 21 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  uint64 outbound_tx_effective_gas_limit = 22;
+  uint64 effective_gas_limit = 22;
   string tss_pubkey = 11;
   TxFinalizationStatus tx_finalization_status = 12;
 }
@@ -97,6 +97,6 @@ message CrossChainTx {
   ];
   string relayed_message = 6; // Not used by protocol , just relayed across
   Status cctx_status = 8;
-  InboundTxParams inbound_tx_params = 9;
-  repeated OutboundTxParams outbound_tx_params = 10;
+  InboundParams inbound_params = 9;
+  repeated OutboundParams outbound_params = 10;
 }

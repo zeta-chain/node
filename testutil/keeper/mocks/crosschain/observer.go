@@ -775,9 +775,9 @@ func (_m *CrosschainObserverKeeper) SetTssAndUpdateNonce(ctx types.Context, tss 
 	_m.Called(ctx, tss)
 }
 
-// VoteOnInboundBallot provides a mock function with given fields: ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash
-func (_m *CrosschainObserverKeeper) VoteOnInboundBallot(ctx types.Context, senderChainID int64, receiverChainID int64, coinType coin.CoinType, voter string, ballotIndex string, inTxHash string) (bool, bool, error) {
-	ret := _m.Called(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+// VoteOnInboundBallot provides a mock function with given fields: ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inboundHash
+func (_m *CrosschainObserverKeeper) VoteOnInboundBallot(ctx types.Context, senderChainID int64, receiverChainID int64, coinType coin.CoinType, voter string, ballotIndex string, inboundHash string) (bool, bool, error) {
+	ret := _m.Called(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inboundHash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for VoteOnInboundBallot")
@@ -787,22 +787,22 @@ func (_m *CrosschainObserverKeeper) VoteOnInboundBallot(ctx types.Context, sende
 	var r1 bool
 	var r2 error
 	if rf, ok := ret.Get(0).(func(types.Context, int64, int64, coin.CoinType, string, string, string) (bool, bool, error)); ok {
-		return rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+		return rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inboundHash)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, int64, int64, coin.CoinType, string, string, string) bool); ok {
-		r0 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+		r0 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inboundHash)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	if rf, ok := ret.Get(1).(func(types.Context, int64, int64, coin.CoinType, string, string, string) bool); ok {
-		r1 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+		r1 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inboundHash)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
 	if rf, ok := ret.Get(2).(func(types.Context, int64, int64, coin.CoinType, string, string, string) error); ok {
-		r2 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+		r2 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inboundHash)
 	} else {
 		r2 = ret.Error(2)
 	}

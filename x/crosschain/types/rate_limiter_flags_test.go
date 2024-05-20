@@ -374,9 +374,9 @@ func TestConvertCctxValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// create cctx with given input
 			cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", tt.chainID, 1))
-			cctx.InboundTxParams.CoinType = tt.coinType
-			cctx.InboundTxParams.Asset = tt.asset
-			cctx.GetCurrentOutTxParam().Amount = tt.amount
+			cctx.InboundParams.CoinType = tt.coinType
+			cctx.InboundParams.Asset = tt.asset
+			cctx.GetCurrentOutboundParam().Amount = tt.amount
 
 			// convert cctx value
 			value := types.ConvertCctxValueToAzeta(tt.chainID, cctx, tt.gasAssetRates, tt.erc20AssetRates)

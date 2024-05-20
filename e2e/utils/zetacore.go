@@ -16,25 +16,25 @@ const (
 	DefaultCctxTimeout = 4 * time.Minute
 )
 
-// WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
-func WaitCctxMinedByInTxHash(
+// WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
+func WaitCctxMinedByInboundHash(
 	ctx context.Context,
-	inTxHash string,
+	inboundHash string,
 	cctxClient crosschaintypes.QueryClient,
 	logger infoLogger,
 	cctxTimeout time.Duration,
 ) *crosschaintypes.CrossChainTx {
-	cctxs := WaitCctxsMinedByInTxHash(ctx, inTxHash, cctxClient, 1, logger, cctxTimeout)
+	cctxs := WaitCctxsMinedByInboundHash(ctx, inboundHash, cctxClient, 1, logger, cctxTimeout)
 	if len(cctxs) == 0 {
-		panic(fmt.Sprintf("cctx not found, inTxHash: %s", inTxHash))
+		panic(fmt.Sprintf("cctx not found, inboundHash: %s", inboundHash))
 	}
 	return cctxs[len(cctxs)-1]
 }
 
-// WaitCctxsMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
-func WaitCctxsMinedByInTxHash(
+// WaitCctxsMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
+func WaitCctxsMinedByInboundHash(
 	ctx context.Context,
-	inTxHash string,
+	inboundHash string,
 	cctxClient crosschaintypes.QueryClient,
 	cctxsCount int,
 	logger infoLogger,
@@ -47,7 +47,7 @@ func WaitCctxsMinedByInTxHash(
 		timeout = cctxTimeout
 	}
 
-	// fetch cctxs by inTxHash
+	// fetch cctxs by inboundHash
 	for i := 0; ; i++ {
 		// declare cctxs here so we can print the last fetched one if we reach timeout
 		var cctxs []*crosschaintypes.CrossChainTx
@@ -58,18 +58,22 @@ func WaitCctxsMinedByInTxHash(
 				cctxMessage = fmt.Sprintf(", last cctx: %v", cctxs[0].String())
 			}
 
-			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s%s", inTxHash, cctxMessage))
+			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inboundHash: %s%s", inboundHash, cctxMessage))
 		}
 		time.Sleep(1 * time.Second)
 
-		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
-			InTxHash: inTxHash,
+		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
+		// for the update tests
+		// TODO: replace with InboundHashToCctxData once removed
+		// https://github.com/zeta-chain/node/issues/2200
+		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInboundHashToCctxDataRequest{
+			InboundHash: inboundHash,
 		})
 
 		if err != nil {
 			// prevent spamming logs
 			if i%10 == 0 {
-				logger.Info("Error getting cctx by inTxHash: %s", err.Error())
+				logger.Info("Error getting cctx by inboundHash: %s", err.Error())
 			}
 			continue
 		}
@@ -77,8 +81,8 @@ func WaitCctxsMinedByInTxHash(
 			// prevent spamming logs
 			if i%10 == 0 {
 				logger.Info(
-					"not enough cctxs found by inTxHash: %s, expected: %d, found: %d",
-					inTxHash,
+					"not enough cctxs found by inboundHash: %s, expected: %d, found: %d",
+					inboundHash,
 					cctxsCount,
 					len(res.CrossChainTxs),
 				)
@@ -93,9 +97,9 @@ func WaitCctxsMinedByInTxHash(
 				// prevent spamming logs
 				if i%10 == 0 {
 					logger.Info(
-						"waiting for cctx index %d to be mined by inTxHash: %s, cctx status: %s, message: %s",
+						"waiting for cctx index %d to be mined by inboundHash: %s, cctx status: %s, message: %s",
 						j,
-						inTxHash,
+						inboundHash,
 						cctx.CctxStatus.Status.String(),
 						cctx.CctxStatus.StatusMessage,
 					)
@@ -143,7 +147,7 @@ func WaitCCTXMinedByIndex(
 		if err != nil {
 			// prevent spamming logs
 			if i%10 == 0 {
-				logger.Info("Error getting cctx by inTxHash: %s", err.Error())
+				logger.Info("Error getting cctx by inboundHash: %s", err.Error())
 			}
 			continue
 		}

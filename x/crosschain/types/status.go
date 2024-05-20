@@ -10,6 +10,7 @@ func (m *Status) AbortRefunded(timeStamp int64) {
 	m.LastUpdateTimestamp = timeStamp
 }
 
+// ChangeStatus changes the status of the cross chain transaction
 // empty msg does not overwrite old status message
 func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	if len(msg) > 0 {

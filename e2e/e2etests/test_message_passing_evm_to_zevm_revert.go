@@ -70,13 +70,13 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 
 	// New inbound message picked up by zeta-clients and voted on by observers to initiate a contract call on zEVM which would revert the transaction
 	// A revert transaction is created and gets fialized on the original sender chain.
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
 
 	// On finalization the Tss address calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}

@@ -197,7 +197,7 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
 	amount := sdkmath.ZeroUint()
 
 	for _, cctx := range cctxs {
-		amount = amount.Add(cctx.GetCurrentOutTxParam().Amount)
+		amount = amount.Add(cctx.GetCurrentOutboundParam().Amount)
 	}
 	amountInt, ok := sdkmath.NewIntFromString(amount.String())
 	if !ok {
@@ -216,12 +216,12 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Ch
 		}
 		nonceToCctxMap := make(map[uint64]*types.CrossChainTx)
 		for _, c := range cctx {
-			if c.InboundTxParams.CoinType == coin.CoinType_Zeta {
-				nonceToCctxMap[c.GetCurrentOutTxParam().OutboundTxTssNonce] = c
+			if c.InboundParams.CoinType == coin.CoinType_Zeta {
+				nonceToCctxMap[c.GetCurrentOutboundParam().TssNonce] = c
 			}
 		}
 
-		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Ascending)
+		trackers, err := zs.zetaClient.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Ascending)
 		if err != nil {
 			continue
 		}

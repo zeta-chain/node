@@ -45,7 +45,7 @@ func init() {
 
 func DebugCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-ballot-from-intx [txHash] [chainID]",
+		Use:   "get-inbound-ballot [inboundHash] [chainID]",
 		Short: "provide txHash and chainID to get the ballot status for the txHash",
 		RunE: func(_ *cobra.Command, args []string) error {
 			cobra.ExactArgs(2)
@@ -58,7 +58,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			txHash := args[0]
+			inboundHash := args[0]
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
@@ -117,8 +117,8 @@ func DebugCmd() *cobra.Command {
 						evmObserver.WithChain(*chains.GetChainFromChainID(chainID))
 					}
 				}
-				hash := ethcommon.HexToHash(txHash)
-				tx, isPending, err := evmObserver.TransactionByHash(txHash)
+				hash := ethcommon.HexToHash(inboundHash)
+				tx, isPending, err := evmObserver.TransactionByHash(inboundHash)
 				if err != nil {
 					return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
 				}
@@ -196,7 +196,7 @@ func DebugCmd() *cobra.Command {
 					return err
 				}
 				btcObserver.WithBtcClient(btcClient)
-				ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(txHash, false)
+				ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(inboundHash, false)
 				if err != nil {
 					return err
 				}

@@ -1,11 +1,10 @@
 # CHANGELOG
 
 ## Unreleased
+
 ### Breaking Changes
-* `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableHeaderVerification` and `MsgDisableHeaderVerification` messages.
- * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
- * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
-* Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
+
+* [List of the breaking changes can be found in this document](docs/releases/v17_breaking_changes.md)
 
 ### Features
 
@@ -24,6 +23,7 @@
 * [2032](https://github.com/zeta-chain/node/pull/2032) - improve some general structure of the ZetaClient codebase
 * [2097](https://github.com/zeta-chain/node/pull/2097) - refactor lightclient verification flags to account for individual chains
 * [2071](https://github.com/zeta-chain/node/pull/2071) - Modify chains struct to add all chain related information
+* [2118](https://github.com/zeta-chain/node/pull/2118) - consolidate inbound and outbound naming
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17

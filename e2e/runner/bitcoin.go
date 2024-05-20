@@ -129,7 +129,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	runner.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
-	cctx := utils.WaitCctxMinedByInTxHash(runner.Ctx, txHash2.String(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(runner.Ctx, txHash2.String(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected mined status; got %s, message: %s",
@@ -280,7 +280,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	runner.Logger.Info("bitcoin intx events:")
+	runner.Logger.Info("bitcoin inbound events:")
 	for _, event := range events {
 		runner.Logger.Info("  TxHash: %s", event.TxHash)
 		runner.Logger.Info("  From: %s", event.FromAddress)

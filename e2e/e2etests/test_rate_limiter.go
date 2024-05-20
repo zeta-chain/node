@@ -152,7 +152,7 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 // NOTE: this could be a more general function but we define it here for this test because we emit in the function logs specific to this test
 func waitForWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInTxHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

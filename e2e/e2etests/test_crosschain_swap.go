@@ -90,7 +90,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("***** First test: ERC20 -> BTC")
 	// Should deposit ERC20 for swap, swap for BTC and withdraw BTC
 	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, big.NewInt(8e7), msg)
-	cctx1 := utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx1 := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// check the cctx status
 	if cctx1.CctxStatus.Status != types.CctxStatus_OutboundMined {
@@ -104,8 +104,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 	stop := r.MineBlocks()
 
-	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
-	cctx2 := utils.WaitCctxMinedByInTxHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
+	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
+	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// check the cctx status
 	if cctx2.CctxStatus.Status != types.CctxStatus_OutboundMined {
@@ -116,7 +116,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		)
 	}
 
-	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutTxParam().OutboundTxHash)
+	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutboundParam().Hash)
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	utxos, err := r.BtcRPCClient.ListUnspent()
@@ -149,7 +149,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 
-	cctx3 := utils.WaitCctxMinedByInTxHash(r.Ctx, txID.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx3 := utils.WaitCctxMinedByInboundHash(r.Ctx, txID.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx3.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected outbound mined status; got %s, message: %s",
@@ -158,11 +158,11 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		)
 	}
 	r.Logger.Info("cctx3 index %s", cctx3.Index)
-	r.Logger.Info("  inbound tx hash %s", cctx3.InboundTxParams.InboundTxObservedHash)
+	r.Logger.Info("  inbound tx hash %s", cctx3.InboundParams.ObservedHash)
 	r.Logger.Info("  status %s", cctx3.CctxStatus.Status.String())
 	r.Logger.Info("  status msg: %s", cctx3.CctxStatus.StatusMessage)
 
-	cctx4 := utils.WaitCctxMinedByInTxHash(r.Ctx, cctx3.Index, r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx4 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx3.Index, r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx4.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected outbound mined status; got %s, message: %s",
@@ -171,7 +171,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		)
 	}
 	r.Logger.Info("cctx4 index %s", cctx4.Index)
-	r.Logger.Info("  outbound tx hash %s", cctx4.GetCurrentOutTxParam().OutboundTxHash)
+	r.Logger.Info("  outbound tx hash %s", cctx4.GetCurrentOutboundParam().Hash)
 	r.Logger.Info("  status %s", cctx4.CctxStatus.Status.String())
 
 	{
@@ -208,20 +208,20 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 			panic(err)
 		}
 
-		cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 		r.Logger.Info("cctx3 index %s", cctx.Index)
-		r.Logger.Info("  inbound tx hash %s", cctx.InboundTxParams.InboundTxObservedHash)
+		r.Logger.Info("  inbound tx hash %s", cctx.InboundParams.ObservedHash)
 		r.Logger.Info("  status %s", cctx.CctxStatus.Status.String())
 		r.Logger.Info("  status msg: %s", cctx.CctxStatus.StatusMessage)
 
 		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 			panic(fmt.Sprintf("expected reverted status; got %s", cctx.CctxStatus.Status.String()))
 		}
-		outTxHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutTxParam().OutboundTxHash)
+		outboundHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutboundParam().Hash)
 		if err != nil {
 			panic(err)
 		}
-		txraw, err := r.BtcRPCClient.GetRawTransactionVerbose(outTxHash)
+		txraw, err := r.BtcRPCClient.GetRawTransactionVerbose(outboundHash)
 		if err != nil {
 			panic(err)
 		}

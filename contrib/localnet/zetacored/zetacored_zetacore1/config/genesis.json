@@ -178,7 +178,7 @@
       "params": {
         "enabled": false
       },
-      "outTxTrackerList": [],
+      "outboundTrackerList": [],
       "keygen": null,
       "tSSVoterList": [],
       "tSSList": [],
@@ -674,7 +674,7 @@
           "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
           "authorization": {
             "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx"
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteInbound"
           },
           "expiration": null
         },
@@ -683,7 +683,7 @@
           "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
           "authorization": {
             "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx"
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteOutbound"
           },
           "expiration": null
         },
@@ -710,7 +710,7 @@
           "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
           "authorization": {
             "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-            "msg": "/zetachain.zetacore.crosschain.MsgAddToOutTxTracker"
+            "msg": "/zetachain.zetacore.crosschain.MsgAddOutboundTracker"
           },
           "expiration": null
         },
@@ -737,7 +737,7 @@
           "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
           "authorization": {
             "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx"
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteInbound"
           },
           "expiration": null
         },
@@ -746,7 +746,7 @@
           "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
           "authorization": {
             "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx"
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteOutbound"
           },
           "expiration": null
         },
@@ -773,7 +773,7 @@
           "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
           "authorization": {
             "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-            "msg": "/zetachain.zetacore.crosschain.MsgAddToOutTxTracker"
+            "msg": "/zetachain.zetacore.crosschain.MsgAddOutboundTracker"
           },
           "expiration": null
         }

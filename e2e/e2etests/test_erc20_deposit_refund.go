@@ -25,13 +25,13 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	amount := big.NewInt(1e4)
 
 	// send the deposit
-	inTxHash, err := sendInvalidERC20Deposit(r, amount)
+	inboundHash, err := sendInvalidERC20Deposit(r, amount)
 	if err != nil {
 		panic(err)
 	}
 
 	// There is no liquidity pool, therefore the cctx should abort
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, inTxHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 	if cctx.CctxStatus.Status != types.CctxStatus_Aborted {
 		panic(fmt.Sprintf("expected cctx status to be Aborted; got %s", cctx.CctxStatus.Status))
@@ -79,14 +79,14 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 
 	// send the deposit
 	amount = big.NewInt(1e7)
-	inTxHash, err = sendInvalidERC20Deposit(r, amount)
+	inboundHash, err = sendInvalidERC20Deposit(r, amount)
 	if err != nil {
 		panic(err)
 	}
 	erc20BalanceAfterSend := big.NewInt(0).Sub(erc20Balance, amount)
 
 	// there is a liquidity pool, therefore the cctx should revert
-	cctx = utils.WaitCctxMinedByInTxHash(r.Ctx, inTxHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// the revert tx creation will fail because the sender, used as the recipient, is not defined in the cctx
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
@@ -98,7 +98,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 
 	// get revert tx
-	revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	revertTxHash := cctx.GetCurrentOutboundParam().Hash
 	receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(revertTxHash))
 	if err != nil {
 		panic(err)
@@ -138,7 +138,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	amount := big.NewInt(1e10)
 	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
-	utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
 	if err != nil {

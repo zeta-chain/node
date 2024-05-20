@@ -331,13 +331,13 @@ func (c *Client) GetBallot(ballotIdentifier string) (*observertypes.QueryBallotB
 	return resp, nil
 }
 
-func (c *Client) GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error) {
+func (c *Client) GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.InTxTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
+	resp, err := client.InboundTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllInboundTrackerByChainRequest{ChainId: chainID})
 	if err != nil {
 		return nil, err
 	}
-	return resp.InTxTracker, nil
+	return resp.InboundTracker, nil
 }
 
 func (c *Client) GetCurrentTss() (observertypes.TSS, error) {
@@ -378,21 +378,21 @@ func (c *Client) GetTssHistory() ([]observertypes.TSS, error) {
 	return resp.TssList, nil
 }
 
-func (c *Client) GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error) {
+func (c *Client) GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.OutTxTracker(context.Background(), &crosschaintypes.QueryGetOutTxTrackerRequest{
+	resp, err := client.OutboundTracker(context.Background(), &crosschaintypes.QueryGetOutboundTrackerRequest{
 		ChainID: chain.ChainId,
 		Nonce:   nonce,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &resp.OutTxTracker, nil
+	return &resp.OutboundTracker, nil
 }
 
-func (c *Client) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
+func (c *Client) GetAllOutboundTrackerByChain(chainID int64, order interfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.OutTxTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllOutTxTrackerByChainRequest{
+	resp, err := client.OutboundTrackerAllByChain(context.Background(), &crosschaintypes.QueryAllOutboundTrackerByChainRequest{
 		Chain: chainID,
 		Pagination: &query.PageRequest{
 			Key:        nil,
@@ -406,16 +406,16 @@ func (c *Client) GetAllOutTxTrackerByChain(chainID int64, order interfaces.Order
 		return nil, err
 	}
 	if order == interfaces.Ascending {
-		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
-			return resp.OutTxTracker[i].Nonce < resp.OutTxTracker[j].Nonce
+		sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
+			return resp.OutboundTracker[i].Nonce < resp.OutboundTracker[j].Nonce
 		})
 	}
 	if order == interfaces.Descending {
-		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
-			return resp.OutTxTracker[i].Nonce > resp.OutTxTracker[j].Nonce
+		sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
+			return resp.OutboundTracker[i].Nonce > resp.OutboundTracker[j].Nonce
 		})
 	}
-	return resp.OutTxTracker, nil
+	return resp.OutboundTracker, nil
 }
 
 func (c *Client) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {

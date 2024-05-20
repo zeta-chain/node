@@ -32,7 +32,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			}})
 		require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
@@ -83,7 +83,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
@@ -97,7 +97,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_Gas,
 				SenderChainId: 999999,
 			}})
@@ -119,7 +119,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
@@ -131,7 +131,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: 999999,
 			}})
@@ -154,7 +154,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
@@ -167,7 +167,7 @@ func TestGetAbortedAmount(t *testing.T) {
 	amount := sdkmath.NewUint(100)
 	t.Run("should return the inbound amount if outbound not present", func(t *testing.T) {
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: amount,
 			},
 		}
@@ -176,10 +176,10 @@ func TestGetAbortedAmount(t *testing.T) {
 	})
 	t.Run("should return the amount outbound amount", func(t *testing.T) {
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{Amount: amount},
 			},
 		}
@@ -188,7 +188,7 @@ func TestGetAbortedAmount(t *testing.T) {
 	})
 	t.Run("should return the zero if outbound amount is not present and inbound is 0", func(t *testing.T) {
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
 		}
@@ -246,10 +246,10 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{}, false)
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
@@ -272,16 +272,16 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		}, true)
 		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false)
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
 		err := k.UpdateNonce(ctx, 5, &cctx)
 		require.Error(t, err)
-		require.Equal(t, uint64(100), cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
+		require.Equal(t, uint64(100), cctx.GetCurrentOutboundParam().TssNonce)
 	})
 
 	t.Run("should error if pending nonces not found", func(t *testing.T) {
@@ -301,10 +301,10 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{}, false)
 
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
@@ -331,10 +331,10 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		}, true)
 
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
@@ -364,10 +364,10 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Once()
 
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Amount: sdkmath.ZeroUint(),
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
@@ -379,23 +379,23 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 func TestKeeper_SortCctxsByHeightAndChainId(t *testing.T) {
 	// cctx1
 	cctx1 := sample.CrossChainTx(t, "1-1")
-	cctx1.GetCurrentOutTxParam().ReceiverChainId = 1
-	cctx1.InboundTxParams.InboundTxObservedExternalHeight = 10
+	cctx1.GetCurrentOutboundParam().ReceiverChainId = 1
+	cctx1.InboundParams.ObservedExternalHeight = 10
 
 	// cctx2
 	cctx2 := sample.CrossChainTx(t, "1-2")
-	cctx2.GetCurrentOutTxParam().ReceiverChainId = 1
-	cctx2.InboundTxParams.InboundTxObservedExternalHeight = 13
+	cctx2.GetCurrentOutboundParam().ReceiverChainId = 1
+	cctx2.InboundParams.ObservedExternalHeight = 13
 
 	// cctx3
 	cctx3 := sample.CrossChainTx(t, "56-1")
-	cctx3.GetCurrentOutTxParam().ReceiverChainId = 56
-	cctx3.InboundTxParams.InboundTxObservedExternalHeight = 13
+	cctx3.GetCurrentOutboundParam().ReceiverChainId = 56
+	cctx3.InboundParams.ObservedExternalHeight = 13
 
 	// cctx4
 	cctx4 := sample.CrossChainTx(t, "56-2")
-	cctx4.GetCurrentOutTxParam().ReceiverChainId = 56
-	cctx4.InboundTxParams.InboundTxObservedExternalHeight = 16
+	cctx4.GetCurrentOutboundParam().ReceiverChainId = 56
+	cctx4.InboundParams.ObservedExternalHeight = 16
 
 	// sort by height
 	cctxs := []*types.CrossChainTx{cctx1, cctx2, cctx3, cctx4}
