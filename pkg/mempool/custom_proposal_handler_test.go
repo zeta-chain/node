@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
@@ -78,6 +79,57 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 
 func TestABCIUtilsTestSuite(t *testing.T) {
 	suite.Run(t, NewABCIUtilsTestSuite(t))
+}
+
+func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_NoopMempool() {
+	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	var (
+		secret1 = []byte("secret1")
+		secret2 = []byte("secret2")
+	)
+	type testTx struct {
+		tx       sdk.Tx
+		priority int64
+		bz       []byte
+	}
+	testTxs := []testTx{
+		{tx: buildMsg(s.T(), txConfig, []byte(`0`), [][]byte{secret1}, []uint64{1}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1}, []uint64{2}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`22`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`32`), [][]byte{secret2}, []uint64{1}), priority: 8},
+	}
+	ctrl := gomock.NewController(s.T())
+	app := mock.NewMockProposalTxVerifier(ctrl)
+	mp := mempool.NoOpMempool{}
+	customProposalHandler := zetamempool.NewCustomProposalHandler(mp, app)
+	prepareProposalHandler := customProposalHandler.PrepareProposalHandler()
+	processProposalHandler := customProposalHandler.ProcessProposalHandler()
+
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 111 + 112,
+	}
+	for _, v := range testTxs {
+		app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
+		s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx))
+		req.Txs = append(req.Txs, v.bz)
+	}
+
+	// since it is noop mempool, all txs returned in fifo order
+	resp := prepareProposalHandler(s.ctx, req)
+	for i, tx := range resp.Txs {
+		require.Equal(s.T(), tx, testTxs[i].bz)
+	}
+
+	// verify that proposal will be processed
+	for i, v := range req.Txs {
+		app.EXPECT().ProcessProposalVerifyTx(v).Return(testTxs[i].tx, nil).AnyTimes()
+	}
+	resp2 := processProposalHandler(s.ctx, abci.RequestProcessProposal{
+		Txs: resp.Txs,
+	})
+	s.Require().Equal(resp2.Status, abci.ResponseProcessProposal_ACCEPT)
 }
 
 func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSelection() {
@@ -246,7 +298,9 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			ctrl := gomock.NewController(s.T())
 			app := mock.NewMockProposalTxVerifier(ctrl)
 			mp := zetamempool.NewPriorityMempool()
-			ph := zetamempool.NewCustomProposalHandler(mp, app).PrepareProposalHandler()
+			customProposalHandler := zetamempool.NewCustomProposalHandler(mp, app)
+			prepareProposalHandler := customProposalHandler.PrepareProposalHandler()
+			processProposalHandler := customProposalHandler.ProcessProposalHandler()
 
 			for _, v := range tc.txInputs {
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
@@ -254,7 +308,7 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 				tc.req.Txs = append(tc.req.Txs, v.bz)
 			}
 
-			resp := ph(tc.ctx, tc.req)
+			resp := prepareProposalHandler(tc.ctx, tc.req)
 			respTxIndexes := []int{}
 			for _, tx := range resp.Txs {
 				for i, v := range testTxs {
@@ -265,6 +319,16 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			}
 
 			s.Require().EqualValues(tc.expectedTxs, respTxIndexes)
+
+			// verify that proposal will be processed
+			req := abci.RequestProcessProposal{
+				Txs: resp.Txs,
+			}
+			for i, v := range req.Txs {
+				app.EXPECT().ProcessProposalVerifyTx(v).Return(tc.txInputs[i].tx, nil).AnyTimes()
+			}
+			resp2 := processProposalHandler(tc.ctx, req)
+			s.Require().Equal(resp2.Status, abci.ResponseProcessProposal_ACCEPT)
 		})
 	}
 }
