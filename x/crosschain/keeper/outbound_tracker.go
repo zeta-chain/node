@@ -55,7 +55,7 @@ func (k Keeper) RemoveOutboundTrackerFromStore(
 	))
 }
 
-// GetAllOutboundTracker returns all outTxTracker
+// GetAllOutboundTracker returns all outbound trackers
 func (k Keeper) GetAllOutboundTracker(ctx sdk.Context) (list []types.OutboundTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
