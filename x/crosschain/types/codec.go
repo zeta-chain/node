@@ -9,7 +9,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddOutboundTracker{}, "crosschain/AddOutboundTracker", nil)
-	cdc.RegisterConcrete(&MsgAddInboundTracker{}, "crosschain/AddToInboundTracker", nil)
+	cdc.RegisterConcrete(&MsgAddInboundTracker{}, "crosschain/AddInboundTracker", nil)
 	cdc.RegisterConcrete(&MsgRemoveOutboundTracker{}, "crosschain/RemoveOutboundTracker", nil)
 	cdc.RegisterConcrete(&MsgVoteGasPrice{}, "crosschain/VoteGasPrice", nil)
 	cdc.RegisterConcrete(&MsgVoteOutbound{}, "crosschain/VoteOutbound", nil)
