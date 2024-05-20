@@ -14,7 +14,7 @@ import (
 func CmdAddInboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "add-inbound-tracker [chain-id] [tx-hash] [coin-type]",
-		Short: `Add a in-tx-tracker 
+		Short: `Add an inbound tracker 
 				Use 0:Zeta,1:Gas,2:ERC20`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
