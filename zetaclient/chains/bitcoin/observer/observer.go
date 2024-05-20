@@ -38,9 +38,6 @@ import (
 )
 
 const (
-	// maxHeightDiff contains the max height diff in case the last block is too old when the observer starts
-	maxHeightDiff = 10000
-
 	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
 	btcBlocksPerDay = 144
 
@@ -679,6 +676,7 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 	return nil
 }
 
+// LoadLastBlock loads last scanned block from DB
 func (ob *Observer) LoadLastBlock() error {
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -694,18 +692,13 @@ func (ob *Observer) LoadLastBlock() error {
 		// #nosec G701 always in range
 		lastBN := int64(lastBlockNum.Num)
 		ob.SetLastBlockHeightScanned(lastBN)
-
-		//If persisted block number is too low, use the latest height
-		if (bn - lastBN) > maxHeightDiff {
-			ob.logger.Chain.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
-			ob.SetLastBlockHeightScanned(bn)
-		}
 	}
 
-	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
+	// bitcoin regtest starts from block 100
+	if chains.IsBitcoinRegnet(ob.chain.ChainId) {
 		ob.SetLastBlockHeightScanned(100)
 	}
-	ob.logger.Chain.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().Msgf("chain %d: start scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
 
 	return nil
 }

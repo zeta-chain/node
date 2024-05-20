@@ -558,12 +558,15 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	return block, nil
 }
 
-func (ob *Observer) BuildLastBlock() error {
-	logger := ob.logger.Chain.With().Str("module", "BuildBlockIndex").Logger()
+// LoadLastBlock loads last scanned block from specified height or from DB
+func (ob *Observer) LoadLastBlock() error {
+	// get environment variable
 	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
+
+	// load from environment variable if set
 	if scanFromBlock != "" {
-		logger.Info().Msgf("BuildLastBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
+		ob.logger.Chain.Info().Msgf("BuildLastBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == clienttypes.EnvVarLatest {
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
@@ -577,22 +580,25 @@ func (ob *Observer) BuildLastBlock() error {
 			}
 			ob.SetLastBlockHeightScanned(scanFromBlockInt)
 		}
-	} else { // last observed block
+	} else {
+		// load from DB otherwise
 		var lastBlockNum clienttypes.LastBlockSQLType
 		if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
-			logger.Info().Msgf("BuildLastBlock: db PosKey does not exist; read from external chain %s", ob.chain.String())
+			ob.logger.Chain.Info().Msgf("BuildLastBlock: db PosKey does not exist; read from external chain %s", ob.chain.String())
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return err
 			}
 			ob.SetLastBlockHeightScanned(header.Number.Uint64())
 			if dbc := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())); dbc.Error != nil {
-				logger.Error().Err(dbc.Error).Msgf("BuildLastBlock: error writing lastBlockScanned %d to db", ob.GetLastBlockHeightScanned())
+				ob.logger.Chain.Error().Err(dbc.Error).Msgf("BuildLastBlock: error writing lastBlockScanned %d to db", ob.GetLastBlockHeightScanned())
 			}
 		} else {
 			ob.SetLastBlockHeightScanned(lastBlockNum.Num)
 		}
 	}
+	ob.logger.Chain.Info().Msgf("chain %d: start scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
+
 	return nil
 }
 
@@ -620,7 +626,7 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		}
 
 		ob.db = db
-		err = ob.BuildLastBlock()
+		err = ob.LoadLastBlock()
 		if err != nil {
 			return err
 		}
