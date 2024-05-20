@@ -132,6 +132,7 @@ import (
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 	"github.com/zeta-chain/zetacore/x/ibccrosschain"
 	ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
@@ -386,7 +387,7 @@ func New(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
-	customProposalHandler := NewCustomProposalHandler(bApp.Mempool(), bApp)
+	customProposalHandler := zetamempool.NewCustomProposalHandler(bApp.Mempool(), bApp)
 	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
 	// add capability keeper and ScopeToModule for ibc module

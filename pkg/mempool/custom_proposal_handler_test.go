@@ -1,6 +1,6 @@
 // Forked from here and extended to test ethermint txs https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/baseapp/abci_utils_test.go
 // TODO: remove this once cosmos is upgraded: https://github.com/zeta-chain/node/issues/2156
-package app_test
+package mempool_test
 
 import (
 	"bytes"
@@ -29,7 +29,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	zetaapp "github.com/zeta-chain/zetacore/app"
-	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 )
 
 type testValidator struct {

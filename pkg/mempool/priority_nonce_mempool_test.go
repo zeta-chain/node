@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 )
 
 func TestOutOfOrder(t *testing.T) {

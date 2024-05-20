@@ -39,7 +39,7 @@ import (
 	ethermintclient "github.com/evmos/ethermint/client"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 )
 
 const EnvPrefix = "zetacore"
