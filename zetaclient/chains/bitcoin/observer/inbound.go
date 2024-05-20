@@ -345,7 +345,7 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) 
 
 	// compliance check
 	// if the inbound contains restricted addresses, return nil
-	if ob.IsInboundRestricted(inbound) {
+	if ob.DoesInboundContainsRestrictedAddress(inbound) {
 		return nil
 	}
 
@@ -367,8 +367,8 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) 
 	)
 }
 
-// IsInboundRestricted returns true if the inbound contains restricted addresses
-func (ob *Observer) IsInboundRestricted(inTx *BTCInboundEvent) bool {
+// DoesInboundContainsRestrictedAddress returns true if the inbound contains restricted addresses
+func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) bool {
 	receiver := ""
 	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {

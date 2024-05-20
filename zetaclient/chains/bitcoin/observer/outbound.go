@@ -204,7 +204,7 @@ func (ob *Observer) SelectUTXOs(
 		defer ob.Mu.Unlock()
 	} else {
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
-		preTxid, err := ob.getOutboundidByNonce(nonce-1, test)
+		preTxid, err := ob.getOutboundIDByNonce(nonce-1, test)
 		if err != nil {
 			return nil, 0, 0, 0, err
 		}
@@ -288,7 +288,7 @@ func (ob *Observer) refreshPendingNonce() {
 	nonceLow := uint64(p.NonceLow)
 	if nonceLow > pendingNonce {
 		// get the last included outbound hash
-		txid, err := ob.getOutboundidByNonce(nonceLow-1, false)
+		txid, err := ob.getOutboundIDByNonce(nonceLow-1, false)
 		if err != nil {
 			ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting last outbound txid")
 		}
@@ -324,11 +324,11 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 			return "", errors.Wrapf(err, "getOutboundIDByNonce: error getting outbound result for nonce %d hash %s", nonce, txid)
 		}
 		if getTxResult.Confirmations <= 0 { // just a double check
-			return "", fmt.Errorf("getOutboundidByNonce: outbound txid %s for nonce %d is not included", txid, nonce)
+			return "", fmt.Errorf("getOutboundIDByNonce: outbound txid %s for nonce %d is not included", txid, nonce)
 		}
 		return txid, nil
 	}
-	return "", fmt.Errorf("getOutboundidByNonce: cannot find outbound txid for nonce %d", nonce)
+	return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 }
 
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
@@ -470,7 +470,7 @@ func (ob *Observer) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 		}
 		// 1st vin: nonce-mark MUST come from prior TSS outbound
 		if nonce > 0 && i == 0 {
-			preTxid, err := ob.getOutboundidByNonce(nonce-1, false)
+			preTxid, err := ob.getOutboundIDByNonce(nonce-1, false)
 			if err != nil {
 				return fmt.Errorf("checkTSSVin: error findTxIDByNonce %d", nonce-1)
 			}

@@ -29,7 +29,7 @@ func (gs GenesisState) Validate() error {
 		}
 		outboundTrackerIndexMap[index] = struct{}{}
 	}
-	// Check for duplicated index in inTxHashToCctx
+	// Check for duplicated index in inboundHashToCctx
 	inboundHashToCctxIndexMap := make(map[string]struct{})
 
 	for _, elem := range gs.InboundHashToCctxList {

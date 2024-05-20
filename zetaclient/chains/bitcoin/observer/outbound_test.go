@@ -247,7 +247,7 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "getOutboundidByNonce: cannot find outbound txid for nonce 0", err.Error())
+	require.Equal(t, "getOutboundIDByNonce: cannot find outbound txid for nonce 0", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 	// Case3: nonce = 1, should pass now
