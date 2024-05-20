@@ -28,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	zetaapp "github.com/zeta-chain/zetacore/app"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 )
 
@@ -247,7 +246,7 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			ctrl := gomock.NewController(s.T())
 			app := mock.NewMockProposalTxVerifier(ctrl)
 			mp := zetamempool.NewPriorityMempool()
-			ph := zetaapp.NewCustomProposalHandler(mp, app).PrepareProposalHandler()
+			ph := zetamempool.NewCustomProposalHandler(mp, app).PrepareProposalHandler()
 
 			for _, v := range tc.txInputs {
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()

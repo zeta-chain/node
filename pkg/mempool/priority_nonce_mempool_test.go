@@ -74,7 +74,6 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	tests := []struct {
 		txs   []txSpec
 		order []int
-		fail  bool
 	}{
 		{
 			txs: []txSpec{
