@@ -47,7 +47,7 @@ type testTxDetailsGetter interface {
 	GetAddress() sdk.AccAddress
 }
 
-// testTx is a dummy implementation of Tx used for testing.
+// testTx is a dummy implementation of cosmos Tx used for testing.
 type testTx struct {
 	id       int
 	priority int64
@@ -76,9 +76,32 @@ func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 	return res, nil
 }
 
+// testTx is a dummy implementation of unsigned cosmos Tx used for testing.
+type testUnsignedTx struct {
+	id       int
+	priority int64
+	nonce    uint64
+	address  sdk.AccAddress
+}
+
+func (tx testUnsignedTx) GetID() int                 { return tx.id }
+func (tx testUnsignedTx) GetPriority() int64         { return tx.priority }
+func (tx testUnsignedTx) GetNonce() uint64           { return tx.nonce }
+func (tx testUnsignedTx) GetAddress() sdk.AccAddress { return tx.address }
+
+func (tx testUnsignedTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+
+func (tx testUnsignedTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
+
+func (tx testUnsignedTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
+	return res, nil
+}
+
 var (
 	_ sdk.Tx                  = (*testTx)(nil)
+	_ sdk.Tx                  = (*testUnsignedTx)(nil)
 	_ signing.SigVerifiableTx = (*testTx)(nil)
+	_ signing.SigVerifiableTx = (*testUnsignedTx)(nil)
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
@@ -90,7 +113,15 @@ func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-// testEthTx is a dummy implementation of Tx used for testing.
+func (tx testUnsignedTx) GetMsgs() []sdk.Msg { return nil }
+
+func (tx testUnsignedTx) ValidateBasic() error { return nil }
+
+func (tx testUnsignedTx) String() string {
+	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
+}
+
+// testEthTx is a dummy implementation of ethermint Tx used for testing.
 type testEthTx struct {
 	id              int
 	priority        int64
@@ -115,9 +146,38 @@ func (tx testEthTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
 
 func (tx testEthTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
+// testEthTx is a dummy implementation of unsigned ethermint Tx used for testing.
+type testUnsignedEthTx struct {
+	id              int
+	priority        int64
+	nonce           uint64
+	address         sdk.AccAddress
+	extensionOption *codectypes.Any
+	msgs            []sdk.Msg
+}
+
+func (tx testUnsignedEthTx) GetID() int                 { return tx.id }
+func (tx testUnsignedEthTx) GetPriority() int64         { return tx.priority }
+func (tx testUnsignedEthTx) GetNonce() uint64           { return tx.nonce }
+func (tx testUnsignedEthTx) GetAddress() sdk.AccAddress { return tx.address }
+
+func (tx testUnsignedEthTx) GetExtensionOptions() []*codectypes.Any {
+	return []*codectypes.Any{tx.extensionOption}
+}
+
+func (tx testUnsignedEthTx) GetNonCriticalExtensionOptions() []*codectypes.Any {
+	panic("not implemented")
+}
+
+func (tx testUnsignedEthTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+
+func (tx testUnsignedEthTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
+
 var (
 	_ sdk.Tx                         = (*testEthTx)(nil)
 	_ authante.HasExtensionOptionsTx = (*testEthTx)(nil)
+	_ sdk.Tx                         = (*testUnsignedEthTx)(nil)
+	_ authante.HasExtensionOptionsTx = (*testUnsignedEthTx)(nil)
 )
 
 func (tx testEthTx) GetMsgs() []sdk.Msg { return tx.msgs }
@@ -125,6 +185,14 @@ func (tx testEthTx) GetMsgs() []sdk.Msg { return tx.msgs }
 func (tx testEthTx) ValidateBasic() error { return nil }
 
 func (tx testEthTx) String() string {
+	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
+}
+
+func (tx testUnsignedEthTx) GetMsgs() []sdk.Msg { return tx.msgs }
+
+func (tx testUnsignedEthTx) ValidateBasic() error { return nil }
+
+func (tx testUnsignedEthTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
@@ -149,6 +217,21 @@ func (s *MempoolTestSuite) buildMockEthTx(id int, priority int64, from string, n
 		priority:        priority,
 		nonce:           nonce,
 		msgs:            []sdk.Msg{msg},
+		extensionOption: option,
+		address:         common.HexToAddress(from).Bytes(),
+	}
+}
+
+func (s *MempoolTestSuite) buildInvalidMockEthTx(id int, priority int64, from string, nonce uint64) testUnsignedEthTx {
+	msg := evmtypes.NewTx(big.NewInt(1), nonce, nil, big.NewInt(1), 0, nil, nil, nil, nil, nil)
+	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
+	require.NoError(s.T(), err)
+	msg.From = from
+	return testUnsignedEthTx{
+		id:              id,
+		priority:        priority,
+		nonce:           nonce,
+		msgs:            []sdk.Msg{}, // empty msgs
 		extensionOption: option,
 		address:         common.HexToAddress(from).Bytes(),
 	}

@@ -3,6 +3,7 @@
 package mempool_test
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
@@ -19,6 +20,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
 func TestOutOfOrder(t *testing.T) {
@@ -343,6 +345,17 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			require.NoError(t, zetamempool.IsEmpty(pool))
 		})
 	}
+}
+
+func (s *MempoolTestSuite) TestPriorityNonceTxOrderFailsIfSenderAndNonceCantBeResolved() {
+	pool := zetamempool.NewPriorityMempool()
+	tx := testUnsignedTx{id: 0, priority: int64(10), nonce: uint64(1), address: nil}
+	err := pool.Insert(context.Background(), tx)
+	require.Error(s.T(), err)
+
+	ethTx := s.buildInvalidMockEthTx(0, 10, sample.EthAddress().Hex(), 0)
+	err = pool.Insert(context.Background(), ethTx)
+	require.Error(s.T(), err)
 }
 
 func (s *MempoolTestSuite) TestIterator() {
