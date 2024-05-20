@@ -452,7 +452,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 
 	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
-		BallotIdentifier: "0x6facd1e8a2008cd0acd7784628ff1ac326406f3bb355ea514bf290c6ce6f8355",
+		BallotIdentifier: "0xc1ebc3b76ebcc7ff9a9e543062c31b9f9445506e4924df858460bf2926be1a25",
 		VoterAddress:     address.String(),
 	}
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
@@ -480,7 +480,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 		coin.CoinType_Gas)
 	require.NoError(t, err)
 	require.Equal(t, sampleHash, hash)
-	require.Equal(t, "0x6facd1e8a2008cd0acd7784628ff1ac326406f3bb355ea514bf290c6ce6f8355", ballot)
+	require.Equal(t, "0xc1ebc3b76ebcc7ff9a9e543062c31b9f9445506e4924df858460bf2926be1a25", ballot)
 }
 
 func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {
