@@ -10,7 +10,7 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
-	// Set all the outTxTracker
+	// Set all the outbound tracker
 	for _, elem := range genState.OutboundTrackerList {
 		k.SetOutboundTracker(ctx, elem)
 	}

@@ -13,12 +13,12 @@ func getOutboundTrackerIndex(chainID int64, nonce uint64) string {
 }
 
 // SetOutboundTracker set a specific outbound tracker in the store from its index
-func (k Keeper) SetOutboundTracker(ctx sdk.Context, outTxTracker types.OutboundTracker) {
-	outTxTracker.Index = getOutboundTrackerIndex(outTxTracker.ChainId, outTxTracker.Nonce)
+func (k Keeper) SetOutboundTracker(ctx sdk.Context, outboundTracker types.OutboundTracker) {
+	outboundTracker.Index = getOutboundTrackerIndex(outboundTracker.ChainId, outboundTracker.Nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
-	b := k.cdc.MustMarshal(&outTxTracker)
+	b := k.cdc.MustMarshal(&outboundTracker)
 	store.Set(types.OutboundTrackerKey(
-		outTxTracker.Index,
+		outboundTracker.Index,
 	), b)
 }
 

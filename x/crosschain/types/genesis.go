@@ -19,7 +19,7 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	// Check for duplicated index in outTxTracker
+	// Check for duplicated index in outbound tracker
 	outboundTrackerIndexMap := make(map[string]struct{})
 
 	for _, elem := range gs.OutboundTrackerList {

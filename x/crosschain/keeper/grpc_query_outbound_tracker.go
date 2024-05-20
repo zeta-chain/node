@@ -17,25 +17,25 @@ func (k Keeper) OutboundTrackerAll(c context.Context, req *types.QueryAllOutboun
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var outTxTrackers []types.OutboundTracker
+	var outboundTrackers []types.OutboundTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutboundTrackerKeyPrefix))
-	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(_ []byte, value []byte) error {
-		var outTxTracker types.OutboundTracker
-		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
+	outboundTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutboundTrackerKeyPrefix))
+	pageRes, err := query.Paginate(outboundTrackerStore, req.Pagination, func(_ []byte, value []byte) error {
+		var outboundTracker types.OutboundTracker
+		if err := k.cdc.Unmarshal(value, &outboundTracker); err != nil {
 			return err
 		}
 
-		outTxTrackers = append(outTxTrackers, outTxTracker)
+		outboundTrackers = append(outboundTrackers, outboundTracker)
 		return nil
 	})
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryAllOutboundTrackerResponse{OutboundTracker: outTxTrackers, Pagination: pageRes}, nil
+	return &types.QueryAllOutboundTrackerResponse{OutboundTracker: outboundTrackers, Pagination: pageRes}, nil
 }
 
 func (k Keeper) OutboundTrackerAllByChain(c context.Context, req *types.QueryAllOutboundTrackerByChainRequest) (*types.QueryAllOutboundTrackerByChainResponse, error) {
@@ -43,18 +43,18 @@ func (k Keeper) OutboundTrackerAllByChain(c context.Context, req *types.QueryAll
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var outTxTrackers []types.OutboundTracker
+	var outboundTrackers []types.OutboundTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
 	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", req.Chain)))
 
 	pageRes, err := query.Paginate(chainStore, req.Pagination, func(_ []byte, value []byte) error {
-		var outTxTracker types.OutboundTracker
-		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
+		var outboundTracker types.OutboundTracker
+		if err := k.cdc.Unmarshal(value, &outboundTracker); err != nil {
 			return err
 		}
-		outTxTrackers = append(outTxTrackers, outTxTracker)
+		outboundTrackers = append(outboundTrackers, outboundTracker)
 		return nil
 	})
 
@@ -62,7 +62,7 @@ func (k Keeper) OutboundTrackerAllByChain(c context.Context, req *types.QueryAll
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllOutboundTrackerByChainResponse{OutboundTracker: outTxTrackers, Pagination: pageRes}, nil
+	return &types.QueryAllOutboundTrackerByChainResponse{OutboundTracker: outboundTrackers, Pagination: pageRes}, nil
 }
 
 func (k Keeper) OutboundTracker(c context.Context, req *types.QueryGetOutboundTrackerRequest) (*types.QueryGetOutboundTrackerResponse, error) {
