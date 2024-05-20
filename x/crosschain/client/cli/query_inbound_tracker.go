@@ -46,7 +46,7 @@ func CmdListInboundTrackerByChain() *cobra.Command {
 func CmdListInboundTrackers() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-all-inbound-trackers",
-		Short: "shows all inboundTrackers",
+		Short: "shows all inbound trackers",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
