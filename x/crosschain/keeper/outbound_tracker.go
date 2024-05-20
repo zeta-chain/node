@@ -22,7 +22,7 @@ func (k Keeper) SetOutboundTracker(ctx sdk.Context, outTxTracker types.OutboundT
 	), b)
 }
 
-// GetOutboundTracker returns a outTxTracker from its index
+// GetOutboundTracker returns an outbound tracker from its index
 func (k Keeper) GetOutboundTracker(
 	ctx sdk.Context,
 	chainID int64,
