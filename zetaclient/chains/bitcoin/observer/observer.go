@@ -635,7 +635,7 @@ func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainha
 	// The Bitcoin node has to be configured to watch TSS address
 	txResult, err := rpcClient.GetTransaction(hash)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "GetOutboundByTxHash: error GetTransaction %s", hash.String())
+		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error GetTransaction %s", hash.String())
 	}
 	return hash, txResult, nil
 }
