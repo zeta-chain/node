@@ -176,6 +176,8 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cry
 				startLogger.Error().Err(err).Msgf("fail to create stream to peer %s", peer)
 				continue
 			}
+
+			// write a message to the stream
 			message := fmt.Sprintf("round %d %s => %s", round, host.ID().String()[len(host.ID().String())-5:], peer.ID.String()[len(peer.ID.String())-5:])
 			_, err = stream.Write([]byte(message))
 			if err != nil {
@@ -186,7 +188,8 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cry
 				}
 				continue
 			}
-			//startLogger.Debug().Msgf("wrote %d bytes", nw)
+
+			// read the echoed message
 			buf := make([]byte, 1024)
 			nr, err := stream.Read(buf)
 			if err != nil {
@@ -197,13 +200,13 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, hotkeyPk cry
 				}
 				continue
 			}
-			//startLogger.Debug().Msgf("read %d bytes", nr)
 			startLogger.Debug().Msgf("echoed message: %s", string(buf[:nr]))
 			err = stream.Close()
 			if err != nil {
 				startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
 			}
 
+			// check if the message is echoed correctly
 			if string(buf[:nr]) != message {
 				startLogger.Error().Msgf("ping-pong failed with peer #(%d): %s; want %s got %s", peerCount, peer, message, string(buf[:nr]))
 				continue

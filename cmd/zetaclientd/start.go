@@ -100,12 +100,19 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Wait until zetacore is ready to create blocks
-	ready := zetacoreClient.WaitForZetacoreToCreateBlocks()
-	if !ready {
-		return errors.New("Zetacore is not ready")
+	err = zetacoreClient.WaitForZetacoreToCreateBlocks()
+	if err != nil {
+		startLogger.Error().Err(err).Msg("WaitForZetacoreToCreateBlocks error")
+		return err
 	}
 	startLogger.Info().Msgf("Zetacore client is ready")
-	zetacoreClient.SetAccountNumber(authz.ZetaClientGranteeKey)
+
+	// Set grantee account number and sequence number
+	err = zetacoreClient.SetAccountNumber(authz.ZetaClientGranteeKey)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("SetAccountNumber error")
+		return err
+	}
 
 	// cross-check chainid
 	res, err := zetacoreClient.GetNodeInfo()

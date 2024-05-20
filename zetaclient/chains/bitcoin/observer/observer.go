@@ -352,10 +352,6 @@ func (ob *Observer) GetLastBlockHeight() int64 {
 }
 
 func (ob *Observer) SetLastBlockHeightScanned(height int64) {
-	if height < 0 {
-		ob.logger.Chain.Error().Msgf("lastBlockScanned for chain %d is negative: %d", ob.chain.ChainId, height)
-		return
-	}
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
@@ -670,9 +666,13 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 }
 
 func (ob *Observer) LoadLastBlock() error {
+	// Get the latest block number from node
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
+	}
+	if bn < 0 {
+		return fmt.Errorf("LoadLastBlock: negative block number %d", bn)
 	}
 
 	//Load persisted block number

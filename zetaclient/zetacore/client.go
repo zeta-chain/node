@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/simapp/params"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/app"
@@ -150,28 +151,28 @@ func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uin
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
-func (c *Client) SetAccountNumber(keyType authz.KeyType) {
+// SetAccountNumber sets the account number and sequence number for the given keyType
+func (c *Client) SetAccountNumber(keyType authz.KeyType) error {
 	ctx, err := c.GetContext()
 	if err != nil {
-		c.logger.Error().Err(err).Msg("fail to get context")
-		return
+		return errors.Wrap(err, "fail to get context")
 	}
 	address, err := c.keys.GetAddress()
 	if err != nil {
-		c.logger.Error().Err(err).Msg("fail to get address")
-		return
+		return errors.Wrap(err, "fail to get address")
 	}
 	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	if err != nil {
-		c.logger.Error().Err(err).Msg("fail to get account number and sequence number")
-		return
+		return errors.Wrap(err, "fail to get account number and sequence number")
 	}
 	c.accountNumber[keyType] = accN
 	c.seqNumber[keyType] = seq
+
+	return nil
 }
 
-// WaitForZetacoreToCreateBlocks returns true if zetacore is ready to create blocks
-func (c *Client) WaitForZetacoreToCreateBlocks() bool {
+// WaitForZetacoreToCreateBlocks waits for zetacore to create blocks
+func (c *Client) WaitForZetacoreToCreateBlocks() error {
 	retryCount := 0
 	for {
 		block, err := c.GetLatestZetaBlock()
@@ -182,12 +183,11 @@ func (c *Client) WaitForZetacoreToCreateBlocks() bool {
 		retryCount++
 		c.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
 		if retryCount > ExtendedRetryCount {
-			c.logger.Error().Msgf("Zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval)
-			return false
+			return fmt.Errorf("zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval)
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return true
+	return nil
 }
 
 // UpdateZetacoreContext updates zetacore context
