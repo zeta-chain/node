@@ -176,7 +176,7 @@ func Test_VoteOutboundBallot(t *testing.T) {
 
 	// load archived cctx
 	cctx := testutils.LoadCctxByNonce(t, chainID, tx.Nonce())
-
+	g
 	t.Run("outbound ballot should match cctx", func(t *testing.T) {
 		msg := types.NewMsgVoteOutbound(
 			"anyCreator",
