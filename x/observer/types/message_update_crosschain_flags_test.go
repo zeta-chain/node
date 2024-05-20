@@ -128,38 +128,20 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 		{
 			name: "disabling outbound and inbound allows group 1",
 			msg: types.MsgUpdateCrosschainFlags{
-				Creator:                      sample.AccAddress(),
-				IsInboundEnabled:             false,
-				IsOutboundEnabled:            false,
-				BlockHeaderVerificationFlags: nil,
-				GasPriceIncreaseFlags:        nil,
-			},
-			want: authoritytypes.PolicyType_groupEmergency,
-		},
-		{
-			name: "disabling outbound and inbound and block header verification allows group 1",
-			msg: types.MsgUpdateCrosschainFlags{
-				Creator:           sample.AccAddress(),
-				IsInboundEnabled:  false,
-				IsOutboundEnabled: false,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: false,
-					IsBtcTypeChainEnabled: false,
-				},
+				Creator:               sample.AccAddress(),
+				IsInboundEnabled:      false,
+				IsOutboundEnabled:     false,
 				GasPriceIncreaseFlags: nil,
 			},
 			want: authoritytypes.PolicyType_groupEmergency,
 		},
+
 		{
 			name: "updating gas price increase flags asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
 				Creator:           sample.AccAddress(),
 				IsInboundEnabled:  false,
 				IsOutboundEnabled: false,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: false,
-					IsBtcTypeChainEnabled: false,
-				},
 				GasPriceIncreaseFlags: &types.GasPriceIncreaseFlags{
 					EpochLength:             1,
 					RetryInterval:           1,
@@ -172,13 +154,9 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 		{
 			name: "enabling inbound asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
-				Creator:           sample.AccAddress(),
-				IsInboundEnabled:  true,
-				IsOutboundEnabled: false,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: false,
-					IsBtcTypeChainEnabled: false,
-				},
+				Creator:               sample.AccAddress(),
+				IsInboundEnabled:      true,
+				IsOutboundEnabled:     false,
 				GasPriceIncreaseFlags: nil,
 			},
 			want: authoritytypes.PolicyType_groupOperational,
@@ -186,41 +164,9 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 		{
 			name: "enabling outbound asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
-				Creator:           sample.AccAddress(),
-				IsInboundEnabled:  false,
-				IsOutboundEnabled: true,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: false,
-					IsBtcTypeChainEnabled: false,
-				},
-				GasPriceIncreaseFlags: nil,
-			},
-			want: authoritytypes.PolicyType_groupOperational,
-		},
-		{
-			name: "enabling eth header verification asserts group 2",
-			msg: types.MsgUpdateCrosschainFlags{
-				Creator:           sample.AccAddress(),
-				IsInboundEnabled:  false,
-				IsOutboundEnabled: false,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: true,
-					IsBtcTypeChainEnabled: false,
-				},
-				GasPriceIncreaseFlags: nil,
-			},
-			want: authoritytypes.PolicyType_groupOperational,
-		},
-		{
-			name: "enabling btc header verification asserts group 2",
-			msg: types.MsgUpdateCrosschainFlags{
-				Creator:           sample.AccAddress(),
-				IsInboundEnabled:  false,
-				IsOutboundEnabled: false,
-				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
-					IsEthTypeChainEnabled: false,
-					IsBtcTypeChainEnabled: true,
-				},
+				Creator:               sample.AccAddress(),
+				IsInboundEnabled:      false,
+				IsOutboundEnabled:     true,
 				GasPriceIncreaseFlags: nil,
 			},
 			want: authoritytypes.PolicyType_groupOperational,

@@ -634,16 +634,6 @@
             "min_observer_delegation": "10000000000.000000000000000000",
             "is_supported": true
           }
-        ],
-        "admin_policy": [
-          {
-            "policy_type": "group1",
-            "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
-          },
-          {
-            "policy_type": "group2",
-            "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
-          }
         ]
       }
     },

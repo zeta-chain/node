@@ -2452,7 +2452,7 @@ type QueryClient interface {
 	Cctx(ctx context.Context, in *QueryGetCctxRequest, opts ...grpc.CallOption) (*QueryGetCctxResponse, error)
 	// Queries a cctx by nonce.
 	CctxByNonce(ctx context.Context, in *QueryGetCctxByNonceRequest, opts ...grpc.CallOption) (*QueryGetCctxResponse, error)
-	// Queries a list of cctxx items.
+	// Queries a list of cctx items.
 	CctxAll(ctx context.Context, in *QueryAllCctxRequest, opts ...grpc.CallOption) (*QueryAllCctxResponse, error)
 	// Queries a list of pending cctxs.
 	ListPendingCctx(ctx context.Context, in *QueryListPendingCctxRequest, opts ...grpc.CallOption) (*QueryListPendingCctxResponse, error)
@@ -2799,7 +2799,7 @@ type QueryServer interface {
 	Cctx(context.Context, *QueryGetCctxRequest) (*QueryGetCctxResponse, error)
 	// Queries a cctx by nonce.
 	CctxByNonce(context.Context, *QueryGetCctxByNonceRequest) (*QueryGetCctxResponse, error)
-	// Queries a list of cctxx items.
+	// Queries a list of cctx items.
 	CctxAll(context.Context, *QueryAllCctxRequest) (*QueryAllCctxResponse, error)
 	// Queries a list of pending cctxs.
 	ListPendingCctx(context.Context, *QueryListPendingCctxRequest) (*QueryListPendingCctxResponse, error)

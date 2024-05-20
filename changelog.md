@@ -26,10 +26,12 @@
 * [2118](https://github.com/zeta-chain/node/pull/2118) - consolidate inbound and outbound naming
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly.
+* [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 
 ### Tests
 
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
+* [2181](https://github.com/zeta-chain/node/pull/2181) - add more assertion and test cases in ZEVM message passing E2E tests
 * [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
 
 ### Fixes

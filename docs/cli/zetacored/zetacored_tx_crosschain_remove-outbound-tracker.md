@@ -1,6 +1,6 @@
 # tx crosschain remove-outbound-tracker
 
-Remove a outbound-tracker
+Remove an outbound tracker
 
 ```
 zetacored tx crosschain remove-outbound-tracker [chain] [nonce] [flags]

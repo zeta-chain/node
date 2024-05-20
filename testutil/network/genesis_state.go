@@ -158,10 +158,9 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 
 	// set crosschain flags
 	crosschainFlags := &observertypes.CrosschainFlags{
-		IsInboundEnabled:             true,
-		IsOutboundEnabled:            true,
-		GasPriceIncreaseFlags:        &observertypes.DefaultGasPriceIncreaseFlags,
-		BlockHeaderVerificationFlags: &observertypes.DefaultBlockHeaderVerificationFlags,
+		IsInboundEnabled:      true,
+		IsOutboundEnabled:     true,
+		GasPriceIncreaseFlags: &observertypes.DefaultGasPriceIncreaseFlags,
 	}
 	nullify.Fill(&crosschainFlags)
 	state.CrosschainFlags = crosschainFlags

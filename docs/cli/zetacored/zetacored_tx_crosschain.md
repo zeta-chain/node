@@ -32,7 +32,7 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain add-outbound-tracker](zetacored_tx_crosschain_add-outbound-tracker.md)	 - Add a outbound-tracker
 * [zetacored tx crosschain migrate-tss-funds](zetacored_tx_crosschain_migrate-tss-funds.md)	 - Migrate TSS funds to the latest TSS address
 * [zetacored tx crosschain refund-aborted](zetacored_tx_crosschain_refund-aborted.md)	 - Refund an aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
-* [zetacored tx crosschain remove-outbound-tracker](zetacored_tx_crosschain_remove-outbound-tracker.md)	 - Remove a outbound-tracker
+* [zetacored tx crosschain remove-outbound-tracker](zetacored_tx_crosschain_remove-outbound-tracker.md)	 - Remove an outbound tracker
 * [zetacored tx crosschain update-tss-address](zetacored_tx_crosschain_update-tss-address.md)	 - Create a new TSSVoter
 * [zetacored tx crosschain vote-gas-price](zetacored_tx_crosschain_vote-gas-price.md)	 - Broadcast message to vote gas price
 * [zetacored tx crosschain vote-inbound](zetacored_tx_crosschain_vote-inbound.md)	 - Broadcast message to vote an inbound
