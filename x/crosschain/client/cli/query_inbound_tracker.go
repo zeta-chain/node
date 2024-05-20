@@ -13,7 +13,7 @@ import (
 func CmdListInboundTrackerByChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-inbound-tracker [chainId]",
-		Short: "shows a list of inbound tracker by chainId",
+		Short: "shows a list of inbound trackers by chainId",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
