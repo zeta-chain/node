@@ -81,10 +81,10 @@ func ConvertCctxValueToAzeta(
 ) sdkmath.Int {
 	var rate sdk.Dec
 	var decimals uint32
-	switch cctx.InboundTxParams.CoinType {
+	switch cctx.InboundParams.CoinType {
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
-		return sdk.NewIntFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+		return sdk.NewIntFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
 	case coin.CoinType_Gas:
 		assetRate, found := gasAssetRateMap[chainID]
 		if !found {
@@ -100,7 +100,7 @@ func ConvertCctxValueToAzeta(
 			// skip if no rate found for this chainID
 			return sdk.NewInt(0)
 		}
-		assetRate := erc20AssetRateMap[chainID][strings.ToLower(cctx.InboundTxParams.Asset)]
+		assetRate := erc20AssetRateMap[chainID][strings.ToLower(cctx.InboundParams.Asset)]
 		rate = assetRate.Rate
 		decimals = assetRate.Decimals
 	default:
@@ -121,7 +121,7 @@ func ConvertCctxValueToAzeta(
 	// given amountCctx = 2000000, rate = 0.8, decimals = 6
 	// amountCctxDec: 2000000 * 0.8 = 1600000.0
 	// amountAzetaDec: 1600000.0 * 10e18 / 10e6 = 1600000000000000000.0
-	amountCctxDec := sdk.NewDecFromBigInt(cctx.GetCurrentOutTxParam().Amount.BigInt())
+	amountCctxDec := sdk.NewDecFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
 	amountAzetaDec := amountCctxDec.Mul(rate).Mul(oneZeta).Quo(oneZrc20)
 	return amountAzetaDec.TruncateInt()
 }

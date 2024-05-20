@@ -36,14 +36,14 @@ export declare class EventInboundFinalized extends Message<EventInboundFinalized
   asset: string;
 
   /**
-   * @generated from field: string in_tx_hash = 6;
+   * @generated from field: string inbound_hash = 6;
    */
-  inTxHash: string;
+  inboundHash: string;
 
   /**
-   * @generated from field: string in_block_height = 7;
+   * @generated from field: string inbound_block_height = 7;
    */
-  inBlockHeight: string;
+  inboundBlockHeight: string;
 
   /**
    * @generated from field: string receiver = 8;
@@ -120,9 +120,9 @@ export declare class EventZrcWithdrawCreated extends Message<EventZrcWithdrawCre
   senderChain: string;
 
   /**
-   * @generated from field: string in_tx_hash = 5;
+   * @generated from field: string inbound_hash = 5;
    */
-  inTxHash: string;
+  inboundHash: string;
 
   /**
    * @generated from field: string receiver = 6;
@@ -179,9 +179,9 @@ export declare class EventZetaWithdrawCreated extends Message<EventZetaWithdrawC
   sender: string;
 
   /**
-   * @generated from field: string in_tx_hash = 4;
+   * @generated from field: string inbound_hash = 4;
    */
-  inTxHash: string;
+  inboundHash: string;
 
   /**
    * @generated from field: string new_status = 5;

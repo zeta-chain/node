@@ -391,10 +391,10 @@ func TestZetacore_GetLastBlockHeight(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryAllLastBlockHeightResponse{
 		LastBlockHeight: []*crosschainTypes.LastBlockHeight{
 			{
-				Index:             "test12345",
-				Chain:             "7000",
-				LastSendHeight:    32345,
-				LastReceiveHeight: 23623,
+				Index:              "test12345",
+				Chain:              "7000",
+				LastOutboundHeight: 32345,
+				LastInboundHeight:  23623,
 			},
 		},
 	}
@@ -460,10 +460,10 @@ func TestZetacore_GetLastBlockHeightByChain(t *testing.T) {
 	index := chains.BscMainnetChain
 	expectedOutput := crosschainTypes.QueryGetLastBlockHeightResponse{
 		LastBlockHeight: &crosschainTypes.LastBlockHeight{
-			Index:             index.ChainName.String(),
-			Chain:             "7000",
-			LastSendHeight:    2134123,
-			LastReceiveHeight: 1234333,
+			Index:              index.ChainName.String(),
+			Chain:              "7000",
+			LastOutboundHeight: 2134123,
+			LastInboundHeight:  1234333,
 		},
 	}
 	input := crosschainTypes.QueryGetLastBlockHeightRequest{Index: index.ChainName.String()}
@@ -610,8 +610,8 @@ func TestZetacore_GetBallotByID(t *testing.T) {
 
 func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 	chainID := chains.BscMainnetChain.ChainId
-	expectedOutput := crosschainTypes.QueryAllInTxTrackerByChainResponse{
-		InTxTracker: []crosschainTypes.InTxTracker{
+	expectedOutput := crosschainTypes.QueryAllInboundTrackerByChainResponse{
+		InboundTracker: []crosschainTypes.InboundTracker{
 			{
 				ChainId:  chainID,
 				TxHash:   "DC76A6DCCC3AA62E89E69042ADC44557C50D59E4D3210C37D78DC8AE49B3B27F",
@@ -619,8 +619,8 @@ func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 			},
 		},
 	}
-	input := crosschainTypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID}
-	method := "/zetachain.zetacore.crosschain.Query/InTxTrackerAllByChain"
+	input := crosschainTypes.QueryAllInboundTrackerByChainRequest{ChainId: chainID}
+	method := "/zetachain.zetacore.crosschain.Query/InboundTrackerAllByChain"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -630,7 +630,7 @@ func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 
 	resp, err := client.GetInboundTrackersForChain(chainID)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.InTxTracker, resp)
+	require.Equal(t, expectedOutput.InboundTracker, resp)
 }
 
 func TestZetacore_GetCurrentTss(t *testing.T) {
@@ -721,21 +721,21 @@ func TestZetacore_GetTssHistory(t *testing.T) {
 	require.Equal(t, expectedOutput.TssList, resp)
 }
 
-func TestZetacore_GetOutTxTracker(t *testing.T) {
+func TestZetacore_GetOutboundTracker(t *testing.T) {
 	chain := chains.BscMainnetChain
-	expectedOutput := crosschainTypes.QueryGetOutTxTrackerResponse{
-		OutTxTracker: crosschainTypes.OutTxTracker{
+	expectedOutput := crosschainTypes.QueryGetOutboundTrackerResponse{
+		OutboundTracker: crosschainTypes.OutboundTracker{
 			Index:    "tracker12345",
 			ChainId:  chain.ChainId,
 			Nonce:    456,
 			HashList: nil,
 		},
 	}
-	input := crosschainTypes.QueryGetOutTxTrackerRequest{
+	input := crosschainTypes.QueryGetOutboundTrackerRequest{
 		ChainID: chain.ChainId,
 		Nonce:   456,
 	}
-	method := "/zetachain.zetacore.crosschain.Query/OutTxTracker"
+	method := "/zetachain.zetacore.crosschain.Query/OutboundTracker"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -743,15 +743,15 @@ func TestZetacore_GetOutTxTracker(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetOutTxTracker(chain, 456)
+	resp, err := client.GetOutboundTracker(chain, 456)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.OutTxTracker, *resp)
+	require.Equal(t, expectedOutput.OutboundTracker, *resp)
 }
 
-func TestZetacore_GetAllOutTxTrackerByChain(t *testing.T) {
+func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	chain := chains.BscMainnetChain
-	expectedOutput := crosschainTypes.QueryAllOutTxTrackerByChainResponse{
-		OutTxTracker: []crosschainTypes.OutTxTracker{
+	expectedOutput := crosschainTypes.QueryAllOutboundTrackerByChainResponse{
+		OutboundTracker: []crosschainTypes.OutboundTracker{
 			{
 				Index:    "tracker23456",
 				ChainId:  chain.ChainId,
@@ -760,7 +760,7 @@ func TestZetacore_GetAllOutTxTrackerByChain(t *testing.T) {
 			},
 		},
 	}
-	input := crosschainTypes.QueryAllOutTxTrackerByChainRequest{
+	input := crosschainTypes.QueryAllOutboundTrackerByChainRequest{
 		Chain: chain.ChainId,
 		Pagination: &query.PageRequest{
 			Key:        nil,
@@ -770,7 +770,7 @@ func TestZetacore_GetAllOutTxTrackerByChain(t *testing.T) {
 			Reverse:    false,
 		},
 	}
-	method := "/zetachain.zetacore.crosschain.Query/OutTxTrackerAllByChain"
+	method := "/zetachain.zetacore.crosschain.Query/OutboundTrackerAllByChain"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
 	defer closeMockServer(t, server)
@@ -778,13 +778,13 @@ func TestZetacore_GetAllOutTxTrackerByChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Ascending)
+	resp, err := client.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Ascending)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.OutTxTracker, resp)
+	require.Equal(t, expectedOutput.OutboundTracker, resp)
 
-	resp, err = client.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Descending)
+	resp, err = client.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Descending)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.OutTxTracker, resp)
+	require.Equal(t, expectedOutput.OutboundTracker, resp)
 }
 
 func TestZetacore_GetPendingNoncesByChain(t *testing.T) {

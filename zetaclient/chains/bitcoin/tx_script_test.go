@@ -122,12 +122,12 @@ func TestDecodeVoutP2WSHErrors(t *testing.T) {
 }
 
 func TestDecodeP2WPKHVout(t *testing.T) {
-	// load archived outtx raw result
+	// load archived outbound raw result
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BtcMainnetChain
 	nonce := uint64(148)
 	net := &chaincfg.MainNetParams
-	nameTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
+	nameTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCOutbound(chain.ChainId, nonce))
 
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
@@ -150,12 +150,12 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 }
 
 func TestDecodeP2WPKHVoutErrors(t *testing.T) {
-	// load archived outtx raw result
+	// load archived outbound raw result
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BtcMainnetChain
 	nonce := uint64(148)
 	net := &chaincfg.MainNetParams
-	nameTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
+	nameTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCOutbound(chain.ChainId, nonce))
 
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
@@ -313,12 +313,12 @@ func TestDecodeVoutP2PKHErrors(t *testing.T) {
 }
 
 func TestDecodeOpReturnMemo(t *testing.T) {
-	// load archived intx raw result
+	// load archived inbound raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	chain := chains.BtcMainnetChain
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
-	rawResult := testutils.LoadBTCIntxRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+	rawResult := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 	require.True(t, len(rawResult.Vout) >= 2)
 	require.Equal(t, scriptHex, rawResult.Vout[1].ScriptPubKey.Hex)
 

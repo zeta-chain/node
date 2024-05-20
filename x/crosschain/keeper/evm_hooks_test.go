@@ -193,9 +193,9 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
-		require.Equal(t, "bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", cctxList[0].GetCurrentOutTxParam().Receiver)
-		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundTxParams.Sender)
-		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundTxParams.TxOrigin)
+		require.Equal(t, "bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", cctxList[0].GetCurrentOutboundParam().Receiver)
+		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
 
 	t.Run("successfully process ZRC20Withdrawal to ETH chain", func(t *testing.T) {
@@ -219,9 +219,9 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
-		require.Equal(t, "0x5daBFdd153Aaab4a970fD953DcFEEE8BF6Bb946E", cctxList[0].GetCurrentOutTxParam().Receiver)
-		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundTxParams.Sender)
-		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundTxParams.TxOrigin)
+		require.Equal(t, "0x5daBFdd153Aaab4a970fD953DcFEEE8BF6Bb946E", cctxList[0].GetCurrentOutboundParam().Receiver)
+		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
 
 	t.Run("unable to process ZRC20Withdrawal if foreign coin is not found", func(t *testing.T) {
@@ -463,10 +463,10 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
-		require.Equal(t, strings.Compare("0x60983881bdf302dcfa96603a58274d15d5966209", cctxList[0].GetCurrentOutTxParam().Receiver), 0)
-		require.Equal(t, chains.EthChain.ChainId, cctxList[0].GetCurrentOutTxParam().ReceiverChainId)
-		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundTxParams.Sender)
-		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundTxParams.TxOrigin)
+		require.Equal(t, strings.Compare("0x60983881bdf302dcfa96603a58274d15d5966209", cctxList[0].GetCurrentOutboundParam().Receiver), 0)
+		require.Equal(t, chains.EthChain.ChainId, cctxList[0].GetCurrentOutboundParam().ReceiverChainId)
+		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
 
 	t.Run("unable to process ZetaSentEvent if fungible module does not have enough balance", func(t *testing.T) {
@@ -616,9 +616,9 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
-		require.Equal(t, "bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", cctxList[0].GetCurrentOutTxParam().Receiver)
-		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundTxParams.Sender)
-		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundTxParams.TxOrigin)
+		require.Equal(t, "bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", cctxList[0].GetCurrentOutboundParam().Receiver)
+		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
 
 	t.Run("successfully parse and process ZetaSentEvent", func(t *testing.T) {
@@ -649,10 +649,10 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
-		require.Equal(t, strings.Compare("0x60983881bdf302dcfa96603a58274d15d5966209", cctxList[0].GetCurrentOutTxParam().Receiver), 0)
-		require.Equal(t, chains.EthChain.ChainId, cctxList[0].GetCurrentOutTxParam().ReceiverChainId)
-		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundTxParams.Sender)
-		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundTxParams.TxOrigin)
+		require.Equal(t, strings.Compare("0x60983881bdf302dcfa96603a58274d15d5966209", cctxList[0].GetCurrentOutboundParam().Receiver), 0)
+		require.Equal(t, chains.EthChain.ChainId, cctxList[0].GetCurrentOutboundParam().ReceiverChainId)
+		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
 
 	t.Run("unable to process logs if system contract not found", func(t *testing.T) {

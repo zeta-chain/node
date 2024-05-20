@@ -159,7 +159,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	//})
 }
 
-func TestZetacore_AddTxHashToOutTxTracker(t *testing.T) {
+func TestZetacore_AddOutboundTracker(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
@@ -167,14 +167,14 @@ func TestZetacore_AddTxHashToOutTxTracker(t *testing.T) {
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		hash, err := client.AddTxHashToOutTxTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := client.AddOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcastError
-		hash, err := client.AddTxHashToOutTxTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := client.AddOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
 		require.Error(t, err)
 		require.Equal(t, "", hash)
 	})
@@ -401,7 +401,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		hash, _, err := client.PostVoteInbound(100, 200, &crosschaintypes.MsgVoteOnObservedInboundTx{
+		hash, _, err := client.PostVoteInbound(100, 200, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
 		})
 		require.NoError(t, err)
@@ -431,7 +431,7 @@ func TestZetacore_GetInBoundVoteMessage(t *testing.T) {
 	})
 }
 
-func TestZetacore_MonitorVoteInboundTxResult(t *testing.T) {
+func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
@@ -440,7 +440,7 @@ func TestZetacore_MonitorVoteInboundTxResult(t *testing.T) {
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		client.MonitorVoteInboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOnObservedInboundTx{
+		client.MonitorVoteInboundResult(sampleHash, 1000, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
 		})
 		// Nothing to verify against this function
@@ -453,7 +453,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 
 	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
-		BallotIdentifier: "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347",
+		BallotIdentifier: "0xc1ebc3b76ebcc7ff9a9e543062c31b9f9445506e4924df858460bf2926be1a25",
 		VoterAddress:     address.String(),
 	}
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
@@ -481,10 +481,10 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 		coin.CoinType_Gas)
 	require.NoError(t, err)
 	require.Equal(t, sampleHash, hash)
-	require.Equal(t, "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347", ballot)
+	require.Equal(t, "0xc1ebc3b76ebcc7ff9a9e543062c31b9f9445506e4924df858460bf2926be1a25", ballot)
 }
 
-func TestZetacore_MonitorVoteOutboundTxResult(t *testing.T) {
+func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
@@ -493,7 +493,7 @@ func TestZetacore_MonitorVoteOutboundTxResult(t *testing.T) {
 
 	t.Run("monitor outbound vote", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		client.MonitorVoteOutboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOnObservedOutboundTx{
+		client.MonitorVoteOutboundResult(sampleHash, 1000, &crosschaintypes.MsgVoteOutbound{
 			Creator: address.String(),
 		})
 		// Nothing to verify against this function

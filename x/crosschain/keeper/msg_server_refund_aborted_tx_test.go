@@ -52,24 +52,24 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.NoError(t, err)
 
-		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
+		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20, refundAddress)
 		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount.Uint64(), balance.Uint64())
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.Uint64(), balance.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
@@ -91,24 +91,24 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutTxParam().Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.NoError(t, err)
 
-		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
+		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
 		refundAddressCosmos := sdk.AccAddress(refundAddress.Bytes())
 		balance := sdkk.BankKeeper.GetBalance(ctx, refundAddressCosmos, config.BaseDenom)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount.Uint64(), balance.Amount.Uint64())
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.Uint64(), balance.Amount.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
@@ -130,25 +130,25 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
-		cctx.OutboundTxParams = nil
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
+		cctx.OutboundParams = nil
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutTxParam().Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.NoError(t, err)
 
-		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
+		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
 		refundAddressCosmos := sdk.AccAddress(refundAddress.Bytes())
 		balance := sdkk.BankKeeper.GetBalance(ctx, refundAddressCosmos, config.BaseDenom)
-		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Amount.Uint64())
+		require.Equal(t, cctx.InboundParams.Amount.Uint64(), balance.Amount.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
@@ -170,18 +170,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = true
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
-		cctx.OutboundTxParams = nil
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
+		cctx.OutboundParams = nil
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutTxParam().Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.Error(t, err)
 	})
@@ -202,18 +202,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
-		cctx.OutboundTxParams = nil
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Cmd
+		cctx.OutboundParams = nil
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutTxParam().Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.Error(t, err)
 	})
@@ -234,11 +234,11 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		refundAddress := sample.EthAddress()
@@ -251,7 +251,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		refundAddressCosmos := sdk.AccAddress(refundAddress.Bytes())
 		balance := sdkk.BankKeeper.GetBalance(ctx, refundAddressCosmos, config.BaseDenom)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount.Uint64(), balance.Amount.Uint64())
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.Uint64(), balance.Amount.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
@@ -274,9 +274,9 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
-		cctx.InboundTxParams.Asset = asset
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_ERC20
+		cctx.InboundParams.Asset = asset
 		k.SetCrossChainTx(ctx, *cctx)
 		// deploy zrc20
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -294,14 +294,14 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.NoError(t, err)
 
-		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, refundAddress)
 		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount.Uint64(), balance.Uint64())
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.Uint64(), balance.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
@@ -323,24 +323,24 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.TxOrigin,
+			RefundAddress: cctx.InboundParams.TxOrigin,
 		})
 		require.NoError(t, err)
 
-		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
+		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20, refundAddress)
 		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().Amount.Uint64(), balance.Uint64())
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.Uint64(), balance.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
@@ -362,11 +362,11 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -393,11 +393,11 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -424,9 +424,9 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
@@ -457,9 +457,9 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -486,12 +486,12 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -517,16 +517,16 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.ErrorContains(t, err, "unable to find zeta accounting")
 	})
@@ -547,17 +547,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
-		cctx.InboundTxParams.SenderChainId = chainID
-		cctx.InboundTxParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundTxParams.Sender,
+			RefundAddress: cctx.InboundParams.Sender,
 		})
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})

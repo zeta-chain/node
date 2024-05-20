@@ -47,10 +47,10 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Gas,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 					CoinType:        coin.CoinType_Gas,
@@ -65,16 +65,16 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		// if the input amount of the cctx is 1e16, the output amount must be 1e16-43000=9999999999957000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
 		require.NoError(t, err)
-		require.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutTxParam().Amount.Uint64())
-		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+		require.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutboundParam().Amount.Uint64())
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().GasLimit)
+		require.Equal(t, "2", cctx.GetCurrentOutboundParam().GasPrice)
 	})
 
 	t.Run("should fail if not coin type gas", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		chainID := getValidEthChainID()
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			},
 		}
@@ -85,7 +85,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Gas,
 			},
 		}
@@ -105,10 +105,10 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Gas,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -142,12 +142,12 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		})
 
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				SenderChainId: chainID,
 				Sender:        sample.EthAddress().String(),
 				CoinType:      coin.CoinType_Gas,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -206,11 +206,11 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Asset:    assetAddress,
 				CoinType: coin.CoinType_ERC20,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -229,16 +229,16 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
 		require.NoError(t, err)
-		require.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutTxParam().Amount.Uint64())
-		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+		require.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutboundParam().Amount.Uint64())
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().GasLimit)
+		require.Equal(t, "2", cctx.GetCurrentOutboundParam().GasPrice)
 	})
 
 	t.Run("should fail if not coin type erc20", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		chainID := getValidEthChainID()
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Gas,
 			},
 		}
@@ -249,7 +249,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_ERC20,
 			},
 		}
@@ -269,10 +269,10 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_ERC20,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -310,11 +310,11 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_ERC20,
 				Asset:    assetAddress,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -362,11 +362,11 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				Asset:    assetAddress,
 				CoinType: coin.CoinType_ERC20,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -420,11 +420,11 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_ERC20,
 				Asset:    assetAddress,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
 				},
@@ -465,50 +465,50 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId:    chainID,
-					OutboundTxGasLimit: 1000,
+					ReceiverChainId: chainID,
+					GasLimit:        1000,
 				},
 			},
 			ZetaFees: math.NewUint(100),
 		}
 		// gasLimit * gasPrice * 2 = 1000 * 2 * 2 = 4000
-		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutboundGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
 
 		// the output amount must be input amount - (out tx fee in zeta + protocol flat fee)
-		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutboundGasFeeInZeta))
 		inputAmount := expectedFeeInZeta.Add(math.NewUint(100000))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
 		require.NoError(t, err)
-		require.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
-		require.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
+		require.Equal(t, "100000", cctx.GetCurrentOutboundParam().Amount.String())
+		require.Equal(t, "4", cctx.GetCurrentOutboundParam().GasPrice) // gas price is doubled
 		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta.Add(math.NewUint(100))), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
 
 		// can call with undefined zeta fees
 		cctx = types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId:    chainID,
-					OutboundTxGasLimit: 1000,
+					ReceiverChainId: chainID,
+					GasLimit:        1000,
 				},
 			},
 		}
-		expectedOutTxGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutboundGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
-		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutboundGasFeeInZeta))
 		inputAmount = expectedFeeInZeta.Add(math.NewUint(100000))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
 		require.NoError(t, err)
-		require.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
-		require.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
+		require.Equal(t, "100000", cctx.GetCurrentOutboundParam().Amount.String())
+		require.Equal(t, "4", cctx.GetCurrentOutboundParam().GasPrice) // gas price is doubled
 		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
 	})
 
@@ -516,7 +516,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		chainID := getValidEthChainID()
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Gas,
 			},
 		}
@@ -527,7 +527,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			},
 		}
@@ -549,15 +549,15 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				SenderChainId: chainID,
 				Sender:        sample.EthAddress().String(),
 				CoinType:      coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId:    chainID,
-					OutboundTxGasLimit: 1000,
+					ReceiverChainId: chainID,
+					GasLimit:        1000,
 				},
 			},
 		}
@@ -583,22 +583,22 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				SenderChainId: chainID,
 				Sender:        sample.EthAddress().String(),
 				CoinType:      coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{
+			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId:    chainID,
-					OutboundTxGasLimit: 1000,
+					ReceiverChainId: chainID,
+					GasLimit:        1000,
 				},
 			},
 			ZetaFees: math.NewUint(100),
 		}
-		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutboundGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
-		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutboundGasFeeInZeta))
 
 		// set input amount lower than total zeta fee
 		inputAmount := expectedFeeInZeta.Sub(math.NewUint(1))

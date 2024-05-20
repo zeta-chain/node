@@ -153,7 +153,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	}
 
 	// gasLimit+uint64(event.Raw.Index) to generate different cctx for multiple events in the same tx.
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -181,8 +181,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	if !found {
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
 	}
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
+	cctx.GetCurrentOutboundParam().GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.GetCurrentOutboundParam().Amount = cctx.InboundParams.Amount
 
 	EmitZRCWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
@@ -227,7 +227,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -268,14 +268,14 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *chains.Chain) error {
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
-		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
+		cctx.InboundParams.ObservedHash = inCctxIndex
 	}
 
 	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
 
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 	ctx.Logger().Debug("ProcessCCTX successful \n")
 	return nil
 }

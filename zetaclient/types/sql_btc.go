@@ -28,7 +28,7 @@ type TransactionResultSQLType struct {
 	Tx  TransactionResultDB `gorm:"embedded"`
 }
 
-type OutTxHashSQLType struct {
+type OutboundHashSQLType struct {
 	gorm.Model
 	Key  string
 	Hash string
@@ -97,8 +97,8 @@ func FromTransactionResultSQLType(txSQL TransactionResultSQLType) (btcjson.GetTr
 	return FromTransactionResultDB(txSQL.Tx)
 }
 
-func ToOutTxHashSQLType(hash string, key string) OutTxHashSQLType {
-	return OutTxHashSQLType{
+func ToOutboundHashSQLType(hash string, key string) OutboundHashSQLType {
+	return OutboundHashSQLType{
 		Key:  key,
 		Hash: hash,
 	}

@@ -68,9 +68,9 @@ func setCctxsInKeeper(
 	for _, cctx := range cctxs {
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
-			ChainId: cctx.GetCurrentOutTxParam().ReceiverChainId,
+			ChainId: cctx.GetCurrentOutboundParam().ReceiverChainId,
 			// #nosec G701 always in range for tests
-			Nonce:     int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce),
+			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
 			CctxIndex: cctx.Index,
 			Tss:       tss.TssPubkey,
 		})
@@ -321,6 +321,7 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 		_, err := k.RateLimiterInput(ctx, nil)
 		require.ErrorContains(t, err, "invalid request")
 	})
+
 	t.Run("window must be positive", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
@@ -330,7 +331,6 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 	})
 	t.Run("height out of range", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-
 		// set current height to 0
 		ctx = ctx.WithBlockHeight(0)
 		_, err := k.RateLimiterInput(ctx, &types.QueryRateLimiterInputRequest{
@@ -338,6 +338,7 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "height out of range")
 	})
+
 	t.Run("tss not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
@@ -347,6 +348,7 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "tss not found")
 	})
+
 	t.Run("asset rates not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
@@ -359,6 +361,7 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "asset rates not found")
 	})
+
 	t.Run("pending nonces not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 

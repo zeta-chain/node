@@ -144,7 +144,7 @@ func (suite *BitcoinObserverTestSuite) Test1() {
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs, err := FilterAndParseIncomingTx(
+	inbounds, err := FilterAndParseIncomingTx(
 		suite.rpcClient,
 		block.Tx,
 		uint64(block.Height),
@@ -154,18 +154,18 @@ func (suite *BitcoinObserverTestSuite) Test1() {
 		0.0,
 	)
 	suite.Require().NoError(err)
-	suite.Require().Equal(1, len(inTxs))
-	suite.Require().Equal(inTxs[0].Value, 0.0001)
-	suite.Require().Equal(inTxs[0].ToAddress, "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
+	suite.Require().Equal(1, len(inbounds))
+	suite.Require().Equal(inbounds[0].Value, 0.0001)
+	suite.Require().Equal(inbounds[0].ToAddress, "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
 	// the text memo is base64 std encoded string:DSRR1RmDCwWmxqY201/TMtsJdmA=
 	// see https://blockstream.info/testnet/tx/889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797
 	memo, err := hex.DecodeString("0d2451D519830B05a6C6a636d35fd332dB097660")
 	suite.Require().NoError(err)
-	suite.Require().Equal((inTxs[0].MemoBytes), memo)
-	suite.Require().Equal(inTxs[0].FromAddress, "tb1qyslx2s8evalx67n88wf42yv7236303ezj3tm2l")
-	suite.T().Logf("from: %s", inTxs[0].FromAddress)
-	suite.Require().Equal(inTxs[0].BlockNumber, uint64(2406185))
-	suite.Require().Equal(inTxs[0].TxHash, "889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797")
+	suite.Require().Equal((inbounds[0].MemoBytes), memo)
+	suite.Require().Equal(inbounds[0].FromAddress, "tb1qyslx2s8evalx67n88wf42yv7236303ezj3tm2l")
+	suite.T().Logf("from: %s", inbounds[0].FromAddress)
+	suite.Require().Equal(inbounds[0].BlockNumber, uint64(2406185))
+	suite.Require().Equal(inbounds[0].TxHash, "889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797")
 }
 
 // a tx with memo around 81B (is this allowed1?)
@@ -181,7 +181,7 @@ func (suite *BitcoinObserverTestSuite) Test2() {
 	suite.T().Logf("block height %d", block.Height)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs, err := FilterAndParseIncomingTx(
+	inbounds, err := FilterAndParseIncomingTx(
 		suite.rpcClient,
 		block.Tx,
 		uint64(block.Height),
@@ -191,7 +191,7 @@ func (suite *BitcoinObserverTestSuite) Test2() {
 		0.0,
 	)
 	suite.Require().NoError(err)
-	suite.Require().Equal(0, len(inTxs))
+	suite.Require().Equal(0, len(inbounds))
 }
 
 func (suite *BitcoinObserverTestSuite) Test3() {

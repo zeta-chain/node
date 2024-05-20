@@ -45,7 +45,7 @@ func (ob *EVMObserver) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (ob *EVMObserver) WatchIntxTracker() {
+func (ob *EVMObserver) WatchInboundTracker() {
 }
 
 // ----------------------------------------------------------------------------
@@ -86,5 +86,5 @@ func (ob *BTCObserver) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (ob *BTCObserver) WatchIntxTracker() {
+func (ob *BTCObserver) WatchInboundTracker() {
 }

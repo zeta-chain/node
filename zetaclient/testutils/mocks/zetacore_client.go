@@ -50,7 +50,7 @@ func NewMockZetacoreClient() *MockZetacoreClient {
 	}
 }
 
-func (m *MockZetacoreClient) PostVoteInbound(_, _ uint64, _ *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (m *MockZetacoreClient) PostVoteInbound(_, _ uint64, _ *crosschaintypes.MsgVoteInbound) (string, string, error) {
 	if m.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
@@ -92,7 +92,7 @@ func (m *MockZetacoreClient) PostBlameData(_ *blame.Blame, _ int64, _ string) (s
 	return "", nil
 }
 
-func (m *MockZetacoreClient) AddTxHashToOutTxTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
+func (m *MockZetacoreClient) AddOutboundTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
 	if m.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
@@ -170,18 +170,18 @@ func (m *MockZetacoreClient) GetCctxByNonce(_ int64, _ uint64) (*crosschaintypes
 	return &crosschaintypes.CrossChainTx{}, nil
 }
 
-func (m *MockZetacoreClient) GetOutTxTracker(_ chains.Chain, _ uint64) (*crosschaintypes.OutTxTracker, error) {
+func (m *MockZetacoreClient) GetOutboundTracker(_ chains.Chain, _ uint64) (*crosschaintypes.OutboundTracker, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return &crosschaintypes.OutTxTracker{}, nil
+	return &crosschaintypes.OutboundTracker{}, nil
 }
 
-func (m *MockZetacoreClient) GetAllOutTxTrackerByChain(_ int64, _ chaininterfaces.Order) ([]crosschaintypes.OutTxTracker, error) {
+func (m *MockZetacoreClient) GetAllOutboundTrackerByChain(_ int64, _ chaininterfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return []crosschaintypes.OutTxTracker{}, nil
+	return []crosschaintypes.OutboundTracker{}, nil
 }
 
 func (m *MockZetacoreClient) GetCrosschainFlags() (observerTypes.CrosschainFlags, error) {
@@ -215,11 +215,11 @@ func (m *MockZetacoreClient) GetBtcTssAddress(_ int64) (string, error) {
 	return testutils.TSSAddressBTCMainnet, nil
 }
 
-func (m *MockZetacoreClient) GetInboundTrackersForChain(_ int64) ([]crosschaintypes.InTxTracker, error) {
+func (m *MockZetacoreClient) GetInboundTrackersForChain(_ int64) ([]crosschaintypes.InboundTracker, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return []crosschaintypes.InTxTracker{}, nil
+	return []crosschaintypes.InboundTracker{}, nil
 }
 
 func (m *MockZetacoreClient) Pause() {

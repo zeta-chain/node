@@ -5,12 +5,12 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { OutTxTracker } from "./out_tx_tracker_pb.js";
+import type { OutboundTracker } from "./outbound_tracker_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { CrossChainTx, ZetaAccounting } from "./cross_chain_tx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
-import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
-import type { InTxTracker } from "./in_tx_tracker_pb.js";
+import type { InboundHashToCctx } from "./inbound_hash_to_cctx_pb.js";
+import type { InboundTracker } from "./inbound_tracker_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -20,9 +20,9 @@ import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
  */
 export declare class GenesisState extends Message<GenesisState> {
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 2;
+   * @generated from field: repeated zetachain.zetacore.crosschain.OutboundTracker outboundTrackerList = 2;
    */
-  outTxTrackerList: OutTxTracker[];
+  outboundTrackerList: OutboundTracker[];
 
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 5;
@@ -40,14 +40,14 @@ export declare class GenesisState extends Message<GenesisState> {
   lastBlockHeightList: LastBlockHeight[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 9;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InboundHashToCctx inboundHashToCctxList = 9;
    */
-  inTxHashToCctxList: InTxHashToCctx[];
+  inboundHashToCctxList: InboundHashToCctx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 11;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InboundTracker inbound_tracker_list = 11;
    */
-  inTxTrackerList: InTxTracker[];
+  inboundTrackerList: InboundTracker[];
 
   /**
    * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 12;

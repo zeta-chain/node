@@ -23,7 +23,7 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
 
 type Order string
@@ -42,15 +42,15 @@ type ChainObserver interface {
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetTxID(nonce uint64) string
-	WatchIntxTracker()
+	WatchInboundTracker()
 }
 
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
-	TryProcessOutTx(
+	TryProcessOutbound(
 		cctx *crosschaintypes.CrossChainTx,
-		outTxProc *outtxprocessor.Processor,
-		outTxID string,
+		outboundProc *outboundprocessor.Processor,
+		outboundID string,
 		observer ChainObserver,
 		zetacoreClient ZetacoreClient,
 		height uint64,
@@ -63,14 +63,14 @@ type ChainSigner interface {
 
 // ZetacoreClient is the client interface to interact with zetacore
 type ZetacoreClient interface {
-	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
+	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,
-		outTxHash string,
+		outboundHash string,
 		outBlockHeight uint64,
-		outTxGasUsed uint64,
-		outTxEffectiveGasPrice *big.Int,
-		outTxEffectiveGasLimit uint64,
+		outboundGasUsed uint64,
+		outboundEffectiveGasPrice *big.Int,
+		outboundEffectiveGasLimit uint64,
 		amount *big.Int,
 		status chains.ReceiveStatus,
 		chain chains.Chain,
@@ -82,7 +82,7 @@ type ZetacoreClient interface {
 	GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error)
 
 	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
-	AddTxHashToOutTxTracker(
+	AddOutboundTracker(
 		chainID int64,
 		nonce uint64,
 		txHash string,
@@ -101,14 +101,14 @@ type ZetacoreClient interface {
 	GetRateLimiterInput(window int64) (crosschaintypes.QueryRateLimiterInputResponse, error)
 	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error)
-	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
+	GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
+	GetAllOutboundTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error)
 	GetObserverList() ([]string, error)
 	GetBtcTssAddress(chainID int64) (string, error)
 	GetZetaHotKeyBalance() (sdkmath.Int, error)
-	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
+	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InboundTracker, error)
 	Pause()
 	Unpause()
 }
