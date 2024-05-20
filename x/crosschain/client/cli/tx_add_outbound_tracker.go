@@ -13,7 +13,7 @@ import (
 func CmdAddOutboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-outbound-tracker [chain] [nonce] [tx-hash]",
-		Short: "Add a outbound-tracker",
+		Short: "Add an outbound tracker",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argChain, err := strconv.ParseInt(args[0], 10, 64)
