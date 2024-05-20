@@ -46,7 +46,7 @@ func CmdListOutboundTracker() *cobra.Command {
 func CmdShowOutboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-outbound-tracker [chainId] [nonce]",
-		Short: "shows a OutboundTracker",
+		Short: "shows an outbound tracker",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
