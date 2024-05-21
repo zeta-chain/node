@@ -5,6 +5,13 @@ UPGRADE_HEIGHT=$1
 CHAINID="athens_101-1"
 UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
+if [[ -z $ZETACORED_URL ]]; then
+    ZETACORED_URL='http://upgrade-host:8000/zetacored'
+fi
+if [[ -z $ZETACLIENTD_URL ]]; then
+    ZETACLIENTD_URL='http://upgrade-host:8000/zetaclientd'
+fi
+
 # Wait for authorized_keys file to exist (populated by zetacore0)
 while [ ! -f ~/.ssh/authorized_keys ]; do
     echo "Waiting for authorized_keys file to exist..."
@@ -32,7 +39,7 @@ if [[ $(hostname) != "zetacore0" ]]; then
 fi
 
 # get new zetacored version
-curl -o /tmp/zetacored.new http://upgrade-host:8000/zetacored
+curl -o /tmp/zetacored.new "${ZETACORED_URL}"
 chmod +x /tmp/zetacored.new
 UPGRADE_NAME=$(/tmp/zetacored.new version)
 
@@ -77,8 +84,8 @@ esac
 cat > upgrade_plan_info.json <<EOF
 {
     "binaries": {
-        "linux/${GOARCH}": "http://upgrade-host:8000/zetacored",
-        "zetaclientd-linux/${GOARCH}": "http://upgrade-host:8000/zetaclientd"
+        "linux/${GOARCH}": "${ZETACORED_URL}",
+        "zetaclientd-linux/${GOARCH}": "${ZETACLIENTD_URL}"
     }
 }
 EOF
