@@ -39,7 +39,7 @@ if [[ $(hostname) != "zetacore0" ]]; then
 fi
 
 # get new zetacored version
-curl -o /tmp/zetacored.new "${ZETACORED_URL}"
+curl -L -o /tmp/zetacored.new "${ZETACORED_URL}"
 chmod +x /tmp/zetacored.new
 UPGRADE_NAME=$(/tmp/zetacored.new version)
 
