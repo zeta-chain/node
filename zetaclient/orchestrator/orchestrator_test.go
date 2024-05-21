@@ -308,7 +308,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// create mock zetacore client
-			client := mocks.NewMockZetaCoreClient()
+			client := mocks.NewMockZetacoreClient()
 
 			// load mock data
 			client.WithRateLimiterFlags(tt.rateLimiterFlags)

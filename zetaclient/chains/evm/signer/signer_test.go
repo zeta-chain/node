@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -57,7 +58,7 @@ func getNewEvmChainObserver() (*observer.Observer, error) {
 	coreCTX := context.NewZetacoreContext(cfg)
 	appCTX := context.NewAppContext(coreCTX, cfg)
 
-	return observer.NewObserver(appCTX, mocks.NewMockZetaCoreClient(), tss, "", logger, evmcfg, ts)
+	return observer.NewObserver(appCTX, mocks.NewMockZetacoreClient(), tss, "", logger, evmcfg, ts)
 }
 
 func getNewOutboundProcessor() *outboundprocessor.Processor {
@@ -108,9 +109,11 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver()
 	require.NoError(t, err)
 
-	evmSigner.TryProcessOutbound(cctx, processorManager, "123", mockObserver, mocks.NewMockZetaCoreClient(), 123)
+	// Test with mock client that has keys
+	client := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
+	evmSigner.TryProcessOutbound(cctx, processorManager, "123", mockObserver, client, 123)
 
-	//Check if cctx was signed and broadcasted
+	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
 	require.Len(t, *list, 1)
 }
@@ -297,7 +300,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutbound(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetaCoreClient(), txData)
+		evmSigner.BroadcastOutbound(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetacoreClient(), txData)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()

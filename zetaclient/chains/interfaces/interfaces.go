@@ -22,7 +22,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
 
@@ -92,7 +92,7 @@ type ZetacoreClient interface {
 	) (string, error)
 	Chain() chains.Chain
 	GetLogger() *zerolog.Logger
-	GetKeys() *keys.Keys
+	GetKeys() keyinterfaces.ObserverKeys
 	GetKeyGen() (*observertypes.Keygen, error)
 	GetBlockHeight() (int64, error)
 	GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error)

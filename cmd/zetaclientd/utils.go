@@ -21,7 +21,7 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	authz.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetaCoreClient(cfg config.Config, telemetry *metrics.TelemetryServer, hotkeyPassword string) (*zetacore.Client, error) {
+func CreateZetacoreClient(cfg config.Config, telemetry *metrics.TelemetryServer, hotkeyPassword string) (*zetacore.Client, error) {
 	hotKey := cfg.AuthzHotkey
 	if cfg.HsmMode {
 		hotKey = cfg.HsmHotKey

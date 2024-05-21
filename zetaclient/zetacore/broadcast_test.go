@@ -73,7 +73,7 @@ func TestBroadcast(t *testing.T) {
 
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 
 	t.Run("broadcast success", func(t *testing.T) {
 		client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
@@ -96,14 +96,13 @@ func TestBroadcast(t *testing.T) {
 		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)
 		require.Error(t, err)
 	})
-
 }
 
 func TestZetacore_GetContext(t *testing.T) {
 	address := types.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 
 	_, err = client.GetContext()
 	require.NoError(t, err)

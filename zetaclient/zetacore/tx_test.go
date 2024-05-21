@@ -32,6 +32,7 @@ import (
 )
 
 const (
+	testSigner   = `jack`
 	sampleHash   = "fa51db4412144f1130669f2bae8cb44aadbd8d85958dbffcb0fe236878097e1a"
 	ethBlockHash = "1a17bcc359e84ba8ae03b17ec425f97022cd11c3e279f6bdf7a96fcffa12b366"
 )
@@ -139,7 +140,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 
 	t.Run("post gas price success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
@@ -162,7 +163,7 @@ func TestZetacore_AddOutboundTracker(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
@@ -183,7 +184,7 @@ func TestZetacore_SetTSS(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 
 	t.Run("set tss success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
@@ -325,7 +326,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 	client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 
 	t.Run("zetacore update success", func(t *testing.T) {
@@ -341,7 +342,7 @@ func TestZetacore_PostBlameData(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 
 	t.Run("post blame data success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
@@ -363,7 +364,7 @@ func TestZetacore_PostVoteBlockHeader(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 	blockHash, err := hex.DecodeString(ethBlockHash)
 	require.NoError(t, err)
 
@@ -395,7 +396,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 	client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
@@ -434,7 +435,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 	client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
@@ -462,7 +463,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 	client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 
 	zetacoreBroadcast = MockBroadcast
@@ -487,7 +488,7 @@ func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, "", "")
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
 	client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 
 	t.Run("monitor outbound vote", func(t *testing.T) {
