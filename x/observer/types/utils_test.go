@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/go-tss/blame"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -27,7 +28,19 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 	if err != nil {
 		return 0, cosmoserrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, big.NewInt(50_000), true, false, "setGasPrice", chainid, gasPrice)
+	res, err := k.CallEVM(
+		ctx,
+		*abi,
+		types.ModuleAddressEVM,
+		oracle,
+		BigIntZero,
+		big.NewInt(50_000),
+		true,
+		false,
+		"setGasPrice",
+		chainid,
+		gasPrice,
+	)
 	if err != nil {
 		return 0, cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
 	}
@@ -51,7 +64,19 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address ethcommon.
 	if err != nil {
 		return cosmoserrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasCoinZRC20", chainid, address)
+	res, err := k.CallEVM(
+		ctx,
+		*abi,
+		types.ModuleAddressEVM,
+		oracle,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"setGasCoinZRC20",
+		chainid,
+		address,
+	)
 	if err != nil {
 		return cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
 	}
@@ -75,7 +100,19 @@ func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool ethcommon
 	if err != nil {
 		return cosmoserrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasZetaPool", chainid, pool)
+	res, err := k.CallEVM(
+		ctx,
+		*abi,
+		types.ModuleAddressEVM,
+		oracle,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"setGasZetaPool",
+		chainid,
+		pool,
+	)
 	if err != nil {
 		return cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
 	}

@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common/math"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -28,7 +29,10 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	// checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 	_, found := k.GetNodeAccount(ctx, msg.Creator)
 	if !found {
-		return nil, errorsmod.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s does not have a node account set", msg.Creator))
+		return nil, errorsmod.Wrap(
+			sdkerrors.ErrorInvalidSigner,
+			fmt.Sprintf("signer %s does not have a node account set", msg.Creator),
+		)
 	}
 	// no need to create a ballot if keygen does not exist
 	keygen, found := k.GetKeygen(ctx)

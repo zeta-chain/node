@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
+
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
@@ -33,7 +34,11 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Print("⏳ depositing BTC into ZEVM")
 
 	// fetch utxos
-	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{runner.BTCDeployerAddress})
+	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(
+		1,
+		9999999,
+		[]btcutil.Address{runner.BTCDeployerAddress},
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -57,7 +62,13 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetabitcoin.DefaultDepositorFee
-	txHash, err = runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount, utxos, runner.BtcRPCClient, runner.BTCDeployerAddress)
+	txHash, err = runner.SendToTSSFromDeployerToDeposit(
+		runner.BTCTSSAddress,
+		amount,
+		utxos,
+		runner.BtcRPCClient,
+		runner.BTCDeployerAddress,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -103,12 +114,24 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	// send two transactions to the TSS address
 	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
-	txHash1, err := runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount1, utxos[:2], btc, runner.BTCDeployerAddress)
+	txHash1, err := runner.SendToTSSFromDeployerToDeposit(
+		runner.BTCTSSAddress,
+		amount1,
+		utxos[:2],
+		btc,
+		runner.BTCDeployerAddress,
+	)
 	if err != nil {
 		panic(err)
 	}
 	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
-	txHash2, err := runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount2, utxos[2:4], btc, runner.BTCDeployerAddress)
+	txHash2, err := runner.SendToTSSFromDeployerToDeposit(
+		runner.BTCTSSAddress,
+		amount2,
+		utxos[2:4],
+		btc,
+		runner.BTCDeployerAddress,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -129,7 +152,13 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	runner.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
-	cctx := utils.WaitCctxMinedByInboundHash(runner.Ctx, txHash2.String(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(
+		runner.Ctx,
+		txHash2.String(),
+		runner.CctxClient,
+		runner.Logger,
+		runner.CctxTimeout,
+	)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected mined status; got %s, message: %s",
@@ -160,7 +189,14 @@ func (runner *E2ERunner) SendToTSSFromDeployerToDeposit(
 	btc *rpcclient.Client,
 	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
-	return runner.SendToTSSFromDeployerWithMemo(to, amount, inputUTXOs, btc, runner.DeployerAddress.Bytes(), btcDeployerAddress)
+	return runner.SendToTSSFromDeployerWithMemo(
+		to,
+		amount,
+		inputUTXOs,
+		btc,
+		runner.DeployerAddress.Bytes(),
+		btcDeployerAddress,
+	)
 }
 
 func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
@@ -384,7 +420,11 @@ func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 			BlockHash: hash.CloneBytes(),
 		})
 		if err != nil {
-			runner.Logger.Info("waiting for block header to show up in observer... current hash %s; err %s", hash.String(), err.Error())
+			runner.Logger.Info(
+				"waiting for block header to show up in observer... current hash %s; err %s",
+				hash.String(),
+				err.Error(),
+			)
 		}
 		if err == nil {
 			break

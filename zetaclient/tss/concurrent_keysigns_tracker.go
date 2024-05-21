@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 

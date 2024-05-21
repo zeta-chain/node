@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -54,7 +54,12 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
 		require.True(t, found)
-		require.True(t, coin.LiquidityCap.Equal(math.NewUint(4200000)), "invalid liquidity cap", coin.LiquidityCap.String())
+		require.True(
+			t,
+			coin.LiquidityCap.Equal(math.NewUint(4200000)),
+			"invalid liquidity cap",
+			coin.LiquidityCap.String(),
+		)
 
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 

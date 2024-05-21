@@ -7,12 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) GasPriceAll(c context.Context, req *types.QueryAllGasPriceRequest) (*types.QueryAllGasPriceResponse, error) {
+func (k Keeper) GasPriceAll(
+	c context.Context,
+	req *types.QueryAllGasPriceRequest,
+) (*types.QueryAllGasPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -40,7 +44,10 @@ func (k Keeper) GasPriceAll(c context.Context, req *types.QueryAllGasPriceReques
 	return &types.QueryAllGasPriceResponse{GasPrice: gasPrices, Pagination: pageRes}, nil
 }
 
-func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) (*types.QueryGetGasPriceResponse, error) {
+func (k Keeper) GasPrice(
+	c context.Context,
+	req *types.QueryGetGasPriceRequest,
+) (*types.QueryGetGasPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

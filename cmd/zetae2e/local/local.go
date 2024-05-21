@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"

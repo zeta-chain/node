@@ -32,9 +32,10 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // BlockNumber returns the current block number in abci app state. Because abci
@@ -51,7 +52,12 @@ func (b *Backend) BlockNumber() (hexutil.Uint64, error) {
 
 	blockHeightHeader := header.Get(grpctypes.GRPCBlockHeightHeader)
 	if headerLen := len(blockHeightHeader); headerLen != 1 {
-		return 0, fmt.Errorf("unexpected '%s' gRPC header length; got %d, expected: %d", grpctypes.GRPCBlockHeightHeader, headerLen, 1)
+		return 0, fmt.Errorf(
+			"unexpected '%s' gRPC header length; got %d, expected: %d",
+			grpctypes.GRPCBlockHeightHeader,
+			headerLen,
+			1,
+		)
 	}
 
 	height, err := strconv.ParseUint(blockHeightHeader[0], 10, 64)
@@ -106,7 +112,13 @@ func (b *Backend) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]inte
 
 	blockRes, err := b.TendermintBlockResultByNumber(&resBlock.Block.Height)
 	if err != nil {
-		b.logger.Debug("failed to fetch block result from Tendermint", "block-hash", hash.String(), "error", err.Error())
+		b.logger.Debug(
+			"failed to fetch block result from Tendermint",
+			"block-hash",
+			hash.String(),
+			"error",
+			err.Error(),
+		)
 		return nil, nil
 	}
 
@@ -332,7 +344,13 @@ func (b *Backend) HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Heade
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", resBlock.Block.Height, "error", err)
+		b.logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			resBlock.Block.Height,
+			"error",
+			err,
+		)
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee)
@@ -362,7 +380,13 @@ func (b *Backend) HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error) 
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", resBlock.Block.Height, "error", err)
+		b.logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			resBlock.Block.Height,
+			"error",
+			err,
+		)
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee)
@@ -398,7 +422,13 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", block.Height, "error", err)
+		b.logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			block.Height,
+			"error",
+			err,
+		)
 	}
 
 	msgs, txsAdditional := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
@@ -523,7 +553,13 @@ func (b *Backend) EthBlockFromTendermintBlock(
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle error for pruned node and log
-		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", height, "error", err)
+		b.logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			height,
+			"error",
+			err,
+		)
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(block.Header, bloom, baseFee)

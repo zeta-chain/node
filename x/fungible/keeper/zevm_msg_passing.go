@@ -26,7 +26,15 @@ func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 		return nil, nil
 	}
 	// Call onReceive function of the connector contract. The connector contract will then call the onReceive function of the destination contract which is the to address
-	return k.CallOnReceiveZevmConnector(ctx, sender.Bytes(), big.NewInt(inboundSenderChainID), to, inboundAmount, data, indexBytes)
+	return k.CallOnReceiveZevmConnector(
+		ctx,
+		sender.Bytes(),
+		big.NewInt(inboundSenderChainID),
+		to,
+		inboundAmount,
+		data,
+		indexBytes,
+	)
 }
 
 // ZETARevertAndCallContract deposits native ZETA to the sender address if its account or if the account does not exist yet
@@ -48,5 +56,14 @@ func (k Keeper) ZETARevertAndCallContract(ctx sdk.Context,
 		return nil, nil
 	}
 	// Call onRevert function of the connector contract. The connector contract will then call the onRevert function of the zetaTxSender contract which is the sender address
-	return k.CallOnRevertZevmConnector(ctx, sender, big.NewInt(inboundSenderChainID), to.Bytes(), big.NewInt(destinationChainID), remainingAmount, data, indexBytes)
+	return k.CallOnRevertZevmConnector(
+		ctx,
+		sender,
+		big.NewInt(inboundSenderChainID),
+		to.Bytes(),
+		big.NewInt(destinationChainID),
+		remainingAmount,
+		data,
+		indexBytes,
+	)
 }

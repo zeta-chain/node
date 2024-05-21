@@ -8,16 +8,19 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // TestStressBTCWithdraw tests the stressing withdraw of btc
 func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	if len(args) != 2 {
-		panic("TestStressBTCWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+		panic(
+			"TestStressBTCWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.",
+		)
 	}
 
 	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -33,33 +34,98 @@ func TestStatus_ValidateTransition(t *testing.T) {
 		newStatus     types.CctxStatus
 		expectedValid bool
 	}{
-		{"Valid - PendingInbound to PendingOutbound", types.CctxStatus_PendingInbound, types.CctxStatus_PendingOutbound, true},
+		{
+			"Valid - PendingInbound to PendingOutbound",
+			types.CctxStatus_PendingInbound,
+			types.CctxStatus_PendingOutbound,
+			true,
+		},
 		{"Valid - PendingInbound to Aborted", types.CctxStatus_PendingInbound, types.CctxStatus_Aborted, true},
-		{"Valid - PendingInbound to OutboundMined", types.CctxStatus_PendingInbound, types.CctxStatus_OutboundMined, true},
-		{"Valid - PendingInbound to PendingRevert", types.CctxStatus_PendingInbound, types.CctxStatus_PendingRevert, true},
+		{
+			"Valid - PendingInbound to OutboundMined",
+			types.CctxStatus_PendingInbound,
+			types.CctxStatus_OutboundMined,
+			true,
+		},
+		{
+			"Valid - PendingInbound to PendingRevert",
+			types.CctxStatus_PendingInbound,
+			types.CctxStatus_PendingRevert,
+			true,
+		},
 
 		{"Valid - PendingOutbound to Aborted", types.CctxStatus_PendingOutbound, types.CctxStatus_Aborted, true},
-		{"Valid - PendingOutbound to PendingRevert", types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert, true},
-		{"Valid - PendingOutbound to OutboundMined", types.CctxStatus_PendingOutbound, types.CctxStatus_OutboundMined, true},
+		{
+			"Valid - PendingOutbound to PendingRevert",
+			types.CctxStatus_PendingOutbound,
+			types.CctxStatus_PendingRevert,
+			true,
+		},
+		{
+			"Valid - PendingOutbound to OutboundMined",
+			types.CctxStatus_PendingOutbound,
+			types.CctxStatus_OutboundMined,
+			true,
+		},
 		{"Valid - PendingOutbound to Reverted", types.CctxStatus_PendingOutbound, types.CctxStatus_Reverted, true},
 
 		{"Valid - PendingRevert to Aborted", types.CctxStatus_PendingRevert, types.CctxStatus_Aborted, true},
-		{"Valid - PendingRevert to OutboundMined", types.CctxStatus_PendingRevert, types.CctxStatus_OutboundMined, true},
+		{
+			"Valid - PendingRevert to OutboundMined",
+			types.CctxStatus_PendingRevert,
+			types.CctxStatus_OutboundMined,
+			true,
+		},
 		{"Valid - PendingRevert to Reverted", types.CctxStatus_PendingRevert, types.CctxStatus_Reverted, true},
 
 		{"Invalid - PendingInbound to Reverted", types.CctxStatus_PendingInbound, types.CctxStatus_Reverted, false},
-		{"Invalid - PendingInbound to PendingInbound", types.CctxStatus_PendingInbound, types.CctxStatus_PendingInbound, false},
+		{
+			"Invalid - PendingInbound to PendingInbound",
+			types.CctxStatus_PendingInbound,
+			types.CctxStatus_PendingInbound,
+			false,
+		},
 
-		{"Invalid - PendingOutbound to PendingInbound", types.CctxStatus_PendingOutbound, types.CctxStatus_PendingInbound, false},
-		{"Invalid - PendingOutbound to PendingOutbound", types.CctxStatus_PendingOutbound, types.CctxStatus_PendingOutbound, false},
+		{
+			"Invalid - PendingOutbound to PendingInbound",
+			types.CctxStatus_PendingOutbound,
+			types.CctxStatus_PendingInbound,
+			false,
+		},
+		{
+			"Invalid - PendingOutbound to PendingOutbound",
+			types.CctxStatus_PendingOutbound,
+			types.CctxStatus_PendingOutbound,
+			false,
+		},
 
-		{"Invalid - PendingRevert to PendingInbound", types.CctxStatus_PendingRevert, types.CctxStatus_PendingInbound, false},
-		{"Invalid - PendingRevert to PendingOutbound", types.CctxStatus_PendingRevert, types.CctxStatus_PendingOutbound, false},
-		{"Invalid - PendingRevert to PendingRevert", types.CctxStatus_PendingRevert, types.CctxStatus_PendingRevert, false},
+		{
+			"Invalid - PendingRevert to PendingInbound",
+			types.CctxStatus_PendingRevert,
+			types.CctxStatus_PendingInbound,
+			false,
+		},
+		{
+			"Invalid - PendingRevert to PendingOutbound",
+			types.CctxStatus_PendingRevert,
+			types.CctxStatus_PendingOutbound,
+			false,
+		},
+		{
+			"Invalid - PendingRevert to PendingRevert",
+			types.CctxStatus_PendingRevert,
+			types.CctxStatus_PendingRevert,
+			false,
+		},
 
 		{"Invalid old status - CctxStatus_Aborted", types.CctxStatus_Aborted, types.CctxStatus_PendingRevert, false},
 		{"Invalid old status - CctxStatus_Reverted", types.CctxStatus_Reverted, types.CctxStatus_PendingRevert, false},
-		{"Invalid old status - CctxStatus_OutboundMined", types.CctxStatus_OutboundMined, types.CctxStatus_PendingRevert, false},
+		{
+			"Invalid old status - CctxStatus_OutboundMined",
+			types.CctxStatus_OutboundMined,
+			types.CctxStatus_PendingRevert,
+			false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -95,6 +161,15 @@ func TestStatus_ChangeStatus(t *testing.T) {
 
 		s.ChangeStatus(types.CctxStatus_PendingInbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_Aborted)
-		assert.Equal(t, fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", types.CctxStatus_PendingOutbound.String(), types.CctxStatus_PendingInbound.String(), "msg"), s.StatusMessage)
+		assert.Equal(
+			t,
+			fmt.Sprintf(
+				"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+				types.CctxStatus_PendingOutbound.String(),
+				types.CctxStatus_PendingInbound.String(),
+				"msg",
+			),
+			s.StatusMessage,
+		)
 	})
 }

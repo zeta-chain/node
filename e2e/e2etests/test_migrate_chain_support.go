@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -88,7 +89,10 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 
 	// set the gas token in the runner
-	ethZRC20Addr, err := newRunner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainParams.ChainId))
+	ethZRC20Addr, err := newRunner.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chainParams.ChainId),
+	)
 	if err != nil {
 		panic(err)
 	}

@@ -6,12 +6,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) NodeAccountAll(c context.Context, req *types.QueryAllNodeAccountRequest) (*types.QueryAllNodeAccountResponse, error) {
+func (k Keeper) NodeAccountAll(
+	c context.Context,
+	req *types.QueryAllNodeAccountRequest,
+) (*types.QueryAllNodeAccountResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -39,7 +43,10 @@ func (k Keeper) NodeAccountAll(c context.Context, req *types.QueryAllNodeAccount
 	return &types.QueryAllNodeAccountResponse{NodeAccount: nodeAccounts, Pagination: pageRes}, nil
 }
 
-func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountRequest) (*types.QueryGetNodeAccountResponse, error) {
+func (k Keeper) NodeAccount(
+	c context.Context,
+	req *types.QueryGetNodeAccountRequest,
+) (*types.QueryGetNodeAccountResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

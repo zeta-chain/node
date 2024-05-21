@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -77,6 +78,10 @@ func TestKeeper_GetAllFinalizedInbound(t *testing.T) {
 		for i := 0; i < listSize; i++ {
 			require.Contains(t, list, types.FinalizedInboundKey(txHashList[i], chainIdList[i], eventIndexList[i]))
 		}
-		require.NotContains(t, list, types.FinalizedInboundKey(sample.Hash().String(), sample.Chain(5).ChainId, sample.EventIndex()))
+		require.NotContains(
+			t,
+			list,
+			types.FinalizedInboundKey(sample.Hash().String(), sample.Chain(5).ChainId, sample.EventIndex()),
+		)
 	})
 }

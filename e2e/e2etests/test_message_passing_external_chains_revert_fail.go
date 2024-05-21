@@ -5,6 +5,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -44,9 +45,11 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 		DestinationChainId:  chainID,
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
-		Message:             []byte("revert"), // non-empty message will cause revert, because the dest address is not a contract
-		ZetaValueAndGas:     amount,
-		ZetaParams:          nil,
+		Message: []byte(
+			"revert",
+		), // non-empty message will cause revert, because the dest address is not a contract
+		ZetaValueAndGas: amount,
+		ZetaParams:      nil,
 	})
 	if err != nil {
 		panic(err)

@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -85,7 +86,8 @@ func NewZetaSupplyChecker(
 	}
 	zetaSupplyChecker.genesisSupply = balances.Add(tokensMintedAtBeginBlock)
 
-	logger.Info().Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
+	logger.Info().
+		Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
 
 	return zetaSupplyChecker, nil
 }
@@ -147,7 +149,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 	ethConnectorAddressString := evmChainParams.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
-	ethConnectorContract, err := observer.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
+	ethConnectorContract, err := observer.FetchConnectorContractEth(
+		ethConnectorAddress,
+		zs.evmClient[zs.ethereumChain.ChainId],
+	)
 	if err != nil {
 		return err
 	}
@@ -176,7 +181,15 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return err
 	}
 
-	ValidateZetaSupply(zs.logger, abortedAmount, zetaInTransit, zs.genesisSupply, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
+	ValidateZetaSupply(
+		zs.logger,
+		abortedAmount,
+		zetaInTransit,
+		zs.genesisSupply,
+		externalChainTotalSupply,
+		zetaTokenSupplyOnNode,
+		ethLockedAmountInt,
+	)
 
 	return nil
 }

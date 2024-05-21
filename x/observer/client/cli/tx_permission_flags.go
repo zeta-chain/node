@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -29,7 +30,11 @@ func CmdUpdateCrosschainFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgUpdateCrosschainFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled, arsIsOutboundEnabled)
+			msg := types.NewMsgUpdateCrosschainFlags(
+				clientCtx.GetFromAddress().String(),
+				argIsInboundEnabled,
+				arsIsOutboundEnabled,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

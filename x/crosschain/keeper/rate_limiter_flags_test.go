@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -93,15 +94,39 @@ func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 	k.SetRateLimiterFlags(ctx, testflags)
 
 	// add gas coin
-	gasCoin, gasAssetRate := createForeignCoinAndAssetRate(t, zrc20GasAddr, "", chainID, 18, coin.CoinType_Gas, sdk.NewDec(1))
+	gasCoin, gasAssetRate := createForeignCoinAndAssetRate(
+		t,
+		zrc20GasAddr,
+		"",
+		chainID,
+		18,
+		coin.CoinType_Gas,
+		sdk.NewDec(1),
+	)
 	zk.FungibleKeeper.SetForeignCoins(ctx, gasCoin)
 
 	// add 1st erc20 coin
-	erc20Coin1, erc20AssetRate1 := createForeignCoinAndAssetRate(t, zrc20ERC20Addr1, sample.EthAddress().Hex(), chainID, 8, coin.CoinType_ERC20, sdk.NewDec(2))
+	erc20Coin1, erc20AssetRate1 := createForeignCoinAndAssetRate(
+		t,
+		zrc20ERC20Addr1,
+		sample.EthAddress().Hex(),
+		chainID,
+		8,
+		coin.CoinType_ERC20,
+		sdk.NewDec(2),
+	)
 	zk.FungibleKeeper.SetForeignCoins(ctx, erc20Coin1)
 
 	// add 2nd erc20 coin
-	erc20Coin2, erc20AssetRate2 := createForeignCoinAndAssetRate(t, zrc20ERC20Addr2, sample.EthAddress().Hex(), chainID, 6, coin.CoinType_ERC20, sdk.NewDec(3))
+	erc20Coin2, erc20AssetRate2 := createForeignCoinAndAssetRate(
+		t,
+		zrc20ERC20Addr2,
+		sample.EthAddress().Hex(),
+		chainID,
+		6,
+		coin.CoinType_ERC20,
+		sdk.NewDec(3),
+	)
 	zk.FungibleKeeper.SetForeignCoins(ctx, erc20Coin2)
 
 	// get rates

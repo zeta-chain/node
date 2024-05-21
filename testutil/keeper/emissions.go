@@ -10,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+
 	emissionsmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/emissions"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"

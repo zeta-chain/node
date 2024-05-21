@@ -7,8 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"golang.org/x/net/context"
+
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 
 const EVMRPCEnabled = "MockEVMRPCEnabled"
@@ -38,7 +39,11 @@ func NewMockEvmClient() *MockEvmClient {
 	return client.Reset()
 }
 
-func (e *MockEvmClient) SubscribeFilterLogs(_ context.Context, _ ethereum.FilterQuery, _ chan<- ethtypes.Log) (ethereum.Subscription, error) {
+func (e *MockEvmClient) SubscribeFilterLogs(
+	_ context.Context,
+	_ ethereum.FilterQuery,
+	_ chan<- ethtypes.Log,
+) (ethereum.Subscription, error) {
 	return subscription{}, nil
 }
 
@@ -92,7 +97,10 @@ func (e *MockEvmClient) BlockByNumber(_ context.Context, _ *big.Int) (*ethtypes.
 	return &ethtypes.Block{}, nil
 }
 
-func (e *MockEvmClient) TransactionByHash(_ context.Context, _ ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error) {
+func (e *MockEvmClient) TransactionByHash(
+	_ context.Context,
+	_ ethcommon.Hash,
+) (tx *ethtypes.Transaction, isPending bool, err error) {
 	return &ethtypes.Transaction{}, false, nil
 }
 
@@ -106,7 +114,12 @@ func (e *MockEvmClient) TransactionReceipt(_ context.Context, _ ethcommon.Hash) 
 	return nil, errors.New("no receipt found")
 }
 
-func (e *MockEvmClient) TransactionSender(_ context.Context, _ *ethtypes.Transaction, _ ethcommon.Hash, _ uint) (ethcommon.Address, error) {
+func (e *MockEvmClient) TransactionSender(
+	_ context.Context,
+	_ *ethtypes.Transaction,
+	_ ethcommon.Hash,
+	_ uint,
+) (ethcommon.Address, error) {
 	return ethcommon.Address{}, nil
 }
 

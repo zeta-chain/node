@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -119,7 +120,10 @@ func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) error {
 }
 
 // GetUpdatedSigner returns signer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetacoreContext, chainID int64) (interfaces.ChainSigner, error) {
+func (oc *Orchestrator) GetUpdatedSigner(
+	coreContext *context.ZetacoreContext,
+	chainID int64,
+) (interfaces.ChainSigner, error) {
 	signer, found := oc.signerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
@@ -147,7 +151,10 @@ func (oc *Orchestrator) GetUpdatedSigner(coreContext *context.ZetacoreContext, c
 }
 
 // GetUpdatedChainObserver returns chain observer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetacoreContext, chainID int64) (interfaces.ChainObserver, error) {
+func (oc *Orchestrator) GetUpdatedChainObserver(
+	coreContext *context.ZetacoreContext,
+	chainID int64,
+) (interfaces.ChainObserver, error) {
 	observer, found := oc.observerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("chain observer not found for chainID %d", chainID)
@@ -174,7 +181,9 @@ func (oc *Orchestrator) GetUpdatedChainObserver(coreContext *context.ZetacoreCon
 }
 
 // GetPendingCctxsWithinRatelimit get pending cctxs across foreign chains within rate limit
-func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(foreignChains []chains.Chain) (map[int64][]*types.CrossChainTx, error) {
+func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(
+	foreignChains []chains.Chain,
+) (map[int64][]*types.CrossChainTx, error) {
 	// get rate limiter flags
 	rateLimitFlags, err := oc.zetacoreClient.GetRateLimiterFlags()
 	if err != nil {
@@ -286,12 +295,16 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 						// update chain parameters for signer and chain observer
 						signer, err := oc.GetUpdatedSigner(coreContext, c.ChainId)
 						if err != nil {
-							oc.logger.Std.Error().Err(err).Msgf("StartCctxScheduler: GetUpdatedSigner failed for chain %d", c.ChainId)
+							oc.logger.Std.Error().
+								Err(err).
+								Msgf("StartCctxScheduler: GetUpdatedSigner failed for chain %d", c.ChainId)
 							continue
 						}
 						ob, err := oc.GetUpdatedChainObserver(coreContext, c.ChainId)
 						if err != nil {
-							oc.logger.Std.Error().Err(err).Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
+							oc.logger.Std.Error().
+								Err(err).
+								Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
 							continue
 						}
 						if !context.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
@@ -348,7 +361,8 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
-			oc.logger.Std.Error().Msgf("ScheduleCctxEVM: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
+			oc.logger.Std.Error().
+				Msgf("ScheduleCctxEVM: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
 		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
@@ -360,11 +374,14 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		// try confirming the outbound
 		included, _, err := observer.IsOutboundProcessed(cctx, oc.logger.Std)
 		if err != nil {
-			oc.logger.Std.Error().Err(err).Msgf("ScheduleCctxEVM: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+			oc.logger.Std.Error().
+				Err(err).
+				Msgf("ScheduleCctxEVM: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if included {
-			oc.logger.Std.Info().Msgf("ScheduleCctxEVM: outbound %s already included; do not schedule keysign", outboundID)
+			oc.logger.Std.Info().
+				Msgf("ScheduleCctxEVM: outbound %s already included; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -390,9 +407,11 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		}
 
 		// otherwise, the normal interval is used
-		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval && !oc.outboundProc.IsOutboundActive(outboundID) {
+		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval &&
+			!oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Std.Debug().Msgf("ScheduleCctxEVM: sign outbound %s with value %d\n", outboundID, cctx.GetCurrentOutboundParam().Amount)
+			oc.logger.Std.Debug().
+				Msgf("ScheduleCctxEVM: sign outbound %s with value %d\n", outboundID, cctx.GetCurrentOutboundParam().Amount)
 			go signer.TryProcessOutbound(cctx, oc.outboundProc, outboundID, observer, oc.zetacoreClient, zetaHeight)
 		}
 
@@ -430,17 +449,21 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
-			oc.logger.Std.Error().Msgf("ScheduleCctxBTC: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
+			oc.logger.Std.Error().
+				Msgf("ScheduleCctxBTC: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
 		// try confirming the outbound
 		included, confirmed, err := btcObserver.IsOutboundProcessed(cctx, oc.logger.Std)
 		if err != nil {
-			oc.logger.Std.Error().Err(err).Msgf("ScheduleCctxBTC: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+			oc.logger.Std.Error().
+				Err(err).
+				Msgf("ScheduleCctxBTC: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if included || confirmed {
-			oc.logger.Std.Info().Msgf("ScheduleCctxBTC: outbound %s already included; do not schedule keysign", outboundID)
+			oc.logger.Std.Info().
+				Msgf("ScheduleCctxBTC: outbound %s already included; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -449,8 +472,11 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 			break
 		}
 		// stop if lookahead is reached
-		if int64(idx) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-			oc.logger.Std.Warn().Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
+		if int64(
+			idx,
+		) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
+			oc.logger.Std.Warn().
+				Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
 			break
 		}
 		// try confirming the outbound or scheduling a keysign

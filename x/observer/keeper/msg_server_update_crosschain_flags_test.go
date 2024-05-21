@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -126,7 +127,11 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.IsOutboundEnabled)
 		require.Equal(t, types.DefaultGasPriceIncreaseFlags.EpochLength, flags.GasPriceIncreaseFlags.EpochLength)
 		require.Equal(t, types.DefaultGasPriceIncreaseFlags.RetryInterval, flags.GasPriceIncreaseFlags.RetryInterval)
-		require.Equal(t, types.DefaultGasPriceIncreaseFlags.GasPriceIncreasePercent, flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
+		require.Equal(
+			t,
+			types.DefaultGasPriceIncreaseFlags.GasPriceIncreasePercent,
+			flags.GasPriceIncreaseFlags.GasPriceIncreasePercent,
+		)
 	})
 
 	t.Run("cannot update crosschain flags if not authorized", func(t *testing.T) {

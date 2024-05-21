@@ -17,10 +17,11 @@ import (
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	. "gopkg.in/check.v1"
+
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	. "gopkg.in/check.v1"
 )
 
 type KeysSuite struct{}
@@ -68,7 +69,13 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	kb, err := cKeys.New(sdk.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
 
-	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(
+		GetGranteeKeyName(signerNameForTest),
+		cKeys.English,
+		cmd.ZetaChainHDPath,
+		password,
+		hd.Secp256k1,
+	)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }

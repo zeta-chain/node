@@ -5,12 +5,16 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // VoteBlockHeader vote for a new block header to the storers
-func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBlockHeader) (*types.MsgVoteBlockHeaderResponse, error) {
+func (k msgServer) VoteBlockHeader(
+	goCtx context.Context,
+	msg *types.MsgVoteBlockHeader,
+) (*types.MsgVoteBlockHeaderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if the chain is enabled

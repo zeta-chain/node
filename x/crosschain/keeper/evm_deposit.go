@@ -11,6 +11,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -51,7 +52,15 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
 		}
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(
+			ctx,
+			sender,
+			to,
+			inboundSenderChainID,
+			inboundAmount,
+			data,
+			indexBytes,
+		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
 		} else if err != nil {

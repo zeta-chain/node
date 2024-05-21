@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"testing"
 
 	"github.com/cometbft/cometbft/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/app"
 
-	//"os"
-	"testing"
+	"github.com/zeta-chain/zetacore/app"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {
@@ -25,7 +24,11 @@ func TestParsefileToObserverMapper(t *testing.T) {
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	require.NoError(t, err)
 	for _, obs := range obsListReadFromFile {
-		require.Equal(t, obs.ZetaClientGranteeAddress, sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String())
+		require.Equal(
+			t,
+			obs.ZetaClientGranteeAddress,
+			sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String(),
+		)
 	}
 }
 

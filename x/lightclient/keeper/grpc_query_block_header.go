@@ -4,15 +4,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/pkg/proofs"
+	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
 // BlockHeaderAll queries all block headers
-func (k Keeper) BlockHeaderAll(c context.Context, req *types.QueryAllBlockHeaderRequest) (*types.QueryAllBlockHeaderResponse, error) {
+func (k Keeper) BlockHeaderAll(
+	c context.Context,
+	req *types.QueryAllBlockHeaderRequest,
+) (*types.QueryAllBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -37,7 +41,10 @@ func (k Keeper) BlockHeaderAll(c context.Context, req *types.QueryAllBlockHeader
 }
 
 // BlockHeader queries block header by hash
-func (k Keeper) BlockHeader(c context.Context, req *types.QueryGetBlockHeaderRequest) (*types.QueryGetBlockHeaderResponse, error) {
+func (k Keeper) BlockHeader(
+	c context.Context,
+	req *types.QueryGetBlockHeaderRequest,
+) (*types.QueryGetBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

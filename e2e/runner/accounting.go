@@ -75,7 +75,11 @@ func (runner *E2ERunner) CheckBtcTSSBalance() error {
 		)
 	}
 	// #nosec G701 test - always in range
-	runner.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply.Int64()-10000000)
+	runner.Logger.Info(
+		"BTC: Balance (%d) >= ZRC20 TotalSupply (%d)",
+		int64(btcBalance*1e8),
+		zrc20Supply.Int64()-10000000,
+	)
 
 	return nil
 }

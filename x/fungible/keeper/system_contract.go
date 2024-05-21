@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -48,7 +49,10 @@ func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, e
 	// set the system contract
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrStateVariableNotFound,
+			"failed to get system contract variable",
+		)
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	return systemAddress, nil
@@ -58,7 +62,10 @@ func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, e
 func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrStateVariableNotFound,
+			"failed to get system contract variable",
+		)
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
@@ -78,14 +85,22 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 		"wZetaContractAddress",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call wZetaContractAddress (%s)", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to call wZetaContractAddress (%s)",
+			err.Error(),
+		)
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
 	var wzetaResponse AddressResponse
 	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "wZetaContractAddress", res.Ret); err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack wZetaContractAddress: %s", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIUnpack,
+			"failed to unpack wZetaContractAddress: %s",
+			err.Error(),
+		)
 	}
 
 	if wzetaResponse.Value == (ethcommon.Address{}) {
@@ -98,7 +113,10 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrStateVariableNotFound,
+			"failed to get system contract variable",
+		)
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
@@ -118,18 +136,29 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 		"uniswapv2FactoryAddress",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call uniswapv2FactoryAddress (%s)", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to call uniswapv2FactoryAddress (%s)",
+			err.Error(),
+		)
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
 	var uniswapFactoryResponse AddressResponse
 	if err := sysABI.UnpackIntoInterface(&uniswapFactoryResponse, "uniswapv2FactoryAddress", res.Ret); err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2FactoryAddress: %s", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIUnpack,
+			"failed to unpack uniswapv2FactoryAddress: %s",
+			err.Error(),
+		)
 	}
 
 	if uniswapFactoryResponse.Value == (ethcommon.Address{}) {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "uniswap factory contract invalid address")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractNotFound,
+			"uniswap factory contract invalid address",
+		)
 	}
 	return uniswapFactoryResponse.Value, nil
 }
@@ -138,7 +167,10 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrStateVariableNotFound,
+			"failed to get system contract variable",
+		)
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
@@ -158,18 +190,29 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 		"uniswapv2Router02Address",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call uniswapv2Router02Address (%s)", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to call uniswapv2Router02Address (%s)",
+			err.Error(),
+		)
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
 	var routerResponse AddressResponse
 	if err := sysABI.UnpackIntoInterface(&routerResponse, "uniswapv2Router02Address", res.Ret); err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2Router02Address: %s", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIUnpack,
+			"failed to unpack uniswapv2Router02Address: %s",
+			err.Error(),
+		)
 	}
 
 	if routerResponse.Value == (ethcommon.Address{}) {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "uniswap router contract invalid address")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractNotFound,
+			"uniswap router contract invalid address",
+		)
 	}
 	return routerResponse.Value, nil
 }
@@ -246,7 +289,10 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.Int) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrStateVariableNotFound,
+			"failed to get system contract variable",
+		)
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
@@ -267,7 +313,11 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 		chainid,
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call gasCoinZRC20ByChainId (%s)", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to call gasCoinZRC20ByChainId (%s)",
+			err.Error(),
+		)
 	}
 
 	type AddressResponse struct {
@@ -275,7 +325,11 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 	}
 	var zrc20Res AddressResponse
 	if err := sysABI.UnpackIntoInterface(&zrc20Res, "gasCoinZRC20ByChainId", res.Ret); err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack gasCoinZRC20ByChainId: %s", err.Error())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIUnpack,
+			"failed to unpack gasCoinZRC20ByChainId: %s",
+			err.Error(),
+		)
 	}
 	if zrc20Res.Value == (ethcommon.Address{}) {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "gas coin contract invalid address")
@@ -331,7 +385,11 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapExactTokensForTokens (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to CallEVM method swapExactTokensForTokens (%s)",
+			err.Error(),
+		)
 	}
 
 	amounts := new([3]*big.Int)
@@ -389,7 +447,11 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForETH(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapExactTokensForETH (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to CallEVM method swapExactTokensForETH (%s)",
+			err.Error(),
+		)
 	}
 
 	amounts := new([2]*big.Int)
@@ -441,7 +503,11 @@ func (k *Keeper) CallUniswapV2RouterSwapExactETHForToken(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapExactETHForTokens (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to CallEVM method swapExactETHForTokens (%s)",
+			err.Error(),
+		)
 	}
 
 	amounts := new([2]*big.Int)
@@ -492,7 +558,11 @@ func (k *Keeper) CallUniswapV2RouterSwapEthForExactToken(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapETHForExactTokens (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(
+			types.ErrContractCall,
+			"failed to CallEVM method swapETHForExactTokens (%s)",
+			err.Error(),
+		)
 	}
 
 	amounts := new([2]*big.Int)
@@ -504,7 +574,11 @@ func (k *Keeper) CallUniswapV2RouterSwapEthForExactToken(
 }
 
 // QueryUniswapV2RouterGetZetaAmountsIn returns the amount of zeta needed to buy the given amount of ZRC4 tokens
-func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 ethcommon.Address) (*big.Int, error) {
+func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(
+	ctx sdk.Context,
+	amountOut *big.Int,
+	outZRC4 ethcommon.Address,
+) (*big.Int, error) {
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
@@ -535,7 +609,10 @@ func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut
 	)
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil, cosmoserrors.Wrap(types.ErrContractCall, fmt.Sprintf("failed to CallEVM method getAmountsIn (%s)", err.Error()))
+		return nil, cosmoserrors.Wrap(
+			types.ErrContractCall,
+			fmt.Sprintf("failed to CallEVM method getAmountsIn (%s)", err.Error()),
+		)
 	}
 
 	amounts := new([2]*big.Int)
@@ -547,7 +624,11 @@ func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut
 }
 
 // QueryUniswapV2RouterGetZRC4AmountsIn returns the amount of ZRC4 tokens needed to buy the given amount of zeta
-func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4 ethcommon.Address) (*big.Int, error) {
+func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(
+	ctx sdk.Context,
+	amountOut *big.Int,
+	inZRC4 ethcommon.Address,
+) (*big.Int, error) {
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
@@ -588,7 +669,11 @@ func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut
 }
 
 // QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn returns the amount of ZRC4 tokens needed to buy another ZRC4 token, it uses the WZeta contract as a bridge
-func (k *Keeper) QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4, outZRC4 ethcommon.Address) (*big.Int, error) {
+func (k *Keeper) QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(
+	ctx sdk.Context,
+	amountOut *big.Int,
+	inZRC4, outZRC4 ethcommon.Address,
+) (*big.Int, error) {
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
