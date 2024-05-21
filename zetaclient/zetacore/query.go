@@ -483,8 +483,12 @@ func (c *Client) HasVoted(ballotIndex string, voterAddress string) (bool, error)
 
 func (c *Client) GetZetaHotKeyBalance() (sdkmath.Int, error) {
 	client := banktypes.NewQueryClient(c.grpcConn)
+	address, err := c.keys.GetAddress()
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
 	resp, err := client.Balance(context.Background(), &banktypes.QueryBalanceRequest{
-		Address: c.keys.GetAddress().String(),
+		Address: address.String(),
 		Denom:   config.BaseDenom,
 	})
 	if err != nil {

@@ -1,7 +1,6 @@
 package context
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 
@@ -120,17 +119,18 @@ func (c *ZetacoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainP
 	return copied
 }
 
+// GetBTCChainParams returns (chain, chain params, found) for bitcoin chain
 func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
 	if c.bitcoinChainParams == nil { // bitcoin is not enabled
-		return chains.Chain{}, &observertypes.ChainParams{}, false
+		return chains.Chain{}, nil, false
 	}
 
 	chain := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId)
 	if chain == nil {
-		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.bitcoinChainParams.ChainId))
+		return chains.Chain{}, nil, false
 	}
 
 	return *chain, c.bitcoinChainParams, true

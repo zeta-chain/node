@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -194,7 +195,7 @@ func Test_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 
 	// parse ZetaSent event
 	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
-	connector := mocks.MockConnectorNonEth(chainID)
+	connector := mocks.MockConnectorNonEth(t, chainID)
 	event := testutils.ParseReceiptZetaSent(receipt, connector)
 
 	// create test compliance config
@@ -241,7 +242,7 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 
 	// parse Deposited event
 	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
-	custody := mocks.MockERC20Custody(chainID)
+	custody := mocks.MockERC20Custody(t, chainID)
 	event := testutils.ParseReceiptERC20Deposited(receipt, custody)
 	sender := ethcommon.HexToAddress(tx.From)
 
@@ -345,7 +346,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// create mock client
 	evmClient := mocks.NewMockEvmClient()
 	evmJSONRPC := mocks.NewMockJSONRPCClient()
-	zetacoreClient := mocks.NewMockZetaCoreClient()
+	zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
 	tss := mocks.NewTSSMainnet()
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -379,7 +380,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		evmClient.WithReceipt(receipt)
 		zetacoreClient.Pause()
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
-		// error posting vote is expected because the mock zetaClient is paused
+		// error posting vote is expected because the mock zetacoreClient is paused
 		require.ErrorContains(t, err, "error checking and voting")
 	})
 }

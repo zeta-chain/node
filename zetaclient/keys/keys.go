@@ -18,12 +18,15 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 )
 
 var (
 	ErrBech32ifyPubKey = errors.New("Bech32ifyPubKey fail in main")
 	ErrNewPubKey       = errors.New("NewPubKey error from string")
 )
+
+var _ interfaces.ObserverKeys = &Keys{}
 
 // Keys manages all the keys used by zeta client
 type Keys struct {
@@ -95,7 +98,7 @@ func (k *Keys) GetSignerInfo() *ckeys.Record {
 	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return info
 }
@@ -104,17 +107,18 @@ func (k *Keys) GetOperatorAddress() sdk.AccAddress {
 	return k.OperatorAddress
 }
 
-func (k *Keys) GetAddress() sdk.AccAddress {
+// GetAddress return the signer address
+func (k *Keys) GetAddress() (sdk.AccAddress, error) {
 	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	addr, err := info.GetAddress()
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return addr
+	return addr, nil
 }
 
 // GetPrivateKey return the private key

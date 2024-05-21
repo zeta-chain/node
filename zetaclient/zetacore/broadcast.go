@@ -152,7 +152,7 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 // GetContext return a valid context with all relevant values set
 func (c *Client) GetContext() (client.Context, error) {
 	ctx := client.Context{}
-	addr, err := c.keys.GetSignerInfo().GetAddress()
+	addr, err := c.keys.GetAddress()
 	if err != nil {
 		c.logger.Error().Err(err).Msg("fail to get address from key")
 		return ctx, err

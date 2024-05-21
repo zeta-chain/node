@@ -36,20 +36,24 @@ type TokenDistribution struct {
 func main() {
 	file, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "address-list.json"))
 	if err != nil {
-		panic(err)
+		fmt.Printf("error getting absolute path of address-list.json: %s\n", err)
+		os.Exit(1)
 	}
 	addresses, err := readLines(file)
 	if err != nil {
-		panic(err)
+		fmt.Printf("error read file: %s\n", err)
+		os.Exit(1)
 	}
 	addresses = removeDuplicates(addresses)
 	fileS, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successful_address.json"))
 	if err != nil {
-		panic(err)
+		fmt.Printf("error getting absolute path of successful_address.json: %s\n", err)
+		os.Exit(1)
 	}
 	fileF, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
 	if err != nil {
-		panic(err)
+		fmt.Printf("error getting absolute path of failed_address.json: %s\n", err)
+		os.Exit(1)
 	}
 
 	distributionList := make([]TokenDistribution, len(addresses))
@@ -59,17 +63,19 @@ func main() {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
-			fmt.Println(fmt.Sprint(err) + ": " + string(output))
-			return
+			fmt.Printf("error getting balance for address %s: %s\n", address, string(output))
+			os.Exit(1)
 		}
 		balance := sdk.Coin{}
 		err = json.Unmarshal(output, &balance)
 		if err != nil {
-			panic(err)
+			fmt.Printf("error unmarshal balance for address %s: %s\n", address, err)
+			os.Exit(1)
 		}
 		distributionAmount, ok := sdkmath.NewIntFromString(amount)
 		if !ok {
-			panic("parse error for amount")
+			fmt.Printf("error unmarshalling amount: %s\n", amount)
+			os.Exit(1)
 		}
 		distributionList[i] = TokenDistribution{
 			Address:           address,
@@ -79,10 +85,7 @@ func main() {
 	}
 
 	args := []string{"tx", "bank", "multi-send", signer}
-	for _, address := range addresses {
-		args = append(args, address)
-	}
-
+	args = append(args, addresses...)
 	args = append(args, []string{distributionList[0].TokensDistributed.String(), "--keyring-backend", "test", "--chain-id", chainID, "--yes",
 		"--broadcast-mode", broadcastMode, "--gas=auto", "--gas-adjustment=2", "--gas-prices=0.001azeta", "--node", node}...)
 
@@ -91,8 +94,8 @@ func main() {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(cmd.String())
-		fmt.Println(fmt.Sprint(err) + ": " + string(output))
-		return
+		fmt.Printf("error distributing tokens: %s\n", string(output))
+		os.Exit(1)
 	}
 	fmt.Println(string(output))
 
@@ -104,13 +107,14 @@ func main() {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
-			fmt.Println(fmt.Sprint(err) + ": " + string(output))
-			return
+			fmt.Printf("error getting balance for address %s: %s\n", address, string(output))
+			os.Exit(1)
 		}
 		balance := sdk.Coin{}
 		err = json.Unmarshal(output, &balance)
 		if err != nil {
-			panic(err)
+			fmt.Printf("error unmarshal balance for address %s: %s\n", address, err)
+			os.Exit(1)
 		}
 		distributionList[i].BalanceAfter = balance
 	}
@@ -125,19 +129,23 @@ func main() {
 	}
 	successFile, err := json.MarshalIndent(successfullDistributions, "", " ")
 	if err != nil {
-		panic(err)
+		fmt.Printf("error marshalling successful distributions: %s\n", err)
+		os.Exit(1)
 	}
 	err = os.WriteFile(fileS, successFile, 0600)
 	if err != nil {
-		panic(err)
+		fmt.Printf("error writing successful distributions to file: %s\n", err)
+		os.Exit(1)
 	}
 	failedFile, err := json.MarshalIndent(failedDistributions, "", " ")
 	if err != nil {
-		panic(err)
+		fmt.Printf("error marshalling failed distributions: %s\n", err)
+		os.Exit(1)
 	}
 	err = os.WriteFile(fileF, failedFile, 0600)
 	if err != nil {
-		panic(err)
+		fmt.Printf("error writing failed distributions to file: %s\n", err)
+		os.Exit(1)
 	}
 }
 

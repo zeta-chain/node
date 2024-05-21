@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"errors"
+
 	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -34,7 +36,10 @@ func (m Keyring) SupportedAlgorithms() (ckeys.SigningAlgoList, ckeys.SigningAlgo
 	return nil, nil
 }
 
-func (m Keyring) Key(_ string) (*ckeys.Record, error) {
+func (m Keyring) Key(uid string) (*ckeys.Record, error) {
+	if uid == "" {
+		return nil, errors.New("empty uid")
+	}
 	return ckeys.NewLocalRecord("", TestKeyringPair, TestKeyringPair.PubKey())
 }
 

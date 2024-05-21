@@ -14,16 +14,6 @@ import (
 	context "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
-func assertPanic(t *testing.T, f func(), errorLog string) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			require.Contains(t, r, errorLog)
-		}
-	}()
-	f()
-}
-
 func getTestCoreContext(
 	evmChain chains.Chain,
 	evmChainParams *observertypes.ChainParams,
@@ -79,11 +69,30 @@ func TestNewZetaCoreContext(t *testing.T) {
 		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
 		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
-		require.Equal(t, &observertypes.ChainParams{}, btcChainParams)
+		require.Nil(t, btcChainParams)
 
 		// assert evm chain params
 		allEVMChainParams := zetaContext.GetAllEVMChainParams()
 		require.Empty(t, allEVMChainParams)
+	})
+
+	t.Run("should return nil chain params if chain id is not found", func(t *testing.T) {
+		// create config with btc config
+		testCfg := config.NewConfig()
+		testCfg.BitcoinConfig = config.BTCConfig{
+			RPCUsername: "test_user",
+			RPCPassword: "test_password",
+		}
+
+		// create zetacore context with 0 chain id
+		zetaContext := context.NewZetacoreContext(testCfg)
+		require.NotNil(t, zetaContext)
+
+		// assert btc chain params
+		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
+		require.Equal(t, chains.Chain{}, chain)
+		require.False(t, btcChainParamsFound)
+		require.Nil(t, btcChainParams)
 	})
 
 	t.Run("should create new zetacore context with config containing evm chain params", func(t *testing.T) {
@@ -130,11 +139,6 @@ func TestNewZetaCoreContext(t *testing.T) {
 		}
 		zetaContext := context.NewZetacoreContext(testCfg)
 		require.NotNil(t, zetaContext)
-
-		// assert btc chain params panic because chain params are not yet updated
-		assertPanic(t, func() {
-			zetaContext.GetBTCChainParams()
-		}, "BTCChain is missing for chainID 0")
 	})
 }
 
@@ -208,7 +212,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
 		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
-		require.Equal(t, &observertypes.ChainParams{}, btcChainParams)
+		require.Nil(t, btcChainParams)
 
 		// assert evm chain params still empty because they were not specified in config
 		allEVMChainParams := zetaContext.GetAllEVMChainParams()
