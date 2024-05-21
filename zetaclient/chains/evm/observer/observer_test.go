@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -69,7 +70,7 @@ func MockEVMObserver(
 	params observertypes.ChainParams) *observer.Observer {
 	// use default mock zetacore client if not provided
 	if zetacoreClient == nil {
-		zetacoreClient = mocks.NewMockZetaCoreClient()
+		zetacoreClient = mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
 	}
 	// use default mock tss if not provided
 	if tss == nil {
