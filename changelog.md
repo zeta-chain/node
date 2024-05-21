@@ -28,6 +28,7 @@
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly
 * [2210](https://github.com/zeta-chain/node/pull/2210) - removed uncessary panics in the zetaclientd process
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
+* [2226](https://github.com/zeta-chain/node/pull/2226) - improve Go formatting with imports standardization and max line length to 120
 
 ### Tests
 
