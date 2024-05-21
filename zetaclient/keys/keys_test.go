@@ -15,11 +15,12 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	. "gopkg.in/check.v1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	. "gopkg.in/check.v1"
 )
 
 type KeysSuite struct{}
@@ -102,8 +103,8 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	k, _, err := GetKeyringKeybase(cfg, "")
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
-	granter := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
-	ki := NewKeysWithKeybase(k, granter, signerNameForTest, "")
+	granterAddress := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
+	ki := NewKeysWithKeybase(k, granterAddress, signerNameForTest, "")
 	kInfo := ki.GetSignerInfo()
 	c.Assert(kInfo, NotNil)
 	//c.Assert(kInfo.G, Equals, signerNameForTest)
@@ -120,4 +121,15 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	pubKey, err := ki.GetSignerInfo().GetPubKey()
 	c.Assert(err, IsNil)
 	c.Assert(pubKey.VerifySignature([]byte(msg), signedMsg), Equals, true)
+}
+
+func TestGetSignerInfo(t *testing.T) {
+	// create a mock keyring
+	keyRing := mocks.NewKeyring()
+
+	// create a new key using the mock keyring
+	granterAddress := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
+	keys := NewKeysWithKeybase(keyRing, granterAddress, "", "")
+	info := keys.GetSignerInfo()
+	require.Nil(t, info)
 }

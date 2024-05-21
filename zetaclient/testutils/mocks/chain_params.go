@@ -1,7 +1,10 @@
 package mocks
 
 import (
+	"testing"
+
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -18,18 +21,14 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 	}
 }
 
-func MockConnectorNonEth(chainID int64) *zetaconnector.ZetaConnectorNonEth {
+func MockConnectorNonEth(t *testing.T, chainID int64) *zetaconnector.ZetaConnectorNonEth {
 	connector, err := zetaconnector.NewZetaConnectorNonEth(testutils.ConnectorAddresses[chainID], &ethclient.Client{})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	return connector
 }
 
-func MockERC20Custody(chainID int64) *erc20custody.ERC20Custody {
+func MockERC20Custody(t *testing.T, chainID int64) *erc20custody.ERC20Custody {
 	custody, err := erc20custody.NewERC20Custody(testutils.CustodyAddresses[chainID], &ethclient.Client{})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	return custody
 }
