@@ -19,7 +19,7 @@ func (k Keeper) VoteOnInboundBallot(
 	coinType coin.CoinType,
 	voter string,
 	ballotIndex string,
-	inTxHash string,
+	inboundHash string,
 ) (bool, bool, error) {
 	if !k.IsInboundEnabled(ctx) {
 		return false, false, types.ErrInboundDisabled
@@ -69,7 +69,7 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, false, err
 	}
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, inTxHash, senderChain.String())
+		EmitEventBallotCreated(ctx, ballot, inboundHash, senderChain.String())
 	}
 
 	// adds a vote and sets the ballot

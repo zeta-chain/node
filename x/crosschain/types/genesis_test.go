@@ -22,7 +22,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
-				OutTxTrackerList: []types.OutTxTracker{
+				OutboundTrackerList: []types.OutboundTracker{
 					{
 						Index: "0",
 					},
@@ -30,12 +30,12 @@ func TestGenesisState_Validate(t *testing.T) {
 						Index: "1",
 					},
 				},
-				InTxHashToCctxList: []types.InTxHashToCctx{
+				InboundHashToCctxList: []types.InboundHashToCctx{
 					{
-						InTxHash: "0",
+						InboundHash: "0",
 					},
 					{
-						InTxHash: "1",
+						InboundHash: "1",
 					},
 				},
 				GasPriceList: []*types.GasPrice{
@@ -48,9 +48,9 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid: true,
 		},
 		{
-			desc: "duplicated outTxTracker",
+			desc: "duplicated outboundTracker",
 			genState: &types.GenesisState{
-				OutTxTrackerList: []types.OutTxTracker{
+				OutboundTrackerList: []types.OutboundTracker{
 					{
 						Index: "0",
 					},
@@ -62,9 +62,9 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid: false,
 		},
 		{
-			desc: "duplicated outTxTracker",
+			desc: "duplicated outboundTracker",
 			genState: &types.GenesisState{
-				OutTxTrackerList: []types.OutTxTracker{
+				OutboundTrackerList: []types.OutboundTracker{
 					{
 						Index: "0",
 					},
@@ -77,14 +77,14 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid: false,
 		},
 		{
-			desc: "duplicated inTxHashToCctx",
+			desc: "duplicated inboundHashToCctx",
 			genState: &types.GenesisState{
-				InTxHashToCctxList: []types.InTxHashToCctx{
+				InboundHashToCctxList: []types.InboundHashToCctx{
 					{
-						InTxHash: "0",
+						InboundHash: "0",
 					},
 					{
-						InTxHash: "0",
+						InboundHash: "0",
 					},
 				},
 			},

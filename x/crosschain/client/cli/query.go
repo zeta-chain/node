@@ -20,21 +20,21 @@ func GetQueryCmd(_ string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdListOutTxTracker(),
-		CmdShowOutTxTracker(),
+		CmdListOutboundTracker(),
+		CmdShowOutboundTracker(),
 		CmdListGasPrice(),
 		CmdShowGasPrice(),
 
 		CmdListSend(),
 		CmdShowSend(),
 		CmdLastZetaHeight(),
-		CmdInTxHashToCctxData(),
-		CmdListInTxHashToCctx(),
-		CmdShowInTxHashToCctx(),
+		CmdInboundHashToCctxData(),
+		CmdListInboundHashToCctx(),
+		CmdShowInboundHashToCctx(),
 
 		CmdPendingCctx(),
-		CmdListInTxTrackerByChain(),
-		CmdListInTxTrackers(),
+		CmdListInboundTrackerByChain(),
+		CmdListInboundTrackers(),
 		CmdGetZetaAccounting(),
 		CmdListPendingCCTXWithinRateLimit(),
 

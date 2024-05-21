@@ -1,9 +1,9 @@
 package common
 
 const (
-	// EVMOuttxGasPriceMultiplier is the default gas price multiplier for EVM-chain outbond txs
-	EVMOuttxGasPriceMultiplier = 1.2
+	// EVMOutboundGasPriceMultiplier is the default gas price multiplier for EVM-chain outbond txs
+	EVMOutboundGasPriceMultiplier = 1.2
 
-	// BTCOuttxGasPriceMultiplier is the default gas price multiplier for BTC outbond txs
-	BTCOuttxGasPriceMultiplier = 2.0
+	// BTCOutboundGasPriceMultiplier is the default gas price multiplier for BTC outbond txs
+	BTCOutboundGasPriceMultiplier = 2.0
 )

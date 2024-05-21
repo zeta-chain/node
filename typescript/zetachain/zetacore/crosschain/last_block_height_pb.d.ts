@@ -26,14 +26,14 @@ export declare class LastBlockHeight extends Message<LastBlockHeight> {
   chain: string;
 
   /**
-   * @generated from field: uint64 lastSendHeight = 4;
+   * @generated from field: uint64 lastInboundHeight = 4;
    */
-  lastSendHeight: bigint;
+  lastInboundHeight: bigint;
 
   /**
-   * @generated from field: uint64 lastReceiveHeight = 5;
+   * @generated from field: uint64 lastOutboundHeight = 5;
    */
-  lastReceiveHeight: bigint;
+  lastOutboundHeight: bigint;
 
   constructor(data?: PartialMessage<LastBlockHeight>);
 

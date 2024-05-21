@@ -30,7 +30,7 @@ jobs:
     concurrency:
       group: "build-and-test"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set CPU Architecture
         shell: bash
@@ -54,7 +54,7 @@ jobs:
           skip_docker_compose: "false"
       
       - name: Test
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 20
           max_attempts: 2
@@ -82,6 +82,20 @@ jobs:
           chmod a+x ./zetacored
           ./zetacored version
 
+      - name: Upload zetacored
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetacored
+          path: ~/go/bin/zetacored
+          retention-days: 30
+      
+      - name: Upload zetaclientd
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetaclientd
+          path: ~/go/bin/zetaclientd
+          retention-days: 30
+      
       - name: Clean Up Workspace
         if: always()
         shell: bash
@@ -91,7 +105,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set CPU Architecture
         shell: bash

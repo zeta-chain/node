@@ -30,19 +30,19 @@ const (
 	bytesPerWitness         = 108 // each additional witness incurs about 108 bytes and it may vary
 	defaultDepositorFeeRate = 20  // 20 sat/byte is the default depositor fee rate
 
-	OutTxBytesMin = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
-	OutTxBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
-	OutTxBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
+	OutboundBytesMin = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
+	OutboundBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
+	OutboundBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
 	DynamicDepositorFeeHeight = 834500 // DynamicDepositorFeeHeight contains the starting height (Bitcoin mainnet) from which dynamic depositor fee will take effect
 )
 
 var (
-	// BtcOutTxBytesDepositor is the outtx size incurred by the depositor: 68vB
-	BtcOutTxBytesDepositor = OuttxSizeDepositor()
+	// BtcOutboundBytesDepositor is the outbound size incurred by the depositor: 68vB
+	BtcOutboundBytesDepositor = OutboundSizeDepositor()
 
-	// BtcOutTxBytesWithdrawer is the outtx size incurred by the withdrawer: 177vB
-	BtcOutTxBytesWithdrawer = OuttxSizeWithdrawer()
+	// BtcOutboundBytesWithdrawer is the outbound size incurred by the withdrawer: 177vB
+	BtcOutboundBytesWithdrawer = OutboundSizeWithdrawer()
 
 	// DefaultDepositorFee is the default depositor fee is 0.00001360 BTC (20 * 68vB / 100000000)
 	// default depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
@@ -64,8 +64,8 @@ func WiredTxSize(numInputs uint64, numOutputs uint64) uint64 {
 	return uint64(8 + wire.VarIntSerializeSize(numInputs) + wire.VarIntSerializeSize(numOutputs))
 }
 
-// EstimateOuttxSize estimates the size of a outtx in vBytes
-func EstimateOuttxSize(numInputs uint64, payees []btcutil.Address) (uint64, error) {
+// EstimateOutboundSize estimates the size of an outbound in vBytes
+func EstimateOutboundSize(numInputs uint64, payees []btcutil.Address) (uint64, error) {
 	if numInputs == 0 {
 		return 0, nil
 	}
@@ -126,13 +126,13 @@ func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 	}
 }
 
-// OuttxSizeDepositor returns outtx size (68vB) incurred by the depositor
-func OuttxSizeDepositor() uint64 {
+// OutboundSizeDepositor returns outbound size (68vB) incurred by the depositor
+func OutboundSizeDepositor() uint64 {
 	return bytesPerInput + bytesPerWitness/blockchain.WitnessScaleFactor
 }
 
-// OuttxSizeWithdrawer returns outtx size (177vB) incurred by the withdrawer (1 input, 3 outputs)
-func OuttxSizeWithdrawer() uint64 {
+// OutboundSizeWithdrawer returns outbound size (177vB) incurred by the withdrawer (1 input, 3 outputs)
+func OutboundSizeWithdrawer() uint64 {
 	bytesWiredTx := WiredTxSize(1, 3)
 	bytesInput := uint64(1) * bytesPerInput         // nonce mark
 	bytesOutput := uint64(2) * bytesPerOutputP2WPKH // 2 P2WPKH outputs: new nonce mark, change
@@ -144,7 +144,7 @@ func OuttxSizeWithdrawer() uint64 {
 // DepositorFee calculates the depositor fee in BTC for a given sat/byte fee rate
 // Note: the depositor fee is charged in order to cover the cost of spending the deposited UTXO in the future
 func DepositorFee(satPerByte int64) float64 {
-	return float64(satPerByte) * float64(BtcOutTxBytesDepositor) / btcutil.SatoshiPerBitcoin
+	return float64(satPerByte) * float64(BtcOutboundBytesDepositor) / btcutil.SatoshiPerBitcoin
 }
 
 // CalcBlockAvgFeeRate calculates the average gas rate (in sat/vByte) for a given block
@@ -229,7 +229,7 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 	}
 
 	// #nosec G701 always in range
-	feeRate = int64(float64(feeRate) * clientcommon.BTCOuttxGasPriceMultiplier)
+	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate)
 }

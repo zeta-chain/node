@@ -162,7 +162,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return fmt.Errorf("error parsing eth locked amount")
 	}
 
-	zetaInTransit := zs.GetAmountOfZetaInTransit()
+	zetaInTransit, err := zs.GetAmountOfZetaInTransit()
+	if err != nil {
+		return err
+	}
 	zetaTokenSupplyOnNode, err := zs.zetaClient.GetZetaTokenSupplyOnNode()
 	if err != nil {
 		return err
@@ -190,21 +193,21 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
-func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
+func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
 	cctxs := zs.GetPendingCCTXInTransit(chainsToCheck)
 	amount := sdkmath.ZeroUint()
 
 	for _, cctx := range cctxs {
-		amount = amount.Add(cctx.GetCurrentOutTxParam().Amount)
+		amount = amount.Add(cctx.GetCurrentOutboundParam().Amount)
 	}
 	amountInt, ok := sdkmath.NewIntFromString(amount.String())
 	if !ok {
-		panic("error parsing amount")
+		return sdkmath.ZeroInt(), fmt.Errorf("error parsing amount %s", amount.String())
 	}
 
-	return amountInt
+	return amountInt, nil
 }
 
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {
@@ -216,12 +219,12 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Ch
 		}
 		nonceToCctxMap := make(map[uint64]*types.CrossChainTx)
 		for _, c := range cctx {
-			if c.InboundTxParams.CoinType == coin.CoinType_Zeta {
-				nonceToCctxMap[c.GetCurrentOutTxParam().OutboundTxTssNonce] = c
+			if c.InboundParams.CoinType == coin.CoinType_Zeta {
+				nonceToCctxMap[c.GetCurrentOutboundParam().TssNonce] = c
 			}
 		}
 
-		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Ascending)
+		trackers, err := zs.zetaClient.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Ascending)
 		if err != nil {
 			continue
 		}

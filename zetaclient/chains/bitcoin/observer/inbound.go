@@ -24,48 +24,48 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// WatchInTx watches Bitcoin chain for incoming txs and post votes to zetacore
-func (ob *Observer) WatchInTx() {
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInTx", ob.GetChainParams().InTxTicker)
+// WatchInbound watches Bitcoin chain for incoming txs and post votes to zetacore
+func (ob *Observer) WatchInbound() {
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.GetChainParams().InboundTicker)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msg("error creating ticker")
+		ob.logger.Inbound.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 	defer ticker.Stop()
 
-	ob.logger.InTx.Info().Msgf("WatchInTx started for chain %d", ob.chain.ChainId)
-	sampledLogger := ob.logger.InTx.Sample(&zerolog.BasicSampler{N: 10})
+	ob.logger.Inbound.Info().Msgf("WatchInbound started for chain %d", ob.chain.ChainId)
+	sampledLogger := ob.logger.Inbound.Sample(&zerolog.BasicSampler{N: 10})
 
 	for {
 		select {
 		case <-ticker.C():
 			if !context.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
-				sampledLogger.Info().Msgf("WatchInTx: inbound observation is disabled for chain %d", ob.chain.ChainId)
+				sampledLogger.Info().Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			err := ob.ObserveInTx()
+			err := ob.ObserveInbound()
 			if err != nil {
-				ob.logger.InTx.Error().Err(err).Msg("WatchInTx error observing in tx")
+				ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.InTx)
+			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
-			ob.logger.InTx.Info().Msgf("WatchInTx stopped for chain %d", ob.chain.ChainId)
+			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}
 }
 
-func (ob *Observer) ObserveInTx() error {
+func (ob *Observer) ObserveInbound() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
-		return fmt.Errorf("observeInTxBTC: error getting block number: %s", err)
+		return fmt.Errorf("observeInboundBTC: error getting block number: %s", err)
 	}
 	if cnt < 0 {
-		return fmt.Errorf("observeInTxBTC: block number is negative: %d", cnt)
+		return fmt.Errorf("observeInboundBTC: block number is negative: %d", cnt)
 	}
 	if cnt < ob.GetLastBlockHeight() {
-		return fmt.Errorf("observeInTxBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
+		return fmt.Errorf("observeInboundBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(cnt)
 
@@ -73,7 +73,7 @@ func (ob *Observer) ObserveInTx() error {
 	// #nosec G701 always in range
 	confirmedBlockNum := cnt - int64(ob.GetChainParams().ConfirmationCount)
 	if confirmedBlockNum < 0 {
-		return fmt.Errorf("observeInTxBTC: skipping observer, current block number %d is too low", cnt)
+		return fmt.Errorf("observeInboundBTC: skipping observer, current block number %d is too low", cnt)
 	}
 
 	// skip if no new block is confirmed
@@ -86,10 +86,10 @@ func (ob *Observer) ObserveInTx() error {
 	blockNumber := lastScanned + 1
 	res, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error getting bitcoin block %d", blockNumber)
+		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error getting bitcoin block %d", blockNumber)
 		return err
 	}
-	ob.logger.InTx.Info().Msgf("observeInTxBTC: block %d has %d txs, current block %d, last block %d",
+	ob.logger.Inbound.Info().Msgf("observeInboundBTC: block %d has %d txs, current block %d, last block %d",
 		blockNumber, len(res.Block.Tx), cnt, lastScanned)
 
 	// add block header to zetacore
@@ -101,83 +101,43 @@ func (ob *Observer) ObserveInTx() error {
 	if found && blockHeaderVerification.Enabled {
 		err = ob.postBlockHeader(blockNumber)
 		if err != nil {
-			ob.logger.InTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", blockNumber)
+			ob.logger.Inbound.Warn().Err(err).Msgf("observeInboundBTC: error posting block header %d", blockNumber)
 		}
 	}
 
 	if len(res.Block.Tx) > 1 {
 		// get depositor fee
-		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.Inbound)
 
 		// filter incoming txs to TSS address
 		tssAddress := ob.Tss.BTCAddress()
 
-		if len(res.Block.Tx) > 1 {
-			// get depositor fee
-			depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
-
-			// filter incoming txs to TSS address
-			tssAddress := ob.Tss.BTCAddress()
-			// #nosec G701 always positive
-			inTxs, err := FilterAndParseIncomingTx(
-				ob.rpcClient,
-				res.Block.Tx,
-				uint64(res.Block.Height),
-				tssAddress,
-				ob.logger.InTx,
-				ob.netParams,
-				depositorFee,
-			)
-			if err != nil {
-				ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error filtering incoming txs for block %d", blockNumber)
-				return err // we have to re-scan this block next time
-			}
-
-			// post inbound vote message to zetacore
-			for _, inTx := range inTxs {
-				msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-				if msg != nil {
-					zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
-					if err != nil {
-						ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zetacore for tx %s", inTx.TxHash)
-						return err // we have to re-scan this block next time
-					} else if zetaHash != "" {
-						ob.logger.InTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
-							zetaHash, inTx.TxHash, ballot, depositorFee)
-					}
-				}
-			}
-		}
-
-		// Save LastBlockHeight
-		ob.SetLastBlockHeightScanned(blockNumber)
-
 		// #nosec G701 always positive
-		inTxs, err := FilterAndParseIncomingTx(
+		inbounds, err := FilterAndParseIncomingTx(
 			ob.rpcClient,
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
-			ob.logger.InTx,
+			ob.logger.Inbound,
 			ob.netParams,
 			depositorFee,
 		)
 		if err != nil {
-			ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error filtering incoming txs for block %d", blockNumber)
+			ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error filtering incoming txs for block %d", blockNumber)
 			return err // we have to re-scan this block next time
 		}
 
 		// post inbound vote message to zetacore
-		for _, inTx := range inTxs {
-			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
+		for _, inbound := range inbounds {
+			msg := ob.GetInboundVoteMessageFromBtcEvent(inbound)
 			if msg != nil {
 				zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
 				if err != nil {
-					ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zetacore for tx %s", inTx.TxHash)
+					ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error posting to zetacore for tx %s", inbound.TxHash)
 					return err // we have to re-scan this block next time
 				} else if zetaHash != "" {
-					ob.logger.InTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
-						zetaHash, inTx.TxHash, ballot, depositorFee)
+					ob.logger.Inbound.Info().Msgf("observeInboundBTC: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
+						zetaHash, inbound.TxHash, ballot, depositorFee)
 				}
 			}
 		}
@@ -188,17 +148,17 @@ func (ob *Observer) ObserveInTx() error {
 
 	// #nosec G701 always positive
 	if err := ob.db.Save(types.ToLastBlockSQLType(uint64(blockNumber))).Error; err != nil {
-		ob.logger.InTx.Error().Err(err).Msgf("observeInTxBTC: error writing last scanned block %d to db", blockNumber)
+		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error writing last scanned block %d to db", blockNumber)
 	}
 
 	return nil
 }
 
-// WatchIntxTracker watches zetacore for bitcoin intx trackers
-func (ob *Observer) WatchIntxTracker() {
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchIntxTracker", ob.GetChainParams().InTxTicker)
+// WatchInboundTracker watches zetacore for bitcoin inbound trackers
+func (ob *Observer) WatchInboundTracker() {
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
 	if err != nil {
-		ob.logger.InTx.Err(err).Msg("error creating ticker")
+		ob.logger.Inbound.Err(err).Msg("error creating ticker")
 		return
 	}
 
@@ -211,11 +171,11 @@ func (ob *Observer) WatchIntxTracker() {
 			}
 			err := ob.ProcessInboundTrackers()
 			if err != nil {
-				ob.logger.InTx.Error().Err(err).Msgf("error observing intx tracker for chain %d", ob.chain.ChainId)
+				ob.logger.Inbound.Error().Err(err).Msgf("error observing inbound tracker for chain %d", ob.chain.ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.InTx)
+			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
-			ob.logger.InTx.Info().Msgf("WatchIntxTracker stopped for chain %d", ob.chain.ChainId)
+			ob.logger.Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}
@@ -229,12 +189,12 @@ func (ob *Observer) ProcessInboundTrackers() error {
 	}
 
 	for _, tracker := range trackers {
-		ob.logger.InTx.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
+		ob.logger.Inbound.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
 		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(tracker.TxHash, true)
 		if err != nil {
 			return err
 		}
-		ob.logger.InTx.Info().Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, coin.CoinType_Gas.String())
+		ob.logger.Inbound.Info().Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, coin.CoinType_Gas.String())
 	}
 
 	return nil
@@ -266,14 +226,14 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
 
-	depositorFee := bitcoin.CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.InTx)
+	depositorFee := bitcoin.CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.Inbound)
 	tss, err := ob.zetacoreClient.GetBtcTssAddress(ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}
 
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(ob.rpcClient, *tx, tss, uint64(blockVb.Height), ob.logger.InTx, ob.netParams, depositorFee)
+	event, err := GetBtcEvent(ob.rpcClient, *tx, tss, uint64(blockVb.Height), ob.logger.Inbound, ob.netParams, depositorFee)
 	if err != nil {
 		return "", err
 	}
@@ -293,10 +253,10 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 
 	zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
 	if err != nil {
-		ob.logger.InTx.Error().Err(err).Msg("error posting to zetacore")
+		ob.logger.Inbound.Error().Err(err).Msg("error posting to zetacore")
 		return "", err
 	} else if zetaHash != "" {
-		ob.logger.InTx.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+		ob.logger.Inbound.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
 			zetaHash, txHash, ballot, depositorFee)
 	}
 
@@ -315,50 +275,50 @@ func FilterAndParseIncomingTx(
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	depositorFee float64,
-) ([]*BTCInTxEvent, error) {
-	inTxs := make([]*BTCInTxEvent, 0)
+) ([]*BTCInboundEvent, error) {
+	inbounds := make([]*BTCInboundEvent, 0)
 	for idx, tx := range txs {
 		if idx == 0 {
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
 
-		inTx, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		inbound, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 
-		if inTx != nil {
-			inTxs = append(inTxs, inTx)
+		if inbound != nil {
+			inbounds = append(inbounds, inbound)
 			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
-	return inTxs, nil
+	return inbounds, nil
 }
 
-func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvent) *crosschaintypes.MsgVoteOnObservedInboundTx {
-	ob.logger.InTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
-	amount := big.NewFloat(inTx.Value)
+func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
+	ob.logger.Inbound.Debug().Msgf("Processing inbound: %s", inbound.TxHash)
+	amount := big.NewFloat(inbound.Value)
 	amount = amount.Mul(amount, big.NewFloat(1e8))
 	amountInt, _ := amount.Int(nil)
-	message := hex.EncodeToString(inTx.MemoBytes)
+	message := hex.EncodeToString(inbound.MemoBytes)
 
 	// compliance check
 	// if the inbound contains restricted addresses, return nil
-	if ob.IsInTxRestricted(inTx) {
+	if ob.DoesInboundContainsRestrictedAddress(inbound) {
 		return nil
 	}
 
 	return zetacore.GetInBoundVoteMessage(
-		inTx.FromAddress,
+		inbound.FromAddress,
 		ob.chain.ChainId,
-		inTx.FromAddress,
-		inTx.FromAddress,
+		inbound.FromAddress,
+		inbound.FromAddress,
 		ob.zetacoreClient.Chain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountInt),
 		message,
-		inTx.TxHash,
-		inTx.BlockNumber,
+		inbound.TxHash,
+		inbound.BlockNumber,
 		0,
 		coin.CoinType_Gas,
 		"",
@@ -367,22 +327,22 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvent) *cross
 	)
 }
 
-// IsInTxRestricted returns true if the inTx contains restricted addresses
-func (ob *Observer) IsInTxRestricted(inTx *BTCInTxEvent) bool {
+// DoesInboundContainsRestrictedAddress returns true if the inbound contains restricted addresses
+func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) bool {
 	receiver := ""
 	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		receiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
-		compliance.PrintComplianceLog(ob.logger.InTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true
 	}
 	return false
 }
 
-// GetBtcEvent either returns a valid BTCInTxEvent or nil
+// GetBtcEvent either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 func GetBtcEvent(
 	rpcClient interfaces.BTCRPCClient,
@@ -392,7 +352,7 @@ func GetBtcEvent(
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	depositorFee float64,
-) (*BTCInTxEvent, error) {
+) (*BTCInboundEvent, error) {
 	found := false
 	var value float64
 	var memo []byte
@@ -431,15 +391,15 @@ func GetBtcEvent(
 	// event found, get sender address
 	if found {
 		if len(tx.Vin) == 0 { // should never happen
-			return nil, fmt.Errorf("GetBtcEvent: no input found for intx: %s", tx.Txid)
+			return nil, fmt.Errorf("GetBtcEvent: no input found for inbound: %s", tx.Txid)
 		}
 
 		fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error getting sender address for intx: %s", tx.Txid)
+			return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 		}
 
-		return &BTCInTxEvent{
+		return &BTCInboundEvent{
 			FromAddress: fromAddress,
 			ToAddress:   tssAddress,
 			Value:       value,

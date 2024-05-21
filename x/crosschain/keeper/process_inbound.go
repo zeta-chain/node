@@ -12,7 +12,7 @@ import (
 // It does a conditional dispatch to ProcessZEVMDeposit or ProcessCrosschainMsgPassing based on the receiver chain.
 // The internal functions handle the state changes and error handling.
 func (k Keeper) ProcessInbound(ctx sdk.Context, cctx *types.CrossChainTx) {
-	if chains.IsZetaChain(cctx.GetCurrentOutTxParam().ReceiverChainId) {
+	if chains.IsZetaChain(cctx.GetCurrentOutboundParam().ReceiverChainId) {
 		k.processZEVMDeposit(ctx, cctx)
 	} else {
 		k.processCrosschainMsgPassing(ctx, cctx)
@@ -39,9 +39,9 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		return
 	} else if err != nil && isContractReverted { // contract call reverted; should refund via a revert tx
 		revertMessage := err.Error()
-		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
+		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId)
 		if senderChain == nil {
-			cctx.SetAbort(fmt.Sprintf("invalid sender chain id %d", cctx.InboundTxParams.SenderChainId))
+			cctx.SetAbort(fmt.Sprintf("invalid sender chain id %d", cctx.InboundParams.SenderChainId))
 			return
 		}
 		gasLimit, err := k.GetRevertGasLimit(ctx, *cctx)
@@ -51,7 +51,7 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		}
 		if gasLimit == 0 {
 			// use same gas limit of outbound as a fallback -- should not be required
-			gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
+			gasLimit = cctx.GetCurrentOutboundParam().GasLimit
 		}
 
 		err = cctx.AddRevertOutbound(gasLimit)
@@ -66,7 +66,7 @@ func (k Keeper) processZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 				tmpCtxRevert,
 				senderChain.ChainId,
 				cctx,
-				cctx.InboundTxParams.Amount,
+				cctx.InboundParams.Amount,
 				false,
 			)
 			if err != nil {
@@ -98,13 +98,13 @@ processCrosschainMsgPassing processes the CCTX for crosschain message passing. A
 */
 func (k Keeper) processCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossChainTx) {
 	tmpCtx, commit := ctx.CacheContext()
-	outboundReceiverChainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+	outboundReceiverChainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	err := func() error {
 		err := k.PayGasAndUpdateCctx(
 			tmpCtx,
 			outboundReceiverChainID,
 			cctx,
-			cctx.InboundTxParams.Amount,
+			cctx.InboundParams.Amount,
 			false,
 		)
 		if err != nil {

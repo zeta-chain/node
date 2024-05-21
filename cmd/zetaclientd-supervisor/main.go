@@ -16,10 +16,13 @@ import (
 )
 
 func main() {
+	// load zetaclient config
 	cfg, err := config.Load(app.DefaultNodeHome)
 	if err != nil {
-		panic(fmt.Errorf("failed to load config: %w", err))
+		fmt.Println("failed to load config: ", err)
+		os.Exit(1)
 	}
+
 	// log outputs must be serialized since we are writing log messages in this process and
 	// also directly from the zetaclient process
 	serializedStdout := &serializedWriter{upstream: os.Stdout}
@@ -38,13 +41,15 @@ func main() {
 
 	hotkeyPassword, tssPassword, err := promptPasswords()
 	if err != nil {
-		panic(fmt.Errorf("unable to get passwords: %w", err))
+		logger.Error().Err(err).Msg("unable to get passwords")
+		os.Exit(1)
 	}
 
 	_, enableAutoDownload := os.LookupEnv("ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD")
 	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger, enableAutoDownload)
 	if err != nil {
-		panic(fmt.Errorf("unable to get supervisor: %w", err))
+		logger.Error().Err(err).Msg("unable to get supervisor")
+		os.Exit(1)
 	}
 	supervisor.Start(ctx)
 

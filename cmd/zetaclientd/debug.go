@@ -24,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
@@ -45,7 +44,7 @@ func init() {
 
 func DebugCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-ballot-from-intx [txHash] [chainID]",
+		Use:   "get-inbound-ballot [inboundHash] [chainID]",
 		Short: "provide txHash and chainID to get the ballot status for the txHash",
 		RunE: func(_ *cobra.Command, args []string) error {
 			cobra.ExactArgs(2)
@@ -58,26 +57,18 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			txHash := args[0]
+			inboundHash := args[0]
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
-			telemetryServer := metrics.NewTelemetryServer()
-			go func() {
-				err := telemetryServer.Start()
-				if err != nil {
-					panic("telemetryServer error")
-				}
-			}()
-
+			// create a new zetacore client
 			client, err := zetacore.NewClient(
 				&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
 				debugArgs.zetaNode,
 				"",
 				debugArgs.zetaChainID,
 				false,
-				telemetryServer)
-
+				nil)
 			if err != nil {
 				return err
 			}
@@ -89,14 +80,13 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			chain := chains.GetChainFromChainID(chainID)
 			if chain == nil {
 				return fmt.Errorf("invalid chain id")
 			}
 
+			// get ballot identifier according to the chain type
 			if chains.IsEVMChain(chain.ChainId) {
-
 				evmObserver := evmobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
@@ -117,8 +107,8 @@ func DebugCmd() *cobra.Command {
 						evmObserver.WithChain(*chains.GetChainFromChainID(chainID))
 					}
 				}
-				hash := ethcommon.HexToHash(txHash)
-				tx, isPending, err := evmObserver.TransactionByHash(txHash)
+				hash := ethcommon.HexToHash(inboundHash)
+				tx, isPending, err := evmObserver.TransactionByHash(inboundHash)
 				if err != nil {
 					return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
 				}
@@ -196,7 +186,7 @@ func DebugCmd() *cobra.Command {
 					return err
 				}
 				btcObserver.WithBtcClient(btcClient)
-				ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(txHash, false)
+				ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(inboundHash, false)
 				if err != nil {
 					return err
 				}
@@ -204,6 +194,7 @@ func DebugCmd() *cobra.Command {
 			}
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 
+			// query ballot
 			ballot, err := client.GetBallot(ballotIdentifier)
 			if err != nil {
 				return err

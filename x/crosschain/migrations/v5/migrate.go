@@ -94,12 +94,12 @@ func SetZetaAccounting(
 	for _, cctx := range ccctxList {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
 
-			switch cctx.InboundTxParams.CoinType {
+			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
-					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
+					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutboundParam().ReceiverChainId)
 					if receiverChain == nil {
-						ctx.Logger().Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutTxParam().ReceiverChainId), cctx.Index)
+						ctx.Logger().Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutboundParam().ReceiverChainId), cctx.Index)
 						continue
 					}
 					// There is a chance that this cctx has already been refunded, so we set the isRefunded flag to true.
@@ -136,11 +136,11 @@ func SetZetaAccounting(
 	return nil
 }
 func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
-	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
-		return cctx.GetCurrentOutTxParam().Amount
+	if cctx.OutboundParams != nil && !cctx.GetCurrentOutboundParam().Amount.IsZero() {
+		return cctx.GetCurrentOutboundParam().Amount
 	}
-	if cctx.InboundTxParams != nil {
-		return cctx.InboundTxParams.Amount
+	if cctx.InboundParams != nil {
+		return cctx.InboundParams.Amount
 	}
 
 	return sdkmath.ZeroUint()

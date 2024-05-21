@@ -89,11 +89,11 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 	// type urls in attr.Value are in double quotes, so it needs to be formatted like this
 	systemTxsMsgTypeUrls := []string{
-		"\"/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx\"",
-		"\"/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx\"",
+		"\"/zetachain.zetacore.crosschain.MsgVoteOutbound\"",
+		"\"/zetachain.zetacore.crosschain.MsgVoteInbound\"",
 		"\"/zetachain.zetacore.crosschain.MsgVoteGasPrice\"",
-		"\"/zetachain.zetacore.crosschain.MsgAddToOutTxTracker\"",
-		"\"/zetachain.zetacore.crosschain.MsgAddToInTxTracker\"",
+		"\"/zetachain.zetacore.crosschain.MsgAddOutboundTracker\"",
+		"\"/zetachain.zetacore.crosschain.MsgAddInboundTracker\"",
 		"\"/zetachain.zetacore.observer.MsgVoteBlockHeader\"",
 		"\"/zetachain.zetacore.observer.MsgVoteTSS\"",
 		"\"/zetachain.zetacore.observer.MsgAddBlameVote\"",

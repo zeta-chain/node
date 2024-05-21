@@ -74,7 +74,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 
 	r.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
 	r.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -83,7 +83,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 			cctx.CctxStatus.StatusMessage,
 		))
 	}
-	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	if err != nil {
 		panic(err)
 	}
@@ -97,7 +97,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 			r.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
 			r.Logger.Info("  Zeta Value: %d", event.ZetaValue)
 			r.Logger.Info("  src chainid: %d", event.SourceChainId)
-			if event.ZetaValue.Cmp(cctx.GetCurrentOutTxParam().Amount.BigInt()) != 0 {
+			if event.ZetaValue.Cmp(cctx.GetCurrentOutboundParam().Amount.BigInt()) != 0 {
 				panic("Zeta value mismatch")
 			}
 		}

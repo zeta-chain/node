@@ -60,11 +60,11 @@ type Logger struct {
 	// Chain is the parent logger for the chain
 	Chain zerolog.Logger
 
-	// InTx is the logger for incoming transactions
-	InTx zerolog.Logger // The logger for incoming transactions
+	// Inbound is the logger for incoming transactions
+	Inbound zerolog.Logger // The logger for incoming transactions
 
-	// OutTx is the logger for outgoing transactions
-	OutTx zerolog.Logger // The logger for outgoing transactions
+	// Outbound is the logger for outgoing transactions
+	Outbound zerolog.Logger // The logger for outgoing transactions
 
 	// UTXOS is the logger for UTXOs management
 	UTXOS zerolog.Logger // The logger for UTXOs management
@@ -76,8 +76,8 @@ type Logger struct {
 	Compliance zerolog.Logger // The logger for compliance checks
 }
 
-// BTCInTxEvent represents an incoming transaction event
-type BTCInTxEvent struct {
+// BTCInboundEvent represents an incoming transaction event
+type BTCInboundEvent struct {
 	// FromAddress is the first input address
 	FromAddress string
 
@@ -92,7 +92,7 @@ type BTCInTxEvent struct {
 	TxHash      string
 }
 
-// BTCOutTxEvent contains bitcoin block and the header
+// BTCOutboundEvent contains bitcoin block and the header
 type BTCBlockNHeader struct {
 	Header *wire.BlockHeader
 	Block  *btcjson.GetBlockVerboseTxResult
@@ -163,8 +163,8 @@ func NewObserver(
 	chainLogger := loggers.Std.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = Logger{
 		Chain:      chainLogger,
-		InTx:       chainLogger.With().Str("module", "WatchInTx").Logger(),
-		OutTx:      chainLogger.With().Str("module", "WatchOutTx").Logger(),
+		Inbound:    chainLogger.With().Str("module", "WatchInbound").Logger(),
+		Outbound:   chainLogger.With().Str("module", "WatchOutbound").Logger(),
 		UTXOS:      chainLogger.With().Str("module", "WatchUTXOS").Logger(),
 		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		Compliance: loggers.Compliance,
@@ -232,8 +232,8 @@ func (ob *Observer) WithLogger(logger zerolog.Logger) {
 	defer ob.Mu.Unlock()
 	ob.logger = Logger{
 		Chain:    logger,
-		InTx:     logger.With().Str("module", "WatchInTx").Logger(),
-		OutTx:    logger.With().Str("module", "WatchOutTx").Logger(),
+		Inbound:  logger.With().Str("module", "WatchInbound").Logger(),
+		Outbound: logger.With().Str("module", "WatchOutbound").Logger(),
 		UTXOS:    logger.With().Str("module", "WatchUTXOS").Logger(),
 		GasPrice: logger.With().Str("module", "WatchGasPrice").Logger(),
 	}
@@ -272,12 +272,12 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 // Start starts the Go routine to observe the Bitcoin chain
 func (ob *Observer) Start() {
 	ob.logger.Chain.Info().Msgf("Bitcoin client is starting")
-	go ob.WatchInTx()        // watch bitcoin chain for incoming txs and post votes to zetacore
-	go ob.WatchOutTx()       // watch bitcoin chain for outgoing txs status
-	go ob.WatchUTXOS()       // watch bitcoin chain for UTXOs owned by the TSS address
-	go ob.WatchGasPrice()    // watch bitcoin chain for gas rate and post to zetacore
-	go ob.WatchIntxTracker() // watch zetacore for bitcoin intx trackers
-	go ob.WatchRPCStatus()   // watch the RPC status of the bitcoin chain
+	go ob.WatchInbound()        // watch bitcoin chain for incoming txs and post votes to zetacore
+	go ob.WatchOutbound()       // watch bitcoin chain for outgoing txs status
+	go ob.WatchUTXOS()          // watch bitcoin chain for UTXOs owned by the TSS address
+	go ob.WatchGasPrice()       // watch bitcoin chain for gas rate and post to zetacore
+	go ob.WatchInboundTracker() // watch zetacore for bitcoin inbound trackers
+	go ob.WatchRPCStatus()      // watch the RPC status of the bitcoin chain
 }
 
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
@@ -344,34 +344,20 @@ func (ob *Observer) Stop() {
 }
 
 func (ob *Observer) SetLastBlockHeight(height int64) {
-	if height < 0 {
-		panic("lastBlock is negative")
-	}
 	atomic.StoreInt64(&ob.lastBlock, height)
 }
 
 func (ob *Observer) GetLastBlockHeight() int64 {
-	height := atomic.LoadInt64(&ob.lastBlock)
-	if height < 0 {
-		panic("lastBlock is negative")
-	}
-	return height
+	return atomic.LoadInt64(&ob.lastBlock)
 }
 
 func (ob *Observer) SetLastBlockHeightScanned(height int64) {
-	if height < 0 {
-		panic("lastBlockScanned is negative")
-	}
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
 func (ob *Observer) GetLastBlockHeightScanned() int64 {
-	height := atomic.LoadInt64(&ob.lastBlockScanned)
-	if height < 0 {
-		panic("lastBlockScanned is negative")
-	}
-	return height
+	return atomic.LoadInt64(&ob.lastBlockScanned)
 }
 
 func (ob *Observer) GetPendingNonce() uint64 {
@@ -552,7 +538,7 @@ func (ob *Observer) WatchUTXOS() {
 func (ob *Observer) FetchUTXOS() error {
 	defer func() {
 		if err := recover(); err != nil {
-			ob.logger.UTXOS.Error().Msgf("BTC fetchUTXOS: caught panic error: %v", err)
+			ob.logger.UTXOS.Error().Msgf("BTC FetchUTXOS: caught panic error: %v", err)
 		}
 	}()
 
@@ -613,16 +599,16 @@ func (ob *Observer) FetchUTXOS() error {
 
 // SaveBroadcastedTx saves successfully broadcasted transaction
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
-	outTxID := ob.GetTxID(nonce)
+	outboundID := ob.GetTxID(nonce)
 	ob.Mu.Lock()
-	ob.broadcastedTx[outTxID] = txHash
+	ob.broadcastedTx[outboundID] = txHash
 	ob.Mu.Unlock()
 
-	broadcastEntry := clienttypes.ToOutTxHashSQLType(txHash, outTxID)
+	broadcastEntry := clienttypes.ToOutboundHashSQLType(txHash, outboundID)
 	if err := ob.db.Save(&broadcastEntry).Error; err != nil {
-		ob.logger.OutTx.Error().Err(err).Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outTx %s", txHash, outTxID)
+		ob.logger.Outbound.Error().Err(err).Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
 	}
-	ob.logger.OutTx.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outTx %s", txHash, outTxID)
+	ob.logger.Outbound.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outbound %s", txHash, outboundID)
 }
 
 // GetTxResultByHash gets the transaction result by hash
@@ -635,7 +621,7 @@ func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainha
 	// The Bitcoin node has to be configured to watch TSS address
 	txResult, err := rpcClient.GetTransaction(hash)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "GetOutTxByTxHash: error GetTransaction %s", hash.String())
+		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error GetTransaction %s", hash.String())
 	}
 	return hash, txResult, nil
 }
@@ -658,7 +644,7 @@ func GetRawTxResult(rpcClient interfaces.BTCRPCClient, hash *chainhash.Hash, res
 			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetBlockVerboseTx %s", res.BlockHash)
 		}
 		if res.BlockIndex < 0 || res.BlockIndex >= int64(len(block.Tx)) {
-			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
+			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: invalid outbound with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
 		}
 		return block.Tx[res.BlockIndex], nil
 	}
@@ -668,7 +654,7 @@ func GetRawTxResult(rpcClient interfaces.BTCRPCClient, hash *chainhash.Hash, res
 }
 
 func (ob *Observer) BuildBroadcastedTxMap() error {
-	var broadcastedTransactions []clienttypes.OutTxHashSQLType
+	var broadcastedTransactions []clienttypes.OutboundHashSQLType
 	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
 		ob.logger.Chain.Error().Err(err).Msg("error iterating over db")
 		return err
@@ -680,9 +666,13 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 }
 
 func (ob *Observer) LoadLastBlock() error {
+	// Get the latest block number from node
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
+	}
+	if bn < 0 {
+		return fmt.Errorf("LoadLastBlock: negative block number %d", bn)
 	}
 
 	//Load persisted block number
@@ -747,7 +737,7 @@ func (ob *Observer) isTssTransaction(txid string) bool {
 
 // postBlockHeader posts block header to zetacore
 func (ob *Observer) postBlockHeader(tip int64) error {
-	ob.logger.InTx.Info().Msgf("postBlockHeader: tip %d", tip)
+	ob.logger.Inbound.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
 	res, err := ob.zetacoreClient.GetBlockHeaderChainState(ob.chain.ChainId)
 	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
@@ -764,7 +754,7 @@ func (ob *Observer) postBlockHeader(tip int64) error {
 	var headerBuf bytes.Buffer
 	err = res2.Header.Serialize(&headerBuf)
 	if err != nil { // should never happen
-		ob.logger.InTx.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
+		ob.logger.Inbound.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
@@ -774,9 +764,9 @@ func (ob *Observer) postBlockHeader(tip int64) error {
 		res2.Block.Height,
 		proofs.NewBitcoinHeader(headerBuf.Bytes()),
 	)
-	ob.logger.InTx.Info().Msgf("posted block header %d: %s", bn, blockHash)
+	ob.logger.Inbound.Info().Msgf("posted block header %d: %s", bn, blockHash)
 	if err != nil { // error shouldn't block the process
-		ob.logger.InTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
+		ob.logger.Inbound.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 	}
 	return err
 }
@@ -791,12 +781,13 @@ func (ob *Observer) loadDB(dbpath string) error {
 	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
-		panic("failed to connect database")
+		ob.logger.Chain.Error().Err(err).Msgf("failed to open observer database for %s", ob.chain.ChainName.String())
+		return err
 	}
 	ob.db = db
 
 	err = db.AutoMigrate(&clienttypes.TransactionResultSQLType{},
-		&clienttypes.OutTxHashSQLType{},
+		&clienttypes.OutboundHashSQLType{},
 		&clienttypes.LastBlockSQLType{})
 	if err != nil {
 		return err

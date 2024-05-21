@@ -13,7 +13,7 @@ import (
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 )
 
-// VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
+// VoteOutbound casts a vote on an outbound transaction observed on a connected chain (after
 // it has been broadcasted to and finalized on a connected chain). If this is
 // the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, the outbound
@@ -54,7 +54,7 @@ import (
 // ```
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
+func (k msgServer) VoteOutbound(goCtx context.Context, msg *types.MsgVoteOutbound) (*types.MsgVoteOutboundResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Validate the message params to verify it against an existing cctx
@@ -68,7 +68,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	isFinalizingVote, isNew, ballot, observationChain, err := k.zetaObserverKeeper.VoteOnOutboundBallot(
 		ctx,
 		ballotIndex,
-		msg.OutTxChain,
+		msg.OutboundChain,
 		msg.Status,
 		msg.Creator)
 	if err != nil {
@@ -76,11 +76,11 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 	// if the ballot is new, set the index to the CCTX
 	if isNew {
-		observerkeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain)
+		observerkeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutboundHash, observationChain)
 	}
 	// if not finalized commit state here
 	if !isFinalizingVote {
-		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
+		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
 	// if ballot successful, the value received should be the out tx amount
@@ -94,10 +94,10 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	err = k.ProcessOutbound(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
 		k.SaveFailedOutbound(ctx, &cctx, err.Error(), ballotIndex)
-		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
+		return &types.MsgVoteOutboundResponse{}, nil
 	}
 	k.SaveSuccessfulOutbound(ctx, &cctx, ballotIndex)
-	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
+	return &types.MsgVoteOutboundResponse{}, nil
 }
 
 // FundStabilityPool funds the stability pool with the remaining fees of an outbound tx
@@ -106,16 +106,16 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 // Event if the funding fails, the outbound tx is still processed.
 func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// Fund the gas stability pool with the remaining funds
-	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutTxParam(), cctx.GetCurrentOutTxParam().ReceiverChainId); err != nil {
-		ctx.Logger().Error(fmt.Sprintf("VoteOnObservedOutboundTx: CCTX: %s Can't fund the gas stability pool with remaining fees %s", cctx.Index, err.Error()))
+	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutboundParam(), cctx.GetCurrentOutboundParam().ReceiverChainId); err != nil {
+		ctx.Logger().Error(fmt.Sprintf("VoteOutbound: CCTX: %s Can't fund the gas stability pool with remaining fees %s", cctx.Index, err.Error()))
 	}
 }
 
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
-func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundTxParams types.OutboundTxParams, chainID int64) error {
-	gasUsed := outboundTxParams.OutboundTxGasUsed
-	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
-	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
+func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, OutboundParams types.OutboundParams, chainID int64) error {
+	gasUsed := OutboundParams.GasUsed
+	gasLimit := OutboundParams.EffectiveGasLimit
+	gasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
 
 	if gasLimit == gasUsed {
 		return nil
@@ -134,7 +134,7 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 				return err
 			}
 		} else {
-			return fmt.Errorf("VoteOnObservedOutboundTx: The gas limit %d is less than the gas used %d", gasLimit, gasUsed)
+			return fmt.Errorf("VoteOutbound: The gas limit %d is less than the gas used %d", gasLimit, gasUsed)
 		}
 	}
 	return nil
@@ -178,38 +178,38 @@ SaveOutbound saves the outbound transaction.It does the following things in one 
 
  3. Remove the outbound tx tracker
 
- 4. Set the cctx and nonce to cctx and inTxHash to cctx
+ 4. Set the cctx and nonce to cctx and inboundHash to cctx
 */
 func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
-	receiverChain := cctx.GetCurrentOutTxParam().ReceiverChainId
-	tssPubkey := cctx.GetCurrentOutTxParam().TssPubkey
-	outTxTssNonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+	receiverChain := cctx.GetCurrentOutboundParam().ReceiverChainId
+	tssPubkey := cctx.GetCurrentOutboundParam().TssPubkey
+	outTxTssNonce := cctx.GetCurrentOutboundParam().TssNonce
 
-	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
+	cctx.GetCurrentOutboundParam().BallotIndex = ballotIndex
 	// #nosec G701 always in range
 	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tssPubkey, receiverChain, int64(outTxTssNonce))
-	k.RemoveOutTxTracker(ctx, receiverChain, outTxTssNonce)
-	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
+	k.RemoveOutboundTrackerFromStore(ctx, receiverChain, outTxTssNonce)
+	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutboundTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight()))
 	// This should set nonce to cctx only if a new revert is created.
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
 }
 
-func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOnObservedOutboundTx) (types.CrossChainTx, error) {
+func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbound) (types.CrossChainTx, error) {
 	// check if CCTX exists and if the nonce matches
 	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
 	if !found {
 		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
 	}
-	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
-		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
+	if cctx.GetCurrentOutboundParam().TssNonce != msg.OutboundTssNonce {
+		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutboundTssNonce %d does not match CCTX OutboundTssNonce %d", msg.OutboundTssNonce, cctx.GetCurrentOutboundParam().TssNonce))
 	}
 	// do not process an outbound vote if TSS is not found
 	_, found = k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return types.CrossChainTx{}, types.ErrCannotFindTSSKeys
 	}
-	if cctx.GetCurrentOutTxParam().ReceiverChainId != msg.OutTxChain {
-		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxChain %d does not match CCTX OutTxChain %d", msg.OutTxChain, cctx.GetCurrentOutTxParam().ReceiverChainId))
+	if cctx.GetCurrentOutboundParam().ReceiverChainId != msg.OutboundChain {
+		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutboundChain %d does not match CCTX OutboundChain %d", msg.OutboundChain, cctx.GetCurrentOutboundParam().ReceiverChainId))
 	}
 	return cctx, nil
 }

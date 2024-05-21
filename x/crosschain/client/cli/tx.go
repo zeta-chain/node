@@ -21,14 +21,14 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdAddToWatchList(),
+		CmdAddOutboundTracker(),
 		CmdVoteGasPrice(),
-		CmdCCTXOutboundVoter(),
-		CmdCCTXInboundVoter(),
-		CmdRemoveFromWatchList(),
+		CmdVoteInbound(),
+		CmdVoteOutbound(),
+		CmdRemoveOutboundTracker(),
 		CmdUpdateTss(),
 		CmdMigrateTssFunds(),
-		CmdAddToInTxTracker(),
+		CmdAddInboundTracker(),
 		CmdWhitelistERC20(),
 		CmdAbortStuckCCTX(),
 		CmdRefundAborted(),

@@ -53,13 +53,13 @@ func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterI
 	// if a cctx falls within the rate limiter window
 	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
-		return cctx.InboundTxParams.InboundTxObservedExternalHeight >= uint64(leftWindowBoundary)
+		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
 	// it is a past cctx if its nonce < `nonceLow`,
 	isPastCctx := func(cctx *types.CrossChainTx, nonceLow int64) bool {
 		// #nosec G701 always positive
-		return cctx.GetCurrentOutTxParam().OutboundTxTssNonce < uint64(nonceLow)
+		return cctx.GetCurrentOutboundParam().TssNonce < uint64(nonceLow)
 	}
 
 	// get foreign chains and conversion rates of foreign coins
@@ -87,7 +87,7 @@ func (k Keeper) RateLimiterInput(c context.Context, req *types.QueryRateLimiterI
 				return nil, err
 			}
 			// #nosec G701 len always in range
-			cctxHeight := int64(cctx.InboundTxParams.InboundTxObservedExternalHeight)
+			cctxHeight := int64(cctx.InboundParams.ObservedExternalHeight)
 			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
 				lowestPendingCctxHeight = cctxHeight
 			}
@@ -246,7 +246,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 	// if a cctx falls within the rate limiter window
 	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
-		return cctx.InboundTxParams.InboundTxObservedExternalHeight >= uint64(leftWindowBoundary)
+		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
 	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs
@@ -266,7 +266,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 				return nil, err
 			}
 			// #nosec G701 len always in range
-			cctxHeight := int64(cctx.InboundTxParams.InboundTxObservedExternalHeight)
+			cctxHeight := int64(cctx.InboundParams.ObservedExternalHeight)
 			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
 				lowestPendingCctxHeight = cctxHeight
 			}
@@ -366,10 +366,10 @@ func (k Keeper) ListPendingCctxWithinRateLimit(c context.Context, req *types.Que
 
 	// sort the cctxs by chain ID and nonce (lower nonce holds higher priority for scheduling)
 	sort.Slice(cctxs, func(i, j int) bool {
-		if cctxs[i].GetCurrentOutTxParam().ReceiverChainId == cctxs[j].GetCurrentOutTxParam().ReceiverChainId {
-			return cctxs[i].GetCurrentOutTxParam().OutboundTxTssNonce < cctxs[j].GetCurrentOutTxParam().OutboundTxTssNonce
+		if cctxs[i].GetCurrentOutboundParam().ReceiverChainId == cctxs[j].GetCurrentOutboundParam().ReceiverChainId {
+			return cctxs[i].GetCurrentOutboundParam().TssNonce < cctxs[j].GetCurrentOutboundParam().TssNonce
 		}
-		return cctxs[i].GetCurrentOutTxParam().ReceiverChainId < cctxs[j].GetCurrentOutTxParam().ReceiverChainId
+		return cctxs[i].GetCurrentOutboundParam().ReceiverChainId < cctxs[j].GetCurrentOutboundParam().ReceiverChainId
 	})
 
 	return &types.QueryListPendingCctxWithinRateLimitResponse{

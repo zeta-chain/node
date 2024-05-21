@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -69,7 +70,7 @@ func MockEVMObserver(
 	params observertypes.ChainParams) *observer.Observer {
 	// use default mock zetacore client if not provided
 	if zetacoreClient == nil {
-		zetacoreClient = mocks.NewMockZetaCoreClient()
+		zetacoreClient = mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
 	}
 	// use default mock tss if not provided
 	if tss == nil {
@@ -116,12 +117,12 @@ func Test_BlockCache(t *testing.T) {
 }
 
 func Test_CheckTxInclusion(t *testing.T) {
-	// load archived evm outtx Gas
+	// load archived evm outbound Gas
 	// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 	chainID := int64(1)
 	coinType := coin.CoinType_Gas
-	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
-	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, TestDataDir, chainID, outtxHash, coinType)
+	outboundHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
+	tx, receipt := testutils.LoadEVMOutboundNReceipt(t, TestDataDir, chainID, outboundHash, coinType)
 
 	// load archived evm block
 	// https://etherscan.io/block/19363323
@@ -137,7 +138,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 	blockCache.Add(blockNumber, block)
 	ob.WithBlockCache(blockCache)
 
-	t.Run("should pass for archived outtx", func(t *testing.T) {
+	t.Run("should pass for archived outbound", func(t *testing.T) {
 		err := ob.CheckTxInclusion(tx, receipt)
 		require.NoError(t, err)
 	})
@@ -167,18 +168,17 @@ func Test_CheckTxInclusion(t *testing.T) {
 }
 
 func Test_VoteOutboundBallot(t *testing.T) {
-	// load archived evm outtx Gas
+	// load archived evm outbound Gas
 	// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 	chainID := int64(1)
 	coinType := coin.CoinType_Gas
-	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
-	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, TestDataDir, chainID, outtxHash, coinType)
+	outboundHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
+	tx, receipt := testutils.LoadEVMOutboundNReceipt(t, TestDataDir, chainID, outboundHash, coinType)
 
 	// load archived cctx
 	cctx := testutils.LoadCctxByNonce(t, chainID, tx.Nonce())
-
-	t.Run("outtx ballot should match cctx", func(t *testing.T) {
-		msg := types.NewMsgVoteOnObservedOutboundTx(
+	t.Run("outbound ballot should match cctx", func(t *testing.T) {
+		msg := types.NewMsgVoteOutbound(
 			"anyCreator",
 			cctx.Index,
 			receipt.TxHash.Hex(),
@@ -192,7 +192,7 @@ func Test_VoteOutboundBallot(t *testing.T) {
 			tx.Nonce(),
 			coinType,
 		)
-		ballotExpected := cctx.GetCurrentOutTxParam().OutboundTxBallotIndex
+		ballotExpected := cctx.GetCurrentOutboundParam().BallotIndex
 		require.Equal(t, ballotExpected, msg.Digest())
 	})
 }

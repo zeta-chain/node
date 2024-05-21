@@ -7,6 +7,64 @@
 
 /usr/sbin/sshd
 
+# This function add authz observer authorizations for inbound/outbound votes and tracker messages
+# These messages have been renamed for v17: https://github.com/zeta-chain/node/blob/refactor/rename-outbound-inbound/docs/releases/v17_breaking_changes.md#inbound-and-outtx-renaming
+# There if the genesis is generated with a v16 binary for the upgrade tests, it will not contains authorizations for new messages
+# This function will add the missing authorizations to the genesis file
+# TODO: Remove this function when v17 is released
+# https://github.com/zeta-chain/node/issues/2196
+add_v17_message_authorizations() {
+    # Path to the JSON file
+    json_file="/root/.zetacored/config/genesis.json"
+
+    # Using jq to parse JSON, create new entries, and append them to the authorization array
+    jq '
+        # Store the nodeAccountList array
+        .app_state.observer.nodeAccountList as $list |
+
+        # Iterate over the stored list to construct new objects and append to the authorization array
+        .app_state.authz.authorization += [
+            $list[] |
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgVoteInbound"
+                },
+                "expiration": null
+            },
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgVoteOutbound"
+                },
+                "expiration": null
+            },
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgAddOutboundTracker"
+                },
+                "expiration": null
+            },
+            {
+                "granter": .operator,
+                "grantee": .granteeAddress,
+                "authorization": {
+                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                    "msg": "/zetachain.zetacore.crosschain.MsgAddInboundTracker"
+                },
+                "expiration": null
+            }
+        ]
+    ' $json_file > temp.json && mv temp.json $json_file
+}
+
 if [ $# -lt 1 ]
 then
   echo "Usage: genesis.sh <num of nodes> [option]"
@@ -128,6 +186,16 @@ then
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 55
+
+  # Check for the existence of "AddToOutTxTracker" string in the genesis file
+  # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
+  # In this case, we need to add authorizations for the new v17 messages to the genesis file
+  # TODO: Remove this function when v17 is released
+  # https://github.com/zeta-chain/node/issues/2196
+  if jq -e 'tostring | contains("AddToOutTxTracker")' "/root/.zetacored/config/genesis.json" > /dev/null; then
+    add_v17_message_authorizations
+  fi
+
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json

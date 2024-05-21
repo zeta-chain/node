@@ -65,11 +65,11 @@ func TestMessagePassingRevertSuccessExternalChains(r *runner.E2ERunner, args []s
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
-	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	outTxHash := cctx.GetCurrentOutboundParam().Hash
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outTxHash))
 	if err != nil {
 		panic(err)
