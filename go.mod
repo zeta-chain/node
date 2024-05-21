@@ -59,11 +59,12 @@ require (
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
 	github.com/btcsuite/btcd/btcutil v1.1.3
+	github.com/cockroachdb/errors v1.10.0
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.8.0
+	github.com/huandu/skiplist v1.2.0
 	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/onrik/ethrpc v1.2.0
-	github.com/tendermint/tendermint v0.34.12
 	go.nhat.io/grpcmock v0.25.0
 )
 
@@ -77,7 +78,6 @@ require (
 	github.com/agl/ed25519 v0.0.0-20200225211852-fd4d107ace12 // indirect
 	github.com/bool64/shared v0.1.5 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/cockroachdb/errors v1.10.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
@@ -98,7 +98,6 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
-	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/ipfs/boxo v0.10.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
@@ -216,7 +215,7 @@ require (
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-getter v1.7.4 // indirect
+	github.com/hashicorp/go-getter v1.7.4
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
@@ -321,7 +320,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.17.0
-	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
+	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.19.0
 	golang.org/x/oauth2 v0.15.0 // indirect
@@ -354,4 +353,4 @@ replace (
 
 replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db v0.0.0-20230321185329-6dc7c0ca6345
 
-replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240429123701-35f3f79bf83f
+replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240521172746-9b5396dad803
