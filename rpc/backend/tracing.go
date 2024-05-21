@@ -23,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
@@ -32,7 +33,7 @@ import (
 // and returns them as a JSON object.
 func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
-	transaction, _, err := b.GetTxByEthHash(hash)
+	transaction, additional, err := b.GetTxByEthHash(hash)
 	if err != nil {
 		b.logger.Debug("tx not found", "hash", hash)
 		return nil, err
@@ -48,6 +49,38 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		b.logger.Debug("block not found", "height", transaction.Height)
 		return nil, err
 	}
+
+	blockResult, err := b.TendermintBlockResultByNumber(&blk.Block.Height)
+	if err != nil {
+		return nil, fmt.Errorf("block result not found for height %d", blk.Block.Height)
+	}
+
+	// pull out txBytes from event and convert to MsgEthereumTx
+	ethTx88 := evmtypes.MsgEthereumTx{}
+	txRes := blockResult.TxsResults[transaction.TxIndex]
+	for _, ev := range txRes.Events {
+		for _, attr := range ev.Attributes {
+			if string(attr.Key) == "TxBytes" {
+				hexBytes, err := hexutil.Decode(string(attr.Value))
+				if err != nil {
+					return nil, err
+				}
+				t := ethtypes.Transaction{}
+				if err := t.UnmarshalBinary(hexBytes); err != nil {
+					return nil, err
+				}
+
+				if err := ethTx88.FromEthereumTx(&t); err != nil {
+					return nil, err
+				}
+			}
+
+			if string(attr.Key) == "sender" {
+				ethTx88.From = string(attr.Value)
+			}
+		}
+	}
+	ethTx88.Hash = hash.Hex()
 
 	// check tx index is not out of bound
 	// #nosec G701 txs number in block is always less than MaxUint32
@@ -91,10 +124,20 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 
 	ethMessage, ok := tx.GetMsgs()[transaction.MsgIndex].(*evmtypes.MsgEthereumTx)
 	if !ok {
-		b.logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
-		return nil, fmt.Errorf("invalid transaction type %T", tx)
+		if additional == nil {
+			b.logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
+			return nil, fmt.Errorf("invalid transaction type %T", tx)
+		}
+		fmt.Println("predecessors ", len(predecessors), hash.Hex())
+		fmt.Println("sender ", len(predecessors), additional.Sender)
+
+		ethMessage = &evmtypes.MsgEthereumTx{
+			Hash: hash.Hex(),
+			From: additional.Sender.Hex(),
+		}
 	}
 
+	fmt.Println("checkpoint 1")
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
 		Msg:             ethMessage,
 		Predecessors:    predecessors,
@@ -104,10 +147,24 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		ProposerAddress: sdk.ConsAddress(blk.Block.ProposerAddress),
 		ChainId:         b.chainID.Int64(),
 	}
+	fmt.Println("checkpoint 2")
+	if additional != nil {
+		traceTxRequest = evmtypes.QueryTraceTxRequest{
+			Msg:             &ethTx88,
+			Predecessors:    []*evmtypes.MsgEthereumTx{},
+			BlockNumber:     blk.Block.Height,
+			BlockTime:       blk.Block.Time,
+			BlockHash:       common.Bytes2Hex(blk.BlockID.Hash),
+			ProposerAddress: sdk.ConsAddress(blk.Block.ProposerAddress),
+			ChainId:         b.chainID.Int64(),
+		}
+	}
 
 	if config != nil {
 		traceTxRequest.TraceConfig = config
 	}
+
+	fmt.Println("checkpoint 3")
 
 	// minus one to get the context of block beginning
 	contextHeight := transaction.Height - 1
@@ -120,6 +177,8 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, err
 	}
 
+	fmt.Println("checkpoint 4")
+
 	// Response format is unknown due to custom tracer config param
 	// More information can be found here https://geth.ethereum.org/docs/dapp/tracing-filtered
 	var decodedResult interface{}
@@ -127,6 +186,8 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("checkpoint 5")
 
 	return decodedResult, nil
 }
