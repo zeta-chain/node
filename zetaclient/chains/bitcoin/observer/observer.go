@@ -662,21 +662,22 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 	return nil
 }
 
-// LoadLastBlock loads last scanned block from DB
-func (ob *Observer) LoadLastBlock() error {
+// LoadLastScannedBlock loads last scanned block from database
+// The last scanned block is the height from which the observer should continue scanning for inbound transactions
+func (ob *Observer) LoadLastScannedBlock() error {
 	// Get the latest block number from node
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
 	}
 	if bn < 0 {
-		return fmt.Errorf("LoadLastBlock: negative block number %d", bn)
+		return fmt.Errorf("LoadLastScannedBlock: negative block number %d", bn)
 	}
 
 	//Load persisted block number
 	var lastBlockNum clienttypes.LastBlockSQLType
 	if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
-		ob.logger.Chain.Info().Msg("LastBlockNum not found in DB, scan from latest")
+		ob.logger.Chain.Info().Msg("LoadLastScannedBlock: last scanned block not found in DB, scan from latest")
 		ob.SetLastBlockHeightScanned(bn)
 	} else {
 		// #nosec G701 always in range
@@ -688,7 +689,7 @@ func (ob *Observer) LoadLastBlock() error {
 	if chains.IsBitcoinRegnet(ob.chain.ChainId) {
 		ob.SetLastBlockHeightScanned(100)
 	}
-	ob.logger.Chain.Info().Msgf("chain %d: start scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
 
 	return nil
 }
@@ -786,8 +787,8 @@ func (ob *Observer) loadDB(dbpath string) error {
 		return err
 	}
 
-	//Load last block
-	err = ob.LoadLastBlock()
+	// Load last scanned block
+	err = ob.LoadLastScannedBlock()
 	if err != nil {
 		return err
 	}
