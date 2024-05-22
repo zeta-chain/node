@@ -688,7 +688,6 @@ func (k Keeper) CallEVMWithData(
 	if gasLimit != nil {
 		gasCap = gasLimit.Uint64()
 	}
-
 	msg := ethtypes.NewMessage(
 		from,
 		contract,
@@ -757,20 +756,12 @@ func (k Keeper) CallEVMWithData(
 
 		if !noEthereumTxEvent {
 			fmt.Println("88 tx", ethTxHash.Hex())
-			txBytes, err := ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-				ChainID:   k.evmKeeper.ChainID(),
-				Nonce:     nonce,
-				GasTipCap: msg.GasTipCap(),
-				GasFeeCap: msg.GasFeeCap(),
-				Gas:       msg.Gas(),
-				To:        msg.To(),
-				Value:     msg.Value(),
-				Data:      msg.Data(),
-			}).MarshalBinary()
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert tx msg, err=%w", err)
 			}
-			attrs = append(attrs, sdk.NewAttribute("TxBytes", hexutil.Encode(txBytes)))
+			attrs = append(attrs, sdk.NewAttribute("TxData", hexutil.Encode(msg.Data())))
+			attrs = append(attrs, sdk.NewAttribute("TxNonce", fmt.Sprint(nonce)))
+
 			attrs = append(attrs, sdk.NewAttribute("TxHash", ethTxHash.Hex()))
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(

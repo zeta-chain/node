@@ -18,8 +18,8 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 
-	"github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -34,7 +34,7 @@ import (
 // and returns them as a JSON object.
 func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
-	transaction, additional, err := b.GetTxByEthHash(hash)
+	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
 		b.logger.Debug("tx not found", "hash", hash)
 		return nil, err
@@ -70,16 +70,18 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 			b.logger.Debug("failed to decode transaction in block", "height", blk.Block.Height, "error", err.Error())
 			continue
 		}
-		for _, msg := range tx.GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-			if !ok {
-				ethTx, err := tryGetEthereumTxFromTxRes(blockResult.TxsResults[i])
-				if ethTx != nil && err == nil {
-					predecessors = append(predecessors, ethTx)
-				}
+
+		// get parsed eth txs from events from tx result
+		parsed, err := rpctypes.ParseTxResult(blockResult.TxsResults[i], tx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, parsedTx := range parsed.Txs {
+			ethMsg := getMsgEthereumTxFromParsedTx(parsedTx, tx)
+			if ethMsg == nil {
 				continue
 			}
-
 			predecessors = append(predecessors, ethMsg)
 		}
 	}
@@ -90,33 +92,30 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, err
 	}
 
-	// add predecessor messages in current cosmos tx
-	// #nosec G701 always in range
-	for i := 0; i < int(transaction.MsgIndex); i++ {
-		// TODO: same fallback for predecessors?
-		ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
-		if !ok {
+	// get parsed eth txs from events from tx result
+	parsed, err := rpctypes.ParseTxResult(blockResult.TxsResults[transaction.TxIndex], tx)
+	if err != nil {
+		return nil, err
+	}
+
+	// iterate parsed eth txs, if its type 88, recreate it and get MsgEthereumTx, otherwise pull it from sdk.Msgs
+	// when requested tx is found, break, no more predecessors
+	var ethMsg *evmtypes.MsgEthereumTx
+	for _, parsedTx := range parsed.Txs {
+		ethMsg = getMsgEthereumTxFromParsedTx(parsedTx, tx)
+		if parsedTx.Hash.Hex() == hash.Hex() {
+			if ethMsg == nil {
+				return nil, errors.New("error while parsing tx")
+			}
+			break
+		}
+		if ethMsg == nil {
 			continue
 		}
 		predecessors = append(predecessors, ethMsg)
 	}
-
-	ethMessage, ok := tx.GetMsgs()[transaction.MsgIndex].(*evmtypes.MsgEthereumTx)
-	if !ok {
-		if additional == nil {
-			b.logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
-			return nil, fmt.Errorf("invalid transaction type %T", tx)
-		}
-
-		ethMessage, err = tryGetEthereumTxFromTxRes(blockResult.TxsResults[transaction.TxIndex])
-		if err != nil {
-			b.logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
-			return nil, fmt.Errorf("invalid transaction type %T", tx)
-		}
-	}
-
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
-		Msg:             ethMessage,
+		Msg:             ethMsg,
 		Predecessors:    predecessors,
 		BlockNumber:     blk.Block.Height,
 		BlockTime:       blk.Block.Time,
@@ -151,44 +150,34 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	return decodedResult, nil
 }
 
-func tryGetEthereumTxFromTxRes(txRes *types.ResponseDeliverTx) (*evmtypes.MsgEthereumTx, error) {
-	ethTx := &evmtypes.MsgEthereumTx{}
-	txFound := false
-	for _, ev := range txRes.Events {
-		if ev.Type != evmtypes.EventTypeEthereumTx {
-			continue
+func getMsgEthereumTxFromParsedTx(parsedTx rpctypes.ParsedTx, tx sdk.Tx) *evmtypes.MsgEthereumTx {
+	if parsedTx.Type == 88 {
+		recipient := parsedTx.Recipient
+		// TODO: is this ok?
+		t := ethtypes.NewTx(&ethtypes.LegacyTx{
+			Nonce:    parsedTx.Nonce,
+			Data:     parsedTx.Data,
+			Gas:      parsedTx.GasUsed,
+			To:       &recipient,
+			GasPrice: nil,
+			Value:    parsedTx.Amount,
+			V:        big.NewInt(0),
+			R:        big.NewInt(0),
+			S:        big.NewInt(0),
+		})
+		ethMsg := &evmtypes.MsgEthereumTx{}
+		err := ethMsg.FromEthereumTx(t)
+		if err != nil {
+			return nil
 		}
-		for _, attr := range ev.Attributes {
-			if string(attr.Key) == "TxBytes" {
-				txFound = true
-				hexBytes, err := hexutil.Decode(string(attr.Value))
-				if err != nil {
-					return nil, err
-				}
-				t := ethtypes.Transaction{}
-				if err := t.UnmarshalBinary(hexBytes); err != nil {
-					return nil, err
-				}
-
-				if err := ethTx.FromEthereumTx(&t); err != nil {
-					return nil, err
-				}
-			}
-
-			if attr.Key == "sender" {
-				ethTx.From = attr.Value
-			}
-
-			if attr.Key == "TxHash" {
-				ethTx.Hash = attr.Value
-			}
+		return ethMsg
+	} else {
+		ethMsg, ok := tx.GetMsgs()[parsedTx.MsgIndex].(*evmtypes.MsgEthereumTx)
+		if !ok {
+			return nil
 		}
+		return ethMsg
 	}
-
-	if !txFound {
-		return nil, nil
-	}
-	return ethTx, nil
 }
 
 // TraceBlock configures a new tracer according to the provided configuration, and

@@ -17,6 +17,7 @@ package types
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 
@@ -24,6 +25,7 @@ import (
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
@@ -68,6 +70,7 @@ const (
 
 // ParsedTx is the tx infos parsed from events.
 type ParsedTx struct {
+	// max uint32 means there is no sdk.Msg corresponding to eth tx
 	MsgIndex int
 
 	// the following fields are parsed from events
@@ -83,6 +86,8 @@ type ParsedTx struct {
 	Amount    *big.Int
 	Recipient common.Address
 	Sender    common.Address
+	Nonce     uint64
+	Data      []byte
 }
 
 // NewParsedTx initialize a ParsedTx
@@ -174,6 +179,18 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 			// replace gasUsed with gasLimit because that's what's actually deducted.
 			gasLimit := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx).GetGas()
 			p.Txs[i].GasUsed = gasLimit
+		}
+	}
+
+	// fix msg indexes, because some eth txs indexed here don't have corresponding sdk.Msg
+	currMsgIndex := -1
+	for _, tx := range p.Txs {
+		if tx.Type == 88 {
+			tx.MsgIndex = math.MaxUint32
+			// todo: fix mapping as well
+		} else {
+			currMsgIndex++
+			tx.MsgIndex = currMsgIndex
 		}
 	}
 	return p, nil
@@ -371,6 +388,19 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 		if !success {
 			return nil
 		}
+	case "TxNonce":
+		nonce, err := strconv.ParseUint(string(value), 10, 64)
+		if err != nil {
+			return err
+		}
+		tx.Nonce = nonce
+
+	case "TxData":
+		hexBytes, err := hexutil.Decode(string(value))
+		if err != nil {
+			return err
+		}
+		tx.Data = hexBytes
 	}
 	return nil
 }
