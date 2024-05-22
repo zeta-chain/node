@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -211,7 +212,12 @@ func (c *Client) PostBlameData(blame *blame.Blame, chainID int64, index string) 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
-func (c *Client) PostVoteBlockHeader(chainID int64, blockHash []byte, height int64, header proofs.HeaderData) (string, error) {
+func (c *Client) PostVoteBlockHeader(
+	chainID int64,
+	blockHash []byte,
+	height int64,
+	header proofs.HeaderData,
+) (string, error) {
 	signerAddress := c.keys.GetOperatorAddress().String()
 
 	msg := observertypes.NewMsgVoteBlockHeader(signerAddress, chainID, blockHash, height, header)
@@ -246,7 +252,12 @@ func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgV
 	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ballotIndex, msg.Creator)
 	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostVoteInbound: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+		return "", ballotIndex, errors.Wrapf(
+			err,
+			"PostVoteInbound: unable to check if already voted for ballot %s voter %s",
+			ballotIndex,
+			msg.Creator,
+		)
 	}
 	if hasVoted {
 		return "", ballotIndex, nil
@@ -361,7 +372,10 @@ func (c *Client) PostVoteOutbound(
 }
 
 // PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOutbound
-func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOutbound) (string, string, error) {
+func (c *Client) PostVoteOutboundFromMsg(
+	gasLimit, retryGasLimit uint64,
+	msg *types.MsgVoteOutbound,
+) (string, string, error) {
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -371,7 +385,12 @@ func (c *Client) PostVoteOutboundFromMsg(gasLimit, retryGasLimit uint64, msg *ty
 	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ballotIndex, msg.Creator)
 	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostVoteOutbound: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+		return "", ballotIndex, errors.Wrapf(
+			err,
+			"PostVoteOutbound: unable to check if already voted for ballot %s voter %s",
+			ballotIndex,
+			msg.Creator,
+		)
 	}
 	if hasVoted {
 		return "", ballotIndex, nil

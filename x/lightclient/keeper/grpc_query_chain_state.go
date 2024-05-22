@@ -7,13 +7,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
 // ChainStateAll queries all chain statess
-func (k Keeper) ChainStateAll(c context.Context, req *types.QueryAllChainStateRequest) (*types.QueryAllChainStateResponse, error) {
+func (k Keeper) ChainStateAll(
+	c context.Context,
+	req *types.QueryAllChainStateRequest,
+) (*types.QueryAllChainStateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -38,7 +42,10 @@ func (k Keeper) ChainStateAll(c context.Context, req *types.QueryAllChainStateRe
 }
 
 // ChainState queries chain state by chain
-func (k Keeper) ChainState(c context.Context, req *types.QueryGetChainStateRequest) (*types.QueryGetChainStateResponse, error) {
+func (k Keeper) ChainState(
+	c context.Context,
+	req *types.QueryGetChainStateRequest,
+) (*types.QueryGetChainStateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

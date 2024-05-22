@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -68,7 +69,11 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		})
 
 		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.ZetaPrivnetChain.ChainId, sample.Hash().String(), 1)
-		require.ErrorContains(t, err, fmt.Sprintf("proof verification is disabled for chain %d", chains.ZetaPrivnetChain.ChainId))
+		require.ErrorContains(
+			t,
+			err,
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.ZetaPrivnetChain.ChainId),
+		)
 	})
 
 	t.Run("should error if blockhash invalid", func(t *testing.T) {

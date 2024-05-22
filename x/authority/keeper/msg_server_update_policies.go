@@ -6,11 +6,15 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 // UpdatePolicies updates policies
-func (k msgServer) UpdatePolicies(goCtx context.Context, msg *types.MsgUpdatePolicies) (*types.MsgUpdatePoliciesResponse, error) {
+func (k msgServer) UpdatePolicies(
+	goCtx context.Context,
+	msg *types.MsgUpdatePolicies,
+) (*types.MsgUpdatePoliciesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check called by governance

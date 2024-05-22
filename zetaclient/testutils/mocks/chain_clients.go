@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"github.com/rs/zerolog"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"

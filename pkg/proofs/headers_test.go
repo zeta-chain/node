@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/testdata"
 )
 

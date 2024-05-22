@@ -43,7 +43,8 @@ func (p *Processor) EndTryProcess(outboundID string) {
 	p.outboundEndTime[outboundID] = time.Now()
 	delete(p.outboundActive, outboundID)
 	p.numActiveProcessor--
-	p.Logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outboundID, p.numActiveProcessor, time.Since(p.outboundStartTime[outboundID]))
+	p.Logger.Info().
+		Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outboundID, p.numActiveProcessor, time.Since(p.outboundStartTime[outboundID]))
 }
 
 func (p *Processor) IsOutboundActive(outboundID string) bool {

@@ -32,6 +32,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/pkg/errors"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
@@ -297,7 +298,9 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 	//          = BaseFee * (ElasticityMultiplier - 1) / Denominator
 	// ```
 	// #nosec G701 range checked
-	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(params.Params.BaseFeeChangeDenominator)
+	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(
+		params.Params.BaseFeeChangeDenominator,
+	)
 	if maxDelta < 0 {
 		// impossible if the parameter validation passed.
 		maxDelta = 0

@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
@@ -79,7 +80,13 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	if bar.Cmp(value) != 0 {
-		panic(fmt.Sprintf("cross-chain call failed bar value %s should be equal to amount %s", bar.String(), value.String()))
+		panic(
+			fmt.Sprintf(
+				"cross-chain call failed bar value %s should be equal to amount %s",
+				bar.String(),
+				value.String(),
+			),
+		)
 	}
 	r.Logger.Info("Cross-chain call succeeded")
 
@@ -127,6 +134,8 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check the status message contains revert error hash in case of revert
 	// 0xbfb4ebcf is the hash of "Foo()"
 	if !strings.Contains(cctx.CctxStatus.StatusMessage, "0xbfb4ebcf") {
-		panic(fmt.Sprintf("expected cctx status message to contain revert reason; got %s", cctx.CctxStatus.StatusMessage))
+		panic(
+			fmt.Sprintf("expected cctx status message to contain revert reason; got %s", cctx.CctxStatus.StatusMessage),
+		)
 	}
 }

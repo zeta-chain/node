@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/lightclient/client/cli"
 	"github.com/zeta-chain/zetacore/x/lightclient/keeper"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"

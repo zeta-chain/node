@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -29,7 +29,10 @@ import (
 var TestDataDir = "../../../"
 
 // getAppContext creates an app context for unit tests
-func getAppContext(evmChain chains.Chain, evmChainParams *observertypes.ChainParams) (*context.AppContext, config.EVMConfig) {
+func getAppContext(
+	evmChain chains.Chain,
+	evmChainParams *observertypes.ChainParams,
+) (*context.AppContext, config.EVMConfig) {
 	// create config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{

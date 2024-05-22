@@ -5,11 +5,12 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // TSS returns the tss address for the current tss only
@@ -37,7 +38,10 @@ func (k Keeper) TssHistory(c context.Context, _ *types.QueryTssHistoryRequest) (
 	return &types.QueryTssHistoryResponse{TssList: tssList}, nil
 }
 
-func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddressRequest) (*types.QueryGetTssAddressResponse, error) {
+func (k Keeper) GetTssAddress(
+	goCtx context.Context,
+	req *types.QueryGetTssAddressRequest,
+) (*types.QueryGetTssAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -68,7 +72,10 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	}, nil
 }
 
-func (k Keeper) GetTssAddressByFinalizedHeight(goCtx context.Context, req *types.QueryGetTssAddressByFinalizedHeightRequest) (*types.QueryGetTssAddressByFinalizedHeightResponse, error) {
+func (k Keeper) GetTssAddressByFinalizedHeight(
+	goCtx context.Context,
+	req *types.QueryGetTssAddressByFinalizedHeightRequest,
+) (*types.QueryGetTssAddressByFinalizedHeightResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

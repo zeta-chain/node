@@ -6,12 +6,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func (k Keeper) ForeignCoinsAll(c context.Context, req *types.QueryAllForeignCoinsRequest) (*types.QueryAllForeignCoinsResponse, error) {
+func (k Keeper) ForeignCoinsAll(
+	c context.Context,
+	req *types.QueryAllForeignCoinsRequest,
+) (*types.QueryAllForeignCoinsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -39,7 +43,10 @@ func (k Keeper) ForeignCoinsAll(c context.Context, req *types.QueryAllForeignCoi
 	return &types.QueryAllForeignCoinsResponse{ForeignCoins: foreignCoinss, Pagination: pageRes}, nil
 }
 
-func (k Keeper) ForeignCoins(c context.Context, req *types.QueryGetForeignCoinsRequest) (*types.QueryGetForeignCoinsResponse, error) {
+func (k Keeper) ForeignCoins(
+	c context.Context,
+	req *types.QueryGetForeignCoinsRequest,
+) (*types.QueryGetForeignCoinsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

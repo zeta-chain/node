@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
-
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 func TestKeeper_SetPolicies(t *testing.T) {

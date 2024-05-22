@@ -13,6 +13,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 )
@@ -211,7 +212,12 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 }
 
 // CalcDepositorFee calculates the depositor fee for a given block
-func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, netParams *chaincfg.Params, logger zerolog.Logger) float64 {
+func CalcDepositorFee(
+	blockVb *btcjson.GetBlockVerboseTxResult,
+	chainID int64,
+	netParams *chaincfg.Params,
+	logger zerolog.Logger,
+) float64 {
 	// use default fee for regnet
 	if chains.IsBitcoinRegnet(chainID) {
 		return DefaultDepositorFee

@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -57,7 +58,19 @@ func (m *MockZetacoreClient) PostVoteInbound(_, _ uint64, _ *crosschaintypes.Msg
 	return "", "", nil
 }
 
-func (m *MockZetacoreClient) PostVoteOutbound(_ string, _ string, _ uint64, _ uint64, _ *big.Int, _ uint64, _ *big.Int, _ chains.ReceiveStatus, _ chains.Chain, _ uint64, _ coin.CoinType) (string, string, error) {
+func (m *MockZetacoreClient) PostVoteOutbound(
+	_ string,
+	_ string,
+	_ uint64,
+	_ uint64,
+	_ *big.Int,
+	_ uint64,
+	_ *big.Int,
+	_ chains.ReceiveStatus,
+	_ chains.Chain,
+	_ uint64,
+	_ coin.CoinType,
+) (string, string, error) {
 	if m.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
@@ -92,7 +105,14 @@ func (m *MockZetacoreClient) PostBlameData(_ *blame.Blame, _ int64, _ string) (s
 	return "", nil
 }
 
-func (m *MockZetacoreClient) AddOutboundTracker(_ int64, _ uint64, _ string, _ *proofs.Proof, _ string, _ int64) (string, error) {
+func (m *MockZetacoreClient) AddOutboundTracker(
+	_ int64,
+	_ uint64,
+	_ string,
+	_ *proofs.Proof,
+	_ string,
+	_ int64,
+) (string, error) {
 	if m.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
@@ -177,7 +197,10 @@ func (m *MockZetacoreClient) GetOutboundTracker(_ chains.Chain, _ uint64) (*cros
 	return &crosschaintypes.OutboundTracker{}, nil
 }
 
-func (m *MockZetacoreClient) GetAllOutboundTrackerByChain(_ int64, _ chaininterfaces.Order) ([]crosschaintypes.OutboundTracker, error) {
+func (m *MockZetacoreClient) GetAllOutboundTrackerByChain(
+	_ int64,
+	_ chaininterfaces.Order,
+) ([]crosschaintypes.OutboundTracker, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
@@ -256,7 +279,9 @@ func (m *MockZetacoreClient) WithRateLimiterFlags(flags *crosschaintypes.RateLim
 	return m
 }
 
-func (m *MockZetacoreClient) WithRateLimiterInput(input *crosschaintypes.QueryRateLimiterInputResponse) *MockZetacoreClient {
+func (m *MockZetacoreClient) WithRateLimiterInput(
+	input *crosschaintypes.QueryRateLimiterInputResponse,
+) *MockZetacoreClient {
 	m.input = input
 	return m
 }

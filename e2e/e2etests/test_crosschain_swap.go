@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -79,7 +80,11 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
 	msg := []byte{}
 	msg = append(msg, r.ZEVMSwapAppAddr.Bytes()...)
-	memobytes, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.BTCZRC20Addr, []byte(r.BTCDeployerAddress.EncodeAddress()))
+	memobytes, err := r.ZEVMSwapApp.EncodeMemo(
+		&bind.CallOpts{},
+		r.BTCZRC20Addr,
+		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+	)
 
 	if err != nil {
 		panic(err)
@@ -94,7 +99,13 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	// check the cctx status
 	if cctx1.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf("expected outbound mined status; got %s, message: %s", cctx1.CctxStatus.Status.String(), cctx1.CctxStatus.StatusMessage))
+		panic(
+			fmt.Sprintf(
+				"expected outbound mined status; got %s, message: %s",
+				cctx1.CctxStatus.Status.String(),
+				cctx1.CctxStatus.StatusMessage,
+			),
+		)
 	}
 
 	// mine 10 blocks to confirm the outbound tx

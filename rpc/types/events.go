@@ -110,7 +110,8 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	}
 	prevEventType := ""
 	for _, event := range result.Events {
-		if event.Type != evmtypes.EventTypeEthereumTx && (prevEventType != evmtypes.EventTypeEthereumTx || event.Type != MessageType) {
+		if event.Type != evmtypes.EventTypeEthereumTx &&
+			(prevEventType != evmtypes.EventTypeEthereumTx || event.Type != MessageType) {
 			continue
 		}
 
@@ -180,15 +181,28 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
-func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(*ParsedTxs) *ParsedTx) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
+func ParseTxIndexerResult(
+	txResult *tmrpctypes.ResultTx,
+	tx sdk.Tx,
+	getter func(*ParsedTxs) *ParsedTx,
+) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(&txResult.TxResult, tx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", txResult.Height, txResult.Index, err)
+		return nil, nil, fmt.Errorf(
+			"failed to parse tx events: block %d, index %d, %v",
+			txResult.Height,
+			txResult.Index,
+			err,
+		)
 	}
 
 	parsedTx := getter(txs)
 	if parsedTx == nil {
-		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", txResult.Height, txResult.Index)
+		return nil, nil, fmt.Errorf(
+			"ethereum tx not found in msgs: block %d, index %d",
+			txResult.Height,
+			txResult.Index,
+		)
 	}
 	if parsedTx.Type == 88 {
 		return &ethermint.TxResult{
@@ -222,7 +236,12 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
-func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int, height int64) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
+func ParseTxBlockResult(
+	txResult *abci.ResponseDeliverTx,
+	tx sdk.Tx,
+	txIndex int,
+	height int64,
+) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(txResult, tx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", height, txIndex, err)

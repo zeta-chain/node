@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -101,13 +102,24 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 }
 
 // AddOutbound adds a new outbound tx to the CCTX.
-func (m *CrossChainTx) AddOutbound(ctx sdk.Context, msg MsgVoteOutbound, ballotStatus observertypes.BallotStatus) error {
+func (m *CrossChainTx) AddOutbound(
+	ctx sdk.Context,
+	msg MsgVoteOutbound,
+	ballotStatus observertypes.BallotStatus,
+) error {
 	if ballotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ValueReceived.Equal(m.GetCurrentOutboundParam().Amount) {
 			ctx.Logger().Error(fmt.Sprintf("VoteOutbound: Mint mismatch: %s value received vs %s cctx amount",
 				msg.ValueReceived,
 				m.GetCurrentOutboundParam().Amount))
-			return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ValueReceived %s does not match sent value %s", msg.ValueReceived, m.GetCurrentOutboundParam().Amount))
+			return cosmoserrors.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				fmt.Sprintf(
+					"ValueReceived %s does not match sent value %s",
+					msg.ValueReceived,
+					m.GetCurrentOutboundParam().Amount,
+				),
+			)
 		}
 	}
 	// Update CCTX values

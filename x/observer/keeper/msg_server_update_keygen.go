@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -13,7 +13,10 @@ import (
 // "pending keygen".
 //
 // Authorized: admin policy group 1.
-func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeygen) (*types.MsgUpdateKeygenResponse, error) {
+func (k msgServer) UpdateKeygen(
+	goCtx context.Context,
+	msg *types.MsgUpdateKeygen,
+) (*types.MsgUpdateKeygenResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission

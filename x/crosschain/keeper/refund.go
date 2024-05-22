@@ -7,12 +7,17 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
+func (k Keeper) RefundAbortedAmountOnZetaChain(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	refundAddress ethcommon.Address,
+) error {
 	coinType := cctx.InboundParams.CoinType
 	switch coinType {
 	case coin.CoinType_Gas:
@@ -27,7 +32,11 @@ func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.Cross
 }
 
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
-func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
+func (k Keeper) RefundAmountOnZetaChainGas(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	refundAddress ethcommon.Address,
+) error {
 	// refund in gas token to refund address
 	// Refund the the amount was previously
 	refundAmount := GetAbortedAmount(cctx)
@@ -52,7 +61,11 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 }
 
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
-func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
+func (k Keeper) RefundAmountOnZetaChainZeta(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	refundAddress ethcommon.Address,
+) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
 	refundAmount := GetAbortedAmount(cctx)
 	chainID := cctx.InboundParams.SenderChainId
@@ -73,7 +86,11 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 // RefundAmountOnZetaChainERC20 refunds the amount of the cctx on ZetaChain in case of aborted cctx
 // NOTE: GetCurrentOutboundParam should contain the last up to date cctx amount
 // Refund address should already be validated before calling this function
-func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
+func (k Keeper) RefundAmountOnZetaChainERC20(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	refundAddress ethcommon.Address,
+) error {
 	refundAmount := GetAbortedAmount(cctx)
 	// preliminary checks
 	if cctx.InboundParams.CoinType != coin.CoinType_ERC20 {
@@ -88,7 +105,11 @@ func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossCh
 	}
 
 	// get address of the zrc20
-	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundParams.Asset, cctx.InboundParams.SenderChainId)
+	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(
+		ctx,
+		cctx.InboundParams.Asset,
+		cctx.InboundParams.SenderChainId,
+	)
 	if !found {
 		return fmt.Errorf("asset %s zrc not found", cctx.InboundParams.Asset)
 	}
