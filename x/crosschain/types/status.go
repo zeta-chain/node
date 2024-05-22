@@ -21,7 +21,12 @@ func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 		}
 	}
 	if !m.ValidateTransition(newStatus) {
-		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
+		m.StatusMessage = fmt.Sprintf(
+			"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+			m.Status.String(),
+			newStatus.String(),
+			msg,
+		)
 		m.Status = CctxStatus_Aborted
 		return
 	}

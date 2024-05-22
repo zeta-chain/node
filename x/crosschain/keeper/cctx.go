@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -21,7 +22,8 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx 
 		return
 	}
 	// set mapping nonce => cctxIndex
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
+		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{
 			ChainId: cctx.GetCurrentOutboundParam().ReceiverChainId,
 			// #nosec G701 always in range

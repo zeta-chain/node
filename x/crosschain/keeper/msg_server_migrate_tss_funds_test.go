@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/gas"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -74,7 +75,13 @@ func setupTssMigrationParams(
 		ChainId: chain.ChainId,
 		Nonce:   1,
 	})
-	indexString := keeper.GetIndexStringForTssMigration(currentTss.TssPubkey, newTss.TssPubkey, chain.ChainId, amount, ctx.BlockHeight())
+	indexString := keeper.GetIndexStringForTssMigration(
+		currentTss.TssPubkey,
+		newTss.TssPubkey,
+		chain.ChainId,
+		amount,
+		ctx.BlockHeight(),
+	)
 	return indexString, currentTss.TssPubkey
 }
 
@@ -308,7 +315,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		tss2.FinalizedZetaHeight = 3
 		observerMock.On("GetTSS", mock.Anything).Return(tss1, true)
 		observerMock.On("GetAllTSS", mock.Anything).Return([]observertypes.TSS{tss2})
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{}, false)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
+			Return(observertypes.PendingNonces{}, false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chain := getValidEthChain()
@@ -472,35 +480,38 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		require.True(t, found)
 	})
 
-	t.Run("unable to migrate funds if current TSS is not present in TSSHistory and no new TSS has been generated", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseAuthorityMock: true,
-		})
+	t.Run(
+		"unable to migrate funds if current TSS is not present in TSSHistory and no new TSS has been generated",
+		func(t *testing.T) {
+			k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+				UseAuthorityMock: true,
+			})
 
-		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+			admin := sample.AccAddress()
+			authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+			keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
-		msgServer := keeper.NewMsgServerImpl(*k)
-		chain := getValidEthChain()
-		amount := sdkmath.NewUintFromString("10000000000000000000")
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, false)
-		currentTss, found := k.GetObserverKeeper().GetTSS(ctx)
-		require.True(t, found)
-		newTss := sample.Tss()
-		newTss.FinalizedZetaHeight = currentTss.FinalizedZetaHeight - 10
-		newTss.KeyGenZetaHeight = currentTss.KeyGenZetaHeight - 10
-		k.GetObserverKeeper().SetTSSHistory(ctx, newTss)
-		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		})
-		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
-		require.ErrorContains(t, err, "current tss is the latest")
-		hash := crypto.Keccak256Hash([]byte(indexString))
-		index := hash.Hex()
-		_, found = k.GetCrossChainTx(ctx, index)
-		require.False(t, found)
-	})
+			msgServer := keeper.NewMsgServerImpl(*k)
+			chain := getValidEthChain()
+			amount := sdkmath.NewUintFromString("10000000000000000000")
+			indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, false)
+			currentTss, found := k.GetObserverKeeper().GetTSS(ctx)
+			require.True(t, found)
+			newTss := sample.Tss()
+			newTss.FinalizedZetaHeight = currentTss.FinalizedZetaHeight - 10
+			newTss.KeyGenZetaHeight = currentTss.KeyGenZetaHeight - 10
+			k.GetObserverKeeper().SetTSSHistory(ctx, newTss)
+			_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
+				Creator: admin,
+				ChainId: chain.ChainId,
+				Amount:  amount,
+			})
+			require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
+			require.ErrorContains(t, err, "current tss is the latest")
+			hash := crypto.Keccak256Hash([]byte(indexString))
+			index := hash.Hex()
+			_, found = k.GetCrossChainTx(ctx, index)
+			require.False(t, found)
+		},
+	)
 }

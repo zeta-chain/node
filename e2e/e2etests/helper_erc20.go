@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )

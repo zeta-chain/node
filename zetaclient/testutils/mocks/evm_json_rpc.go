@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/onrik/ethrpc"
+
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 

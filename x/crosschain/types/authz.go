@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 

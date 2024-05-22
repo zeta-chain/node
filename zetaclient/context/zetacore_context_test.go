@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -225,110 +226,113 @@ func TestUpdateZetacoreContext(t *testing.T) {
 		require.Equal(t, verificationFlags, verFlags)
 	})
 
-	t.Run("should update zetacore context after being created from config with evm and btc chain params", func(t *testing.T) {
-		testCfg := config.NewConfig()
-		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
-			1: {
-				Chain: chains.Chain{
+	t.Run(
+		"should update zetacore context after being created from config with evm and btc chain params",
+		func(t *testing.T) {
+			testCfg := config.NewConfig()
+			testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
+				1: {
+					Chain: chains.Chain{
+						ChainName: 1,
+						ChainId:   1,
+					},
+				},
+				2: {
+					Chain: chains.Chain{
+						ChainName: 2,
+						ChainId:   2,
+					},
+				},
+			}
+			testCfg.BitcoinConfig = config.BTCConfig{
+				RPCUsername: "test username",
+				RPCPassword: "test password",
+				RPCHost:     "test host",
+				RPCParams:   "test params",
+			}
+
+			zetaContext := context.NewZetacoreContext(testCfg)
+			require.NotNil(t, zetaContext)
+
+			keyGenToUpdate := observertypes.Keygen{
+				Status:         observertypes.KeygenStatus_KeyGenSuccess,
+				GranteePubkeys: []string{"testpubkey1"},
+			}
+			enabledChainsToUpdate := []chains.Chain{
+				{
 					ChainName: 1,
 					ChainId:   1,
 				},
-			},
-			2: {
-				Chain: chains.Chain{
+				{
 					ChainName: 2,
 					ChainId:   2,
 				},
-			},
-		}
-		testCfg.BitcoinConfig = config.BTCConfig{
-			RPCUsername: "test username",
-			RPCPassword: "test password",
-			RPCHost:     "test host",
-			RPCParams:   "test params",
-		}
+			}
+			evmChainParamsToUpdate := map[int64]*observertypes.ChainParams{
+				1: {
+					ChainId: 1,
+				},
+				2: {
+					ChainId: 2,
+				},
+			}
 
-		zetaContext := context.NewZetacoreContext(testCfg)
-		require.NotNil(t, zetaContext)
+			testBtcChain := chains.BtcTestNetChain
+			btcChainParamsToUpdate := &observertypes.ChainParams{
+				ChainId: testBtcChain.ChainId,
+			}
+			tssPubKeyToUpdate := "tsspubkeytest"
+			crosschainFlags := sample.CrosschainFlags()
+			verificationFlags := sample.HeaderSupportedChains()
+			require.NotNil(t, crosschainFlags)
+			loggers := clientcommon.DefaultLoggers()
+			zetaContext.Update(
+				&keyGenToUpdate,
+				enabledChainsToUpdate,
+				evmChainParamsToUpdate,
+				btcChainParamsToUpdate,
+				tssPubKeyToUpdate,
+				*crosschainFlags,
+				verificationFlags,
+				false,
+				loggers.Std,
+			)
 
-		keyGenToUpdate := observertypes.Keygen{
-			Status:         observertypes.KeygenStatus_KeyGenSuccess,
-			GranteePubkeys: []string{"testpubkey1"},
-		}
-		enabledChainsToUpdate := []chains.Chain{
-			{
-				ChainName: 1,
-				ChainId:   1,
-			},
-			{
-				ChainName: 2,
-				ChainId:   2,
-			},
-		}
-		evmChainParamsToUpdate := map[int64]*observertypes.ChainParams{
-			1: {
-				ChainId: 1,
-			},
-			2: {
-				ChainId: 2,
-			},
-		}
+			// assert keygen updated
+			keyGen := zetaContext.GetKeygen()
+			require.Equal(t, keyGenToUpdate, keyGen)
 
-		testBtcChain := chains.BtcTestNetChain
-		btcChainParamsToUpdate := &observertypes.ChainParams{
-			ChainId: testBtcChain.ChainId,
-		}
-		tssPubKeyToUpdate := "tsspubkeytest"
-		crosschainFlags := sample.CrosschainFlags()
-		verificationFlags := sample.HeaderSupportedChains()
-		require.NotNil(t, crosschainFlags)
-		loggers := clientcommon.DefaultLoggers()
-		zetaContext.Update(
-			&keyGenToUpdate,
-			enabledChainsToUpdate,
-			evmChainParamsToUpdate,
-			btcChainParamsToUpdate,
-			tssPubKeyToUpdate,
-			*crosschainFlags,
-			verificationFlags,
-			false,
-			loggers.Std,
-		)
+			// assert enabled chains updated
+			require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
 
-		// assert keygen updated
-		keyGen := zetaContext.GetKeygen()
-		require.Equal(t, keyGenToUpdate, keyGen)
+			// assert current tss pubkey updated
+			require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())
 
-		// assert enabled chains updated
-		require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
+			// assert btc chain params
+			chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
+			require.Equal(t, testBtcChain, chain)
+			require.True(t, btcChainParamsFound)
+			require.Equal(t, btcChainParamsToUpdate, btcChainParams)
 
-		// assert current tss pubkey updated
-		require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())
+			// assert evm chain params
+			allEVMChainParams := zetaContext.GetAllEVMChainParams()
+			require.Equal(t, evmChainParamsToUpdate, allEVMChainParams)
 
-		// assert btc chain params
-		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
-		require.Equal(t, testBtcChain, chain)
-		require.True(t, btcChainParamsFound)
-		require.Equal(t, btcChainParamsToUpdate, btcChainParams)
+			evmChainParams1, found := zetaContext.GetEVMChainParams(1)
+			require.True(t, found)
+			require.Equal(t, evmChainParamsToUpdate[1], evmChainParams1)
 
-		// assert evm chain params
-		allEVMChainParams := zetaContext.GetAllEVMChainParams()
-		require.Equal(t, evmChainParamsToUpdate, allEVMChainParams)
+			evmChainParams2, found := zetaContext.GetEVMChainParams(2)
+			require.True(t, found)
+			require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
 
-		evmChainParams1, found := zetaContext.GetEVMChainParams(1)
-		require.True(t, found)
-		require.Equal(t, evmChainParamsToUpdate[1], evmChainParams1)
+			ccFlags := zetaContext.GetCrossChainFlags()
+			require.Equal(t, ccFlags, *crosschainFlags)
 
-		evmChainParams2, found := zetaContext.GetEVMChainParams(2)
-		require.True(t, found)
-		require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
-
-		ccFlags := zetaContext.GetCrossChainFlags()
-		require.Equal(t, ccFlags, *crosschainFlags)
-
-		verFlags := zetaContext.GetAllHeaderEnabledChains()
-		require.Equal(t, verFlags, verificationFlags)
-	})
+			verFlags := zetaContext.GetAllHeaderEnabledChains()
+			require.Equal(t, verFlags, verificationFlags)
+		},
+	)
 }
 
 func TestIsOutboundObservationEnabled(t *testing.T) {

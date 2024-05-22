@@ -3,8 +3,6 @@ package app
 import (
 	"os"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"golang.org/x/exp/slices"
+
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
@@ -127,19 +127,22 @@ func SetupHandlers(app *App) {
 		upgradeHandlerFns, storeUpgrades = allUpgrades.mergeAllUpgrades()
 	}
 
-	app.UpgradeKeeper.SetUpgradeHandler(constant.Version, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Running upgrade handler for " + constant.Version)
+	app.UpgradeKeeper.SetUpgradeHandler(
+		constant.Version,
+		func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			app.Logger().Info("Running upgrade handler for " + constant.Version)
 
-		var err error
-		for _, upgradeHandler := range upgradeHandlerFns {
-			vm, err = upgradeHandler(ctx, vm)
-			if err != nil {
-				return vm, err
+			var err error
+			for _, upgradeHandler := range upgradeHandlerFns {
+				vm, err = upgradeHandler(ctx, vm)
+				if err != nil {
+					return vm, err
+				}
 			}
-		}
 
-		return app.mm.RunMigrations(ctx, app.configurator, vm)
-	})
+			return app.mm.RunMigrations(ctx, app.configurator, vm)
+		},
+	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {

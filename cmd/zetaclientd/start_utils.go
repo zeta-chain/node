@@ -9,8 +9,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc"
+
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 func waitForZetaCore(config config.Config, logger zerolog.Logger) {

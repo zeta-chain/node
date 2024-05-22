@@ -4,9 +4,10 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k Keeper) HasVoted(goCtx context.Context, req *types.QueryHasVotedRequest) (*types.QueryHasVotedResponse, error) {
@@ -27,7 +28,10 @@ func (k Keeper) HasVoted(goCtx context.Context, req *types.QueryHasVotedRequest)
 	}, nil
 }
 
-func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallotByIdentifierRequest) (*types.QueryBallotByIdentifierResponse, error) {
+func (k Keeper) BallotByIdentifier(
+	goCtx context.Context,
+	req *types.QueryBallotByIdentifierRequest,
+) (*types.QueryBallotByIdentifierResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

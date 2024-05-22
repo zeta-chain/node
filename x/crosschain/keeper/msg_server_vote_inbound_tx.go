@@ -6,6 +6,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -52,7 +53,10 @@ import (
 // ```
 //
 // Only observer validators are authorized to broadcast this message.
-func (k msgServer) VoteInbound(goCtx context.Context, msg *types.MsgVoteInbound) (*types.MsgVoteInboundResponse, error) {
+func (k msgServer) VoteInbound(
+	goCtx context.Context,
+	msg *types.MsgVoteInbound,
+) (*types.MsgVoteInboundResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	index := msg.Digest()
 
@@ -79,7 +83,12 @@ func (k msgServer) VoteInbound(goCtx context.Context, msg *types.MsgVoteInbound)
 		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, cosmoserrors.Wrap(
 				types.ErrObservedTxAlreadyFinalized,
-				fmt.Sprintf("inboundHash:%s, SenderChainID:%d, EventIndex:%d", msg.InboundHash, msg.SenderChainId, msg.EventIndex),
+				fmt.Sprintf(
+					"inboundHash:%s, SenderChainID:%d, EventIndex:%d",
+					msg.InboundHash,
+					msg.SenderChainId,
+					msg.EventIndex,
+				),
 			)
 		}
 	}

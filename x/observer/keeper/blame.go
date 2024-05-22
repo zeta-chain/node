@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -35,7 +36,10 @@ func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []types.Blame) {
 	return
 }
 
-func (k Keeper) GetAllBlamePaginated(ctx sdk.Context, pagination *query.PageRequest) (blameRecords []types.Blame, pageRes *query.PageResponse, err error) {
+func (k Keeper) GetAllBlamePaginated(
+	ctx sdk.Context,
+	pagination *query.PageRequest,
+) (blameRecords []types.Blame, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
 	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var blame types.Blame
@@ -48,7 +52,11 @@ func (k Keeper) GetAllBlamePaginated(ctx sdk.Context, pagination *query.PageRequ
 	return
 }
 
-func (k Keeper) GetBlamesByChainAndNonce(ctx sdk.Context, chainID int64, nonce int64) (BlameRecords []*types.Blame, found bool) {
+func (k Keeper) GetBlamesByChainAndNonce(
+	ctx sdk.Context,
+	chainID int64,
+	nonce int64,
+) (BlameRecords []*types.Blame, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
 	blamePrefix := types.GetBlamePrefix(chainID, nonce)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(blamePrefix))

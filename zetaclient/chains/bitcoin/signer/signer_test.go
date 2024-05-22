@@ -15,6 +15,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	. "gopkg.in/check.v1"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -22,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	. "gopkg.in/check.v1"
 )
 
 type BTCSignerSuite struct {
@@ -173,7 +174,16 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	c.Assert(err, IsNil)
 
 	{
-		txWitness, err := txscript.WitnessSignature(redeemTx, txSigHashes, 0, 100000000, pkScript, txscript.SigHashAll, privKey, true)
+		txWitness, err := txscript.WitnessSignature(
+			redeemTx,
+			txSigHashes,
+			0,
+			100000000,
+			pkScript,
+			txscript.SigHashAll,
+			privKey,
+			true,
+		)
 		c.Assert(err, IsNil)
 		redeemTx.TxIn[0].Witness = txWitness
 		// Prove that the transaction has been validly signed by executing the
@@ -190,7 +200,14 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	}
 
 	{
-		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, txSigHashes, txscript.SigHashAll, redeemTx, 0, 100000000)
+		witnessHash, err := txscript.CalcWitnessSigHash(
+			pkScript,
+			txSigHashes,
+			txscript.SigHashAll,
+			redeemTx,
+			0,
+			100000000,
+		)
 		c.Assert(err, IsNil)
 		sig, err := privKey.Sign(witnessHash)
 		c.Assert(err, IsNil)
@@ -213,7 +230,13 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer, err := NewSigner(config.BTCConfig{}, mocks.NewTSSMainnet(), clientcommon.DefaultLoggers(), &metrics.TelemetryServer{}, nil)
+	signer, err := NewSigner(
+		config.BTCConfig{},
+		mocks.NewTSSMainnet(),
+		clientcommon.DefaultLoggers(),
+		&metrics.TelemetryServer{},
+		nil,
+	)
 	require.NoError(t, err)
 
 	// tss address and script

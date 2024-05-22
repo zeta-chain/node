@@ -5,10 +5,11 @@ import (
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/zeta-chain/zetacore/x/observer/client/cli"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (s *CliTestSuite) TestShowNodeAccount() {

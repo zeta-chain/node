@@ -4,17 +4,22 @@ import (
 	"errors"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgResetChainNonces = "reset_chain_nonces"
 
 var _ sdk.Msg = &MsgResetChainNonces{}
 
-func NewMsgResetChainNonces(creator string, chainID int64, chainNonceLow int64, chainNonceHigh int64) *MsgResetChainNonces {
+func NewMsgResetChainNonces(
+	creator string,
+	chainID int64,
+	chainNonceLow int64,
+	chainNonceHigh int64,
+) *MsgResetChainNonces {
 	return &MsgResetChainNonces{
 		Creator:        creator,
 		ChainId:        chainID,

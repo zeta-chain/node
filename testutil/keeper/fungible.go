@@ -13,6 +13,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
@@ -67,7 +68,10 @@ func initFungibleKeeper(
 }
 
 // FungibleKeeperWithMocks initializes a fungible keeper for testing purposes with option to mock specific keepers
-func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
+func FungibleKeeperWithMocks(
+	t testing.TB,
+	mockOptions FungibleMockOptions,
+) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 

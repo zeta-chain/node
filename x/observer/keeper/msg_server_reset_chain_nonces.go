@@ -4,13 +4,17 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // ResetChainNonces handles resetting chain nonces
-func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetChainNonces) (*types.MsgResetChainNoncesResponse, error) {
+func (k msgServer) ResetChainNonces(
+	goCtx context.Context,
+	msg *types.MsgResetChainNonces,
+) (*types.MsgResetChainNoncesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
 		return &types.MsgResetChainNoncesResponse{}, authoritytypes.ErrUnauthorized

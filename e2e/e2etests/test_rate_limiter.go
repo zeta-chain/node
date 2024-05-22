@@ -8,10 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // WithdrawType is the type of withdraw to perform in the test
@@ -150,7 +151,13 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 // waitForWithdrawMined waits for a withdraw to be mined
 // we first wait to get the receipt
 // NOTE: this could be a more general function but we define it here for this test because we emit in the function logs specific to this test
-func waitForWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+func waitForWithdrawMined(
+	ctx context.Context,
+	r *runner.E2ERunner,
+	tx *ethtypes.Transaction,
+	index int,
+	startTime time.Time,
+) error {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")

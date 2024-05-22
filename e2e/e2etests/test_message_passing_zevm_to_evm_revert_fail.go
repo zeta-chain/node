@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -120,6 +121,8 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
-		panic(fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()))
+		panic(
+			fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()),
+		)
 	}
 }

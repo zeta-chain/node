@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
 	"github.com/zeta-chain/zetacore/docs/openapi"
 )
 

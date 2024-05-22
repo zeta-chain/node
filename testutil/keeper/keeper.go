@@ -47,6 +47,7 @@ import (
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -243,10 +244,21 @@ func StakingKeeper(
 }
 
 // SlashingKeeper instantiates a slashing keeper for testing purposes
-func SlashingKeeper(cdc codec.Codec, db *tmdb.MemDB, ss store.CommitMultiStore, stakingKeeper stakingkeeper.Keeper) slashingkeeper.Keeper {
+func SlashingKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	stakingKeeper stakingkeeper.Keeper,
+) slashingkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(slashingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	return slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), storeKey, stakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	return slashingkeeper.NewKeeper(
+		cdc,
+		codec.NewLegacyAmino(),
+		storeKey,
+		stakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 }
 
 // DistributionKeeper instantiates a distribution keeper for testing purposes
@@ -454,11 +466,31 @@ func NewSDKKeepers(
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
 	consensusKeeper := ConsensusKeeper(cdc, db, ss)
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper, consensusKeeper)
-	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper, consensusKeeper)
+	evmKeeper := EVMKeeper(
+		cdc,
+		db,
+		ss,
+		authKeeper,
+		bankKeeper,
+		stakingKeeper,
+		feeMarketKeeper,
+		paramsKeeper,
+		consensusKeeper,
+	)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 
 	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, stakingKeeper, UpgradeKeeper(cdc, db, ss), *capabilityKeeper)
-	transferKeeper := TransferKeeper(cdc, db, ss, paramsKeeper, ibcKeeper, authKeeper, bankKeeper, *capabilityKeeper, ibcRouter)
+	transferKeeper := TransferKeeper(
+		cdc,
+		db,
+		ss,
+		paramsKeeper,
+		ibcKeeper,
+		authKeeper,
+		bankKeeper,
+		*capabilityKeeper,
+		ibcRouter,
+	)
 
 	return SDKKeepers{
 		CapabilityKeeper: capabilityKeeper,

@@ -7,14 +7,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Chain nonces queries
 
-func (k Keeper) ChainNoncesAll(c context.Context, req *types.QueryAllChainNoncesRequest) (*types.QueryAllChainNoncesResponse, error) {
+func (k Keeper) ChainNoncesAll(
+	c context.Context,
+	req *types.QueryAllChainNoncesRequest,
+) (*types.QueryAllChainNoncesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -42,7 +46,10 @@ func (k Keeper) ChainNoncesAll(c context.Context, req *types.QueryAllChainNonces
 	return &types.QueryAllChainNoncesResponse{ChainNonces: chainNoncess, Pagination: pageRes}, nil
 }
 
-func (k Keeper) ChainNonces(c context.Context, req *types.QueryGetChainNoncesRequest) (*types.QueryGetChainNoncesResponse, error) {
+func (k Keeper) ChainNonces(
+	c context.Context,
+	req *types.QueryGetChainNoncesRequest,
+) (*types.QueryGetChainNoncesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -58,7 +65,10 @@ func (k Keeper) ChainNonces(c context.Context, req *types.QueryGetChainNoncesReq
 
 // Pending nonces queries
 
-func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNoncesRequest) (*types.QueryAllPendingNoncesResponse, error) {
+func (k Keeper) PendingNoncesAll(
+	c context.Context,
+	req *types.QueryAllPendingNoncesRequest,
+) (*types.QueryAllPendingNoncesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -74,7 +84,10 @@ func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNo
 	}, nil
 }
 
-func (k Keeper) PendingNoncesByChain(c context.Context, req *types.QueryPendingNoncesByChainRequest) (*types.QueryPendingNoncesByChainResponse, error) {
+func (k Keeper) PendingNoncesByChain(
+	c context.Context,
+	req *types.QueryPendingNoncesByChainRequest,
+) (*types.QueryPendingNoncesByChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

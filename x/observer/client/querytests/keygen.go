@@ -5,9 +5,10 @@ import (
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"google.golang.org/grpc/status"
+
 	"github.com/zeta-chain/zetacore/x/observer/client/cli"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc/status"
 )
 
 func (s *CliTestSuite) TestShowKeygen() {

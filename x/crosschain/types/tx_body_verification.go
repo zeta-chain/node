@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"

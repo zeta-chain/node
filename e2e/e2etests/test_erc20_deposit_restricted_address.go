@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )

@@ -12,6 +12,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
@@ -242,7 +243,9 @@ func TestOutboundSizeXIn3Out(t *testing.T) {
 
 		// Estimate the tx size
 		// #nosec G701 always positive
-		vError := uint64(0.25 + float64(x)/4) // 1st witness incurs 0.25 more vByte error than others (which incurs 1/4 vByte per witness)
+		vError := uint64(
+			0.25 + float64(x)/4,
+		) // 1st witness incurs 0.25 more vByte error than others (which incurs 1/4 vByte per witness)
 		vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 		vBytesEstimated, err := EstimateOutboundSize(uint64(len(exampleTxids[:x])), []btcutil.Address{payee})
 		require.NoError(t, err)

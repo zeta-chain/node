@@ -21,6 +21,10 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -32,9 +36,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 const (
@@ -317,16 +318,21 @@ func (ob *Observer) WatchRPCStatus() {
 			tssAddr := ob.Tss.BTCAddressWitnessPubkeyHash()
 			res, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddr})
 			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: can't list utxos of TSS address; wallet or loaded? TSS address is not imported? ")
+				ob.logger.Chain.Error().
+					Err(err).
+					Msg("RPC status check: can't list utxos of TSS address; wallet or loaded? TSS address is not imported? ")
 				continue
 			}
 
 			if len(res) == 0 {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
+				ob.logger.Chain.Error().
+					Err(err).
+					Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
 				continue
 			}
 
-			ob.logger.Chain.Info().Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
+			ob.logger.Chain.Info().
+				Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
 
 		case <-ob.stop:
 			return
@@ -603,13 +609,18 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 
 	broadcastEntry := clienttypes.ToOutboundHashSQLType(txHash, outboundID)
 	if err := ob.db.Save(&broadcastEntry).Error; err != nil {
-		ob.logger.Outbound.Error().Err(err).Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
+		ob.logger.Outbound.Error().
+			Err(err).
+			Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
 	}
 	ob.logger.Outbound.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outbound %s", txHash, outboundID)
 }
 
 // GetTxResultByHash gets the transaction result by hash
-func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
+func GetTxResultByHash(
+	rpcClient interfaces.BTCRPCClient,
+	txID string,
+) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
 	hash, err := chainhash.NewHashFromStr(txID)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error NewHashFromStr: %s", txID)
@@ -624,11 +635,19 @@ func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainha
 }
 
 // GetRawTxResult gets the raw tx result
-func GetRawTxResult(rpcClient interfaces.BTCRPCClient, hash *chainhash.Hash, res *btcjson.GetTransactionResult) (btcjson.TxRawResult, error) {
+func GetRawTxResult(
+	rpcClient interfaces.BTCRPCClient,
+	hash *chainhash.Hash,
+	res *btcjson.GetTransactionResult,
+) (btcjson.TxRawResult, error) {
 	if res.Confirmations == 0 { // for pending tx, we query the raw tx directly
 		rawResult, err := rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
 		if err != nil {
-			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetRawTransactionVerbose %s", res.TxID)
+			return btcjson.TxRawResult{}, errors.Wrapf(
+				err,
+				"getRawTxResult: error GetRawTransactionVerbose %s",
+				res.TxID,
+			)
 		}
 		return *rawResult, nil
 	} else if res.Confirmations > 0 { // for confirmed tx, we query the block

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
@@ -32,7 +33,14 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 	}
 
 	txhash := multipleDeposits(r, depositAmount, numberOfDeposits)
-	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, txhash.Hex(), r.CctxClient, int(numberOfDeposits.Int64()), r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInboundHash(
+		r.Ctx,
+		txhash.Hex(),
+		r.CctxClient,
+		int(numberOfDeposits.Int64()),
+		r.Logger,
+		r.CctxTimeout,
+	)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
