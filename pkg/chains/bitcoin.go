@@ -26,6 +26,20 @@ func BitcoinNetParamsFromChainID(chainID int64) (*chaincfg.Params, error) {
 	}
 }
 
+// BitcoinChainIDFromNetworkName returns the chain id for the given bitcoin network name
+func BitcoinChainIDFromNetworkName(name string) (int64, error) {
+	switch name {
+	case BitcoinRegnetParams.Name:
+		return BtcRegtestChain.ChainId, nil
+	case BitcoinMainnetParams.Name:
+		return BtcMainnetChain.ChainId, nil
+	case BitcoinTestnetParams.Name:
+		return BtcTestNetChain.ChainId, nil
+	default:
+		return 0, fmt.Errorf("invalid Bitcoin network name: %s", name)
+	}
+}
+
 // IsBitcoinRegnet returns true if the chain id is for the regnet
 func IsBitcoinRegnet(chainID int64) bool {
 	return chainID == BtcRegtestChain.ChainId

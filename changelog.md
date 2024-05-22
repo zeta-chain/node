@@ -35,11 +35,13 @@
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
 * [2181](https://github.com/zeta-chain/node/pull/2181) - add more assertion and test cases in ZEVM message passing E2E tests
 * [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
+* [2240](https://github.com/zeta-chain/node/pull/2240) - removed hard-coded Bitcoin regnet chainID in E2E withdraw tests
 
 ### Fixes
 
 * [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
 * [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
+* [2222](https://github.com/zeta-chain/node/pull/2222) - removed `maxHeightDiff` to let observer scan from Bitcoin height where it left off
 
 ### CI
 

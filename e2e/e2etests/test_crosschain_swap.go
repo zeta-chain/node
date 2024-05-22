@@ -10,6 +10,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -113,7 +114,13 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	stop := r.MineBlocks()
+
+	// mine blocks if testing on regnet
+	var stop chan struct{}
+	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
+	if isRegnet {
+		stop = r.MineBlocks()
+	}
 
 	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -246,5 +253,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// stop mining
-	stop <- struct{}{}
+	if isRegnet {
+		stop <- struct{}{}
+	}
 }

@@ -327,6 +327,15 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	return txid, nil
 }
 
+// GetBitcoinChainID gets the bitcoin chain ID from the network params
+func (runner *E2ERunner) GetBitcoinChainID() int64 {
+	chainID, err := chains.BitcoinChainIDFromNetworkName(runner.BitcoinParams.Name)
+	if err != nil {
+		panic(err)
+	}
+	return chainID
+}
+
 // MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
 func (runner *E2ERunner) MineBlocks() chan struct{} {

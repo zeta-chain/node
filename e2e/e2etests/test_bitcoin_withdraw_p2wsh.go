@@ -15,7 +15,7 @@ func TestBitcoinWithdrawP2WSH(r *runner.E2ERunner, args []string) {
 
 	// parse arguments and withdraw BTC
 	defaultReceiver := "bcrt1qm9mzhyky4w853ft2ms6dtqdyyu3z2tmrq8jg8xglhyuv0dsxzmgs2f0sqy"
-	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
 	_, ok := receiver.(*btcutil.AddressWitnessScriptHash)
 	if !ok {
 		panic("Invalid receiver address specified for TestBitcoinWithdrawP2WSH.")
