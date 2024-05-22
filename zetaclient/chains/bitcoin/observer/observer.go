@@ -708,7 +708,8 @@ func (ob *Observer) LoadLastScannedBlock() error {
 	if chains.IsBitcoinRegnet(ob.chain.ChainId) {
 		ob.SetLastBlockHeightScanned(100)
 	}
-	ob.logger.Chain.Info().Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().
+		Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
 
 	return nil
 }

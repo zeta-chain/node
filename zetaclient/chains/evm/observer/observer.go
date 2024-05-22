@@ -579,7 +579,8 @@ func (ob *Observer) LoadLastScannedBlock() error {
 
 	// load from environment variable if set
 	if scanFromBlock != "" {
-		ob.logger.Chain.Info().Msgf("LoadLastScannedBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
+		ob.logger.Chain.Info().
+			Msgf("LoadLastScannedBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == clienttypes.EnvVarLatest {
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
@@ -610,7 +611,8 @@ func (ob *Observer) LoadLastScannedBlock() error {
 			ob.SetLastBlockHeightScanned(lastBlock.Num)
 		}
 	}
-	ob.logger.Chain.Info().Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().
+		Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
 
 	return nil
 }
