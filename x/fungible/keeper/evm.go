@@ -771,6 +771,7 @@ func (k Keeper) CallEVMWithData(
 				return nil, fmt.Errorf("failed to convert tx msg, err=%w", err)
 			}
 			attrs = append(attrs, sdk.NewAttribute("TxBytes", hexutil.Encode(txBytes)))
+			attrs = append(attrs, sdk.NewAttribute("TxHash", ethTxHash.Hex()))
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					evmtypes.EventTypeEthereumTx,

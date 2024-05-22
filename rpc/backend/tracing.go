@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -55,33 +56,6 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, fmt.Errorf("block result not found for height %d", blk.Block.Height)
 	}
 
-	// pull out txBytes from event and convert to MsgEthereumTx
-	ethTx88 := evmtypes.MsgEthereumTx{}
-	txRes := blockResult.TxsResults[transaction.TxIndex]
-	for _, ev := range txRes.Events {
-		for _, attr := range ev.Attributes {
-			if string(attr.Key) == "TxBytes" {
-				hexBytes, err := hexutil.Decode(string(attr.Value))
-				if err != nil {
-					return nil, err
-				}
-				t := ethtypes.Transaction{}
-				if err := t.UnmarshalBinary(hexBytes); err != nil {
-					return nil, err
-				}
-
-				if err := ethTx88.FromEthereumTx(&t); err != nil {
-					return nil, err
-				}
-			}
-
-			if string(attr.Key) == "sender" {
-				ethTx88.From = string(attr.Value)
-			}
-		}
-	}
-	ethTx88.Hash = hash.Hex()
-
 	// check tx index is not out of bound
 	// #nosec G701 txs number in block is always less than MaxUint32
 	if uint32(len(blk.Block.Txs)) < transaction.TxIndex {
@@ -90,7 +64,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	var predecessors []*evmtypes.MsgEthereumTx
-	for _, txBz := range blk.Block.Txs[:transaction.TxIndex] {
+	for i, txBz := range blk.Block.Txs[:transaction.TxIndex] {
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(txBz)
 		if err != nil {
 			b.logger.Debug("failed to decode transaction in block", "height", blk.Block.Height, "error", err.Error())
@@ -99,6 +73,10 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		for _, msg := range tx.GetMsgs() {
 			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 			if !ok {
+				ethTx, err := tryGetEthereumTxFromTxRes(blockResult.TxsResults[i])
+				if ethTx != nil && err == nil {
+					predecessors = append(predecessors, ethTx)
+				}
 				continue
 			}
 
@@ -115,6 +93,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	// add predecessor messages in current cosmos tx
 	// #nosec G701 always in range
 	for i := 0; i < int(transaction.MsgIndex); i++ {
+		// TODO: same fallback for predecessors?
 		ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
 		if !ok {
 			continue
@@ -128,16 +107,14 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 			b.logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
 			return nil, fmt.Errorf("invalid transaction type %T", tx)
 		}
-		fmt.Println("predecessors ", len(predecessors), hash.Hex())
-		fmt.Println("sender ", len(predecessors), additional.Sender)
 
-		ethMessage = &evmtypes.MsgEthereumTx{
-			Hash: hash.Hex(),
-			From: additional.Sender.Hex(),
+		ethMessage, err = tryGetEthereumTxFromTxRes(blockResult.TxsResults[transaction.TxIndex])
+		if err != nil {
+			b.logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
+			return nil, fmt.Errorf("invalid transaction type %T", tx)
 		}
 	}
 
-	fmt.Println("checkpoint 1")
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
 		Msg:             ethMessage,
 		Predecessors:    predecessors,
@@ -147,24 +124,10 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		ProposerAddress: sdk.ConsAddress(blk.Block.ProposerAddress),
 		ChainId:         b.chainID.Int64(),
 	}
-	fmt.Println("checkpoint 2")
-	if additional != nil {
-		traceTxRequest = evmtypes.QueryTraceTxRequest{
-			Msg:             &ethTx88,
-			Predecessors:    []*evmtypes.MsgEthereumTx{},
-			BlockNumber:     blk.Block.Height,
-			BlockTime:       blk.Block.Time,
-			BlockHash:       common.Bytes2Hex(blk.BlockID.Hash),
-			ProposerAddress: sdk.ConsAddress(blk.Block.ProposerAddress),
-			ChainId:         b.chainID.Int64(),
-		}
-	}
 
 	if config != nil {
 		traceTxRequest.TraceConfig = config
 	}
-
-	fmt.Println("checkpoint 3")
 
 	// minus one to get the context of block beginning
 	contextHeight := transaction.Height - 1
@@ -177,8 +140,6 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, err
 	}
 
-	fmt.Println("checkpoint 4")
-
 	// Response format is unknown due to custom tracer config param
 	// More information can be found here https://geth.ethereum.org/docs/dapp/tracing-filtered
 	var decodedResult interface{}
@@ -187,9 +148,46 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, err
 	}
 
-	fmt.Println("checkpoint 5")
-
 	return decodedResult, nil
+}
+
+func tryGetEthereumTxFromTxRes(txRes *types.ResponseDeliverTx) (*evmtypes.MsgEthereumTx, error) {
+	ethTx := &evmtypes.MsgEthereumTx{}
+	txFound := false
+	for _, ev := range txRes.Events {
+		if ev.Type == evmtypes.EventTypeEthereumTx {
+			for _, attr := range ev.Attributes {
+				if string(attr.Key) == "TxBytes" {
+					txFound = true
+					hexBytes, err := hexutil.Decode(string(attr.Value))
+					if err != nil {
+						return nil, err
+					}
+					t := ethtypes.Transaction{}
+					if err := t.UnmarshalBinary(hexBytes); err != nil {
+						return nil, err
+					}
+
+					if err := ethTx.FromEthereumTx(&t); err != nil {
+						return nil, err
+					}
+				}
+
+				if string(attr.Key) == "sender" {
+					ethTx.From = string(attr.Value)
+				}
+
+				if string(attr.Key) == "TxHash" {
+					ethTx.Hash = string(attr.Value)
+				}
+			}
+		}
+	}
+
+	if !txFound {
+		return nil, nil
+	}
+	return ethTx, nil
 }
 
 // TraceBlock configures a new tracer according to the provided configuration, and
