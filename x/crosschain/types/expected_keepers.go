@@ -9,6 +9,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -45,17 +46,30 @@ type ObserverKeeper interface {
 	SetKeygen(ctx sdk.Context, keygen observertypes.Keygen)
 	SetCrosschainFlags(ctx sdk.Context, crosschainFlags observertypes.CrosschainFlags)
 	SetLastObserverCount(ctx sdk.Context, lbc *observertypes.LastObserverCount)
-	AddVoteToBallot(ctx sdk.Context, ballot observertypes.Ballot, address string, observationType observertypes.VoteType) (observertypes.Ballot, error)
+	AddVoteToBallot(
+		ctx sdk.Context,
+		ballot observertypes.Ballot,
+		address string,
+		observationType observertypes.VoteType,
+	) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
 	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
-	FindBallot(ctx sdk.Context, index string, chain *chains.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
+	FindBallot(
+		ctx sdk.Context,
+		index string,
+		chain *chains.Chain,
+		observationType observertypes.ObservationType,
+	) (ballot observertypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
 	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (observertypes.TSS, bool)
 	GetAllTSS(ctx sdk.Context) (list []observertypes.TSS)
 	GetTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
 	SetTSS(ctx sdk.Context, tss observertypes.TSS)
 	SetTSSHistory(ctx sdk.Context, tss observertypes.TSS)
-	GetTssAddress(goCtx context.Context, req *observertypes.QueryGetTssAddressRequest) (*observertypes.QueryGetTssAddressResponse, error)
+	GetTssAddress(
+		goCtx context.Context,
+		req *observertypes.QueryGetTssAddressRequest,
+	) (*observertypes.QueryGetTssAddressResponse, error)
 
 	SetFundMigrator(ctx sdk.Context, fm observertypes.TssFundMigratorInfo)
 	GetFundMigrator(ctx sdk.Context, chainID int64) (val observertypes.TssFundMigratorInfo, found bool)
@@ -104,8 +118,16 @@ type FungibleKeeper interface {
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (ethcommon.Address, error)
 	GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address, error)
-	QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 ethcommon.Address) (*big.Int, error)
-	QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4, outZRC4 ethcommon.Address) (*big.Int, error)
+	QueryUniswapV2RouterGetZetaAmountsIn(
+		ctx sdk.Context,
+		amountOut *big.Int,
+		outZRC4 ethcommon.Address,
+	) (*big.Int, error)
+	QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(
+		ctx sdk.Context,
+		amountOut *big.Int,
+		inZRC4, outZRC4 ethcommon.Address,
+	) (*big.Int, error)
 	QueryGasLimit(ctx sdk.Context, contract ethcommon.Address) (*big.Int, error)
 	QueryProtocolFlatFee(ctx sdk.Context, contract ethcommon.Address) (*big.Int, error)
 	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
@@ -143,7 +165,13 @@ type FungibleKeeper interface {
 		outZRC4 ethcommon.Address,
 		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
-	CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20address ethcommon.Address, amount *big.Int, noEthereumTxEvent bool) error
+	CallZRC20Burn(
+		ctx sdk.Context,
+		sender ethcommon.Address,
+		zrc20address ethcommon.Address,
+		amount *big.Int,
+		noEthereumTxEvent bool,
+	) error
 	CallZRC20Approve(
 		ctx sdk.Context,
 		owner ethcommon.Address,

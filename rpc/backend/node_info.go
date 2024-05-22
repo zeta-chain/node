@@ -38,6 +38,7 @@ import (
 	"github.com/evmos/ethermint/server/config"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 

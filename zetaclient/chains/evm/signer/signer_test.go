@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -300,7 +301,14 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutbound(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetacoreClient(), txData)
+		evmSigner.BroadcastOutbound(
+			tx,
+			cctx,
+			zerolog.Logger{},
+			sdktypes.AccAddress{},
+			mocks.NewMockZetacoreClient(),
+			txData,
+		)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()

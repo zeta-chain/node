@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+
 	"github.com/zeta-chain/zetacore/app"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 )

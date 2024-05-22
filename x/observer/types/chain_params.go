@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
@@ -76,27 +76,51 @@ func ValidateChainParams(params *ChainParams) error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTicker %d out of range", params.OutboundTicker)
 	}
 	if params.OutboundScheduleInterval == 0 || params.OutboundScheduleInterval > 100 { // 600 secs
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundScheduleInterval %d out of range", params.OutboundScheduleInterval)
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"OutboundScheduleInterval %d out of range",
+			params.OutboundScheduleInterval,
+		)
 	}
 	if params.OutboundScheduleLookahead == 0 || params.OutboundScheduleLookahead > 500 { // 500 cctxs
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundScheduleLookahead %d out of range", params.OutboundScheduleLookahead)
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"OutboundScheduleLookahead %d out of range",
+			params.OutboundScheduleLookahead,
+		)
 	}
 
 	// chain type specific checks
 	if chains.IsBitcoinChain(params.ChainId) {
 		if params.WatchUtxoTicker == 0 || params.WatchUtxoTicker > 300 {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "WatchUtxoTicker %d out of range", params.WatchUtxoTicker)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"WatchUtxoTicker %d out of range",
+				params.WatchUtxoTicker,
+			)
 		}
 	}
 	if chains.IsEVMChain(params.ChainId) {
 		if !validChainContractAddress(params.ZetaTokenContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ZetaTokenContractAddress %s", params.ZetaTokenContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid ZetaTokenContractAddress %s",
+				params.ZetaTokenContractAddress,
+			)
 		}
 		if !validChainContractAddress(params.ConnectorContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ConnectorContractAddress %s", params.ConnectorContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid ConnectorContractAddress %s",
+				params.ConnectorContractAddress,
+			)
 		}
 		if !validChainContractAddress(params.Erc20CustodyContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid Erc20CustodyContractAddress %s", params.Erc20CustodyContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid Erc20CustodyContractAddress %s",
+				params.Erc20CustodyContractAddress,
+			)
 		}
 	}
 

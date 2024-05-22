@@ -46,7 +46,11 @@ func (msg *MsgUpdateSystemContract) ValidateBasic() error {
 	}
 	// check if the system contract address is valid
 	if ethcommon.HexToAddress(msg.NewSystemContractAddress) == (ethcommon.Address{}) {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.NewSystemContractAddress)
+		return cosmoserrors.Wrapf(
+			sdkerrors.ErrInvalidAddress,
+			"invalid system contract address (%s)",
+			msg.NewSystemContractAddress,
+		)
 	}
 
 	return nil

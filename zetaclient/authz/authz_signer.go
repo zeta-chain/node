@@ -2,6 +2,7 @@ package authz
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )

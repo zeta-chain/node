@@ -77,7 +77,13 @@ func TestStringToHash(t *testing.T) {
 		expect  []byte
 		wantErr bool
 	}{
-		{"evm chain", evmChainId, "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5", ethcommon.HexToHash("95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5").Bytes(), false},
+		{
+			"evm chain",
+			evmChainId,
+			"95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+			ethcommon.HexToHash("95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5").Bytes(),
+			false,
+		},
 		{"btc chain", btcChainId, expectedBtcHash.String(), expectedBtcHash.CloneBytes(), false},
 		{"btc chain invalid hash", btcChainId, wrontBtcHash, nil, true},
 		{"unknown chain", unknownChainId, "", nil, true},
@@ -106,7 +112,13 @@ func TestParseAddressAndData(t *testing.T) {
 		expectData []byte
 		wantErr    bool
 	}{
-		{"valid msg", "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5", ethcommon.HexToAddress("95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"), []byte{}, false},
+		{
+			"valid msg",
+			"95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+			ethcommon.HexToAddress("95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"),
+			[]byte{},
+			false,
+		},
 		{"empty msg", "", ethcommon.Address{}, nil, false},
 		{"invalid hex", "invalidHex", ethcommon.Address{}, nil, true},
 		{"short msg", "1a2b3c4d5e6f708192a3b4c5d6e7f808", ethcommon.Address{}, expectedShortMsgResult, false},

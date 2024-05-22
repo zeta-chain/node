@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -40,7 +41,8 @@ func (ob *Observer) WatchInbound() {
 		select {
 		case <-ticker.C():
 			if !context.IsInboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
-				sampledLogger.Info().Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.chain.ChainId)
+				sampledLogger.Info().
+					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
 			err := ob.ObserveInbound()
@@ -65,7 +67,11 @@ func (ob *Observer) ObserveInbound() error {
 		return fmt.Errorf("observeInboundBTC: block number is negative: %d", cnt)
 	}
 	if cnt < ob.GetLastBlockHeight() {
-		return fmt.Errorf("observeInboundBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
+		return fmt.Errorf(
+			"observeInboundBTC: block number should not decrease: current %d last %d",
+			cnt,
+			ob.GetLastBlockHeight(),
+		)
 	}
 	ob.SetLastBlockHeight(cnt)
 
@@ -123,7 +129,9 @@ func (ob *Observer) ObserveInbound() error {
 			depositorFee,
 		)
 		if err != nil {
-			ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error filtering incoming txs for block %d", blockNumber)
+			ob.logger.Inbound.Error().
+				Err(err).
+				Msgf("observeInboundBTC: error filtering incoming txs for block %d", blockNumber)
 			return err // we have to re-scan this block next time
 		}
 
@@ -131,9 +139,15 @@ func (ob *Observer) ObserveInbound() error {
 		for _, inbound := range inbounds {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inbound)
 			if msg != nil {
-				zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
+				zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(
+					zetacore.PostVoteInboundGasLimit,
+					zetacore.PostVoteInboundExecutionGasLimit,
+					msg,
+				)
 				if err != nil {
-					ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error posting to zetacore for tx %s", inbound.TxHash)
+					ob.logger.Inbound.Error().
+						Err(err).
+						Msgf("observeInboundBTC: error posting to zetacore for tx %s", inbound.TxHash)
 					return err // we have to re-scan this block next time
 				} else if zetaHash != "" {
 					ob.logger.Inbound.Info().Msgf("observeInboundBTC: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
@@ -148,7 +162,9 @@ func (ob *Observer) ObserveInbound() error {
 
 	// #nosec G701 always positive
 	if err := ob.db.Save(types.ToLastBlockSQLType(uint64(blockNumber))).Error; err != nil {
-		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error writing last scanned block %d to db", blockNumber)
+		ob.logger.Inbound.Error().
+			Err(err).
+			Msgf("observeInboundBTC: error writing last scanned block %d to db", blockNumber)
 	}
 
 	return nil
@@ -171,7 +187,9 @@ func (ob *Observer) WatchInboundTracker() {
 			}
 			err := ob.ProcessInboundTrackers()
 			if err != nil {
-				ob.logger.Inbound.Error().Err(err).Msgf("error observing inbound tracker for chain %d", ob.chain.ChainId)
+				ob.logger.Inbound.Error().
+					Err(err).
+					Msgf("error observing inbound tracker for chain %d", ob.chain.ChainId)
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.stop:
@@ -189,12 +207,14 @@ func (ob *Observer) ProcessInboundTrackers() error {
 	}
 
 	for _, tracker := range trackers {
-		ob.logger.Inbound.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
+		ob.logger.Inbound.Info().
+			Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
 		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(tracker.TxHash, true)
 		if err != nil {
 			return err
 		}
-		ob.logger.Inbound.Info().Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, coin.CoinType_Gas.String())
+		ob.logger.Inbound.Info().
+			Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, coin.CoinType_Gas.String())
 	}
 
 	return nil
@@ -233,7 +253,15 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 	}
 
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(ob.rpcClient, *tx, tss, uint64(blockVb.Height), ob.logger.Inbound, ob.netParams, depositorFee)
+	event, err := GetBtcEvent(
+		ob.rpcClient,
+		*tx,
+		tss,
+		uint64(blockVb.Height),
+		ob.logger.Inbound,
+		ob.netParams,
+		depositorFee,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -251,7 +279,11 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 		return msg.Digest(), nil
 	}
 
-	zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
+	zetaHash, ballot, err := ob.zetacoreClient.PostVoteInbound(
+		zetacore.PostVoteInboundGasLimit,
+		zetacore.PostVoteInboundExecutionGasLimit,
+		msg,
+	)
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msg("error posting to zetacore")
 		return "", err
@@ -374,7 +406,8 @@ func GetBtcEvent(
 
 			// deposit amount has to be no less than the minimum depositor fee
 			if vout0.Value < depositorFee {
-				logger.Info().Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
+				logger.Info().
+					Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
 				return nil, nil
 			}
 			value = vout0.Value - depositorFee

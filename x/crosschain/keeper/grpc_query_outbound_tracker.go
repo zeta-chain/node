@@ -7,12 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) OutboundTrackerAll(c context.Context, req *types.QueryAllOutboundTrackerRequest) (*types.QueryAllOutboundTrackerResponse, error) {
+func (k Keeper) OutboundTrackerAll(
+	c context.Context,
+	req *types.QueryAllOutboundTrackerRequest,
+) (*types.QueryAllOutboundTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -38,7 +42,10 @@ func (k Keeper) OutboundTrackerAll(c context.Context, req *types.QueryAllOutboun
 	return &types.QueryAllOutboundTrackerResponse{OutboundTracker: outboundTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutboundTrackerAllByChain(c context.Context, req *types.QueryAllOutboundTrackerByChainRequest) (*types.QueryAllOutboundTrackerByChainResponse, error) {
+func (k Keeper) OutboundTrackerAllByChain(
+	c context.Context,
+	req *types.QueryAllOutboundTrackerByChainRequest,
+) (*types.QueryAllOutboundTrackerByChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -65,7 +72,10 @@ func (k Keeper) OutboundTrackerAllByChain(c context.Context, req *types.QueryAll
 	return &types.QueryAllOutboundTrackerByChainResponse{OutboundTracker: outboundTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) OutboundTracker(c context.Context, req *types.QueryGetOutboundTrackerRequest) (*types.QueryGetOutboundTrackerResponse, error) {
+func (k Keeper) OutboundTracker(
+	c context.Context,
+	req *types.QueryGetOutboundTrackerRequest,
+) (*types.QueryGetOutboundTrackerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

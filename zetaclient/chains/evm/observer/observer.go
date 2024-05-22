@@ -24,6 +24,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -34,8 +37,6 @@ import (
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 // Logger is the logger for evm chains
@@ -250,19 +251,31 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 	return addr, contract, err
 }
 
-func FetchConnectorContract(addr ethcommon.Address, client interfaces.EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
+func FetchConnectorContract(
+	addr ethcommon.Address,
+	client interfaces.EVMRPCClient,
+) (*zetaconnector.ZetaConnectorNonEth, error) {
 	return zetaconnector.NewZetaConnectorNonEth(addr, client)
 }
 
-func FetchConnectorContractEth(addr ethcommon.Address, client interfaces.EVMRPCClient) (*zetaconnectoreth.ZetaConnectorEth, error) {
+func FetchConnectorContractEth(
+	addr ethcommon.Address,
+	client interfaces.EVMRPCClient,
+) (*zetaconnectoreth.ZetaConnectorEth, error) {
 	return zetaconnectoreth.NewZetaConnectorEth(addr, client)
 }
 
-func FetchZetaZetaNonEthTokenContract(addr ethcommon.Address, client interfaces.EVMRPCClient) (*zeta.ZetaNonEth, error) {
+func FetchZetaZetaNonEthTokenContract(
+	addr ethcommon.Address,
+	client interfaces.EVMRPCClient,
+) (*zeta.ZetaNonEth, error) {
 	return zeta.NewZetaNonEth(addr, client)
 }
 
-func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCClient) (*erc20custody.ERC20Custody, error) {
+func FetchERC20CustodyContract(
+	addr ethcommon.Address,
+	client interfaces.EVMRPCClient,
+) (*erc20custody.ERC20Custody, error) {
 	return erc20custody.NewERC20Custody(addr, client)
 }
 
@@ -313,10 +326,12 @@ func (ob *Observer) WatchRPCStatus() {
 			blockTime := time.Unix(int64(header.Time), 0).UTC()
 			elapsedSeconds := time.Since(blockTime).Seconds()
 			if elapsedSeconds > 100 {
-				ob.logger.Chain.Warn().Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
+				ob.logger.Chain.Warn().
+					Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
 				continue
 			}
-			ob.logger.Chain.Info().Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
+			ob.logger.Chain.Info().
+				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
 		case <-ob.stop:
 			return
 		}
@@ -376,7 +391,8 @@ func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tr
 func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	return ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] != nil
+	return ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] != nil &&
+		ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }
 
 // CheckTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
@@ -434,7 +450,10 @@ func (ob *Observer) WatchGasPrice() {
 	}
 
 	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetChainParams().GasPriceTicker)
+	ticker, err := clienttypes.NewDynamicTicker(
+		fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId),
+		ob.GetChainParams().GasPriceTicker,
+	)
 	if err != nil {
 		ob.logger.GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
@@ -551,12 +570,17 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	return block, nil
 }
 
-func (ob *Observer) BuildLastBlock() error {
-	logger := ob.logger.Chain.With().Str("module", "BuildBlockIndex").Logger()
+// LoadLastScannedBlock loads last scanned block from specified height or from database
+// The last scanned block is the height from which the observer should continue scanning for inbound transactions
+func (ob *Observer) LoadLastScannedBlock() error {
+	// get environment variable
 	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
+
+	// load from environment variable if set
 	if scanFromBlock != "" {
-		logger.Info().Msgf("BuildLastBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
+		ob.logger.Chain.Info().
+			Msgf("LoadLastScannedBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == clienttypes.EnvVarLatest {
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
@@ -570,22 +594,26 @@ func (ob *Observer) BuildLastBlock() error {
 			}
 			ob.SetLastBlockHeightScanned(scanFromBlockInt)
 		}
-	} else { // last observed block
-		var lastBlockNum clienttypes.LastBlockSQLType
-		if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
-			logger.Info().Msgf("BuildLastBlock: db PosKey does not exist; read from external chain %s", ob.chain.String())
+	} else {
+		// load from DB otherwise
+		var lastBlock clienttypes.LastBlockSQLType
+		if err := ob.db.First(&lastBlock, clienttypes.LastBlockNumID).Error; err != nil {
+			ob.logger.Chain.Info().Msg("LoadLastScannedBlock: last scanned block not found in DB, scan from latest")
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return err
 			}
 			ob.SetLastBlockHeightScanned(header.Number.Uint64())
 			if dbc := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())); dbc.Error != nil {
-				logger.Error().Err(dbc.Error).Msgf("BuildLastBlock: error writing lastBlockScanned %d to db", ob.GetLastBlockHeightScanned())
+				ob.logger.Chain.Error().Err(dbc.Error).Msgf("LoadLastScannedBlock: error writing last scanned block %d to DB", ob.GetLastBlockHeightScanned())
 			}
 		} else {
-			ob.SetLastBlockHeightScanned(lastBlockNum.Num)
+			ob.SetLastBlockHeightScanned(lastBlock.Num)
 		}
 	}
+	ob.logger.Chain.Info().
+		Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
+
 	return nil
 }
 
@@ -601,7 +629,9 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		path := fmt.Sprintf("%s/%s", dbPath, chain.ChainName.String()) //Use "file::memory:?cache=shared" for temp db
 		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 		if err != nil {
-			ob.logger.Chain.Error().Err(err).Msgf("failed to open observer database for %s", ob.chain.ChainName.String())
+			ob.logger.Chain.Error().
+				Err(err).
+				Msgf("failed to open observer database for %s", ob.chain.ChainName.String())
 			return err
 		}
 
@@ -614,7 +644,7 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		}
 
 		ob.db = db
-		err = ob.BuildLastBlock()
+		err = ob.LoadLastScannedBlock()
 		if err != nil {
 			return err
 		}

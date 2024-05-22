@@ -32,7 +32,11 @@ func Sign(config *crypto11.Config, msg []byte, label string) (signature []byte, 
 }
 
 // GenerateKey This generates a new key using one of the supported algorithms and a label identifier through the HSM
-func GenerateKey(label string, algorithm keystone.KeygenAlgorithm, config *crypto11.Config) (*keystone.CryptoKey, error) {
+func GenerateKey(
+	label string,
+	algorithm keystone.KeygenAlgorithm,
+	config *crypto11.Config,
+) (*keystone.CryptoKey, error) {
 	keyring, err := keystone.NewPkcs11(config)
 	if err != nil {
 		return nil, err

@@ -14,12 +14,12 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
-
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -311,7 +311,15 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		eventIndex := sample.Uint64InRange(1, 100)
 		k.SaveInbound(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
-		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundParams().ObservedHash, cctx.GetInboundParams().SenderChainId, eventIndex))
+		require.True(
+			t,
+			k.IsFinalizedInbound(
+				ctx,
+				cctx.GetInboundParams().ObservedHash,
+				cctx.GetInboundParams().SenderChainId,
+				eventIndex,
+			),
+		)
 		_, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 	})
@@ -334,7 +342,15 @@ func TestKeeper_SaveInbound(t *testing.T) {
 
 		k.SaveInbound(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
-		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundParams().ObservedHash, cctx.GetInboundParams().SenderChainId, eventIndex))
+		require.True(
+			t,
+			k.IsFinalizedInbound(
+				ctx,
+				cctx.GetInboundParams().ObservedHash,
+				cctx.GetInboundParams().SenderChainId,
+				eventIndex,
+			),
+		)
 		_, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
 		_, found = k.GetInboundTracker(ctx, senderChain.ChainId, hash.String())
@@ -343,7 +359,13 @@ func TestKeeper_SaveInbound(t *testing.T) {
 }
 
 // GetERC20Cctx returns a sample CrossChainTx with ERC20 params. This is used for testing Inbound and Outbound voting transactions
-func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain chains.Chain, asset string, amount *big.Int) *types.CrossChainTx {
+func GetERC20Cctx(
+	t *testing.T,
+	receiver ethcommon.Address,
+	senderChain chains.Chain,
+	asset string,
+	amount *big.Int,
+) *types.CrossChainTx {
 	r := sample.Rand()
 	cctx := &types.CrossChainTx{
 		Creator:        sample.AccAddress(),

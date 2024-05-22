@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
 	zetacore "github.com/zeta-chain/zetacore/cmd/zetacored"
 )
 

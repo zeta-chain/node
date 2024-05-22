@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -45,7 +46,11 @@ func parseBitcoinWithdrawArgs(args []string, defaultReceiver string) (btcutil.Ad
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	tx, err := r.BTCZRC20.Approve(r.ZEVMAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
+	tx, err := r.BTCZRC20.Approve(
+		r.ZEVMAuth,
+		r.BTCZRC20Addr,
+		big.NewInt(amount.Int64()*2),
+	) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}

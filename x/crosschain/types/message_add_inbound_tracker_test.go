@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -48,7 +49,11 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 				CoinType: coin.CoinType_Gas,
 				Proof:    &proofs.Proof{},
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", chains.ZetaTestnetChain.ChainId),
+			err: errorsmod.Wrapf(
+				types.ErrProofVerificationFail,
+				"chain id %d does not support proof-based trackers",
+				chains.ZetaTestnetChain.ChainId,
+			),
 		},
 		{
 			name: "invalid coin type",

@@ -10,6 +10,7 @@ import (
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -49,7 +50,16 @@ func (k Keeper) SetupChainGasCoinAndPool(
 		}
 	}
 
-	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainId, coin.CoinType_Gas, "", transferGasLimit)
+	zrc20Addr, err := k.DeployZRC20Contract(
+		ctx,
+		name,
+		symbol,
+		decimals,
+		chain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		transferGasLimit,
+	)
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}
@@ -71,21 +81,46 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
-	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountAZeta))))
+	err = k.bankKeeper.MintCoins(
+		ctx,
+		types.ModuleName,
+		sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountAZeta))),
+	)
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
 	if err != nil || systemContractAddress == (ethcommon.Address{}) {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract address invalid: %s", systemContractAddress)
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			types.ErrContractNotFound,
+			"system contract address invalid: %s",
+			systemContractAddress,
+		)
 	}
 	systemABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to get system contract abi")
 	}
-	_, err = k.CallEVM(ctx, *systemABI, types.ModuleAddressEVM, systemContractAddress, BigIntZero, nil, true, false, "setGasZetaPool", big.NewInt(chain.ChainId), zrc20Addr)
+	_, err = k.CallEVM(
+		ctx,
+		*systemABI,
+		types.ModuleAddressEVM,
+		systemContractAddress,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"setGasZetaPool",
+		big.NewInt(chain.ChainId),
+		zrc20Addr,
+	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chain.ChainId, zrc20Addr.String())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			err,
+			"failed to CallEVM method setGasZetaPool(%d, %s)",
+			chain.ChainId,
+			zrc20Addr.String(),
+		)
 	}
 
 	// setup uniswap v2 pools gas/zeta
@@ -101,9 +136,26 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to GetAbi zrc20")
 	}
-	_, err = k.CallEVM(ctx, *ZRC20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, false, "approve", routerAddress, amount)
+	_, err = k.CallEVM(
+		ctx,
+		*ZRC20ABI,
+		types.ModuleAddressEVM,
+		zrc20Addr,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"approve",
+		routerAddress,
+		amount,
+	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to CallEVM method approve(%s, %d)", routerAddress.String(), amount)
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			err,
+			"failed to CallEVM method approve(%s, %d)",
+			routerAddress.String(),
+			amount,
+		)
 	}
 
 	//function addLiquidityETH(
@@ -114,10 +166,30 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	//	address to,
 	//	uint deadline
 	//) external payable returns (uint amountToken, uint amountETH, uint liquidity);
-	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amountAZeta, big.NewInt(5_000_000), true, false,
-		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, amountAZeta)
+	res, err := k.CallEVM(
+		ctx,
+		*routerABI,
+		types.ModuleAddressEVM,
+		routerAddress,
+		amountAZeta,
+		big.NewInt(5_000_000),
+		true,
+		false,
+		"addLiquidityETH",
+		zrc20Addr,
+		amount,
+		BigIntZero,
+		BigIntZero,
+		types.ModuleAddressEVM,
+		amountAZeta,
+	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amountAZeta.String())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(
+			err,
+			"failed to CallEVM method addLiquidityETH(%s, %s)",
+			zrc20Addr.String(),
+			amountAZeta.String(),
+		)
 	}
 	AmountToken := new(*big.Int)
 	AmountETH := new(*big.Int)

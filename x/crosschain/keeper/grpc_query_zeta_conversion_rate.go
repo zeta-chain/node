@@ -6,14 +6,18 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryConvertGasToZetaRequest) (*types.QueryConvertGasToZetaResponse, error) {
+func (k Keeper) ConvertGasToZeta(
+	context context.Context,
+	request *types.QueryConvertGasToZetaRequest,
+) (*types.QueryConvertGasToZetaResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
 	chain := chains.GetChainFromChainID(request.ChainId)
 
@@ -42,7 +46,10 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	}, nil
 }
 
-func (k Keeper) ProtocolFee(_ context.Context, _ *types.QueryMessagePassingProtocolFeeRequest) (*types.QueryMessagePassingProtocolFeeResponse, error) {
+func (k Keeper) ProtocolFee(
+	_ context.Context,
+	_ *types.QueryMessagePassingProtocolFeeRequest,
+) (*types.QueryMessagePassingProtocolFeeResponse, error) {
 	return &types.QueryMessagePassingProtocolFeeResponse{
 		FeeInZeta: types.GetProtocolFee().String(),
 	}, nil

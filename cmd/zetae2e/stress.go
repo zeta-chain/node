@@ -16,13 +16,14 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -52,11 +53,15 @@ func NewStressTestCmd() *cobra.Command {
 		Run:   StressTest,
 	}
 
-	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
-	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
+	StressCmd.Flags().
+		StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
+	StressCmd.Flags().
+		StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "LOCAL", "--network TESTNET")
-	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
-	StressCmd.Flags().BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
+	StressCmd.Flags().
+		Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
+	StressCmd.Flags().
+		BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
 	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the E2E test")
 	StressCmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
@@ -112,7 +117,10 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		time.Sleep(20 * time.Second)
 		for {
 			time.Sleep(5 * time.Second)
-			response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
+			response, err := cctxClient.LastZetaHeight(
+				context.Background(),
+				&crosschaintypes.QueryLastZetaHeightRequest{},
+			)
 			if err != nil {
 				fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
 				continue
@@ -252,9 +260,12 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := runner.CctxClient.ListPendingCctx(context.Background(), &crosschaintypes.QueryListPendingCctxRequest{
-				ChainId: chainID.Int64(),
-			})
+			cctxResp, err := runner.CctxClient.ListPendingCctx(
+				context.Background(),
+				&crosschaintypes.QueryListPendingCctxRequest{
+					ChainId: chainID.Int64(),
+				},
+			)
 			if err != nil {
 				continue
 			}
@@ -263,13 +274,20 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 				return sends[i].GetCurrentOutboundParam().TssNonce < sends[j].GetCurrentOutboundParam().TssNonce
 			})
 			if len(sends) > 0 {
-				fmt.Printf("pending nonces %d to %d\n", sends[0].GetCurrentOutboundParam().TssNonce, sends[len(sends)-1].GetCurrentOutboundParam().TssNonce)
+				fmt.Printf(
+					"pending nonces %d to %d\n",
+					sends[0].GetCurrentOutboundParam().TssNonce,
+					sends[len(sends)-1].GetCurrentOutboundParam().TssNonce,
+				)
 			} else {
 				continue
 			}
 			//
 			// Get all trackers
-			trackerResp, err := runner.CctxClient.OutboundTrackerAll(context.Background(), &crosschaintypes.QueryAllOutboundTrackerRequest{})
+			trackerResp, err := runner.CctxClient.OutboundTrackerAll(
+				context.Background(),
+				&crosschaintypes.QueryAllOutboundTrackerRequest{},
+			)
 			if err != nil {
 				continue
 			}
@@ -293,7 +311,15 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 			numPending := len(cctxResp.CrossChainTx)
 			numTrackers := len(trackerResp.OutboundTracker)
 
-			fmt.Println("Network Stat => Num of Pending cctx: ", numPending, "Num active trackers: ", numTrackers, "Tx Rate: ", rate, " tx/min")
+			fmt.Println(
+				"Network Stat => Num of Pending cctx: ",
+				numPending,
+				"Num active trackers: ",
+				numTrackers,
+				"Tx Rate: ",
+				rate,
+				" tx/min",
+			)
 		}
 	}
 }
