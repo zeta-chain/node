@@ -14,7 +14,7 @@ func TestBitcoinWithdrawTaproot(r *runner.E2ERunner, args []string) {
 
 	// parse arguments and withdraw BTC
 	defaultReceiver := "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh"
-	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
 	_, ok := receiver.(*chains.AddressTaproot)
 	if !ok {
 		panic("Invalid receiver address specified for TestBitcoinWithdrawTaproot.")
