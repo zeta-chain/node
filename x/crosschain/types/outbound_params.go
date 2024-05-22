@@ -32,7 +32,7 @@ func (m OutboundParams) Validate() error {
 		return fmt.Errorf("amount cannot be nil")
 	}
 	if m.BallotIndex != "" {
-		err = ValidateZetaIndex(m.BallotIndex)
+		err = ValidateCCTXIndex(m.BallotIndex)
 		if err != nil {
 			return errors.Wrap(err, "invalid outbound tx ballot index")
 		}
