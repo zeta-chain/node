@@ -2,6 +2,7 @@ package ibccrosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )

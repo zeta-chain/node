@@ -11,6 +11,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -101,7 +102,13 @@ func LoadBTCTxRawResult(t *testing.T, dir string, chainID int64, txType string, 
 }
 
 // LoadBTCInboundRawResult loads archived Bitcoin inbound raw result from file
-func LoadBTCInboundRawResult(t *testing.T, dir string, chainID int64, txHash string, donation bool) *btcjson.TxRawResult {
+func LoadBTCInboundRawResult(
+	t *testing.T,
+	dir string,
+	chainID int64,
+	txHash string,
+	donation bool,
+) *btcjson.TxRawResult {
 	name := path.Join(dir, TestDataPathBTC, FileNameBTCInbound(chainID, txHash, donation))
 	rawResult := &btcjson.TxRawResult{}
 	LoadObjectFromJSONFile(t, rawResult, name)
@@ -109,7 +116,12 @@ func LoadBTCInboundRawResult(t *testing.T, dir string, chainID int64, txHash str
 }
 
 // LoadBTCTxRawResultNCctx loads archived Bitcoin outbound raw result and corresponding cctx
-func LoadBTCTxRawResultNCctx(t *testing.T, dir string, chainID int64, nonce uint64) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
+func LoadBTCTxRawResultNCctx(
+	t *testing.T,
+	dir string,
+	chainID int64,
+	nonce uint64,
+) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
 	nameTx := path.Join(dir, TestDataPathBTC, FileNameBTCOutbound(chainID, nonce))
 	rawResult := &btcjson.TxRawResult{}
 	LoadObjectFromJSONFile(t, rawResult, nameTx)

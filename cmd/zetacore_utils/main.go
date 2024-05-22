@@ -11,6 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 )
 
@@ -59,7 +60,19 @@ func main() {
 	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
 		// #nosec G204
-		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
+		cmd := exec.Command(
+			"zetacored",
+			"q",
+			"bank",
+			"balances",
+			address,
+			"--output",
+			"json",
+			"--denom",
+			"azeta",
+			"--node",
+			node,
+		)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
@@ -86,8 +99,23 @@ func main() {
 
 	args := []string{"tx", "bank", "multi-send", signer}
 	args = append(args, addresses...)
-	args = append(args, []string{distributionList[0].TokensDistributed.String(), "--keyring-backend", "test", "--chain-id", chainID, "--yes",
-		"--broadcast-mode", broadcastMode, "--gas=auto", "--gas-adjustment=2", "--gas-prices=0.001azeta", "--node", node}...)
+	args = append(
+		args,
+		[]string{
+			distributionList[0].TokensDistributed.String(),
+			"--keyring-backend",
+			"test",
+			"--chain-id",
+			chainID,
+			"--yes",
+			"--broadcast-mode",
+			broadcastMode,
+			"--gas=auto",
+			"--gas-adjustment=2",
+			"--gas-prices=0.001azeta",
+			"--node",
+			node,
+		}...)
 
 	// #nosec G204
 	cmd := exec.Command("zetacored", args...)
@@ -103,7 +131,19 @@ func main() {
 
 	for i, address := range addresses {
 		// #nosec G204
-		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
+		cmd := exec.Command(
+			"zetacored",
+			"q",
+			"bank",
+			"balances",
+			address,
+			"--output",
+			"json",
+			"--denom",
+			"azeta",
+			"--node",
+			node,
+		)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())

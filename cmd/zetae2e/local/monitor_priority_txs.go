@@ -9,6 +9,7 @@ import (
 	"github.com/cometbft/cometbft/abci/types"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 )
 

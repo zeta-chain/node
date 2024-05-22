@@ -22,7 +22,6 @@ import (
 	"github.com/cometbft/cometbft/libs/service"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/types"
-
 	ethermint "github.com/evmos/ethermint/types"
 )
 

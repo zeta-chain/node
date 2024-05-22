@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -22,7 +23,11 @@ func (k Keeper) SetInboundTracker(ctx sdk.Context, InboundTracker types.InboundT
 }
 
 // GetInboundTracker returns a InboundTracker from its index
-func (k Keeper) GetInboundTracker(ctx sdk.Context, chainID int64, txHash string) (val types.InboundTracker, found bool) {
+func (k Keeper) GetInboundTracker(
+	ctx sdk.Context,
+	chainID int64,
+	txHash string,
+) (val types.InboundTracker, found bool) {
 	key := getInboundTrackerKey(chainID, txHash)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundTrackerKeyPrefix))
 	b := store.Get(types.KeyPrefix(key))
@@ -40,7 +45,11 @@ func (k Keeper) RemoveInboundTrackerIfExists(ctx sdk.Context, chainID int64, txH
 		store.Delete(types.KeyPrefix(key))
 	}
 }
-func (k Keeper) GetAllInboundTrackerPaginated(ctx sdk.Context, pagination *query.PageRequest) (inTxTrackers []types.InboundTracker, pageRes *query.PageResponse, err error) {
+
+func (k Keeper) GetAllInboundTrackerPaginated(
+	ctx sdk.Context,
+	pagination *query.PageRequest,
+) (inTxTrackers []types.InboundTracker, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
@@ -79,7 +88,11 @@ func (k Keeper) GetAllInboundTrackerForChain(ctx sdk.Context, chainID int64) (li
 	return list
 }
 
-func (k Keeper) GetAllInboundTrackerForChainPaginated(ctx sdk.Context, chainID int64, pagination *query.PageRequest) (inTxTrackers []types.InboundTracker, pageRes *query.PageResponse, err error) {
+func (k Keeper) GetAllInboundTrackerForChainPaginated(
+	ctx sdk.Context,
+	chainID int64,
+	pagination *query.PageRequest,
+) (inTxTrackers []types.InboundTracker, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.InboundTrackerKeyPrefix)))
 	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", chainID)))
 	pageRes, err = query.Paginate(chainStore, pagination, func(_ []byte, value []byte) error {

@@ -5,6 +5,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 
@@ -35,7 +36,10 @@ func GetTssAddrBTC(tssPubkey string, bitcoinParams *chaincfg.Params) (string, er
 	return addrWPKH.EncodeAddress(), nil
 }
 
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, bitcoinParams *chaincfg.Params) (*btcutil.AddressWitnessPubKeyHash, error) {
+func getKeyAddrBTCWitnessPubkeyHash(
+	tssPubkey string,
+	bitcoinParams *chaincfg.Params,
+) (*btcutil.AddressWitnessPubKeyHash, error) {
 	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return nil, err

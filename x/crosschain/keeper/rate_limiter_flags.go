@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -29,7 +30,9 @@ func (k Keeper) GetRateLimiterFlags(ctx sdk.Context) (val types.RateLimiterFlags
 }
 
 // GetRateLimiterAssetRateList returns a list of all foreign asset rate
-func (k Keeper) GetRateLimiterAssetRateList(ctx sdk.Context) (flags types.RateLimiterFlags, assetRates []types.AssetRate, found bool) {
+func (k Keeper) GetRateLimiterAssetRateList(
+	ctx sdk.Context,
+) (flags types.RateLimiterFlags, assetRates []types.AssetRate, found bool) {
 	flags, found = k.GetRateLimiterFlags(ctx)
 	if !found {
 		return flags, nil, false

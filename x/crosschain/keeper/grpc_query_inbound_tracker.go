@@ -4,13 +4,16 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) InboundTrackerAllByChain(goCtx context.Context, request *types.QueryAllInboundTrackerByChainRequest) (*types.QueryAllInboundTrackerByChainResponse, error) {
+func (k Keeper) InboundTrackerAllByChain(
+	goCtx context.Context,
+	request *types.QueryAllInboundTrackerByChainRequest,
+) (*types.QueryAllInboundTrackerByChainResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var inTxTrackers []types.InboundTracker
 	inTxTrackers, pageRes, err := k.GetAllInboundTrackerForChainPaginated(ctx, request.ChainId, request.Pagination)
@@ -20,7 +23,10 @@ func (k Keeper) InboundTrackerAllByChain(goCtx context.Context, request *types.Q
 	return &types.QueryAllInboundTrackerByChainResponse{InboundTracker: inTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) InboundTrackerAll(goCtx context.Context, req *types.QueryAllInboundTrackersRequest) (*types.QueryAllInboundTrackersResponse, error) {
+func (k Keeper) InboundTrackerAll(
+	goCtx context.Context,
+	req *types.QueryAllInboundTrackersRequest,
+) (*types.QueryAllInboundTrackersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var inTxTrackers []types.InboundTracker
 	inTxTrackers, pageRes, err := k.GetAllInboundTrackerPaginated(ctx, req.Pagination)

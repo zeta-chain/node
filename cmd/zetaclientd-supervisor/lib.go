@@ -18,8 +18,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc"
+
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 const zetaclientdBinaryName = "zetaclientd"
@@ -46,7 +47,11 @@ func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 	case "json":
 		logger = zerolog.New(out).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	case "text":
-		logger = zerolog.New(zerolog.ConsoleWriter{Out: out, TimeFormat: time.RFC3339}).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: out, TimeFormat: time.RFC3339}).
+			Level(zerolog.Level(cfg.LogLevel)).
+			With().
+			Timestamp().
+			Logger()
 	default:
 		logger = zerolog.New(zerolog.ConsoleWriter{Out: out, TimeFormat: time.RFC3339})
 	}
@@ -63,7 +68,11 @@ type zetaclientdSupervisor struct {
 	enableAutoDownload bool
 }
 
-func newZetaclientdSupervisor(zetaCoreURL string, logger zerolog.Logger, enableAutoDownload bool) (*zetaclientdSupervisor, error) {
+func newZetaclientdSupervisor(
+	zetaCoreURL string,
+	logger zerolog.Logger,
+	enableAutoDownload bool,
+) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:9090", zetaCoreURL),
@@ -151,7 +160,9 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 
 		err = atomicSymlink(newVersionDir, currentLinkPath)
 		if err != nil {
-			s.logger.Error().Err(err).Msgf("unable to update current symlink (%s -> %s)", newVersionDir, currentLinkPath)
+			s.logger.Error().
+				Err(err).
+				Msgf("unable to update current symlink (%s -> %s)", newVersionDir, currentLinkPath)
 			return
 		}
 		s.reloadSignals <- true

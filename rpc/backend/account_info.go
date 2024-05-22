@@ -29,6 +29,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
@@ -52,7 +53,11 @@ func (b *Backend) GetCode(address common.Address, blockNrOrHash rpctypes.BlockNu
 }
 
 // GetProof returns an account object with proof and any storage proofs
-func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNrOrHash rpctypes.BlockNumberOrHash) (*rpctypes.AccountResult, error) {
+func (b *Backend) GetProof(
+	address common.Address,
+	storageKeys []string,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+) (*rpctypes.AccountResult, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err
@@ -88,7 +93,11 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 
 	for i, key := range storageKeys {
 		hexKey := common.HexToHash(key)
-		valueBz, proof, err := b.queryClient.GetProof(clientCtx, evmtypes.StoreKey, evmtypes.StateKey(address, hexKey.Bytes()))
+		valueBz, proof, err := b.queryClient.GetProof(
+			clientCtx,
+			evmtypes.StoreKey,
+			evmtypes.StateKey(address, hexKey.Bytes()),
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +143,11 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 }
 
 // GetStorageAt returns the contract storage at the given address, block number, and key.
-func (b *Backend) GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
+func (b *Backend) GetStorageAt(
+	address common.Address,
+	key string,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+) (hexutil.Bytes, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err

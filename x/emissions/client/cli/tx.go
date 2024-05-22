@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
+
+	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

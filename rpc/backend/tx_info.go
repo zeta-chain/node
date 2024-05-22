@@ -29,6 +29,7 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
@@ -92,7 +93,13 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", blockRes.Height, "error", err)
+		b.logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			blockRes.Height,
+			"error",
+			err,
+		)
 	}
 
 	return rpctypes.NewTransactionFromMsg(
@@ -309,7 +316,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction identified by hash and index.
-func (b *Backend) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (b *Backend) GetTransactionByBlockHashAndIndex(
+	hash common.Hash,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	b.logger.Debug("eth_getTransactionByBlockHashAndIndex", "hash", hash.Hex(), "index", idx)
 
 	sc, ok := b.clientCtx.Client.(tmrpcclient.SignClient)
@@ -331,7 +341,10 @@ func (b *Backend) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexuti
 }
 
 // GetTransactionByBlockNumberAndIndex returns the transaction identified by number and index.
-func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (b *Backend) GetTransactionByBlockNumberAndIndex(
+	blockNum rpctypes.BlockNumber,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	b.logger.Debug("eth_getTransactionByBlockNumberAndIndex", "number", blockNum, "index", idx)
 
 	block, err := b.TendermintBlockByNumber(blockNum)
@@ -371,7 +384,10 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, *rpctyp
 }
 
 // GetTxByTxIndex uses `/tx_query` to find transaction by tx index of valid ethereum txs
-func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+func (b *Backend) GetTxByTxIndex(
+	height int64,
+	index uint,
+) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	if b.indexer != nil {
 		// #nosec G701 always in range
 		txRes, err := b.indexer.GetByBlockAndIndex(height, int32(index))
@@ -396,7 +412,10 @@ func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult,
 }
 
 // queryTendermintTxIndexer query tx in tendermint tx indexer
-func (b *Backend) queryTendermintTxIndexer(query string, txGetter func(*rpctypes.ParsedTxs) *rpctypes.ParsedTx) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+func (b *Backend) queryTendermintTxIndexer(
+	query string,
+	txGetter func(*rpctypes.ParsedTxs) *rpctypes.ParsedTx,
+) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	resTxs, err := b.clientCtx.Client.TxSearch(b.ctx, query, false, nil, nil, "")
 	if err != nil {
 		return nil, nil, err
@@ -422,7 +441,10 @@ func (b *Backend) queryTendermintTxIndexer(query string, txGetter func(*rpctypes
 }
 
 // GetTransactionByBlockAndIndex is the common code shared by `GetTransactionByBlockNumberAndIndex` and `GetTransactionByBlockHashAndIndex`.
-func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (b *Backend) GetTransactionByBlockAndIndex(
+	block *tmrpctypes.ResultBlock,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
 	if err != nil {
 		return nil, nil
@@ -467,7 +489,13 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", block.Block.Height, "error", err)
+		b.logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			block.Block.Height,
+			"error",
+			err,
+		)
 	}
 
 	return rpctypes.NewTransactionFromMsg(

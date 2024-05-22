@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -13,7 +13,10 @@ import (
 //
 // Aurthorized: admin policy group 1 (except enabling/disabled
 // inbounds/outbounds and gas price increase), admin policy group 2 (all).
-func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUpdateCrosschainFlags) (*types.MsgUpdateCrosschainFlagsResponse, error) {
+func (k msgServer) UpdateCrosschainFlags(
+	goCtx context.Context,
+	msg *types.MsgUpdateCrosschainFlags,
+) (*types.MsgUpdateCrosschainFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission

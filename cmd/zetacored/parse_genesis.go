@@ -28,6 +28,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
@@ -152,7 +153,11 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 
 // ModifyCrosschainState modifies the crosschain state before importing
 // It truncates the crosschain transactions, inbound transactions and finalized inbounds to MaxItemsForList
-func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
+func ModifyCrosschainState(
+	appState map[string]json.RawMessage,
+	importAppState map[string]json.RawMessage,
+	cdc codec.Codec,
+) error {
 	importedCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedCrossChainGenState.CrossChainTxs = importedCrossChainGenState.CrossChainTxs[:math.Min(MaxItemsForList, len(importedCrossChainGenState.CrossChainTxs))]
 	importedCrossChainGenState.InboundHashToCctxList = importedCrossChainGenState.InboundHashToCctxList[:math.Min(MaxItemsForList, len(importedCrossChainGenState.InboundHashToCctxList))]
@@ -167,7 +172,11 @@ func ModifyCrosschainState(appState map[string]json.RawMessage, importAppState m
 
 // ModifyObserverState modifies the observer state before importing
 // It truncates the ballots and nonce to cctx list to MaxItemsForList
-func ModifyObserverState(appState map[string]json.RawMessage, importAppState map[string]json.RawMessage, cdc codec.Codec) error {
+func ModifyObserverState(
+	appState map[string]json.RawMessage,
+	importAppState map[string]json.RawMessage,
+	cdc codec.Codec,
+) error {
 	importedObserverGenState := observertypes.GetGenesisStateFromAppState(cdc, importAppState)
 	importedObserverGenState.Ballots = importedObserverGenState.Ballots[:math.Min(MaxItemsForList, len(importedObserverGenState.Ballots))]
 	importedObserverGenState.NonceToCctx = importedObserverGenState.NonceToCctx[:math.Min(MaxItemsForList, len(importedObserverGenState.NonceToCctx))]

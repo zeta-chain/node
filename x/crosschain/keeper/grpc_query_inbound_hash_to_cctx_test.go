@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -16,6 +14,7 @@ import (
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )

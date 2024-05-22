@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 

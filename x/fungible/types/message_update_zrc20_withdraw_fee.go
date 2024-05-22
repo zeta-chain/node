@@ -3,7 +3,6 @@ package types
 import (
 	cosmoserror "cosmossdk.io/errors"
 	math "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -13,7 +12,12 @@ const TypeMsgUpdateZRC20WithdrawFee = "update_zrc20_withdraw_fee"
 
 var _ sdk.Msg = &MsgUpdateZRC20WithdrawFee{}
 
-func NewMsgUpdateZRC20WithdrawFee(creator string, zrc20 string, newFee math.Uint, newGasLimit math.Uint) *MsgUpdateZRC20WithdrawFee {
+func NewMsgUpdateZRC20WithdrawFee(
+	creator string,
+	zrc20 string,
+	newFee math.Uint,
+	newGasLimit math.Uint,
+) *MsgUpdateZRC20WithdrawFee {
 	return &MsgUpdateZRC20WithdrawFee{
 		Creator:        creator,
 		Zrc20Address:   zrc20,

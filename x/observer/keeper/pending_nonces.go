@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -30,7 +31,10 @@ func (k Keeper) GetPendingNonces(ctx sdk.Context, tss string, chainID int64) (va
 	return val, true
 }
 
-func (k Keeper) GetAllPendingNoncesPaginated(ctx sdk.Context, pagination *query.PageRequest) (list []types.PendingNonces, pageRes *query.PageResponse, err error) {
+func (k Keeper) GetAllPendingNoncesPaginated(
+	ctx sdk.Context,
+	pagination *query.PageRequest,
+) (list []types.PendingNonces, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 

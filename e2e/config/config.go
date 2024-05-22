@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/chaincfg"
-
 	"gopkg.in/yaml.v2"
 )
 

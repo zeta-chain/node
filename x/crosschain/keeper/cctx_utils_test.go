@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -216,7 +217,11 @@ func Test_IsPending(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(fmt.Sprintf("status %s", tc.status), func(t *testing.T) {
-			require.Equal(t, tc.expected, crosschainkeeper.IsPending(&types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
+			require.Equal(
+				t,
+				tc.expected,
+				crosschainkeeper.IsPending(&types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}),
+			)
 		})
 	}
 }
@@ -298,7 +303,8 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 			Nonce: 100,
 		}, true)
 		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true)
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{}, false)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
+			Return(observertypes.PendingNonces{}, false)
 
 		cctx := types.CrossChainTx{
 			InboundParams: &types.InboundParams{
@@ -326,9 +332,10 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 			Nonce: 100,
 		}, true)
 		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true)
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{
-			NonceHigh: 99,
-		}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
+			Return(observertypes.PendingNonces{
+				NonceHigh: 99,
+			}, true)
 
 		cctx := types.CrossChainTx{
 			InboundParams: &types.InboundParams{
@@ -356,9 +363,10 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 			Nonce: 100,
 		}, true)
 		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true)
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{
-			NonceHigh: 100,
-		}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
+			Return(observertypes.PendingNonces{
+				NonceHigh: 100,
+			}, true)
 
 		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Once()
 		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Once()

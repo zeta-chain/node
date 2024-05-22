@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -13,8 +14,6 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	tmtypes "github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
-
-	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -169,7 +168,12 @@ func ExportGenesisFileWithTimeAndConsensusParams(
 	return genDoc.SaveAs(genFile)
 }
 
-func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
+func initGenFiles(
+	cfg Config,
+	genAccounts []authtypes.GenesisAccount,
+	genBalances []banktypes.Balance,
+	genFiles []string,
+) error {
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)

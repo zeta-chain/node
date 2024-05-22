@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -21,9 +22,18 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
-		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err := sk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		)
 		require.NoError(t, err)
-		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			types.UndistributedObserverRewardsPool,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		)
 		require.NoError(t, err)
 
 		_, err = msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
@@ -32,9 +42,13 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		balance := k.GetBankKeeper().GetBalance(ctx, sdk.MustAccAddressFromBech32(withdrawableEmission.Address), config.BaseDenom).Amount.String()
+		balance := k.GetBankKeeper().
+			GetBalance(ctx, sdk.MustAccAddressFromBech32(withdrawableEmission.Address), config.BaseDenom).
+			Amount.String()
 		require.Equal(t, withdrawableEmission.Amount.String(), balance)
-		balance = k.GetBankKeeper().GetBalance(ctx, types.UndistributedObserverRewardsPoolAddress, config.BaseDenom).Amount.String()
+		balance = k.GetBankKeeper().
+			GetBalance(ctx, types.UndistributedObserverRewardsPoolAddress, config.BaseDenom).
+			Amount.String()
 		require.Equal(t, sdk.ZeroInt().String(), balance)
 	})
 
@@ -44,9 +58,18 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
-		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err := sk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		)
 		require.NoError(t, err)
-		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			types.UndistributedObserverRewardsPool,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		)
 		require.NoError(t, err)
 
 		_, err = msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
@@ -56,19 +79,22 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrInvalidAddress)
 	})
 
-	t.Run("unable to withdraw emissions if undistributed rewards pool does not have enough balance", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+	t.Run(
+		"unable to withdraw emissions if undistributed rewards pool does not have enough balance",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
-		msgServer := keeper.NewMsgServerImpl(*k)
-		withdrawableEmission := sample.WithdrawableEmissions(t)
-		k.SetWithdrawableEmission(ctx, withdrawableEmission)
+			msgServer := keeper.NewMsgServerImpl(*k)
+			withdrawableEmission := sample.WithdrawableEmissions(t)
+			k.SetWithdrawableEmission(ctx, withdrawableEmission)
 
-		_, err := msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
-			Creator: withdrawableEmission.Address,
-			Amount:  withdrawableEmission.Amount,
-		})
-		require.ErrorIs(t, err, types.ErrRewardsPoolDoesNotHaveEnoughBalance)
-	})
+			_, err := msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
+				Creator: withdrawableEmission.Address,
+				Amount:  withdrawableEmission.Amount,
+			})
+			require.ErrorIs(t, err, types.ErrRewardsPoolDoesNotHaveEnoughBalance)
+		},
+	)
 
 	t.Run("unable to withdraw emissions with invalid amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
@@ -91,15 +117,29 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
-		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err := sk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		)
 		require.NoError(t, err)
-		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			types.UndistributedObserverRewardsPool,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		)
 		require.NoError(t, err)
 		address, err := sdk.AccAddressFromBech32(withdrawableEmission.Address)
 		require.NoError(t, err)
 
-		bankMock.On("SendCoinsFromModuleToAccount",
-			ctx, types.UndistributedObserverRewardsPool, address, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount))).
+		bankMock.On(
+			"SendCoinsFromModuleToAccount",
+			ctx,
+			types.UndistributedObserverRewardsPool,
+			address,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)),
+		).
 			Return(types.ErrUnableToWithdrawEmissions).Once()
 		bankMock.On("GetBalance",
 			ctx, mock.Anything, config.BaseDenom).
@@ -110,7 +150,11 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		})
 
 		require.ErrorIs(t, err, types.ErrUnableToWithdrawEmissions)
-		balance := sk.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(withdrawableEmission.Address), config.BaseDenom).Amount.String()
+		balance := sk.BankKeeper.GetBalance(
+			ctx,
+			sdk.MustAccAddressFromBech32(withdrawableEmission.Address),
+			config.BaseDenom,
+		).Amount.String()
 		require.Equal(t, sdk.ZeroInt().String(), balance)
 	})
 
@@ -121,9 +165,18 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
 		withdrawAmount := withdrawableEmission.Amount.Add(sdkmath.OneInt())
-		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawAmount)))
+		err := sk.BankKeeper.MintCoins(
+			ctx,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawAmount)),
+		)
 		require.NoError(t, err)
-		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawAmount)))
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			types.UndistributedObserverRewardsPool,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawAmount)),
+		)
 		require.NoError(t, err)
 
 		_, err = msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{

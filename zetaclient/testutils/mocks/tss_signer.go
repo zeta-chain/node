@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -112,7 +113,10 @@ func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 
 		// witness program: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Witness_program
 		// The HASH160 of the public key must match the 20-byte witness program.
-		addrWPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pk.SerializeCompressed()), &chaincfg.TestNet3Params)
+		addrWPKH, err := btcutil.NewAddressWitnessPubKeyHash(
+			btcutil.Hash160(pk.SerializeCompressed()),
+			&chaincfg.TestNet3Params,
+		)
 		if err != nil {
 			fmt.Printf("error NewAddressWitnessPubKeyHash: %v", err)
 			return nil

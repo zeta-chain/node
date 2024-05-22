@@ -32,7 +32,11 @@ func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
 	}
 }
 
-func EmitEventAddObserver(ctx sdk.Context, observerCount uint64, operatorAddress, zetaclientGranteeAddress, zetaclientGranteePubkey string) {
+func EmitEventAddObserver(
+	ctx sdk.Context,
+	observerCount uint64,
+	operatorAddress, zetaclientGranteeAddress, zetaclientGranteePubkey string,
+) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventNewObserverAdded{
 		MsgTypeUrl:               sdk.MsgTypeURL(&types.MsgAddObserver{}),
 		ObserverAddress:          operatorAddress,
