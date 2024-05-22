@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-// ValidateCCTXIndex validates the zeta index
+// ValidateCCTXIndex validates the CCTX index
 func ValidateCCTXIndex(index string) error {
 	if len(index) != CCTXIndexLength {
 		return errors.Wrapf(ErrInvalidIndexValue, "invalid index length %d, expected: %d", len(index), CCTXIndexLength)
