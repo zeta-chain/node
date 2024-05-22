@@ -312,7 +312,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testHeader := !light && !skipHeaderProof
 
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
-		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
