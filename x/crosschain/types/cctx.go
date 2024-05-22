@@ -51,7 +51,7 @@ func (m CrossChainTx) Validate() error {
 		return fmt.Errorf("outbound tx params cannot be more than 2")
 	}
 	if m.Index != "" {
-		err := ValidateZetaIndex(m.Index)
+		err := ValidateCCTXIndex(m.Index)
 		if err != nil {
 			return err
 		}
@@ -69,16 +69,10 @@ func (m CrossChainTx) Validate() error {
 	return nil
 }
 
-/*
-AddRevertOutbound does the following things in one function:
-
-	1. create a new OutboundTxParams for the revert
-
-	2. append the new OutboundTxParams to the current OutboundTxParams
-
-	3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
-*/
-
+// AddRevertOutbound does the following things in one function:
+//  1. create a new OutboundTxParams for the revert
+//  2. append the new OutboundTxParams to the current OutboundTxParams
+//  3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
 func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	if m.IsCurrentOutboundRevert() {
 		return fmt.Errorf("cannot revert a revert tx")
