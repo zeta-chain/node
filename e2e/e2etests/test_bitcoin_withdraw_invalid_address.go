@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
