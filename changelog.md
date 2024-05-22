@@ -39,6 +39,7 @@
 
 * [1484](https://github.com/zeta-chain/node/issues/1484) - replaced hard-coded `MaxLookaheadNonce` with a default lookback factor
 * [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
+* [2233](https://github.com/zeta-chain/node/pull/2233) - fix `IsSupported` flag not properly updated in zetaclient's context
 
 ### CI
 
