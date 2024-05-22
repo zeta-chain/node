@@ -634,6 +634,26 @@ func GetTxResultByHash(
 	return hash, txResult, nil
 }
 
+// GetBlockHeightByTxHash gets the block height by block hash
+func GetBlockHeightByHash(
+	rpcClient interfaces.BTCRPCClient,
+	hash string,
+) (int64, error) {
+	// decode the block hash
+	var blockHash chainhash.Hash
+	err := chainhash.Decode(&blockHash, hash)
+	if err != nil {
+		return 0, errors.Wrapf(err, "GetBlockHeightByHash: error decoding block hash %s", hash)
+	}
+
+	// get block by hash
+	block, err := rpcClient.GetBlockVerbose(&blockHash)
+	if err != nil {
+		return 0, errors.Wrapf(err, "GetBlockHeightByHash: error GetBlockVerbose %s", hash)
+	}
+	return block.Height, nil
+}
+
 // GetRawTxResult gets the raw tx result
 func GetRawTxResult(
 	rpcClient interfaces.BTCRPCClient,

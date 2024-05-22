@@ -219,10 +219,32 @@ func (suite *BitcoinObserverTestSuite) Test3() {
 func TestBitcoinObserverLive(t *testing.T) {
 	// suite.Run(t, new(BitcoinClientTestSuite))
 
+	// LiveTestGetBlockHeightByHash(t)
 	// LiveTestBitcoinFeeRate(t)
 	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
 	// LiveTestAvgFeeRateTestnetMempoolSpace(t)
 	// LiveTestGetSenderByVin(t)
+}
+
+// LiveTestGetBlockHeightByHash queries Bitcoin block height by hash
+func LiveTestGetBlockHeightByHash(t *testing.T) {
+	// setup Bitcoin client
+	client, err := getRPCClient(8332)
+	require.NoError(t, err)
+
+	// the block hashes to test
+	expectedHeight := int64(835053)
+	hash := "00000000000000000000994a5d12976ec5bda078a7b9c27981f0a4e7a6d46d23"
+	invalidHash := "invalidhash"
+
+	// get block by invalid hash
+	_, err = GetBlockHeightByHash(client, invalidHash)
+	require.ErrorContains(t, err, "error decoding block hash")
+
+	// get block height by block hash
+	height, err := GetBlockHeightByHash(client, hash)
+	require.NoError(t, err)
+	require.Equal(t, expectedHeight, height)
 }
 
 // LiveTestBitcoinFeeRate query Bitcoin mainnet fee rate every 5 minutes
