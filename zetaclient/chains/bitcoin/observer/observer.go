@@ -39,9 +39,6 @@ import (
 )
 
 const (
-	// maxHeightDiff contains the max height diff in case the last block is too old when the observer starts
-	maxHeightDiff = 10000
-
 	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
 	btcBlocksPerDay = 144
 
@@ -684,37 +681,35 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 	return nil
 }
 
-func (ob *Observer) LoadLastBlock() error {
+// LoadLastScannedBlock loads last scanned block from database
+// The last scanned block is the height from which the observer should continue scanning for inbound transactions
+func (ob *Observer) LoadLastScannedBlock() error {
 	// Get the latest block number from node
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
 	}
 	if bn < 0 {
-		return fmt.Errorf("LoadLastBlock: negative block number %d", bn)
+		return fmt.Errorf("LoadLastScannedBlock: negative block number %d", bn)
 	}
 
 	//Load persisted block number
 	var lastBlockNum clienttypes.LastBlockSQLType
 	if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
-		ob.logger.Chain.Info().Msg("LastBlockNum not found in DB, scan from latest")
+		ob.logger.Chain.Info().Msg("LoadLastScannedBlock: last scanned block not found in DB, scan from latest")
 		ob.SetLastBlockHeightScanned(bn)
 	} else {
 		// #nosec G701 always in range
 		lastBN := int64(lastBlockNum.Num)
 		ob.SetLastBlockHeightScanned(lastBN)
-
-		//If persisted block number is too low, use the latest height
-		if (bn - lastBN) > maxHeightDiff {
-			ob.logger.Chain.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
-			ob.SetLastBlockHeightScanned(bn)
-		}
 	}
 
-	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
+	// bitcoin regtest starts from block 100
+	if chains.IsBitcoinRegnet(ob.chain.ChainId) {
 		ob.SetLastBlockHeightScanned(100)
 	}
-	ob.logger.Chain.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().
+		Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
 
 	return nil
 }
@@ -812,8 +807,8 @@ func (ob *Observer) loadDB(dbpath string) error {
 		return err
 	}
 
-	//Load last block
-	err = ob.LoadLastBlock()
+	// Load last scanned block
+	err = ob.LoadLastScannedBlock()
 	if err != nil {
 		return err
 	}
