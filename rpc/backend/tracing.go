@@ -155,31 +155,32 @@ func tryGetEthereumTxFromTxRes(txRes *types.ResponseDeliverTx) (*evmtypes.MsgEth
 	ethTx := &evmtypes.MsgEthereumTx{}
 	txFound := false
 	for _, ev := range txRes.Events {
-		if ev.Type == evmtypes.EventTypeEthereumTx {
-			for _, attr := range ev.Attributes {
-				if string(attr.Key) == "TxBytes" {
-					txFound = true
-					hexBytes, err := hexutil.Decode(string(attr.Value))
-					if err != nil {
-						return nil, err
-					}
-					t := ethtypes.Transaction{}
-					if err := t.UnmarshalBinary(hexBytes); err != nil {
-						return nil, err
-					}
-
-					if err := ethTx.FromEthereumTx(&t); err != nil {
-						return nil, err
-					}
+		if ev.Type != evmtypes.EventTypeEthereumTx {
+			continue
+		}
+		for _, attr := range ev.Attributes {
+			if string(attr.Key) == "TxBytes" {
+				txFound = true
+				hexBytes, err := hexutil.Decode(string(attr.Value))
+				if err != nil {
+					return nil, err
+				}
+				t := ethtypes.Transaction{}
+				if err := t.UnmarshalBinary(hexBytes); err != nil {
+					return nil, err
 				}
 
-				if string(attr.Key) == "sender" {
-					ethTx.From = string(attr.Value)
+				if err := ethTx.FromEthereumTx(&t); err != nil {
+					return nil, err
 				}
+			}
 
-				if string(attr.Key) == "TxHash" {
-					ethTx.Hash = string(attr.Value)
-				}
+			if attr.Key == "sender" {
+				ethTx.From = attr.Value
+			}
+
+			if attr.Key == "TxHash" {
+				ethTx.Hash = attr.Value
 			}
 		}
 	}
