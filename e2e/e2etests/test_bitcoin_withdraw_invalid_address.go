@@ -9,6 +9,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner, args []string) {
@@ -45,8 +46,12 @@ func withdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 		panic(fmt.Errorf("approve receipt status is not 1"))
 	}
 
-	// mine blocks
-	stop := r.MineBlocks()
+	// mine blocks if testing on regnet
+	var stop chan struct{}
+	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
+	if isRegnet {
+		stop = r.MineBlocks()
+	}
 
 	// withdraw amount provided as test arg BTC from ZRC20 to BTC legacy address
 	// the address "1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3" is for mainnet, not regtest
@@ -58,6 +63,9 @@ func withdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	if receipt.Status == 1 {
 		panic(fmt.Errorf("withdraw receipt status is successful for an invalid BTC address"))
 	}
+
 	// stop mining
-	stop <- struct{}{}
+	if isRegnet {
+		stop <- struct{}{}
+	}
 }

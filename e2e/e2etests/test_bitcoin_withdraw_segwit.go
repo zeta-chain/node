@@ -15,7 +15,7 @@ func TestBitcoinWithdrawSegWit(r *runner.E2ERunner, args []string) {
 
 	// parse arguments
 	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
-	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
 	_, ok := receiver.(*btcutil.AddressWitnessPubKeyHash)
 	if !ok {
 		panic("Invalid receiver address specified for TestBitcoinWithdrawSegWit.")
