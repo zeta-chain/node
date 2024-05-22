@@ -205,9 +205,13 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		InboundParams:  inboundParams,
 		OutboundParams: []*OutboundParams{outBoundParams},
 	}
+
+	// TODO: remove this validate call
+	// https://github.com/zeta-chain/node/issues/2236
 	err := cctx.Validate()
 	if err != nil {
 		return CrossChainTx{}, err
 	}
+
 	return cctx, nil
 }
