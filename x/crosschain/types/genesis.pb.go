@@ -24,7 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines the metacore module's genesis state.
+// GenesisState defines the crosschain modules genesis state.
 type GenesisState struct {
 	OutTxTrackerList    []OutTxTracker     `protobuf:"bytes,2,rep,name=outTxTrackerList,proto3" json:"outTxTrackerList"`
 	GasPriceList        []*GasPrice        `protobuf:"bytes,5,rep,name=gasPriceList,proto3" json:"gasPriceList,omitempty"`
@@ -133,7 +133,8 @@ func (m *GenesisState) GetRateLimiterFlags() RateLimiterFlags {
 	return RateLimiterFlags{}
 }
 
-// GenesisState defines the metacore module's genesis state.
+// Remove legacy types
+// https://github.com/zeta-chain/node/issues/2139
 type GenesisStateLegacy struct {
 	Params              *Params            `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	OutTxTrackerList    []OutTxTracker     `protobuf:"bytes,2,rep,name=outTxTrackerList,proto3" json:"outTxTrackerList"`

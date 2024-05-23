@@ -14,7 +14,7 @@ import type { InTxTracker } from "./in_tx_tracker_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
- * GenesisState defines the metacore module's genesis state.
+ * GenesisState defines the crosschain modules genesis state.
  *
  * @generated from message zetachain.zetacore.crosschain.GenesisState
  */
@@ -80,7 +80,8 @@ export declare class GenesisState extends Message<GenesisState> {
 }
 
 /**
- * GenesisState defines the metacore module's genesis state.
+ * Remove legacy types
+ * https://github.com/zeta-chain/node/issues/2139
  *
  * @generated from message zetachain.zetacore.crosschain.GenesisState_legacy
  */

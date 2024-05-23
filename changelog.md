@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v17.0.0
+
+### Fixes
+
+* [2249](https://github.com/zeta-chain/node/pull/2249) - fix inbound and outbound validation for BSC chain
+
 ## v16.0.0
 
 ### Breaking Changes

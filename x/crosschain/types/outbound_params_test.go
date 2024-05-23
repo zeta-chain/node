@@ -11,25 +11,34 @@ import (
 
 func TestOutboundTxParams_Validate(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
+
 	outTxParams := sample.OutboundTxParamsValidChainID(r)
 	outTxParams.Receiver = ""
 	require.ErrorContains(t, outTxParams.Validate(), "receiver cannot be empty")
+
 	outTxParams = sample.OutboundTxParamsValidChainID(r)
 	outTxParams.ReceiverChainId = 1000
 	require.ErrorContains(t, outTxParams.Validate(), "invalid receiver chain id 1000")
-	outTxParams = sample.OutboundTxParamsValidChainID(r)
-	outTxParams.Receiver = "0x123"
-	require.ErrorContains(t, outTxParams.Validate(), "invalid address 0x123")
+
 	outTxParams = sample.OutboundTxParamsValidChainID(r)
 	outTxParams.Amount = sdkmath.Uint{}
 	require.ErrorContains(t, outTxParams.Validate(), "amount cannot be nil")
-	outTxParams = sample.OutboundTxParamsValidChainID(r)
-	outTxParams.OutboundTxBallotIndex = "12"
-	require.ErrorContains(t, outTxParams.Validate(), "invalid index length 2")
+
 	outTxParams = sample.OutboundTxParamsValidChainID(r)
 	outTxParams.OutboundTxBallotIndex = sample.ZetaIndex(t)
 	outTxParams.OutboundTxHash = sample.Hash().String()
 	require.NoError(t, outTxParams.Validate())
+
+	// Disabled checks
+	// TODO: Improve the checks, move the validation call to a new place and reenable
+	// https://github.com/zeta-chain/node/issues/2234
+	// https://github.com/zeta-chain/node/issues/2235
+	//outTxParams = sample.OutboundParamsValidChainID(r)
+	//outTxParams.Receiver = "0x123"
+	//require.ErrorContains(t, outTxParams.Validate(), "invalid address 0x123")
+	//outTxParams = sample.OutboundParamsValidChainID(r)
+	//outTxParams.BallotIndex = "12"
+	//require.ErrorContains(t, outTxParams.Validate(), "invalid index length 2")
 }
 
 func TestOutboundTxParams_GetGasPrice(t *testing.T) {

@@ -91,7 +91,7 @@ func Test_InitializeCCTX(t *testing.T) {
 		tss := sample.Tss()
 		msg := types.MsgVoteOnObservedInboundTx{
 			Creator:       creator,
-			Sender:        "invalid",
+			Sender:        "",
 			SenderChainId: senderChain.ChainId,
 			Receiver:      receiver.String(),
 			ReceiverChain: receiverChain.ChainId,
@@ -106,7 +106,7 @@ func Test_InitializeCCTX(t *testing.T) {
 			EventIndex:    eventIndex,
 		}
 		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
-		require.ErrorContains(t, err, "invalid address")
+		require.ErrorContains(t, err, "sender cannot be empty")
 	})
 }
 
