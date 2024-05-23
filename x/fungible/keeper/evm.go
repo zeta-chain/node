@@ -755,9 +755,6 @@ func (k Keeper) CallEVMWithData(
 		}
 
 		if !noEthereumTxEvent {
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert tx msg, err=%w", err)
-			}
 			attrs = append(attrs, sdk.NewAttribute("TxData", hexutil.Encode(msg.Data()))) // adding txData for more info in rpc methods
 			attrs = append(attrs, sdk.NewAttribute("TxNonce", fmt.Sprint(nonce)))         // adding nonce for more info in rpc methods
 			ctx.EventManager().EmitEvents(sdk.Events{

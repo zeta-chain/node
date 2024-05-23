@@ -183,14 +183,14 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	}
 
 	// fix msg indexes, because some eth txs indexed here don't have corresponding sdk.Msg
-	currMsgIndex := -1
+	currMsgIndex := 0
 	for _, tx := range p.Txs {
 		if tx.Type == 88 {
 			tx.MsgIndex = math.MaxUint32
 			// todo: fix mapping as well
 		} else {
-			currMsgIndex++
 			tx.MsgIndex = currMsgIndex
+			currMsgIndex++
 		}
 	}
 	return p, nil
