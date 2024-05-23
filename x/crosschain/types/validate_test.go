@@ -61,11 +61,11 @@ func TestValidateAddressForChain(t *testing.T) {
 	)
 }
 
-func TestValidateZetaIndex(t *testing.T) {
-	require.NoError(t, types.ValidateZetaIndex("0x84bd5c9922b63c52d8a9ca686e0a57ff978150b71be0583514d01c27aa341910"))
-	require.NoError(t, types.ValidateZetaIndex(sample.ZetaIndex(t)))
-	require.Error(t, types.ValidateZetaIndex("0"))
-	require.Error(t, types.ValidateZetaIndex("0x70e967acFcC17c3941E87562161406d41676FD83"))
+func TestValidateCCTXIndex(t *testing.T) {
+	require.NoError(t, types.ValidateCCTXIndex("0x84bd5c9922b63c52d8a9ca686e0a57ff978150b71be0583514d01c27aa341910"))
+	require.NoError(t, types.ValidateCCTXIndex(sample.ZetaIndex(t)))
+	require.Error(t, types.ValidateCCTXIndex("0"))
+	require.Error(t, types.ValidateCCTXIndex("0x70e967acFcC17c3941E87562161406d41676FD83"))
 }
 
 func TestValidateHashForChain(t *testing.T) {
