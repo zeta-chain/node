@@ -25,6 +25,7 @@ func SetupHandlers(app *App) {
 	})
 
 	app.UpgradeKeeper.SetUpgradeHandler("v17-athens", func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Running upgrade handler for v17-athens")
 		return vm, nil
 	})
 

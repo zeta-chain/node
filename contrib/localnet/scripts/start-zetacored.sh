@@ -34,10 +34,9 @@ export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-export UpgradeName=${NEW_VERSION}
 
 # upgrade name used for upgrade testing
-export UpgradeName=${NEW_VERSION}
+export UpgradeName=v17-athens
 
 # generate node list
 START=1
@@ -245,4 +244,3 @@ else
   tail -f zetanode.log
 
 fi
-
