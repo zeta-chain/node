@@ -8,6 +8,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -32,7 +33,13 @@ func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	}()
 	runner.Lock()
 
-	cctx := utils.WaitCctxMinedByInboundHash(runner.Ctx, txHash.Hex(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(
+		runner.Ctx,
+		txHash.Hex(),
+		runner.CctxClient,
+		runner.Logger,
+		runner.CctxTimeout,
+	)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
 			cctx.CctxStatus.Status.String(),

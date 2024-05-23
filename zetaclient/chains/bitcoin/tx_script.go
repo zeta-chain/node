@@ -12,9 +12,10 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/btcutil/base58"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/ripemd160"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
-	"golang.org/x/crypto/ripemd160"
 )
 
 const (

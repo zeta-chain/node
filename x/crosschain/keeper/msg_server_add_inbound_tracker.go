@@ -6,13 +6,17 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AddInboundTracker adds a new record to the inbound transaction tracker.
-func (k msgServer) AddInboundTracker(goCtx context.Context, msg *types.MsgAddInboundTracker) (*types.MsgAddInboundTrackerResponse, error) {
+func (k msgServer) AddInboundTracker(
+	goCtx context.Context,
+	msg *types.MsgAddInboundTracker,
+) (*types.MsgAddInboundTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {

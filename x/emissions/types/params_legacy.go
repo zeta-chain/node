@@ -21,9 +21,25 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyPrefix(ParamMinBondFactor), &p.MinBondFactor, validateMinBondFactor),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamAvgBlockTime), &p.AvgBlockTime, validateAvgBlockTime),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamTargetBondRatio), &p.TargetBondRatio, validateTargetBondRatio),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamValidatorEmissionPercentage), &p.ValidatorEmissionPercentage, validateValidatorEmissionPercentage),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamObserverEmissionPercentage), &p.ObserverEmissionPercentage, validateObserverEmissionPercentage),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamTssSignerEmissionPercentage), &p.TssSignerEmissionPercentage, validateTssEmissionPercentage),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamDurationFactorConstant), &p.DurationFactorConstant, validateDurationFactorConstant),
+		paramtypes.NewParamSetPair(
+			KeyPrefix(ParamValidatorEmissionPercentage),
+			&p.ValidatorEmissionPercentage,
+			validateValidatorEmissionPercentage,
+		),
+		paramtypes.NewParamSetPair(
+			KeyPrefix(ParamObserverEmissionPercentage),
+			&p.ObserverEmissionPercentage,
+			validateObserverEmissionPercentage,
+		),
+		paramtypes.NewParamSetPair(
+			KeyPrefix(ParamTssSignerEmissionPercentage),
+			&p.TssSignerEmissionPercentage,
+			validateTssEmissionPercentage,
+		),
+		paramtypes.NewParamSetPair(
+			KeyPrefix(ParamDurationFactorConstant),
+			&p.DurationFactorConstant,
+			validateDurationFactorConstant,
+		),
 	}
 }

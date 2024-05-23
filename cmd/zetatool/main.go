@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/zeta-chain/zetacore/cmd/zetatool/filterdeposit"
-
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
+	"github.com/zeta-chain/zetacore/cmd/zetatool/filterdeposit"
 )
 
 var rootCmd = &cobra.Command{

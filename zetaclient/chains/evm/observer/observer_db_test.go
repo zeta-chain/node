@@ -9,9 +9,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 const TempSQLiteDbPath = "file::memory:?cache=shared"

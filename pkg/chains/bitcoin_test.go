@@ -33,6 +33,33 @@ func TestBitcoinNetParamsFromChainID(t *testing.T) {
 	}
 }
 
+func TestBitcoinChainIDFromNetParams(t *testing.T) {
+	tests := []struct {
+		name            string
+		networkName     string
+		expectedChainID int64
+		wantErr         bool
+	}{
+		{"Regnet", BitcoinRegnetParams.Name, BtcRegtestChain.ChainId, false},
+		{"Mainnet", BitcoinMainnetParams.Name, BtcMainnetChain.ChainId, false},
+		{"Testnet", BitcoinTestnetParams.Name, BtcTestNetChain.ChainId, false},
+		{"Unknown", "Unknown", 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chainID, err := BitcoinChainIDFromNetworkName(tt.networkName)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Zero(t, chainID)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedChainID, chainID)
+			}
+		})
+	}
+}
+
 func TestIsBitcoinRegnet(t *testing.T) {
 	require.True(t, IsBitcoinRegnet(BtcRegtestChain.ChainId))
 	require.False(t, IsBitcoinRegnet(BtcMainnetChain.ChainId))

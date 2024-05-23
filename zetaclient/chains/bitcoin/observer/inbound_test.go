@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -41,11 +42,19 @@ func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHash string) *mocks
 func TestAvgFeeRateBlock828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(
+		t,
+		&blockVb,
+		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"),
+	)
 
 	// https://mempool.space/block/000000000000000000025ca01d2c1094b8fd3bacc5468cc3193ced6a14618c27
 	var blockMb testutils.MempoolBlock
-	testutils.LoadObjectFromJSONFile(t, &blockMb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(
+		t,
+		&blockMb,
+		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"),
+	)
 
 	gasRate, err := bitcoin.CalcBlockAvgFeeRate(&blockVb, &chaincfg.MainNetParams)
 	require.NoError(t, err)
@@ -55,7 +64,11 @@ func TestAvgFeeRateBlock828440(t *testing.T) {
 func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(
+		t,
+		&blockVb,
+		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"),
+	)
 
 	t.Run("block has no transactions", func(t *testing.T) {
 		emptyVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{}}
@@ -141,7 +154,11 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 func TestCalcDepositorFee828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(
+		t,
+		&blockVb,
+		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"),
+	)
 	avgGasRate := float64(32.0)
 	// #nosec G701 test - always in range
 
@@ -237,7 +254,11 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2PKH tx
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
 		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
-		nameMsgTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chain.ChainId, txHash))
+		nameMsgTx := path.Join(
+			TestDataDir,
+			testutils.TestDataPathBTC,
+			testutils.FileNameBTCMsgTx(chain.ChainId, txHash),
+		)
 		var msgTx wire.MsgTx
 		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
 

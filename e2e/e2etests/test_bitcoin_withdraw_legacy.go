@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
@@ -14,7 +15,7 @@ func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
 
 	// parse arguments and withdraw BTC
 	defaultReceiver := "mxpYha3UJKUgSwsAz2qYRqaDSwAkKZ3YEY"
-	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
 	_, ok := receiver.(*btcutil.AddressPubKeyHash)
 	if !ok {
 		panic("Invalid receiver address specified for TestBitcoinWithdrawLegacy.")

@@ -142,6 +142,19 @@ gosec:
 	gosec  -exclude-dir=localnet ./...
 
 ###############################################################################
+###                           		Formatting			                    ###
+###############################################################################
+
+fmt-import:
+	@bash ./scripts/fmt-imports.sh
+@PHONY: fmt-import
+
+fmt-golines:
+	@echo "--> Formatting Go lines"
+	@bash ./scripts/fmt-golines.sh
+.PHONY: fmt-golines
+
+###############################################################################
 ###                           Generation commands  		                    ###
 ###############################################################################
 
@@ -185,7 +198,8 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-generate: proto-gen openapi specs typescript docs-zetacored mocks
+# generate also includes Go code formatting
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-import fmt-golines
 .PHONY: generate
 
 ###############################################################################

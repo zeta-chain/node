@@ -73,7 +73,10 @@ func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNa
 }
 
 // GetE2ETestsToRunByConfig prepares a list of E2ETests to run based on provided test names and their corresponding arguments
-func (runner *E2ERunner) GetE2ETestsToRunByConfig(availableTests []E2ETest, testConfigs []E2ETestRunConfig) ([]E2ETest, error) {
+func (runner *E2ERunner) GetE2ETestsToRunByConfig(
+	availableTests []E2ETest,
+	testConfigs []E2ETestRunConfig,
+) ([]E2ETest, error) {
 	tests := []E2ETest{}
 	for _, testSpec := range testConfigs {
 		e2eTest, found := findE2ETestByName(availableTests, testSpec.Name)

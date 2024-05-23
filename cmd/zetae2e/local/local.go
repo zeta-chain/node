@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
@@ -265,14 +265,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositNewAddressName,
+		}
+		zevmMPTests := []string{}
+		zevmMPAdvancedTests := []string{
 			e2etests.TestMessagePassingZEVMToEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
-			e2etests.TestZetaDepositName,
-			e2etests.TestZetaDepositNewAddressName,
 		}
 		bitcoinTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
@@ -300,6 +303,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
+			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
 			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
@@ -309,6 +313,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}

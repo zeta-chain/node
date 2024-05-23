@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -57,7 +58,11 @@ func TestMsgDisableHeaderVerification_ValidateBasic(t *testing.T) {
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(t, err, fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId))
+				require.ErrorContains(
+					t,
+					err,
+					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId),
+				)
 			},
 		},
 		{

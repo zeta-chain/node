@@ -8,28 +8,33 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func parseBitcoinWithdrawArgs(args []string, defaultReceiver string) (btcutil.Address, *big.Int) {
+func parseBitcoinWithdrawArgs(r *runner.E2ERunner, args []string, defaultReceiver string) (btcutil.Address, *big.Int) {
+	// get bitcoin chain id
+	chainID := r.GetBitcoinChainID()
+
 	// parse receiver address
 	var err error
 	var receiver btcutil.Address
 	if args[0] == "" {
 		// use the default receiver
-		receiver, err = chains.DecodeBtcAddress(defaultReceiver, chains.BtcRegtestChain.ChainId)
+		receiver, err = chains.DecodeBtcAddress(defaultReceiver, chainID)
 		if err != nil {
 			panic("Invalid default receiver address specified for TestBitcoinWithdraw.")
 		}
 	} else {
-		receiver, err = chains.DecodeBtcAddress(args[0], chains.BtcRegtestChain.ChainId)
+		receiver, err = chains.DecodeBtcAddress(args[0], chainID)
 		if err != nil {
 			panic("Invalid receiver address specified for TestBitcoinWithdraw.")
 		}
 	}
+
 	// parse the withdrawal amount
 	withdrawalAmount, err := strconv.ParseFloat(args[1], 64)
 	if err != nil {
@@ -45,7 +50,11 @@ func parseBitcoinWithdrawArgs(args []string, defaultReceiver string) (btcutil.Ad
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	tx, err := r.BTCZRC20.Approve(r.ZEVMAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
+	tx, err := r.BTCZRC20.Approve(
+		r.ZEVMAuth,
+		r.BTCZRC20Addr,
+		big.NewInt(amount.Int64()*2),
+	) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
@@ -54,8 +63,12 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 		panic(fmt.Errorf("approve receipt status is not 1"))
 	}
 
-	// mine blocks
-	stop := r.MineBlocks()
+	// mine blocks if testing on regnet
+	var stop chan struct{}
+	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
+	if isRegnet {
+		stop = r.MineBlocks()
+	}
 
 	// withdraw 'amount' of BTC from ZRC20 to BTC address
 	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
@@ -105,7 +118,9 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// stop mining
-	stop <- struct{}{}
+	if isRegnet {
+		stop <- struct{}{}
+	}
 
 	return rawTx
 }

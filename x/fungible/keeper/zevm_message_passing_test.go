@@ -10,6 +10,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -34,7 +35,15 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err = k.ZETADepositAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			inboundSenderChainID,
+			inboundAmount,
+			data,
+			cctxIndexBytes,
+		)
 		require.NoError(t, err)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
@@ -78,7 +87,15 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err = k.ZETADepositAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			inboundSenderChainID,
+			inboundAmount,
+			data,
+			cctxIndexBytes,
+		)
 		require.NoError(t, err)
 		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxReceiver.Bytes()), config.BaseDenom)
 		require.Equal(t, inboundAmount.Int64(), b.Amount.Int64())
@@ -95,7 +112,15 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err := k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err := k.ZETADepositAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			inboundSenderChainID,
+			inboundAmount,
+			data,
+			cctxIndexBytes,
+		)
 		require.NoError(t, err)
 		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxReceiver.Bytes()), config.BaseDenom)
 		require.Equal(t, inboundAmount.Int64(), b.Amount.Int64())
@@ -123,7 +148,15 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		errorMint := errors.New("", 10, "error minting coins")
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
-		_, err = k.ZETADepositAndCallContract(ctx, zetaTxSender, zetaTxReceiver, inboundSenderChainID, inboundAmount, data, cctxIndexBytes)
+		_, err = k.ZETADepositAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			inboundSenderChainID,
+			inboundAmount,
+			data,
+			cctxIndexBytes,
+		)
 		require.ErrorIs(t, err, errorMint)
 	})
 }
@@ -146,7 +179,16 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			senderChainID.Int64(),
+			destinationChainID.Int64(),
+			amount,
+			data,
+			cctxIndexBytes,
+		)
 		require.NoError(t, err)
 
 		dappAbi, err := contracts.DappMetaData.GetAbi()
@@ -191,7 +233,16 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			senderChainID.Int64(),
+			destinationChainID.Int64(),
+			amount,
+			data,
+			cctxIndexBytes,
+		)
 		require.NoError(t, err)
 		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxSender.Bytes()), config.BaseDenom)
 		require.Equal(t, amount.Int64(), b.Amount.Int64())
@@ -209,7 +260,16 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err := k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err := k.ZETARevertAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			senderChainID.Int64(),
+			destinationChainID.Int64(),
+			amount,
+			data,
+			cctxIndexBytes,
+		)
 		require.NoError(t, err)
 		b := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(zetaTxSender.Bytes()), config.BaseDenom)
 		require.Equal(t, amount.Int64(), b.Amount.Int64())
@@ -238,7 +298,16 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		errorMint := errors.New("", 101, "error minting coins")
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
-		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			senderChainID.Int64(),
+			destinationChainID.Int64(),
+			amount,
+			data,
+			cctxIndexBytes,
+		)
 		require.ErrorIs(t, err, errorMint)
 	})
 
@@ -258,7 +327,16 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZETARevertAndCallContract(ctx, zetaTxSender, zetaTxReceiver, senderChainID.Int64(), destinationChainID.Int64(), amount, data, cctxIndexBytes)
+		_, err = k.ZETARevertAndCallContract(
+			ctx,
+			zetaTxSender,
+			zetaTxReceiver,
+			senderChainID.Int64(),
+			destinationChainID.Int64(),
+			amount,
+			data,
+			cctxIndexBytes,
+		)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 		require.ErrorContains(t, err, "GetSystemContract address not found")
 	})

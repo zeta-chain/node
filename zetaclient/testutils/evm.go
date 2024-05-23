@@ -7,7 +7,10 @@ import (
 )
 
 // ParseReceiptZetaSent parses a ZetaSent event from a receipt
-func ParseReceiptZetaSent(receipt *ethtypes.Receipt, connector *zetaconnector.ZetaConnectorNonEth) *zetaconnector.ZetaConnectorNonEthZetaSent {
+func ParseReceiptZetaSent(
+	receipt *ethtypes.Receipt,
+	connector *zetaconnector.ZetaConnectorNonEth,
+) *zetaconnector.ZetaConnectorNonEthZetaSent {
 	for _, log := range receipt.Logs {
 		event, err := connector.ParseZetaSent(*log)
 		if err == nil && event != nil {
@@ -18,7 +21,10 @@ func ParseReceiptZetaSent(receipt *ethtypes.Receipt, connector *zetaconnector.Ze
 }
 
 // ParseReceiptERC20Deposited parses an Deposited event from a receipt
-func ParseReceiptERC20Deposited(receipt *ethtypes.Receipt, custody *erc20custody.ERC20Custody) *erc20custody.ERC20CustodyDeposited {
+func ParseReceiptERC20Deposited(
+	receipt *ethtypes.Receipt,
+	custody *erc20custody.ERC20Custody,
+) *erc20custody.ERC20CustodyDeposited {
 	for _, log := range receipt.Logs {
 		event, err := custody.ParseDeposited(*log)
 		if err == nil && event != nil {

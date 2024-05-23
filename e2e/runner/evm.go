@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rpc"
+
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -78,7 +79,11 @@ func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
 	return runner.DepositERC20WithAmountAndMessage(runner.DeployerAddress, big.NewInt(1e18), []byte{})
 }
 
-func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
+func (runner *E2ERunner) DepositERC20WithAmountAndMessage(
+	to ethcommon.Address,
+	amount *big.Int,
+	msg []byte,
+) ethcommon.Hash {
 	// reset allowance, necessary for USDT
 	tx, err := runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {

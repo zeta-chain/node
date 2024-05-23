@@ -13,11 +13,11 @@ services:
     image: zetanode:old
 
   zetaclient0:
-    entrypoint: ["/root/start-zetaclientd.sh", "background"]
+    entrypoint: ["/root/start-zetaclientd.sh"]
     image: zetanode:old
 
   zetaclient1:
-    entrypoint: ["/root/start-zetaclientd.sh", "background"]
+    entrypoint: ["/root/start-zetaclientd.sh"]
     image: zetanode:old
 
   orchestrator:

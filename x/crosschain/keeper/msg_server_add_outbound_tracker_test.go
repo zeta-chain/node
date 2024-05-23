@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -345,7 +346,8 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: tssAddress.Hex(),
 		}, nil)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ethTxBytes, nil)
 
 		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
@@ -387,7 +389,8 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: tssAddress.Hex(),
 		}, nil)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ethTxBytes, nil)
 
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
@@ -442,7 +445,8 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, errors.New("error"))
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ethTxBytes, errors.New("error"))
 
 		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,
@@ -477,7 +481,8 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ethTxBytes, nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ethTxBytes, nil)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: tssAddress.Hex(),
 		}, errors.New("error"))
@@ -520,7 +525,8 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		}, nil)
 
 		// makes VerifyProof returning an invalid hash
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(sample.Bytes(), nil)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(sample.Bytes(), nil)
 
 		_, err := msgServer.AddOutboundTracker(ctx, &types.MsgAddOutboundTracker{
 			Creator:   admin,

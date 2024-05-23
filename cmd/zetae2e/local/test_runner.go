@@ -2,6 +2,7 @@ package local
 
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"

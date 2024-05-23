@@ -7,6 +7,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -22,7 +23,18 @@ func TestKeeper_SetGasPrice(t *testing.T) {
 	queryGasPrice := func(chainID *big.Int) *big.Int {
 		abi, err := systemcontract.SystemContractMetaData.GetAbi()
 		require.NoError(t, err)
-		res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, system, keeper.BigIntZero, nil, false, false, "gasPriceByChainId", chainID)
+		res, err := k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			system,
+			keeper.BigIntZero,
+			nil,
+			false,
+			false,
+			"gasPriceByChainId",
+			chainID,
+		)
 		require.NoError(t, err)
 		unpacked, err := abi.Unpack("gasPriceByChainId", res.Ret)
 		require.NoError(t, err)
@@ -136,7 +148,18 @@ func TestKeeper_SetGasZetaPool(t *testing.T) {
 	queryZetaPool := func(chainID *big.Int) ethcommon.Address {
 		abi, err := systemcontract.SystemContractMetaData.GetAbi()
 		require.NoError(t, err)
-		res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, system, keeper.BigIntZero, nil, false, false, "gasZetaPoolByChainId", chainID)
+		res, err := k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			system,
+			keeper.BigIntZero,
+			nil,
+			false,
+			false,
+			"gasZetaPoolByChainId",
+			chainID,
+		)
 		require.NoError(t, err)
 		unpacked, err := abi.Unpack("gasZetaPoolByChainId", res.Ret)
 		require.NoError(t, err)
