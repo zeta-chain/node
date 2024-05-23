@@ -52,6 +52,7 @@
 * [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
+
 ## v16.0.0
 
 ### Breaking Changes
@@ -114,8 +115,7 @@
 * [2045](https://github.com/zeta-chain/node/pull/2046) - add grpc query with outbound rate limit for zetaclient to use
 * [2046](https://github.com/zeta-chain/node/pull/2046) - add state variable in crosschain for rate limiter flags
 * [2034](https://github.com/zeta-chain/node/pull/2034) - add support for zEVM message passing
-
-
+* [1825](https://github.com/zeta-chain/node/pull/1825) - add a message to withdraw emission rewards
 
 ### Tests
 
@@ -142,6 +142,7 @@
 * [2008](https://github.com/zeta-chain/node/pull/2008) - add test for connector bytecode update
 * [2047](https://github.com/zeta-chain/node/pull/2047) - fix liquidity cap advanced test
 * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM.
+
 ### Fixes
 
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
@@ -186,7 +187,6 @@
 ### Features
 
 * [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
-* [1811](https://github.com/zeta-chain/node/pull/1811) - add a message to withdraw emission rewards
 
 ### Docs
 
