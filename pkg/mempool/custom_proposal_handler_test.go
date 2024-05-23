@@ -199,6 +199,8 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			),
 			priority: 8,
 		},
+		// same as tx2, but with same nonce as tx1, used in skip same-sender and nonce and add same-sender and nonce with less size
+		{tx: buildMsg(s.T(), txConfig, []byte(`22`), [][]byte{secret1}, []uint64{2}), priority: 10},
 	}
 
 	for i := range testTxs {
@@ -245,6 +247,14 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			},
 			expectedTxs: []int{0, 3},
 		},
+		"skip same-sender and nonce and add same-sender and nonce with less size": {
+			ctx:      s.ctx,
+			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[23]},
+			req: abci.RequestPrepareProposal{
+				MaxTxBytes: 111 + 112,
+			},
+			expectedTxs: []int{0, 23},
+		},
 		"(eth tx) skip same-sender non-sequential sequence and then add others txs": {
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[15], testTxs[16], testTxs[17], testTxs[18]},
@@ -270,7 +280,7 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			expectedTxs: []int{4, 8},
 		},
 		"only the first tx is added": {
-			// Because tx 10 is valid, tx 11 can't be valid as they have higher sequence numbers.
+			// Because tx 10 is invalid, tx 11 can't be valid as they have higher sequence numbers.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
 			req: abci.RequestPrepareProposal{
