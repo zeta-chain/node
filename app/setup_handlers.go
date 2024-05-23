@@ -10,7 +10,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const releaseVersion = "v16"
+const releaseVersion = "v17"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -22,6 +22,10 @@ func SetupHandlers(app *App) {
 		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
+	})
+
+	app.UpgradeKeeper.SetUpgradeHandler("v17-athens", func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
 	})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
