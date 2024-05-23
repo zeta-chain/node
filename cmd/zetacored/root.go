@@ -34,8 +34,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/app"
-	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
 	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 	zevmserver "github.com/zeta-chain/zetacore/server"
 	servercfg "github.com/zeta-chain/zetacore/server/config"
 )
