@@ -208,6 +208,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	// define test foreign chains
 	ethChain := chains.EthChain
 	btcChain := chains.BtcMainnetChain
+	zetaChainID := chains.ZetaTestnetChain.ChainId
 	foreignChains := []chains.Chain{
 		ethChain,
 		btcChain,
@@ -222,6 +223,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 		t,
 		1,
 		10,
+		zetaChainID,
 		ethChain.ChainId,
 		coin.CoinType_Gas,
 		"",
@@ -232,6 +234,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 		t,
 		11,
 		100,
+		zetaChainID,
 		ethChain.ChainId,
 		coin.CoinType_Gas,
 		"",
@@ -245,6 +248,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 		t,
 		1,
 		10,
+		zetaChainID,
 		btcChain.ChainId,
 		coin.CoinType_Gas,
 		"",
@@ -255,6 +259,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 		t,
 		11,
 		100,
+		zetaChainID,
 		btcChain.ChainId,
 		coin.CoinType_Gas,
 		"",

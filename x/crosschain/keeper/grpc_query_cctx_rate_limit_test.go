@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -95,6 +96,7 @@ func setupForeignCoins(
 func TestKeeper_RateLimiterInput(t *testing.T) {
 	// create sample TSS
 	tss := sample.Tss()
+	zetaChainID := chains.ZetaTestnetChain.ChainId
 
 	// create sample zrc20 addresses for ETH, BTC, USDT
 	zrc20ETH := sample.EthAddress().Hex()
@@ -107,6 +109,7 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 		t,
 		1,
 		999,
+		zetaChainID,
 		ethChainID,
 		coin.CoinType_Gas,
 		"",
@@ -117,6 +120,7 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 		t,
 		1000,
 		1199,
+		zetaChainID,
 		ethChainID,
 		coin.CoinType_Gas,
 		"",
@@ -130,6 +134,7 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 		t,
 		1,
 		999,
+		zetaChainID,
 		btcChainID,
 		coin.CoinType_Gas,
 		"",
@@ -140,6 +145,7 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 		t,
 		1000,
 		1199,
+		zetaChainID,
 		btcChainID,
 		coin.CoinType_Gas,
 		"",
@@ -470,6 +476,7 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 	// create sample TSS
 	tss := sample.Tss()
+	zetaChainID := chains.ZetaTestnetChain.ChainId
 
 	// create sample zrc20 addresses for ETH, BTC, USDT
 	zrc20ETH := sample.EthAddress().Hex()
@@ -482,6 +489,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		t,
 		1,
 		999,
+		zetaChainID,
 		ethChainID,
 		coin.CoinType_Gas,
 		"",
@@ -492,6 +500,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		t,
 		1000,
 		1199,
+		zetaChainID,
 		ethChainID,
 		coin.CoinType_Gas,
 		"",
@@ -505,6 +514,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		t,
 		1,
 		999,
+		zetaChainID,
 		btcChainID,
 		coin.CoinType_Gas,
 		"",
@@ -515,6 +525,7 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 		t,
 		1000,
 		1199,
+		zetaChainID,
 		btcChainID,
 		coin.CoinType_Gas,
 		"",
