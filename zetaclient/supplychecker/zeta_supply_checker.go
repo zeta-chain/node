@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -85,7 +86,8 @@ func NewZetaSupplyChecker(
 	}
 	zetaSupplyChecker.genesisSupply = balances.Add(tokensMintedAtBeginBlock)
 
-	logger.Info().Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
+	logger.Info().
+		Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
 
 	return zetaSupplyChecker, nil
 }
@@ -147,7 +149,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 	ethConnectorAddressString := evmChainParams.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
-	ethConnectorContract, err := observer.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
+	ethConnectorContract, err := observer.FetchConnectorContractEth(
+		ethConnectorAddress,
+		zs.evmClient[zs.ethereumChain.ChainId],
+	)
 	if err != nil {
 		return err
 	}
@@ -162,7 +167,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return fmt.Errorf("error parsing eth locked amount")
 	}
 
-	zetaInTransit := zs.GetAmountOfZetaInTransit()
+	zetaInTransit, err := zs.GetAmountOfZetaInTransit()
+	if err != nil {
+		return err
+	}
 	zetaTokenSupplyOnNode, err := zs.zetaClient.GetZetaTokenSupplyOnNode()
 	if err != nil {
 		return err
@@ -173,7 +181,15 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return err
 	}
 
-	ValidateZetaSupply(zs.logger, abortedAmount, zetaInTransit, zs.genesisSupply, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
+	ValidateZetaSupply(
+		zs.logger,
+		abortedAmount,
+		zetaInTransit,
+		zs.genesisSupply,
+		externalChainTotalSupply,
+		zetaTokenSupplyOnNode,
+		ethLockedAmountInt,
+	)
 
 	return nil
 }
@@ -190,7 +206,7 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
-func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
+func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
 	cctxs := zs.GetPendingCCTXInTransit(chainsToCheck)
@@ -201,10 +217,10 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
 	}
 	amountInt, ok := sdkmath.NewIntFromString(amount.String())
 	if !ok {
-		panic("error parsing amount")
+		return sdkmath.ZeroInt(), fmt.Errorf("error parsing amount %s", amount.String())
 	}
 
-	return amountInt
+	return amountInt, nil
 }
 
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -57,7 +58,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -95,7 +104,10 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.SenderChainId = chainID
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
+		k.SetZetaAccounting(
+			ctx,
+			crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount},
+		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -135,7 +147,10 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.OutboundParams = nil
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
+		k.SetZetaAccounting(
+			ctx,
+			crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount},
+		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -175,7 +190,10 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.OutboundParams = nil
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
+		k.SetZetaAccounting(
+			ctx,
+			crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount},
+		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -207,7 +225,10 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Cmd
 		cctx.OutboundParams = nil
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount})
+		k.SetZetaAccounting(
+			ctx,
+			crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutboundParam().Amount},
+		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
@@ -328,7 +349,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -491,7 +520,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
+		_ = setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -552,7 +589,15 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundParams.SenderChainId, "foobar", "foobar")
+		_ = setupGasCoin(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			cctx.InboundParams.SenderChainId,
+			"foobar",
+			"foobar",
+		)
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,

@@ -15,6 +15,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -24,7 +25,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
@@ -38,7 +38,8 @@ type debugArguments struct {
 
 func init() {
 	RootCmd.AddCommand(DebugCmd())
-	DebugCmd().Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", "/Users/tanmay/.zetacored", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
+	DebugCmd().Flags().
+		StringVar(&debugArgs.zetaCoreHome, "core-home", "/Users/tanmay/.zetacored", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	DebugCmd().Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
 	DebugCmd().Flags().StringVar(&debugArgs.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
 }
@@ -62,22 +63,14 @@ func DebugCmd() *cobra.Command {
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
-			telemetryServer := metrics.NewTelemetryServer()
-			go func() {
-				err := telemetryServer.Start()
-				if err != nil {
-					panic("telemetryServer error")
-				}
-			}()
-
+			// create a new zetacore client
 			client, err := zetacore.NewClient(
 				&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
 				debugArgs.zetaNode,
 				"",
 				debugArgs.zetaChainID,
 				false,
-				telemetryServer)
-
+				nil)
 			if err != nil {
 				return err
 			}
@@ -89,14 +82,13 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			chain := chains.GetChainFromChainID(chainID)
 			if chain == nil {
 				return fmt.Errorf("invalid chain id")
 			}
 
+			// get ballot identifier according to the chain type
 			if chains.IsEVMChain(chain.ChainId) {
-
 				evmObserver := evmobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
@@ -204,6 +196,7 @@ func DebugCmd() *cobra.Command {
 			}
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 
+			// query ballot
 			ballot, err := client.GetBallot(ballotIdentifier)
 			if err != nil {
 				return err

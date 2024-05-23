@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -18,12 +19,18 @@ import (
 // variable but cannot remove any existing variable
 //
 // Authozied: admin policy group 2
-func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpdateContractBytecode) (*types.MsgUpdateContractBytecodeResponse, error) {
+func (k msgServer) UpdateContractBytecode(
+	goCtx context.Context,
+	msg *types.MsgUpdateContractBytecode,
+) (*types.MsgUpdateContractBytecodeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, cosmoserror.Wrap(
+			authoritytypes.ErrUnauthorized,
+			"Deploy can only be executed by the correct policy account",
+		)
 	}
 
 	// fetch account to update
@@ -46,7 +53,11 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 		}
 		if msg.ContractAddress != systemContract.ConnectorZevm {
 			// not a zrc20 or wzeta connector contract, can't be updated
-			return nil, cosmoserror.Wrapf(types.ErrInvalidContract, "contract (%s) is neither a zrc20 nor wzeta connector", msg.ContractAddress)
+			return nil, cosmoserror.Wrapf(
+				types.ErrInvalidContract,
+				"contract (%s) is neither a zrc20 nor wzeta connector",
+				msg.ContractAddress,
+			)
 		}
 	}
 

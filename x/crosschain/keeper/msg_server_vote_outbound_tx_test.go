@@ -11,6 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -69,13 +70,15 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			isError:           true,
 		},
 		{
-			name:                                  "should call fund stability pool with correct remaining fees",
-			effectiveGasLimit:                     100,
-			gasUsed:                               90,
-			effectiveGasPrice:                     math.NewInt(100),
-			fundStabilityPoolReturn:               nil,
-			expectFundStabilityPoolCall:           true,
-			fundStabilityPoolExpectedRemainingFee: big.NewInt(10 * keeper.RemainingFeesToStabilityPoolPercent), // (100-90)*100 = 1000 => statbilityPool% of 1000 = 10 * statbilityPool
+			name:                        "should call fund stability pool with correct remaining fees",
+			effectiveGasLimit:           100,
+			gasUsed:                     90,
+			effectiveGasPrice:           math.NewInt(100),
+			fundStabilityPoolReturn:     nil,
+			expectFundStabilityPoolCall: true,
+			fundStabilityPoolExpectedRemainingFee: big.NewInt(
+				10 * keeper.RemainingFeesToStabilityPoolPercent,
+			), // (100-90)*100 = 1000 => statbilityPool% of 1000 = 10 * statbilityPool
 		},
 		{
 			name:                                  "should return error if fund stability pool returns error",
@@ -322,7 +325,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		keepertest.MockGetOutBound(observerMock, ctx)
 
 		// Fail ProcessOutbound so that changes are not committed to the state
-		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{}, false)
+		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
+			Return(fungibletypes.ForeignCoins{}, false)
 
 		//Successfully mock SaveFailedOutbound
 		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
@@ -363,7 +367,12 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// set state to successfully vote on outbound tx
 		accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
-		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{accAddress.String(), sample.AccAddress(), sample.AccAddress()}})
+		zk.ObserverKeeper.SetObserverSet(
+			ctx,
+			observertypes.ObserverSet{
+				ObserverList: []string{accAddress.String(), sample.AccAddress(), sample.AccAddress()},
+			},
+		)
 		sk.StakingKeeper.SetValidator(ctx, validator)
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
@@ -454,7 +463,11 @@ func TestKeeper_SaveFailedOutBound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SaveFailedOutbound(ctx, cctx, sample.String(), sample.ZetaIndex(t))
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
-		_, found := k.GetOutboundTracker(ctx, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.GetCurrentOutboundParam().TssNonce)
+		_, found := k.GetOutboundTracker(
+			ctx,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().TssNonce,
+		)
 		require.False(t, found)
 	})
 }
@@ -472,7 +485,11 @@ func TestKeeper_SaveSuccessfulOutBound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SaveSuccessfulOutbound(ctx, cctx, sample.String())
 		require.Equal(t, cctx.GetCurrentOutboundParam().BallotIndex, sample.String())
-		_, found := k.GetOutboundTracker(ctx, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.GetCurrentOutboundParam().TssNonce)
+		_, found := k.GetOutboundTracker(
+			ctx,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().TssNonce,
+		)
 		require.False(t, found)
 	})
 }
@@ -505,15 +522,28 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 		// Save outbound and assert all values are successfully saved
 		k.SaveOutbound(ctx, cctx, ballotIndex)
 		require.Equal(t, cctx.GetCurrentOutboundParam().BallotIndex, ballotIndex)
-		_, found := k.GetOutboundTracker(ctx, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.GetCurrentOutboundParam().TssNonce)
+		_, found := k.GetOutboundTracker(
+			ctx,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().TssNonce,
+		)
 		require.False(t, found)
-		pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
+		pn, found := zk.ObserverKeeper.GetPendingNonces(
+			ctx,
+			cctx.GetCurrentOutboundParam().TssPubkey,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+		)
 		require.True(t, found)
 		require.Equal(t, pn.NonceLow, int64(cctx.GetCurrentOutboundParam().TssNonce)+1)
 		require.Equal(t, pn.NonceHigh, int64(cctx.GetCurrentOutboundParam().TssNonce)+1)
 		_, found = k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
 		require.True(t, found)
-		_, found = zk.ObserverKeeper.GetNonceToCctx(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, int64(cctx.GetCurrentOutboundParam().TssNonce))
+		_, found = zk.ObserverKeeper.GetNonceToCctx(
+			ctx,
+			cctx.GetCurrentOutboundParam().TssPubkey,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			int64(cctx.GetCurrentOutboundParam().TssNonce),
+		)
 		require.True(t, found)
 	})
 }
@@ -553,7 +583,15 @@ func TestKeeper_ValidateOutboundMessage(t *testing.T) {
 		}
 		_, err := k.ValidateOutboundMessage(ctx, msg)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-		require.ErrorContains(t, err, fmt.Sprintf("OutboundTssNonce %d does not match CCTX OutboundTssNonce %d", msg.OutboundTssNonce, cctx.GetCurrentOutboundParam().TssNonce))
+		require.ErrorContains(
+			t,
+			err,
+			fmt.Sprintf(
+				"OutboundTssNonce %d does not match CCTX OutboundTssNonce %d",
+				msg.OutboundTssNonce,
+				cctx.GetCurrentOutboundParam().TssNonce,
+			),
+		)
 	})
 
 	t.Run("failed to validate outbound message if tss not found", func(t *testing.T) {
@@ -578,6 +616,14 @@ func TestKeeper_ValidateOutboundMessage(t *testing.T) {
 			OutboundChain:    2,
 		})
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-		require.ErrorContains(t, err, fmt.Sprintf("OutboundChain %d does not match CCTX OutboundChain %d", 2, cctx.GetCurrentOutboundParam().ReceiverChainId))
+		require.ErrorContains(
+			t,
+			err,
+			fmt.Sprintf(
+				"OutboundChain %d does not match CCTX OutboundChain %d",
+				2,
+				cctx.GetCurrentOutboundParam().ReceiverChainId,
+			),
+		)
 	})
 }

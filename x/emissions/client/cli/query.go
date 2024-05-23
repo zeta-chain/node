@@ -2,14 +2,11 @@ package cli
 
 import (
 	"fmt"
-	// "strings"
-
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
+
+	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

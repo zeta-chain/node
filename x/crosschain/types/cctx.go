@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -51,7 +52,7 @@ func (m CrossChainTx) Validate() error {
 		return fmt.Errorf("outbound tx params cannot be more than 2")
 	}
 	if m.Index != "" {
-		err := ValidateZetaIndex(m.Index)
+		err := ValidateCCTXIndex(m.Index)
 		if err != nil {
 			return err
 		}
@@ -69,16 +70,10 @@ func (m CrossChainTx) Validate() error {
 	return nil
 }
 
-/*
-AddRevertOutbound does the following things in one function:
-
-	1. create a new OutboundTxParams for the revert
-
-	2. append the new OutboundTxParams to the current OutboundTxParams
-
-	3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
-*/
-
+// AddRevertOutbound does the following things in one function:
+//  1. create a new OutboundTxParams for the revert
+//  2. append the new OutboundTxParams to the current OutboundTxParams
+//  3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
 func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	if m.IsCurrentOutboundRevert() {
 		return fmt.Errorf("cannot revert a revert tx")
@@ -101,13 +96,24 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 }
 
 // AddOutbound adds a new outbound tx to the CCTX.
-func (m *CrossChainTx) AddOutbound(ctx sdk.Context, msg MsgVoteOutbound, ballotStatus observertypes.BallotStatus) error {
+func (m *CrossChainTx) AddOutbound(
+	ctx sdk.Context,
+	msg MsgVoteOutbound,
+	ballotStatus observertypes.BallotStatus,
+) error {
 	if ballotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ValueReceived.Equal(m.GetCurrentOutboundParam().Amount) {
 			ctx.Logger().Error(fmt.Sprintf("VoteOutbound: Mint mismatch: %s value received vs %s cctx amount",
 				msg.ValueReceived,
 				m.GetCurrentOutboundParam().Amount))
-			return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ValueReceived %s does not match sent value %s", msg.ValueReceived, m.GetCurrentOutboundParam().Amount))
+			return cosmoserrors.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				fmt.Sprintf(
+					"ValueReceived %s does not match sent value %s",
+					msg.ValueReceived,
+					m.GetCurrentOutboundParam().Amount,
+				),
+			)
 		}
 	}
 	// Update CCTX values
@@ -211,9 +217,13 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		InboundParams:  inboundParams,
 		OutboundParams: []*OutboundParams{outBoundParams},
 	}
+
+	// TODO: remove this validate call
+	// https://github.com/zeta-chain/node/issues/2236
 	err := cctx.Validate()
 	if err != nil {
 		return CrossChainTx{}, err
 	}
+
 	return cctx, nil
 }

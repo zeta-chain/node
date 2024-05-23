@@ -24,15 +24,12 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/spf13/cast"
-	"google.golang.org/grpc/metadata"
-
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-
 	ethermint "github.com/evmos/ethermint/types"
+	"github.com/spf13/cast"
+	"google.golang.org/grpc/metadata"
 )
 
 // BlockNumber represents decoding hex string to block values
@@ -70,7 +67,11 @@ func ContextWithHeight(height int64) context.Context {
 		return context.Background()
 	}
 
-	return metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, fmt.Sprintf("%d", height))
+	return metadata.AppendToOutgoingContext(
+		context.Background(),
+		grpctypes.GRPCBlockHeightHeader,
+		fmt.Sprintf("%d", height),
+	)
 }
 
 // UnmarshalJSON parses the given JSON fragment into a BlockNumber. It supports:

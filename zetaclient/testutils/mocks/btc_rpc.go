@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 
@@ -59,11 +60,18 @@ func (c *MockBTCRPCClient) ListUnspent() ([]btcjson.ListUnspentResult, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (c *MockBTCRPCClient) ListUnspentMinMaxAddresses(_ int, _ int, _ []btcutil.Address) ([]btcjson.ListUnspentResult, error) {
+func (c *MockBTCRPCClient) ListUnspentMinMaxAddresses(
+	_ int,
+	_ int,
+	_ []btcutil.Address,
+) ([]btcjson.ListUnspentResult, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (c *MockBTCRPCClient) EstimateSmartFee(_ int64, _ *btcjson.EstimateSmartFeeMode) (*btcjson.EstimateSmartFeeResult, error) {
+func (c *MockBTCRPCClient) EstimateSmartFee(
+	_ int64,
+	_ *btcjson.EstimateSmartFeeMode,
+) (*btcjson.EstimateSmartFeeResult, error) {
 	return nil, errors.New("not implemented")
 }
 

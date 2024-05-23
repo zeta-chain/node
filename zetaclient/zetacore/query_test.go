@@ -12,6 +12,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -23,8 +26,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"go.nhat.io/grpcmock"
-	"go.nhat.io/grpcmock/planner"
 )
 
 func setupMockServer(t *testing.T, serviceFunc any, method string, input any, expectedOutput any) *grpcmock.Server {
@@ -55,7 +56,7 @@ func setupZetacoreClient() (*Client, error) {
 	return NewClient(
 		&keys.Keys{},
 		"127.0.0.1",
-		"",
+		testSigner,
 		"zetachain_7000-1",
 		false,
 		&metrics.TelemetryServer{})
@@ -126,16 +127,18 @@ func TestZetacore_GetRateLimiterFlags(t *testing.T) {
 }
 
 func TestZetacore_HeaderEnabledChains(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
-		{
-			ChainId: chains.EthChain.ChainId,
-			Enabled: true,
+	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{
+		HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
+			{
+				ChainId: chains.EthChain.ChainId,
+				Enabled: true,
+			},
+			{
+				ChainId: chains.BtcMainnetChain.ChainId,
+				Enabled: true,
+			},
 		},
-		{
-			ChainId: chains.BtcMainnetChain.ChainId,
-			Enabled: true,
-		},
-	}}
+	}
 	input := lightclienttypes.QueryHeaderEnabledChainsRequest{}
 	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
@@ -242,7 +245,9 @@ func TestZetacore_GetCctxByHash(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryGetCctxResponse{CrossChainTx: &crosschainTypes.CrossChainTx{
 		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
 	}}
-	input := crosschainTypes.QueryGetCctxRequest{Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"}
+	input := crosschainTypes.QueryGetCctxRequest{
+		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
+	}
 	method := "/zetachain.zetacore.crosschain.Query/Cctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
@@ -959,9 +964,16 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "", "")
 
+	// should be able to get balance of signer
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "bob", "")
 	resp, err := client.GetZetaHotKeyBalance()
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Balance.Amount, resp)
+
+	// should return error on empty signer
+	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "", "")
+	resp, err = client.GetZetaHotKeyBalance()
+	require.Error(t, err)
+	require.Equal(t, types.ZeroInt(), resp)
 }

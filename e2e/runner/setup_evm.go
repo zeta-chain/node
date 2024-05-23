@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
@@ -62,7 +63,11 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 
 	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
 	// gas token on ZetaChain to initialize the pool
-	txDonation, err := runner.SendEther(runner.TSSAddress, big.NewInt(101000000000000000), []byte(constant.DonationMessage))
+	txDonation, err := runner.SendEther(
+		runner.TSSAddress,
+		big.NewInt(101000000000000000),
+		[]byte(constant.DonationMessage),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +103,11 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	runner.ConnectorEthAddr = connectorEthAddr
 	conf.Contracts.EVM.ConnectorEthAddr = connectorEthAddr.String()
 
-	runner.Logger.Info("ZetaConnectorEth contract address: %s, tx hash: %s", connectorEthAddr.Hex(), txConnector.Hash().Hex())
+	runner.Logger.Info(
+		"ZetaConnectorEth contract address: %s, tx hash: %s",
+		connectorEthAddr.Hex(),
+		txConnector.Hash().Hex(),
+	)
 
 	runner.Logger.Info("Deploying ERC20Custody contract")
 	erc20CustodyAddr, txCustody, ERC20Custody, err := erc20custody.DeployERC20Custody(
@@ -127,7 +136,12 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	runner.Logger.Info("ERC20 contract address: %s, tx hash: %s", erc20Addr.Hex(), txERC20.Hash().Hex())
 
 	// deploy TestDApp contract
-	appAddr, txApp, _, err := testdapp.DeployTestDApp(runner.EVMAuth, runner.EVMClient, runner.ConnectorEthAddr, runner.ZetaEthAddr)
+	appAddr, txApp, _, err := testdapp.DeployTestDApp(
+		runner.EVMAuth,
+		runner.EVMClient,
+		runner.ConnectorEthAddr,
+		runner.ZetaEthAddr,
+	)
 	if err != nil {
 		panic(err)
 	}

@@ -15,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
+
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
@@ -40,7 +41,12 @@ var (
 )
 
 // BroadcastToZetaCore is the default broadcast function used to send transactions to zetacore
-func BroadcastToZetaCore(client *Client, gasLimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
+func BroadcastToZetaCore(
+	client *Client,
+	gasLimit uint64,
+	authzWrappedMsg sdktypes.Msg,
+	authzSigner authz.Signer,
+) (string, error) {
 	return client.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
 }
 
@@ -138,7 +144,8 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 				return "", err
 			}
 			c.seqNumber[authzSigner.KeyType] = expectedSeq
-			c.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
+			c.logger.Warn().
+				Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
 		}
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
@@ -152,7 +159,7 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 // GetContext return a valid context with all relevant values set
 func (c *Client) GetContext() (client.Context, error) {
 	ctx := client.Context{}
-	addr, err := c.keys.GetSignerInfo().GetAddress()
+	addr, err := c.keys.GetAddress()
 	if err != nil {
 		c.logger.Error().Err(err).Msg("fail to get address from key")
 		return ctx, err
@@ -223,17 +230,23 @@ func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
 // returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outboundHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
-		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outbound confirmation")
+		log.Warn().
+			Err(err).
+			Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outbound confirmation")
 		return false, false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {
-		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
+		log.Warn().
+			Err(err).
+			Msgf("Broadcast replacement: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
 		return false, false
 	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
 		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
 		return false, true // report to tracker, because there's possibilities a successful broadcast gets this error code
 	}
 
-	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outboundHash %s; retrying...", nonce, toChain, outboundHash)
+	log.Error().
+		Err(err).
+		Msgf("Broadcast error: nonce %s chain %s outboundHash %s; retrying...", nonce, toChain, outboundHash)
 	return true, false
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -97,9 +98,13 @@ func SetZetaAccounting(
 			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
-					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutboundParam().ReceiverChainId)
+					receiverChain := observerKeeper.GetSupportedChainFromChainID(
+						ctx,
+						cctx.GetCurrentOutboundParam().ReceiverChainId,
+					)
 					if receiverChain == nil {
-						ctx.Logger().Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutboundParam().ReceiverChainId), cctx.Index)
+						ctx.Logger().
+							Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutboundParam().ReceiverChainId), cctx.Index)
 						continue
 					}
 					// There is a chance that this cctx has already been refunded, so we set the isRefunded flag to true.

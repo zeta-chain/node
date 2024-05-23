@@ -15,11 +15,13 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
 type KeysSuite struct{}
@@ -67,7 +69,13 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	kb, err := cKeys.New(sdk.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
 
-	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(
+		GetGranteeKeyName(signerNameForTest),
+		cKeys.English,
+		cmd.ZetaChainHDPath,
+		password,
+		hd.Secp256k1,
+	)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }
@@ -102,8 +110,8 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	k, _, err := GetKeyringKeybase(cfg, "")
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
-	granter := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
-	ki := NewKeysWithKeybase(k, granter, signerNameForTest, "")
+	granterAddress := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
+	ki := NewKeysWithKeybase(k, granterAddress, signerNameForTest, "")
 	kInfo := ki.GetSignerInfo()
 	c.Assert(kInfo, NotNil)
 	//c.Assert(kInfo.G, Equals, signerNameForTest)
@@ -120,4 +128,15 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	pubKey, err := ki.GetSignerInfo().GetPubKey()
 	c.Assert(err, IsNil)
 	c.Assert(pubKey.VerifySignature([]byte(msg), signedMsg), Equals, true)
+}
+
+func TestGetSignerInfo(t *testing.T) {
+	// create a mock keyring
+	keyRing := mocks.NewKeyring()
+
+	// create a new key using the mock keyring
+	granterAddress := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
+	keys := NewKeysWithKeybase(keyRing, granterAddress, "", "")
+	info := keys.GetSignerInfo()
+	require.Nil(t, info)
 }

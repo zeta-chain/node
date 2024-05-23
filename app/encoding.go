@@ -1,9 +1,8 @@
 package app
 
 import (
-	evmenc "github.com/evmos/ethermint/encoding"
-	//"github.com/zeta-chain/zetacore/app/params"
 	"cosmossdk.io/simapp/params"
+	evmenc "github.com/evmos/ethermint/encoding"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing

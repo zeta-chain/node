@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
@@ -13,7 +14,9 @@ import (
 func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	approvedAmount := big.NewInt(1e18)
 	if len(args) != 2 {
-		panic("TestMultipleWithdraws requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+		panic(
+			"TestMultipleWithdraws requires exactly two arguments: the withdrawal amount and the number of withdrawals.",
+		)
 	}
 
 	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)
@@ -87,7 +90,14 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 		panic("withdraw failed")
 	}
 
-	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, int(numberOfWithdrawals.Int64()), r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInboundHash(
+		r.Ctx,
+		tx.Hash().Hex(),
+		r.CctxClient,
+		int(numberOfWithdrawals.Int64()),
+		r.Logger,
+		r.CctxTimeout,
+	)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}

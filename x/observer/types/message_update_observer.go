@@ -10,7 +10,12 @@ const TypeMsgUpdateObserver = "update_observer"
 
 var _ sdk.Msg = &MsgUpdateObserver{}
 
-func NewMsgUpdateObserver(creator string, oldObserverAddress string, newObserverAddress string, updateReason ObserverUpdateReason) *MsgUpdateObserver {
+func NewMsgUpdateObserver(
+	creator string,
+	oldObserverAddress string,
+	newObserverAddress string,
+	updateReason ObserverUpdateReason,
+) *MsgUpdateObserver {
 	return &MsgUpdateObserver{
 		Creator:            creator,
 		OldObserverAddress: oldObserverAddress,

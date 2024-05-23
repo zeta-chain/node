@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -110,7 +111,11 @@ func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 	return rpcclient.New(connCfg, nil)
 }
 
-func getFeeRate(client *rpcclient.Client, confTarget int64, estimateMode *btcjson.EstimateSmartFeeMode) (*big.Int, error) {
+func getFeeRate(
+	client *rpcclient.Client,
+	confTarget int64,
+	estimateMode *btcjson.EstimateSmartFeeMode,
+) (*big.Int, error) {
 	feeResult, err := client.EstimateSmartFee(confTarget, estimateMode)
 	if err != nil {
 		return nil, err
@@ -249,8 +254,18 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 	if errEco2 != nil {
 		t.Error(errEco2)
 	}
-	fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
-	fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
+	fmt.Printf(
+		"Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n",
+		bn,
+		feeRateConservative1.Uint64(),
+		feeRateEconomical1.Uint64(),
+	)
+	fmt.Printf(
+		"Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n",
+		bn,
+		feeRateConservative2.Uint64(),
+		feeRateEconomical2.Uint64(),
+	)
 
 	// monitor fee rate every 5 minutes
 	for {
@@ -267,8 +282,18 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 		require.True(t, feeRateConservative2.Uint64() >= feeRateEconomical2.Uint64())
 		require.True(t, feeRateConservative1.Uint64() >= feeRateConservative2.Uint64())
 		require.True(t, feeRateEconomical1.Uint64() >= feeRateEconomical2.Uint64())
-		fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
-		fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
+		fmt.Printf(
+			"Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n",
+			bn,
+			feeRateConservative1.Uint64(),
+			feeRateEconomical1.Uint64(),
+		)
+		fmt.Printf(
+			"Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n",
+			bn,
+			feeRateConservative2.Uint64(),
+			feeRateEconomical2.Uint64(),
+		)
 	}
 }
 
@@ -416,7 +441,7 @@ BLOCKLOOP:
 					continue BLOCKLOOP // retry the block
 				}
 				if senderAddr != mpvin.Prevout.ScriptpubkeyAddress {
-					panic(fmt.Sprintf("block %d, tx %s, vout %d: want %s, got %s\n", bn, vin.Txid, vin.Vout, mpvin.Prevout.ScriptpubkeyAddress, senderAddr))
+					t.Errorf("block %d, tx %s, vout %d: want %s, got %s\n", bn, vin.Txid, vin.Vout, mpvin.Prevout.ScriptpubkeyAddress, senderAddr)
 				} else {
 					fmt.Printf("block: %d sender address type: %s\n", bn, mpvin.Prevout.ScriptpubkeyType)
 				}

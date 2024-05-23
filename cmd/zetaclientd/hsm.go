@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	keystone "github.com/zeta-chain/keystone/keys"
+
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
@@ -49,7 +50,8 @@ func init() {
 	HsmCmd.PersistentFlags().StringVar(&hsmArgs.label, "key-label", "", "label used to identify key on HSM")
 
 	// HSM key gen arguments
-	GenerateHsmKeyCmd.Flags().IntVar(&hsmKeyGenArgs.algorithm, "algorithm", 0, "key algo; 0=SECP256K1, 1=SECP256R1, 2=ED25519")
+	GenerateHsmKeyCmd.Flags().
+		IntVar(&hsmKeyGenArgs.algorithm, "algorithm", 0, "key algo; 0=SECP256K1, 1=SECP256R1, 2=ED25519")
 }
 
 func GetHsmAddress(_ *cobra.Command, _ []string) error {

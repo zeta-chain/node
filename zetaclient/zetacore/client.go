@@ -7,8 +7,11 @@ import (
 
 	"cosmossdk.io/simapp/params"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -16,9 +19,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"google.golang.org/grpc"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}
@@ -32,7 +34,7 @@ type Client struct {
 	grpcConn      *grpc.ClientConn
 	cfg           config.ClientConfiguration
 	encodingCfg   params.EncodingConfig
-	keys          *keys.Keys
+	keys          keyinterfaces.ObserverKeys
 	broadcastLock *sync.RWMutex
 	chainID       string
 	chain         chains.Chain
@@ -48,7 +50,7 @@ type Client struct {
 
 // NewClient create a new instance of Client
 func NewClient(
-	k *keys.Keys,
+	keys keyinterfaces.ObserverKeys,
 	chainIP string,
 	signerName string,
 	chainID string,
@@ -57,7 +59,7 @@ func NewClient(
 ) (*Client, error) {
 
 	// main module logger
-	logger := log.With().Str("module", "ZetaCoreClient").Logger()
+	logger := log.With().Str("module", "ZetacoreClient").Logger()
 	cfg := config.ClientConfiguration{
 		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
 		SignerName:   signerName,
@@ -93,7 +95,7 @@ func NewClient(
 		seqNumber:           seqMap,
 		cfg:                 cfg,
 		encodingCfg:         app.MakeEncodingConfig(),
-		keys:                k,
+		keys:                keys,
 		broadcastLock:       &sync.RWMutex{},
 		stop:                make(chan struct{}),
 		chainID:             chainID,
@@ -128,7 +130,7 @@ func (c *Client) GetLogger() *zerolog.Logger {
 	return &c.logger
 }
 
-func (c *Client) GetKeys() *keys.Keys {
+func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
 }
 
@@ -143,27 +145,35 @@ func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uin
 	if err != nil {
 		return 0, 0, err
 	}
-	address := c.keys.GetAddress()
+	address, err := c.keys.GetAddress()
+	if err != nil {
+		return 0, 0, err
+	}
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
-func (c *Client) SetAccountNumber(keyType authz.KeyType) {
+// SetAccountNumber sets the account number and sequence number for the given keyType
+func (c *Client) SetAccountNumber(keyType authz.KeyType) error {
 	ctx, err := c.GetContext()
 	if err != nil {
-		c.logger.Error().Err(err).Msg("fail to get context")
-		return
+		return errors.Wrap(err, "fail to get context")
 	}
-	address := c.keys.GetAddress()
+	address, err := c.keys.GetAddress()
+	if err != nil {
+		return errors.Wrap(err, "fail to get address")
+	}
 	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	if err != nil {
-		c.logger.Error().Err(err).Msg("fail to get account number and sequence number")
-		return
+		return errors.Wrap(err, "fail to get account number and sequence number")
 	}
 	c.accountNumber[keyType] = accN
 	c.seqNumber[keyType] = seq
+
+	return nil
 }
 
-func (c *Client) WaitForCoreToCreateBlocks() {
+// WaitForZetacoreToCreateBlocks waits for zetacore to create blocks
+func (c *Client) WaitForZetacoreToCreateBlocks() error {
 	retryCount := 0
 	for {
 		block, err := c.GetLatestZetaBlock()
@@ -174,15 +184,20 @@ func (c *Client) WaitForCoreToCreateBlocks() {
 		retryCount++
 		c.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
 		if retryCount > ExtendedRetryCount {
-			panic(fmt.Sprintf("Zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
+			return fmt.Errorf("zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval)
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
+	return nil
 }
 
 // UpdateZetacoreContext updates zetacore context
 // zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, init bool, sampledLogger zerolog.Logger) error {
+func (c *Client) UpdateZetacoreContext(
+	coreContext *context.ZetacoreContext,
+	init bool,
+	sampledLogger zerolog.Logger,
+) error {
 	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)
@@ -193,8 +208,9 @@ func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, ini
 		return fmt.Errorf("failed to get upgrade plan: %w", err)
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		c.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
-			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
+		c.logger.Warn().
+			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
+				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
 		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 

@@ -8,11 +8,13 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -28,7 +30,13 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 	inboundHash := "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76"
 
 	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Zeta)
+		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_Zeta,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -38,7 +46,13 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Zeta)
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_Zeta,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
@@ -47,7 +61,13 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no ZetaSent event", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Zeta)
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_Zeta,
+		)
 		receipt.Logs = receipt.Logs[:2] // remove ZetaSent event
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
@@ -58,7 +78,13 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act if emitter is not ZetaConnector", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Zeta)
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_Zeta,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -79,7 +105,13 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 	inboundHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
 
 	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_ERC20)
+		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_ERC20,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -89,7 +121,13 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_ERC20)
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_ERC20,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
@@ -98,7 +136,13 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no Deposit event", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_ERC20)
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_ERC20,
+		)
 		receipt.Logs = receipt.Logs[:1] // remove Deposit event
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
@@ -109,7 +153,13 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act if emitter is not ERC20 Custody", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_ERC20)
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_ERC20,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -130,7 +180,13 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 	inboundHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
 
 	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
+		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(
+			t,
+			TestDataDir,
+			chainID,
+			inboundHash,
+			coin.CoinType_Gas,
+		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -194,7 +250,7 @@ func Test_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 
 	// parse ZetaSent event
 	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
-	connector := mocks.MockConnectorNonEth(chainID)
+	connector := mocks.MockConnectorNonEth(t, chainID)
 	event := testutils.ParseReceiptZetaSent(receipt, connector)
 
 	// create test compliance config
@@ -241,7 +297,7 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 
 	// parse Deposited event
 	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
-	custody := mocks.MockERC20Custody(chainID)
+	custody := mocks.MockERC20Custody(t, chainID)
 	event := testutils.ParseReceiptERC20Deposited(receipt, custody)
 	sender := ethcommon.HexToAddress(tx.From)
 
@@ -288,7 +344,13 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	// load archived gas token donation to TSS
 	// https://etherscan.io/tx/0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155
 	inboundHashDonation := "0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155"
-	txDonation, receiptDonation := testutils.LoadEVMInboundNReceiptDonation(t, TestDataDir, chainID, inboundHashDonation, coin.CoinType_Gas)
+	txDonation, receiptDonation := testutils.LoadEVMInboundNReceiptDonation(
+		t,
+		TestDataDir,
+		chainID,
+		inboundHashDonation,
+		coin.CoinType_Gas,
+	)
 	require.NoError(t, evm.ValidateEvmTransaction(txDonation))
 
 	// create test compliance config
@@ -298,14 +360,22 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	}
 
 	t.Run("should return vote msg for archived gas token transfer to TSS", func(t *testing.T) {
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, ethcommon.HexToAddress(tx.From), receipt.BlockNumber.Uint64())
+		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+			tx,
+			ethcommon.HexToAddress(tx.From),
+			receipt.BlockNumber.Uint64(),
+		)
 		require.NotNil(t, msg)
 		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{tx.From}
 		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, ethcommon.HexToAddress(tx.From), receipt.BlockNumber.Uint64())
+		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+			tx,
+			ethcommon.HexToAddress(tx.From),
+			receipt.BlockNumber.Uint64(),
+		)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
@@ -315,7 +385,11 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 		txCopy.Input = message // use other address as receiver
 		cfg.ComplianceConfig.RestrictedAddresses = []string{testutils.OtherAddress1}
 		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(txCopy, ethcommon.HexToAddress(txCopy.From), receipt.BlockNumber.Uint64())
+		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+			txCopy,
+			ethcommon.HexToAddress(txCopy.From),
+			receipt.BlockNumber.Uint64(),
+		)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg on donation transaction", func(t *testing.T) {
@@ -345,7 +419,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// create mock client
 	evmClient := mocks.NewMockEvmClient()
 	evmJSONRPC := mocks.NewMockJSONRPCClient()
-	zetacoreClient := mocks.NewMockZetaCoreClient()
+	zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
 	tss := mocks.NewTSSMainnet()
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -379,7 +453,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		evmClient.WithReceipt(receipt)
 		zetacoreClient.Pause()
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
-		// error posting vote is expected because the mock zetaClient is paused
+		// error posting vote is expected because the mock zetacoreClient is paused
 		require.ErrorContains(t, err, "error checking and voting")
 	})
 }

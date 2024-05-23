@@ -16,13 +16,14 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
 
@@ -92,7 +93,7 @@ type ZetacoreClient interface {
 	) (string, error)
 	Chain() chains.Chain
 	GetLogger() *zerolog.Logger
-	GetKeys() *keys.Keys
+	GetKeys() keyinterfaces.ObserverKeys
 	GetKeyGen() (*observertypes.Keygen, error)
 	GetBlockHeight() (int64, error)
 	GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error)
@@ -144,7 +145,12 @@ type EVMRPCClient interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*ethtypes.Header, error)
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
-	TransactionSender(ctx context.Context, tx *ethtypes.Transaction, block ethcommon.Hash, index uint) (ethcommon.Address, error)
+	TransactionSender(
+		ctx context.Context,
+		tx *ethtypes.Transaction,
+		block ethcommon.Hash,
+		index uint,
+	) (ethcommon.Address, error)
 }
 
 // EVMJSONRPCClient is the interface for EVM JSON RPC client

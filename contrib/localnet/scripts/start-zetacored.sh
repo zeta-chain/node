@@ -121,20 +121,24 @@ while [ ! -f ~/.ssh/authorized_keys ]; do
     sleep 1
 done
 
-# Init a new node to generate genesis file .
-# Copy config files from existing folders which get copied via Docker Copy when building images
-mkdir -p ~/.backup/config
-zetacored init Zetanode-Localnet --chain-id=$CHAINID
-rm -rf ~/.zetacored/config/app.toml
-rm -rf ~/.zetacored/config/client.toml
-rm -rf ~/.zetacored/config/config.toml
-cp -r ~/zetacored/common/app.toml ~/.zetacored/config/
-cp -r ~/zetacored/common/client.toml ~/.zetacored/config/
-cp -r ~/zetacored/common/config.toml ~/.zetacored/config/
-sed -i -e "/moniker =/s/=.*/= \"$HOSTNAME\"/" "$HOME"/.zetacored/config/config.toml
+# Skip init if it has already been completed (marked by presence of ~/.zetacored/init_complete file)
+if [[ ! -f ~/.zetacored/init_complete ]]
+then
+  # Init a new node to generate genesis file .
+  # Copy config files from existing folders which get copied via Docker Copy when building images
+  mkdir -p ~/.backup/config
+  zetacored init Zetanode-Localnet --chain-id=$CHAINID
+  rm -rf ~/.zetacored/config/app.toml
+  rm -rf ~/.zetacored/config/client.toml
+  rm -rf ~/.zetacored/config/config.toml
+  cp -r ~/zetacored/common/app.toml ~/.zetacored/config/
+  cp -r ~/zetacored/common/client.toml ~/.zetacored/config/
+  cp -r ~/zetacored/common/config.toml ~/.zetacored/config/
+  sed -i -e "/moniker =/s/=.*/= \"$HOSTNAME\"/" "$HOME"/.zetacored/config/config.toml
 
-# Add two new keys for operator and hotkey and create the required json structure for os_info
-source ~/add-keys.sh
+  # Add two new keys for operator and hotkey and create the required json structure for os_info
+  source ~/add-keys.sh
+fi
 
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
@@ -143,8 +147,7 @@ then
     echo "Waiting for genesis.json file to exist..."
     sleep 1
   done
-  # need to wait for zetacore0 to be up otherwise you get
-  # 
+  # need to wait for zetacore0 to be up
   while ! curl -s -o /dev/null zetacore0:26657/status ; do
     echo "Waiting for zetacore0 rpc"
     sleep 1
@@ -160,8 +163,9 @@ fi
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
 # 7. Start the nodes
 
-# Start of genesis creation . This is done only on zetacore0
-if [ $HOSTNAME == "zetacore0" ]
+# Start of genesis creation . This is done only on zetacore0.
+# Skip genesis if it has already been completed (marked by presence of ~/.zetacored/init_complete file)
+if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient0 mkdir -p ~/.zetacored/keyring-test/
@@ -266,7 +270,7 @@ fi
 # End of genesis creation steps . The steps below are common to all the nodes
 
 # Update persistent peers
-if [ $HOSTNAME != "zetacore0" ]
+if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
@@ -278,5 +282,8 @@ then
   pps=${pp:1:58}
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
+
+# mark init completed so we skip it if container is restarted
+touch ~/.zetacored/init_complete
 
 cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
