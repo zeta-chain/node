@@ -224,10 +224,6 @@ func (c *Client) UpdateZetacoreContext(
 
 	// check and update chain params for each chain
 	for _, chainParam := range chainParams {
-		if !chainParam.GetIsSupported() {
-			sampledLogger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
-			continue
-		}
 		err := observertypes.ValidateChainParams(chainParam)
 		if err != nil {
 			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)

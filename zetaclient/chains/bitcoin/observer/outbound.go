@@ -161,12 +161,22 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		return true, false, nil
 	}
 
+	// Get outbound block height
+	blockHeight, err := GetBlockHeightByHash(ob.rpcClient, res.BlockHash)
+	if err != nil {
+		return true, false, errors.Wrapf(
+			err,
+			"IsOutboundProcessed: error getting block height by hash %s",
+			res.BlockHash,
+		)
+	}
+
 	logger.Debug().Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
 	zetaHash, ballot, err := ob.zetacoreClient.PostVoteOutbound(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive
-		uint64(res.BlockIndex),
+		uint64(blockHeight),
 		0,   // gas used not used with Bitcoin
 		nil, // gas price not used with Bitcoin
 		0,   // gas limit not used with Bitcoin
