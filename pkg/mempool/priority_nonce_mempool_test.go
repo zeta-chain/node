@@ -12,13 +12,13 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
+
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 )
@@ -950,8 +950,16 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 
 	txs := []testTx{
 		{priority: 20, nonce: 1, address: sa},
-		{priority: 15, nonce: 1, address: sa}, // priority is less than the first Tx, failed tx replacement when the option enabled.
-		{priority: 23, nonce: 1, address: sa}, // priority is not 20% more than the first Tx, failed tx replacement when the option enabled.
+		{
+			priority: 15,
+			nonce:    1,
+			address:  sa,
+		}, // priority is less than the first Tx, failed tx replacement when the option enabled.
+		{
+			priority: 23,
+			nonce:    1,
+			address:  sa,
+		}, // priority is not 20% more than the first Tx, failed tx replacement when the option enabled.
 		{priority: 24, nonce: 1, address: sa}, // priority is 20% more than the first Tx, the first tx will be replaced.
 	}
 
@@ -970,10 +978,12 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
 	// otherwise, the Insert will return error
 	feeBump := 20
-	mp = zetamempool.NewPriorityMempool(zetamempool.PriorityNonceWithTxReplacement(func(op, np int64, oTx, nTx sdk.Tx) bool {
-		threshold := int64(100 + feeBump)
-		return np >= op*threshold/100
-	}))
+	mp = zetamempool.NewPriorityMempool(
+		zetamempool.PriorityNonceWithTxReplacement(func(op, np int64, oTx, nTx sdk.Tx) bool {
+			threshold := int64(100 + feeBump)
+			return np >= op*threshold/100
+		}),
+	)
 
 	c := ctx.WithPriority(txs[0].priority)
 	require.NoError(t, mp.Insert(c, txs[0]))
