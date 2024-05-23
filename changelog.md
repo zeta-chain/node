@@ -43,6 +43,7 @@
 * [2125](https://github.com/zeta-chain/node/pull/2125) - fix develop upgrade test
 * [2222](https://github.com/zeta-chain/node/pull/2222) - removed `maxHeightDiff` to let observer scan from Bitcoin height where it left off
 * [2233](https://github.com/zeta-chain/node/pull/2233) - fix `IsSupported` flag not properly updated in zetaclient's context
+* [2243](https://github.com/zeta-chain/node/pull/2243) - fix incorrect bitcoin outbound height in the CCTX outbound parameter
 
 ### CI
 

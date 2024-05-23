@@ -164,7 +164,11 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	// Get outbound block height
 	blockHeight, err := GetBlockHeightByHash(ob.rpcClient, res.BlockHash)
 	if err != nil {
-		return true, false, errors.Wrapf(err, "IsOutboundProcessed: error getting block height by hash %s", res.BlockHash)
+		return true, false, errors.Wrapf(
+			err,
+			"IsOutboundProcessed: error getting block height by hash %s",
+			res.BlockHash,
+		)
 	}
 
 	logger.Debug().Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())

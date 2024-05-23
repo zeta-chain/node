@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -86,10 +87,13 @@ func (suite *BitcoinObserverTestSuite) TearDownSuite() {
 
 func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
+	rpcMainnet := os.Getenv("BTC_RPC_MAINNET")
+	rpcTestnet := os.Getenv("BTC_RPC_TESTNET")
+
 	// mainnet
 	if chainID == 8332 {
 		connCfg = &rpcclient.ConnConfig{
-			Host:         "127.0.0.1:8332", // mainnet endpoint goes here
+			Host:         rpcMainnet, // mainnet endpoint goes here
 			User:         "user",
 			Pass:         "pass",
 			Params:       "mainnet",
@@ -100,7 +104,7 @@ func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 	// testnet3
 	if chainID == 18332 {
 		connCfg = &rpcclient.ConnConfig{
-			Host:         "127.0.0.1:8332", // testnet endpoint goes here
+			Host:         rpcTestnet, // testnet endpoint goes here
 			User:         "user",
 			Pass:         "pass",
 			Params:       "testnet3",
