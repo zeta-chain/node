@@ -638,110 +638,6 @@ func (m *MsgAddBlameVoteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddBlameVoteResponse proto.InternalMessageInfo
 
-type MsgUpdateCrosschainFlags struct {
-	Creator               string                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	IsInboundEnabled      bool                   `protobuf:"varint,3,opt,name=isInboundEnabled,proto3" json:"isInboundEnabled,omitempty"`
-	IsOutboundEnabled     bool                   `protobuf:"varint,4,opt,name=isOutboundEnabled,proto3" json:"isOutboundEnabled,omitempty"`
-	GasPriceIncreaseFlags *GasPriceIncreaseFlags `protobuf:"bytes,5,opt,name=gasPriceIncreaseFlags,proto3" json:"gasPriceIncreaseFlags,omitempty"`
-}
-
-func (m *MsgUpdateCrosschainFlags) Reset()         { *m = MsgUpdateCrosschainFlags{} }
-func (m *MsgUpdateCrosschainFlags) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateCrosschainFlags) ProtoMessage()    {}
-func (*MsgUpdateCrosschainFlags) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{12}
-}
-func (m *MsgUpdateCrosschainFlags) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUpdateCrosschainFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUpdateCrosschainFlags.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUpdateCrosschainFlags) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateCrosschainFlags.Merge(m, src)
-}
-func (m *MsgUpdateCrosschainFlags) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUpdateCrosschainFlags) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateCrosschainFlags.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUpdateCrosschainFlags proto.InternalMessageInfo
-
-func (m *MsgUpdateCrosschainFlags) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *MsgUpdateCrosschainFlags) GetIsInboundEnabled() bool {
-	if m != nil {
-		return m.IsInboundEnabled
-	}
-	return false
-}
-
-func (m *MsgUpdateCrosschainFlags) GetIsOutboundEnabled() bool {
-	if m != nil {
-		return m.IsOutboundEnabled
-	}
-	return false
-}
-
-func (m *MsgUpdateCrosschainFlags) GetGasPriceIncreaseFlags() *GasPriceIncreaseFlags {
-	if m != nil {
-		return m.GasPriceIncreaseFlags
-	}
-	return nil
-}
-
-type MsgUpdateCrosschainFlagsResponse struct {
-}
-
-func (m *MsgUpdateCrosschainFlagsResponse) Reset()         { *m = MsgUpdateCrosschainFlagsResponse{} }
-func (m *MsgUpdateCrosschainFlagsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateCrosschainFlagsResponse) ProtoMessage()    {}
-func (*MsgUpdateCrosschainFlagsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{13}
-}
-func (m *MsgUpdateCrosschainFlagsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUpdateCrosschainFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUpdateCrosschainFlagsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUpdateCrosschainFlagsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateCrosschainFlagsResponse.Merge(m, src)
-}
-func (m *MsgUpdateCrosschainFlagsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUpdateCrosschainFlagsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateCrosschainFlagsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUpdateCrosschainFlagsResponse proto.InternalMessageInfo
-
 type MsgUpdateKeygen struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Block   int64  `protobuf:"varint,2,opt,name=block,proto3" json:"block,omitempty"`
@@ -751,7 +647,7 @@ func (m *MsgUpdateKeygen) Reset()         { *m = MsgUpdateKeygen{} }
 func (m *MsgUpdateKeygen) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateKeygen) ProtoMessage()    {}
 func (*MsgUpdateKeygen) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{14}
+	return fileDescriptor_eda6e3b1d16a4021, []int{12}
 }
 func (m *MsgUpdateKeygen) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -801,7 +697,7 @@ func (m *MsgUpdateKeygenResponse) Reset()         { *m = MsgUpdateKeygenResponse
 func (m *MsgUpdateKeygenResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateKeygenResponse) ProtoMessage()    {}
 func (*MsgUpdateKeygenResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{15}
+	return fileDescriptor_eda6e3b1d16a4021, []int{13}
 }
 func (m *MsgUpdateKeygenResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -841,7 +737,7 @@ func (m *MsgResetChainNonces) Reset()         { *m = MsgResetChainNonces{} }
 func (m *MsgResetChainNonces) String() string { return proto.CompactTextString(m) }
 func (*MsgResetChainNonces) ProtoMessage()    {}
 func (*MsgResetChainNonces) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{16}
+	return fileDescriptor_eda6e3b1d16a4021, []int{14}
 }
 func (m *MsgResetChainNonces) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -905,7 +801,7 @@ func (m *MsgResetChainNoncesResponse) Reset()         { *m = MsgResetChainNonces
 func (m *MsgResetChainNoncesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgResetChainNoncesResponse) ProtoMessage()    {}
 func (*MsgResetChainNoncesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{17}
+	return fileDescriptor_eda6e3b1d16a4021, []int{15}
 }
 func (m *MsgResetChainNoncesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -945,7 +841,7 @@ func (m *MsgVoteTSS) Reset()         { *m = MsgVoteTSS{} }
 func (m *MsgVoteTSS) String() string { return proto.CompactTextString(m) }
 func (*MsgVoteTSS) ProtoMessage()    {}
 func (*MsgVoteTSS) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{18}
+	return fileDescriptor_eda6e3b1d16a4021, []int{16}
 }
 func (m *MsgVoteTSS) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1012,7 +908,7 @@ func (m *MsgVoteTSSResponse) Reset()         { *m = MsgVoteTSSResponse{} }
 func (m *MsgVoteTSSResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgVoteTSSResponse) ProtoMessage()    {}
 func (*MsgVoteTSSResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_eda6e3b1d16a4021, []int{19}
+	return fileDescriptor_eda6e3b1d16a4021, []int{17}
 }
 func (m *MsgVoteTSSResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1062,6 +958,288 @@ func (m *MsgVoteTSSResponse) GetKeygenSuccess() bool {
 	return false
 }
 
+type MsgEnableCCTXFlags struct {
+	Creator        string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	EnableInbound  bool   `protobuf:"varint,2,opt,name=enableInbound,proto3" json:"enableInbound,omitempty"`
+	EnableOutbound bool   `protobuf:"varint,3,opt,name=enableOutbound,proto3" json:"enableOutbound,omitempty"`
+}
+
+func (m *MsgEnableCCTXFlags) Reset()         { *m = MsgEnableCCTXFlags{} }
+func (m *MsgEnableCCTXFlags) String() string { return proto.CompactTextString(m) }
+func (*MsgEnableCCTXFlags) ProtoMessage()    {}
+func (*MsgEnableCCTXFlags) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eda6e3b1d16a4021, []int{18}
+}
+func (m *MsgEnableCCTXFlags) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgEnableCCTXFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgEnableCCTXFlags.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgEnableCCTXFlags) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgEnableCCTXFlags.Merge(m, src)
+}
+func (m *MsgEnableCCTXFlags) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgEnableCCTXFlags) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgEnableCCTXFlags.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgEnableCCTXFlags proto.InternalMessageInfo
+
+func (m *MsgEnableCCTXFlags) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgEnableCCTXFlags) GetEnableInbound() bool {
+	if m != nil {
+		return m.EnableInbound
+	}
+	return false
+}
+
+func (m *MsgEnableCCTXFlags) GetEnableOutbound() bool {
+	if m != nil {
+		return m.EnableOutbound
+	}
+	return false
+}
+
+type MsgEnableCCTXFlagsResponse struct {
+}
+
+func (m *MsgEnableCCTXFlagsResponse) Reset()         { *m = MsgEnableCCTXFlagsResponse{} }
+func (m *MsgEnableCCTXFlagsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgEnableCCTXFlagsResponse) ProtoMessage()    {}
+func (*MsgEnableCCTXFlagsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eda6e3b1d16a4021, []int{19}
+}
+func (m *MsgEnableCCTXFlagsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgEnableCCTXFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgEnableCCTXFlagsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgEnableCCTXFlagsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgEnableCCTXFlagsResponse.Merge(m, src)
+}
+func (m *MsgEnableCCTXFlagsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgEnableCCTXFlagsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgEnableCCTXFlagsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgEnableCCTXFlagsResponse proto.InternalMessageInfo
+
+type MsgDisableCCTXFlags struct {
+	Creator         string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	DisableInbound  bool   `protobuf:"varint,2,opt,name=disableInbound,proto3" json:"disableInbound,omitempty"`
+	DisableOutbound bool   `protobuf:"varint,3,opt,name=disableOutbound,proto3" json:"disableOutbound,omitempty"`
+}
+
+func (m *MsgDisableCCTXFlags) Reset()         { *m = MsgDisableCCTXFlags{} }
+func (m *MsgDisableCCTXFlags) String() string { return proto.CompactTextString(m) }
+func (*MsgDisableCCTXFlags) ProtoMessage()    {}
+func (*MsgDisableCCTXFlags) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eda6e3b1d16a4021, []int{20}
+}
+func (m *MsgDisableCCTXFlags) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDisableCCTXFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDisableCCTXFlags.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDisableCCTXFlags) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDisableCCTXFlags.Merge(m, src)
+}
+func (m *MsgDisableCCTXFlags) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDisableCCTXFlags) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDisableCCTXFlags.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDisableCCTXFlags proto.InternalMessageInfo
+
+func (m *MsgDisableCCTXFlags) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgDisableCCTXFlags) GetDisableInbound() bool {
+	if m != nil {
+		return m.DisableInbound
+	}
+	return false
+}
+
+func (m *MsgDisableCCTXFlags) GetDisableOutbound() bool {
+	if m != nil {
+		return m.DisableOutbound
+	}
+	return false
+}
+
+type MsgDisableCCTXFlagsResponse struct {
+}
+
+func (m *MsgDisableCCTXFlagsResponse) Reset()         { *m = MsgDisableCCTXFlagsResponse{} }
+func (m *MsgDisableCCTXFlagsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDisableCCTXFlagsResponse) ProtoMessage()    {}
+func (*MsgDisableCCTXFlagsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eda6e3b1d16a4021, []int{21}
+}
+func (m *MsgDisableCCTXFlagsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDisableCCTXFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDisableCCTXFlagsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDisableCCTXFlagsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDisableCCTXFlagsResponse.Merge(m, src)
+}
+func (m *MsgDisableCCTXFlagsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDisableCCTXFlagsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDisableCCTXFlagsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDisableCCTXFlagsResponse proto.InternalMessageInfo
+
+type MsgUpdateGasPriceIncreaseFlags struct {
+	Creator               string                `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	GasPriceIncreaseFlags GasPriceIncreaseFlags `protobuf:"bytes,2,opt,name=gasPriceIncreaseFlags,proto3" json:"gasPriceIncreaseFlags"`
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlags) Reset()         { *m = MsgUpdateGasPriceIncreaseFlags{} }
+func (m *MsgUpdateGasPriceIncreaseFlags) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateGasPriceIncreaseFlags) ProtoMessage()    {}
+func (*MsgUpdateGasPriceIncreaseFlags) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eda6e3b1d16a4021, []int{22}
+}
+func (m *MsgUpdateGasPriceIncreaseFlags) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateGasPriceIncreaseFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateGasPriceIncreaseFlags.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateGasPriceIncreaseFlags) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateGasPriceIncreaseFlags.Merge(m, src)
+}
+func (m *MsgUpdateGasPriceIncreaseFlags) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateGasPriceIncreaseFlags) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateGasPriceIncreaseFlags.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateGasPriceIncreaseFlags proto.InternalMessageInfo
+
+func (m *MsgUpdateGasPriceIncreaseFlags) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlags) GetGasPriceIncreaseFlags() GasPriceIncreaseFlags {
+	if m != nil {
+		return m.GasPriceIncreaseFlags
+	}
+	return GasPriceIncreaseFlags{}
+}
+
+type MsgUpdateGasPriceIncreaseFlagsResponse struct {
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) Reset() {
+	*m = MsgUpdateGasPriceIncreaseFlagsResponse{}
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateGasPriceIncreaseFlagsResponse) ProtoMessage()    {}
+func (*MsgUpdateGasPriceIncreaseFlagsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eda6e3b1d16a4021, []int{23}
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateGasPriceIncreaseFlagsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateGasPriceIncreaseFlagsResponse.Merge(m, src)
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateGasPriceIncreaseFlagsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateGasPriceIncreaseFlagsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateObserver)(nil), "zetachain.zetacore.observer.MsgUpdateObserver")
 	proto.RegisterType((*MsgUpdateObserverResponse)(nil), "zetachain.zetacore.observer.MsgUpdateObserverResponse")
@@ -1075,14 +1253,18 @@ func init() {
 	proto.RegisterType((*MsgAddObserverResponse)(nil), "zetachain.zetacore.observer.MsgAddObserverResponse")
 	proto.RegisterType((*MsgAddBlameVote)(nil), "zetachain.zetacore.observer.MsgAddBlameVote")
 	proto.RegisterType((*MsgAddBlameVoteResponse)(nil), "zetachain.zetacore.observer.MsgAddBlameVoteResponse")
-	proto.RegisterType((*MsgUpdateCrosschainFlags)(nil), "zetachain.zetacore.observer.MsgUpdateCrosschainFlags")
-	proto.RegisterType((*MsgUpdateCrosschainFlagsResponse)(nil), "zetachain.zetacore.observer.MsgUpdateCrosschainFlagsResponse")
 	proto.RegisterType((*MsgUpdateKeygen)(nil), "zetachain.zetacore.observer.MsgUpdateKeygen")
 	proto.RegisterType((*MsgUpdateKeygenResponse)(nil), "zetachain.zetacore.observer.MsgUpdateKeygenResponse")
 	proto.RegisterType((*MsgResetChainNonces)(nil), "zetachain.zetacore.observer.MsgResetChainNonces")
 	proto.RegisterType((*MsgResetChainNoncesResponse)(nil), "zetachain.zetacore.observer.MsgResetChainNoncesResponse")
 	proto.RegisterType((*MsgVoteTSS)(nil), "zetachain.zetacore.observer.MsgVoteTSS")
 	proto.RegisterType((*MsgVoteTSSResponse)(nil), "zetachain.zetacore.observer.MsgVoteTSSResponse")
+	proto.RegisterType((*MsgEnableCCTXFlags)(nil), "zetachain.zetacore.observer.MsgEnableCCTXFlags")
+	proto.RegisterType((*MsgEnableCCTXFlagsResponse)(nil), "zetachain.zetacore.observer.MsgEnableCCTXFlagsResponse")
+	proto.RegisterType((*MsgDisableCCTXFlags)(nil), "zetachain.zetacore.observer.MsgDisableCCTXFlags")
+	proto.RegisterType((*MsgDisableCCTXFlagsResponse)(nil), "zetachain.zetacore.observer.MsgDisableCCTXFlagsResponse")
+	proto.RegisterType((*MsgUpdateGasPriceIncreaseFlags)(nil), "zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags")
+	proto.RegisterType((*MsgUpdateGasPriceIncreaseFlagsResponse)(nil), "zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlagsResponse")
 }
 
 func init() {
@@ -1090,81 +1272,86 @@ func init() {
 }
 
 var fileDescriptor_eda6e3b1d16a4021 = []byte{
-	// 1176 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0xcb, 0x73, 0xdb, 0x44,
-	0x18, 0x8f, 0x48, 0x9b, 0x38, 0x5f, 0xde, 0x22, 0x69, 0x1d, 0x85, 0x98, 0x8c, 0x86, 0x52, 0xb7,
-	0x04, 0x3b, 0x71, 0x79, 0xcf, 0x70, 0x48, 0x5a, 0x9a, 0x84, 0x92, 0x26, 0x23, 0x87, 0x1e, 0x7a,
-	0xd1, 0xac, 0xa5, 0x8d, 0x24, 0xa2, 0xec, 0x7a, 0xb4, 0xeb, 0x3c, 0x0a, 0xc3, 0x0c, 0x47, 0x0e,
-	0x0c, 0xfc, 0x01, 0xfc, 0x23, 0xdc, 0x39, 0x94, 0x5b, 0x87, 0x13, 0x27, 0x86, 0x49, 0x4e, 0xfc,
-	0x07, 0x1c, 0x19, 0xed, 0xae, 0x14, 0xbf, 0x22, 0xdb, 0x99, 0xe9, 0xc9, 0xd2, 0xb7, 0xbf, 0xdf,
-	0xf7, 0xda, 0xef, 0x61, 0xc1, 0x3b, 0x2f, 0x30, 0x47, 0x8e, 0x8f, 0x02, 0x52, 0x16, 0x4f, 0x34,
-	0xc2, 0x65, 0x5a, 0x63, 0x38, 0x3a, 0xc6, 0x51, 0x99, 0x9f, 0x96, 0xea, 0x11, 0xe5, 0x54, 0x5f,
-	0x4c, 0x51, 0xa5, 0x04, 0x55, 0x4a, 0x50, 0xc6, 0x9c, 0x47, 0x3d, 0x2a, 0x70, 0xe5, 0xf8, 0x49,
-	0x52, 0x8c, 0xbb, 0x59, 0x8a, 0x6b, 0x21, 0x3a, 0xc2, 0x0a, 0x58, 0xc9, 0x02, 0x3a, 0x11, 0x65,
-	0x4c, 0x1c, 0xda, 0x07, 0x21, 0xf2, 0x98, 0xe2, 0xdc, 0xcf, 0xe2, 0x24, 0x0f, 0x0a, 0x5b, 0xcc,
-	0xc2, 0xd6, 0x51, 0x84, 0x8e, 0x12, 0xad, 0xab, 0x99, 0x48, 0x4c, 0xdc, 0x80, 0x78, 0x36, 0xa1,
-	0xc4, 0xc1, 0x09, 0xe3, 0x4e, 0x66, 0xf6, 0x58, 0x96, 0xbb, 0xf5, 0x43, 0xaf, 0x2c, 0x44, 0x4c,
-	0xfd, 0xf4, 0xc0, 0xd6, 0x23, 0x4a, 0x0f, 0x98, 0xfa, 0x91, 0x58, 0xf3, 0x5f, 0x0d, 0x66, 0x77,
-	0x98, 0xf7, 0x75, 0xdd, 0x45, 0x1c, 0xef, 0x2a, 0xbb, 0x7a, 0x1e, 0x46, 0x9d, 0x08, 0x23, 0x4e,
-	0xa3, 0xbc, 0xb6, 0xac, 0x15, 0xc7, 0xac, 0xe4, 0x55, 0x5f, 0x85, 0x39, 0x1a, 0xba, 0x76, 0xe2,
-	0xa1, 0x8d, 0x5c, 0x37, 0xc2, 0x8c, 0xe5, 0xdf, 0x10, 0x30, 0x9d, 0x86, 0x6e, 0xa2, 0x64, 0x5d,
-	0x9e, 0xc4, 0x0c, 0x82, 0x4f, 0x3a, 0x19, 0xc3, 0x92, 0x41, 0xf0, 0x49, 0x3b, 0xe3, 0x19, 0x4c,
-	0x36, 0x84, 0x3f, 0x76, 0x84, 0x11, 0xa3, 0x24, 0x7f, 0x63, 0x59, 0x2b, 0x4e, 0x55, 0xd6, 0x4a,
-	0x19, 0x25, 0x54, 0x4a, 0x94, 0xc8, 0x48, 0x2c, 0x41, 0xb4, 0x26, 0x1a, 0x4d, 0x6f, 0xe6, 0x22,
-	0x2c, 0x74, 0x84, 0x6a, 0x61, 0x56, 0xa7, 0x84, 0x61, 0xf3, 0x0f, 0x0d, 0xf4, 0x1d, 0xe6, 0x3d,
-	0xa3, 0x1c, 0x6f, 0x84, 0xd4, 0x39, 0xdc, 0xc2, 0xc8, 0xcd, 0xcc, 0xc4, 0x02, 0xe4, 0x64, 0x55,
-	0x05, 0xae, 0x88, 0x7e, 0xd8, 0x1a, 0x15, 0xef, 0xdb, 0xae, 0xbe, 0x04, 0x50, 0x8b, 0x75, 0xd8,
-	0x3e, 0x62, 0xbe, 0x08, 0x74, 0xc2, 0x1a, 0x13, 0x92, 0x2d, 0xc4, 0x7c, 0xfd, 0x16, 0x8c, 0xf8,
-	0x38, 0xf0, 0x7c, 0x2e, 0x02, 0x1b, 0xb6, 0xd4, 0x9b, 0xbe, 0x19, 0xcb, 0x63, 0xab, 0xf9, 0x9b,
-	0xcb, 0x5a, 0x71, 0xbc, 0x72, 0xaf, 0x5b, 0xc0, 0xf5, 0x43, 0xaf, 0xa4, 0x6e, 0x50, 0xba, 0xf8,
-	0x08, 0x71, 0xb4, 0x71, 0xe3, 0xe5, 0xdf, 0x6f, 0x0f, 0x59, 0x8a, 0x6e, 0x7e, 0x03, 0x46, 0x67,
-	0x28, 0x49, 0xa4, 0xfa, 0x1d, 0x98, 0xaa, 0xa1, 0x30, 0xa4, 0xdc, 0x16, 0xa1, 0x60, 0x57, 0x44,
-	0x96, 0xb3, 0x26, 0xa5, 0xf4, 0xa1, 0x14, 0xc6, 0xb0, 0x63, 0xca, 0xb1, 0x7d, 0x10, 0x10, 0x14,
-	0x06, 0x2f, 0xb0, 0x8c, 0x32, 0x67, 0x4d, 0xc6, 0xd2, 0xc7, 0x89, 0xd0, 0xfc, 0x0e, 0xe6, 0xd2,
-	0xa4, 0x3e, 0x8c, 0x5d, 0xdd, 0x13, 0xfd, 0x90, 0x91, 0xb8, 0x2f, 0x61, 0xdc, 0xb9, 0x04, 0x0a,
-	0xad, 0xe3, 0x95, 0x62, 0xe6, 0xe5, 0x36, 0x29, 0xb6, 0x9a, 0xc9, 0x66, 0x01, 0xde, 0xea, 0x66,
-	0x3d, 0xbd, 0xd5, 0x27, 0xc2, 0x3b, 0x0b, 0x1f, 0xd1, 0xe3, 0x3e, 0xbd, 0xbb, 0xfa, 0x5a, 0x95,
-	0xb1, 0x0e, 0x65, 0xa9, 0xb1, 0xdf, 0x35, 0x98, 0xda, 0x61, 0xde, 0xba, 0xeb, 0xf6, 0xd1, 0x48,
-	0xf7, 0x60, 0xe6, 0x8a, 0x26, 0x9a, 0xa6, 0x6d, 0xfd, 0xf0, 0x19, 0x2c, 0x88, 0x94, 0x84, 0x01,
-	0x26, 0xdc, 0xf6, 0x22, 0x44, 0x38, 0xc6, 0x76, 0xbd, 0x51, 0x3b, 0xc4, 0x67, 0xaa, 0x8d, 0x6e,
-	0x5f, 0x02, 0x36, 0xe5, 0xf9, 0x9e, 0x38, 0xd6, 0xd7, 0x60, 0x1e, 0xb9, 0xae, 0x4d, 0xa8, 0x8b,
-	0x6d, 0xe4, 0x38, 0xb4, 0x41, 0xb8, 0x4d, 0x49, 0x78, 0x26, 0x4a, 0x2f, 0x67, 0xe9, 0xc8, 0x75,
-	0x9f, 0x52, 0x17, 0xaf, 0xcb, 0xa3, 0x5d, 0x12, 0x9e, 0x99, 0x79, 0xb8, 0xd5, 0x1a, 0x45, 0x1a,
-	0xe0, 0xcf, 0x1a, 0x4c, 0xcb, 0xa3, 0x8d, 0x78, 0xfa, 0xc6, 0x05, 0x76, 0xbd, 0x06, 0xd9, 0x8c,
-	0x1b, 0x04, 0x1d, 0x61, 0x3b, 0x20, 0x07, 0x54, 0x84, 0x30, 0x5e, 0x31, 0x33, 0x2b, 0x40, 0x18,
-	0x54, 0x65, 0x3e, 0x26, 0xb8, 0xdb, 0xe4, 0x80, 0x9a, 0x0b, 0x70, 0xbb, 0xcd, 0xa1, 0xd4, 0xd9,
-	0xff, 0x34, 0xc8, 0x5f, 0xd6, 0x46, 0xba, 0x04, 0x1e, 0xc7, 0x3b, 0x20, 0xc3, 0xeb, 0xfb, 0x30,
-	0x13, 0xb0, 0x6d, 0x52, 0xa3, 0x0d, 0xe2, 0x7e, 0x41, 0x50, 0x2d, 0xc4, 0xae, 0x70, 0x30, 0x67,
-	0x75, 0xc8, 0xf5, 0x15, 0x98, 0x0d, 0xd8, 0x6e, 0x83, 0xb7, 0x80, 0x65, 0x62, 0x3b, 0x0f, 0x74,
-	0x1f, 0xe6, 0x3d, 0xc4, 0xf6, 0xa2, 0xc0, 0xc1, 0xdb, 0x24, 0x36, 0xc7, 0xb0, 0x70, 0x46, 0x75,
-	0x7b, 0x25, 0x33, 0xfe, 0xcd, 0x6e, 0x4c, 0xab, 0xbb, 0x42, 0xd3, 0x84, 0xe5, 0xab, 0x22, 0x4f,
-	0xd3, 0xb3, 0x2e, 0xae, 0x52, 0x62, 0x9e, 0xe0, 0x33, 0x0f, 0x93, 0x8c, 0xa4, 0xcc, 0xc1, 0x4d,
-	0x31, 0xbe, 0xd4, 0x3d, 0xca, 0x17, 0x95, 0xfc, 0x66, 0x15, 0xa9, 0xf6, 0x5f, 0x35, 0x78, 0x53,
-	0xf4, 0x0a, 0xc3, 0x5c, 0xb4, 0xca, 0x53, 0xb1, 0xf3, 0xae, 0x57, 0x2d, 0xef, 0xc2, 0xb4, 0x3c,
-	0x12, 0x8b, 0xd3, 0x0e, 0xe9, 0x89, 0xb8, 0x91, 0x61, 0x6b, 0xd2, 0x49, 0x55, 0x7f, 0x45, 0x4f,
-	0xf4, 0x22, 0xcc, 0x34, 0xe3, 0xfc, 0xc0, 0xf3, 0xd5, 0x84, 0x9d, 0xba, 0x04, 0x6e, 0x05, 0x9e,
-	0x6f, 0x2e, 0xc1, 0x62, 0x17, 0xef, 0x52, 0xef, 0x7f, 0xd3, 0x00, 0xd4, 0x00, 0xdd, 0xaf, 0x56,
-	0x33, 0x9c, 0x5e, 0x02, 0xe0, 0x8c, 0x25, 0xad, 0x28, 0xdb, 0x77, 0x8c, 0x33, 0xa6, 0x9a, 0x6f,
-	0x05, 0xf4, 0x43, 0x91, 0x17, 0x3b, 0xbe, 0x50, 0x5b, 0x0d, 0x7d, 0xe9, 0xfb, 0x8c, 0x3c, 0x79,
-	0x8e, 0x39, 0xda, 0x92, 0xe3, 0xff, 0x11, 0x8c, 0x30, 0x8e, 0x78, 0x83, 0xa9, 0x7d, 0xb7, 0x72,
-	0xd5, 0xf8, 0x57, 0xcb, 0xde, 0xc2, 0x0e, 0x0e, 0x8e, 0x71, 0x55, 0x70, 0x2c, 0xc5, 0x35, 0x7f,
-	0xbc, 0xdc, 0x63, 0xfb, 0xd5, 0xea, 0xeb, 0x19, 0xfa, 0x31, 0x4c, 0x05, 0xc6, 0x1a, 0x8e, 0x93,
-	0x6c, 0xf3, 0x9c, 0x35, 0x29, 0xa5, 0x55, 0x29, 0xac, 0xfc, 0x39, 0x06, 0xc3, 0x3b, 0xcc, 0xd3,
-	0x29, 0x8c, 0x37, 0x0f, 0xc5, 0xf7, 0x32, 0x2b, 0xbd, 0x75, 0xf6, 0x18, 0x0f, 0x06, 0x00, 0xa7,
-	0xd1, 0x9e, 0xc2, 0x54, 0xdb, 0x3f, 0x9a, 0x52, 0x2f, 0x35, 0xad, 0x78, 0xe3, 0xa3, 0xc1, 0xf0,
-	0xa9, 0xe5, 0x1f, 0x34, 0x98, 0xed, 0x5c, 0x86, 0x6b, 0xfd, 0x69, 0x6b, 0xa2, 0x18, 0x9f, 0x0e,
-	0x4c, 0x69, 0xf1, 0xa1, 0x73, 0xe5, 0xf5, 0xf4, 0xa1, 0x83, 0xd2, 0xdb, 0x87, 0x2b, 0x77, 0xa1,
-	0x1e, 0xc1, 0x44, 0xcb, 0x9a, 0x58, 0xe9, 0xe3, 0x1a, 0x53, 0xb4, 0xf1, 0xc1, 0x20, 0xe8, 0xd4,
-	0xe6, 0x4f, 0x1a, 0xcc, 0x77, 0x1f, 0xf7, 0x1f, 0xf6, 0x99, 0xcc, 0x56, 0x9a, 0xf1, 0xf9, 0xb5,
-	0x68, 0xcd, 0x39, 0x68, 0x99, 0xaf, 0x2b, 0xfd, 0xa9, 0x93, 0xe8, 0xde, 0x39, 0xe8, 0x36, 0x78,
-	0xf5, 0x6f, 0x61, 0xba, 0xfd, 0x2f, 0x6c, 0xb9, 0x97, 0xa2, 0x36, 0x82, 0xf1, 0xf1, 0x80, 0x84,
-	0xd4, 0xf8, 0xf7, 0x30, 0xd3, 0x31, 0xf1, 0x57, 0x7b, 0xd7, 0x50, 0x2b, 0xc3, 0xf8, 0x64, 0x50,
-	0x46, 0x6a, 0xdf, 0x81, 0xd1, 0x64, 0x66, 0xdf, 0xed, 0x27, 0x86, 0xfd, 0x6a, 0xd5, 0x28, 0xf7,
-	0x09, 0x4c, 0x8c, 0x6c, 0x6c, 0xbf, 0x3c, 0x2f, 0x68, 0xaf, 0xce, 0x0b, 0xda, 0x3f, 0xe7, 0x05,
-	0xed, 0x97, 0x8b, 0xc2, 0xd0, 0xab, 0x8b, 0xc2, 0xd0, 0x5f, 0x17, 0x85, 0xa1, 0xe7, 0x65, 0x2f,
-	0xe0, 0x7e, 0xa3, 0x56, 0x72, 0xe8, 0x91, 0xf8, 0xf0, 0x7a, 0xbf, 0xed, 0x1b, 0xec, 0xb4, 0xe9,
-	0xc3, 0xee, 0xac, 0x8e, 0x59, 0x6d, 0x44, 0x7c, 0x83, 0x3d, 0xf8, 0x3f, 0x00, 0x00, 0xff, 0xff,
-	0x57, 0xa3, 0x79, 0xf2, 0x42, 0x0f, 0x00, 0x00,
+	// 1253 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0x4b, 0x6f, 0xdb, 0x46,
+	0x10, 0x36, 0xeb, 0xc4, 0x8f, 0x91, 0x25, 0x3b, 0xac, 0x93, 0xc8, 0x72, 0xac, 0x1a, 0x44, 0xe2,
+	0x28, 0xad, 0x2b, 0xd9, 0x4a, 0xd1, 0xe7, 0xc9, 0x8f, 0xc6, 0x76, 0x53, 0xc7, 0x06, 0xe5, 0x06,
+	0x45, 0x2e, 0xc4, 0x8a, 0x5c, 0x53, 0xac, 0xe9, 0x5d, 0x81, 0x4b, 0xf9, 0x91, 0x06, 0x05, 0x72,
+	0xec, 0xa9, 0xfd, 0x01, 0x05, 0x7a, 0xef, 0x3f, 0xe8, 0xbd, 0x87, 0xf4, 0x96, 0x63, 0x4f, 0x45,
+	0x6b, 0x9f, 0xfa, 0x2f, 0x0a, 0xee, 0x2e, 0x69, 0x89, 0x92, 0x48, 0x29, 0x45, 0x4f, 0x12, 0x67,
+	0xbf, 0x6f, 0xe6, 0x9b, 0xd9, 0xd9, 0x1d, 0x12, 0xee, 0x3e, 0xc7, 0x3e, 0x32, 0x1b, 0xc8, 0x21,
+	0x15, 0xfe, 0x8f, 0x7a, 0xb8, 0x42, 0xeb, 0x0c, 0x7b, 0x27, 0xd8, 0xab, 0xf8, 0x67, 0xe5, 0xa6,
+	0x47, 0x7d, 0xaa, 0xce, 0x47, 0xa8, 0x72, 0x88, 0x2a, 0x87, 0xa8, 0xc2, 0xac, 0x4d, 0x6d, 0xca,
+	0x71, 0x95, 0xe0, 0x9f, 0xa0, 0x14, 0xee, 0x27, 0x39, 0xae, 0xbb, 0xe8, 0x18, 0x4b, 0x60, 0x35,
+	0x09, 0x68, 0x7a, 0x94, 0x31, 0xbe, 0x68, 0x1c, 0xba, 0xc8, 0x66, 0x92, 0xf3, 0x6e, 0x12, 0x27,
+	0xfc, 0x23, 0xb1, 0xa5, 0x24, 0x6c, 0x13, 0x79, 0xe8, 0x38, 0xf4, 0xba, 0x92, 0x88, 0xc4, 0xc4,
+	0x72, 0x88, 0x6d, 0x10, 0x4a, 0x4c, 0x1c, 0x32, 0xee, 0x25, 0x56, 0x8f, 0x25, 0xc9, 0x6d, 0x1e,
+	0xd9, 0x15, 0x6e, 0x62, 0xf2, 0x27, 0x05, 0xdb, 0xf4, 0x28, 0x3d, 0x64, 0xf2, 0x47, 0x60, 0xb5,
+	0x7f, 0x14, 0xb8, 0xb1, 0xcb, 0xec, 0xaf, 0x9a, 0x16, 0xf2, 0xf1, 0x9e, 0x8c, 0xab, 0xe6, 0x61,
+	0xdc, 0xf4, 0x30, 0xf2, 0xa9, 0x97, 0x57, 0x16, 0x95, 0xd2, 0xa4, 0x1e, 0x3e, 0xaa, 0x2b, 0x30,
+	0x4b, 0x5d, 0xcb, 0x08, 0x15, 0x1a, 0xc8, 0xb2, 0x3c, 0xcc, 0x58, 0xfe, 0x2d, 0x0e, 0x53, 0xa9,
+	0x6b, 0x85, 0x4e, 0xd6, 0xc4, 0x4a, 0xc0, 0x20, 0xf8, 0xb4, 0x9b, 0x31, 0x2a, 0x18, 0x04, 0x9f,
+	0xc6, 0x19, 0x4f, 0x21, 0xdb, 0xe2, 0x7a, 0x0c, 0x0f, 0x23, 0x46, 0x49, 0xfe, 0xda, 0xa2, 0x52,
+	0xca, 0x55, 0x57, 0xcb, 0x09, 0x2d, 0x54, 0x0e, 0x9d, 0x88, 0x4c, 0x74, 0x4e, 0xd4, 0xa7, 0x5a,
+	0x6d, 0x4f, 0xda, 0x3c, 0xcc, 0x75, 0xa5, 0xaa, 0x63, 0xd6, 0xa4, 0x84, 0x61, 0xed, 0x77, 0x05,
+	0xd4, 0x5d, 0x66, 0x3f, 0xa5, 0x3e, 0x5e, 0x77, 0xa9, 0x79, 0xb4, 0x8d, 0x91, 0x95, 0x58, 0x89,
+	0x39, 0x98, 0x10, 0x5d, 0xe5, 0x58, 0x3c, 0xfb, 0x51, 0x7d, 0x9c, 0x3f, 0xef, 0x58, 0xea, 0x02,
+	0x40, 0x3d, 0xf0, 0x61, 0x34, 0x10, 0x6b, 0xf0, 0x44, 0xa7, 0xf4, 0x49, 0x6e, 0xd9, 0x46, 0xac,
+	0xa1, 0xde, 0x82, 0xb1, 0x06, 0x76, 0xec, 0x86, 0xcf, 0x13, 0x1b, 0xd5, 0xe5, 0x93, 0xba, 0x15,
+	0xd8, 0x83, 0xa8, 0xf9, 0xeb, 0x8b, 0x4a, 0x29, 0x53, 0x7d, 0xd0, 0x2b, 0xe1, 0xe6, 0x91, 0x5d,
+	0x96, 0x3b, 0x28, 0x24, 0x6e, 0x22, 0x1f, 0xad, 0x5f, 0x7b, 0xf5, 0xe7, 0x3b, 0x23, 0xba, 0xa4,
+	0x6b, 0xdf, 0x40, 0xa1, 0x3b, 0x95, 0x30, 0x53, 0xf5, 0x1e, 0xe4, 0xea, 0xc8, 0x75, 0xa9, 0x6f,
+	0xf0, 0x54, 0xb0, 0xc5, 0x33, 0x9b, 0xd0, 0xb3, 0xc2, 0xba, 0x21, 0x8c, 0x01, 0xec, 0x84, 0xfa,
+	0xd8, 0x38, 0x74, 0x08, 0x72, 0x9d, 0xe7, 0x58, 0x64, 0x39, 0xa1, 0x67, 0x03, 0xeb, 0xa3, 0xd0,
+	0xa8, 0xbd, 0x80, 0xd9, 0xa8, 0xa8, 0x1b, 0x81, 0xd4, 0x7d, 0x7e, 0x1e, 0x12, 0x0a, 0xf7, 0x05,
+	0x64, 0xcc, 0x2b, 0x20, 0xf7, 0x9a, 0xa9, 0x96, 0x12, 0x37, 0xb7, 0xcd, 0xb1, 0xde, 0x4e, 0xd6,
+	0x8a, 0x70, 0xa7, 0x57, 0xf4, 0x68, 0x57, 0x1f, 0x73, 0x75, 0x3a, 0x3e, 0xa6, 0x27, 0x03, 0xaa,
+	0xeb, 0xbf, 0xad, 0x32, 0x58, 0x97, 0xb3, 0x28, 0xd8, 0x6f, 0x0a, 0xe4, 0x76, 0x99, 0xbd, 0x66,
+	0x59, 0x03, 0x1c, 0xa4, 0x07, 0x30, 0xd3, 0xe7, 0x10, 0x4d, 0xd3, 0xd8, 0x79, 0xf8, 0x14, 0xe6,
+	0x78, 0x49, 0x5c, 0x07, 0x13, 0xdf, 0xb0, 0x3d, 0x44, 0x7c, 0x8c, 0x8d, 0x66, 0xab, 0x7e, 0x84,
+	0xcf, 0xe5, 0x31, 0xba, 0x7d, 0x05, 0xd8, 0x12, 0xeb, 0xfb, 0x7c, 0x59, 0x5d, 0x85, 0x9b, 0xc8,
+	0xb2, 0x0c, 0x42, 0x2d, 0x6c, 0x20, 0xd3, 0xa4, 0x2d, 0xe2, 0x1b, 0x94, 0xb8, 0xe7, 0xbc, 0xf5,
+	0x26, 0x74, 0x15, 0x59, 0xd6, 0x13, 0x6a, 0xe1, 0x35, 0xb1, 0xb4, 0x47, 0xdc, 0x73, 0x2d, 0x0f,
+	0xb7, 0x3a, 0xb3, 0x88, 0x12, 0xfc, 0x41, 0x81, 0x69, 0xb1, 0xb4, 0x1e, 0xdc, 0xbe, 0x41, 0x83,
+	0xbd, 0xd9, 0x01, 0xd9, 0x0a, 0x0e, 0x08, 0x3a, 0xc6, 0x86, 0x43, 0x0e, 0x29, 0x4f, 0x21, 0x53,
+	0xd5, 0x12, 0x3b, 0x80, 0x07, 0x94, 0x6d, 0x3e, 0xc9, 0xb9, 0x3b, 0xe4, 0x90, 0x6a, 0x73, 0x70,
+	0x3b, 0x26, 0x28, 0x12, 0xbb, 0xc6, 0xb5, 0x8a, 0xd6, 0x78, 0x8c, 0xcf, 0x6d, 0x4c, 0x12, 0xb4,
+	0xce, 0xc2, 0x75, 0x7e, 0x3e, 0xa5, 0x50, 0xf1, 0x20, 0xbd, 0xb7, 0xbb, 0x88, 0xbc, 0xff, 0xa4,
+	0xc0, 0xdb, 0xbc, 0x19, 0x18, 0xf6, 0x79, 0x2f, 0x3c, 0xe1, 0x97, 0xfa, 0x9b, 0x95, 0x63, 0x09,
+	0xa6, 0xc5, 0x12, 0x9f, 0x0c, 0x86, 0x4b, 0x4f, 0x79, 0x4d, 0x46, 0xf5, 0xac, 0x19, 0xb9, 0xfe,
+	0x92, 0x9e, 0xaa, 0x25, 0x98, 0x69, 0xc7, 0x35, 0x1c, 0xbb, 0x21, 0xaf, 0x90, 0xdc, 0x15, 0x70,
+	0xdb, 0xb1, 0x1b, 0xda, 0x02, 0xcc, 0xf7, 0x50, 0x17, 0xa9, 0xff, 0x55, 0x01, 0x90, 0x37, 0xc4,
+	0x41, 0xad, 0x96, 0x20, 0x7a, 0x01, 0xc0, 0x67, 0x2c, 0xec, 0x35, 0xd1, 0x9f, 0x93, 0x3e, 0x63,
+	0xb2, 0xbb, 0x96, 0x41, 0x3d, 0xe2, 0x75, 0x31, 0x82, 0x1d, 0x33, 0xe4, 0xad, 0x26, 0xb4, 0xcf,
+	0x88, 0x95, 0x67, 0xd8, 0x47, 0xdb, 0xe2, 0x7e, 0xdb, 0x84, 0x31, 0xe6, 0x23, 0xbf, 0xc5, 0xe4,
+	0x85, 0xbe, 0xdc, 0xef, 0x7e, 0x93, 0xd3, 0x4c, 0xc7, 0x26, 0x76, 0x4e, 0x70, 0x8d, 0x73, 0x74,
+	0xc9, 0xd5, 0xbe, 0xbf, 0xba, 0xa8, 0x0f, 0x6a, 0xb5, 0xff, 0xe7, 0x56, 0x0b, 0x60, 0x32, 0x31,
+	0xd6, 0x32, 0xcd, 0x70, 0x5c, 0x4d, 0xe8, 0x59, 0x61, 0xad, 0x09, 0xa3, 0xf6, 0x82, 0x4b, 0xf9,
+	0x9c, 0xa0, 0xba, 0x8b, 0x37, 0x36, 0x0e, 0xbe, 0x7e, 0x14, 0xbc, 0x60, 0x24, 0x94, 0xf3, 0x2e,
+	0x64, 0x31, 0x07, 0xef, 0x90, 0x3a, 0x6d, 0x91, 0x28, 0x78, 0x87, 0x51, 0x5d, 0x82, 0x9c, 0x30,
+	0xec, 0xb5, 0x7c, 0x01, 0x13, 0xc1, 0x63, 0x56, 0xed, 0x0e, 0xbf, 0xe6, 0x63, 0xd1, 0xa3, 0x3d,
+	0x7e, 0x29, 0x3a, 0x74, 0xd3, 0x61, 0x83, 0xaa, 0x5b, 0x82, 0x9c, 0x25, 0xd0, 0x9d, 0xf2, 0x62,
+	0x56, 0xb5, 0x04, 0xd3, 0xd2, 0x12, 0x13, 0x18, 0x37, 0xcb, 0x36, 0x8c, 0x4b, 0x88, 0x24, 0xfe,
+	0xa2, 0x40, 0x31, 0x3a, 0x60, 0x5b, 0x88, 0xed, 0x7b, 0x8e, 0x89, 0x77, 0x48, 0xa0, 0x87, 0xe1,
+	0x34, 0xb5, 0x04, 0x6e, 0xda, 0xbd, 0x28, 0x72, 0xa0, 0x54, 0x13, 0xaf, 0x93, 0x9e, 0xc1, 0xe4,
+	0xf5, 0xd2, 0xdb, 0xad, 0x56, 0x82, 0xa5, 0x64, 0xad, 0x61, 0x5a, 0xd5, 0xbf, 0x33, 0x30, 0xba,
+	0xcb, 0x6c, 0x95, 0x42, 0xa6, 0x7d, 0x16, 0xbc, 0x97, 0xa8, 0xa8, 0xf3, 0xca, 0x2d, 0x3c, 0x1c,
+	0x02, 0x1c, 0x9d, 0x81, 0x33, 0xc8, 0xc5, 0x5e, 0xe4, 0xca, 0x69, 0x6e, 0x3a, 0xf1, 0x85, 0x0f,
+	0x87, 0xc3, 0x47, 0x91, 0x5f, 0x2a, 0x70, 0xa3, 0xfb, 0x1d, 0x60, 0x75, 0x30, 0x6f, 0x6d, 0x94,
+	0xc2, 0x27, 0x43, 0x53, 0x3a, 0x34, 0x74, 0x4f, 0xfa, 0x54, 0x0d, 0x5d, 0x94, 0x74, 0x0d, 0x7d,
+	0x5f, 0x01, 0x54, 0x0f, 0xa6, 0x3a, 0xa6, 0xe3, 0xf2, 0x00, 0xdb, 0x18, 0xa1, 0x0b, 0x1f, 0x0c,
+	0x83, 0x6e, 0x8f, 0xd9, 0x31, 0xe5, 0x96, 0x07, 0x2b, 0xa1, 0x40, 0xa7, 0xc7, 0xec, 0x35, 0xfe,
+	0xd4, 0x6f, 0x61, 0x3a, 0xfe, 0xa6, 0x5c, 0x49, 0x73, 0x14, 0x23, 0x14, 0x3e, 0x1a, 0x92, 0x10,
+	0x05, 0xff, 0x0e, 0x66, 0xba, 0xe6, 0xee, 0x4a, 0xfa, 0x9e, 0x75, 0x32, 0x0a, 0x1f, 0x0f, 0xcb,
+	0x88, 0xe2, 0x9b, 0x30, 0x1e, 0x4e, 0xce, 0xfb, 0x83, 0xe4, 0x70, 0x50, 0xab, 0x15, 0x2a, 0x03,
+	0x02, 0xdb, 0x2b, 0x1c, 0x9f, 0x2b, 0xa9, 0x3e, 0x62, 0x84, 0xf4, 0x0a, 0xf7, 0x99, 0x1d, 0x41,
+	0x85, 0xbb, 0xe6, 0x46, 0x6a, 0x85, 0xe3, 0x8c, 0xf4, 0x0a, 0xf7, 0x1b, 0x0c, 0xea, 0xcf, 0x0a,
+	0xcc, 0x27, 0x4d, 0x85, 0xcf, 0x06, 0x6b, 0xda, 0x9e, 0xe4, 0xc2, 0xc6, 0x7f, 0x20, 0x87, 0x0a,
+	0xd7, 0x77, 0x5e, 0x5d, 0x14, 0x95, 0xd7, 0x17, 0x45, 0xe5, 0xaf, 0x8b, 0xa2, 0xf2, 0xe3, 0x65,
+	0x71, 0xe4, 0xf5, 0x65, 0x71, 0xe4, 0x8f, 0xcb, 0xe2, 0xc8, 0xb3, 0x8a, 0xed, 0xf8, 0x8d, 0x56,
+	0xbd, 0x6c, 0xd2, 0x63, 0xfe, 0xf9, 0xfd, 0x7e, 0xec, 0x4b, 0xfc, 0xac, 0xed, 0xf3, 0xfe, 0xbc,
+	0x89, 0x59, 0x7d, 0x8c, 0x7f, 0x89, 0x3f, 0xfc, 0x37, 0x00, 0x00, 0xff, 0xff, 0x63, 0x61, 0x4b,
+	0x2a, 0x48, 0x11, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1184,11 +1371,13 @@ type MsgClient interface {
 	UpdateChainParams(ctx context.Context, in *MsgUpdateChainParams, opts ...grpc.CallOption) (*MsgUpdateChainParamsResponse, error)
 	RemoveChainParams(ctx context.Context, in *MsgRemoveChainParams, opts ...grpc.CallOption) (*MsgRemoveChainParamsResponse, error)
 	AddBlameVote(ctx context.Context, in *MsgAddBlameVote, opts ...grpc.CallOption) (*MsgAddBlameVoteResponse, error)
-	UpdateCrosschainFlags(ctx context.Context, in *MsgUpdateCrosschainFlags, opts ...grpc.CallOption) (*MsgUpdateCrosschainFlagsResponse, error)
 	UpdateKeygen(ctx context.Context, in *MsgUpdateKeygen, opts ...grpc.CallOption) (*MsgUpdateKeygenResponse, error)
 	VoteBlockHeader(ctx context.Context, in *MsgVoteBlockHeader, opts ...grpc.CallOption) (*MsgVoteBlockHeaderResponse, error)
 	ResetChainNonces(ctx context.Context, in *MsgResetChainNonces, opts ...grpc.CallOption) (*MsgResetChainNoncesResponse, error)
 	VoteTSS(ctx context.Context, in *MsgVoteTSS, opts ...grpc.CallOption) (*MsgVoteTSSResponse, error)
+	EnableCCTXFlags(ctx context.Context, in *MsgEnableCCTXFlags, opts ...grpc.CallOption) (*MsgEnableCCTXFlagsResponse, error)
+	DisableCCTXFlags(ctx context.Context, in *MsgDisableCCTXFlags, opts ...grpc.CallOption) (*MsgDisableCCTXFlagsResponse, error)
+	UpdateGasPriceIncreaseFlags(ctx context.Context, in *MsgUpdateGasPriceIncreaseFlags, opts ...grpc.CallOption) (*MsgUpdateGasPriceIncreaseFlagsResponse, error)
 }
 
 type msgClient struct {
@@ -1244,15 +1433,6 @@ func (c *msgClient) AddBlameVote(ctx context.Context, in *MsgAddBlameVote, opts 
 	return out, nil
 }
 
-func (c *msgClient) UpdateCrosschainFlags(ctx context.Context, in *MsgUpdateCrosschainFlags, opts ...grpc.CallOption) (*MsgUpdateCrosschainFlagsResponse, error) {
-	out := new(MsgUpdateCrosschainFlagsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdateCrosschainFlags", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) UpdateKeygen(ctx context.Context, in *MsgUpdateKeygen, opts ...grpc.CallOption) (*MsgUpdateKeygenResponse, error) {
 	out := new(MsgUpdateKeygenResponse)
 	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdateKeygen", in, out, opts...)
@@ -1289,6 +1469,33 @@ func (c *msgClient) VoteTSS(ctx context.Context, in *MsgVoteTSS, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *msgClient) EnableCCTXFlags(ctx context.Context, in *MsgEnableCCTXFlags, opts ...grpc.CallOption) (*MsgEnableCCTXFlagsResponse, error) {
+	out := new(MsgEnableCCTXFlagsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/EnableCCTXFlags", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DisableCCTXFlags(ctx context.Context, in *MsgDisableCCTXFlags, opts ...grpc.CallOption) (*MsgDisableCCTXFlagsResponse, error) {
+	out := new(MsgDisableCCTXFlagsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/DisableCCTXFlags", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateGasPriceIncreaseFlags(ctx context.Context, in *MsgUpdateGasPriceIncreaseFlags, opts ...grpc.CallOption) (*MsgUpdateGasPriceIncreaseFlagsResponse, error) {
+	out := new(MsgUpdateGasPriceIncreaseFlagsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdateGasPriceIncreaseFlags", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	AddObserver(context.Context, *MsgAddObserver) (*MsgAddObserverResponse, error)
@@ -1296,11 +1503,13 @@ type MsgServer interface {
 	UpdateChainParams(context.Context, *MsgUpdateChainParams) (*MsgUpdateChainParamsResponse, error)
 	RemoveChainParams(context.Context, *MsgRemoveChainParams) (*MsgRemoveChainParamsResponse, error)
 	AddBlameVote(context.Context, *MsgAddBlameVote) (*MsgAddBlameVoteResponse, error)
-	UpdateCrosschainFlags(context.Context, *MsgUpdateCrosschainFlags) (*MsgUpdateCrosschainFlagsResponse, error)
 	UpdateKeygen(context.Context, *MsgUpdateKeygen) (*MsgUpdateKeygenResponse, error)
 	VoteBlockHeader(context.Context, *MsgVoteBlockHeader) (*MsgVoteBlockHeaderResponse, error)
 	ResetChainNonces(context.Context, *MsgResetChainNonces) (*MsgResetChainNoncesResponse, error)
 	VoteTSS(context.Context, *MsgVoteTSS) (*MsgVoteTSSResponse, error)
+	EnableCCTXFlags(context.Context, *MsgEnableCCTXFlags) (*MsgEnableCCTXFlagsResponse, error)
+	DisableCCTXFlags(context.Context, *MsgDisableCCTXFlags) (*MsgDisableCCTXFlagsResponse, error)
+	UpdateGasPriceIncreaseFlags(context.Context, *MsgUpdateGasPriceIncreaseFlags) (*MsgUpdateGasPriceIncreaseFlagsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1322,9 +1531,6 @@ func (*UnimplementedMsgServer) RemoveChainParams(ctx context.Context, req *MsgRe
 func (*UnimplementedMsgServer) AddBlameVote(ctx context.Context, req *MsgAddBlameVote) (*MsgAddBlameVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBlameVote not implemented")
 }
-func (*UnimplementedMsgServer) UpdateCrosschainFlags(ctx context.Context, req *MsgUpdateCrosschainFlags) (*MsgUpdateCrosschainFlagsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateCrosschainFlags not implemented")
-}
 func (*UnimplementedMsgServer) UpdateKeygen(ctx context.Context, req *MsgUpdateKeygen) (*MsgUpdateKeygenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateKeygen not implemented")
 }
@@ -1336,6 +1542,15 @@ func (*UnimplementedMsgServer) ResetChainNonces(ctx context.Context, req *MsgRes
 }
 func (*UnimplementedMsgServer) VoteTSS(ctx context.Context, req *MsgVoteTSS) (*MsgVoteTSSResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoteTSS not implemented")
+}
+func (*UnimplementedMsgServer) EnableCCTXFlags(ctx context.Context, req *MsgEnableCCTXFlags) (*MsgEnableCCTXFlagsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableCCTXFlags not implemented")
+}
+func (*UnimplementedMsgServer) DisableCCTXFlags(ctx context.Context, req *MsgDisableCCTXFlags) (*MsgDisableCCTXFlagsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableCCTXFlags not implemented")
+}
+func (*UnimplementedMsgServer) UpdateGasPriceIncreaseFlags(ctx context.Context, req *MsgUpdateGasPriceIncreaseFlags) (*MsgUpdateGasPriceIncreaseFlagsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGasPriceIncreaseFlags not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1432,24 +1647,6 @@ func _Msg_AddBlameVote_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateCrosschainFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateCrosschainFlags)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UpdateCrosschainFlags(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/zetachain.zetacore.observer.Msg/UpdateCrosschainFlags",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateCrosschainFlags(ctx, req.(*MsgUpdateCrosschainFlags))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_UpdateKeygen_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateKeygen)
 	if err := dec(in); err != nil {
@@ -1522,6 +1719,60 @@ func _Msg_VoteTSS_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_EnableCCTXFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgEnableCCTXFlags)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).EnableCCTXFlags(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.observer.Msg/EnableCCTXFlags",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).EnableCCTXFlags(ctx, req.(*MsgEnableCCTXFlags))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DisableCCTXFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDisableCCTXFlags)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DisableCCTXFlags(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.observer.Msg/DisableCCTXFlags",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DisableCCTXFlags(ctx, req.(*MsgDisableCCTXFlags))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateGasPriceIncreaseFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGasPriceIncreaseFlags)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateGasPriceIncreaseFlags(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.observer.Msg/UpdateGasPriceIncreaseFlags",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateGasPriceIncreaseFlags(ctx, req.(*MsgUpdateGasPriceIncreaseFlags))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.observer.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -1547,10 +1798,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_AddBlameVote_Handler,
 		},
 		{
-			MethodName: "UpdateCrosschainFlags",
-			Handler:    _Msg_UpdateCrosschainFlags_Handler,
-		},
-		{
 			MethodName: "UpdateKeygen",
 			Handler:    _Msg_UpdateKeygen_Handler,
 		},
@@ -1565,6 +1812,18 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VoteTSS",
 			Handler:    _Msg_VoteTSS_Handler,
+		},
+		{
+			MethodName: "EnableCCTXFlags",
+			Handler:    _Msg_EnableCCTXFlags_Handler,
+		},
+		{
+			MethodName: "DisableCCTXFlags",
+			Handler:    _Msg_DisableCCTXFlags_Handler,
+		},
+		{
+			MethodName: "UpdateGasPriceIncreaseFlags",
+			Handler:    _Msg_UpdateGasPriceIncreaseFlags_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2011,91 +2270,6 @@ func (m *MsgAddBlameVoteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdateCrosschainFlags) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUpdateCrosschainFlags) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateCrosschainFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.GasPriceIncreaseFlags != nil {
-		{
-			size, err := m.GasPriceIncreaseFlags.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x2a
-	}
-	if m.IsOutboundEnabled {
-		i--
-		if m.IsOutboundEnabled {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.IsInboundEnabled {
-		i--
-		if m.IsInboundEnabled {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x18
-	}
-	if len(m.Creator) > 0 {
-		i -= len(m.Creator)
-		copy(dAtA[i:], m.Creator)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUpdateCrosschainFlagsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUpdateCrosschainFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateCrosschainFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgUpdateKeygen) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2322,6 +2496,215 @@ func (m *MsgVoteTSSResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgEnableCCTXFlags) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgEnableCCTXFlags) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgEnableCCTXFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.EnableOutbound {
+		i--
+		if m.EnableOutbound {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.EnableInbound {
+		i--
+		if m.EnableInbound {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgEnableCCTXFlagsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgEnableCCTXFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgEnableCCTXFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDisableCCTXFlags) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDisableCCTXFlags) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDisableCCTXFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DisableOutbound {
+		i--
+		if m.DisableOutbound {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DisableInbound {
+		i--
+		if m.DisableInbound {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDisableCCTXFlagsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDisableCCTXFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDisableCCTXFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlags) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlags) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.GasPriceIncreaseFlags.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -2517,38 +2900,6 @@ func (m *MsgAddBlameVoteResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgUpdateCrosschainFlags) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Creator)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.IsInboundEnabled {
-		n += 2
-	}
-	if m.IsOutboundEnabled {
-		n += 2
-	}
-	if m.GasPriceIncreaseFlags != nil {
-		l = m.GasPriceIncreaseFlags.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgUpdateCrosschainFlagsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgUpdateKeygen) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2643,6 +2994,86 @@ func (m *MsgVoteTSSResponse) Size() (n int) {
 	if m.KeygenSuccess {
 		n += 2
 	}
+	return n
+}
+
+func (m *MsgEnableCCTXFlags) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.EnableInbound {
+		n += 2
+	}
+	if m.EnableOutbound {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgEnableCCTXFlagsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDisableCCTXFlags) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DisableInbound {
+		n += 2
+	}
+	if m.DisableOutbound {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgDisableCCTXFlagsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlags) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.GasPriceIncreaseFlags.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -3863,214 +4294,6 @@ func (m *MsgAddBlameVoteResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdateCrosschainFlags) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateCrosschainFlags: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateCrosschainFlags: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Creator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsInboundEnabled", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.IsInboundEnabled = bool(v != 0)
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsOutboundEnabled", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.IsOutboundEnabled = bool(v != 0)
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GasPriceIncreaseFlags", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.GasPriceIncreaseFlags == nil {
-				m.GasPriceIncreaseFlags = &GasPriceIncreaseFlags{}
-			}
-			if err := m.GasPriceIncreaseFlags.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUpdateCrosschainFlagsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateCrosschainFlagsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateCrosschainFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MsgUpdateKeygen) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4652,6 +4875,515 @@ func (m *MsgVoteTSSResponse) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.KeygenSuccess = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgEnableCCTXFlags) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgEnableCCTXFlags: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgEnableCCTXFlags: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EnableInbound", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.EnableInbound = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EnableOutbound", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.EnableOutbound = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgEnableCCTXFlagsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgEnableCCTXFlagsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgEnableCCTXFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDisableCCTXFlags) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDisableCCTXFlags: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDisableCCTXFlags: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisableInbound", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DisableInbound = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisableOutbound", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DisableOutbound = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDisableCCTXFlagsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDisableCCTXFlagsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDisableCCTXFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateGasPriceIncreaseFlags) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateGasPriceIncreaseFlags: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateGasPriceIncreaseFlags: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GasPriceIncreaseFlags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.GasPriceIncreaseFlags.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateGasPriceIncreaseFlagsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateGasPriceIncreaseFlagsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateGasPriceIncreaseFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
