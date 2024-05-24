@@ -708,9 +708,11 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				NonceHigh: 1199,
 				Tss:       tss.TssPubkey,
 			},
-			currentHeight:          1199,
-			queryLimit:             keeper.MaxPendingCctxs,
-			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingRevertCctxs...), btcPendingCctxs...),
+			currentHeight: 1199,
+			queryLimit:    keeper.MaxPendingCctxs,
+			expectedCctxs: append(
+				append([]*types.CrossChainTx{}, ethPendingRevertCctxs...),
+				btcPendingCctxs...),
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
 			expectedWithdrawRate:   sdk.NewInt(5e17).String(), // 0.5 ZETA per block, only btc cctxs should be counted
