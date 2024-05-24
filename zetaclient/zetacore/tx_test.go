@@ -145,7 +145,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 
 	t.Run("post gas price success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		hash, err := client.PostGasPrice(chains.BscMainnetChain, 1000000, "100", 1234)
+		hash, err := client.PostGasPrice(chains.BscMainnet, 1000000, "100", 1234)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
@@ -154,7 +154,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	//
 	//t.Run("post gas price fail", func(t *testing.T) {
 	//	zetacoreBroadcast = MockBroadcastError
-	//	hash, err := client.PostGasPrice(chains.BscMainnetChain, 1000000, "100", 1234)
+	//	hash, err := client.PostGasPrice(chains.BscMainnet, 1000000, "100", 1234)
 	//	require.ErrorContains(t, err, "post gasprice failed")
 	//	require.Equal(t, "", hash)
 	//})
@@ -168,14 +168,14 @@ func TestZetacore_AddOutboundTracker(t *testing.T) {
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		hash, err := client.AddOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := client.AddOutboundTracker(chains.BscMainnet.ChainId, 123, "", nil, "", 456)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcastError
-		hash, err := client.AddOutboundTracker(chains.BscMainnetChain.ChainId, 123, "", nil, "", 456)
+		hash, err := client.AddOutboundTracker(chains.BscMainnet.ChainId, 123, "", nil, "", 456)
 		require.Error(t, err)
 		require.Equal(t, "", hash)
 	})
@@ -251,11 +251,11 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 						{
 							chains.BtcMainnetChain.ChainName,
 							chains.BtcMainnetChain.ChainId,
-							chains.BscMainnetChain.Network,
-							chains.BscMainnetChain.NetworkType,
-							chains.BscMainnetChain.Vm,
-							chains.BscMainnetChain.Consensus,
-							chains.BscMainnetChain.IsExternal,
+							chains.BscMainnet.Network,
+							chains.BscMainnet.NetworkType,
+							chains.BscMainnet.Vm,
+							chains.BscMainnet.Consensus,
+							chains.BscMainnet.IsExternal,
 						},
 						{
 							chains.Ethereum.ChainName,
@@ -353,7 +353,7 @@ func TestZetacore_PostBlameData(t *testing.T) {
 				IsUnicast:  false,
 				BlameNodes: nil,
 			},
-			chains.BscMainnetChain.ChainId,
+			chains.BscMainnet.ChainId,
 			"102394876-bsc",
 		)
 		require.NoError(t, err)

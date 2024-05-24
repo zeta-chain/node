@@ -462,7 +462,7 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 }
 
 func TestZetacore_GetLastBlockHeightByChain(t *testing.T) {
-	index := chains.BscMainnetChain
+	index := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryGetLastBlockHeightResponse{
 		LastBlockHeight: &crosschainTypes.LastBlockHeight{
 			Index:              index.ChainName.String(),
@@ -524,7 +524,7 @@ func TestZetacore_GetBaseGasPrice(t *testing.T) {
 }
 
 func TestZetacore_GetNonceByChain(t *testing.T) {
-	chain := chains.BscMainnetChain
+	chain := chains.BscMainnet
 	expectedOutput := observertypes.QueryGetChainNoncesResponse{
 		ChainNonces: observertypes.ChainNonces{
 			Creator:         "",
@@ -614,7 +614,7 @@ func TestZetacore_GetBallotByID(t *testing.T) {
 }
 
 func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
-	chainID := chains.BscMainnetChain.ChainId
+	chainID := chains.BscMainnet.ChainId
 	expectedOutput := crosschainTypes.QueryAllInboundTrackerByChainResponse{
 		InboundTracker: []crosschainTypes.InboundTracker{
 			{
@@ -727,7 +727,7 @@ func TestZetacore_GetTssHistory(t *testing.T) {
 }
 
 func TestZetacore_GetOutboundTracker(t *testing.T) {
-	chain := chains.BscMainnetChain
+	chain := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryGetOutboundTrackerResponse{
 		OutboundTracker: crosschainTypes.OutboundTracker{
 			Index:    "tracker12345",
@@ -754,7 +754,7 @@ func TestZetacore_GetOutboundTracker(t *testing.T) {
 }
 
 func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
-	chain := chains.BscMainnetChain
+	chain := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryAllOutboundTrackerByChainResponse{
 		OutboundTracker: []crosschainTypes.OutboundTracker{
 			{
@@ -816,7 +816,7 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 }
 
 func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
-	chainID := chains.BscMainnetChain.ChainId
+	chainID := chains.BscMainnet.ChainId
 	expectedOutput := lightclienttypes.QueryGetChainStateResponse{ChainState: &lightclienttypes.ChainState{
 		ChainId:         chainID,
 		LatestHeight:    5566654,
@@ -843,11 +843,11 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 			{
 				ChainName:   chains.BtcMainnetChain.ChainName,
 				ChainId:     chains.BtcMainnetChain.ChainId,
-				Network:     chains.BscMainnetChain.Network,
-				NetworkType: chains.BscMainnetChain.NetworkType,
-				Vm:          chains.BscMainnetChain.Vm,
-				Consensus:   chains.BscMainnetChain.Consensus,
-				IsExternal:  chains.BscMainnetChain.IsExternal,
+				Network:     chains.BscMainnet.Network,
+				NetworkType: chains.BscMainnet.NetworkType,
+				Vm:          chains.BscMainnet.Vm,
+				Consensus:   chains.BscMainnet.Consensus,
+				IsExternal:  chains.BscMainnet.IsExternal,
 			},
 			{
 				ChainName:   chains.Ethereum.ChainName,
@@ -900,7 +900,7 @@ func TestZetacore_GetPendingNonces(t *testing.T) {
 }
 
 func TestZetacore_Prove(t *testing.T) {
-	chainId := chains.BscMainnetChain.ChainId
+	chainId := chains.BscMainnet.ChainId
 	txHash := "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"
 	blockHash := "0000000000000000000172c9a64f86f208b867a84dc7a0b7c75be51e750ed8eb"
 	txIndex := 555

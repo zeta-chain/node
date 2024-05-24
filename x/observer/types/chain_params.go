@@ -182,7 +182,7 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscMainnetChain.ChainId,
+		ChainId:                     chains.BscMainnet.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

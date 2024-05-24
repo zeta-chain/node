@@ -29,8 +29,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// BscMainnetChain is Binance Smart Chain mainnet
-	BscMainnetChain = Chain{
+	// BscMainnet is Binance Smart Chain mainnet
+	BscMainnet = Chain{
 		ChainName:   ChainName_bsc_mainnet,
 		ChainId:     56,
 		Network:     Network_bsc,
@@ -253,7 +253,7 @@ func BtcDustOffset() int64 {
 func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
 		BtcMainnetChain,
-		BscMainnetChain,
+		BscMainnet,
 		Ethereum,
 		BtcTestNetChain,
 		MumbaiChain,
