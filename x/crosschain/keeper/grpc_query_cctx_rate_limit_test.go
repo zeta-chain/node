@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -22,6 +23,9 @@ var (
 
 	// local btc chain ID
 	btcChainID = getValidBtcChainID()
+
+	// local zeta chain ID
+	zetaChainID = chains.ZetaPrivnetChain().ChainId
 )
 
 // createTestRateLimiterFlags creates a custom rate limiter flags
@@ -67,7 +71,8 @@ func createCctxsWithCoinTypeAndHeightRange(
 	t *testing.T,
 	lowBlock uint64,
 	highBlock uint64,
-	chainID int64,
+	senderChainID int64,
+	receiverChainID int64,
 	coinType coin.CoinType,
 	asset string,
 	amount uint64,
@@ -76,13 +81,13 @@ func createCctxsWithCoinTypeAndHeightRange(
 	// create 1 pending cctxs per block
 	for i := lowBlock; i <= highBlock; i++ {
 		nonce := i - 1
-		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", receiverChainID, nonce))
 		cctx.CctxStatus.Status = status
-		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundTxParams.SenderChainId = senderChainID
 		cctx.InboundTxParams.CoinType = coinType
 		cctx.InboundTxParams.Asset = asset
 		cctx.InboundTxParams.InboundTxObservedExternalHeight = i
-		cctx.GetCurrentOutTxParam().ReceiverChainId = chainID
+		cctx.GetCurrentOutTxParam().ReceiverChainId = receiverChainID
 		cctx.GetCurrentOutTxParam().Amount = sdk.NewUint(amount)
 		cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce
 		cctxs = append(cctxs, cctx)
@@ -101,7 +106,7 @@ func setCctxsInKeeper(
 	for _, cctx := range cctxs {
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
-			ChainId: cctx.InboundTxParams.SenderChainId,
+			ChainId: cctx.GetCurrentOutTxParam().ReceiverChainId,
 			// #nosec G701 always in range for tests
 			Nonce:     int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce),
 			CctxIndex: cctx.Index,
@@ -275,13 +280,18 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 
 	// create Eth chain 999 mined and 200 pending cctxs for rate limiter test
 	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
-	ethMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
-	ethPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
+	ethMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, zetaChainID, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_OutboundMined)
+	ethPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, zetaChainID, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingOutbound)
+
+	// create Eth chain 999 reverted and 200 pending revert cctxs for rate limiter test
+	// these cctxs should be just ignored by the rate limiter as we can't compare their `ObservedExternalHeight` with window boundary
+	ethRevertedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, ethChainID, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_Reverted)
+	ethPendingRevertCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, ethChainID, ethChainID, coin.CoinType_Gas, "", uint64(1e15), types.CctxStatus_PendingRevert)
 
 	// create Btc chain 999 mined and 200 pending cctxs for rate limiter test
 	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
-	btcMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_OutboundMined)
-	btcPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_PendingOutbound)
+	btcMinedCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1, 999, zetaChainID, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_OutboundMined)
+	btcPendingCctxs := createCctxsWithCoinTypeAndHeightRange(t, 1000, 1199, zetaChainID, btcChainID, coin.CoinType_Gas, "", 1000, types.CctxStatus_PendingOutbound)
 
 	// define test cases
 	tests := []struct {
@@ -385,6 +395,35 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			expectedTotalPending:   400,
 			expectedWithdrawWindow: 500,                       // the sliding window
 			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			rateLimitExceeded:      false,
+		},
+		{
+			name:            "can ignore reverted or pending revert cctxs and retrieve all pending cctx without exceeding rate limit",
+			rateLimitFlags:  createTestRateLimiterFlags(500, math.NewUint(10*1e18), zrc20ETH, zrc20BTC, zrc20USDT, "2500", "50000", "0.8"),
+			ethMinedCctxs:   ethRevertedCctxs,      // replace mined cctxs with reverted cctxs, should be ignored
+			ethPendingCctxs: ethPendingRevertCctxs, // replace pending cctxs with pending revert cctxs, should be ignored
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,
+			queryLimit:    keeper.MaxPendingCctxs,
+			expectedCctxs: append(
+				append([]*types.CrossChainTx{}, ethPendingRevertCctxs...),
+				btcPendingCctxs...),
+			expectedTotalPending:   400,
+			expectedWithdrawWindow: 500,                       // the sliding window
+			expectedWithdrawRate:   sdk.NewInt(5e17).String(), // 0.5 ZETA per block, only btc cctxs should be counted
 			rateLimitExceeded:      false,
 		},
 		{
