@@ -132,8 +132,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// AmoyChain is Polygon amoy testnet
-	AmoyChain = Chain{
+	// Amoy is Polygon amoy testnet
+	Amoy = Chain{
 		ChainName:   ChainName_amoy_testnet,
 		ChainId:     80002,
 		Network:     Network_polygon,
@@ -257,7 +257,7 @@ func DefaultChainsList() []*Chain {
 		Ethereum,
 		BitcoinTestnet,
 		MumbaiChain,
-		AmoyChain,
+		Amoy,
 		BscTestnet,
 		GoerliChain,
 		Sepolia,
