@@ -13,7 +13,7 @@ func DefaultBlockHeaderVerification() BlockHeaderVerification {
 func DefaultHeaderSupportedChains() []HeaderSupportedChain {
 	return []HeaderSupportedChain{
 		{
-			ChainId: chains.EthChain.ChainId,
+			ChainId: chains.Ethereum.ChainId,
 			Enabled: false,
 		},
 		{

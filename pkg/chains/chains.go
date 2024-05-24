@@ -18,8 +18,8 @@ var (
 		IsExternal:  false,
 	}
 
-	// EthChain is Ethereum mainnet
-	EthChain = Chain{
+	// Ethereum is Ethereum mainnet
+	Ethereum = Chain{
 		ChainName:   ChainName_eth_mainnet,
 		ChainId:     1,
 		Network:     Network_eth,
@@ -254,7 +254,7 @@ func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
 		BtcMainnetChain,
 		BscMainnetChain,
-		EthChain,
+		Ethereum,
 		BtcTestNetChain,
 		MumbaiChain,
 		AmoyChain,

@@ -36,8 +36,8 @@ var bitcoinConfigRegnet = BTCConfig{
 }
 
 var evmChainsConfigs = map[int64]EVMConfig{
-	chains.EthChain.ChainId: {
-		Chain: chains.EthChain,
+	chains.Ethereum.ChainId: {
+		Chain: chains.Ethereum,
 	},
 	chains.BscMainnetChain.ChainId: {
 		Chain: chains.BscMainnetChain,

@@ -43,7 +43,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 			},
@@ -62,7 +62,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 					Enabled: false,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 			},
@@ -86,7 +86,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 					Enabled: true,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},
@@ -106,7 +106,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 					Enabled: true,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},
@@ -128,7 +128,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 					Enabled: true,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},

@@ -258,13 +258,13 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.BscMainnetChain.IsExternal,
 						},
 						{
-							chains.EthChain.ChainName,
-							chains.EthChain.ChainId,
-							chains.EthChain.Network,
-							chains.EthChain.NetworkType,
-							chains.EthChain.Vm,
-							chains.EthChain.Consensus,
-							chains.EthChain.IsExternal,
+							chains.Ethereum.ChainName,
+							chains.Ethereum.ChainId,
+							chains.Ethereum.Network,
+							chains.Ethereum.NetworkType,
+							chains.Ethereum.Vm,
+							chains.Ethereum.Consensus,
+							chains.Ethereum.IsExternal,
 						},
 					},
 				})
@@ -310,7 +310,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
 				Return(lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
 					{
-						ChainId: chains.EthChain.ChainId,
+						ChainId: chains.Ethereum.ChainId,
 						Enabled: true,
 					},
 					{
@@ -372,7 +372,7 @@ func TestZetacore_PostVoteBlockHeader(t *testing.T) {
 	t.Run("post add block header success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
 		hash, err := client.PostVoteBlockHeader(
-			chains.EthChain.ChainId,
+			chains.Ethereum.ChainId,
 			blockHash,
 			18495266,
 			getHeaderData(t),
@@ -416,7 +416,7 @@ func TestZetacore_GetInBoundVoteMessage(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
 		msg := GetInBoundVoteMessage(
 			address.String(),
-			chains.EthChain.ChainId,
+			chains.Ethereum.ChainId,
 			"",
 			address.String(),
 			chains.ZetaChainMainnet.ChainId,
@@ -477,7 +477,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 		1200,
 		big.NewInt(500),
 		chains.ReceiveStatus_success,
-		chains.EthChain,
+		chains.Ethereum,
 		10001,
 		coin.CoinType_Gas)
 	require.NoError(t, err)

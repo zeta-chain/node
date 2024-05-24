@@ -13,7 +13,7 @@ func TestDefaultVerificationFlags(t *testing.T) {
 		flags := DefaultHeaderSupportedChains()
 		for _, f := range flags {
 			switch f.ChainId {
-			case chains.EthChain.ChainId:
+			case chains.Ethereum.ChainId:
 				require.False(t, f.Enabled)
 			case chains.BscMainnetChain.ChainId:
 				require.False(t, f.Enabled)

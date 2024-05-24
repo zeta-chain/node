@@ -130,7 +130,7 @@ func TestZetacore_HeaderEnabledChains(t *testing.T) {
 	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{
 		HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
 			{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Enabled: true,
 			},
 			{
@@ -797,11 +797,11 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 		PendingNonces: observertypes.PendingNonces{
 			NonceLow:  0,
 			NonceHigh: 0,
-			ChainId:   chains.EthChain.ChainId,
+			ChainId:   chains.Ethereum.ChainId,
 			Tss:       "",
 		},
 	}
-	input := observertypes.QueryPendingNoncesByChainRequest{ChainId: chains.EthChain.ChainId}
+	input := observertypes.QueryPendingNoncesByChainRequest{ChainId: chains.Ethereum.ChainId}
 	method := "/zetachain.zetacore.observer.Query/PendingNoncesByChain"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
@@ -810,7 +810,7 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetPendingNoncesByChain(chains.EthChain.ChainId)
+	resp, err := client.GetPendingNoncesByChain(chains.Ethereum.ChainId)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.PendingNonces, resp)
 }
@@ -850,13 +850,13 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 				IsExternal:  chains.BscMainnetChain.IsExternal,
 			},
 			{
-				ChainName:   chains.EthChain.ChainName,
-				ChainId:     chains.EthChain.ChainId,
-				Network:     chains.EthChain.Network,
-				NetworkType: chains.EthChain.NetworkType,
-				Vm:          chains.EthChain.Vm,
-				Consensus:   chains.EthChain.Consensus,
-				IsExternal:  chains.EthChain.IsExternal,
+				ChainName:   chains.Ethereum.ChainName,
+				ChainId:     chains.Ethereum.ChainId,
+				Network:     chains.Ethereum.Network,
+				NetworkType: chains.Ethereum.NetworkType,
+				Vm:          chains.Ethereum.Vm,
+				Consensus:   chains.Ethereum.Consensus,
+				IsExternal:  chains.Ethereum.IsExternal,
 			},
 		},
 	}

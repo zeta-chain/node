@@ -337,7 +337,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 
 func TestIsOutboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
-	evmChain := chains.EthChain
+	evmChain := chains.Ethereum
 	ccFlags := *sample.CrosschainFlags()
 	verificationFlags := sample.HeaderSupportedChains()
 	chainParams := &observertypes.ChainParams{
@@ -367,7 +367,7 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 
 func TestIsInboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
-	evmChain := chains.EthChain
+	evmChain := chains.Ethereum
 	ccFlags := *sample.CrosschainFlags()
 	verificationFlags := sample.HeaderSupportedChains()
 	chainParams := &observertypes.ChainParams{

@@ -43,7 +43,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 
 	// add some evm and non-evm chains
 	supportedChains := []*chains.Chain{
-		{ChainId: chains.EthChain.ChainId},
+		{ChainId: chains.Ethereum.ChainId},
 		{ChainId: chains.BtcMainnetChain.ChainId},
 		{ChainId: chains.BscMainnetChain.ChainId},
 		{ChainId: chains.ZetaChainMainnet.ChainId},
@@ -52,7 +52,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	// set pending cctx
 	tss := sample.Tss()
 	zk.ObserverKeeper.SetTSS(ctx, tss)
-	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.EthChain.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.Ethereum.ChainId, tss, zk)
 	createCctxWithNonceRange(t, ctx, *k, 20, 25, chains.BtcMainnetChain.ChainId, tss, zk)
 	createCctxWithNonceRange(t, ctx, *k, 30, 35, chains.BscMainnetChain.ChainId, tss, zk)
 	createCctxWithNonceRange(t, ctx, *k, 40, 45, chains.ZetaChainMainnet.ChainId, tss, zk)

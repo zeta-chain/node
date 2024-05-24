@@ -164,7 +164,7 @@ func GetDefaultChainParams() ChainParamsList {
 
 func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.EthChain.ChainId,
+		ChainId:                     chains.Ethereum.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

@@ -29,7 +29,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.BlockHeader(sample.Hash().Bytes()),
 				},
 				ChainStates: []types.ChainState{
-					sample.ChainState(chains.EthChain.ChainId),
+					sample.ChainState(chains.Ethereum.ChainId),
 					sample.ChainState(chains.BtcMainnetChain.ChainId),
 					sample.ChainState(chains.BscMainnetChain.ChainId),
 				},
@@ -56,8 +56,8 @@ func TestGenesisState_Validate(t *testing.T) {
 			desc: "duplicate chain state is invalid",
 			genState: &types.GenesisState{
 				ChainStates: []types.ChainState{
-					sample.ChainState(chains.EthChain.ChainId),
-					sample.ChainState(chains.EthChain.ChainId),
+					sample.ChainState(chains.Ethereum.ChainId),
+					sample.ChainState(chains.Ethereum.ChainId),
 					sample.ChainState(chains.BscMainnetChain.ChainId),
 				},
 			},

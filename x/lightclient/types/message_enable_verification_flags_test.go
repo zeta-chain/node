@@ -69,7 +69,7 @@ func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "valid address",
 			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.EthChain.ChainId},
+				ChainIdList: []int64{chains.Ethereum.ChainId},
 			},
 			err: require.NoError,
 		},
@@ -93,7 +93,7 @@ func TestMsgEnableHeaderVerification_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgEnableHeaderVerification(
 				signer,
-				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
 			),
 			panics: false,
 		},
@@ -101,7 +101,7 @@ func TestMsgEnableHeaderVerification_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgEnableHeaderVerification(
 				"invalid",
-				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
 			),
 			panics: true,
 		},

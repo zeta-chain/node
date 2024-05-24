@@ -199,7 +199,7 @@ mocks:
 .PHONY: mocks
 
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-import fmt-golines
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-import 
 .PHONY: generate
 
 ###############################################################################

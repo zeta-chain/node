@@ -34,8 +34,8 @@ func getContractsByChainID(
 func Test_IsOutboundProcessed(t *testing.T) {
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.EthChain
-	chainID := chains.EthChain.ChainId
+	chain := chains.Ethereum
+	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
 	chainParam := mocks.MockChainParams(chain.ChainId, 1)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
@@ -124,8 +124,8 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.EthChain
-	chainID := chains.EthChain.ChainId
+	chain := chains.Ethereum
+	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
 	chainParam := mocks.MockChainParams(chain.ChainId, 1)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
@@ -175,7 +175,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 	// Note: outbound of Gas/ERC20 token can also be used for this test
 	// load archived cctx, outbound and receipt for a ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.EthChain
+	chain := chains.Ethereum
 	nonce := uint64(9718)
 	coinType := coin.CoinType_Zeta
 	cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(
@@ -223,7 +223,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 func Test_ParseZetaReceived(t *testing.T) {
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chainID := chains.EthChain.ChainId
+	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
 	connector := mocks.MockConnectorNonEth(t, chainID)
@@ -357,7 +357,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 
 func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	// load archived outbound receipt that contains ERC20 Withdrawn event
-	chainID := chains.EthChain.ChainId
+	chainID := chains.Ethereum.ChainId
 	nonce := uint64(8014)
 	outboundHash := "0xd2eba7ac3da1b62800165414ea4bcaf69a3b0fb9b13a0fc32f4be11bfef79146"
 	custody := mocks.MockERC20Custody(t, chainID)
@@ -427,7 +427,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 }
 
 func Test_ParseOutboundReceivedValue(t *testing.T) {
-	chainID := chains.EthChain.ChainId
+	chainID := chains.Ethereum.ChainId
 	connector, connectorAddr, custody, custodyAddr := getContractsByChainID(t, chainID)
 
 	t.Run("should parse and check ZetaReceived event from archived outbound receipt", func(t *testing.T) {

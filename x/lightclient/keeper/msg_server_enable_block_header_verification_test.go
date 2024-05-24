@@ -28,7 +28,7 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 				{
@@ -42,12 +42,12 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
-		require.True(t, bhv.IsChainEnabled(chains.EthChain.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
 		require.True(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
 	})
 
@@ -65,12 +65,12 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
-		require.True(t, bhv.IsChainEnabled(chains.EthChain.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
 		require.True(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
 	})
 
@@ -87,7 +87,7 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 				{
@@ -100,7 +100,7 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.EthChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId},
 		})
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})

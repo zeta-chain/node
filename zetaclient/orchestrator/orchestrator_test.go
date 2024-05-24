@@ -89,7 +89,7 @@ func CreateCoreContext(
 
 func Test_GetUpdatedSigner(t *testing.T) {
 	// initial parameters for orchestrator creation
-	evmChain := chains.EthChain
+	evmChain := chains.Ethereum
 	btcChain := chains.BtcMainnetChain
 	evmChainParams := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
@@ -125,7 +125,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 
 func Test_GetUpdatedChainObserver(t *testing.T) {
 	// initial parameters for orchestrator creation
-	evmChain := chains.EthChain
+	evmChain := chains.Ethereum
 	btcChain := chains.BtcMainnetChain
 	evmChainParams := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
@@ -206,7 +206,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 
 func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	// define test foreign chains
-	ethChain := chains.EthChain
+	ethChain := chains.Ethereum
 	btcChain := chains.BtcMainnetChain
 	foreignChains := []chains.Chain{
 		ethChain,
