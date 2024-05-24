@@ -61,7 +61,7 @@ func (k Keeper) RateLimiterInput(
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
-	// if a cctx is outgoing from ZetaChain
+	// if a cctx is an outgoing cctx that orginates from ZetaChain
 	// reverted incoming cctx has an external `SenderChainId` and should not be counted
 	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
 		return chains.IsZetaChain(cctx.InboundParams.SenderChainId)
@@ -140,7 +140,7 @@ func (k Keeper) RateLimiterInput(
 				break
 			}
 
-			// sum up past cctxs' value within window
+			// sum up the cctxs' value if the cctx is outgoing, within the window and in the past
 			if inWindow && isOutgoing && isPast {
 				pastCctxsValue = pastCctxsValue.Add(
 					types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap),
@@ -340,7 +340,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if nonce < endNonce && !inWindow {
 				break
 			}
-			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
+			// sum up the cctxs' value if the cctx is outgoing and within the window
 			if inWindow && isOutgoing &&
 				types.RateLimitExceeded(
 					chain.ChainId,
