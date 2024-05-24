@@ -249,8 +249,8 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 					Chains: []*chains.Chain{
 
 						{
-							chains.BitcoinMainnet.ChainName,
 							chains.BitcoinMainnet.ChainId,
+							chains.BitcoinMainnet.ChainName,
 							chains.BscMainnet.Network,
 							chains.BscMainnet.NetworkType,
 							chains.BscMainnet.Vm,
@@ -258,8 +258,8 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.BscMainnet.IsExternal,
 						},
 						{
+							chains.Ethereum.ChainI
 							chains.Ethereum.ChainName,
-							chains.Ethereum.ChainId,
 							chains.Ethereum.Network,
 							chains.Ethereum.NetworkType,
 							chains.Ethereum.Vm,
