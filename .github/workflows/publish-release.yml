@@ -440,7 +440,7 @@ jobs:
       - e2e-upgrade-test
       - check_branch
       - e2e-stateful-data-test
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-20.04
     timeout-minutes: 60
     environment: release
     steps:
