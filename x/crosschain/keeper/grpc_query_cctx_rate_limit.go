@@ -56,14 +56,14 @@ func (k Keeper) RateLimiterInput(
 	}
 
 	// if a cctx falls within the rate limiter window
-	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
+	isCCTXInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
 	// if a cctx is outgoing from ZetaChain
 	// reverted incoming cctx has an external `SenderChainId` and should not be counted
-	isCctxOutgoing := func(cctx *types.CrossChainTx) bool {
+	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
 		return chains.IsZetaChain(cctx.InboundParams.SenderChainId)
 	}
 
@@ -130,8 +130,8 @@ func (k Keeper) RateLimiterInput(
 			if err != nil {
 				return nil, err
 			}
-			inWindow := isCctxInWindow(cctx)
-			isOutgoing := isCctxOutgoing(cctx)
+			inWindow := isCCTXInWindow(cctx)
+			isOutgoing := isCCTXOutgoing(cctx)
 			isPast := isPastCctx(cctx, pendingNonces.NonceLow)
 
 			// we should at least go backwards by 1000 nonces to pick up missed pending cctxs
@@ -264,14 +264,14 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	}
 
 	// if a cctx falls within the rate limiter window
-	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
+	isCCTXInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
 	// if a cctx is outgoing from ZetaChain
 	// reverted incoming cctx has an external `SenderChainId` and should not be counted
-	isCctxOutgoing := func(cctx *types.CrossChainTx) bool {
+	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
 		return chains.IsZetaChain(cctx.InboundParams.SenderChainId)
 	}
 
@@ -331,8 +331,8 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if err != nil {
 				return nil, err
 			}
-			inWindow := isCctxInWindow(cctx)
-			isOutgoing := isCctxOutgoing(cctx)
+			inWindow := isCCTXInWindow(cctx)
+			isOutgoing := isCCTXOutgoing(cctx)
 
 			// we should at least go backwards by 1000 nonces to pick up missed pending cctxs
 			// we might go even further back if rate limiter is enabled and the endNonce hasn't hit the left window boundary yet

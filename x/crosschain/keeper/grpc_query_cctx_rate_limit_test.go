@@ -96,7 +96,7 @@ func setupForeignCoins(
 func TestKeeper_RateLimiterInput(t *testing.T) {
 	// create sample TSS
 	tss := sample.Tss()
-	zetaChainID := chains.ZetaTestnetChain.ChainId
+	zetaChainID := chains.ZetaChainMainnet.ChainId
 
 	// create sample zrc20 addresses for ETH, BTC, USDT
 	zrc20ETH := sample.EthAddress().Hex()
@@ -476,7 +476,7 @@ func TestKeeper_RateLimiterInput_Errors(t *testing.T) {
 func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 	// create sample TSS
 	tss := sample.Tss()
-	zetaChainID := chains.ZetaTestnetChain.ChainId
+	zetaChainID := chains.ZetaChainMainnet.ChainId
 
 	// create sample zrc20 addresses for ETH, BTC, USDT
 	zrc20ETH := sample.EthAddress().Hex()

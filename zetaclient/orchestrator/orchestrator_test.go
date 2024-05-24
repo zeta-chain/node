@@ -208,7 +208,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	// define test foreign chains
 	ethChain := chains.EthChain
 	btcChain := chains.BtcMainnetChain
-	zetaChainID := chains.ZetaTestnetChain.ChainId
+	zetaChainID := chains.ZetaChainMainnet.ChainId
 	foreignChains := []chains.Chain{
 		ethChain,
 		btcChain,
