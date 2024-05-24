@@ -258,7 +258,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.BscMainnet.IsExternal,
 						},
 						{
-							chains.Ethereum.ChainI
+							chains.Ethereum.ChainId,
 							chains.Ethereum.ChainName,
 							chains.Ethereum.Network,
 							chains.Ethereum.NetworkType,
