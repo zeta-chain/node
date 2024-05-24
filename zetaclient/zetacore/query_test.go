@@ -134,7 +134,7 @@ func TestZetacore_HeaderEnabledChains(t *testing.T) {
 				Enabled: true,
 			},
 			{
-				ChainId: chains.BtcMainnetChain.ChainId,
+				ChainId: chains.BitcoinMainnet.ChainId,
 				Enabled: true,
 			},
 		},
@@ -841,8 +841,8 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []*chains.Chain{
 			{
-				ChainName:   chains.BtcMainnetChain.ChainName,
-				ChainId:     chains.BtcMainnetChain.ChainId,
+				ChainName:   chains.BitcoinMainnet.ChainName,
+				ChainId:     chains.BitcoinMainnet.ChainId,
 				Network:     chains.BscMainnet.Network,
 				NetworkType: chains.BscMainnet.NetworkType,
 				Vm:          chains.BscMainnet.Vm,

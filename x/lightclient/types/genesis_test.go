@@ -30,7 +30,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 				ChainStates: []types.ChainState{
 					sample.ChainState(chains.Ethereum.ChainId),
-					sample.ChainState(chains.BtcMainnetChain.ChainId),
+					sample.ChainState(chains.BitcoinMainnet.ChainId),
 					sample.ChainState(chains.BscMainnet.ChainId),
 				},
 			},

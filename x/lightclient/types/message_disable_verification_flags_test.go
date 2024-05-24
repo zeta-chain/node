@@ -93,7 +93,7 @@ func TestMsgDisableHeaderVerification_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgDisableHeaderVerification(
 				signer,
-				[]int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 			),
 			panics: false,
 		},
@@ -101,7 +101,7 @@ func TestMsgDisableHeaderVerification_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgDisableHeaderVerification(
 				"invalid",
-				[]int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 			),
 			panics: true,
 		},

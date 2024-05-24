@@ -78,7 +78,7 @@ func TestResetTestnetNonce(t *testing.T) {
 			chains.BscTestnetChain,
 			chains.BtcTestNetChain,
 		}
-		mainnetChains := []chains.Chain{chains.Ethereum, chains.BscMainnet, chains.BtcMainnetChain}
+		mainnetChains := []chains.Chain{chains.Ethereum, chains.BscMainnet, chains.BitcoinMainnet}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()

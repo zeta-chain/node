@@ -40,8 +40,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// BtcMainnetChain is Bitcoin mainnet
-	BtcMainnetChain = Chain{
+	// BitcoinMainnet is Bitcoin mainnet
+	BitcoinMainnet = Chain{
 		ChainName:   ChainName_btc_mainnet,
 		ChainId:     8332,
 		Network:     Network_btc,
@@ -252,7 +252,7 @@ func BtcDustOffset() int64 {
 // DefaultChainsList returns a list of default chains
 func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
-		BtcMainnetChain,
+		BitcoinMainnet,
 		BscMainnet,
 		Ethereum,
 		BtcTestNetChain,

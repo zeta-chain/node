@@ -72,7 +72,7 @@ func TestNewBitcoinObserver(t *testing.T) {
 		cfg := config.NewConfig()
 		coreContext := context.NewZetacoreContext(cfg)
 		appContext := context.NewAppContext(coreContext, cfg)
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		zetacoreClient := mocks.NewMockZetacoreClient()
 		tss := mocks.NewMockTSS(chains.BtcTestNetChain, sample.EthAddress().String(), "")
 		loggers := clientcommon.ClientLogger{}

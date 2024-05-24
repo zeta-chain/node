@@ -160,7 +160,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 	})
 
@@ -170,7 +170,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		)
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.Value = big.NewInt(0)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid amount")
 	})
 
@@ -190,7 +190,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
 			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "unsupported address")
 	})
 }
@@ -200,7 +200,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -669,7 +669,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -750,7 +750,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -773,7 +773,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		func(t *testing.T) {
 			k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 			k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
-			chain := chains.BtcMainnetChain
+			chain := chains.BitcoinMainnet
 			chainID := chain.ChainId
 			setSupportedChain(ctx, zk, chainID)
 			SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -795,7 +795,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -841,7 +841,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)

@@ -28,7 +28,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "can't verify btc tx tx body",
 			msg: types.MsgAddInboundTracker{
-				ChainId: chains.BtcMainnetChain.ChainId,
+				ChainId: chains.BitcoinMainnet.ChainId,
 			},
 			txBytes:     sample.Bytes(),
 			errContains: "cannot verify inbound body for chain",

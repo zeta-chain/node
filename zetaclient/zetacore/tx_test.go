@@ -249,8 +249,8 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 					Chains: []*chains.Chain{
 
 						{
-							chains.BtcMainnetChain.ChainName,
-							chains.BtcMainnetChain.ChainId,
+							chains.BitcoinMainnet.ChainName,
+							chains.BitcoinMainnet.ChainId,
 							chains.BscMainnet.Network,
 							chains.BscMainnet.NetworkType,
 							chains.BscMainnet.Vm,
@@ -314,7 +314,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 						Enabled: true,
 					},
 					{
-						ChainId: chains.BtcMainnetChain.ChainId,
+						ChainId: chains.BitcoinMainnet.ChainId,
 						Enabled: false,
 					},
 				}})

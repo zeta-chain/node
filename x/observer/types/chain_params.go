@@ -200,7 +200,7 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcMainnetChain.ChainId,
+		ChainId:                     chains.BitcoinMainnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

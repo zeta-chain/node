@@ -17,7 +17,7 @@ func TestChainListByNetworkType(t *testing.T) {
 			NetworkType_mainnet,
 			[]*Chain{
 				&ZetaChainMainnet,
-				&BtcMainnetChain,
+				&BitcoinMainnet,
 				&BscMainnet,
 				&Ethereum,
 				&PolygonChain,
@@ -72,7 +72,7 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Btc",
 			Network_btc,
-			[]*Chain{&BtcMainnetChain, &BtcTestNetChain, &BtcRegtestChain},
+			[]*Chain{&BitcoinMainnet, &BtcTestNetChain, &BtcRegtestChain},
 		},
 		{
 			"Eth",
@@ -117,7 +117,7 @@ func TestChainListFunctions(t *testing.T) {
 			"DefaultChainsList",
 			DefaultChainsList,
 			[]*Chain{
-				&BtcMainnetChain,
+				&BitcoinMainnet,
 				&BscMainnet,
 				&Ethereum,
 				&BtcTestNetChain,
@@ -143,7 +143,7 @@ func TestChainListFunctions(t *testing.T) {
 			"ExternalChainList",
 			ExternalChainList,
 			[]*Chain{
-				&BtcMainnetChain,
+				&BitcoinMainnet,
 				&BscMainnet,
 				&Ethereum,
 				&BtcTestNetChain,

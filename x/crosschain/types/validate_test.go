@@ -25,25 +25,25 @@ func TestValidateAddressForChain(t *testing.T) {
 		t,
 		types.ValidateAddressForChain(
 			"bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9",
-			chains.BtcMainnetChain.ChainId,
+			chains.BitcoinMainnet.ChainId,
 		),
 	)
 	require.NoError(
 		t,
-		types.ValidateAddressForChain("327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE", chains.BtcMainnetChain.ChainId),
+		types.ValidateAddressForChain("327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE", chains.BitcoinMainnet.ChainId),
 	)
 	require.NoError(
 		t,
-		types.ValidateAddressForChain("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", chains.BtcMainnetChain.ChainId),
+		types.ValidateAddressForChain("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", chains.BitcoinMainnet.ChainId),
 	)
 	require.Error(
 		t,
-		types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", chains.BtcMainnetChain.ChainId),
+		types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", chains.BitcoinMainnet.ChainId),
 	)
 	require.Error(t, types.ValidateAddressForChain("", chains.BtcRegtestChain.ChainId))
 	require.NoError(
 		t,
-		types.ValidateAddressForChain("bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", chains.BtcMainnetChain.ChainId),
+		types.ValidateAddressForChain("bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", chains.BitcoinMainnet.ChainId),
 	)
 	require.NoError(
 		t,
@@ -88,7 +88,7 @@ func TestValidateHashForChain(t *testing.T) {
 		t,
 		types.ValidateHashForChain(
 			"15b7880f5d236e857a5e8f043ce9d56f5ef01e1c3f2a786baf740fc0bb7a22a3",
-			chains.BtcMainnetChain.ChainId,
+			chains.BitcoinMainnet.ChainId,
 		),
 	)
 	require.NoError(
@@ -102,7 +102,7 @@ func TestValidateHashForChain(t *testing.T) {
 		t,
 		types.ValidateHashForChain(
 			"0x84bd5c9922b63c52d8a9ca686e0a57ff978150b71be0583514d01c27aa341910",
-			chains.BtcMainnetChain.ChainId,
+			chains.BitcoinMainnet.ChainId,
 		),
 	)
 }

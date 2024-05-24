@@ -32,7 +32,7 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 					Enabled: false,
 				},
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: false,
 				},
 			},
@@ -42,13 +42,13 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
 		require.True(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
-		require.True(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.BitcoinMainnet.ChainId))
 	})
 
 	t.Run("enable verification flags even if the chain has not been set previously", func(t *testing.T) {
@@ -65,13 +65,13 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
 		require.True(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
-		require.True(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.BitcoinMainnet.ChainId))
 	})
 
 	t.Run("cannot update if not authorized group", func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 					Enabled: false,
 				},
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: false,
 				},
 			},

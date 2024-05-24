@@ -174,7 +174,7 @@ func TestIsEVMChain(t *testing.T) {
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
 		{"Goerli Testnet", GoerliChain.ChainId, true},
 		{"Sepolia Testnet", SepoliaChain.ChainId, true},
-		{"Non-EVM", BtcMainnetChain.ChainId, false},
+		{"Non-EVM", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -197,7 +197,7 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 		{"Sepolia Testnet", SepoliaChain.ChainId, true},
 		{"BSC Testnet", BscTestnetChain.ChainId, true},
 		{"BSC Mainnet", BscMainnet.ChainId, true},
-		{"BTC", BtcMainnetChain.ChainId, true},
+		{"BTC", BitcoinMainnet.ChainId, true},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -217,7 +217,7 @@ func TestSupportMerkleProof(t *testing.T) {
 		{"Ethereum Mainnet", Ethereum, true},
 		{"BSC Testnet", BscTestnetChain, true},
 		{"BSC Mainnet", BscMainnet, true},
-		{"Non-EVM", BtcMainnetChain, true},
+		{"Non-EVM", BitcoinMainnet, true},
 		{"Zeta Mainnet", ZetaChainMainnet, false},
 	}
 
@@ -234,7 +234,7 @@ func TestIsBitcoinChain(t *testing.T) {
 		chainID int64
 		want    bool
 	}{
-		{"Bitcoin Mainnet", BtcMainnetChain.ChainId, true},
+		{"Bitcoin Mainnet", BitcoinMainnet.ChainId, true},
 		{"Bitcoin Testnet", BtcTestNetChain.ChainId, true},
 		{"Bitcoin Regtest", BtcRegtestChain.ChainId, true},
 		{"Non-Bitcoin", Ethereum.ChainId, false},
@@ -257,7 +257,7 @@ func TestIsEthereumChain(t *testing.T) {
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
 		{"Goerli Testnet", GoerliChain.ChainId, true},
 		{"Sepolia Testnet", SepoliaChain.ChainId, true},
-		{"Non-Ethereum", BtcMainnetChain.ChainId, false},
+		{"Non-Ethereum", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -350,7 +350,7 @@ func TestGetChainFromChainID(t *testing.T) {
 }
 
 func TestGetBTCChainParams(t *testing.T) {
-	params, err := GetBTCChainParams(BtcMainnetChain.ChainId)
+	params, err := GetBTCChainParams(BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	require.Equal(t, &chaincfg.MainNetParams, params)
 

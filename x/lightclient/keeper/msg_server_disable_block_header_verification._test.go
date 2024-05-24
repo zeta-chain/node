@@ -32,7 +32,7 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 					Enabled: true,
 				},
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 			},
@@ -42,13 +42,13 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgDisableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
 		require.False(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
-		require.False(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
+		require.False(t, bhv.IsChainEnabled(chains.BitcoinMainnet.ChainId))
 
 	})
 
@@ -69,7 +69,7 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 					Enabled: true,
 				},
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 			},
@@ -97,12 +97,12 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgDisableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
 		require.False(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
-		require.False(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
+		require.False(t, bhv.IsChainEnabled(chains.BitcoinMainnet.ChainId))
 	})
 }

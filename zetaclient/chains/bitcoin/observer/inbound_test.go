@@ -187,7 +187,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 }
 
 func TestGetSenderAddressByVin(t *testing.T) {
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	net := &chaincfg.MainNetParams
 
 	t.Run("should get sender address from P2TR tx", func(t *testing.T) {
@@ -281,7 +281,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 func TestGetSenderAddressByVinErrors(t *testing.T) {
 	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	net := &chaincfg.MainNetParams
 
 	t.Run("should get sender address from P2TR tx", func(t *testing.T) {
@@ -315,7 +315,7 @@ func TestGetBtcEvent(t *testing.T) {
 	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 
 	// GetBtcEvent arguments
 	tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -489,7 +489,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	net := &chaincfg.MainNetParams
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)

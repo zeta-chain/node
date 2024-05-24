@@ -17,7 +17,7 @@ func BitcoinNetParamsFromChainID(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
 	case BtcRegtestChain.ChainId:
 		return BitcoinRegnetParams, nil
-	case BtcMainnetChain.ChainId:
+	case BitcoinMainnet.ChainId:
 		return BitcoinMainnetParams, nil
 	case BtcTestNetChain.ChainId:
 		return BitcoinTestnetParams, nil
@@ -32,7 +32,7 @@ func BitcoinChainIDFromNetworkName(name string) (int64, error) {
 	case BitcoinRegnetParams.Name:
 		return BtcRegtestChain.ChainId, nil
 	case BitcoinMainnetParams.Name:
-		return BtcMainnetChain.ChainId, nil
+		return BitcoinMainnet.ChainId, nil
 	case BitcoinTestnetParams.Name:
 		return BtcTestNetChain.ChainId, nil
 	default:
@@ -47,5 +47,5 @@ func IsBitcoinRegnet(chainID int64) bool {
 
 // IsBitcoinMainnet returns true if the chain id is for the mainnet
 func IsBitcoinMainnet(chainID int64) bool {
-	return chainID == BtcMainnetChain.ChainId
+	return chainID == BitcoinMainnet.ChainId
 }

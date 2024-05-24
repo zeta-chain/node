@@ -108,7 +108,7 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "1",
 			InboundParams: &types.InboundParams{
-				SenderChainId: chains.BtcMainnetChain.ChainId,
+				SenderChainId: chains.BitcoinMainnet.ChainId,
 				ObservedHash:  "0x111",
 			},
 		})
@@ -155,7 +155,7 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.GoerliChain.ChainId, 0))
 		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", chains.Ethereum.ChainId, 0))
 		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.MumbaiChain.ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BtcMainnetChain.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BitcoinMainnet.ChainId, 0))
 		require.True(t, k.IsFinalizedInbound(ctx, "0x222", chains.BtcTestNetChain.ChainId, 0))
 		require.True(t, k.IsFinalizedInbound(ctx, "0x333", chains.BtcTestNetChain.ChainId, 0))
 		require.True(t, k.IsFinalizedInbound(ctx, "0x444", chains.BtcRegtestChain.ChainId, 0))
