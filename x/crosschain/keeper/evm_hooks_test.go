@@ -179,7 +179,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcTestNetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "invalid address")
 	})
 
@@ -820,7 +820,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// use the wrong (testnet) chain ID to make the btc address parsing fail
-		chain := chains.BtcTestNetChain
+		chain := chains.BitcoinTestnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)

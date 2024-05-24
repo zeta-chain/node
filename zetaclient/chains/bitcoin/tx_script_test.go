@@ -476,7 +476,7 @@ func TestDecodeTSSVoutErrors(t *testing.T) {
 	t.Run("should return error when invalid receiver passed", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// use testnet params to decode mainnet receiver
-		wrongChain := chains.BtcTestNetChain
+		wrongChain := chains.BitcoinTestnet
 		receiver, amount, err := DecodeTSSVout(invalidVout, "bc1qulmx8ej27cj0xe20953cztr2excnmsqvuh0s5c", wrongChain)
 		require.ErrorContains(t, err, "error decoding receiver")
 		require.Empty(t, receiver)

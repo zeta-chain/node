@@ -277,7 +277,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 				},
 			}
 
-			testBtcChain := chains.BtcTestNetChain
+			testBtcChain := chains.BitcoinTestnet
 			btcChainParamsToUpdate := &observertypes.ChainParams{
 				ChainId: testBtcChain.ChainId,
 			}

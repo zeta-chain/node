@@ -74,7 +74,7 @@ func TestNewBitcoinObserver(t *testing.T) {
 		appContext := context.NewAppContext(coreContext, cfg)
 		chain := chains.BitcoinMainnet
 		zetacoreClient := mocks.NewMockZetacoreClient()
-		tss := mocks.NewMockTSS(chains.BtcTestNetChain, sample.EthAddress().String(), "")
+		tss := mocks.NewMockTSS(chains.BitcoinTestnet, sample.EthAddress().String(), "")
 		loggers := clientcommon.ClientLogger{}
 		btcCfg := cfg.BitcoinConfig
 		ts := metrics.NewTelemetryServer()

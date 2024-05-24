@@ -95,7 +95,7 @@ func TestValidateHashForChain(t *testing.T) {
 		t,
 		types.ValidateHashForChain(
 			"a0fa5a82f106fb192e4c503bfa8d54b2de20a821e09338094ab825cc9b275059",
-			chains.BtcTestNetChain.ChainId,
+			chains.BitcoinTestnet.ChainId,
 		),
 	)
 	require.Error(

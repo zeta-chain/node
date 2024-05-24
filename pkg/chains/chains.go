@@ -121,8 +121,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// BtcTestNetChain is Bitcoin testnet3
-	BtcTestNetChain = Chain{
+	// BitcoinTestnet is Bitcoin testnet3
+	BitcoinTestnet = Chain{
 		ChainName:   ChainName_btc_testnet,
 		ChainId:     18332,
 		Network:     Network_btc,
@@ -255,7 +255,7 @@ func DefaultChainsList() []*Chain {
 		BitcoinMainnet,
 		BscMainnet,
 		Ethereum,
-		BtcTestNetChain,
+		BitcoinTestnet,
 		MumbaiChain,
 		AmoyChain,
 		BscTestnet,

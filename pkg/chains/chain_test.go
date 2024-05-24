@@ -235,7 +235,7 @@ func TestIsBitcoinChain(t *testing.T) {
 		want    bool
 	}{
 		{"Bitcoin Mainnet", BitcoinMainnet.ChainId, true},
-		{"Bitcoin Testnet", BtcTestNetChain.ChainId, true},
+		{"Bitcoin Testnet", BitcoinTestnet.ChainId, true},
 		{"Bitcoin Regtest", BtcRegtestChain.ChainId, true},
 		{"Non-Bitcoin", Ethereum.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
@@ -296,7 +296,7 @@ func TestChain_WitnessProgram(t *testing.T) {
 		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 
-		chain := BtcTestNetChain
+		chain := BitcoinTestnet
 		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
 		require.NoError(t, err)
 	})
@@ -318,7 +318,7 @@ func TestChain_WitnessProgram(t *testing.T) {
 		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 
-		chain := BtcTestNetChain
+		chain := BitcoinTestnet
 		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram()[0:19])
 		require.Error(t, err)
 	})

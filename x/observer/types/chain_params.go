@@ -273,7 +273,7 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcTestNetChain.ChainId,
+		ChainId:                     chains.BitcoinTestnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

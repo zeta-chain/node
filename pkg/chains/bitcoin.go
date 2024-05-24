@@ -19,7 +19,7 @@ func BitcoinNetParamsFromChainID(chainID int64) (*chaincfg.Params, error) {
 		return BitcoinRegnetParams, nil
 	case BitcoinMainnet.ChainId:
 		return BitcoinMainnetParams, nil
-	case BtcTestNetChain.ChainId:
+	case BitcoinTestnet.ChainId:
 		return BitcoinTestnetParams, nil
 	default:
 		return nil, fmt.Errorf("no Bitcoin net params for chain ID: %d", chainID)
@@ -34,7 +34,7 @@ func BitcoinChainIDFromNetworkName(name string) (int64, error) {
 	case BitcoinMainnetParams.Name:
 		return BitcoinMainnet.ChainId, nil
 	case BitcoinTestnetParams.Name:
-		return BtcTestNetChain.ChainId, nil
+		return BitcoinTestnet.ChainId, nil
 	default:
 		return 0, fmt.Errorf("invalid Bitcoin network name: %s", name)
 	}

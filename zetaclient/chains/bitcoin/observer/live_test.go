@@ -416,7 +416,7 @@ func LiveTestGetSenderByVin(t *testing.T) {
 	net, err := chains.GetBTCChainParams(chainID)
 	require.NoError(t, err)
 	testnet := false
-	if chainID == chains.BtcTestNetChain.ChainId {
+	if chainID == chains.BitcoinTestnet.ChainId {
 		testnet = true
 	}
 
