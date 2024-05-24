@@ -17,7 +17,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 	t.Run("should error if verification flags not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.Sepolia.ChainId, sample.Hash().String(), 1)
 		require.ErrorContains(t, err, "proof verification is disabled for all chains")
 	})
 
@@ -48,7 +48,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 				},
 			},
 		})
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.Sepolia.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 	})
 
@@ -112,7 +112,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 			},
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.Sepolia.ChainId, sample.Hash().String(), 1)
 		require.ErrorContains(t, err, "block header verification is disabled")
 	})
 
@@ -153,7 +153,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 					Enabled: true,
 				},
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},

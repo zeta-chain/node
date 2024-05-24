@@ -99,8 +99,8 @@ var (
 		IsExternal:  false,
 	}
 
-	// SepoliaChain is Ethereum sepolia testnet
-	SepoliaChain = Chain{
+	// Sepolia is Ethereum sepolia testnet
+	Sepolia = Chain{
 		ChainName:   ChainName_sepolia_testnet,
 		ChainId:     11155111,
 		Network:     Network_eth,
@@ -260,7 +260,7 @@ func DefaultChainsList() []*Chain {
 		AmoyChain,
 		BscTestnetChain,
 		GoerliChain,
-		SepoliaChain,
+		Sepolia,
 		BtcRegtestChain,
 		GoerliLocalnetChain,
 		ZetaChainMainnet,

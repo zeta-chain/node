@@ -53,7 +53,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "chain id doesn't correspond",
 			msg: types.MsgAddInboundTracker{
-				ChainId: chains.SepoliaChain.ChainId,
+				ChainId: chains.Sepolia.ChainId,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
 			txBytes:     sampleEthTxBytes,
@@ -224,7 +224,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "chain id doesn't correspond",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.SepoliaChain.ChainId,
+				ChainId: chains.Sepolia.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},

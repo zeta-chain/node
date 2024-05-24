@@ -21,7 +21,7 @@ func DefaultHeaderSupportedChains() []HeaderSupportedChain {
 			Enabled: false,
 		},
 		{
-			ChainId: chains.SepoliaChain.ChainId,
+			ChainId: chains.Sepolia.ChainId,
 			Enabled: false,
 		},
 		{

@@ -173,7 +173,7 @@ func TestIsEVMChain(t *testing.T) {
 	}{
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
 		{"Goerli Testnet", GoerliChain.ChainId, true},
-		{"Sepolia Testnet", SepoliaChain.ChainId, true},
+		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"Non-EVM", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
@@ -194,7 +194,7 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
 		{"Goerli Testnet", GoerliChain.ChainId, true},
 		{"Goerli Localnet", GoerliLocalnetChain.ChainId, true},
-		{"Sepolia Testnet", SepoliaChain.ChainId, true},
+		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"BSC Testnet", BscTestnetChain.ChainId, true},
 		{"BSC Mainnet", BscMainnet.ChainId, true},
 		{"BTC", BitcoinMainnet.ChainId, true},
@@ -256,7 +256,7 @@ func TestIsEthereumChain(t *testing.T) {
 	}{
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
 		{"Goerli Testnet", GoerliChain.ChainId, true},
-		{"Sepolia Testnet", SepoliaChain.ChainId, true},
+		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"Non-Ethereum", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
