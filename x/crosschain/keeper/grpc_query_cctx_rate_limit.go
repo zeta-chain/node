@@ -380,9 +380,10 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if err != nil {
 				return nil, err
 			}
+			isOutgoing := isCCTXOutgoing(cctx)
 
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if types.RateLimitExceeded(
+			if isOutgoing && types.RateLimitExceeded(
 				chain.ChainId,
 				cctx,
 				gasAssetRateMap,
