@@ -202,7 +202,7 @@ jobs:
   build-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 15
     concurrency:
       group: "build-test"
@@ -411,7 +411,7 @@ jobs:
       - e2e-admin-tests
       - e2e-upgrade-test
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 60
     environment: release
     steps:
