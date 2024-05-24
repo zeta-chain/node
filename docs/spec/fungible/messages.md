@@ -119,6 +119,7 @@ message MsgUpdateZRC20LiquidityCap {
 ## MsgPauseZRC20
 
 PauseZRC20 pauses the ZRC20 token
+Authorized: admin policy group groupEmergency.
 
 ```proto
 message MsgPauseZRC20 {
@@ -130,6 +131,7 @@ message MsgPauseZRC20 {
 ## MsgUnpauseZRC20
 
 UnpauseZRC20 unpauses the ZRC20 token
+Authorized: admin policy group groupOperational.
 
 ```proto
 message MsgUnpauseZRC20 {
