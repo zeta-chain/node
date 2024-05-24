@@ -29,8 +29,15 @@ while [ ! -f ~/.ssh/authorized_keys ]; do
     sleep 1
 done
 
-echo "waiting for geth RPC to start..."
-sleep 2
+echo "Waiting for network to start producing blocks"
+CURRENT_HEIGHT=0
+WAIT_HEIGHT=1
+while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
+do
+    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
+    sleep 5
+done
+
 
 ### Create the accounts and fund them with Ether on local Ethereum network
 
@@ -72,7 +79,7 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 
 ### Run zetae2e command depending on the option passed
 
-if [ "$OPTION" == "upgrade" ]; then
+if [[ "$OPTION" == "upgrade" || "$OPTION" == "import-data-upgrade" ]]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
 

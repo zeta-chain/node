@@ -229,6 +229,10 @@ start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-performance.yml up -d
 
+start-e2e-import-mainnet-test: zetanode
+	@echo "--> Starting e2e import-data test"
+	cd contrib/localnet/  && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
+
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d

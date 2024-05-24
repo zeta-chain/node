@@ -71,6 +71,7 @@ then
   exit 1
 fi
 NUMOFNODES=$1
+OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"
@@ -256,6 +257,12 @@ then
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
+
+  if [[ "$OPTION" == "import-data" || "$OPTION" == "import-data-upgrade" ]]; then
+    echo "Importing data"
+    zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
+  fi
+
   zetacored validate-genesis
 # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
