@@ -5,7 +5,7 @@
 ### Fixes
 
 * [2249](https://github.com/zeta-chain/node/pull/2249) - fix inbound and outbound validation for BSC chain
-* [2265](https://github.com/zeta-chain/node/pull/2265) - ported rate limiter fix to the revert cctxs
+* [2265](https://github.com/zeta-chain/node/pull/2265) - fix rate limiter query for revert cctxs
 
 ## v16.0.0
 
