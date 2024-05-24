@@ -189,7 +189,7 @@ export declare class EventZRC20Paused extends Message<EventZRC20Paused> {
   zrc20Addresses: string[];
 
   /**
-   * @generated from field: string signer = 4;
+   * @generated from field: string signer = 3;
    */
   signer: string;
 
@@ -223,7 +223,7 @@ export declare class EventZRC20UnPaused extends Message<EventZRC20UnPaused> {
   zrc20Addresses: string[];
 
   /**
-   * @generated from field: string signer = 4;
+   * @generated from field: string signer = 3;
    */
   signer: string;
 
