@@ -118,7 +118,7 @@ message MsgUpdateZRC20LiquidityCap {
 
 ## MsgPauseZRC20
 
-PauseZRC20 pauses the ZRC20 token
+PauseZRC20 pauses a list of ZRC20 tokens
 Authorized: admin policy group groupEmergency.
 
 ```proto
