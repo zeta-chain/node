@@ -1,9 +1,9 @@
-# tx crosschain outbound-voter
+# tx crosschain remove-outbound-tracker
 
-Broadcast message receiveConfirmation
+Remove an outbound tracker
 
 ```
-zetacored tx crosschain outbound-voter [sendHash] [outTxHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [flags]
+zetacored tx crosschain remove-outbound-tracker [chain] [nonce] [flags]
 ```
 
 ### Options
@@ -22,7 +22,7 @@ zetacored tx crosschain outbound-voter [sendHash] [outTxHash] [outBlockHeight] [
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for outbound-voter
+  -h, --help                     help for remove-outbound-tracker
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device

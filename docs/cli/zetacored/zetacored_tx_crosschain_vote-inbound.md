@@ -1,9 +1,9 @@
-# tx observer disable-cctx-flags
+# tx crosschain vote-inbound
 
-Disable inbound and outbound cross-chain flags
+Broadcast message to vote an inbound
 
 ```
-zetacored tx observer disable-cctx-flags [disable-inbound] [disable-outbound] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [flags]
 ```
 
 ### Options
@@ -22,7 +22,7 @@ zetacored tx observer disable-cctx-flags [disable-inbound] [disable-outbound] [f
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for disable-cctx-flags
+  -h, --help                     help for vote-inbound
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -49,5 +49,5 @@ zetacored tx observer disable-cctx-flags [disable-inbound] [disable-outbound] [f
 
 ### SEE ALSO
 
-* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
+* [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
 

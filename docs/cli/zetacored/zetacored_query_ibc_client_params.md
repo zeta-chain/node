@@ -1,26 +1,30 @@
-# query crosschain list-in-tx-hash-to-cctx
+# query ibc client params
 
-list all inTxHashToCctx
+Query the current ibc client parameters
+
+### Synopsis
+
+Query the current ibc client parameters
 
 ```
-zetacored query crosschain list-in-tx-hash-to-cctx [flags]
+zetacored query ibc client params [flags]
+```
+
+### Examples
+
+```
+zetacored query ibc client params
 ```
 
 ### Options
 
 ```
-      --count-total        count total number of records in list-in-tx-hash-to-cctx to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for list-in-tx-hash-to-cctx
-      --limit uint         pagination limit of list-in-tx-hash-to-cctx to query for (default 100)
+  -h, --help               help for params
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of list-in-tx-hash-to-cctx to query for
   -o, --output string      Output format (text|json) 
-      --page uint          pagination page of list-in-tx-hash-to-cctx to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of list-in-tx-hash-to-cctx to query for
-      --reverse            results are sorted in descending order
 ```
 
 ### Options inherited from parent commands
@@ -36,5 +40,5 @@ zetacored query crosschain list-in-tx-hash-to-cctx [flags]
 
 ### SEE ALSO
 
-* [zetacored query crosschain](zetacored_query_crosschain.md)	 - Querying commands for the crosschain module
+* [zetacored query ibc client](zetacored_query_ibc_client.md)	 - IBC client query subcommands
 

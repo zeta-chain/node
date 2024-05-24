@@ -1,21 +1,21 @@
-# collect-observer-info
+# tx ibc channel
 
-collect observer info into the genesis from a folder , default path is ~/.zetacored/os_info/ 
-
+IBC channel transaction subcommands
 
 ```
-zetacored collect-observer-info [folder] [flags]
+zetacored tx ibc channel [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for collect-observer-info
+  -h, --help   help for channel
 ```
 
 ### Options inherited from parent commands
 
 ```
+      --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
@@ -25,5 +25,5 @@ zetacored collect-observer-info [folder] [flags]
 
 ### SEE ALSO
 
-* [zetacored](zetacored.md)	 - Zetacore Daemon (server)
+* [zetacored tx ibc](zetacored_tx_ibc.md)	 - IBC transaction subcommands
 

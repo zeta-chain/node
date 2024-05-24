@@ -1,9 +1,10 @@
-# tx observer enable-cctx-flags
+# tx crosschain add-inbound-tracker
 
-Enable inbound and outbound cross-chain flags
+Add an inbound tracker 
+				Use 0:Zeta,1:Gas,2:ERC20
 
 ```
-zetacored tx observer enable-cctx-flags [enable-inbound] [enable-outbound] [flags]
+zetacored tx crosschain add-inbound-tracker [chain-id] [tx-hash] [coin-type] [flags]
 ```
 
 ### Options
@@ -22,7 +23,7 @@ zetacored tx observer enable-cctx-flags [enable-inbound] [enable-outbound] [flag
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for enable-cctx-flags
+  -h, --help                     help for add-inbound-tracker
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -49,5 +50,5 @@ zetacored tx observer enable-cctx-flags [enable-inbound] [enable-outbound] [flag
 
 ### SEE ALSO
 
-* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
+* [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
 

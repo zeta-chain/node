@@ -118,6 +118,8 @@ message MsgUpdateZRC20LiquidityCap {
 
 ## MsgPauseZRC20
 
+PauseZRC20 pauses the ZRC20 token
+
 ```proto
 message MsgPauseZRC20 {
 	string creator = 1;
@@ -126,6 +128,8 @@ message MsgPauseZRC20 {
 ```
 
 ## MsgUnpauseZRC20
+
+UnpauseZRC20 unpauses the ZRC20 token
 
 ```proto
 message MsgUnpauseZRC20 {

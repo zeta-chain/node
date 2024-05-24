@@ -5,6 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -34,7 +35,12 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 		}
 
 		// setup zrc20
-		zrc20A, zrc20B, zrc20C := sample.EthAddress().String(), sample.EthAddress().String(), sample.EthAddress().String()
+		zrc20A, zrc20B, zrc20C := sample.EthAddress().
+			String(),
+			sample.EthAddress().
+				String(),
+			sample.EthAddress().
+				String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))
 		fcB := sample.ForeignCoins(t, zrc20B)
 		fcB.Paused = true

@@ -1,9 +1,21 @@
-# tx crosschain inbound-voter
+# tx ibc client create
 
-Broadcast message sendVoter
+create new IBC client
+
+### Synopsis
+
+create a new IBC client with the specified client state and consensus state
+	- ClientState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}
+	- ConsensusState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"}
 
 ```
-zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset] [eventIndex] [flags]
+zetacored tx ibc client create [path/to/client_state.json] [path/to/consensus_state.json] [flags]
+```
+
+### Examples
+
+```
+zetacored tx ibc client create [path/to/client_state.json] [path/to/consensus_state.json] --from node0 --home ../node0/[app]cli --chain-id $CID
 ```
 
 ### Options
@@ -22,7 +34,7 @@ zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [recei
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for inbound-voter
+  -h, --help                     help for create
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -49,5 +61,5 @@ zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [recei
 
 ### SEE ALSO
 
-* [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
+* [zetacored tx ibc client](zetacored_tx_ibc_client.md)	 - IBC client transaction subcommands
 

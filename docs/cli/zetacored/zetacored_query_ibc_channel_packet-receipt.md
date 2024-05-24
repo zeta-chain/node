@@ -1,9 +1,19 @@
-# query crosschain show-out-tx-tracker
+# query ibc channel packet-receipt
 
-shows a OutTxTracker
+Query a packet receipt
+
+### Synopsis
+
+Query a packet receipt
 
 ```
-zetacored query crosschain show-out-tx-tracker [chainId] [nonce] [flags]
+zetacored query ibc channel packet-receipt [port-id] [channel-id] [sequence] [flags]
+```
+
+### Examples
+
+```
+zetacored query ibc channel packet-receipt [port-id] [channel-id] [sequence]
 ```
 
 ### Options
@@ -12,9 +22,10 @@ zetacored query crosschain show-out-tx-tracker [chainId] [nonce] [flags]
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for show-out-tx-tracker
+  -h, --help               help for packet-receipt
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
+      --prove              show proofs for the query results (default true)
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +41,5 @@ zetacored query crosschain show-out-tx-tracker [chainId] [nonce] [flags]
 
 ### SEE ALSO
 
-* [zetacored query crosschain](zetacored_query_crosschain.md)	 - Querying commands for the crosschain module
+* [zetacored query ibc channel](zetacored_query_ibc_channel.md)	 - IBC channel query subcommands
 

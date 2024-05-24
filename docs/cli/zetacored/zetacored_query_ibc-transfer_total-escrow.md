@@ -1,9 +1,19 @@
-# query crosschain list-all-in-tx-trackers
+# query ibc-transfer total-escrow
 
-shows all inTxTrackers
+Query the total amount of tokens in escrow for a denom
+
+### Synopsis
+
+Query the total amount of tokens in escrow for a denom
 
 ```
-zetacored query crosschain list-all-in-tx-trackers [flags]
+zetacored query ibc-transfer total-escrow [denom] [flags]
+```
+
+### Examples
+
+```
+zetacored query ibc-transfer total-escrow uosmo
 ```
 
 ### Options
@@ -12,7 +22,7 @@ zetacored query crosschain list-all-in-tx-trackers [flags]
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for list-all-in-tx-trackers
+  -h, --help               help for total-escrow
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
@@ -30,5 +40,5 @@ zetacored query crosschain list-all-in-tx-trackers [flags]
 
 ### SEE ALSO
 
-* [zetacored query crosschain](zetacored_query_crosschain.md)	 - Querying commands for the crosschain module
+* [zetacored query ibc-transfer](zetacored_query_ibc-transfer.md)	 - IBC fungible token transfer query subcommands
 
