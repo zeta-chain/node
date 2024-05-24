@@ -103,6 +103,7 @@
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 * [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags
 * [1970](https://github.com/zeta-chain/node/issues/1970) - remove the timeout in the evm outtx tracker processing thread
+* [2265](https://github.com/zeta-chain/node/pull/2265) - ported rate limiter fix to the revert cctxs
 
 ### Chores
 
