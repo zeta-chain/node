@@ -327,7 +327,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.ZetaPrivnet.ChainId,
+		ChainId:                     chains.ZetaChainPrivnet.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

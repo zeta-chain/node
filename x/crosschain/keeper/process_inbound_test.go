@@ -38,7 +38,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutboundParam().Receiver = receiver.String()
-		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		cctx.GetInboundParams().Amount = sdkmath.NewUintFromBigInt(amount)
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundParams().SenderChainId = 0
@@ -65,7 +65,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutboundParam().Receiver = receiver.String()
-		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		cctx.GetInboundParams().Amount = sdkmath.NewUintFromBigInt(amount)
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundParams().SenderChainId = 0
@@ -100,7 +100,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 			// call ProcessInbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
-			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			k.ProcessInbound(ctx, cctx)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(
@@ -138,7 +138,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(
@@ -181,7 +181,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 			// call ProcessInbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			k.ProcessInbound(ctx, cctx)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(
@@ -225,7 +225,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 			// call ProcessInbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			k.ProcessInbound(ctx, cctx)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(
@@ -270,7 +270,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
@@ -308,7 +308,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.StatusMessage)
@@ -344,7 +344,7 @@ func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 
 			// call ProcessInbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaPrivnet.ChainId
+			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			cctx.OutboundParams = append(cctx.OutboundParams, cctx.GetCurrentOutboundParam())
 			k.ProcessInbound(ctx, cctx)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)

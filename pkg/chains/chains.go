@@ -169,9 +169,9 @@ var (
 	* Devnet chains
 	 */
 
-	// ZetaDevnet is the devnet chain for Zeta
+	// ZetaChainDevnet is the devnet chain for Zeta
 	// used as live testing environment
-	ZetaDevnet = Chain{
+	ZetaChainDevnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
 		ChainId:     70000,
 		Network:     Network_zeta,
@@ -185,8 +185,8 @@ var (
 	* Privnet chains
 	 */
 
-	// ZetaPrivnet is the privnet chain for Zeta (localnet)
-	ZetaPrivnet = Chain{
+	// ZetaChainPrivnet is the privnet chain for Zeta (localnet)
+	ZetaChainPrivnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
 		ChainId:     101,
 		Network:     Network_zeta,
@@ -265,8 +265,8 @@ func DefaultChainsList() []*Chain {
 		GoerliLocalnet,
 		ZetaChainMainnet,
 		ZetaChainTestnet,
-		ZetaDevnet,
-		ZetaPrivnet,
+		ZetaChainDevnet,
+		ZetaChainPrivnet,
 		Polygon,
 		OptimismMainnet,
 		OptimismSepolia,
@@ -338,14 +338,14 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 
 	switch ethChainID {
-	case ZetaPrivnet.ChainId:
-		return ZetaPrivnet, nil
+	case ZetaChainPrivnet.ChainId:
+		return ZetaChainPrivnet, nil
 	case ZetaChainMainnet.ChainId:
 		return ZetaChainMainnet, nil
 	case ZetaChainTestnet.ChainId:
 		return ZetaChainTestnet, nil
-	case ZetaDevnet.ChainId:
-		return ZetaDevnet, nil
+	case ZetaChainDevnet.ChainId:
+		return ZetaChainDevnet, nil
 	default:
 		return Chain{}, fmt.Errorf("chain %d not found", ethChainID)
 	}

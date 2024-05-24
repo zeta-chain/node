@@ -68,11 +68,11 @@ func TestKeeper_VerifyProof(t *testing.T) {
 			},
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.ZetaPrivnet.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.ZetaChainPrivnet.ChainId, sample.Hash().String(), 1)
 		require.ErrorContains(
 			t,
 			err,
-			fmt.Sprintf("proof verification is disabled for chain %d", chains.ZetaPrivnet.ChainId),
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.ZetaChainPrivnet.ChainId),
 		)
 	})
 

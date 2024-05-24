@@ -54,14 +54,14 @@ func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "invalid chain id",
 			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.ZetaPrivnet.ChainId},
+				ChainIdList: []int64{chains.ZetaChainPrivnet.ChainId},
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 				require.ErrorContains(
 					t,
 					err,
-					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnet.ChainId),
+					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaChainPrivnet.ChainId),
 				)
 			},
 		},

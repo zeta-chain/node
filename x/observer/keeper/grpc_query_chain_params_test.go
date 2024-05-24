@@ -39,7 +39,7 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 		list := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:               chains.ZetaPrivnet.ChainId,
+					ChainId:               chains.ZetaChainPrivnet.ChainId,
 					IsSupported:           false,
 					BallotThreshold:       sdk.ZeroDec(),
 					MinObserverDelegation: sdk.ZeroDec(),
@@ -49,7 +49,7 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 		k.SetChainParamsList(ctx, list)
 
 		res, err := k.GetChainParamsForChain(wctx, &types.QueryGetChainParamsForChainRequest{
-			ChainId: chains.ZetaPrivnet.ChainId,
+			ChainId: chains.ZetaChainPrivnet.ChainId,
 		})
 		require.NoError(t, err)
 		require.Equal(t, &types.QueryGetChainParamsForChainResponse{
@@ -84,7 +84,7 @@ func TestKeeper_GetChainParams(t *testing.T) {
 		list := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:               chains.ZetaPrivnet.ChainId,
+					ChainId:               chains.ZetaChainPrivnet.ChainId,
 					IsSupported:           false,
 					BallotThreshold:       sdk.ZeroDec(),
 					MinObserverDelegation: sdk.ZeroDec(),

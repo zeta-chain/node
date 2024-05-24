@@ -44,7 +44,7 @@ func TestChainListByNetworkType(t *testing.T) {
 			"privnet chains",
 			NetworkType_privnet,
 			[]*Chain{
-				&ZetaPrivnet,
+				&ZetaChainPrivnet,
 				&BitcoinRegtest,
 				&GoerliLocalnet,
 			},
@@ -67,7 +67,7 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Zeta",
 			Network_zeta,
-			[]*Chain{&ZetaChainMainnet, &ZetaDevnet, &ZetaPrivnet, &ZetaChainTestnet},
+			[]*Chain{&ZetaChainMainnet, &ZetaChainDevnet, &ZetaChainPrivnet, &ZetaChainTestnet},
 		},
 		{
 			"Btc",
@@ -130,8 +130,8 @@ func TestChainListFunctions(t *testing.T) {
 				&GoerliLocalnet,
 				&ZetaChainMainnet,
 				&ZetaChainTestnet,
-				&ZetaDevnet,
-				&ZetaPrivnet,
+				&ZetaChainDevnet,
+				&ZetaChainPrivnet,
 				&Polygon,
 				&OptimismMainnet,
 				&OptimismSepolia,
@@ -191,15 +191,15 @@ func TestZetaChainFromChainID(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:     "ZetaDevnet",
+			name:     "ZetaChainDevnet",
 			chainID:  "cosmoshub_70000-1",
-			expected: ZetaDevnet,
+			expected: ZetaChainDevnet,
 			wantErr:  false,
 		},
 		{
-			name:     "ZetaPrivnet",
+			name:     "ZetaChainPrivnet",
 			chainID:  "cosmoshub_101-1",
-			expected: ZetaPrivnet,
+			expected: ZetaChainPrivnet,
 			wantErr:  false,
 		},
 		{
