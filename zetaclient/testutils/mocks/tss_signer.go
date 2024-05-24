@@ -54,7 +54,7 @@ func NewTSSMainnet() *TSS {
 }
 
 func NewTSSAthens3() *TSS {
-	return NewMockTSS(chains.BscTestnetChain, testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
+	return NewMockTSS(chains.BscTestnet, testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
 }
 
 // WithPrivKey sets the private key for the TSS

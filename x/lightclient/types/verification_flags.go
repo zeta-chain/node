@@ -25,7 +25,7 @@ func DefaultHeaderSupportedChains() []HeaderSupportedChain {
 			Enabled: false,
 		},
 		{
-			ChainId: chains.BscTestnetChain.ChainId,
+			ChainId: chains.BscTestnet.ChainId,
 			Enabled: false,
 		},
 		{

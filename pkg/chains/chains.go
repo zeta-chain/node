@@ -110,8 +110,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// BscTestnetChain is Binance Smart Chain testnet
-	BscTestnetChain = Chain{
+	// BscTestnet is Binance Smart Chain testnet
+	BscTestnet = Chain{
 		ChainName:   ChainName_bsc_testnet,
 		ChainId:     97,
 		Network:     Network_bsc,
@@ -258,7 +258,7 @@ func DefaultChainsList() []*Chain {
 		BtcTestNetChain,
 		MumbaiChain,
 		AmoyChain,
-		BscTestnetChain,
+		BscTestnet,
 		GoerliChain,
 		Sepolia,
 		BtcRegtestChain,

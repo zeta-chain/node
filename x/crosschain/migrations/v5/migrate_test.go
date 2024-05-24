@@ -75,7 +75,7 @@ func TestResetTestnetNonce(t *testing.T) {
 		testnetChains := []chains.Chain{
 			chains.GoerliChain,
 			chains.MumbaiChain,
-			chains.BscTestnetChain,
+			chains.BscTestnet,
 			chains.BtcTestNetChain,
 		}
 		mainnetChains := []chains.Chain{chains.Ethereum, chains.BscMainnet, chains.BitcoinMainnet}
@@ -114,7 +114,7 @@ func TestResetTestnetNonce(t *testing.T) {
 		assertValues := map[chains.Chain]int64{
 			chains.GoerliChain:     226841,
 			chains.MumbaiChain:     200599,
-			chains.BscTestnetChain: 110454,
+			chains.BscTestnet:      110454,
 			chains.BtcTestNetChain: 4881,
 		}
 
@@ -163,7 +163,7 @@ func TestResetTestnetNonce(t *testing.T) {
 		assertValuesSet := map[chains.Chain]int64{
 			chains.GoerliChain: 226841,
 		}
-		assertValuesNotSet := []chains.Chain{chains.MumbaiChain, chains.BscTestnetChain, chains.BtcTestNetChain}
+		assertValuesNotSet := []chains.Chain{chains.MumbaiChain, chains.BscTestnet, chains.BtcTestNetChain}
 
 		for _, chain := range testnetChains {
 			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)

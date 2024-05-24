@@ -19,7 +19,7 @@ func TestDefaultVerificationFlags(t *testing.T) {
 				require.False(t, f.Enabled)
 			case chains.Sepolia.ChainId:
 				require.False(t, f.Enabled)
-			case chains.BscTestnetChain.ChainId:
+			case chains.BscTestnet.ChainId:
 				require.False(t, f.Enabled)
 			case chains.GoerliLocalnetChain.ChainId:
 				require.False(t, f.Enabled)

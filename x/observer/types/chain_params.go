@@ -237,7 +237,7 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscTestnetChain.ChainId,
+		ChainId:                     chains.BscTestnet.ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

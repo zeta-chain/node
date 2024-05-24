@@ -195,7 +195,7 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 		{"Goerli Testnet", GoerliChain.ChainId, true},
 		{"Goerli Localnet", GoerliLocalnetChain.ChainId, true},
 		{"Sepolia Testnet", Sepolia.ChainId, true},
-		{"BSC Testnet", BscTestnetChain.ChainId, true},
+		{"BSC Testnet", BscTestnet.ChainId, true},
 		{"BSC Mainnet", BscMainnet.ChainId, true},
 		{"BTC", BitcoinMainnet.ChainId, true},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
@@ -215,7 +215,7 @@ func TestSupportMerkleProof(t *testing.T) {
 		want  bool
 	}{
 		{"Ethereum Mainnet", Ethereum, true},
-		{"BSC Testnet", BscTestnetChain, true},
+		{"BSC Testnet", BscTestnet, true},
 		{"BSC Mainnet", BscMainnet, true},
 		{"Non-EVM", BitcoinMainnet, true},
 		{"Zeta Mainnet", ZetaChainMainnet, false},
