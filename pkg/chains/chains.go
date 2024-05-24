@@ -268,6 +268,10 @@ func DefaultChainsList() []*Chain {
 		ZetaMocknetChain,
 		ZetaPrivnetChain,
 		PolygonChain,
+		OptimismMainnet,
+		OptimismSepolia,
+		BaseMainnet,
+		BaseSepolia,
 	})
 }
 
