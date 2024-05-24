@@ -128,6 +128,32 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 		types.CctxStatus_PendingOutbound,
 	)
 
+	// create Eth chain 999 reverted and 200 pending revert cctxs for rate limiter test
+	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
+	// these cctxs should be ignored by the rate limiter as it can't compare `ObservedExternalHeight` against the window boundary
+	ethRevertedCctxs := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		999,
+		ethChainID,
+		ethChainID,
+		coin.CoinType_Gas,
+		"",
+		uint64(1e15),
+		types.CctxStatus_Reverted,
+	)
+	ethPendingRevertCctxs := sample.CustomCctxsInBlockRange(
+		t,
+		1000,
+		1199,
+		ethChainID,
+		ethChainID,
+		coin.CoinType_Gas,
+		"",
+		uint64(1e15),
+		types.CctxStatus_PendingRevert,
+	)
+
 	// create Btc chain 999 mined and 200 pending cctxs for rate limiter test
 	// the number 999 is to make it less than `MaxLookbackNonce` so the LoopBackwards gets the chance to hit nonce 0
 	btcMinedCctxs := sample.CustomCctxsInBlockRange(
@@ -222,7 +248,54 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			),
 			expectedTotalPending:            400,
 			expectedPastCctxsValue:          sdk.NewInt(1200).Mul(sdk.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * 1e15 ZETA
+			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedLowestPendingCctxHeight: 1100,
+		},
+		{
+			name: "scan retrieve all pending cctxs and ignore revert cctxs",
+			rateLimitFlags: createTestRateLimiterFlags(
+				500,
+				math.NewUint(10*1e18),
+				zrc20ETH,
+				zrc20BTC,
+				zrc20USDT,
+				"2500",
+				"50000",
+				"0.8",
+			),
+			ethMinedCctxs:   ethRevertedCctxs,
+			ethPendingCctxs: ethPendingRevertCctxs,
+			ethPendingNonces: observertypes.PendingNonces{
+				ChainId:   ethChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			btcMinedCctxs:   btcMinedCctxs,
+			btcPendingCctxs: btcPendingCctxs,
+			btcPendingNonces: observertypes.PendingNonces{
+				ChainId:   btcChainID,
+				NonceLow:  1099,
+				NonceHigh: 1199,
+				Tss:       tss.TssPubkey,
+			},
+			currentHeight: 1199,
+			queryLimit:    0, // use default MaxPendingCctxs
+
+			// expected results
+			expectedHeight: 1199,
+			expectedCctxsMissed: keeper.SortCctxsByHeightAndChainID(
+				append(append([]*types.CrossChainTx{}, ethPendingRevertCctxs[0:100]...), btcPendingCctxs[0:100]...),
+			),
+			expectedCctxsPending: keeper.SortCctxsByHeightAndChainID(
+				append(append([]*types.CrossChainTx{}, ethPendingRevertCctxs[100:200]...), btcPendingCctxs[100:200]...),
+			),
+			expectedTotalPending: 400,
+			expectedPastCctxsValue: sdk.NewInt(200).
+				Mul(sdk.NewInt(1e18)).
+				String(),
+			// 400 * 0.5 ZETA, ignore Eth chain reverted cctxs
+			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(), // 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -266,7 +339,7 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			),
 			expectedTotalPending:            400,
 			expectedPastCctxsValue:          sdk.NewInt(3297).Mul(sdk.NewInt(1e18)).String(), // 1099 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * 1e15 ZETA
+			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
