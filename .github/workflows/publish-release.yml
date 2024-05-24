@@ -411,7 +411,7 @@ jobs:
       - e2e-admin-tests
       - e2e-upgrade-test
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-20.04
     timeout-minutes: 60
     environment: release
     steps:
