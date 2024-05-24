@@ -26,7 +26,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.200
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+    entrypoint: ["/root/start-rosetta.sh"]
     volumes:
       - ssh:/root/.ssh
 
