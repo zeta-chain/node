@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// PauseZRC20 pauses the ZRC20 token
+// PauseZRC20 pauses a list of ZRC20 tokens
 // Authorized: admin policy group groupEmergency.
 func (k msgServer) PauseZRC20(
 	goCtx context.Context,
