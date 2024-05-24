@@ -18,11 +18,6 @@ func (k msgServer) PauseZRC20(
 ) (*types.MsgPauseZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check message validity
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
 		return nil, cosmoserrors.Wrap(
 			authoritytypes.ErrUnauthorized,

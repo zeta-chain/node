@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -92,22 +91,6 @@ func TestKeeper_PauseZRC20(t *testing.T) {
 		assertPaused(zrc20A)
 		assertPaused(zrc20B)
 		assertPaused(zrc20C)
-	})
-
-	t.Run("should fail if invalid message", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseAuthorityMock: true,
-		})
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
-		admin := sample.AccAddress()
-
-		invalidMsg := types.NewMsgPauseZRC20(admin, []string{})
-		require.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
-
-		_, err := msgServer.PauseZRC20(ctx, invalidMsg)
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
