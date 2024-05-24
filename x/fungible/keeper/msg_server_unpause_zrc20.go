@@ -11,6 +11,7 @@ import (
 )
 
 // UnpauseZRC20 unpauses the ZRC20 token
+// Authorized: admin policy group groupOperational.
 func (k msgServer) UnpauseZRC20(
 	goCtx context.Context,
 	msg *types.MsgUnpauseZRC20,
@@ -30,6 +31,8 @@ func (k msgServer) UnpauseZRC20(
 	}
 
 	// iterate all foreign coins and set unpaused status
+	// TODO : Skip coins that are not found instead of returning an error
+	// https://github.com/zeta-chain/node/issues/2263
 	for _, zrc20 := range msg.Zrc20Addresses {
 		fc, found := k.GetForeignCoins(ctx, zrc20)
 		if !found {
