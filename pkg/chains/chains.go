@@ -185,8 +185,8 @@ var (
 	* Privnet chains
 	 */
 
-	// ZetaPrivnetChain is the privnet chain for Zeta (localnet)
-	ZetaPrivnetChain = Chain{
+	// ZetaPrivnet is the privnet chain for Zeta (localnet)
+	ZetaPrivnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
 		ChainId:     101,
 		Network:     Network_zeta,
@@ -266,7 +266,7 @@ func DefaultChainsList() []*Chain {
 		ZetaChainMainnet,
 		ZetaChainTestnet,
 		ZetaDevnet,
-		ZetaPrivnetChain,
+		ZetaPrivnet,
 		Polygon,
 		OptimismMainnet,
 		OptimismSepolia,
@@ -338,8 +338,8 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 
 	switch ethChainID {
-	case ZetaPrivnetChain.ChainId:
-		return ZetaPrivnetChain, nil
+	case ZetaPrivnet.ChainId:
+		return ZetaPrivnet, nil
 	case ZetaChainMainnet.ChainId:
 		return ZetaChainMainnet, nil
 	case ZetaChainTestnet.ChainId:

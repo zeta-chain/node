@@ -140,7 +140,7 @@ func TestChain_DecodeAddress(t *testing.T) {
 func TestChain_InChainList(t *testing.T) {
 	require.True(t, ZetaChainMainnet.InChainList(ChainListByNetwork(Network_zeta)))
 	require.True(t, ZetaDevnet.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaPrivnetChain.InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaPrivnet.InChainList(ChainListByNetwork(Network_zeta)))
 	require.True(t, ZetaChainTestnet.InChainList(ChainListByNetwork(Network_zeta)))
 	require.False(t, Ethereum.InChainList(ChainListByNetwork(Network_zeta)))
 }
@@ -154,7 +154,7 @@ func TestIsZetaChain(t *testing.T) {
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, true},
 		{"Zeta Testnet", ZetaChainTestnet.ChainId, true},
 		{"Zeta Mocknet", ZetaDevnet.ChainId, true},
-		{"Zeta Privnet", ZetaPrivnetChain.ChainId, true},
+		{"Zeta Privnet", ZetaPrivnet.ChainId, true},
 		{"Non-Zeta", Ethereum.ChainId, false},
 	}
 
