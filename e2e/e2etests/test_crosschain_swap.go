@@ -153,16 +153,11 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	txID, err := r.SendToTSSFromDeployerWithMemo(
 		r.BTCTSSAddress,
 		0.01,
-		utxos[0:2],
+		utxos[0:1],
 		r.BtcRPCClient,
 		memo,
 		r.BTCDeployerAddress,
 	)
-	if err != nil {
-		panic(err)
-	}
-	r.Logger.Info("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation", txID)
-	_, err = r.BtcRPCClient.GenerateToAddress(10, r.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -194,11 +189,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	{
 		r.Logger.Info("******* Third test: BTC -> ETH with contract call reverted; should refund BTC")
-		utxos, err := r.BtcRPCClient.ListUnspent()
-		if err != nil {
-			panic(err)
-		}
-		r.Logger.Info("#utxos %d", len(utxos))
 		// the following memo will result in a revert in the contract call as targetZRC20 is set to DeployerAddress
 		// which is apparently not a ZRC20 contract; the UNISWAP call will revert
 		memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.DeployerAddress, r.DeployerAddress.Bytes())
@@ -212,16 +202,11 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		txid, err := r.SendToTSSFromDeployerWithMemo(
 			r.BTCTSSAddress,
 			amount,
-			utxos[0:2],
+			utxos[1:2],
 			r.BtcRPCClient,
 			memo,
 			r.BTCDeployerAddress,
 		)
-		if err != nil {
-			panic(err)
-		}
-		r.Logger.Info("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation", txid)
-		_, err = r.BtcRPCClient.GenerateToAddress(10, r.BTCDeployerAddress, nil)
 		if err != nil {
 			panic(err)
 		}
