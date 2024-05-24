@@ -12,12 +12,12 @@ import (
 
 func TestValidateAddressForChain(t *testing.T) {
 	// test for eth chain
-	require.Error(t, types.ValidateAddressForChain("0x123", chains.GoerliChain.ChainId))
-	require.Error(t, types.ValidateAddressForChain("", chains.GoerliChain.ChainId))
-	require.Error(t, types.ValidateAddressForChain("%%%%", chains.GoerliChain.ChainId))
+	require.Error(t, types.ValidateAddressForChain("0x123", chains.Goerli.ChainId))
+	require.Error(t, types.ValidateAddressForChain("", chains.Goerli.ChainId))
+	require.Error(t, types.ValidateAddressForChain("%%%%", chains.Goerli.ChainId))
 	require.NoError(
 		t,
-		types.ValidateAddressForChain("0x792c127Fa3AC1D52F904056Baf1D9257391e7D78", chains.GoerliChain.ChainId),
+		types.ValidateAddressForChain("0x792c127Fa3AC1D52F904056Baf1D9257391e7D78", chains.Goerli.ChainId),
 	)
 
 	// test for btc chain
@@ -73,15 +73,15 @@ func TestValidateHashForChain(t *testing.T) {
 		t,
 		types.ValidateHashForChain(
 			"0x84bd5c9922b63c52d8a9ca686e0a57ff978150b71be0583514d01c27aa341910",
-			chains.GoerliChain.ChainId,
+			chains.Goerli.ChainId,
 		),
 	)
-	require.Error(t, types.ValidateHashForChain("", chains.GoerliChain.ChainId))
+	require.Error(t, types.ValidateHashForChain("", chains.Goerli.ChainId))
 	require.Error(
 		t,
 		types.ValidateHashForChain(
 			"a0fa5a82f106fb192e4c503bfa8d54b2de20a821e09338094ab825cc9b275059",
-			chains.GoerliChain.ChainId,
+			chains.Goerli.ChainId,
 		),
 	)
 	require.NoError(

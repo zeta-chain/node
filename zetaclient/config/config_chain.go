@@ -42,8 +42,8 @@ var evmChainsConfigs = map[int64]EVMConfig{
 	chains.BscMainnet.ChainId: {
 		Chain: chains.BscMainnet,
 	},
-	chains.GoerliChain.ChainId: {
-		Chain:    chains.GoerliChain,
+	chains.Goerli.ChainId: {
+		Chain:    chains.Goerli,
 		Endpoint: "",
 	},
 	chains.Sepolia.ChainId: {
@@ -54,8 +54,8 @@ var evmChainsConfigs = map[int64]EVMConfig{
 		Chain:    chains.BscTestnet,
 		Endpoint: "",
 	},
-	chains.MumbaiChain.ChainId: {
-		Chain:    chains.MumbaiChain,
+	chains.Mumbai.ChainId: {
+		Chain:    chains.Mumbai,
 		Endpoint: "",
 	},
 	chains.GoerliLocalnet.ChainId: {

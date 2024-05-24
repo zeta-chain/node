@@ -36,7 +36,7 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	case 0:
 		return chains.GoerliLocalnet.ChainId
 	case 1:
-		return chains.GoerliChain.ChainId
+		return chains.Goerli.ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}

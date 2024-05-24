@@ -101,7 +101,7 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "0",
 			InboundParams: &types.InboundParams{
-				SenderChainId: chains.GoerliChain.ChainId,
+				SenderChainId: chains.Goerli.ChainId,
 				ObservedHash:  "0xaaa",
 			},
 		})
@@ -136,7 +136,7 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "5",
 			InboundParams: &types.InboundParams{
-				SenderChainId: chains.MumbaiChain.ChainId,
+				SenderChainId: chains.Mumbai.ChainId,
 				ObservedHash:  "0xccc",
 			},
 		})
@@ -152,9 +152,9 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		v4.SetBitcoinFinalizedInbound(ctx, k)
 
 		// check finalized inbound
-		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.GoerliChain.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.Goerli.ChainId, 0))
 		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", chains.Ethereum.ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.MumbaiChain.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.Mumbai.ChainId, 0))
 		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BitcoinMainnet.ChainId, 0))
 		require.True(t, k.IsFinalizedInbound(ctx, "0x222", chains.BitcoinTestnet.ChainId, 0))
 		require.True(t, k.IsFinalizedInbound(ctx, "0x333", chains.BitcoinTestnet.ChainId, 0))

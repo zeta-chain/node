@@ -23,7 +23,7 @@ func TestDefaultVerificationFlags(t *testing.T) {
 				require.False(t, f.Enabled)
 			case chains.GoerliLocalnet.ChainId:
 				require.False(t, f.Enabled)
-			case chains.GoerliChain.ChainId:
+			case chains.Goerli.ChainId:
 				require.False(t, f.Enabled)
 			default:
 				require.False(t, f.Enabled, "unexpected chain id")

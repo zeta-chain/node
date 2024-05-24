@@ -172,7 +172,7 @@ func TestIsEVMChain(t *testing.T) {
 		want    bool
 	}{
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
-		{"Goerli Testnet", GoerliChain.ChainId, true},
+		{"Goerli Testnet", Goerli.ChainId, true},
 		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"Non-EVM", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
@@ -192,7 +192,7 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 		want    bool
 	}{
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
-		{"Goerli Testnet", GoerliChain.ChainId, true},
+		{"Goerli Testnet", Goerli.ChainId, true},
 		{"Goerli Localnet", GoerliLocalnet.ChainId, true},
 		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"BSC Testnet", BscTestnet.ChainId, true},
@@ -255,7 +255,7 @@ func TestIsEthereumChain(t *testing.T) {
 		want    bool
 	}{
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
-		{"Goerli Testnet", GoerliChain.ChainId, true},
+		{"Goerli Testnet", Goerli.ChainId, true},
 		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"Non-Ethereum", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
@@ -307,7 +307,7 @@ func TestChain_WitnessProgram(t *testing.T) {
 		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 
-		chain := GoerliChain
+		chain := Goerli
 		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
 		require.Error(t, err)
 	})

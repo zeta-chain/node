@@ -25,7 +25,7 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: types.NewMsgAddInboundTracker(
 				"invalid_address",
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -68,7 +68,7 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 			name: "valid",
 			msg: types.NewMsgAddInboundTracker(
 				sample.AccAddress(),
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -98,7 +98,7 @@ func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgAddInboundTracker(
 				signer,
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -108,7 +108,7 @@ func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgAddInboundTracker(
 				"invalid_address",
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -133,7 +133,7 @@ func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 func TestMsgAddInboundTracker_Type(t *testing.T) {
 	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
-		chains.GoerliChain.ChainId,
+		chains.Goerli.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
@@ -143,7 +143,7 @@ func TestMsgAddInboundTracker_Type(t *testing.T) {
 func TestMsgAddInboundTracker_Route(t *testing.T) {
 	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
-		chains.GoerliChain.ChainId,
+		chains.Goerli.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
@@ -153,7 +153,7 @@ func TestMsgAddInboundTracker_Route(t *testing.T) {
 func TestMsgAddInboundTracker_GetSignBytes(t *testing.T) {
 	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
-		chains.GoerliChain.ChainId,
+		chains.Goerli.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)

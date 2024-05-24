@@ -73,8 +73,8 @@ func TestResetTestnetNonce(t *testing.T) {
 	t.Run("reset only testnet nonce without changing mainnet chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		testnetChains := []chains.Chain{
-			chains.GoerliChain,
-			chains.MumbaiChain,
+			chains.Goerli,
+			chains.Mumbai,
 			chains.BscTestnet,
 			chains.BitcoinTestnet,
 		}
@@ -112,8 +112,8 @@ func TestResetTestnetNonce(t *testing.T) {
 		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
 		require.NoError(t, err)
 		assertValues := map[chains.Chain]int64{
-			chains.GoerliChain:    226841,
-			chains.MumbaiChain:    200599,
+			chains.Goerli:         226841,
+			chains.Mumbai:         200599,
 			chains.BscTestnet:     110454,
 			chains.BitcoinTestnet: 4881,
 		}
@@ -140,7 +140,7 @@ func TestResetTestnetNonce(t *testing.T) {
 
 	t.Run("reset nonce even if some chain values are missing", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		testnetChains := []chains.Chain{chains.GoerliChain}
+		testnetChains := []chains.Chain{chains.Goerli}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()
@@ -161,9 +161,9 @@ func TestResetTestnetNonce(t *testing.T) {
 		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
 		require.NoError(t, err)
 		assertValuesSet := map[chains.Chain]int64{
-			chains.GoerliChain: 226841,
+			chains.Goerli: 226841,
 		}
-		assertValuesNotSet := []chains.Chain{chains.MumbaiChain, chains.BscTestnet, chains.BitcoinTestnet}
+		assertValuesNotSet := []chains.Chain{chains.Mumbai, chains.BscTestnet, chains.BitcoinTestnet}
 
 		for _, chain := range testnetChains {
 			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)

@@ -222,8 +222,8 @@ var (
 	* Deprecated chains
 	 */
 
-	// GoerliChain is Ethereum goerli testnet (deprecated for sepolia)
-	GoerliChain = Chain{
+	// Goerli is Ethereum goerli testnet (deprecated for sepolia)
+	Goerli = Chain{
 		ChainName:   ChainName_goerli_testnet,
 		ChainId:     5,
 		Network:     Network_eth,
@@ -233,8 +233,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// MumbaiChain is Polygon mumbai testnet (deprecated for amoy)
-	MumbaiChain = Chain{
+	// Mumbai is Polygon mumbai testnet (deprecated for amoy)
+	Mumbai = Chain{
 		ChainName:   ChainName_mumbai_testnet,
 		ChainId:     80001,
 		Network:     Network_polygon,
@@ -256,10 +256,10 @@ func DefaultChainsList() []*Chain {
 		BscMainnet,
 		Ethereum,
 		BitcoinTestnet,
-		MumbaiChain,
+		Mumbai,
 		Amoy,
 		BscTestnet,
-		GoerliChain,
+		Goerli,
 		Sepolia,
 		BitcoinRegtest,
 		GoerliLocalnet,

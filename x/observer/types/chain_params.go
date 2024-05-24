@@ -218,7 +218,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:           chains.GoerliChain.ChainId,
+		ChainId:           chains.Goerli.ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
@@ -255,7 +255,7 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.MumbaiChain.ChainId,
+		ChainId:                     chains.Mumbai.ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
