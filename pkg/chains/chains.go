@@ -88,8 +88,8 @@ var (
 	* Testnet chains
 	 */
 
-	// ZetaTestnetChain is the testnet chain for Zeta
-	ZetaTestnetChain = Chain{
+	// ZetaChainTestnet is the testnet chain for Zeta
+	ZetaChainTestnet = Chain{
 		ChainName:   ChainName_zeta_testnet,
 		ChainId:     7001,
 		Network:     Network_zeta,
@@ -264,7 +264,7 @@ func DefaultChainsList() []*Chain {
 		BtcRegtestChain,
 		GoerliLocalnetChain,
 		ZetaChainMainnet,
-		ZetaTestnetChain,
+		ZetaChainTestnet,
 		ZetaMocknetChain,
 		ZetaPrivnetChain,
 		Polygon,
@@ -342,8 +342,8 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 		return ZetaPrivnetChain, nil
 	case ZetaChainMainnet.ChainId:
 		return ZetaChainMainnet, nil
-	case ZetaTestnetChain.ChainId:
-		return ZetaTestnetChain, nil
+	case ZetaChainTestnet.ChainId:
+		return ZetaChainTestnet, nil
 	case ZetaMocknetChain.ChainId:
 		return ZetaMocknetChain, nil
 	default:

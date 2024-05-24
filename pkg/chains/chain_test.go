@@ -141,7 +141,7 @@ func TestChain_InChainList(t *testing.T) {
 	require.True(t, ZetaChainMainnet.InChainList(ChainListByNetwork(Network_zeta)))
 	require.True(t, ZetaMocknetChain.InChainList(ChainListByNetwork(Network_zeta)))
 	require.True(t, ZetaPrivnetChain.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaTestnetChain.InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaChainTestnet.InChainList(ChainListByNetwork(Network_zeta)))
 	require.False(t, Ethereum.InChainList(ChainListByNetwork(Network_zeta)))
 }
 
@@ -152,7 +152,7 @@ func TestIsZetaChain(t *testing.T) {
 		want    bool
 	}{
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, true},
-		{"Zeta Testnet", ZetaTestnetChain.ChainId, true},
+		{"Zeta Testnet", ZetaChainTestnet.ChainId, true},
 		{"Zeta Mocknet", ZetaMocknetChain.ChainId, true},
 		{"Zeta Privnet", ZetaPrivnetChain.ChainId, true},
 		{"Non-Zeta", Ethereum.ChainId, false},
@@ -325,19 +325,19 @@ func TestChain_WitnessProgram(t *testing.T) {
 }
 
 func TestChains_Has(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaTestnetChain}
+	chains := Chains{ZetaChainMainnet, ZetaChainTestnet}
 	require.True(t, chains.Has(ZetaChainMainnet))
 	require.False(t, chains.Has(Ethereum))
 }
 
 func TestChains_Distinct(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaChainMainnet, ZetaTestnetChain}
+	chains := Chains{ZetaChainMainnet, ZetaChainMainnet, ZetaChainTestnet}
 	distinctChains := chains.Distinct()
 	require.Len(t, distinctChains, 2)
 }
 
 func TestChains_Strings(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaTestnetChain}
+	chains := Chains{ZetaChainMainnet, ZetaChainTestnet}
 	strings := chains.Strings()
 	expected := []string{chains[0].String(), chains[1].String()}
 	require.Equal(t, expected, strings)
