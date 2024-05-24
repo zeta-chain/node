@@ -298,7 +298,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 
 func Test_ParseZetaReverted(t *testing.T) {
 	// load archived outbound receipt that contains ZetaReverted event
-	chainID := chains.GoerliLocalnetChain.ChainId
+	chainID := chains.GoerliLocalnet.ChainId
 	nonce := uint64(14)
 	outboundHash := "0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7"
 	connector := mocks.MockConnectorNonEth(t, chainID)
@@ -460,7 +460,7 @@ func Test_ParseOutboundReceivedValue(t *testing.T) {
 	t.Run("should parse and check ZetaReverted event from archived outbound receipt", func(t *testing.T) {
 		// load archived outbound receipt that contains ZetaReverted event
 		// use local network tx: 0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7
-		localChainID := chains.GoerliLocalnetChain.ChainId
+		localChainID := chains.GoerliLocalnet.ChainId
 		nonce := uint64(14)
 		coinType := coin.CoinType_Zeta
 		connectorLocal, connectorAddrLocal, custodyLocal, custodyAddrLocal := getContractsByChainID(t, localChainID)

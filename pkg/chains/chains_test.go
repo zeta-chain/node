@@ -46,7 +46,7 @@ func TestChainListByNetworkType(t *testing.T) {
 			[]*Chain{
 				&ZetaPrivnet,
 				&BitcoinRegtest,
-				&GoerliLocalnetChain,
+				&GoerliLocalnet,
 			},
 		},
 	}
@@ -77,7 +77,7 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Eth",
 			Network_eth,
-			[]*Chain{&Ethereum, &GoerliChain, &Sepolia, &GoerliLocalnetChain},
+			[]*Chain{&Ethereum, &GoerliChain, &Sepolia, &GoerliLocalnet},
 		},
 		{
 			"Bsc",
@@ -127,7 +127,7 @@ func TestChainListFunctions(t *testing.T) {
 				&GoerliChain,
 				&Sepolia,
 				&BitcoinRegtest,
-				&GoerliLocalnetChain,
+				&GoerliLocalnet,
 				&ZetaChainMainnet,
 				&ZetaChainTestnet,
 				&ZetaDevnet,
@@ -153,7 +153,7 @@ func TestChainListFunctions(t *testing.T) {
 				&GoerliChain,
 				&Sepolia,
 				&BitcoinRegtest,
-				&GoerliLocalnetChain,
+				&GoerliLocalnet,
 				&Polygon,
 				&OptimismMainnet,
 				&OptimismSepolia,

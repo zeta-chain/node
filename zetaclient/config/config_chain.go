@@ -58,8 +58,8 @@ var evmChainsConfigs = map[int64]EVMConfig{
 		Chain:    chains.MumbaiChain,
 		Endpoint: "",
 	},
-	chains.GoerliLocalnetChain.ChainId: {
-		Chain:    chains.GoerliLocalnetChain,
+	chains.GoerliLocalnet.ChainId: {
+		Chain:    chains.GoerliLocalnet,
 		Endpoint: "http://eth:8545",
 	},
 }

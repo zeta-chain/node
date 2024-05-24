@@ -195,7 +195,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if !skipHeaderProof {
 		if err := deployerRunner.EnableHeaderVerification([]int64{
-			chains.GoerliLocalnetChain.ChainId,
+			chains.GoerliLocalnet.ChainId,
 			chains.BitcoinRegtest.ChainId}); err != nil {
 			panic(err)
 		}

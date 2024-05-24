@@ -207,8 +207,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// GoerliLocalnetChain is Ethereum local goerli (localnet)
-	GoerliLocalnetChain = Chain{
+	// GoerliLocalnet is Ethereum local goerli (localnet)
+	GoerliLocalnet = Chain{
 		ChainName:   ChainName_goerli_localnet,
 		ChainId:     1337,
 		Network:     Network_eth,
@@ -262,7 +262,7 @@ func DefaultChainsList() []*Chain {
 		GoerliChain,
 		Sepolia,
 		BitcoinRegtest,
-		GoerliLocalnetChain,
+		GoerliLocalnet,
 		ZetaChainMainnet,
 		ZetaChainTestnet,
 		ZetaDevnet,

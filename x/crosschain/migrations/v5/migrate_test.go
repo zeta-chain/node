@@ -244,7 +244,7 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				OutboundParams: []*crosschaintypes.OutboundParams{{
 					Amount:          math.ZeroUint(),
 					CoinType:        coin.CoinType_ERC20,
-					ReceiverChainId: chains.GoerliLocalnetChain.ChainId,
+					ReceiverChainId: chains.GoerliLocalnet.ChainId,
 				}},
 			}
 		}

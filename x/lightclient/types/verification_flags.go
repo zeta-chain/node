@@ -29,7 +29,7 @@ func DefaultHeaderSupportedChains() []HeaderSupportedChain {
 			Enabled: false,
 		},
 		{
-			ChainId: chains.GoerliLocalnetChain.ChainId,
+			ChainId: chains.GoerliLocalnet.ChainId,
 			Enabled: false,
 		},
 		{

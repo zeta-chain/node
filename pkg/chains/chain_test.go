@@ -193,7 +193,7 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 	}{
 		{"Ethereum Mainnet", Ethereum.ChainId, true},
 		{"Goerli Testnet", GoerliChain.ChainId, true},
-		{"Goerli Localnet", GoerliLocalnetChain.ChainId, true},
+		{"Goerli Localnet", GoerliLocalnet.ChainId, true},
 		{"Sepolia Testnet", Sepolia.ChainId, true},
 		{"BSC Testnet", BscTestnet.ChainId, true},
 		{"BSC Mainnet", BscMainnet.ChainId, true},

@@ -309,7 +309,7 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.GoerliLocalnetChain.ChainId,
+		ChainId:                     chains.GoerliLocalnet.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",

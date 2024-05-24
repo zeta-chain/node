@@ -204,7 +204,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 func (runner *E2ERunner) SetupETHZRC20() {
 	ethZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(
 		&bind.CallOpts{},
-		big.NewInt(chains.GoerliLocalnetChain.ChainId),
+		big.NewInt(chains.GoerliLocalnet.ChainId),
 	)
 	if err != nil {
 		panic(err)
