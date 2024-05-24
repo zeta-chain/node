@@ -33,7 +33,7 @@ func getValidEthChain() *chains.Chain {
 }
 
 func getValidBTCChain() *chains.Chain {
-	btcRegNet := chains.BtcRegtestChain
+	btcRegNet := chains.BitcoinRegtest
 	return &btcRegNet
 }
 

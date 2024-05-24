@@ -356,7 +356,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.BtcRegtestChain.ChainId,
+		chains.BitcoinRegtest.ChainId,
 		8,
 		"BTC",
 		"tBTC",

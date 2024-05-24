@@ -196,8 +196,8 @@ var (
 		IsExternal:  false,
 	}
 
-	// BtcRegtestChain is Bitcoin regtest (localnet)
-	BtcRegtestChain = Chain{
+	// BitcoinRegtest is Bitcoin regtest (localnet)
+	BitcoinRegtest = Chain{
 		ChainName:   ChainName_btc_regtest,
 		ChainId:     18444,
 		Network:     Network_btc,
@@ -261,7 +261,7 @@ func DefaultChainsList() []*Chain {
 		BscTestnet,
 		GoerliChain,
 		Sepolia,
-		BtcRegtestChain,
+		BitcoinRegtest,
 		GoerliLocalnetChain,
 		ZetaChainMainnet,
 		ZetaChainTestnet,

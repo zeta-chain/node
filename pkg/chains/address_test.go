@@ -60,7 +60,7 @@ func TestDecodeBtcAddress(t *testing.T) {
 		require.ErrorContains(t, err, "decode address failed")
 	})
 	t.Run("valid legacy main-net address address incorrect params RegTestNet", func(t *testing.T) {
-		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcRegtestChain.ChainId)
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BitcoinRegtest.ChainId)
 		require.ErrorContains(t, err, "decode address failed")
 	})
 
@@ -78,7 +78,7 @@ func TestDecodeBtcAddress(t *testing.T) {
 		require.ErrorContains(t, err, "not for network mainnet")
 	})
 	t.Run("non legacy valid address with correct params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcRegtestChain.ChainId)
+		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BitcoinRegtest.ChainId)
 		require.NoError(t, err)
 	})
 
@@ -122,7 +122,7 @@ func Test_IsBtcAddressSupported_P2TR(t *testing.T) {
 		{
 			name:      "regtest taproot address",
 			addr:      "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -166,7 +166,7 @@ func Test_IsBtcAddressSupported_P2WSH(t *testing.T) {
 		{
 			name:      "regtest P2WSH address",
 			addr:      "bcrt1qm9mzhyky4w853ft2ms6dtqdyyu3z2tmrq8jg8xglhyuv0dsxzmgs2f0sqy",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -209,7 +209,7 @@ func Test_IsBtcAddressSupported_P2WPKH(t *testing.T) {
 		{
 			name:      "regtest P2WPKH address",
 			addr:      "bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -259,13 +259,13 @@ func Test_IsBtcAddressSupported_P2SH(t *testing.T) {
 		{
 			name:      "testnet P2SH address 1 should also be supported in regtest",
 			addr:      "2N6AoUj3KPS7wNGZXuCckh8YEWcSYNsGbqd",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 		{
 			name:      "testnet P2SH address 2 should also be supported in regtest",
 			addr:      "2MwbFpRpZWv4zREjbdLB9jVW3Q8xonpVeyE",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -315,13 +315,13 @@ func Test_IsBtcAddressSupported_P2PKH(t *testing.T) {
 		{
 			name:      "testnet P2PKH address should also be supported in regtest",
 			addr:      "mxpYha3UJKUgSwsAz2qYRqaDSwAkKZ3YEY",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 		{
 			name:      "testnet P2PKH address should also be supported in regtest",
 			addr:      "n1gXcqxmzwqHmqmgobe1XXuJaweSu69tZz",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}

@@ -236,7 +236,7 @@ func TestIsBitcoinChain(t *testing.T) {
 	}{
 		{"Bitcoin Mainnet", BitcoinMainnet.ChainId, true},
 		{"Bitcoin Testnet", BitcoinTestnet.ChainId, true},
-		{"Bitcoin Regtest", BtcRegtestChain.ChainId, true},
+		{"Bitcoin Regtest", BitcoinRegtest.ChainId, true},
 		{"Non-Bitcoin", Ethereum.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}

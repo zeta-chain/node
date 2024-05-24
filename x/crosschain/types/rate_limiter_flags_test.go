@@ -237,7 +237,7 @@ func TestBuildAssetRateMapFromList(t *testing.T) {
 func TestConvertCctxValue(t *testing.T) {
 	// chain IDs
 	ethChainID := chains.GoerliLocalnetChain.ChainId
-	btcChainID := chains.BtcRegtestChain.ChainId
+	btcChainID := chains.BitcoinRegtest.ChainId
 
 	// setup test asset rates
 	assetETH := sample.EthAddress().Hex()

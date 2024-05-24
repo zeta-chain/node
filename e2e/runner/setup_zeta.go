@@ -224,7 +224,7 @@ func (runner *E2ERunner) SetupETHZRC20() {
 func (runner *E2ERunner) SetupBTCZRC20() {
 	BTCZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(
 		&bind.CallOpts{},
-		big.NewInt(chains.BtcRegtestChain.ChainId),
+		big.NewInt(chains.BitcoinRegtest.ChainId),
 	)
 	if err != nil {
 		panic(err)

@@ -26,7 +26,7 @@ func ForeignCoins(t *testing.T, address string) types.ForeignCoins {
 func ForeignCoinList(t *testing.T, zrc20ETH, zrc20BTC, zrc20ERC20, erc20Asset string) []types.ForeignCoins {
 	// eth and btc chain id
 	ethChainID := chains.GoerliLocalnetChain.ChainId
-	btcChainID := chains.BtcRegtestChain.ChainId
+	btcChainID := chains.BitcoinRegtest.ChainId
 
 	// add zrc20 ETH
 	fcGas := ForeignCoins(t, zrc20ETH)

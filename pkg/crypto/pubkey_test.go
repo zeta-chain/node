@@ -146,7 +146,7 @@ func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mocknet)
 
-		addrETH, err = pk.GetAddress(chains.BtcRegtestChain)
+		addrETH, err = pk.GetAddress(chains.BitcoinRegtest)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH, Equals, chains.NoAddress)
 	}
