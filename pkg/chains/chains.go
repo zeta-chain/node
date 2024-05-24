@@ -51,8 +51,8 @@ var (
 		IsExternal:  true,
 	}
 
-	// PolygonChain is Polygon mainnet
-	PolygonChain = Chain{
+	// Polygon is Polygon mainnet
+	Polygon = Chain{
 		ChainName:   ChainName_polygon_mainnet,
 		ChainId:     137,
 		Network:     Network_polygon,
@@ -267,7 +267,7 @@ func DefaultChainsList() []*Chain {
 		ZetaTestnetChain,
 		ZetaMocknetChain,
 		ZetaPrivnetChain,
-		PolygonChain,
+		Polygon,
 		OptimismMainnet,
 		OptimismSepolia,
 		BaseMainnet,
