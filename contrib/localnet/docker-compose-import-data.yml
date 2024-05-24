@@ -1,6 +1,7 @@
 version: "3"
 
-# This docker-compose file configures the localnet environment
+# This docker-compose file configures the localnet environment.
+# It mounts an additional volume to zetacore0 to import the genesis data, and provides the option "import-data" to the start-zetacored.sh script.
 # it contains the following services:
 # - ZetaChain with 2 nodes (zetacore0, zetacore1)
 # - A observer set with 2 clients (zetaclient0, zetaclient1)
