@@ -79,7 +79,7 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 
 ### Run zetae2e command depending on the option passed
 
-if [[ "$OPTION" == "upgrade" || "$OPTION" == "import-data-upgrade" ]]; then
+if [ "$OPTION" == "upgrade" ]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
 

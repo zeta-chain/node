@@ -258,8 +258,8 @@ then
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
 
-  if [[ "$OPTION" == "import-data" || "$OPTION" == "import-data-upgrade" ]]; then
-    echo "Importing data"
+  if [ "$OPTION" == "import-data" ]; then
+    echo "Importing data into genesis file"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
 
