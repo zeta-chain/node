@@ -72,7 +72,7 @@ func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, btc
 
 // getTestAddrScript returns hard coded test address scripts by script type
 func getTestAddrScript(t *testing.T, scriptType string) btcutil.Address {
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	inputAddress, found := testAddressMap[scriptType]
 	require.True(t, found)
 	address, err := chains.DecodeBtcAddress(inputAddress, chain.ChainId)

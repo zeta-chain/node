@@ -36,7 +36,7 @@ func getNewEvmSigner() (*Signer, error) {
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 	return NewSigner(
-		chains.BscMainnetChain,
+		chains.BscMainnet,
 		mocks.EVMRPCEnabled,
 		mocks.NewTSSMainnet(),
 		config.GetConnectorABI(),
@@ -54,8 +54,8 @@ func getNewEvmChainObserver() (*observer.Observer, error) {
 	cfg := config.NewConfig()
 	tss := mocks.NewTSSMainnet()
 
-	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain, Endpoint: "http://localhost:8545"}
-	cfg.EVMChainConfigs[chains.BscMainnetChain.ChainId] = evmcfg
+	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
+	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
 	coreCTX := context.NewZetacoreContext(cfg)
 	appCTX := context.NewAppContext(coreCTX, cfg)
 

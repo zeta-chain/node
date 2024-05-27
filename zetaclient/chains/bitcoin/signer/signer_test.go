@@ -247,7 +247,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 
 	// receiver addresses
 	receiver := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
-	to, err := chains.DecodeBtcAddress(receiver, chains.BtcMainnetChain.ChainId)
+	to, err := chains.DecodeBtcAddress(receiver, chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	toScript, err := bitcoin.PayToAddrScript(to)
 	require.NoError(t, err)

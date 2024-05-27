@@ -147,10 +147,10 @@ func TestKeeper_GetTssAddress(t *testing.T) {
 		k.SetTSS(ctx, tss)
 
 		res, err := k.GetTssAddress(wctx, &types.QueryGetTssAddressRequest{
-			BitcoinChainId: chains.BtcRegtestChain.ChainId,
+			BitcoinChainId: chains.BitcoinRegtest.ChainId,
 		})
 		require.NoError(t, err)
-		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BtcRegtestChain.ChainId)
+		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BitcoinRegtest.ChainId)
 		require.NoError(t, err)
 		expectedBtcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, expectedBitcoinParams)
 		require.NoError(t, err)
@@ -213,11 +213,11 @@ func TestKeeper_GetTssAddressByFinalizedHeight(t *testing.T) {
 		}
 
 		res, err := k.GetTssAddressByFinalizedHeight(wctx, &types.QueryGetTssAddressByFinalizedHeightRequest{
-			BitcoinChainId:      chains.BtcRegtestChain.ChainId,
+			BitcoinChainId:      chains.BitcoinRegtest.ChainId,
 			FinalizedZetaHeight: tssList[r].FinalizedZetaHeight,
 		})
 		require.NoError(t, err)
-		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BtcRegtestChain.ChainId)
+		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BitcoinRegtest.ChainId)
 		require.NoError(t, err)
 		expectedBtcAddress, err := crypto.GetTssAddrBTC(tssList[r].TssPubkey, expectedBitcoinParams)
 		require.NoError(t, err)

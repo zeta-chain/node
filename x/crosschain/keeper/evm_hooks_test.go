@@ -160,7 +160,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 	})
 
@@ -170,7 +170,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		)
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.Value = big.NewInt(0)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid amount")
 	})
 
@@ -179,7 +179,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcTestNetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "invalid address")
 	})
 
@@ -190,7 +190,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
 			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain.ChainId)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "unsupported address")
 	})
 }
@@ -200,7 +200,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -226,7 +226,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -252,7 +252,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -273,7 +273,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
@@ -294,7 +294,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -317,7 +317,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -343,7 +343,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -369,7 +369,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -392,7 +392,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -427,7 +427,7 @@ func TestKeeper_ParseZetaSentEvent(t *testing.T) {
 				require.Nil(t, event)
 				continue
 			}
-			require.Equal(t, chains.EthChain.ChainId, event.DestinationChainId.Int64())
+			require.Equal(t, chains.Ethereum.ChainId, event.DestinationChainId.Int64())
 			require.Equal(t, "70000000000000000000", event.ZetaValueAndGas.String())
 			require.Equal(t, "0x60983881bdf302dcfa96603A58274D15D5966209", event.SourceTxOriginAddress.String())
 			require.Equal(t, "0xF0a3F93Ed1B126142E61423F9546bf1323Ff82DF", event.ZetaTxSenderAddress.String())
@@ -465,7 +465,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 
@@ -503,7 +503,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 			),
 			0,
 		)
-		require.Equal(t, chains.EthChain.ChainId, cctxList[0].GetCurrentOutboundParam().ReceiverChainId)
+		require.Equal(t, chains.Ethereum.ChainId, cctxList[0].GetCurrentOutboundParam().ReceiverChainId)
 		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
 		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
@@ -512,7 +512,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -536,7 +536,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
@@ -566,7 +566,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -599,7 +599,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -629,7 +629,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 
@@ -669,7 +669,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -695,7 +695,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.EthChain
+		chain := chains.Ethereum
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -731,7 +731,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 			),
 			0,
 		)
-		require.Equal(t, chains.EthChain.ChainId, cctxList[0].GetCurrentOutboundParam().ReceiverChainId)
+		require.Equal(t, chains.Ethereum.ChainId, cctxList[0].GetCurrentOutboundParam().ReceiverChainId)
 		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
 		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
@@ -750,7 +750,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -773,7 +773,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		func(t *testing.T) {
 			k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 			k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
-			chain := chains.BtcMainnetChain
+			chain := chains.BitcoinMainnet
 			chainID := chain.ChainId
 			setSupportedChain(ctx, zk, chainID)
 			SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -795,7 +795,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -820,7 +820,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		// use the wrong (testnet) chain ID to make the btc address parsing fail
-		chain := chains.BtcTestNetChain
+		chain := chains.BitcoinTestnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
@@ -841,7 +841,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)

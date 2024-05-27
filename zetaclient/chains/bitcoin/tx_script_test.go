@@ -21,7 +21,7 @@ var TestDataDir = "../../"
 func TestDecodeVoutP2TR(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 	net := &chaincfg.MainNetParams
 
@@ -37,7 +37,7 @@ func TestDecodeVoutP2TR(t *testing.T) {
 func TestDecodeVoutP2TRErrors(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 	net := &chaincfg.MainNetParams
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2TR", txHash)
@@ -73,7 +73,7 @@ func TestDecodeVoutP2TRErrors(t *testing.T) {
 func TestDecodeVoutP2WSH(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53"
 	net := &chaincfg.MainNetParams
 
@@ -89,7 +89,7 @@ func TestDecodeVoutP2WSH(t *testing.T) {
 func TestDecodeVoutP2WSHErrors(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53"
 	net := &chaincfg.MainNetParams
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2WSH", txHash)
@@ -125,7 +125,7 @@ func TestDecodeVoutP2WSHErrors(t *testing.T) {
 func TestDecodeP2WPKHVout(t *testing.T) {
 	// load archived outbound raw result
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	nonce := uint64(148)
 	net := &chaincfg.MainNetParams
 	nameTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCOutbound(chain.ChainId, nonce))
@@ -153,7 +153,7 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 	// load archived outbound raw result
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	nonce := uint64(148)
 	net := &chaincfg.MainNetParams
 	nameTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCOutbound(chain.ChainId, nonce))
@@ -185,7 +185,7 @@ func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 func TestDecodeVoutP2SH(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21"
 	net := &chaincfg.MainNetParams
 
@@ -201,7 +201,7 @@ func TestDecodeVoutP2SH(t *testing.T) {
 func TestDecodeVoutP2SHErrors(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21"
 	net := &chaincfg.MainNetParams
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2SH", txHash)
@@ -243,7 +243,7 @@ func TestDecodeVoutP2SHErrors(t *testing.T) {
 func TestDecodeVoutP2PKH(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca"
 	net := &chaincfg.MainNetParams
 
@@ -259,7 +259,7 @@ func TestDecodeVoutP2PKH(t *testing.T) {
 func TestDecodeVoutP2PKHErrors(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca"
 	net := &chaincfg.MainNetParams
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2PKH", txHash)
@@ -316,7 +316,7 @@ func TestDecodeVoutP2PKHErrors(t *testing.T) {
 func TestDecodeOpReturnMemo(t *testing.T) {
 	// load archived inbound raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
 	rawResult := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -388,7 +388,7 @@ func TestDecodeOpReturnMemoErrors(t *testing.T) {
 }
 
 func TestDecodeTSSVout(t *testing.T) {
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 
 	t.Run("should decode P2TR vout", func(t *testing.T) {
 		// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7
@@ -450,7 +450,7 @@ func TestDecodeTSSVout(t *testing.T) {
 func TestDecodeTSSVoutErrors(t *testing.T) {
 	// load archived tx raw result
 	// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2TR", txHash)
@@ -476,7 +476,7 @@ func TestDecodeTSSVoutErrors(t *testing.T) {
 	t.Run("should return error when invalid receiver passed", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// use testnet params to decode mainnet receiver
-		wrongChain := chains.BtcTestNetChain
+		wrongChain := chains.BitcoinTestnet
 		receiver, amount, err := DecodeTSSVout(invalidVout, "bc1qulmx8ej27cj0xe20953cztr2excnmsqvuh0s5c", wrongChain)
 		require.ErrorContains(t, err, "error decoding receiver")
 		require.Empty(t, receiver)

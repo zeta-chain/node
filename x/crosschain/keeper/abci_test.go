@@ -43,18 +43,18 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 
 	// add some evm and non-evm chains
 	supportedChains := []*chains.Chain{
-		{ChainId: chains.EthChain.ChainId},
-		{ChainId: chains.BtcMainnetChain.ChainId},
-		{ChainId: chains.BscMainnetChain.ChainId},
+		{ChainId: chains.Ethereum.ChainId},
+		{ChainId: chains.BitcoinMainnet.ChainId},
+		{ChainId: chains.BscMainnet.ChainId},
 		{ChainId: chains.ZetaChainMainnet.ChainId},
 	}
 
 	// set pending cctx
 	tss := sample.Tss()
 	zk.ObserverKeeper.SetTSS(ctx, tss)
-	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.EthChain.ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 20, 25, chains.BtcMainnetChain.ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 30, 35, chains.BscMainnetChain.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.Ethereum.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 20, 25, chains.BitcoinMainnet.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 30, 35, chains.BscMainnet.ChainId, tss, zk)
 	createCctxWithNonceRange(t, ctx, *k, 40, 45, chains.ZetaChainMainnet.ChainId, tss, zk)
 
 	// set a cctx where the update function should fail to test that the next cctx are not updated but the next chains are

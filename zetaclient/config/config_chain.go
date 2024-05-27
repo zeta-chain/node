@@ -36,30 +36,30 @@ var bitcoinConfigRegnet = BTCConfig{
 }
 
 var evmChainsConfigs = map[int64]EVMConfig{
-	chains.EthChain.ChainId: {
-		Chain: chains.EthChain,
+	chains.Ethereum.ChainId: {
+		Chain: chains.Ethereum,
 	},
-	chains.BscMainnetChain.ChainId: {
-		Chain: chains.BscMainnetChain,
+	chains.BscMainnet.ChainId: {
+		Chain: chains.BscMainnet,
 	},
-	chains.GoerliChain.ChainId: {
-		Chain:    chains.GoerliChain,
+	chains.Goerli.ChainId: {
+		Chain:    chains.Goerli,
 		Endpoint: "",
 	},
-	chains.SepoliaChain.ChainId: {
-		Chain:    chains.SepoliaChain,
+	chains.Sepolia.ChainId: {
+		Chain:    chains.Sepolia,
 		Endpoint: "",
 	},
-	chains.BscTestnetChain.ChainId: {
-		Chain:    chains.BscTestnetChain,
+	chains.BscTestnet.ChainId: {
+		Chain:    chains.BscTestnet,
 		Endpoint: "",
 	},
-	chains.MumbaiChain.ChainId: {
-		Chain:    chains.MumbaiChain,
+	chains.Mumbai.ChainId: {
+		Chain:    chains.Mumbai,
 		Endpoint: "",
 	},
-	chains.GoerliLocalnetChain.ChainId: {
-		Chain:    chains.GoerliLocalnetChain,
+	chains.GoerliLocalnet.ChainId: {
+		Chain:    chains.GoerliLocalnet,
 		Endpoint: "http://eth:8545",
 	},
 }

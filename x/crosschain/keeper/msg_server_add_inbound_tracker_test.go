@@ -232,7 +232,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(sample.Bytes(), nil)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
-			Return(sample.ChainParams(chains.EthChain.ChainId), true)
+			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(nil, errors.New("error"))
 
 		txHash := "string"
@@ -268,7 +268,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
-			Return(sample.ChainParams(chains.EthChain.ChainId), true)
+			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: sample.EthAddress().Hex(),
 		}, nil)
@@ -303,7 +303,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 
 		admin := sample.AccAddress()
 
-		chainID := chains.EthChain.ChainId
+		chainID := chains.Ethereum.ChainId
 		tssAddress := sample.EthAddress()
 		ethTx, ethTxBytes := sample.EthTx(t, chainID, tssAddress, 42)
 		txHash := ethTx.Hash().Hex()
@@ -316,7 +316,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
-			Return(sample.ChainParams(chains.EthChain.ChainId), true)
+			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(&observertypes.QueryGetTssAddressResponse{
 			Eth: tssAddress.Hex(),
 		}, nil)
