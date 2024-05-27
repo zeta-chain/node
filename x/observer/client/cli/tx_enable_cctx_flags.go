@@ -11,10 +11,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdUpdateCrosschainFlags() *cobra.Command {
+func CmdEnableCCTXFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-crosschain-flags [is-inbound-enabled] [is-outbound-enabled]",
-		Short: "Update crosschain flags",
+		Use:   "enable-cctx-flags [enable-inbound] [enable-outbound]",
+		Short: "Enable inbound and outbound cross-chain flags",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
@@ -22,25 +22,23 @@ func CmdUpdateCrosschainFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argIsInboundEnabled, err := strconv.ParseBool(args[0])
+			enableInbound, err := strconv.ParseBool(args[0])
 			if err != nil {
 				return err
 			}
-			arsIsOutboundEnabled, err := strconv.ParseBool(args[1])
+			enableOutbound, err := strconv.ParseBool(args[1])
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgUpdateCrosschainFlags(
-				clientCtx.GetFromAddress().String(),
-				argIsInboundEnabled,
-				arsIsOutboundEnabled,
-			)
+			msg := types.NewMsgEnableCCTXFlags(clientCtx.GetFromAddress().String(), enableInbound, enableOutbound)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }

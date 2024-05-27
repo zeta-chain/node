@@ -3,19 +3,23 @@ package keeper
 import (
 	"context"
 
-	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k msgServer) DisableCCTXFlags(goCtx context.Context, msg *types.MsgDisableCCTXFlags) (*types.MsgDisableCCTXFlagsResponse, error) {
+func (k msgServer) DisableCCTXFlags(
+	goCtx context.Context,
+	msg *types.MsgDisableCCTXFlags,
+) (*types.MsgDisableCCTXFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
-	if err != nil {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
+		return &types.MsgDisableCCTXFlagsResponse{}, authoritytypes.ErrUnauthorized.Wrap(
+			"EnableCCTXFlags can only be executed by the correct policy account",
+		)
 	}
 
 	// check if the value exists,
@@ -24,7 +28,6 @@ func (k msgServer) DisableCCTXFlags(goCtx context.Context, msg *types.MsgDisable
 	if !isFound {
 		flags = *types.DefaultCrosschainFlags()
 		flags.GasPriceIncreaseFlags = nil
-		flags.BlockHeaderVerificationFlags = nil
 	}
 
 	if msg.DisableInbound {
@@ -36,7 +39,7 @@ func (k msgServer) DisableCCTXFlags(goCtx context.Context, msg *types.MsgDisable
 
 	k.SetCrosschainFlags(ctx, flags)
 
-	err = ctx.EventManager().EmitTypedEvents(&types.EventCCTXFlagsDisabled{
+	err := ctx.EventManager().EmitTypedEvents(&types.EventCCTXFlagsDisabled{
 		MsgTypeUrl:        sdk.MsgTypeURL(&types.MsgDisableCCTXFlags{}),
 		IsInboundEnabled:  flags.IsInboundEnabled,
 		IsOutboundEnabled: flags.IsOutboundEnabled,

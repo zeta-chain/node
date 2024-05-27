@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -35,7 +36,6 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		require.True(t, flags.IsInboundEnabled)
 		require.True(t, flags.IsOutboundEnabled)
 		require.Nil(t, flags.GasPriceIncreaseFlags)
-		require.Nil(t, flags.BlockHeaderVerificationFlags)
 	})
 
 	t.Run("can enable cctx flags if flags set to false", func(t *testing.T) {

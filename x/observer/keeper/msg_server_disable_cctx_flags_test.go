@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -35,7 +36,6 @@ func TestMsgServer_DisableCCTXFlags(t *testing.T) {
 		require.False(t, flags.IsInboundEnabled)
 		require.False(t, flags.IsOutboundEnabled)
 		require.Nil(t, flags.GasPriceIncreaseFlags)
-		require.Nil(t, flags.BlockHeaderVerificationFlags)
 	})
 
 	t.Run("can disable cctx flags if flags set to true", func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestMsgServer_DisableCCTXFlags(t *testing.T) {
 			DisableInbound:  false,
 		}
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
 
 		_, err := srv.DisableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
 		require.ErrorIs(t, authoritytypes.ErrUnauthorized, err)
