@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -55,9 +56,15 @@ func (k Keeper) RateLimiterInput(
 	}
 
 	// if a cctx falls within the rate limiter window
-	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
+	isCCTXInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
+	}
+
+	// if a cctx is an outgoing cctx that orginates from ZetaChain
+	// reverted incoming cctx has an external `SenderChainId` and should not be counted
+	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
+		return chains.IsZetaChain(cctx.InboundParams.SenderChainId)
 	}
 
 	// it is a past cctx if its nonce < `nonceLow`,
@@ -123,7 +130,8 @@ func (k Keeper) RateLimiterInput(
 			if err != nil {
 				return nil, err
 			}
-			inWindow := isCctxInWindow(cctx)
+			inWindow := isCCTXInWindow(cctx)
+			isOutgoing := isCCTXOutgoing(cctx)
 			isPast := isPastCctx(cctx, pendingNonces.NonceLow)
 
 			// we should at least go backwards by 1000 nonces to pick up missed pending cctxs
@@ -132,8 +140,8 @@ func (k Keeper) RateLimiterInput(
 				break
 			}
 
-			// sum up past cctxs' value within window
-			if inWindow && isPast {
+			// sum up the cctxs' value if the cctx is outgoing, within the window and in the past
+			if inWindow && isOutgoing && isPast {
 				pastCctxsValue = pastCctxsValue.Add(
 					types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap),
 				)
@@ -197,7 +205,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	totalPending := uint64(0)
 	totalWithdrawInAzeta := sdkmath.NewInt(0)
 	cctxs := make([]*types.CrossChainTx, 0)
-	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+	foreignChains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
 
 	// check rate limit flags to decide if we should apply rate limit
 	applyLimit := true
@@ -211,7 +219,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 
 	// fallback to non-rate-limited query if rate limiter is disabled
 	if !applyLimit {
-		for _, chain := range chains {
+		for _, chain := range foreignChains {
 			resp, err := k.ListPendingCctx(
 				ctx,
 				&types.QueryListPendingCctxRequest{ChainId: chain.ChainId, Limit: limit},
@@ -256,15 +264,21 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	}
 
 	// if a cctx falls within the rate limiter window
-	isCctxInWindow := func(cctx *types.CrossChainTx) bool {
+	isCCTXInWindow := func(cctx *types.CrossChainTx) bool {
 		// #nosec G701 checked positive
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
+	}
+
+	// if a cctx is outgoing from ZetaChain
+	// reverted incoming cctx has an external `SenderChainId` and should not be counted
+	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
+		return chains.IsZetaChain(cctx.InboundParams.SenderChainId)
 	}
 
 	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs
 	lowestPendingCctxHeight := int64(0)
 	pendingNoncesMap := make(map[int64]observertypes.PendingNonces)
-	for _, chain := range chains {
+	for _, chain := range foreignChains {
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			return nil, status.Error(codes.Internal, "pending nonces not found")
@@ -300,7 +314,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	}
 
 	// query backwards for potential missed pending cctxs for each foreign chain
-	for _, chain := range chains {
+	for _, chain := range foreignChains {
 		// we should at least query 1000 prior to find any pending cctx that we might have missed
 		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
 		// therefore might mask some lower nonce cctx that is still pending.
@@ -317,7 +331,8 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if err != nil {
 				return nil, err
 			}
-			inWindow := isCctxInWindow(cctx)
+			inWindow := isCCTXInWindow(cctx)
+			isOutgoing := isCCTXOutgoing(cctx)
 
 			// we should at least go backwards by 1000 nonces to pick up missed pending cctxs
 			// we might go even further back if rate limiter is enabled and the endNonce hasn't hit the left window boundary yet
@@ -325,8 +340,8 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if nonce < endNonce && !inWindow {
 				break
 			}
-			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if inWindow &&
+			// sum up the cctxs' value if the cctx is outgoing and within the window
+			if inWindow && isOutgoing &&
 				types.RateLimitExceeded(
 					chain.ChainId,
 					cctx,
@@ -353,7 +368,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	missedPending := len(cctxs)
 
 	// query forwards for pending cctxs for each foreign chain
-	for _, chain := range chains {
+	for _, chain := range foreignChains {
 		pendingNonces := pendingNoncesMap[chain.ChainId]
 
 		// #nosec G701 always in range
@@ -365,9 +380,10 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if err != nil {
 				return nil, err
 			}
+			isOutgoing := isCCTXOutgoing(cctx)
 
 			// skip the cctx if rate limit is exceeded but still accumulate the total withdraw value
-			if types.RateLimitExceeded(
+			if isOutgoing && types.RateLimitExceeded(
 				chain.ChainId,
 				cctx,
 				gasAssetRateMap,
