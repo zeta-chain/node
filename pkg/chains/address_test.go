@@ -44,7 +44,7 @@ func TestAddress(t *testing.T) {
 
 func TestDecodeBtcAddress(t *testing.T) {
 	t.Run("invalid string", func(t *testing.T) {
-		_, err := DecodeBtcAddress("�U�ڷ���i߭����꿚�l", BtcTestNetChain.ChainId)
+		_, err := DecodeBtcAddress("�U�ڷ���i߭����꿚�l", BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "runtime error: index out of range")
 	})
 	t.Run("invalid chain", func(t *testing.T) {
@@ -52,47 +52,47 @@ func TestDecodeBtcAddress(t *testing.T) {
 		require.ErrorContains(t, err, "is not a bitcoin chain")
 	})
 	t.Run("invalid checksum", func(t *testing.T) {
-		_, err := DecodeBtcAddress("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcTestNetChain.ChainId)
+		_, err := DecodeBtcAddress("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "invalid checksum")
 	})
 	t.Run("valid legacy main-net address address incorrect params TestNet", func(t *testing.T) {
-		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcTestNetChain.ChainId)
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "decode address failed")
 	})
 	t.Run("valid legacy main-net address address incorrect params RegTestNet", func(t *testing.T) {
-		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcRegtestChain.ChainId)
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BitcoinRegtest.ChainId)
 		require.ErrorContains(t, err, "decode address failed")
 	})
 
 	t.Run("valid legacy main-net address address correct params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcMainnetChain.ChainId)
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 	})
 	t.Run("valid legacy testnet address with correct params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("n2TCLD16i8SNjwPCcgGBkTEeG6CQAcYTN1", BtcTestNetChain.ChainId)
+		_, err := DecodeBtcAddress("n2TCLD16i8SNjwPCcgGBkTEeG6CQAcYTN1", BitcoinTestnet.ChainId)
 		require.NoError(t, err)
 	})
 
 	t.Run("non legacy valid address with incorrect params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcMainnetChain.ChainId)
+		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "not for network mainnet")
 	})
 	t.Run("non legacy valid address with correct params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcRegtestChain.ChainId)
+		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BitcoinRegtest.ChainId)
 		require.NoError(t, err)
 	})
 
 	t.Run("taproot address with correct params", func(t *testing.T) {
 		_, err := DecodeBtcAddress(
 			"bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c",
-			BtcMainnetChain.ChainId,
+			BitcoinMainnet.ChainId,
 		)
 		require.NoError(t, err)
 	})
 	t.Run("taproot address with incorrect params", func(t *testing.T) {
 		_, err := DecodeBtcAddress(
 			"bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c",
-			BtcTestNetChain.ChainId,
+			BitcoinTestnet.ChainId,
 		)
 		require.ErrorContains(t, err, "not for network testnet")
 	})
@@ -109,20 +109,20 @@ func Test_IsBtcAddressSupported_P2TR(t *testing.T) {
 			// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7
 			name:      "mainnet taproot address",
 			addr:      "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9",
-			chainId:   BtcMainnetChain.ChainId,
+			chainId:   BitcoinMainnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/24991bd2fdc4f744bf7bbd915d4915925eecebdae249f81e057c0a6ffb700ab9
 			name:      "testnet taproot address",
 			addr:      "tb1p7qqaucx69xtwkx7vwmhz03xjmzxxpy3hk29y7q06mt3k6a8sehhsu5lacw",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			name:      "regtest taproot address",
 			addr:      "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -153,20 +153,20 @@ func Test_IsBtcAddressSupported_P2WSH(t *testing.T) {
 			// https://mempool.space/tx/791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53
 			name:      "mainnet P2WSH address",
 			addr:      "bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc",
-			chainId:   BtcMainnetChain.ChainId,
+			chainId:   BitcoinMainnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/78fac3f0d4c0174c88d21c4bb1e23a8f007e890c6d2cfa64c97389ead16c51ed
 			name:      "testnet P2WSH address",
 			addr:      "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			name:      "regtest P2WSH address",
 			addr:      "bcrt1qm9mzhyky4w853ft2ms6dtqdyyu3z2tmrq8jg8xglhyuv0dsxzmgs2f0sqy",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -196,20 +196,20 @@ func Test_IsBtcAddressSupported_P2WPKH(t *testing.T) {
 			// https://mempool.space/tx/5d09d232bfe41c7cb831bf53fc2e4029ab33a99087fd5328a2331b52ff2ebe5b
 			name:      "mainnet P2WPKH address",
 			addr:      "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y",
-			chainId:   BtcMainnetChain.ChainId,
+			chainId:   BitcoinMainnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/508b4d723c754bad001eae9b7f3c12377d3307bd5b595c27fd8a90089094f0e9
 			name:      "testnet P2WPKH address",
 			addr:      "tb1q6rufg6myrxurdn0h57d2qhtm9zfmjw2mzcm05q",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			name:      "regtest P2WPKH address",
 			addr:      "bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -239,33 +239,33 @@ func Test_IsBtcAddressSupported_P2SH(t *testing.T) {
 			// https://mempool.space/tx/fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21
 			name:      "mainnet P2SH address",
 			addr:      "327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE",
-			chainId:   BtcMainnetChain.ChainId,
+			chainId:   BitcoinMainnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/0c8c8f94817e0288a5273f5c971adaa3cee18a895c3ec8544785dddcd96f3848
 			name:      "testnet P2SH address 1",
 			addr:      "2N6AoUj3KPS7wNGZXuCckh8YEWcSYNsGbqd",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/b5e074c5e021fcbd91ea14b1db29dfe5d14e1a6e046039467bf6ada7f8cc01b3
 			name:      "testnet P2SH address 2",
 			addr:      "2MwbFpRpZWv4zREjbdLB9jVW3Q8xonpVeyE",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			name:      "testnet P2SH address 1 should also be supported in regtest",
 			addr:      "2N6AoUj3KPS7wNGZXuCckh8YEWcSYNsGbqd",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 		{
 			name:      "testnet P2SH address 2 should also be supported in regtest",
 			addr:      "2MwbFpRpZWv4zREjbdLB9jVW3Q8xonpVeyE",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}
@@ -295,33 +295,33 @@ func Test_IsBtcAddressSupported_P2PKH(t *testing.T) {
 			// https://mempool.space/tx/9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca
 			name:      "mainnet P2PKH address 1",
 			addr:      "1FueivsE338W2LgifJ25HhTcVJ7CRT8kte",
-			chainId:   BtcMainnetChain.ChainId,
+			chainId:   BitcoinMainnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/1e3974386f071de7f65cabb57346c1a22ec9b3e211a96928a98149673f681237
 			name:      "testnet P2PKH address 1",
 			addr:      "mxpYha3UJKUgSwsAz2qYRqaDSwAkKZ3YEY",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			// https://mempool.space/testnet/tx/e48459f372727f2253b0ea8c71ded83e8270873b8a044feb3435fc7a799a648f
 			name:      "testnet P2PKH address 2",
 			addr:      "n1gXcqxmzwqHmqmgobe1XXuJaweSu69tZz",
-			chainId:   BtcTestNetChain.ChainId,
+			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
 		{
 			name:      "testnet P2PKH address should also be supported in regtest",
 			addr:      "mxpYha3UJKUgSwsAz2qYRqaDSwAkKZ3YEY",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 		{
 			name:      "testnet P2PKH address should also be supported in regtest",
 			addr:      "n1gXcqxmzwqHmqmgobe1XXuJaweSu69tZz",
-			chainId:   BtcRegtestChain.ChainId,
+			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
 	}

@@ -17,7 +17,7 @@ func TestKeeper_VerifyProof(t *testing.T) {
 	t.Run("should error if verification flags not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.Sepolia.ChainId, sample.Hash().String(), 1)
 		require.ErrorContains(t, err, "proof verification is disabled for all chains")
 	})
 
@@ -27,13 +27,13 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: false,
 				},
 			},
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BtcMainnetChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BitcoinMainnet.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 	})
 
@@ -43,12 +43,12 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 			},
 		})
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.Sepolia.ChainId, sample.Hash().String(), 1)
 		require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 	})
 
@@ -58,21 +58,21 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: false,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 			},
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.ZetaPrivnetChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.ZetaChainPrivnet.ChainId, sample.Hash().String(), 1)
 		require.ErrorContains(
 			t,
 			err,
-			fmt.Sprintf("proof verification is disabled for chain %d", chains.ZetaPrivnetChain.ChainId),
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.ZetaChainPrivnet.ChainId),
 		)
 	})
 
@@ -82,17 +82,17 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BtcMainnetChain.ChainId, "invalid", 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.BitcoinMainnet.ChainId, "invalid", 1)
 		require.ErrorIs(t, err, types.ErrInvalidBlockHash)
 	})
 
@@ -102,17 +102,17 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},
 		})
 
-		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.SepoliaChain.ChainId, sample.Hash().String(), 1)
+		_, err := k.VerifyProof(ctx, &proofs.Proof{}, chains.Sepolia.ChainId, sample.Hash().String(), 1)
 		require.ErrorContains(t, err, "block header verification is disabled")
 	})
 
@@ -124,11 +124,11 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},
@@ -149,11 +149,11 @@ func TestKeeper_VerifyProof(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},

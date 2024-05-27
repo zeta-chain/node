@@ -73,7 +73,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("successfully process failed outbound if original sender is a address", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		err := sdkk.EvmKeeper.SetAccount(
 			ctx,
@@ -90,7 +90,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("unable to  process failed outbound if GetCCTXIndexBytes fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.Index = ""
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
@@ -114,7 +114,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		errorFailedZETARevertAndCallContract := errors.New("test", 999, "failed ZETARevertAndCallContract")
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		fungibleMock.On("ZETARevertAndCallContract", mock.Anything,
@@ -133,7 +133,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
@@ -323,7 +323,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 func TestKeeper_ProcessOutbound(t *testing.T) {
 	t.Run("successfully process outbound with ballot finalized to success", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ProcessOutbound(
 			ctx,
@@ -339,7 +339,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		"successfully process outbound with ballot finalized to failed and old status is Pending Revert",
 		func(t *testing.T) {
 			k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-			cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+			cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 			cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
 			err := k.ProcessOutbound(
 				ctx,
@@ -355,7 +355,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and coin-type is CMD", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundParams.CoinType = coin.CoinType_Cmd
 		err := k.ProcessOutbound(
@@ -371,7 +371,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("do not process if cctx invalid", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundParams = nil
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotInProgress, sample.String())

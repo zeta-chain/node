@@ -15,6 +15,7 @@
 * [2152](https://github.com/zeta-chain/node/pull/2152) - custom priority nonce mempool
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
 * [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
+* [2258](https://github.com/zeta-chain/node/pull/2258) - add Optimism and Base in static chain information
 
 ### Refactor
 

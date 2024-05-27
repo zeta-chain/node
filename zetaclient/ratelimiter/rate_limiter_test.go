@@ -113,8 +113,8 @@ func Test_IsRateLimiterUsable(t *testing.T) {
 
 func Test_ApplyRateLimiter(t *testing.T) {
 	// define test chain ids
-	ethChainID := chains.EthChain.ChainId
-	btcChainID := chains.BtcMainnetChain.ChainId
+	ethChainID := chains.Ethereum.ChainId
+	btcChainID := chains.BitcoinMainnet.ChainId
 	zetaChainID := chains.ZetaChainMainnet.ChainId
 
 	// create 10 missed and 90 pending cctxs for eth chain, the coinType/amount does not matter for this test
