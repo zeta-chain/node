@@ -1,14 +1,11 @@
 package cli
 
 import (
-	"strconv"
 	"strings"
 
-	cosmoserrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -27,14 +24,6 @@ func CmdPauseZRC20() *cobra.Command {
 			}
 
 			contractAddressList := strings.Split(strings.TrimSpace(args[0]), ",")
-
-			action, err := strconv.ParseUint(args[1], 10, 32)
-			if err != nil {
-				return err
-			}
-			if (action != 0) && (action != 1) {
-				return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action (%d)", action)
-			}
 
 			msg := types.NewMsgPauseZRC20(
 				clientCtx.GetFromAddress().String(),
@@ -63,14 +52,6 @@ func CmdUnpauseZRC20() *cobra.Command {
 			}
 
 			contractAddressList := strings.Split(strings.TrimSpace(args[0]), ",")
-
-			action, err := strconv.ParseUint(args[1], 10, 32)
-			if err != nil {
-				return err
-			}
-			if (action != 0) && (action != 1) {
-				return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action (%d)", action)
-			}
 
 			msg := types.NewMsgUnpauseZRC20(
 				clientCtx.GetFromAddress().String(),

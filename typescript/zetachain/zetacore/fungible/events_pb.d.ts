@@ -209,9 +209,9 @@ export declare class EventZRC20Paused extends Message<EventZRC20Paused> {
 }
 
 /**
- * @generated from message zetachain.zetacore.fungible.EventZRC20UnPaused
+ * @generated from message zetachain.zetacore.fungible.EventZRC20Unpaused
  */
-export declare class EventZRC20UnPaused extends Message<EventZRC20UnPaused> {
+export declare class EventZRC20Unpaused extends Message<EventZRC20Unpaused> {
   /**
    * @generated from field: string msg_type_url = 1;
    */
@@ -227,19 +227,19 @@ export declare class EventZRC20UnPaused extends Message<EventZRC20UnPaused> {
    */
   signer: string;
 
-  constructor(data?: PartialMessage<EventZRC20UnPaused>);
+  constructor(data?: PartialMessage<EventZRC20Unpaused>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.fungible.EventZRC20UnPaused";
+  static readonly typeName = "zetachain.zetacore.fungible.EventZRC20Unpaused";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventZRC20UnPaused;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventZRC20Unpaused;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventZRC20UnPaused;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventZRC20Unpaused;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventZRC20UnPaused;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventZRC20Unpaused;
 
-  static equals(a: EventZRC20UnPaused | PlainMessage<EventZRC20UnPaused> | undefined, b: EventZRC20UnPaused | PlainMessage<EventZRC20UnPaused> | undefined): boolean;
+  static equals(a: EventZRC20Unpaused | PlainMessage<EventZRC20Unpaused> | undefined, b: EventZRC20Unpaused | PlainMessage<EventZRC20Unpaused> | undefined): boolean;
 }
 
 /**
