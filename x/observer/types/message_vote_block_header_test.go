@@ -63,7 +63,7 @@ func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
 			name: "bitcoin chain id",
 			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
-				chains.BtcMainnetChain.ChainId,
+				chains.BitcoinMainnet.ChainId,
 				[]byte{},
 				6,
 				proofs.HeaderData{},

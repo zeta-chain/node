@@ -69,21 +69,21 @@ func sepoliaBlockHeaders(t *testing.T) (proofs.BlockHeader, proofs.BlockHeader, 
 			Height:     5000000,
 			Hash:       header1.Hash().Bytes(),
 			ParentHash: header1.ParentHash.Bytes(),
-			ChainId:    chains.SepoliaChain.ChainId,
+			ChainId:    chains.Sepolia.ChainId,
 			Header:     proofs.NewEthereumHeader(headerRLP1),
 		},
 		proofs.BlockHeader{
 			Height:     5000001,
 			Hash:       header2.Hash().Bytes(),
 			ParentHash: header2.ParentHash.Bytes(),
-			ChainId:    chains.SepoliaChain.ChainId,
+			ChainId:    chains.Sepolia.ChainId,
 			Header:     proofs.NewEthereumHeader(headerRLP2),
 		},
 		proofs.BlockHeader{
 			Height:     5000002,
 			Hash:       header3.Hash().Bytes(),
 			ParentHash: header3.ParentHash.Bytes(),
-			ChainId:    chains.SepoliaChain.ChainId,
+			ChainId:    chains.Sepolia.ChainId,
 			Header:     proofs.NewEthereumHeader(headerRLP3),
 		}
 }
@@ -131,7 +131,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -150,7 +150,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: false,
 				},
 			},
@@ -191,7 +191,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -209,7 +209,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -233,7 +233,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -260,7 +260,7 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -292,7 +292,7 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -334,7 +334,7 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 			k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 				HeaderSupportedChains: []types.HeaderSupportedChain{
 					{
-						ChainId: chains.SepoliaChain.ChainId,
+						ChainId: chains.Sepolia.ChainId,
 						Enabled: true,
 					},
 				},

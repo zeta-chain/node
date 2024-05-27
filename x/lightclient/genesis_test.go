@@ -24,9 +24,9 @@ func TestGenesis(t *testing.T) {
 				sample.BlockHeader(sample.Hash().Bytes()),
 			},
 			ChainStates: []types.ChainState{
-				sample.ChainState(chains.EthChain.ChainId),
-				sample.ChainState(chains.BtcMainnetChain.ChainId),
-				sample.ChainState(chains.BscMainnetChain.ChainId),
+				sample.ChainState(chains.Ethereum.ChainId),
+				sample.ChainState(chains.BitcoinMainnet.ChainId),
+				sample.ChainState(chains.BscMainnet.ChainId),
 			},
 		}
 

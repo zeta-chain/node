@@ -26,9 +26,9 @@ func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
 func Test_InitializeCCTX(t *testing.T) {
 	t.Run("should return a cctx with correct values", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := chains.GoerliChain
+		senderChain := chains.Goerli
 		sender := sample.EthAddress()
-		receiverChain := chains.GoerliChain
+		receiverChain := chains.Goerli
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
@@ -76,9 +76,9 @@ func Test_InitializeCCTX(t *testing.T) {
 	})
 	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := chains.GoerliChain
+		senderChain := chains.Goerli
 		sender := sample.EthAddress()
-		receiverChain := chains.GoerliChain
+		receiverChain := chains.Goerli
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)

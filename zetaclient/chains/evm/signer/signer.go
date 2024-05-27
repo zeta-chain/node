@@ -832,7 +832,7 @@ func (signer *Signer) reportToOutboundTracker(
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
 func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
 	if endpoint == mocks.EVMRPCEnabled {
-		chainID := big.NewInt(chains.BscMainnetChain.ChainId)
+		chainID := big.NewInt(chains.BscMainnet.ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
 		client := &mocks.MockEvmClient{}
 		return client, ethSigner, nil
