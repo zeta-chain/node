@@ -29,9 +29,9 @@ import (
 // Therefore, we hardcode RPC urls and addresses for simplicity
 const EVM2RPCURL = "http://eth2:8545"
 
-// EVM2ChainID is the chain ID for the additional EVM localnet
+// EVMSepoliaChainID is the chain ID for the additional EVM localnet
 // We set Sepolia testnet although the value is not important, only used to differentiate
-var EVM2ChainID = chains.Sepolia.ChainId
+var EVMSepoliaChainID = chains.Sepolia.ChainId
 
 func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
@@ -309,7 +309,7 @@ func getNewEVMChainParams(r *runner.E2ERunner) *observertypes.ChainParams {
 	chainParams := observertypes.GetDefaultGoerliLocalnetChainParams()
 
 	// set the chain id to the new chain id
-	chainParams.ChainId = EVM2ChainID
+	chainParams.ChainId = EVMSepoliaChainID
 
 	// set contracts
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
