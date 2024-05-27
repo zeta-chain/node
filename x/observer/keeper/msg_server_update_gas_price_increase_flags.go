@@ -9,6 +9,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
+// The flags are updated by the policy account with the groupOperational policy type.
 func (k msgServer) UpdateGasPriceIncreaseFlags(
 	goCtx context.Context,
 	msg *types.MsgUpdateGasPriceIncreaseFlags,
@@ -18,7 +20,7 @@ func (k msgServer) UpdateGasPriceIncreaseFlags(
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
 		return &types.MsgUpdateGasPriceIncreaseFlagsResponse{}, authoritytypes.ErrUnauthorized.Wrap(
-			"EnableCCTXFlags can only be executed by the correct policy account",
+			"UpdateGasPriceIncreaseFlags can only be executed by the correct policy account",
 		)
 	}
 	// check if the value exists,
@@ -45,7 +47,7 @@ func (k msgServer) UpdateGasPriceIncreaseFlags(
 	})
 
 	if err != nil {
-		ctx.Logger().Error("Error emitting event EventCrosschainFlagsUpdated :", err)
+		ctx.Logger().Error("Error emitting EventGasPriceIncreaseFlagsUpdated :", err)
 	}
 
 	return &types.MsgUpdateGasPriceIncreaseFlagsResponse{}, nil

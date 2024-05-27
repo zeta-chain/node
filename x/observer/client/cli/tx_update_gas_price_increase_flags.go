@@ -15,8 +15,8 @@ import (
 func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-gas-price-increase-flags [epochLength] [retryInterval] [gasPriceIncreasePercent] [gasPriceIncreaseMax] [maxPendingCctxs]",
-		Short: "Enable inbound and outbound cross-chain flags",
-		Args:  cobra.ExactArgs(2),
+		Short: "Update the gas price increase flags",
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -45,11 +45,11 @@ func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 				return err
 			}
 			gasPriceIncreaseFlags := types.GasPriceIncreaseFlags{
-				epochLength,
-				time.Duration(retryInterval),
-				uint32(gasPriceIncreasePercent),
-				uint32(gasPriceIncreaseMax),
-				uint32(maxPendingCctxs)}
+				EpochLength:             epochLength,
+				RetryInterval:           time.Duration(retryInterval),
+				GasPriceIncreasePercent: uint32(gasPriceIncreasePercent),
+				GasPriceIncreaseMax:     uint32(gasPriceIncreaseMax),
+				MaxPendingCctxs:         uint32(maxPendingCctxs)}
 			msg := types.NewMsgUpdateGasPriceIncreaseFlags(clientCtx.GetFromAddress().String(), gasPriceIncreaseFlags)
 			err = msg.ValidateBasic()
 			if err != nil {

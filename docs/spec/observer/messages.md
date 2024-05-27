@@ -128,6 +128,9 @@ message MsgVoteTSS {
 
 ## MsgEnableCCTXFlags
 
+EnableCCTXFlags enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
+The flags are enabled by the policy account with the groupOperational policy type.
+
 ```proto
 message MsgEnableCCTXFlags {
 	string creator = 1;
@@ -138,6 +141,9 @@ message MsgEnableCCTXFlags {
 
 ## MsgDisableCCTXFlags
 
+DisableCCTXFlags disables the IsInboundEnabled and IsOutboundEnabled flags. These flags control the creation of inbounds and outbounds.
+The flags are disabled by the policy account with the groupEmergency policy type.
+
 ```proto
 message MsgDisableCCTXFlags {
 	string creator = 1;
@@ -147,6 +153,9 @@ message MsgDisableCCTXFlags {
 ```
 
 ## MsgUpdateGasPriceIncreaseFlags
+
+UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
+The flags are updated by the policy account with the groupOperational policy type.
 
 ```proto
 message MsgUpdateGasPriceIncreaseFlags {

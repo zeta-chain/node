@@ -9,6 +9,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// DisableCCTXFlags disables the IsInboundEnabled and IsOutboundEnabled flags. These flags control the creation of inbounds and outbounds.
+// The flags are disabled by the policy account with the groupEmergency policy type.
 func (k msgServer) DisableCCTXFlags(
 	goCtx context.Context,
 	msg *types.MsgDisableCCTXFlags,
@@ -18,7 +20,7 @@ func (k msgServer) DisableCCTXFlags(
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
 		return &types.MsgDisableCCTXFlagsResponse{}, authoritytypes.ErrUnauthorized.Wrap(
-			"EnableCCTXFlags can only be executed by the correct policy account",
+			"DisableCCTXFlags can only be executed by the correct policy account",
 		)
 	}
 
@@ -46,7 +48,7 @@ func (k msgServer) DisableCCTXFlags(
 	})
 
 	if err != nil {
-		ctx.Logger().Error("Error emitting event EventCrosschainFlagsUpdated :", err)
+		ctx.Logger().Error("Error emitting event EventCCTXFlagsDisabled :", err)
 	}
 
 	return &types.MsgDisableCCTXFlagsResponse{}, nil

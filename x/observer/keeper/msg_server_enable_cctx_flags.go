@@ -9,6 +9,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// EnableCCTXFlags enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
+// The flags are enabled by the policy account with the groupOperational policy type.
 func (k msgServer) EnableCCTXFlags(
 	goCtx context.Context,
 	msg *types.MsgEnableCCTXFlags,
@@ -46,7 +48,7 @@ func (k msgServer) EnableCCTXFlags(
 	})
 
 	if err != nil {
-		ctx.Logger().Error("Error emitting event EventCrosschainFlagsUpdated :", err)
+		ctx.Logger().Error("Error emitting EventCCTXFlagsEnabled :", err)
 	}
 
 	return &types.MsgEnableCCTXFlagsResponse{}, nil

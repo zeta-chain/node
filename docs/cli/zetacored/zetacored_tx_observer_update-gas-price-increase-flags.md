@@ -1,6 +1,6 @@
 # tx observer update-gas-price-increase-flags
 
-Enable inbound and outbound cross-chain flags
+Update the gas price increase flags
 
 ```
 zetacored tx observer update-gas-price-increase-flags [epochLength] [retryInterval] [gasPriceIncreasePercent] [gasPriceIncreaseMax] [maxPendingCctxs] [flags]

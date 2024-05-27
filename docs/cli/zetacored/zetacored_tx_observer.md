@@ -34,7 +34,7 @@ zetacored tx observer [flags]
 * [zetacored tx observer remove-chain-params](zetacored_tx_observer_remove-chain-params.md)	 - Broadcast message to remove chain params
 * [zetacored tx observer reset-chain-nonces](zetacored_tx_observer_reset-chain-nonces.md)	 - Broadcast message to reset chain nonces
 * [zetacored tx observer update-chain-params](zetacored_tx_observer_update-chain-params.md)	 - Broadcast message updateChainParams
-* [zetacored tx observer update-gas-price-increase-flags](zetacored_tx_observer_update-gas-price-increase-flags.md)	 - Enable inbound and outbound cross-chain flags
+* [zetacored tx observer update-gas-price-increase-flags](zetacored_tx_observer_update-gas-price-increase-flags.md)	 - Update the gas price increase flags
 * [zetacored tx observer update-keygen](zetacored_tx_observer_update-keygen.md)	 - command to update the keygen block via a group proposal
 * [zetacored tx observer update-observer](zetacored_tx_observer_update-observer.md)	 - Broadcast message add-observer
 * [zetacored tx observer vote-tss](zetacored_tx_observer_vote-tss.md)	 - Vote for a new TSS creation
