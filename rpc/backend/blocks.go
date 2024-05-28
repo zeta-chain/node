@@ -274,7 +274,7 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 	return big.NewInt(resBlock.Block.Height), nil
 }
 
-// EthMsgsFromTendermintBlock returns all real MsgEthereumTxs from a
+// EthMsgsFromTendermintBlock returns all real and synthetic MsgEthereumTxs from a
 // Tendermint block. It also ensures consistency over the correct txs indexes
 // across RPC endpoints
 // TODO: check if additionals array can be removed
@@ -300,7 +300,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		if err != nil {
 			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
 			// try to check if there is synthetic eth tx in tx result
-			ethMsg, additional := b.parseSyntheticTx(txResults, i, tx, block)
+			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
 			if ethMsg == nil {
 				continue
 			}
@@ -324,7 +324,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 
 		if shouldCheckForSyntheticTx {
 			// try to check if there is synthetic eth tx in tx result
-			ethMsg, additional := b.parseSyntheticTx(txResults, i, tx, block)
+			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
 			if ethMsg == nil {
 				continue
 			}
@@ -335,7 +335,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 	return result, txsAdditional
 }
 
-func (b *Backend) parseSyntheticTx(
+func (b *Backend) parseSyntheticTxFromBlockResults(
 	txResults []*abci.ResponseDeliverTx,
 	i int,
 	tx sdk.Tx,
