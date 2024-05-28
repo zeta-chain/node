@@ -788,8 +788,10 @@ func (k Keeper) CallEVMWithData(
 		}
 
 		if !noEthereumTxEvent {
-			attrs = append(attrs, sdk.NewAttribute("TxData", hexutil.Encode(msg.Data()))) // adding txData for more info in rpc methods
-			attrs = append(attrs, sdk.NewAttribute("TxNonce", fmt.Sprint(nonce)))         // adding nonce for more info in rpc methods
+			// adding txData for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute("TxData", hexutil.Encode(msg.Data())))
+			// adding nonce for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute("TxNonce", fmt.Sprint(nonce)))
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					evmtypes.EventTypeEthereumTx,
