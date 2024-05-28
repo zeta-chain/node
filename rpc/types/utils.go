@@ -170,10 +170,10 @@ func NewTransactionFromMsg(
 	chainID *big.Int,
 	txAdditional *TxResultAdditionalFields,
 ) (*RPCTransaction, error) {
-	tx := msg.AsTransaction()
-	if tx == nil {
+	if txAdditional != nil {
 		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txAdditional)
 	}
+	tx := msg.AsTransaction()
 	return NewRPCTransaction(tx, blockHash, blockNumber, index, baseFee, chainID)
 }
 
@@ -256,7 +256,7 @@ func NewRPCTransactionFromIncompleteMsg(
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),
 		Input:    []byte{},
-		Nonce:    0, // TODO: get nonce for "from" from ethermint
+		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from ethermint
 		To:       to,
 		Value:    (*hexutil.Big)(txAdditional.Value),
 		V:        nil,

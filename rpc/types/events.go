@@ -16,10 +16,12 @@
 package types
 
 import (
+	"encoding/base64"
 	"fmt"
 	"math"
 	"math/big"
 	"strconv"
+	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -268,6 +270,8 @@ func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
+				Data:      parsedTx.Data,
+				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
 	return &ethermint.TxResult{
@@ -351,8 +355,8 @@ func (p *ParsedTxs) AccumulativeGasUsed(msgIndex int) (result uint64) {
 
 // fillTxAttribute parse attributes by name, less efficient than hardcode the index, but more stable against event
 // format changes.
-func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
-	switch string(key) {
+func fillTxAttribute(tx *ParsedTx, key, value string) error {
+	switch key {
 	case evmtypes.AttributeKeyEthereumTxHash:
 		tx.Hash = common.HexToHash(string(value))
 	case evmtypes.AttributeKeyTxIndex:
@@ -406,10 +410,32 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 }
 
 func fillTxAttributes(tx *ParsedTx, attrs []abci.EventAttribute) error {
+	isLegacyAttrs := isLegacyAttrEncoding(attrs)
 	for _, attr := range attrs {
-		if err := fillTxAttribute(tx, []byte(attr.Key), []byte(attr.Value)); err != nil {
+		if isLegacyAttrs {
+			decKey, err := base64.StdEncoding.DecodeString(attr.Key)
+			if err == nil {
+				attr.Key = string(decKey)
+			}
+			decValue, err := base64.StdEncoding.DecodeString(attr.Value)
+			if err == nil {
+				attr.Value = string(decValue)
+			}
+		}
+
+		if err := fillTxAttribute(tx, attr.Key, attr.Value); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func isLegacyAttrEncoding(attrs []abci.EventAttribute) bool {
+	for _, attr := range attrs {
+		if strings.Contains(attr.Key, "==") || strings.Contains(attr.Value, "==") {
+			return true
+		}
+	}
+
+	return false
 }

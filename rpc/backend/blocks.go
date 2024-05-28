@@ -284,25 +284,79 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(tx)
 		if err != nil {
 			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
+			// try to check if there is synthetic eth tx in tx result
+			res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], nil, i, block.Height)
+			if err != nil || additional == nil || res == nil {
+				continue
+			}
+			recipient := additional.Recipient
+			t := ethtypes.NewTx(&ethtypes.LegacyTx{
+				Nonce:    additional.Nonce,
+				Data:     additional.Data,
+				Gas:      additional.GasUsed,
+				To:       &recipient,
+				GasPrice: nil,
+				Value:    additional.Value,
+				V:        big.NewInt(0),
+				R:        big.NewInt(0),
+				S:        big.NewInt(0),
+			})
+			ethMsg := &evmtypes.MsgEthereumTx{}
+			err = ethMsg.FromEthereumTx(t)
+			if err != nil {
+				b.logger.Debug("can not create eth msg", err.Error())
+				continue
+			}
+			ethMsg.Hash = additional.Hash.Hex()
+			ethMsg.From = additional.Sender.Hex()
+			result = append(result, ethMsg)
+			txsAdditional = append(txsAdditional, additional)
 			continue
 		}
+
+		// assumption is that if regular ethermint msg is found in tx
+		// there should not be synthetic one as well
+		shouldCheckForSyntheticTx := true
 		for _, msg := range tx.GetMsgs() {
 			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 			if !ok {
-				res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
-				if err != nil || additional == nil || res == nil {
-					continue
-				}
-				ethMsg = &evmtypes.MsgEthereumTx{
-					From: additional.Sender.Hex(),
-					Hash: additional.Hash.Hex(),
-				}
-				txsAdditional = append(txsAdditional, additional)
+				continue
 			} else {
+				shouldCheckForSyntheticTx = false
 				ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
+				result = append(result, ethMsg)
 				txsAdditional = append(txsAdditional, nil)
 			}
+		}
+
+		if shouldCheckForSyntheticTx {
+			// try to check if there is synthetic eth tx in tx result
+			res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
+			if err != nil || additional == nil || res == nil {
+				continue
+			}
+			recipient := additional.Recipient
+			t := ethtypes.NewTx(&ethtypes.LegacyTx{
+				Nonce:    additional.Nonce,
+				Data:     additional.Data,
+				Gas:      additional.GasUsed,
+				To:       &recipient,
+				GasPrice: nil,
+				Value:    additional.Value,
+				V:        big.NewInt(0),
+				R:        big.NewInt(0),
+				S:        big.NewInt(0),
+			})
+			ethMsg := &evmtypes.MsgEthereumTx{}
+			err = ethMsg.FromEthereumTx(t)
+			if err != nil {
+				b.logger.Debug("can not create eth msg", err.Error())
+				continue
+			}
+			ethMsg.Hash = additional.Hash.Hex()
+			ethMsg.From = additional.Sender.Hex()
 			result = append(result, ethMsg)
+			txsAdditional = append(txsAdditional, additional)
 		}
 	}
 	return result, txsAdditional

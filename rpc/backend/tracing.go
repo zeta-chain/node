@@ -18,13 +18,10 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
@@ -56,64 +53,21 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, fmt.Errorf("block result not found for height %d", blk.Block.Height)
 	}
 
-	// check tx index is not out of bound
-	// #nosec G701 txs number in block is always less than MaxUint32
-	if uint32(len(blk.Block.Txs)) < transaction.TxIndex {
-		b.logger.Debug("tx index out of bounds", "index", transaction.TxIndex, "hash", hash.String(), "height", blk.Block.Height)
-		return nil, fmt.Errorf("transaction not included in block %v", blk.Block.Height)
-	}
-
 	var predecessors []*evmtypes.MsgEthereumTx
-	for i, txBz := range blk.Block.Txs[:transaction.TxIndex] {
-		tx, err := b.clientCtx.TxConfig.TxDecoder()(txBz)
-		if err != nil {
-			b.logger.Debug("failed to decode transaction in block", "height", blk.Block.Height, "error", err.Error())
-			continue
-		}
-
-		// get parsed eth txs from events from tx result
-		parsed, err := rpctypes.ParseTxResult(blockResult.TxsResults[i], tx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, parsedTx := range parsed.Txs {
-			ethMsg := getMsgEthereumTxFromParsedTx(parsedTx, tx)
-			if ethMsg == nil {
-				continue
-			}
-			predecessors = append(predecessors, ethMsg)
-		}
-	}
-
-	tx, err := b.clientCtx.TxConfig.TxDecoder()(blk.Block.Txs[transaction.TxIndex])
-	if err != nil {
-		b.logger.Debug("tx not found", "hash", hash)
-		return nil, err
-	}
-
-	// get parsed eth txs from events from tx result
-	parsed, err := rpctypes.ParseTxResult(blockResult.TxsResults[transaction.TxIndex], tx)
-	if err != nil {
-		return nil, err
-	}
-
-	// iterate parsed eth txs, if its type 88, recreate it and get MsgEthereumTx, otherwise pull it from sdk.Msgs
-	// when requested tx is found, break, no more predecessors
+	msgs, _ := b.EthMsgsFromTendermintBlock(blk, blockResult)
 	var ethMsg *evmtypes.MsgEthereumTx
-	for _, parsedTx := range parsed.Txs {
-		ethMsg = getMsgEthereumTxFromParsedTx(parsedTx, tx)
-		if parsedTx.Hash.Hex() == hash.Hex() {
-			if ethMsg == nil {
-				return nil, errors.New("error while parsing tx")
-			}
+	for _, m := range msgs {
+		if m.Hash == hash.Hex() {
+			ethMsg = m
 			break
 		}
-		if ethMsg == nil {
-			continue
-		}
-		predecessors = append(predecessors, ethMsg)
+		predecessors = append(predecessors, m)
 	}
+
+	if ethMsg == nil {
+		return nil, fmt.Errorf("tx not found in block %d", blk.Block.Height)
+	}
+
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
 		Msg:             ethMsg,
 		Predecessors:    predecessors,
@@ -150,36 +104,6 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	return decodedResult, nil
 }
 
-func getMsgEthereumTxFromParsedTx(parsedTx rpctypes.ParsedTx, tx sdk.Tx) *evmtypes.MsgEthereumTx {
-	if parsedTx.Type == 88 {
-		recipient := parsedTx.Recipient
-		// TODO: is this ok?
-		t := ethtypes.NewTx(&ethtypes.LegacyTx{
-			Nonce:    parsedTx.Nonce,
-			Data:     parsedTx.Data,
-			Gas:      parsedTx.GasUsed,
-			To:       &recipient,
-			GasPrice: nil,
-			Value:    parsedTx.Amount,
-			V:        big.NewInt(0),
-			R:        big.NewInt(0),
-			S:        big.NewInt(0),
-		})
-		ethMsg := &evmtypes.MsgEthereumTx{}
-		err := ethMsg.FromEthereumTx(t)
-		if err != nil {
-			return nil
-		}
-		return ethMsg
-	} else {
-		ethMsg, ok := tx.GetMsgs()[parsedTx.MsgIndex].(*evmtypes.MsgEthereumTx)
-		if !ok {
-			return nil
-		}
-		return ethMsg
-	}
-}
-
 // TraceBlock configures a new tracer according to the provided configuration, and
 // executes all the transactions contained within. The return value will be one item
 // per transaction, dependent on the requested tracer.
@@ -200,31 +124,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
 		return nil, nil
 	}
-
-	txDecoder := b.clientCtx.TxConfig.TxDecoder()
-
-	var txsMessages []*evmtypes.MsgEthereumTx
-	for i, tx := range txs {
-		if !rpctypes.TxSuccessOrExceedsBlockGasLimit(blockRes.TxsResults[i]) {
-			b.logger.Debug("invalid tx result code", "cosmos-hash", hexutil.Encode(tx.Hash()))
-			continue
-		}
-
-		decodedTx, err := txDecoder(tx)
-		if err != nil {
-			b.logger.Error("failed to decode transaction", "hash", txs[i].Hash(), "error", err.Error())
-			continue
-		}
-
-		for _, msg := range decodedTx.GetMsgs() {
-			ethMessage, ok := msg.(*evmtypes.MsgEthereumTx)
-			if !ok {
-				// Just considers Ethereum transactions
-				continue
-			}
-			txsMessages = append(txsMessages, ethMessage)
-		}
-	}
+	msgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
 
 	// minus one to get the context at the beginning of the block
 	contextHeight := height - 1
@@ -235,7 +135,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	ctxWithHeight := rpctypes.ContextWithHeight(int64(contextHeight))
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
-		Txs:             txsMessages,
+		Txs:             msgs,
 		TraceConfig:     config,
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
