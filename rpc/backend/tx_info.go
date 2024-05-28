@@ -17,7 +17,6 @@ package backend
 
 import (
 	"fmt"
-	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
@@ -62,32 +61,16 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 			return nil, fmt.Errorf("failed to decode tx: %w", err)
 		}
 		ethMsg = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
-
-		if err != nil {
-			b.logger.Error("failed to unpack tx data", "error", err.Error())
-			return nil, err
+		if ethMsg == nil {
+			b.logger.Error("failed to get eth msg")
+			return nil, fmt.Errorf("failed to get eth msg")
 		}
 	} else {
-		recipient := additional.Recipient
-		t := ethtypes.NewTx(&ethtypes.LegacyTx{
-			Nonce:    additional.Nonce,
-			Data:     additional.Data,
-			Gas:      additional.GasUsed,
-			To:       &recipient,
-			GasPrice: nil,
-			Value:    additional.Value,
-			V:        big.NewInt(0),
-			R:        big.NewInt(0),
-			S:        big.NewInt(0),
-		})
-		ethMsg = &evmtypes.MsgEthereumTx{}
-		err = ethMsg.FromEthereumTx(t)
-		if err != nil {
-			b.logger.Error("can not create eth msg", err.Error())
-			return nil, err
+		ethMsg = b.parseSyntethicTxFromAdditionalFields(additional)
+		if ethMsg == nil {
+			b.logger.Error("failed to parse tx")
+			return nil, fmt.Errorf("failed to parse tx")
 		}
-		ethMsg.Hash = additional.Hash.Hex()
-		ethMsg.From = additional.Sender.Hex()
 	}
 
 	if res.EthTxIndex == -1 {
@@ -199,6 +182,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 			return nil, fmt.Errorf("failed to decode tx: %w", err)
 		}
 		ethMsg = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
+		if ethMsg == nil {
+			b.logger.Error("failed to get eth msg")
+			return nil, fmt.Errorf("failed to get eth msg")
+		}
 
 		txData, err = evmtypes.UnpackTxData(ethMsg.Data)
 		if err != nil {
@@ -206,26 +193,11 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 			return nil, err
 		}
 	} else {
-		recipient := additional.Recipient
-		t := ethtypes.NewTx(&ethtypes.LegacyTx{
-			Nonce:    additional.Nonce,
-			Data:     additional.Data,
-			Gas:      additional.GasUsed,
-			To:       &recipient,
-			GasPrice: nil,
-			Value:    additional.Value,
-			V:        big.NewInt(0),
-			R:        big.NewInt(0),
-			S:        big.NewInt(0),
-		})
-		ethMsg = &evmtypes.MsgEthereumTx{}
-		err = ethMsg.FromEthereumTx(t)
-		if err != nil {
-			b.logger.Error("can not create eth msg", err.Error())
-			return nil, err
+		ethMsg = b.parseSyntethicTxFromAdditionalFields(additional)
+		if ethMsg == nil {
+			b.logger.Error("failed to parse tx")
+			return nil, fmt.Errorf("failed to parse tx")
 		}
-		ethMsg.Hash = additional.Hash.Hex()
-		ethMsg.From = additional.Sender.Hex()
 	}
 
 	cumulativeGasUsed := uint64(0)

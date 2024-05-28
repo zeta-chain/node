@@ -342,6 +342,10 @@ func (b *Backend) parseSyntheticTx(txResults []*abci.ResponseDeliverTx, i int, t
 	if err != nil || additional == nil || res == nil {
 		return nil, nil
 	}
+	return b.parseSyntethicTxFromAdditionalFields(additional), additional
+}
+
+func (b *Backend) parseSyntethicTxFromAdditionalFields(additional *rpctypes.TxResultAdditionalFields) *evmtypes.MsgEthereumTx {
 	recipient := additional.Recipient
 	t := ethtypes.NewTx(&ethtypes.LegacyTx{
 		Nonce:    additional.Nonce,
@@ -355,14 +359,14 @@ func (b *Backend) parseSyntheticTx(txResults []*abci.ResponseDeliverTx, i int, t
 		S:        big.NewInt(0),
 	})
 	ethMsg := &evmtypes.MsgEthereumTx{}
-	err = ethMsg.FromEthereumTx(t)
+	err := ethMsg.FromEthereumTx(t)
 	if err != nil {
 		b.logger.Error("can not create eth msg", err.Error())
-		return nil, nil
+		return nil
 	}
 	ethMsg.Hash = additional.Hash.Hex()
 	ethMsg.From = additional.Sender.Hex()
-	return ethMsg, additional
+	return ethMsg
 }
 
 // HeaderByNumber returns the block header identified by height.
