@@ -254,6 +254,29 @@ export declare enum Consensus {
 }
 
 /**
+ * CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
+ *
+ * @generated from enum zetachain.zetacore.pkg.chains.CCTXGateway
+ */
+export declare enum CCTXGateway {
+  /**
+   * zevm is the internal CCTX gateway to process outbound on the ZEVM in
+   * ZetaChain only used for ZetaChain chains
+   *
+   * @generated from enum value: zevm = 0;
+   */
+  zevm = 0,
+
+  /**
+   * observers is the CCTX gateway for chains relying on the observer set to
+   * observe inbounds and TSS for outbounds
+   *
+   * @generated from enum value: observers = 1;
+   */
+  observers = 1,
+}
+
+/**
  * Chain represents static data about a blockchain network
  * it is identified by a unique chain ID
  *
@@ -308,6 +331,13 @@ export declare class Chain extends Message<Chain> {
    * @generated from field: bool is_external = 7;
    */
   isExternal: boolean;
+
+  /**
+   * CCTXGateway is the gateway used to handle CCTX outbounds
+   *
+   * @generated from field: zetachain.zetacore.pkg.chains.CCTXGateway cctx_gateway = 8;
+   */
+  cctxGateway: CCTXGateway;
 
   constructor(data?: PartialMessage<Chain>);
 
