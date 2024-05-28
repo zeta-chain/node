@@ -180,7 +180,13 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
 		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid TestDappAddr: %s", c)
+			return fmt.Errorf("invalid ZevmTestDappAddr: %s", c)
+		}
+		r.ZevmTestDAppAddr = ethcommon.HexToAddress(c)
+	}
+	if c := conf.Contracts.EVM.TestDappAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid EvmTestDappAddr: %s", c)
 		}
 		r.EvmTestDAppAddr = ethcommon.HexToAddress(c)
 	}
