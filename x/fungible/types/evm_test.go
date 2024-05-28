@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 

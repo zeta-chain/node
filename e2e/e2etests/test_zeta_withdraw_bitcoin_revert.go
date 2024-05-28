@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -47,7 +48,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 
 	lessThanAmount := amount.Div(amount, big.NewInt(10)) // 1/10 of amount
 	tx, err = r.ConnectorZEVM.Send(r.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(chains.BtcRegtestChain.ChainId),
+		DestinationChainId:  big.NewInt(chains.BitcoinRegtest.ChainId),
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,

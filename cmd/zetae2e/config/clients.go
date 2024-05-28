@@ -10,12 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc"
 )
 
 // getClientsFromConfig get clients from config
@@ -41,7 +42,9 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(conf.RPCs.ZetaCoreGRPC)
+	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
+		conf.RPCs.ZetaCoreGRPC,
+	)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
@@ -91,20 +94,20 @@ func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
 func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to dial evm client: %w", err)
 	}
 
 	chainid, err := evmClient.ChainID(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get chain id: %w", err)
 	}
 	deployerPrivkey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get deployer privkey: %w", err)
 	}
 	evmAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get keyed transactor: %w", err)
 	}
 
 	return evmClient, evmAuth, nil

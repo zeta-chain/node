@@ -8,10 +8,9 @@ import (
 	"log"
 	"testing"
 
-	"github.com/frumioj/crypto11"
-
 	btcsecp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/frumioj/crypto11"
 	"github.com/stretchr/testify/require"
 	keystone "github.com/zeta-chain/keystone/keys"
 )

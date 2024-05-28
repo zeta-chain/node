@@ -3,10 +3,10 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
-
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
@@ -29,9 +29,9 @@ func TestGenesisState_Validate(t *testing.T) {
 					sample.BlockHeader(sample.Hash().Bytes()),
 				},
 				ChainStates: []types.ChainState{
-					sample.ChainState(chains.EthChain.ChainId),
-					sample.ChainState(chains.BtcMainnetChain.ChainId),
-					sample.ChainState(chains.BscMainnetChain.ChainId),
+					sample.ChainState(chains.Ethereum.ChainId),
+					sample.ChainState(chains.BitcoinMainnet.ChainId),
+					sample.ChainState(chains.BscMainnet.ChainId),
 				},
 			},
 			valid: true,
@@ -56,9 +56,9 @@ func TestGenesisState_Validate(t *testing.T) {
 			desc: "duplicate chain state is invalid",
 			genState: &types.GenesisState{
 				ChainStates: []types.ChainState{
-					sample.ChainState(chains.EthChain.ChainId),
-					sample.ChainState(chains.EthChain.ChainId),
-					sample.ChainState(chains.BscMainnetChain.ChainId),
+					sample.ChainState(chains.Ethereum.ChainId),
+					sample.ChainState(chains.Ethereum.ChainId),
+					sample.ChainState(chains.BscMainnet.ChainId),
 				},
 			},
 			valid: false,

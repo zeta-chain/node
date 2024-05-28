@@ -7,27 +7,26 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-const TypeMsgUpdateZRC20PausedStatus = "update_zrc20_withdraw_fee"
+const TypeMsgPauseZrc20 = "pause_zrc20"
 
-var _ sdk.Msg = &MsgUpdateZRC20PausedStatus{}
+var _ sdk.Msg = &MsgPauseZRC20{}
 
-func NewMsgUpdateZRC20PausedStatus(creator string, zrc20 []string, action UpdatePausedStatusAction) *MsgUpdateZRC20PausedStatus {
-	return &MsgUpdateZRC20PausedStatus{
+func NewMsgPauseZRC20(creator string, zrc20 []string) *MsgPauseZRC20 {
+	return &MsgPauseZRC20{
 		Creator:        creator,
 		Zrc20Addresses: zrc20,
-		Action:         action,
 	}
 }
 
-func (msg *MsgUpdateZRC20PausedStatus) Route() string {
+func (msg *MsgPauseZRC20) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgUpdateZRC20PausedStatus) Type() string {
-	return TypeMsgUpdateZRC20PausedStatus
+func (msg *MsgPauseZRC20) Type() string {
+	return TypeMsgPauseZrc20
 }
 
-func (msg *MsgUpdateZRC20PausedStatus) GetSigners() []sdk.AccAddress {
+func (msg *MsgPauseZRC20) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -35,19 +34,15 @@ func (msg *MsgUpdateZRC20PausedStatus) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgUpdateZRC20PausedStatus) GetSignBytes() []byte {
+func (msg *MsgPauseZRC20) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgUpdateZRC20PausedStatus) ValidateBasic() error {
+func (msg *MsgPauseZRC20) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-
-	if msg.Action != UpdatePausedStatusAction_PAUSE && msg.Action != UpdatePausedStatusAction_UNPAUSE {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action (%d)", msg.Action)
 	}
 
 	if len(msg.Zrc20Addresses) == 0 {

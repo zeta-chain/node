@@ -6,6 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
@@ -15,7 +16,8 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	emissionPoolBalance := keeper.GetReservesFactor(ctx)
 	blockRewards := types.BlockReward
 	if blockRewards.GT(emissionPoolBalance) {
-		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
+		ctx.Logger().
+			Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
 		return
 	}
 
@@ -57,9 +59,15 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 // DistributeValidatorRewards distributes the rewards to validators who signed the block .
 // The block proposer gets a bonus reward
 // This function uses the distribution module of cosmos-sdk , by directly sending funds to the feecollector.
-func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, feeCollector string) error {
+func DistributeValidatorRewards(
+	ctx sdk.Context,
+	amount sdkmath.Int,
+	bankKeeper types.BankKeeper,
+	feeCollector string,
+) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
-	ctx.Logger().Info(fmt.Sprintf("Distributing Validator Rewards Total:%s To FeeCollector : %s", amount.String(), feeCollector))
+	ctx.Logger().
+		Info(fmt.Sprintf("Distributing Validator Rewards Total:%s To FeeCollector : %s", amount.String(), feeCollector))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
@@ -76,7 +84,8 @@ func DistributeObserverRewards(
 	slashAmount := params.ObserverSlashAmount
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)
-	err := keeper.GetBankKeeper().SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
+	err := keeper.GetBankKeeper().
+		SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
 	if err != nil {
 		return err
 	}
@@ -102,7 +111,8 @@ func DistributeObserverRewards(
 	if totalRewardsUnits > 0 && amount.IsPositive() {
 		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
 	}
-	ctx.Logger().Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(ballotIdentifiers)))
+	ctx.Logger().
+		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(ballotIdentifiers)))
 	sortedKeys := make([]string, 0, len(rewardsDistributer))
 	for k := range rewardsDistributer {
 		sortedKeys = append(sortedKeys, k)

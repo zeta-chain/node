@@ -10,6 +10,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
@@ -72,9 +73,13 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("successfully process failed outbound if original sender is a address", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
-		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(cctx.InboundParams.Sender), *statedb.NewEmptyAccount())
+		err := sdkk.EvmKeeper.SetAccount(
+			ctx,
+			ethcommon.HexToAddress(cctx.InboundParams.Sender),
+			*statedb.NewEmptyAccount(),
+		)
 		require.NoError(t, err)
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		err = k.ProcessFailedOutbound(ctx, cctx, sample.String())
@@ -85,7 +90,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("unable to  process failed outbound if GetCCTXIndexBytes fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.Index = ""
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
@@ -109,7 +114,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
 		errorFailedZETARevertAndCallContract := errors.New("test", 999, "failed ZETARevertAndCallContract")
-		cctx := GetERC20Cctx(t, receiver, chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		fungibleMock.On("ZETARevertAndCallContract", mock.Anything,
@@ -128,7 +133,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
@@ -318,29 +323,47 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 func TestKeeper_ProcessOutbound(t *testing.T) {
 	t.Run("successfully process outbound with ballot finalized to success", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
+		err := k.ProcessOutbound(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
 	})
 
-	t.Run("successfully process outbound with ballot finalized to failed and old status is Pending Revert", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
-		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
-		require.NoError(t, err)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
-		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
-	})
+	t.Run(
+		"successfully process outbound with ballot finalized to failed and old status is Pending Revert",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+			cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
+			cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
+			err := k.ProcessOutbound(
+				ctx,
+				cctx,
+				observertypes.BallotStatus_BallotFinalized_FailureObservation,
+				sample.String(),
+			)
+			require.NoError(t, err)
+			require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
+			require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+		},
+	)
 
 	t.Run("successfully process outbound with ballot finalized to failed and coin-type is CMD", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundParams.CoinType = coin.CoinType_Cmd
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ProcessOutbound(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
@@ -348,7 +371,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("do not process if cctx invalid", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain, "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundParams = nil
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotInProgress, sample.String())
@@ -376,7 +399,12 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 				Zrc20ContractAddress: sample.EthAddress().String(),
 			}, false).Once()
 
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ProcessOutbound(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
 		// New outbound not added and the old outbound is not finalized
@@ -406,7 +434,12 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		// mock successful GetRevertGasLimit for ERC20
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ProcessOutbound(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.Error(t, err)
 	})
 
@@ -436,12 +469,21 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		// mock successful UpdateNonce
 		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
 
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ProcessOutbound(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingRevert)
 		// New outbound added for revert and the old outbound is finalized
 		require.Len(t, cctx.OutboundParams, oldOutboundParamsLen+1)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_NotFinalized)
-		require.Equal(t, cctx.OutboundParams[oldOutboundParamsLen-1].TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+		require.Equal(
+			t,
+			cctx.OutboundParams[oldOutboundParamsLen-1].TxFinalizationStatus,
+			types.TxFinalizationStatus_Executed,
+		)
 	})
 }

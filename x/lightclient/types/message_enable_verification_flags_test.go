@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -53,18 +54,22 @@ func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "invalid chain id",
 			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.ZetaPrivnetChain.ChainId},
+				ChainIdList: []int64{chains.ZetaChainPrivnet.ChainId},
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(t, err, fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId))
+				require.ErrorContains(
+					t,
+					err,
+					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaChainPrivnet.ChainId),
+				)
 			},
 		},
 		{
 			name: "valid address",
 			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.EthChain.ChainId},
+				ChainIdList: []int64{chains.Ethereum.ChainId},
 			},
 			err: require.NoError,
 		},
@@ -88,7 +93,7 @@ func TestMsgEnableHeaderVerification_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgEnableHeaderVerification(
 				signer,
-				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 			),
 			panics: false,
 		},
@@ -96,7 +101,7 @@ func TestMsgEnableHeaderVerification_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgEnableHeaderVerification(
 				"invalid",
-				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 			),
 			panics: true,
 		},

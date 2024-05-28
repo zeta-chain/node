@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/ethereum/go-ethereum/rpc"
 	ethermint "github.com/evmos/ethermint/types"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth"

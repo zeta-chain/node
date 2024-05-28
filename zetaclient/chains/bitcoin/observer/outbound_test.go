@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -21,7 +22,7 @@ func MockBTCObserverMainnet() *Observer {
 	coreContext := context.NewZetacoreContext(cfg)
 
 	return &Observer{
-		chain:          chains.BtcMainnetChain,
+		chain:          chains.BitcoinMainnet,
 		zetacoreClient: mocks.NewMockZetacoreClient(),
 		Tss:            mocks.NewTSSMainnet(),
 		coreContext:    coreContext,
@@ -65,7 +66,11 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 
 	// Set nonce mark
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(chains.NonceMarkAmount(nonce)) * 1e-8}
+	nonceMark := btcjson.ListUnspentResult{
+		TxID:    txid,
+		Address: tssAddress,
+		Amount:  float64(chains.NonceMarkAmount(nonce)) * 1e-8,
+	}
 	if preMarkIndex >= 0 { // replace nonce-mark utxo
 		ob.utxos[preMarkIndex] = nonceMark
 
@@ -80,7 +85,7 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 func TestCheckTSSVout(t *testing.T) {
 	// the archived outbound raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	chainID := chain.ChainId
 	nonce := uint64(148)
 
@@ -162,7 +167,7 @@ func TestCheckTSSVout(t *testing.T) {
 func TestCheckTSSVoutCancelled(t *testing.T) {
 	// the archived outbound raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	chainID := chain.ChainId
 	nonce := uint64(148)
 
@@ -314,7 +319,11 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64", err.Error())
+	require.Equal(
+		t,
+		"SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64",
+		err.Error(),
+	)
 }
 
 func TestUTXOConsolidation(t *testing.T) {
@@ -388,7 +397,12 @@ func TestUTXOConsolidation(t *testing.T) {
 
 	t.Run("should consolidate 3 utxos sparse", func(t *testing.T) {
 		ob := createObserverWithUTXOs(t)
-		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
+		mineTxNSetNonceMark(
+			ob,
+			24105431,
+			dummyTxID,
+			-1,
+		) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 5, amount = 0.13, nonce = 24105432, rank = 5
 		// output: [0.24107431, 0.01, 0.12, 1.26, 0.5, 0.24], 2.37107431
@@ -406,7 +420,12 @@ func TestUTXOConsolidation(t *testing.T) {
 
 	t.Run("should consolidate all utxos sparse", func(t *testing.T) {
 		ob := createObserverWithUTXOs(t)
-		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
+		mineTxNSetNonceMark(
+			ob,
+			24105431,
+			dummyTxID,
+			-1,
+		) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 12, amount = 0.13, nonce = 24105432, rank = 1
 		// output: [0.24107431, 0.01, 0.12, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18], 22.68107431

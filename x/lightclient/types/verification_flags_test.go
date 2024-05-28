@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
@@ -12,17 +13,17 @@ func TestDefaultVerificationFlags(t *testing.T) {
 		flags := DefaultHeaderSupportedChains()
 		for _, f := range flags {
 			switch f.ChainId {
-			case chains.EthChain.ChainId:
+			case chains.Ethereum.ChainId:
 				require.False(t, f.Enabled)
-			case chains.BscMainnetChain.ChainId:
+			case chains.BscMainnet.ChainId:
 				require.False(t, f.Enabled)
-			case chains.SepoliaChain.ChainId:
+			case chains.Sepolia.ChainId:
 				require.False(t, f.Enabled)
-			case chains.BscTestnetChain.ChainId:
+			case chains.BscTestnet.ChainId:
 				require.False(t, f.Enabled)
-			case chains.GoerliLocalnetChain.ChainId:
+			case chains.GoerliLocalnet.ChainId:
 				require.False(t, f.Enabled)
-			case chains.GoerliChain.ChainId:
+			case chains.Goerli.ChainId:
 				require.False(t, f.Enabled)
 			default:
 				require.False(t, f.Enabled, "unexpected chain id")

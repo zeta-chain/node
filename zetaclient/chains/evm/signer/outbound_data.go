@@ -10,6 +10,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -74,11 +75,13 @@ func (txData *OutboundData) SetupGas(
 	txData.gasLimit = cctx.GetCurrentOutboundParam().GasLimit
 	if txData.gasLimit < MinGasLimit {
 		txData.gasLimit = MinGasLimit
-		logger.Warn().Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
+		logger.Warn().
+			Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
 	}
 	if txData.gasLimit > MaxGasLimit {
 		txData.gasLimit = MaxGasLimit
-		logger.Warn().Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
+		logger.Warn().
+			Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
 	}
 
 	// use dynamic gas price for ethereum chains.
@@ -153,7 +156,8 @@ func NewOutboundData(
 	}
 
 	// Get sendHash
-	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
+	logger.Info().
+		Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
 	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(cctxIndex) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
@@ -164,7 +168,8 @@ func NewOutboundData(
 	pendingTx := evmObserver.GetPendingTx(nonce)
 	if pendingTx != nil {
 		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
-			logger.Info().Msgf("replace pending outbound %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
+			logger.Info().
+				Msgf("replace pending outbound %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
 		} else {
 			logger.Info().Msgf("please wait for pending outbound %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
 			return nil, true, nil

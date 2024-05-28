@@ -40,6 +40,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/zetacore/rpc/types"
@@ -98,7 +99,12 @@ type websocketsServer struct {
 	logger   log.Logger
 }
 
-func NewWebsocketsServer(clientCtx client.Context, logger log.Logger, tmWSClient *rpcclient.WSClient, cfg *config.Config) WebsocketsServer {
+func NewWebsocketsServer(
+	clientCtx client.Context,
+	logger log.Logger,
+	tmWSClient *rpcclient.WSClient,
+	cfg *config.Config,
+) WebsocketsServer {
 	logger = logger.With("api", "websocket-server")
 	_, port, err := net.SplitHostPort(cfg.JSONRPC.Address)
 	if err != nil {
@@ -465,7 +471,13 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 				if !ok {
 					return
 				}
-				api.logger.Debug("dropping NewHeads WebSocket subscription", "subscription-id", subID, "error", err.Error())
+				api.logger.Debug(
+					"dropping NewHeads WebSocket subscription",
+					"subscription-id",
+					subID,
+					"error",
+					err.Error(),
+				)
 			}
 		}
 	}()
@@ -618,7 +630,13 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 					return
 				}
 
-				logs := rpcfilters.FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
+				logs := rpcfilters.FilterLogs(
+					evmtypes.LogsToEthereum(txResponse.Logs),
+					crit.FromBlock,
+					crit.ToBlock,
+					crit.Addresses,
+					crit.Topics,
+				)
 				if len(logs) == 0 {
 					continue
 				}

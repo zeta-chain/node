@@ -7,8 +7,10 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -79,7 +81,11 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
 	msg := []byte{}
 	msg = append(msg, r.ZEVMSwapAppAddr.Bytes()...)
-	memobytes, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.BTCZRC20Addr, []byte(r.BTCDeployerAddress.EncodeAddress()))
+	memobytes, err := r.ZEVMSwapApp.EncodeMemo(
+		&bind.CallOpts{},
+		r.BTCZRC20Addr,
+		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+	)
 
 	if err != nil {
 		panic(err)
@@ -94,7 +100,13 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	// check the cctx status
 	if cctx1.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf("expected outbound mined status; got %s, message: %s", cctx1.CctxStatus.Status.String(), cctx1.CctxStatus.StatusMessage))
+		panic(
+			fmt.Sprintf(
+				"expected outbound mined status; got %s, message: %s",
+				cctx1.CctxStatus.Status.String(),
+				cctx1.CctxStatus.StatusMessage,
+			),
+		)
 	}
 
 	// mine 10 blocks to confirm the outbound tx
@@ -102,7 +114,13 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	stop := r.MineBlocks()
+
+	// mine blocks if testing on regnet
+	var stop chan struct{}
+	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
+	if isRegnet {
+		stop = r.MineBlocks()
+	}
 
 	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -235,5 +253,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// stop mining
-	stop <- struct{}{}
+	if isRegnet {
+		stop <- struct{}{}
+	}
 }

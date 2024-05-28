@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"

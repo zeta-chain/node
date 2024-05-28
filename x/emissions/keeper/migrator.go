@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/emissions/exported"
 	v3 "github.com/zeta-chain/zetacore/x/emissions/migrations/v3"
 )

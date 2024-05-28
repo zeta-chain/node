@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
@@ -95,6 +96,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.EVM.ConnectorEthAddr = r.ConnectorEthAddr.Hex()
 	conf.Contracts.EVM.CustodyAddr = r.ERC20CustodyAddr.Hex()
 	conf.Contracts.EVM.ERC20 = r.ERC20Addr.Hex()
+	conf.Contracts.EVM.TestDappAddr = r.EvmTestDAppAddr.Hex()
 
 	conf.Contracts.ZEVM.SystemContractAddr = r.SystemContractAddr.Hex()
 	conf.Contracts.ZEVM.ETHZRC20Addr = r.ETHZRC20Addr.Hex()
@@ -106,7 +108,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.WZetaAddr = r.WZetaAddr.Hex()
 	conf.Contracts.ZEVM.ZEVMSwapAppAddr = r.ZEVMSwapAppAddr.Hex()
 	conf.Contracts.ZEVM.ContextAppAddr = r.ContextAppAddr.Hex()
-	conf.Contracts.ZEVM.TestDappAddr = r.EvmTestDAppAddr.Hex()
+	conf.Contracts.ZEVM.TestDappAddr = r.ZevmTestDAppAddr.Hex()
 
 	return conf
 }

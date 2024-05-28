@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -28,9 +29,9 @@ import (
 // Therefore, we hardcode RPC urls and addresses for simplicity
 const EVM2RPCURL = "http://eth2:8545"
 
-// EVM2ChainID is the chain ID for the additional EVM localnet
+// EVMSepoliaChainID is the chain ID for the additional EVM localnet
 // We set Sepolia testnet although the value is not important, only used to differentiate
-var EVM2ChainID = chains.SepoliaChain.ChainId
+var EVMSepoliaChainID = chains.Sepolia.ChainId
 
 func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
@@ -88,7 +89,10 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 
 	// set the gas token in the runner
-	ethZRC20Addr, err := newRunner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainParams.ChainId))
+	ethZRC20Addr, err := newRunner.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chainParams.ChainId),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -183,7 +187,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
 		adminAddr,
 		newRunner.ERC20Addr.Hex(),
-		chains.SepoliaChain.ChainId,
+		chains.Sepolia.ChainId,
 		"USDT",
 		"USDT",
 		18,
@@ -305,7 +309,7 @@ func getNewEVMChainParams(r *runner.E2ERunner) *observertypes.ChainParams {
 	chainParams := observertypes.GetDefaultGoerliLocalnetChainParams()
 
 	// set the chain id to the new chain id
-	chainParams.ChainId = EVM2ChainID
+	chainParams.ChainId = EVMSepoliaChainID
 
 	// set contracts
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()

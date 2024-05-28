@@ -46,6 +46,10 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x6F57D5E7c6DBb75e59F
 echo "funding deployer address 0x5cC2fBb200A929B372e3016F1925DcF988E081fd with 10000 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd", value: web3.toWei(10000,"ether")})' attach http://eth:8545
 
+# unlock zevm message passing tester accounts
+echo "funding deployer address 0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c with 10000 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+
 # unlock bitcoin tester accounts
 echo "funding deployer address 0x283d810090EdF4043E75247eAeBcE848806237fD with 10000 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x283d810090EdF4043E75247eAeBcE848806237fD", value: web3.toWei(10000,"ether")})' attach http://eth:8545
@@ -75,24 +79,29 @@ if [ "$OPTION" == "upgrade" ]; then
   # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
   UPGRADE_HEIGHT=${3:-225}
 
-  # Run zetae2e, if the upgrade height is lower than 100, we use the setup-only flag
-  if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    echo "running E2E command to setup the networks..."
+  if [[ ! -f deployed.yml ]]; then
     zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml --skip-header-proof
+    if [ $? -ne 0 ]; then
+      echo "e2e setup failed"
+      exit 1
+    fi
   else
+    echo "skipping e2e setup because it has already been completed"
+  fi
+
+  # Run zetae2e, if the upgrade height is greater than 100 to populate the state
+  if [ "$UPGRADE_HEIGHT" -gt 100 ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e "$ZETAE2E_CMD" --config-out deployed.yml --light --skip-header-proof
- fi
-  ZETAE2E_EXIT_CODE=$?
-
-  if [ $ZETAE2E_EXIT_CODE -ne 0 ]; then
-    echo "E2E setup failed"
-    exit 1
+    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --light --skip-header-proof
+    if [ $? -ne 0 ]; then
+      echo "first e2e failed"
+      exit 1
+    fi
   fi
 
-  echo "E2E setup passed, waiting for upgrade height..."
+  echo "Waiting for upgrade height..."
 
   OLD_VERSION=$(get_zetacored_version)
 
@@ -144,10 +153,21 @@ if [ "$OPTION" == "upgrade" ]; then
 else
 
   # Run the e2e tests normally
+  echo "running e2e setup..."
+
+  if [[ ! -f deployed.yml ]]; then
+    zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml
+    if [ $? -ne 0 ]; then
+      echo "e2e setup failed"
+      exit 1
+    fi
+  else
+    echo "skipping e2e setup because it has already been completed"
+  fi
 
   echo "running e2e tests..."
 
-  eval "zetae2e $ZETAE2E_CMD"
+  zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml
   ZETAE2E_EXIT_CODE=$?
 
   # if e2e passed, exit with 0, otherwise exit with 1

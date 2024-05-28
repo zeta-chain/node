@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
@@ -143,7 +144,12 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	runner.SetupBTCZRC20()
 
 	// deploy TestDApp contract on zEVM
-	appAddr, txApp, _, err := testdapp.DeployTestDApp(runner.ZEVMAuth, runner.ZEVMClient, runner.ConnectorZEVMAddr, runner.WZetaAddr)
+	appAddr, txApp, _, err := testdapp.DeployTestDApp(
+		runner.ZEVMAuth,
+		runner.ZEVMClient,
+		runner.ConnectorZEVMAddr,
+		runner.WZetaAddr,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -166,14 +172,26 @@ func (runner *E2ERunner) SetZEVMContracts() {
 		panic(err)
 	}
 
-	receipt := e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txZEVMSwapApp, runner.Logger, runner.ReceiptTimeout)
+	receipt := e2eutils.MustWaitForTxReceipt(
+		runner.Ctx,
+		runner.ZEVMClient,
+		txZEVMSwapApp,
+		runner.Logger,
+		runner.ReceiptTimeout,
+	)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
 	runner.ZEVMSwapAppAddr = zevmSwapAppAddr
 	runner.ZEVMSwapApp = zevmSwapApp
 
-	receipt = e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txContextApp, runner.Logger, runner.ReceiptTimeout)
+	receipt = e2eutils.MustWaitForTxReceipt(
+		runner.Ctx,
+		runner.ZEVMClient,
+		txContextApp,
+		runner.Logger,
+		runner.ReceiptTimeout,
+	)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}
@@ -184,7 +202,10 @@ func (runner *E2ERunner) SetZEVMContracts() {
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
 func (runner *E2ERunner) SetupETHZRC20() {
-	ethZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chains.GoerliLocalnetChain.ChainId))
+	ethZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chains.GoerliLocalnet.ChainId),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -201,7 +222,10 @@ func (runner *E2ERunner) SetupETHZRC20() {
 
 // SetupBTCZRC20 sets up the BTC ZRC20 in the runner from the values queried from the chain
 func (runner *E2ERunner) SetupBTCZRC20() {
-	BTCZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chains.BtcRegtestChain.ChainId))
+	BTCZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chains.BitcoinRegtest.ChainId),
+	)
 	if err != nil {
 		panic(err)
 	}

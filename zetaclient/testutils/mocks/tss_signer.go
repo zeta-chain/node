@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -49,11 +50,11 @@ func NewMockTSS(chain chains.Chain, evmAddress string, btcAddress string) *TSS {
 }
 
 func NewTSSMainnet() *TSS {
-	return NewMockTSS(chains.BtcMainnetChain, testutils.TSSAddressEVMMainnet, testutils.TSSAddressBTCMainnet)
+	return NewMockTSS(chains.BitcoinMainnet, testutils.TSSAddressEVMMainnet, testutils.TSSAddressBTCMainnet)
 }
 
 func NewTSSAthens3() *TSS {
-	return NewMockTSS(chains.BscTestnetChain, testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
+	return NewMockTSS(chains.BscTestnet, testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
 }
 
 // WithPrivKey sets the private key for the TSS
@@ -112,7 +113,10 @@ func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 
 		// witness program: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Witness_program
 		// The HASH160 of the public key must match the 20-byte witness program.
-		addrWPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pk.SerializeCompressed()), &chaincfg.TestNet3Params)
+		addrWPKH, err := btcutil.NewAddressWitnessPubKeyHash(
+			btcutil.Hash160(pk.SerializeCompressed()),
+			&chaincfg.TestNet3Params,
+		)
 		if err != nil {
 			fmt.Printf("error NewAddressWitnessPubKeyHash: %v", err)
 			return nil

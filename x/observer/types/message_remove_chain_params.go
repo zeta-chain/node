@@ -2,10 +2,10 @@ package types
 
 import (
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgRemoveChainParams = "remove_chain_params"

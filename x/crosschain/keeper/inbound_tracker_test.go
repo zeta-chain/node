@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -56,7 +57,11 @@ func TestKeeper_GetAllInboundTrackerForChain(t *testing.T) {
 	t.Run("Get all InTx trackers for chain paginated by limit", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		inboundTrackers := createNInboundTracker(keeper, ctx, 100, 6)
-		rst, pageRes, err := keeper.GetAllInboundTrackerForChainPaginated(ctx, 6, &query.PageRequest{Limit: 10, CountTotal: true})
+		rst, pageRes, err := keeper.GetAllInboundTrackerForChainPaginated(
+			ctx,
+			6,
+			&query.PageRequest{Limit: 10, CountTotal: true},
+		)
 		require.NoError(t, err)
 		require.Subset(t, nullify.Fill(inboundTrackers), nullify.Fill(rst))
 		require.Equal(t, len(inboundTrackers), int(pageRes.Total))
@@ -64,14 +69,20 @@ func TestKeeper_GetAllInboundTrackerForChain(t *testing.T) {
 	t.Run("Get all InTx trackers for chain paginated by offset", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		inboundTrackers := createNInboundTracker(keeper, ctx, 100, 6)
-		rst, pageRes, err := keeper.GetAllInboundTrackerForChainPaginated(ctx, 6, &query.PageRequest{Offset: 10, CountTotal: true})
+		rst, pageRes, err := keeper.GetAllInboundTrackerForChainPaginated(
+			ctx,
+			6,
+			&query.PageRequest{Offset: 10, CountTotal: true},
+		)
 		require.NoError(t, err)
 		require.Subset(t, nullify.Fill(inboundTrackers), nullify.Fill(rst))
 		require.Equal(t, len(inboundTrackers), int(pageRes.Total))
 	})
 	t.Run("Get all InTx trackers paginated by limit", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		inboundTrackers := append(createNInboundTracker(keeper, ctx, 10, 6), createNInboundTracker(keeper, ctx, 10, 7)...)
+		inboundTrackers := append(
+			createNInboundTracker(keeper, ctx, 10, 6),
+			createNInboundTracker(keeper, ctx, 10, 7)...)
 		rst, pageRes, err := keeper.GetAllInboundTrackerPaginated(ctx, &query.PageRequest{Limit: 20, CountTotal: true})
 		require.NoError(t, err)
 		require.Subset(t, nullify.Fill(inboundTrackers), nullify.Fill(rst))
@@ -79,7 +90,9 @@ func TestKeeper_GetAllInboundTrackerForChain(t *testing.T) {
 	})
 	t.Run("Get all InTx trackers paginated by offset", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		inboundTrackers := append(createNInboundTracker(keeper, ctx, 100, 6), createNInboundTracker(keeper, ctx, 100, 7)...)
+		inboundTrackers := append(
+			createNInboundTracker(keeper, ctx, 100, 6),
+			createNInboundTracker(keeper, ctx, 100, 7)...)
 		rst, pageRes, err := keeper.GetAllInboundTrackerPaginated(ctx, &query.PageRequest{Offset: 10, CountTotal: true})
 		require.NoError(t, err)
 		require.Subset(t, nullify.Fill(inboundTrackers), nullify.Fill(rst))

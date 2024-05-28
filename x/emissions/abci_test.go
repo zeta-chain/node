@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -55,7 +56,11 @@ func TestBeginBlocker(t *testing.T) {
 	t.Run("tmp ctx is not committed if any of the distribution fails", func(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
 		// Fund the emission pool to start the emission process
-		err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000000000))))
+		err := sk.BankKeeper.MintCoins(
+			ctx,
+			emissionstypes.ModuleName,
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000000000))),
+		)
 		require.NoError(t, err)
 		// Setup module accounts for emission pools except for observer pool , so that the observer distribution fails
 		_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
@@ -68,7 +73,16 @@ func TestBeginBlocker(t *testing.T) {
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
 		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
-		require.True(t, sk.BankKeeper.GetBalance(ctx, emissionstypes.EmissionsModuleAddress, config.BaseDenom).Amount.Equal(sdk.NewInt(1000000000000)))
+		require.True(
+			t,
+			sk.BankKeeper.GetBalance(
+				ctx,
+				emissionstypes.EmissionsModuleAddress,
+				config.BaseDenom,
+			).Amount.Equal(
+				sdk.NewInt(1000000000000),
+			),
+		)
 	})
 	t.Run("begin blocker returns early if validator distribution fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
@@ -181,17 +195,22 @@ func TestBeginBlocker(t *testing.T) {
 		require.NoError(t, err)
 
 		// Setup module accounts for emission pools
-		undistributedObserverPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
-		undistributedTssPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
+		undistributedObserverPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).
+			GetAddress()
+		undistributedTssPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).
+			GetAddress()
 		feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 		emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 
 		params, found := k.GetParams(ctx)
 		require.True(t, found)
 		blockRewards := emissionstypes.BlockReward
-		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ObserverEmissionPercentage)).TruncateInt()
-		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ValidatorEmissionPercentage)).TruncateInt()
-		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.TssSignerEmissionPercentage)).TruncateInt()
+		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ObserverEmissionPercentage)).
+			TruncateInt()
+		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ValidatorEmissionPercentage)).
+			TruncateInt()
+		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.TssSignerEmissionPercentage)).
+			TruncateInt()
 		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
 
 		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))
@@ -202,11 +221,20 @@ func TestBeginBlocker(t *testing.T) {
 			emissionsModule.BeginBlocker(ctx, *k)
 
 			// require distribution amount
-			emissionPoolBalanceAfterBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
-			require.True(t, emissionPoolBeforeBlockDistribution.Sub(emissionPoolBalanceAfterBlockDistribution).Equal(distributedRewards))
+			emissionPoolBalanceAfterBlockDistribution := sk.BankKeeper.GetBalance(
+				ctx,
+				emissionPool,
+				config.BaseDenom,
+			).Amount
+			require.True(
+				t,
+				emissionPoolBeforeBlockDistribution.Sub(emissionPoolBalanceAfterBlockDistribution).
+					Equal(distributedRewards),
+			)
 
 			// totalDistributedTillCurrentBlock is the net amount of rewards distributed till the current block, this works in a unit test as the fees are not being collected by validators
-			totalDistributedTillCurrentBlock := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount.
+			totalDistributedTillCurrentBlock := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).
+				Amount.
 				Add(sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount).
 				Add(sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount)
 			// require we are always under the max limit of block rewards
@@ -217,7 +245,9 @@ func TestBeginBlocker(t *testing.T) {
 		}
 
 		// We can simplify the calculation as the rewards are distributed equally among all the observers
-		rewardPerUnit := observerRewardsForABlock.Quo(sdk.NewInt(int64(len(ballotList) * len(observerSet.ObserverList))))
+		rewardPerUnit := observerRewardsForABlock.Quo(
+			sdk.NewInt(int64(len(ballotList) * len(observerSet.ObserverList))),
+		)
 		emissionAmount := rewardPerUnit.Mul(sdk.NewInt(int64(len(ballotList))))
 
 		// Check if the rewards are distributed equally among all the observers
@@ -232,10 +262,18 @@ func TestBeginBlocker(t *testing.T) {
 		require.Equal(t, feeCollectorBalance, validatorRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))))
 
 		tssPoolBalances := sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount
-		require.Equal(t, tssSignerRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))).String(), tssPoolBalances.String())
+		require.Equal(
+			t,
+			tssSignerRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))).String(),
+			tssPoolBalances.String(),
+		)
 
 		observerPoolBalances := sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount
-		require.Equal(t, observerRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))).String(), observerPoolBalances.String())
+		require.Equal(
+			t,
+			observerRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))).String(),
+			observerPoolBalances.String(),
+		)
 	})
 }
 
@@ -253,8 +291,15 @@ func TestDistributeObserverRewards(t *testing.T) {
 		slashAmount          sdkmath.Int
 	}{
 		{
-			name:  "all observers rewarded correctly",
-			votes: [][]observerTypes.VoteType{{observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation}},
+			name: "all observers rewarded correctly",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
 			// total reward units would be 4 as all votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(100),
 			expectedRewards: map[string]int64{
@@ -267,8 +312,15 @@ func TestDistributeObserverRewards(t *testing.T) {
 			slashAmount:  sdkmath.NewInt(25),
 		},
 		{
-			name:  "one observer slashed",
-			votes: [][]observerTypes.VoteType{{observerTypes.VoteType_FailureObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation}},
+			name: "one observer slashed",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_FailureObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
 			// total reward units would be 3 as 3 votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(75),
 			expectedRewards: map[string]int64{
@@ -281,8 +333,15 @@ func TestDistributeObserverRewards(t *testing.T) {
 			slashAmount:  sdkmath.NewInt(25),
 		},
 		{
-			name:  "all observer slashed",
-			votes: [][]observerTypes.VoteType{{observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation}},
+			name: "all observer slashed",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
 			// total reward units would be 0 as no votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(100),
 			expectedRewards: map[string]int64{
@@ -295,8 +354,15 @@ func TestDistributeObserverRewards(t *testing.T) {
 			slashAmount:  sdkmath.NewInt(25),
 		},
 		{
-			name:  "slashed to zero if slash amount is greater than available emissions",
-			votes: [][]observerTypes.VoteType{{observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation}},
+			name: "slashed to zero if slash amount is greater than available emissions",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
 			// total reward units would be 0 as no votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(100),
 			expectedRewards: map[string]int64{
@@ -311,8 +377,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 		{
 			name: "withdraw able emissions unchanged if rewards and slashes are equal",
 			votes: [][]observerTypes.VoteType{
-				{observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation},
-				{observerTypes.VoteType_FailureObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_SuccessObservation},
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+				{
+					observerTypes.VoteType_FailureObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
 			},
 			// total reward units would be 7 as 7 votes match the ballot status, including both ballots
 			totalRewardsForBlock: sdkmath.NewInt(70),
@@ -387,7 +463,13 @@ func TestDistributeObserverRewards(t *testing.T) {
 			for i, observer := range observerSet.ObserverList {
 				observerEmission, found := k.GetWithdrawableEmission(ctx, observer)
 				require.True(t, found, "withdrawable emission not found for observer %d", i)
-				require.Equal(t, tc.expectedRewards[observer], observerEmission.Amount.Int64(), "invalid withdrawable emission for observer %d", i)
+				require.Equal(
+					t,
+					tc.expectedRewards[observer],
+					observerEmission.Amount.Int64(),
+					"invalid withdrawable emission for observer %d",
+					i,
+				)
 			}
 		})
 	}

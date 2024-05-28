@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/chaincfg"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -55,6 +54,7 @@ type EVM struct {
 	ConnectorEthAddr string `yaml:"connector_eth"`
 	CustodyAddr      string `yaml:"custody"`
 	ERC20            string `yaml:"erc20"`
+	TestDappAddr     string `yaml:"test_dapp"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain

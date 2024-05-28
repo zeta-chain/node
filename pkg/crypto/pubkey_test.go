@@ -10,9 +10,9 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
@@ -132,21 +132,21 @@ func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 		c.Assert(err, IsNil)
 
 		c.Assert(os.Setenv("NET", "mainnet"), IsNil)
-		addrETH, err := pk.GetAddress(chains.GoerliChain)
+		addrETH, err := pk.GetAddress(chains.Goerli)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mainnet)
 
 		c.Assert(os.Setenv("NET", "testnet"), IsNil)
-		addrETH, err = pk.GetAddress(chains.GoerliChain)
+		addrETH, err = pk.GetAddress(chains.Goerli)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.testnet)
 
 		c.Assert(os.Setenv("NET", "mocknet"), IsNil)
-		addrETH, err = pk.GetAddress(chains.GoerliChain)
+		addrETH, err = pk.GetAddress(chains.Goerli)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mocknet)
 
-		addrETH, err = pk.GetAddress(chains.BtcRegtestChain)
+		addrETH, err = pk.GetAddress(chains.BitcoinRegtest)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH, Equals, chains.NoAddress)
 	}

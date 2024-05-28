@@ -12,6 +12,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -23,8 +26,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"go.nhat.io/grpcmock"
-	"go.nhat.io/grpcmock/planner"
 )
 
 func setupMockServer(t *testing.T, serviceFunc any, method string, input any, expectedOutput any) *grpcmock.Server {
@@ -126,16 +127,18 @@ func TestZetacore_GetRateLimiterFlags(t *testing.T) {
 }
 
 func TestZetacore_HeaderEnabledChains(t *testing.T) {
-	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
-		{
-			ChainId: chains.EthChain.ChainId,
-			Enabled: true,
+	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{
+		HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
+			{
+				ChainId: chains.Ethereum.ChainId,
+				Enabled: true,
+			},
+			{
+				ChainId: chains.BitcoinMainnet.ChainId,
+				Enabled: true,
+			},
 		},
-		{
-			ChainId: chains.BtcMainnetChain.ChainId,
-			Enabled: true,
-		},
-	}}
+	}
 	input := lightclienttypes.QueryHeaderEnabledChainsRequest{}
 	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 	server := setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
@@ -242,7 +245,9 @@ func TestZetacore_GetCctxByHash(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryGetCctxResponse{CrossChainTx: &crosschainTypes.CrossChainTx{
 		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
 	}}
-	input := crosschainTypes.QueryGetCctxRequest{Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"}
+	input := crosschainTypes.QueryGetCctxRequest{
+		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
+	}
 	method := "/zetachain.zetacore.crosschain.Query/Cctx"
 	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
@@ -457,7 +462,7 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 }
 
 func TestZetacore_GetLastBlockHeightByChain(t *testing.T) {
-	index := chains.BscMainnetChain
+	index := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryGetLastBlockHeightResponse{
 		LastBlockHeight: &crosschainTypes.LastBlockHeight{
 			Index:              index.ChainName.String(),
@@ -519,7 +524,7 @@ func TestZetacore_GetBaseGasPrice(t *testing.T) {
 }
 
 func TestZetacore_GetNonceByChain(t *testing.T) {
-	chain := chains.BscMainnetChain
+	chain := chains.BscMainnet
 	expectedOutput := observertypes.QueryGetChainNoncesResponse{
 		ChainNonces: observertypes.ChainNonces{
 			Creator:         "",
@@ -609,7 +614,7 @@ func TestZetacore_GetBallotByID(t *testing.T) {
 }
 
 func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
-	chainID := chains.BscMainnetChain.ChainId
+	chainID := chains.BscMainnet.ChainId
 	expectedOutput := crosschainTypes.QueryAllInboundTrackerByChainResponse{
 		InboundTracker: []crosschainTypes.InboundTracker{
 			{
@@ -722,7 +727,7 @@ func TestZetacore_GetTssHistory(t *testing.T) {
 }
 
 func TestZetacore_GetOutboundTracker(t *testing.T) {
-	chain := chains.BscMainnetChain
+	chain := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryGetOutboundTrackerResponse{
 		OutboundTracker: crosschainTypes.OutboundTracker{
 			Index:    "tracker12345",
@@ -749,7 +754,7 @@ func TestZetacore_GetOutboundTracker(t *testing.T) {
 }
 
 func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
-	chain := chains.BscMainnetChain
+	chain := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryAllOutboundTrackerByChainResponse{
 		OutboundTracker: []crosschainTypes.OutboundTracker{
 			{
@@ -792,11 +797,11 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 		PendingNonces: observertypes.PendingNonces{
 			NonceLow:  0,
 			NonceHigh: 0,
-			ChainId:   chains.EthChain.ChainId,
+			ChainId:   chains.Ethereum.ChainId,
 			Tss:       "",
 		},
 	}
-	input := observertypes.QueryPendingNoncesByChainRequest{ChainId: chains.EthChain.ChainId}
+	input := observertypes.QueryPendingNoncesByChainRequest{ChainId: chains.Ethereum.ChainId}
 	method := "/zetachain.zetacore.observer.Query/PendingNoncesByChain"
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 	server.Serve()
@@ -805,13 +810,13 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetPendingNoncesByChain(chains.EthChain.ChainId)
+	resp, err := client.GetPendingNoncesByChain(chains.Ethereum.ChainId)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.PendingNonces, resp)
 }
 
 func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
-	chainID := chains.BscMainnetChain.ChainId
+	chainID := chains.BscMainnet.ChainId
 	expectedOutput := lightclienttypes.QueryGetChainStateResponse{ChainState: &lightclienttypes.ChainState{
 		ChainId:         chainID,
 		LatestHeight:    5566654,
@@ -836,22 +841,22 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []*chains.Chain{
 			{
-				ChainName:   chains.BtcMainnetChain.ChainName,
-				ChainId:     chains.BtcMainnetChain.ChainId,
-				Network:     chains.BscMainnetChain.Network,
-				NetworkType: chains.BscMainnetChain.NetworkType,
-				Vm:          chains.BscMainnetChain.Vm,
-				Consensus:   chains.BscMainnetChain.Consensus,
-				IsExternal:  chains.BscMainnetChain.IsExternal,
+				ChainName:   chains.BitcoinMainnet.ChainName,
+				ChainId:     chains.BitcoinMainnet.ChainId,
+				Network:     chains.BscMainnet.Network,
+				NetworkType: chains.BscMainnet.NetworkType,
+				Vm:          chains.BscMainnet.Vm,
+				Consensus:   chains.BscMainnet.Consensus,
+				IsExternal:  chains.BscMainnet.IsExternal,
 			},
 			{
-				ChainName:   chains.EthChain.ChainName,
-				ChainId:     chains.EthChain.ChainId,
-				Network:     chains.EthChain.Network,
-				NetworkType: chains.EthChain.NetworkType,
-				Vm:          chains.EthChain.Vm,
-				Consensus:   chains.EthChain.Consensus,
-				IsExternal:  chains.EthChain.IsExternal,
+				ChainName:   chains.Ethereum.ChainName,
+				ChainId:     chains.Ethereum.ChainId,
+				Network:     chains.Ethereum.Network,
+				NetworkType: chains.Ethereum.NetworkType,
+				Vm:          chains.Ethereum.Vm,
+				Consensus:   chains.Ethereum.Consensus,
+				IsExternal:  chains.Ethereum.IsExternal,
 			},
 		},
 	}
@@ -895,7 +900,7 @@ func TestZetacore_GetPendingNonces(t *testing.T) {
 }
 
 func TestZetacore_Prove(t *testing.T) {
-	chainId := chains.BscMainnetChain.ChainId
+	chainId := chains.BscMainnet.ChainId
 	txHash := "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"
 	blockHash := "0000000000000000000172c9a64f86f208b867a84dc7a0b7c75be51e750ed8eb"
 	txIndex := 555

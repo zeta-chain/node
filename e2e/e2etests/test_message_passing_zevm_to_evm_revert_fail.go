@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -74,10 +75,6 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 	}
 
 	// Get previous balances to check funds are not minted anywhere when aborted
-	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
-	if err != nil {
-		panic(err)
-	}
 	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, testDappNoRevertAddr)
 	if err != nil {
 		panic(err)
@@ -101,25 +98,14 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 		panic("expected cctx to be reverted")
 	}
 
-	// Check ZETA balance on EVM TestDApp and check new balance is previous balance
-	newBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
-	if err != nil {
-		panic(err)
-	}
-	if newBalanceEVM.Cmp(previousBalanceEVM) != 0 {
-		panic(fmt.Sprintf(
-			"expected new balance to be %s, got %s",
-			previousBalanceEVM.String(),
-			newBalanceEVM.String()),
-		)
-	}
-
 	// Check the funds are not minted to the contract as the cctx has been aborted
 	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, testDappNoRevertAddr)
 	if err != nil {
 		panic(err)
 	}
 	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
-		panic(fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()))
+		panic(
+			fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()),
+		)
 	}
 }

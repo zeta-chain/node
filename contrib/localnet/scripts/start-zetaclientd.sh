@@ -39,21 +39,22 @@ operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"
 echo "Start zetaclientd"
-if [ $HOSTNAME == "zetaclient0" ]
+# skip initialization if the config file already exists (zetaclientd init has already been run)
+if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
 then
     rm ~/.tss/*
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
 
     # check if the option is additional-evm
-   # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
+    # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
     # in /root/.zetacored/config/zetaclient_config.json
     if [ "$OPTION" == "additional-evm" ]; then
      set_sepolia_endpoint
     fi
-
-    zetaclientd-supervisor start < /root/password.file
-else
+fi
+if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
+then
   num=$(echo $HOSTNAME | tr -dc '0-9')
   node="zetacore$num"
   MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
@@ -71,13 +72,6 @@ else
   if [ "$OPTION" == "additional-evm" ]; then
    set_sepolia_endpoint
   fi
-
-  zetaclientd-supervisor start < /root/password.file
 fi
 
-# check if the option is background
-# in this case, we tail the zetaclientd log file
-if [ "$OPTION" == "background" ]; then
-    sleep 3
-    tail -f $HOME/zetaclient.log
-fi
+zetaclientd-supervisor start < /root/password.file

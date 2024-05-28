@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -19,7 +20,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
-		chainId := chains.GoerliLocalnetChain.ChainId
+		chainId := chains.GoerliLocalnet.ChainId
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
@@ -44,7 +45,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		chainId := chains.GoerliLocalnetChain.ChainId
+		chainId := chains.GoerliLocalnet.ChainId
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
@@ -88,8 +89,8 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		chainId := chains.GoerliLocalnetChain.ChainId
-		index := chains.GoerliLocalnetChain.ChainName.String()
+		chainId := chains.GoerliLocalnet.ChainId
+		index := chains.GoerliLocalnet.ChainName.String()
 
 		// check existing chain nonces
 		_, found := k.GetChainNonces(ctx, index)

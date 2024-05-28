@@ -8,6 +8,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -68,21 +69,21 @@ func sepoliaBlockHeaders(t *testing.T) (proofs.BlockHeader, proofs.BlockHeader, 
 			Height:     5000000,
 			Hash:       header1.Hash().Bytes(),
 			ParentHash: header1.ParentHash.Bytes(),
-			ChainId:    chains.SepoliaChain.ChainId,
+			ChainId:    chains.Sepolia.ChainId,
 			Header:     proofs.NewEthereumHeader(headerRLP1),
 		},
 		proofs.BlockHeader{
 			Height:     5000001,
 			Hash:       header2.Hash().Bytes(),
 			ParentHash: header2.ParentHash.Bytes(),
-			ChainId:    chains.SepoliaChain.ChainId,
+			ChainId:    chains.Sepolia.ChainId,
 			Header:     proofs.NewEthereumHeader(headerRLP2),
 		},
 		proofs.BlockHeader{
 			Height:     5000002,
 			Hash:       header3.Hash().Bytes(),
 			ParentHash: header3.ParentHash.Bytes(),
-			ChainId:    chains.SepoliaChain.ChainId,
+			ChainId:    chains.Sepolia.ChainId,
 			Header:     proofs.NewEthereumHeader(headerRLP3),
 		}
 }
@@ -130,7 +131,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -149,7 +150,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: false,
 				},
 			},
@@ -190,7 +191,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -208,7 +209,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -232,7 +233,7 @@ func TestKeeper_CheckNewBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -259,7 +260,7 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -291,7 +292,7 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.SepoliaChain.ChainId,
+					ChainId: chains.Sepolia.ChainId,
 					Enabled: true,
 				},
 			},
@@ -325,43 +326,46 @@ func TestKeeper_AddBlockHeader(t *testing.T) {
 		require.EqualValues(t, bh.ChainId, chainState.ChainId)
 	})
 
-	t.Run("should add a block header and update chain state if exists and set earliest height if 0", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.LightclientKeeper(t)
+	t.Run(
+		"should add a block header and update chain state if exists and set earliest height if 0",
+		func(t *testing.T) {
+			k, ctx, _, _ := keepertest.LightclientKeeper(t)
 
-		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
-			HeaderSupportedChains: []types.HeaderSupportedChain{
-				{
-					ChainId: chains.SepoliaChain.ChainId,
-					Enabled: true,
+			k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
+				HeaderSupportedChains: []types.HeaderSupportedChain{
+					{
+						ChainId: chains.Sepolia.ChainId,
+						Enabled: true,
+					},
 				},
-			},
-		})
+			})
 
-		bh, _, _ := sepoliaBlockHeaders(t)
+			bh, _, _ := sepoliaBlockHeaders(t)
 
-		k.SetChainState(ctx, types.ChainState{
-			ChainId:         bh.ChainId,
-			LatestHeight:    bh.Height - 1,
-			EarliestHeight:  0,
-			LatestBlockHash: bh.ParentHash,
-		})
+			k.SetChainState(ctx, types.ChainState{
+				ChainId:         bh.ChainId,
+				LatestHeight:    bh.Height - 1,
+				EarliestHeight:  0,
+				LatestBlockHash: bh.ParentHash,
+			})
 
-		k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
+			k.AddBlockHeader(ctx, bh.ChainId, bh.Height, bh.Hash, bh.Header, bh.ParentHash)
 
-		retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
-		require.True(t, found)
-		require.EqualValues(t, bh.Header, retrieved.Header)
-		require.EqualValues(t, bh.Height, retrieved.Height)
-		require.EqualValues(t, bh.Hash, retrieved.Hash)
-		require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
-		require.EqualValues(t, bh.ChainId, retrieved.ChainId)
+			retrieved, found := k.GetBlockHeader(ctx, bh.Hash)
+			require.True(t, found)
+			require.EqualValues(t, bh.Header, retrieved.Header)
+			require.EqualValues(t, bh.Height, retrieved.Height)
+			require.EqualValues(t, bh.Hash, retrieved.Hash)
+			require.EqualValues(t, bh.ParentHash, retrieved.ParentHash)
+			require.EqualValues(t, bh.ChainId, retrieved.ChainId)
 
-		// Check chain state
-		chainState, found := k.GetChainState(ctx, bh.ChainId)
-		require.True(t, found)
-		require.EqualValues(t, bh.Height, chainState.LatestHeight)
-		require.EqualValues(t, bh.Height, chainState.EarliestHeight)
-		require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
-		require.EqualValues(t, bh.ChainId, chainState.ChainId)
-	})
+			// Check chain state
+			chainState, found := k.GetChainState(ctx, bh.ChainId)
+			require.True(t, found)
+			require.EqualValues(t, bh.Height, chainState.LatestHeight)
+			require.EqualValues(t, bh.Height, chainState.EarliestHeight)
+			require.EqualValues(t, bh.Hash, chainState.LatestBlockHash)
+			require.EqualValues(t, bh.ChainId, chainState.ChainId)
+		},
+	)
 }

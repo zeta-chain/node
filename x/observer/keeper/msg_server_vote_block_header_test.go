@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -66,7 +67,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:         chains.GoerliLocalnetChain.ChainId,
+					ChainId:         chains.GoerliLocalnet.ChainId,
 					IsSupported:     true,
 					BallotThreshold: one,
 				},
@@ -75,7 +76,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 
 		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   sample.AccAddress(),
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: sample.Hash().Bytes(),
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -96,7 +97,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:         chains.GoerliLocalnetChain.ChainId,
+					ChainId:         chains.GoerliLocalnet.ChainId,
 					IsSupported:     true,
 					BallotThreshold: one,
 				},
@@ -113,7 +114,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 
 		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: sample.Hash().Bytes(),
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -134,7 +135,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:         chains.GoerliLocalnetChain.ChainId,
+					ChainId:         chains.GoerliLocalnet.ChainId,
 					IsSupported:     true,
 					BallotThreshold: one,
 				},
@@ -153,7 +154,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		// there is a single node account, so the ballot will be created and finalized in a single vote
 		res, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: sample.Hash().Bytes(),
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -179,7 +180,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:         chains.GoerliLocalnetChain.ChainId,
+					ChainId:         chains.GoerliLocalnet.ChainId,
 					IsSupported:     true,
 					BallotThreshold: one,
 				},
@@ -196,7 +197,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		mockCheckNewBlockHeader(lightclientMock, nil)
 		res, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer1,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: blockHash,
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -212,7 +213,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		mockCheckNewBlockHeader(lightclientMock, nil)
 		res, err = srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer2,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: blockHash,
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -229,7 +230,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		mockAddBlockHeader(lightclientMock)
 		res, err = srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer3,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: blockHash,
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -253,7 +254,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:         chains.GoerliLocalnetChain.ChainId,
+					ChainId:         chains.GoerliLocalnet.ChainId,
 					IsSupported:     true,
 					BallotThreshold: one,
 				},
@@ -271,7 +272,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		mockCheckNewBlockHeader(lightclientMock, nil)
 		_, err := srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: blockHash,
 			Height:    42,
 			Header:    proofs.HeaderData{},
@@ -284,7 +285,7 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		mockCheckNewBlockHeader(lightclientMock, nil)
 		_, err = srv.VoteBlockHeader(ctx, &types.MsgVoteBlockHeader{
 			Creator:   observer,
-			ChainId:   chains.GoerliLocalnetChain.ChainId,
+			ChainId:   chains.GoerliLocalnet.ChainId,
 			BlockHash: blockHash,
 			Height:    42,
 			Header:    proofs.HeaderData{},

@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -20,7 +21,10 @@ func CmdGasStabilityPoolAddress() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GasStabilityPoolAddress(context.Background(), &types.QueryGetGasStabilityPoolAddress{})
+			res, err := queryClient.GasStabilityPoolAddress(
+				context.Background(),
+				&types.QueryGetGasStabilityPoolAddress{},
+			)
 			if err != nil {
 				return err
 			}
@@ -79,7 +83,10 @@ func CmdGasStabilityPoolBalances() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GasStabilityPoolBalanceAll(context.Background(), &types.QueryAllGasStabilityPoolBalance{})
+			res, err := queryClient.GasStabilityPoolBalanceAll(
+				context.Background(),
+				&types.QueryAllGasStabilityPoolBalance{},
+			)
 			if err != nil {
 				return err
 			}

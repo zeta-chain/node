@@ -21,6 +21,10 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -32,15 +36,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 const (
-	// maxHeightDiff contains the max height diff in case the last block is too old when the observer starts
-	maxHeightDiff = 10000
-
 	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
 	btcBlocksPerDay = 144
 
@@ -320,16 +318,21 @@ func (ob *Observer) WatchRPCStatus() {
 			tssAddr := ob.Tss.BTCAddressWitnessPubkeyHash()
 			res, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddr})
 			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: can't list utxos of TSS address; wallet or loaded? TSS address is not imported? ")
+				ob.logger.Chain.Error().
+					Err(err).
+					Msg("RPC status check: can't list utxos of TSS address; wallet or loaded? TSS address is not imported? ")
 				continue
 			}
 
 			if len(res) == 0 {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
+				ob.logger.Chain.Error().
+					Err(err).
+					Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
 				continue
 			}
 
-			ob.logger.Chain.Info().Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
+			ob.logger.Chain.Info().
+				Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
 
 		case <-ob.stop:
 			return
@@ -606,13 +609,18 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 
 	broadcastEntry := clienttypes.ToOutboundHashSQLType(txHash, outboundID)
 	if err := ob.db.Save(&broadcastEntry).Error; err != nil {
-		ob.logger.Outbound.Error().Err(err).Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
+		ob.logger.Outbound.Error().
+			Err(err).
+			Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
 	}
 	ob.logger.Outbound.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outbound %s", txHash, outboundID)
 }
 
 // GetTxResultByHash gets the transaction result by hash
-func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
+func GetTxResultByHash(
+	rpcClient interfaces.BTCRPCClient,
+	txID string,
+) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
 	hash, err := chainhash.NewHashFromStr(txID)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error NewHashFromStr: %s", txID)
@@ -626,12 +634,40 @@ func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainha
 	return hash, txResult, nil
 }
 
+// GetBlockHeightByTxHash gets the block height by block hash
+func GetBlockHeightByHash(
+	rpcClient interfaces.BTCRPCClient,
+	hash string,
+) (int64, error) {
+	// decode the block hash
+	var blockHash chainhash.Hash
+	err := chainhash.Decode(&blockHash, hash)
+	if err != nil {
+		return 0, errors.Wrapf(err, "GetBlockHeightByHash: error decoding block hash %s", hash)
+	}
+
+	// get block by hash
+	block, err := rpcClient.GetBlockVerbose(&blockHash)
+	if err != nil {
+		return 0, errors.Wrapf(err, "GetBlockHeightByHash: error GetBlockVerbose %s", hash)
+	}
+	return block.Height, nil
+}
+
 // GetRawTxResult gets the raw tx result
-func GetRawTxResult(rpcClient interfaces.BTCRPCClient, hash *chainhash.Hash, res *btcjson.GetTransactionResult) (btcjson.TxRawResult, error) {
+func GetRawTxResult(
+	rpcClient interfaces.BTCRPCClient,
+	hash *chainhash.Hash,
+	res *btcjson.GetTransactionResult,
+) (btcjson.TxRawResult, error) {
 	if res.Confirmations == 0 { // for pending tx, we query the raw tx directly
 		rawResult, err := rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
 		if err != nil {
-			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetRawTransactionVerbose %s", res.TxID)
+			return btcjson.TxRawResult{}, errors.Wrapf(
+				err,
+				"getRawTxResult: error GetRawTransactionVerbose %s",
+				res.TxID,
+			)
 		}
 		return *rawResult, nil
 	} else if res.Confirmations > 0 { // for confirmed tx, we query the block
@@ -665,37 +701,35 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 	return nil
 }
 
-func (ob *Observer) LoadLastBlock() error {
+// LoadLastScannedBlock loads last scanned block from database
+// The last scanned block is the height from which the observer should continue scanning for inbound transactions
+func (ob *Observer) LoadLastScannedBlock() error {
 	// Get the latest block number from node
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
 	}
 	if bn < 0 {
-		return fmt.Errorf("LoadLastBlock: negative block number %d", bn)
+		return fmt.Errorf("LoadLastScannedBlock: negative block number %d", bn)
 	}
 
 	//Load persisted block number
 	var lastBlockNum clienttypes.LastBlockSQLType
 	if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
-		ob.logger.Chain.Info().Msg("LastBlockNum not found in DB, scan from latest")
+		ob.logger.Chain.Info().Msg("LoadLastScannedBlock: last scanned block not found in DB, scan from latest")
 		ob.SetLastBlockHeightScanned(bn)
 	} else {
 		// #nosec G701 always in range
 		lastBN := int64(lastBlockNum.Num)
 		ob.SetLastBlockHeightScanned(lastBN)
-
-		//If persisted block number is too low, use the latest height
-		if (bn - lastBN) > maxHeightDiff {
-			ob.logger.Chain.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
-			ob.SetLastBlockHeightScanned(bn)
-		}
 	}
 
-	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
+	// bitcoin regtest starts from block 100
+	if chains.IsBitcoinRegnet(ob.chain.ChainId) {
 		ob.SetLastBlockHeightScanned(100)
 	}
-	ob.logger.Chain.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
+	ob.logger.Chain.Info().
+		Msgf("LoadLastScannedBlock: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockHeightScanned())
 
 	return nil
 }
@@ -793,8 +827,8 @@ func (ob *Observer) loadDB(dbpath string) error {
 		return err
 	}
 
-	//Load last block
-	err = ob.LoadLastBlock()
+	// Load last scanned block
+	err = ob.LoadLastScannedBlock()
 	if err != nil {
 		return err
 	}

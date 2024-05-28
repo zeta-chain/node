@@ -2,14 +2,13 @@ package e2etests
 
 import (
 	"fmt"
-	"strconv"
-
 	"math/big"
+	"strconv"
 	"time"
 
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"golang.org/x/sync/errgroup"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -18,7 +17,9 @@ import (
 // TestStressEtherWithdraw tests the stressing withdraw of ether
 func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	if len(args) != 2 {
-		panic("TestStressEtherWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+		panic(
+			"TestStressEtherWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.",
+		)
 	}
 
 	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)

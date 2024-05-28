@@ -7,6 +7,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -52,7 +53,10 @@ func MockOrchestrator(
 	return orchestrator
 }
 
-func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChainParams *observertypes.ChainParams) *context.ZetacoreContext {
+func CreateCoreContext(
+	evmChain, btcChain chains.Chain,
+	evmChainParams, btcChainParams *observertypes.ChainParams,
+) *context.ZetacoreContext {
 	// new config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
@@ -85,8 +89,8 @@ func CreateCoreContext(evmChain, btcChain chains.Chain, evmChainParams, btcChain
 
 func Test_GetUpdatedSigner(t *testing.T) {
 	// initial parameters for orchestrator creation
-	evmChain := chains.EthChain
-	btcChain := chains.BtcMainnetChain
+	evmChain := chains.Ethereum
+	btcChain := chains.BitcoinMainnet
 	evmChainParams := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConnectorContractAddress:    testutils.ConnectorAddresses[evmChain.ChainId].Hex(),
@@ -105,7 +109,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		context := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC signer should not be found
-		_, err := orchestrator.GetUpdatedSigner(context, chains.BscMainnetChain.ChainId)
+		_, err := orchestrator.GetUpdatedSigner(context, chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
@@ -121,8 +125,8 @@ func Test_GetUpdatedSigner(t *testing.T) {
 
 func Test_GetUpdatedChainObserver(t *testing.T) {
 	// initial parameters for orchestrator creation
-	evmChain := chains.EthChain
-	btcChain := chains.BtcMainnetChain
+	evmChain := chains.Ethereum
+	btcChain := chains.BitcoinMainnet
 	evmChainParams := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConnectorContractAddress:    testutils.ConnectorAddresses[evmChain.ChainId].Hex(),
@@ -170,7 +174,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC chain observer should not be found
-		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BscMainnetChain.ChainId)
+		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "chain observer not found")
 	})
 	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
@@ -186,7 +190,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateCoreContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
 		// BTC testnet chain observer should not be found
-		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BtcTestNetChain.ChainId)
+		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "chain observer not found")
 	})
 	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
@@ -202,8 +206,9 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 
 func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	// define test foreign chains
-	ethChain := chains.EthChain
-	btcChain := chains.BtcMainnetChain
+	ethChain := chains.Ethereum
+	btcChain := chains.BitcoinMainnet
+	zetaChainID := chains.ZetaChainMainnet.ChainId
 	foreignChains := []chains.Chain{
 		ethChain,
 		btcChain,
@@ -214,13 +219,53 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	btcChainParams := &observertypes.ChainParams{ChainId: btcChain.ChainId}
 
 	// create 10 missed and 90 pending cctxs for eth chain, the coinType/amount does not matter for this test
-	ethCctxsMissed := sample.CustomCctxsInBlockRange(t, 1, 10, ethChain.ChainId, coin.CoinType_Gas, "", uint64(2e14), crosschaintypes.CctxStatus_PendingOutbound)
-	ethCctxsPending := sample.CustomCctxsInBlockRange(t, 11, 100, ethChain.ChainId, coin.CoinType_Gas, "", uint64(2e14), crosschaintypes.CctxStatus_PendingOutbound)
+	ethCctxsMissed := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		10,
+		zetaChainID,
+		ethChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		uint64(2e14),
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
+	ethCctxsPending := sample.CustomCctxsInBlockRange(
+		t,
+		11,
+		100,
+		zetaChainID,
+		ethChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		uint64(2e14),
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
 	ethCctxsAll := append(append([]*crosschaintypes.CrossChainTx{}, ethCctxsMissed...), ethCctxsPending...)
 
 	// create 10 missed and 90 pending cctxs for btc chain, the coinType/amount does not matter for this test
-	btcCctxsMissed := sample.CustomCctxsInBlockRange(t, 1, 10, btcChain.ChainId, coin.CoinType_Gas, "", 2000, crosschaintypes.CctxStatus_PendingOutbound)
-	btcCctxsPending := sample.CustomCctxsInBlockRange(t, 11, 100, btcChain.ChainId, coin.CoinType_Gas, "", 2000, crosschaintypes.CctxStatus_PendingOutbound)
+	btcCctxsMissed := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		10,
+		zetaChainID,
+		btcChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		2000,
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
+	btcCctxsPending := sample.CustomCctxsInBlockRange(
+		t,
+		11,
+		100,
+		zetaChainID,
+		btcChain.ChainId,
+		coin.CoinType_Gas,
+		"",
+		2000,
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
 	btcCctxsAll := append(append([]*crosschaintypes.CrossChainTx{}, btcCctxsMissed...), btcCctxsPending...)
 
 	// all missed cctxs and all pending cctxs across all foreign chains

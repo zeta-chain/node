@@ -10,13 +10,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"go.nhat.io/grpcmock"
-	"go.nhat.io/grpcmock/planner"
 )
 
 func TestHandleBroadcastError(t *testing.T) {
@@ -79,7 +80,13 @@ func TestBroadcast(t *testing.T) {
 		client.EnableMockSDKClient(mocks.NewSDKClientWithErr(nil, 0))
 		blockHash, err := hex.DecodeString(ethBlockHash)
 		require.NoError(t, err)
-		msg := observerTypes.NewMsgVoteBlockHeader(address.String(), chains.EthChain.ChainId, blockHash, 18495266, getHeaderData(t))
+		msg := observerTypes.NewMsgVoteBlockHeader(
+			address.String(),
+			chains.Ethereum.ChainId,
+			blockHash,
+			18495266,
+			getHeaderData(t),
+		)
 		authzMsg, authzSigner, err := client.WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
 		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)
@@ -87,10 +94,18 @@ func TestBroadcast(t *testing.T) {
 	})
 
 	t.Run("broadcast failed", func(t *testing.T) {
-		client.EnableMockSDKClient(mocks.NewSDKClientWithErr(errors.New("account sequence mismatch, expected 5 got 4"), 32))
+		client.EnableMockSDKClient(
+			mocks.NewSDKClientWithErr(errors.New("account sequence mismatch, expected 5 got 4"), 32),
+		)
 		blockHash, err := hex.DecodeString(ethBlockHash)
 		require.NoError(t, err)
-		msg := observerTypes.NewMsgVoteBlockHeader(address.String(), chains.EthChain.ChainId, blockHash, 18495266, getHeaderData(t))
+		msg := observerTypes.NewMsgVoteBlockHeader(
+			address.String(),
+			chains.Ethereum.ChainId,
+			blockHash,
+			18495266,
+			getHeaderData(t),
+		)
 		authzMsg, authzSigner, err := client.WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
 		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)

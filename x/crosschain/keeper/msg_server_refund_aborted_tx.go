@@ -6,10 +6,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"golang.org/x/net/context"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/net/context"
 )
 
 // RefundAbortedCCTX refunds the aborted CCTX.
@@ -17,7 +18,10 @@ import (
 // It refunds the amount to the refund address and sets the CCTX as refunded.
 // Refer to documentation for GetRefundAddress for the refund address logic.
 // Refer to documentation for GetAbortedAmount for the aborted amount logic.
-func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefundAbortedCCTX) (*types.MsgRefundAbortedCCTXResponse, error) {
+func (k msgServer) RefundAbortedCCTX(
+	goCtx context.Context,
+	msg *types.MsgRefundAbortedCCTX,
+) (*types.MsgRefundAbortedCCTXResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

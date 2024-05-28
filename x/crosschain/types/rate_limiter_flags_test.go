@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -235,8 +236,8 @@ func TestBuildAssetRateMapFromList(t *testing.T) {
 
 func TestConvertCctxValue(t *testing.T) {
 	// chain IDs
-	ethChainID := chains.GoerliLocalnetChain.ChainId
-	btcChainID := chains.BtcRegtestChain.ChainId
+	ethChainID := chains.GoerliLocalnet.ChainId
+	btcChainID := chains.BitcoinRegtest.ChainId
 
 	// setup test asset rates
 	assetETH := sample.EthAddress().Hex()

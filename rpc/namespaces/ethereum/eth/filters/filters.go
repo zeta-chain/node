@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	"github.com/zeta-chain/zetacore/rpc/types"
 )
@@ -57,7 +58,13 @@ func NewBlockFilter(logger log.Logger, backend Backend, criteria filters.FilterC
 
 // NewRangeFilter creates a new filter which uses a bloom filter on blocks to
 // figure out whether a particular block is interesting or not.
-func NewRangeFilter(logger log.Logger, backend Backend, begin, end int64, addresses []common.Address, topics [][]common.Hash) *Filter {
+func NewRangeFilter(
+	logger log.Logger,
+	backend Backend,
+	begin, end int64,
+	addresses []common.Address,
+	topics [][]common.Hash,
+) *Filter {
 	// Flatten the address and topic filter clauses into a single bloombits filter
 	// system. Since the bloombits are not positional, nil topics are permitted,
 	// which get flattened into a nil byte slice.
@@ -118,7 +125,13 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 
 		blockRes, err := f.backend.TendermintBlockResultByNumber(&resBlock.Block.Height)
 		if err != nil {
-			f.logger.Debug("failed to fetch block result from Tendermint", "height", resBlock.Block.Height, "error", err.Error())
+			f.logger.Debug(
+				"failed to fetch block result from Tendermint",
+				"height",
+				resBlock.Block.Height,
+				"error",
+				err.Error(),
+			)
 			return nil, nil
 		}
 

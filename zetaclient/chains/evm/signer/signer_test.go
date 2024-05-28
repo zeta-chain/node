@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -35,7 +36,7 @@ func getNewEvmSigner() (*Signer, error) {
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 	return NewSigner(
-		chains.BscMainnetChain,
+		chains.BscMainnet,
 		mocks.EVMRPCEnabled,
 		mocks.NewTSSMainnet(),
 		config.GetConnectorABI(),
@@ -53,8 +54,8 @@ func getNewEvmChainObserver() (*observer.Observer, error) {
 	cfg := config.NewConfig()
 	tss := mocks.NewTSSMainnet()
 
-	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain, Endpoint: "http://localhost:8545"}
-	cfg.EVMChainConfigs[chains.BscMainnetChain.ChainId] = evmcfg
+	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
+	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
 	coreCTX := context.NewZetacoreContext(cfg)
 	appCTX := context.NewAppContext(coreCTX, cfg)
 
@@ -300,7 +301,14 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutbound(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mocks.NewMockZetacoreClient(), txData)
+		evmSigner.BroadcastOutbound(
+			tx,
+			cctx,
+			zerolog.Logger{},
+			sdktypes.AccAddress{},
+			mocks.NewMockZetacoreClient(),
+			txData,
+		)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()

@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -19,7 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"google.golang.org/grpc"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}
@@ -192,7 +193,11 @@ func (c *Client) WaitForZetacoreToCreateBlocks() error {
 
 // UpdateZetacoreContext updates zetacore context
 // zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, init bool, sampledLogger zerolog.Logger) error {
+func (c *Client) UpdateZetacoreContext(
+	coreContext *context.ZetacoreContext,
+	init bool,
+	sampledLogger zerolog.Logger,
+) error {
 	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)
@@ -203,8 +208,9 @@ func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, ini
 		return fmt.Errorf("failed to get upgrade plan: %w", err)
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		c.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
-			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
+		c.logger.Warn().
+			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
+				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
 		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 
@@ -218,10 +224,6 @@ func (c *Client) UpdateZetacoreContext(coreContext *context.ZetacoreContext, ini
 
 	// check and update chain params for each chain
 	for _, chainParam := range chainParams {
-		if !chainParam.GetIsSupported() {
-			sampledLogger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
-			continue
-		}
 		err := observertypes.ValidateChainParams(chainParam)
 		if err != nil {
 			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)

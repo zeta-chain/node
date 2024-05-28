@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -46,7 +48,7 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	appContext := clientcontext.NewAppContext(&clientcontext.ZetacoreContext{}, config.Config{})
-	client, err := NewObserver(appContext, chains.BtcRegtestChain, nil, tss, tempSQLiteDbPath,
+	client, err := NewObserver(appContext, chains.BitcoinRegtest, nil, tss, tempSQLiteDbPath,
 		clientcommon.DefaultLoggers(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.rpcClient, err = getRPCClient(18332)
@@ -85,10 +87,13 @@ func (suite *BitcoinObserverTestSuite) TearDownSuite() {
 
 func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
+	rpcMainnet := os.Getenv("BTC_RPC_MAINNET")
+	rpcTestnet := os.Getenv("BTC_RPC_TESTNET")
+
 	// mainnet
 	if chainID == 8332 {
 		connCfg = &rpcclient.ConnConfig{
-			Host:         "127.0.0.1:8332", // mainnet endpoint goes here
+			Host:         rpcMainnet, // mainnet endpoint goes here
 			User:         "user",
 			Pass:         "pass",
 			Params:       "mainnet",
@@ -99,7 +104,7 @@ func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 	// testnet3
 	if chainID == 18332 {
 		connCfg = &rpcclient.ConnConfig{
-			Host:         "127.0.0.1:8332", // testnet endpoint goes here
+			Host:         rpcTestnet, // testnet endpoint goes here
 			User:         "user",
 			Pass:         "pass",
 			Params:       "testnet3",
@@ -110,7 +115,11 @@ func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 	return rpcclient.New(connCfg, nil)
 }
 
-func getFeeRate(client *rpcclient.Client, confTarget int64, estimateMode *btcjson.EstimateSmartFeeMode) (*big.Int, error) {
+func getFeeRate(
+	client *rpcclient.Client,
+	confTarget int64,
+	estimateMode *btcjson.EstimateSmartFeeMode,
+) (*big.Int, error) {
 	feeResult, err := client.EstimateSmartFee(confTarget, estimateMode)
 	if err != nil {
 		return nil, err
@@ -214,10 +223,32 @@ func (suite *BitcoinObserverTestSuite) Test3() {
 func TestBitcoinObserverLive(t *testing.T) {
 	// suite.Run(t, new(BitcoinClientTestSuite))
 
+	// LiveTestGetBlockHeightByHash(t)
 	// LiveTestBitcoinFeeRate(t)
 	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
 	// LiveTestAvgFeeRateTestnetMempoolSpace(t)
 	// LiveTestGetSenderByVin(t)
+}
+
+// LiveTestGetBlockHeightByHash queries Bitcoin block height by hash
+func LiveTestGetBlockHeightByHash(t *testing.T) {
+	// setup Bitcoin client
+	client, err := getRPCClient(8332)
+	require.NoError(t, err)
+
+	// the block hashes to test
+	expectedHeight := int64(835053)
+	hash := "00000000000000000000994a5d12976ec5bda078a7b9c27981f0a4e7a6d46d23"
+	invalidHash := "invalidhash"
+
+	// get block by invalid hash
+	_, err = GetBlockHeightByHash(client, invalidHash)
+	require.ErrorContains(t, err, "error decoding block hash")
+
+	// get block height by block hash
+	height, err := GetBlockHeightByHash(client, hash)
+	require.NoError(t, err)
+	require.Equal(t, expectedHeight, height)
 }
 
 // LiveTestBitcoinFeeRate query Bitcoin mainnet fee rate every 5 minutes
@@ -249,8 +280,18 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 	if errEco2 != nil {
 		t.Error(errEco2)
 	}
-	fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
-	fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
+	fmt.Printf(
+		"Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n",
+		bn,
+		feeRateConservative1.Uint64(),
+		feeRateEconomical1.Uint64(),
+	)
+	fmt.Printf(
+		"Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n",
+		bn,
+		feeRateConservative2.Uint64(),
+		feeRateEconomical2.Uint64(),
+	)
 
 	// monitor fee rate every 5 minutes
 	for {
@@ -267,8 +308,18 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 		require.True(t, feeRateConservative2.Uint64() >= feeRateEconomical2.Uint64())
 		require.True(t, feeRateConservative1.Uint64() >= feeRateConservative2.Uint64())
 		require.True(t, feeRateEconomical1.Uint64() >= feeRateEconomical2.Uint64())
-		fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
-		fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
+		fmt.Printf(
+			"Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n",
+			bn,
+			feeRateConservative1.Uint64(),
+			feeRateEconomical1.Uint64(),
+		)
+		fmt.Printf(
+			"Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n",
+			bn,
+			feeRateConservative2.Uint64(),
+			feeRateEconomical2.Uint64(),
+		)
 	}
 }
 
@@ -365,7 +416,7 @@ func LiveTestGetSenderByVin(t *testing.T) {
 	net, err := chains.GetBTCChainParams(chainID)
 	require.NoError(t, err)
 	testnet := false
-	if chainID == chains.BtcTestNetChain.ChainId {
+	if chainID == chains.BitcoinTestnet.ChainId {
 		testnet = true
 	}
 

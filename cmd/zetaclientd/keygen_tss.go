@@ -12,13 +12,14 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"
+	"golang.org/x/crypto/sha3"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
-	"golang.org/x/crypto/sha3"
 )
 
 func GenerateTss(
@@ -36,7 +37,7 @@ func GenerateTss(
 	// Bitcoin chain ID is currently used for using the correct signature format
 	// TODO: remove this once we have a better way to determine the signature format
 	// https://github.com/zeta-chain/node/issues/1397
-	bitcoinChainID := chains.BtcRegtestChain.ChainId
+	bitcoinChainID := chains.BitcoinRegtest.ChainId
 	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
 	if btcEnabled {
 		bitcoinChainID = btcChain.ChainId
@@ -99,7 +100,8 @@ func GenerateTss(
 				if currentBlock != keyGen.BlockNumber {
 					if currentBlock > lastBlock {
 						lastBlock = currentBlock
-						keygenLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, appContext.Config().ChainID)
+						keygenLogger.Info().
+							Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, appContext.Config().ChainID)
 					}
 					continue
 				}
@@ -126,7 +128,11 @@ func GenerateTss(
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := client.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, chains.ReceiveStatus_success)
+				tssSuccessVoteHash, err := client.SetTSS(
+					newTss.CurrentPubkey,
+					keyGen.BlockNumber,
+					chains.ReceiveStatus_success,
+				)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err
@@ -143,7 +149,8 @@ func GenerateTss(
 				continue
 			}
 		}
-		keygenLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", keyGen.BlockNumber)
+		keygenLogger.Debug().
+			Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", keyGen.BlockNumber)
 	}
 	return nil, errors.New("unexpected state for TSS generation")
 }

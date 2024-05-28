@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -25,9 +26,9 @@ func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
 func Test_InitializeCCTX(t *testing.T) {
 	t.Run("should return a cctx with correct values", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := chains.GoerliChain
+		senderChain := chains.Goerli
 		sender := sample.EthAddress()
-		receiverChain := chains.GoerliChain
+		receiverChain := chains.Goerli
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
@@ -75,9 +76,9 @@ func Test_InitializeCCTX(t *testing.T) {
 	})
 	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := chains.GoerliChain
+		senderChain := chains.Goerli
 		sender := sample.EthAddress()
-		receiverChain := chains.GoerliChain
+		receiverChain := chains.Goerli
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
@@ -91,7 +92,7 @@ func Test_InitializeCCTX(t *testing.T) {
 		tss := sample.Tss()
 		msg := types.MsgVoteInbound{
 			Creator:            creator,
-			Sender:             "invalid",
+			Sender:             "",
 			SenderChainId:      senderChain.ChainId,
 			Receiver:           receiver.String(),
 			ReceiverChain:      receiverChain.ChainId,
@@ -106,7 +107,7 @@ func Test_InitializeCCTX(t *testing.T) {
 			EventIndex:         eventIndex,
 		}
 		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
-		require.ErrorContains(t, err, "invalid address")
+		require.ErrorContains(t, err, "sender cannot be empty")
 	})
 }
 

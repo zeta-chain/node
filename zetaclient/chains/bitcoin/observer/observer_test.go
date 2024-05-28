@@ -8,6 +8,9 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/require"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -17,8 +20,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 const (
@@ -71,9 +72,9 @@ func TestNewBitcoinObserver(t *testing.T) {
 		cfg := config.NewConfig()
 		coreContext := context.NewZetacoreContext(cfg)
 		appContext := context.NewAppContext(coreContext, cfg)
-		chain := chains.BtcMainnetChain
+		chain := chains.BitcoinMainnet
 		zetacoreClient := mocks.NewMockZetacoreClient()
-		tss := mocks.NewMockTSS(chains.BtcTestNetChain, sample.EthAddress().String(), "")
+		tss := mocks.NewMockTSS(chains.BitcoinTestnet, sample.EthAddress().String(), "")
 		loggers := clientcommon.ClientLogger{}
 		btcCfg := cfg.BitcoinConfig
 		ts := metrics.NewTelemetryServer()

@@ -20,9 +20,19 @@ func TestNewParams(t *testing.T) {
 	require.Equal(t, "00.50", params.ValidatorEmissionPercentage, "ValidatorEmissionPercentage should be set to 00.50")
 	require.Equal(t, "00.25", params.ObserverEmissionPercentage, "ObserverEmissionPercentage should be set to 00.25")
 	require.Equal(t, "00.25", params.TssSignerEmissionPercentage, "TssSignerEmissionPercentage should be set to 00.25")
-	require.Equal(t, "0.001877876953694702", params.DurationFactorConstant, "DurationFactorConstant should be set to 0.001877876953694702")
+	require.Equal(
+		t,
+		"0.001877876953694702",
+		params.DurationFactorConstant,
+		"DurationFactorConstant should be set to 0.001877876953694702",
+	)
 
-	require.Equal(t, sdkmath.NewInt(100000000000000000), params.ObserverSlashAmount, "ObserverSlashAmount should be set to 100000000000000000")
+	require.Equal(
+		t,
+		sdkmath.NewInt(100000000000000000),
+		params.ObserverSlashAmount,
+		"ObserverSlashAmount should be set to 100000000000000000",
+	)
 }
 
 func TestDefaultParams(t *testing.T) {

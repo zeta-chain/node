@@ -7,6 +7,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
@@ -72,7 +73,7 @@ func Proof(t *testing.T) (*proofs.Proof, proofs.BlockHeader, string, int64, int6
 	proof, err := txsTree.GenerateProof(txIndex)
 	require.NoError(t, err)
 
-	chainID := chains.SepoliaChain.ChainId
+	chainID := chains.Sepolia.ChainId
 	ethProof := proofs.NewEthereumProof(proof)
 	ethHeader := proofs.NewEthereumHeader(b)
 	blockHeader := proofs.BlockHeader{

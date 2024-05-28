@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -43,18 +43,18 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 
 	// add some evm and non-evm chains
 	supportedChains := []*chains.Chain{
-		{ChainId: chains.EthChain.ChainId},
-		{ChainId: chains.BtcMainnetChain.ChainId},
-		{ChainId: chains.BscMainnetChain.ChainId},
+		{ChainId: chains.Ethereum.ChainId},
+		{ChainId: chains.BitcoinMainnet.ChainId},
+		{ChainId: chains.BscMainnet.ChainId},
 		{ChainId: chains.ZetaChainMainnet.ChainId},
 	}
 
 	// set pending cctx
 	tss := sample.Tss()
 	zk.ObserverKeeper.SetTSS(ctx, tss)
-	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.EthChain.ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 20, 25, chains.BtcMainnetChain.ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 30, 35, chains.BscMainnetChain.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.Ethereum.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 20, 25, chains.BitcoinMainnet.ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 30, 35, chains.BscMainnet.ChainId, tss, zk)
 	createCctxWithNonceRange(t, ctx, *k, 40, 45, chains.ZetaChainMainnet.ChainId, tss, zk)
 
 	// set a cctx where the update function should fail to test that the next cctx are not updated but the next chains are
@@ -106,7 +106,9 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 	sampleTimestamp := time.Now()
 	retryIntervalReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval + time.Second)
-	retryIntervalNotReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval - time.Second)
+	retryIntervalNotReached := sampleTimestamp.Add(
+		observertypes.DefaultGasPriceIncreaseFlags.RetryInterval - time.Second,
+	)
 
 	tt := []struct {
 		name                                   string
@@ -382,8 +384,20 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			require.NoError(t, err)
 
 			// check values
-			require.True(t, gasPriceIncrease.Equal(tc.expectedGasPriceIncrease), "expected %s, got %s", tc.expectedGasPriceIncrease.String(), gasPriceIncrease.String())
-			require.True(t, feesPaid.Equal(tc.expectedAdditionalFees), "expected %s, got %s", tc.expectedAdditionalFees.String(), feesPaid.String())
+			require.True(
+				t,
+				gasPriceIncrease.Equal(tc.expectedGasPriceIncrease),
+				"expected %s, got %s",
+				tc.expectedGasPriceIncrease.String(),
+				gasPriceIncrease.String(),
+			)
+			require.True(
+				t,
+				feesPaid.Equal(tc.expectedAdditionalFees),
+				"expected %s, got %s",
+				tc.expectedAdditionalFees.String(),
+				feesPaid.String(),
+			)
 
 			// check cctx
 			if !tc.expectedGasPriceIncrease.IsZero() {
@@ -391,7 +405,14 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				require.True(t, found)
 				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 				require.NoError(t, err)
-				require.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
+				require.EqualValues(
+					t,
+					tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(),
+					newGasPrice,
+					"%d - %d",
+					tc.expectedGasPriceIncrease.Uint64(),
+					previousGasPrice,
+				)
 				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
 			}
 		})

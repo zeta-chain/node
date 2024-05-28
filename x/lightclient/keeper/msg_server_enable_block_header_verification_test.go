@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -27,11 +28,11 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: false,
 				},
 			},
@@ -41,13 +42,13 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
-		require.True(t, bhv.IsChainEnabled(chains.EthChain.ChainId))
-		require.True(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.BitcoinMainnet.ChainId))
 	})
 
 	t.Run("enable verification flags even if the chain has not been set previously", func(t *testing.T) {
@@ -64,13 +65,13 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 		})
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
-		require.True(t, bhv.IsChainEnabled(chains.EthChain.ChainId))
-		require.True(t, bhv.IsChainEnabled(chains.BtcMainnetChain.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
+		require.True(t, bhv.IsChainEnabled(chains.BitcoinMainnet.ChainId))
 	})
 
 	t.Run("cannot update if not authorized group", func(t *testing.T) {
@@ -86,11 +87,11 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: false,
 				},
 			},
@@ -99,7 +100,7 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
 			Creator:     admin,
-			ChainIdList: []int64{chains.EthChain.ChainId},
+			ChainIdList: []int64{chains.Ethereum.ChainId},
 		})
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})

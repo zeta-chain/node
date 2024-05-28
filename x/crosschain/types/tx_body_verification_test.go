@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -13,7 +14,7 @@ import (
 
 func TestVerifyInboundBody(t *testing.T) {
 	sampleTo := sample.EthAddress()
-	sampleEthTx, sampleEthTxBytes := sample.EthTx(t, chains.EthChain.ChainId, sampleTo, 42)
+	sampleEthTx, sampleEthTxBytes := sample.EthTx(t, chains.Ethereum.ChainId, sampleTo, 42)
 
 	// NOTE: errContains == "" means no error
 	for _, tc := range []struct {
@@ -27,7 +28,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "can't verify btc tx tx body",
 			msg: types.MsgAddInboundTracker{
-				ChainId: chains.BtcMainnetChain.ChainId,
+				ChainId: chains.BitcoinMainnet.ChainId,
 			},
 			txBytes:     sample.Bytes(),
 			errContains: "cannot verify inbound body for chain",
@@ -35,7 +36,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "txBytes can't be unmarshaled",
 			msg: types.MsgAddInboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 			},
 			txBytes:     []byte("invalid"),
 			errContains: "failed to unmarshal transaction",
@@ -43,7 +44,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "txHash doesn't correspond",
 			msg: types.MsgAddInboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				TxHash:  sample.Hash().Hex(),
 			},
 			txBytes:     sampleEthTxBytes,
@@ -52,7 +53,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "chain id doesn't correspond",
 			msg: types.MsgAddInboundTracker{
-				ChainId: chains.SepoliaChain.ChainId,
+				ChainId: chains.Sepolia.ChainId,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
 			txBytes:     sampleEthTxBytes,
@@ -61,7 +62,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "invalid coin type",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType(1000),
 			},
@@ -71,7 +72,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is zeta, but connector contract address is wrong",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_Zeta,
 			},
@@ -82,7 +83,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is zeta, connector contract address is correct",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_Zeta,
 			},
@@ -92,7 +93,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is erc20, but erc20 custody contract address is wrong",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_ERC20,
 			},
@@ -103,7 +104,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is erc20, erc20 custody contract address is correct",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_ERC20,
 			},
@@ -113,7 +114,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is gas, but tss address is not found",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_Gas,
 			},
@@ -124,7 +125,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is gas, but tss address is wrong",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_Gas,
 			},
@@ -135,7 +136,7 @@ func TestVerifyInboundBody(t *testing.T) {
 		{
 			desc: "coin types is gas, tss address is correct",
 			msg: types.MsgAddInboundTracker{
-				ChainId:  chains.EthChain.ChainId,
+				ChainId:  chains.Ethereum.ChainId,
 				TxHash:   sampleEthTx.Hash().Hex(),
 				CoinType: coin.CoinType_Gas,
 			},
@@ -157,8 +158,8 @@ func TestVerifyInboundBody(t *testing.T) {
 func TestVerifyOutboundBody(t *testing.T) {
 
 	sampleTo := sample.EthAddress()
-	sampleEthTx, sampleEthTxBytes, sampleFrom := sample.EthTxSigned(t, chains.EthChain.ChainId, sampleTo, 42)
-	_, sampleEthTxBytesNonSigned := sample.EthTx(t, chains.EthChain.ChainId, sampleTo, 42)
+	sampleEthTx, sampleEthTxBytes, sampleFrom := sample.EthTxSigned(t, chains.Ethereum.ChainId, sampleTo, 42)
+	_, sampleEthTxBytesNonSigned := sample.EthTx(t, chains.Ethereum.ChainId, sampleTo, 42)
 
 	// NOTE: errContains == "" means no error
 	for _, tc := range []struct {
@@ -181,7 +182,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "txBytes can't be unmarshaled",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
@@ -191,7 +192,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "can't recover sender address",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
@@ -201,7 +202,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "tss address not found",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
@@ -212,7 +213,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "tss address is wrong",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
@@ -223,7 +224,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "chain id doesn't correspond",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.SepoliaChain.ChainId,
+				ChainId: chains.Sepolia.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
@@ -234,7 +235,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "nonce doesn't correspond",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   100,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},
@@ -245,7 +246,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "tx hash doesn't correspond",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   42,
 				TxHash:  sample.Hash().Hex(),
 			},
@@ -256,7 +257,7 @@ func TestVerifyOutboundBody(t *testing.T) {
 		{
 			desc: "valid outbound body",
 			msg: types.MsgAddOutboundTracker{
-				ChainId: chains.EthChain.ChainId,
+				ChainId: chains.Ethereum.ChainId,
 				Nonce:   42,
 				TxHash:  sampleEthTx.Hash().Hex(),
 			},

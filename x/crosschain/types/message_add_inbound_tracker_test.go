@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -24,7 +25,7 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: types.NewMsgAddInboundTracker(
 				"invalid_address",
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -44,17 +45,21 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 			name: "invalid proof",
 			msg: &types.MsgAddInboundTracker{
 				Creator:  sample.AccAddress(),
-				ChainId:  chains.ZetaTestnetChain.ChainId,
+				ChainId:  chains.ZetaChainTestnet.ChainId,
 				CoinType: coin.CoinType_Gas,
 				Proof:    &proofs.Proof{},
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", chains.ZetaTestnetChain.ChainId),
+			err: errorsmod.Wrapf(
+				types.ErrProofVerificationFail,
+				"chain id %d does not support proof-based trackers",
+				chains.ZetaChainTestnet.ChainId,
+			),
 		},
 		{
 			name: "invalid coin type",
 			msg: &types.MsgAddInboundTracker{
 				Creator:  sample.AccAddress(),
-				ChainId:  chains.ZetaTestnetChain.ChainId,
+				ChainId:  chains.ZetaChainTestnet.ChainId,
 				CoinType: 5,
 			},
 			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "coin-type not supported"),
@@ -63,7 +68,7 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 			name: "valid",
 			msg: types.NewMsgAddInboundTracker(
 				sample.AccAddress(),
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -93,7 +98,7 @@ func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgAddInboundTracker(
 				signer,
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -103,7 +108,7 @@ func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgAddInboundTracker(
 				"invalid_address",
-				chains.GoerliChain.ChainId,
+				chains.Goerli.ChainId,
 				coin.CoinType_Gas,
 				"hash",
 			),
@@ -128,7 +133,7 @@ func TestMsgAddInboundTracker_GetSigners(t *testing.T) {
 func TestMsgAddInboundTracker_Type(t *testing.T) {
 	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
-		chains.GoerliChain.ChainId,
+		chains.Goerli.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
@@ -138,7 +143,7 @@ func TestMsgAddInboundTracker_Type(t *testing.T) {
 func TestMsgAddInboundTracker_Route(t *testing.T) {
 	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
-		chains.GoerliChain.ChainId,
+		chains.Goerli.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)
@@ -148,7 +153,7 @@ func TestMsgAddInboundTracker_Route(t *testing.T) {
 func TestMsgAddInboundTracker_GetSignBytes(t *testing.T) {
 	msg := types.NewMsgAddInboundTracker(
 		sample.AccAddress(),
-		chains.GoerliChain.ChainId,
+		chains.Goerli.ChainId,
 		coin.CoinType_Gas,
 		"hash",
 	)

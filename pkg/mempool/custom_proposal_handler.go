@@ -1,4 +1,4 @@
-package app
+package mempool
 
 // This proposal handler is taken from https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/baseapp/abci_utils.go
 // Only difference is extraction of senders and nonce from tx. In latest version of cosmos, there is a way to provide adapter for this, but in 0.47.10 this is the only way.
@@ -9,10 +9,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
 )
 
 type (
@@ -107,7 +105,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 		for iterator != nil {
 			memTx := iterator.Tx()
 
-			sendersWithNonce, err := zetamempool.GetSendersWithNonce(memTx)
+			sendersWithNonce, err := GetSendersWithNonce(memTx)
 			if err != nil {
 				panic(fmt.Errorf("failed to get signatures: %w", err))
 			}

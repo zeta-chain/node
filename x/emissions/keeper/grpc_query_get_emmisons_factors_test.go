@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
@@ -27,7 +28,10 @@ func TestKeeper_GetEmissionsFactors(t *testing.T) {
 	})
 
 	t.Run("should fail if params not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{SkipSettingParams: true})
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(
+			t,
+			keepertest.EmissionMockOptions{SkipSettingParams: true},
+		)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		res, err := k.GetEmissionsFactors(wctx, nil)
