@@ -263,6 +263,7 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 // EthMsgsFromTendermintBlock returns all real MsgEthereumTxs from a
 // Tendermint block. It also ensures consistency over the correct txs indexes
 // across RPC endpoints
+// TODO: check if additionals array can be removed
 func (b *Backend) EthMsgsFromTendermintBlock(
 	resBlock *tmrpctypes.ResultBlock,
 	blockRes *tmrpctypes.ResultBlockResults,

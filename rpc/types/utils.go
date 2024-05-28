@@ -170,6 +170,7 @@ func NewTransactionFromMsg(
 	chainID *big.Int,
 	txAdditional *TxResultAdditionalFields,
 ) (*RPCTransaction, error) {
+	// TODO: check if this condition can be removed
 	if txAdditional != nil {
 		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txAdditional)
 	}
