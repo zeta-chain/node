@@ -314,9 +314,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		shouldCheckForSyntheticTx := true
 		for _, msg := range tx.GetMsgs() {
 			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-			if !ok {
-				continue
-			} else {
+			if ok {
 				shouldCheckForSyntheticTx = false
 				ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
 				result = append(result, ethMsg)

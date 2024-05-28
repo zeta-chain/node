@@ -457,6 +457,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(
 		return nil, nil
 	}
 
+	// #nosec G701 always in range
 	i := int(idx)
 	ethMsgs, additionals := b.EthMsgsFromTendermintBlock(block, blockRes)
 	if i >= len(ethMsgs) {

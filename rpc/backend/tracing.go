@@ -54,7 +54,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, fmt.Errorf("block result not found for height %d", blk.Block.Height)
 	}
 
-	var predecessors []*evmtypes.MsgEthereumTx
+	predecessors := []*evmtypes.MsgEthereumTx{}
 	msgs, _ := b.EthMsgsFromTendermintBlock(blk, blockResult)
 	var ethMsg *evmtypes.MsgEthereumTx
 	for _, m := range msgs {

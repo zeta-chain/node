@@ -377,16 +377,16 @@ func (p *ParsedTxs) AccumulativeGasUsed(msgIndex int) (result uint64) {
 func fillTxAttribute(tx *ParsedTx, key, value string) error {
 	switch key {
 	case evmtypes.AttributeKeyEthereumTxHash:
-		tx.Hash = common.HexToHash(string(value))
+		tx.Hash = common.HexToHash(value)
 	case evmtypes.AttributeKeyTxIndex:
-		txIndex, err := strconv.ParseUint(string(value), 10, 31)
+		txIndex, err := strconv.ParseUint(value, 10, 31)
 		if err != nil {
 			return err
 		}
 		// #nosec G701 always in range
 		tx.EthTxIndex = int32(txIndex)
 	case evmtypes.AttributeKeyTxGasUsed:
-		gasUsed, err := strconv.ParseUint(string(value), 10, 64)
+		gasUsed, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
@@ -394,32 +394,32 @@ func fillTxAttribute(tx *ParsedTx, key, value string) error {
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
 	case SenderType:
-		tx.Sender = common.HexToAddress(string(value))
+		tx.Sender = common.HexToAddress(value)
 	case evmtypes.AttributeKeyRecipient:
-		tx.Recipient = common.HexToAddress(string(value))
+		tx.Recipient = common.HexToAddress(value)
 	case evmtypes.AttributeKeyTxHash:
-		tx.TxHash = string(value)
+		tx.TxHash = value
 	case evmtypes.AttributeKeyTxType:
-		txType, err := strconv.ParseUint(string(value), 10, 31)
+		txType, err := strconv.ParseUint(value, 10, 31)
 		if err != nil {
 			return err
 		}
 		tx.Type = txType
 	case AmountType:
 		var success bool
-		tx.Amount, success = big.NewInt(0).SetString(string(value), 10)
+		tx.Amount, success = big.NewInt(0).SetString(value, 10)
 		if !success {
 			return nil
 		}
 	case "TxNonce":
-		nonce, err := strconv.ParseUint(string(value), 10, 64)
+		nonce, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
 		tx.Nonce = nonce
 
 	case "TxData":
-		hexBytes, err := hexutil.Decode(string(value))
+		hexBytes, err := hexutil.Decode(value)
 		if err != nil {
 			return err
 		}
