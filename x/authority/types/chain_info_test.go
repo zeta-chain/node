@@ -28,7 +28,7 @@ func TestChainInfo_Validate(t *testing.T) {
 		},
 		{
 			name:      "valid chain info",
-			chainInfo: sample.ChainInfo(),
+			chainInfo: sample.ChainInfo(42),
 		},
 		{
 			name: "invalid if chain is invalid",

@@ -24,10 +24,10 @@ func Policies() authoritytypes.Policies {
 	}
 }
 
-func ChainInfo() authoritytypes.ChainInfo {
-	chain1 := Chain(42)
-	chain2 := Chain(43)
-	chain3 := Chain(44)
+func ChainInfo(startChainID int64) authoritytypes.ChainInfo {
+	chain1 := Chain(startChainID)
+	chain2 := Chain(startChainID + 1)
+	chain3 := Chain(startChainID + 2)
 
 	return authoritytypes.ChainInfo{
 		Chains: []chains.Chain{

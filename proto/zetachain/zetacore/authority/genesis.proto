@@ -2,7 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
-import "zetachain/zetacore/pkg/chains/chains.proto";
+import "zetachain/zetacore/authority/chain_info.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
@@ -10,5 +10,5 @@ option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 // GenesisState defines the authority module's genesis state.
 message GenesisState {
   Policies policies = 1 [ (gogoproto.nullable) = false ];
-  repeated pkg.chains.Chain chain_info = 2 [ (gogoproto.nullable) = false ];
+  ChainInfo chain_info = 2 [ (gogoproto.nullable) = false ];
 }
