@@ -34,7 +34,7 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
   publish-release:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     needs:
       - pre-release-checks

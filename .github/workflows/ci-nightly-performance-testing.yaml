@@ -1,0 +1,34 @@
+name: "NIGHTLY:EVM:PERFORMANCE:TESTING"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight
+
+jobs:
+  nightly_emv_api_performance_test:
+    name: "NIGHTLY:EMV:API:PERFORMANCE:TEST"
+    runs-on: "buildjet-16vcpu-ubuntu-2204"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "START:LOCAL:NET"
+        run: | 
+          make start-e2e-test
+
+      - name: "EXECUTE:LOADTESTS"
+        uses: artilleryio/action-cli@v1
+        with:
+          command: run .github/actions/performance-tests/art.yaml --output ./report.json
+
+      - name: "GENERATE:REPORT"
+        uses: artilleryio/action-cli@v1
+        with:
+          command: report report.json --output artillery_report.html
+
+      - name: "UPLOAD:REPORT"
+        uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: artillery-report
+          path: ./artillery_report.html
