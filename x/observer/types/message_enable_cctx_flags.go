@@ -45,5 +45,8 @@ func (msg *MsgEnableCCTXFlags) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+	if !msg.EnableInbound && !msg.EnableOutbound {
+		return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, "at least one of EnableInbound or EnableOutbound must be true")
+	}
 	return nil
 }

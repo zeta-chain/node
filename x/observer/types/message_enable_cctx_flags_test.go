@@ -24,6 +24,13 @@ func TestMsgEnableCCTXFlags_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid flags",
+			msg:  types.NewMsgEnableCCTXFlags(sample.AccAddress(), false, false),
+			err: func(t require.TestingT, err error, i ...interface{}) {
+				require.Contains(t, err.Error(), "at least one of EnableInbound or EnableOutbound must be true")
+			},
+		},
+		{
 			name: "valid",
 			msg:  types.NewMsgEnableCCTXFlags(sample.AccAddress(), true, true),
 			err:  require.NoError,

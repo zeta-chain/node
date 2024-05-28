@@ -24,6 +24,13 @@ func TestMsgDisableCCTXFlags_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid flags",
+			msg:  types.NewMsgDisableCCTXFlags(sample.AccAddress(), false, false),
+			err: func(t require.TestingT, err error, i ...interface{}) {
+				require.Contains(t, err.Error(), "at least one of DisableInbound or DisableOutbound must be true")
+			},
+		},
+		{
 			name: "valid",
 			msg:  types.NewMsgDisableCCTXFlags(sample.AccAddress(), true, true),
 			err:  require.NoError,
