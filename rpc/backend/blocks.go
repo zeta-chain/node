@@ -337,7 +337,12 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 	return result, txsAdditional
 }
 
-func (b *Backend) parseSyntheticTx(txResults []*abci.ResponseDeliverTx, i int, tx sdk.Tx, block *tmtypes.Block) (*evmtypes.MsgEthereumTx, *rpctypes.TxResultAdditionalFields) {
+func (b *Backend) parseSyntheticTx(
+	txResults []*abci.ResponseDeliverTx,
+	i int,
+	tx sdk.Tx,
+	block *tmtypes.Block,
+) (*evmtypes.MsgEthereumTx, *rpctypes.TxResultAdditionalFields) {
 	res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
 	if err != nil || additional == nil || res == nil {
 		return nil, nil
@@ -345,7 +350,9 @@ func (b *Backend) parseSyntheticTx(txResults []*abci.ResponseDeliverTx, i int, t
 	return b.parseSyntethicTxFromAdditionalFields(additional), additional
 }
 
-func (b *Backend) parseSyntethicTxFromAdditionalFields(additional *rpctypes.TxResultAdditionalFields) *evmtypes.MsgEthereumTx {
+func (b *Backend) parseSyntethicTxFromAdditionalFields(
+	additional *rpctypes.TxResultAdditionalFields,
+) *evmtypes.MsgEthereumTx {
 	recipient := additional.Recipient
 	t := ethtypes.NewTx(&ethtypes.LegacyTx{
 		Nonce:    additional.Nonce,
