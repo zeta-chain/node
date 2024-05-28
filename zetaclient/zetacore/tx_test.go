@@ -247,7 +247,6 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				WithPayload(observertypes.QuerySupportedChains{}).
 				Return(observertypes.QuerySupportedChainsResponse{
 					Chains: []*chains.Chain{
-
 						{
 							chains.BitcoinMainnet.ChainId,
 							chains.BitcoinMainnet.ChainName,
@@ -256,6 +255,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.BscMainnet.Vm,
 							chains.BscMainnet.Consensus,
 							chains.BscMainnet.IsExternal,
+							chains.BscMainnet.CctxGateway,
 						},
 						{
 							chains.Ethereum.ChainId,
@@ -265,6 +265,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.Ethereum.Vm,
 							chains.Ethereum.Consensus,
 							chains.Ethereum.IsExternal,
+							chains.Ethereum.CctxGateway,
 						},
 					},
 				})
