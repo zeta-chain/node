@@ -88,6 +88,19 @@ enum Consensus {
   op_stack = 3;
 }
 
+// CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
+enum CCTXGateway {
+  option (gogoproto.goproto_enum_stringer) = true;
+
+  // zevm is the internal CCTX gateway to process outbound on the ZEVM in
+  // ZetaChain only used for ZetaChain chains
+  zevm = 0;
+
+  // observers is the CCTX gateway for chains relying on the observer set to
+  // observe inbounds and TSS for outbounds
+  observers = 1;
+}
+
 // Chain represents static data about a blockchain network
 // it is identified by a unique chain ID
 message Chain {
@@ -111,4 +124,7 @@ message Chain {
 
   // IsExternal describe if the chain is ZetaChain or external
   bool is_external = 7;
+
+  // CCTXGateway is the gateway used to handle CCTX outbounds
+  CCTXGateway cctx_gateway = 8;
 }
