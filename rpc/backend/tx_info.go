@@ -42,11 +42,6 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		return b.getTransactionByHashPending(txHash)
 	}
 
-	block, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(res.Height))
-	if err != nil {
-		return nil, err
-	}
-
 	resBlock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(res.Height))
 	if err != nil {
 		b.logger.Debug("block not found", "height", res.Height, "error", err.Error())
@@ -129,7 +124,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 
 	return rpctypes.NewTransactionFromMsg(
 		ethMsg,
-		common.BytesToHash(block.BlockID.Hash.Bytes()),
+		common.BytesToHash(resBlock.BlockID.Hash.Bytes()),
 		// #nosec G701 always positive
 		uint64(res.Height),
 		// #nosec G701 always positive

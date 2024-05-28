@@ -345,7 +345,7 @@ func (b *Backend) parseSyntheticTx(txResults []*abci.ResponseDeliverTx, i int, t
 	ethMsg := &evmtypes.MsgEthereumTx{}
 	err = ethMsg.FromEthereumTx(t)
 	if err != nil {
-		b.logger.Debug("can not create eth msg", err.Error())
+		b.logger.Error("can not create eth msg", err.Error())
 		return nil, nil
 	}
 	ethMsg.Hash = additional.Hash.Hex()
