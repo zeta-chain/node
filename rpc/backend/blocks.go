@@ -22,8 +22,10 @@ import (
 	"math/big"
 	"strconv"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/ethereum/go-ethereum/common"
@@ -286,30 +288,10 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		if err != nil {
 			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
 			// try to check if there is synthetic eth tx in tx result
-			res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], nil, i, block.Height)
-			if err != nil || additional == nil || res == nil {
+			ethMsg, additional := b.parseSyntheticTx(txResults, i, tx, block)
+			if ethMsg == nil {
 				continue
 			}
-			recipient := additional.Recipient
-			t := ethtypes.NewTx(&ethtypes.LegacyTx{
-				Nonce:    additional.Nonce,
-				Data:     additional.Data,
-				Gas:      additional.GasUsed,
-				To:       &recipient,
-				GasPrice: nil,
-				Value:    additional.Value,
-				V:        big.NewInt(0),
-				R:        big.NewInt(0),
-				S:        big.NewInt(0),
-			})
-			ethMsg := &evmtypes.MsgEthereumTx{}
-			err = ethMsg.FromEthereumTx(t)
-			if err != nil {
-				b.logger.Debug("can not create eth msg", err.Error())
-				continue
-			}
-			ethMsg.Hash = additional.Hash.Hex()
-			ethMsg.From = additional.Sender.Hex()
 			result = append(result, ethMsg)
 			txsAdditional = append(txsAdditional, additional)
 			continue
@@ -332,35 +314,43 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 
 		if shouldCheckForSyntheticTx {
 			// try to check if there is synthetic eth tx in tx result
-			res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
-			if err != nil || additional == nil || res == nil {
+			ethMsg, additional := b.parseSyntheticTx(txResults, i, tx, block)
+			if ethMsg == nil {
 				continue
 			}
-			recipient := additional.Recipient
-			t := ethtypes.NewTx(&ethtypes.LegacyTx{
-				Nonce:    additional.Nonce,
-				Data:     additional.Data,
-				Gas:      additional.GasUsed,
-				To:       &recipient,
-				GasPrice: nil,
-				Value:    additional.Value,
-				V:        big.NewInt(0),
-				R:        big.NewInt(0),
-				S:        big.NewInt(0),
-			})
-			ethMsg := &evmtypes.MsgEthereumTx{}
-			err = ethMsg.FromEthereumTx(t)
-			if err != nil {
-				b.logger.Debug("can not create eth msg", err.Error())
-				continue
-			}
-			ethMsg.Hash = additional.Hash.Hex()
-			ethMsg.From = additional.Sender.Hex()
 			result = append(result, ethMsg)
 			txsAdditional = append(txsAdditional, additional)
 		}
 	}
 	return result, txsAdditional
+}
+
+func (b *Backend) parseSyntheticTx(txResults []*abci.ResponseDeliverTx, i int, tx sdk.Tx, block *tmtypes.Block) (*evmtypes.MsgEthereumTx, *rpctypes.TxResultAdditionalFields) {
+	res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
+	if err != nil || additional == nil || res == nil {
+		return nil, nil
+	}
+	recipient := additional.Recipient
+	t := ethtypes.NewTx(&ethtypes.LegacyTx{
+		Nonce:    additional.Nonce,
+		Data:     additional.Data,
+		Gas:      additional.GasUsed,
+		To:       &recipient,
+		GasPrice: nil,
+		Value:    additional.Value,
+		V:        big.NewInt(0),
+		R:        big.NewInt(0),
+		S:        big.NewInt(0),
+	})
+	ethMsg := &evmtypes.MsgEthereumTx{}
+	err = ethMsg.FromEthereumTx(t)
+	if err != nil {
+		b.logger.Debug("can not create eth msg", err.Error())
+		return nil, nil
+	}
+	ethMsg.Hash = additional.Hash.Hex()
+	ethMsg.From = additional.Sender.Hex()
+	return ethMsg, additional
 }
 
 // HeaderByNumber returns the block header identified by height.
