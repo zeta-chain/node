@@ -1,0 +1,18 @@
+syntax = "proto3";
+package zetachain.zetacore.authority;
+
+import "gogoproto/gogo.proto";
+import "zetachain/zetacore/authority/policies.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
+
+message Authorization {
+  // The URL of the message that needs to be authorized
+  string msg_url = 1;
+  // The policy that is authorized to access the message
+  PolicyType authorized_policy = 2;
+}
+// AuthorizationList holds the list of authorizations on zetachain
+message AuthorizationList {
+  repeated Authorization authorizations = 1 [ (gogoproto.nullable) = false ];
+}

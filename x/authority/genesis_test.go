@@ -14,7 +14,8 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Policies: sample.Policies(),
+		Policies:          sample.Policies(),
+		AuthorizationList: sample.AuthorizationList("sample"),
 	}
 
 	// Init
@@ -25,6 +26,11 @@ func TestGenesis(t *testing.T) {
 	policies, found := k.GetPolicies(ctx)
 	require.True(t, found)
 	require.Equal(t, genesisState.Policies, policies)
+
+	// Check authorization list is set
+	authorizationList, found := k.GetAuthorizationList(ctx)
+	require.True(t, found)
+	require.Equal(t, genesisState.AuthorizationList, authorizationList)
 
 	// Export
 	got := authority.ExportGenesis(ctx, *k)
