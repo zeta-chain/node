@@ -40,6 +40,34 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 		require.False(t, flags.IsOutboundEnabled)
 	})
 
+	t.Run("can update gas price increase flags if crosschain flags exist", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
+		srv := keeper.NewMsgServerImpl(*k)
+		admin := sample.AccAddress()
+		defaultCrosschainFlags := types.DefaultCrosschainFlags()
+		k.SetCrosschainFlags(ctx, *defaultCrosschainFlags)
+		updatedFlags := sample.GasPriceIncreaseFlags()
+		msg := &types.MsgUpdateGasPriceIncreaseFlags{
+			Creator:               admin,
+			GasPriceIncreaseFlags: updatedFlags,
+		}
+
+		// mock the authority keeper for authorization
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+
+		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), msg)
+		require.NoError(t, err)
+
+		flags, found := k.GetCrosschainFlags(ctx)
+		require.True(t, found)
+		require.Equal(t, updatedFlags, *flags.GasPriceIncreaseFlags)
+		require.Equal(t, defaultCrosschainFlags.IsInboundEnabled, flags.IsInboundEnabled)
+		require.Equal(t, defaultCrosschainFlags.IsOutboundEnabled, flags.IsOutboundEnabled)
+	})
+
 	t.Run("cannot update invalid gas price increase flags", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,

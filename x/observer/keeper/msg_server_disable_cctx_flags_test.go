@@ -42,9 +42,11 @@ func TestMsgServer_DisableCCTXFlags(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
+		gasPriceIncreaseFlags := sample.GasPriceIncreaseFlags()
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
-			IsInboundEnabled:  true,
-			IsOutboundEnabled: true,
+			IsInboundEnabled:      true,
+			IsOutboundEnabled:     true,
+			GasPriceIncreaseFlags: &gasPriceIncreaseFlags,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
@@ -63,15 +65,18 @@ func TestMsgServer_DisableCCTXFlags(t *testing.T) {
 		require.True(t, found)
 		require.False(t, flags.IsInboundEnabled)
 		require.False(t, flags.IsOutboundEnabled)
+		require.Equal(t, gasPriceIncreaseFlags, *flags.GasPriceIncreaseFlags)
 	})
 
-	t.Run("can disable only 1 flag", func(t *testing.T) {
+	t.Run("can disable only outbound flag", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
+		gasPriceIncreaseFlags := sample.GasPriceIncreaseFlags()
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
-			IsInboundEnabled:  true,
-			IsOutboundEnabled: true,
+			IsInboundEnabled:      true,
+			IsOutboundEnabled:     true,
+			GasPriceIncreaseFlags: &gasPriceIncreaseFlags,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
@@ -90,6 +95,37 @@ func TestMsgServer_DisableCCTXFlags(t *testing.T) {
 		require.True(t, found)
 		require.True(t, flags.IsInboundEnabled)
 		require.False(t, flags.IsOutboundEnabled)
+		require.Equal(t, gasPriceIncreaseFlags, *flags.GasPriceIncreaseFlags)
+	})
+
+	t.Run("can disable only inbound flag", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
+		gasPriceIncreaseFlags := sample.GasPriceIncreaseFlags()
+		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
+			IsInboundEnabled:      true,
+			IsOutboundEnabled:     true,
+			GasPriceIncreaseFlags: &gasPriceIncreaseFlags,
+		})
+		srv := keeper.NewMsgServerImpl(*k)
+		admin := sample.AccAddress()
+		msg := &types.MsgDisableCCTXFlags{
+			Creator:         admin,
+			DisableOutbound: false,
+			DisableInbound:  true,
+		}
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+
+		_, err := srv.DisableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
+		require.NoError(t, err)
+
+		flags, found := k.GetCrosschainFlags(ctx)
+		require.True(t, found)
+		require.False(t, flags.IsInboundEnabled)
+		require.True(t, flags.IsOutboundEnabled)
+		require.Equal(t, gasPriceIncreaseFlags, *flags.GasPriceIncreaseFlags)
 	})
 
 	t.Run("cannot disable cctx flags if not correct address", func(t *testing.T) {
