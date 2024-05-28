@@ -47,37 +47,61 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		return nil, err
 	}
 
-	tx, err := b.clientCtx.TxConfig.TxDecoder()(block.Block.Txs[res.TxIndex])
+	resBlock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(res.Height))
 	if err != nil {
-		// only return error if tx can not contain synthetic tx
-		if additional == nil {
-			return nil, err
-		}
-	}
-
-	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
-	if err != nil {
-		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
+		b.logger.Debug("block not found", "height", res.Height, "error", err.Error())
 		return nil, nil
 	}
 
-	var msg *evmtypes.MsgEthereumTx
-	if tx != nil {
-		// the `res.MsgIndex` is inferred from tx index, should be within the bound.
-		ethermintMsg, ok := tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
-		if !ok {
-			return nil, errors.New("can not find msg")
-		}
-		msg = ethermintMsg
+	blockRes, err := b.TendermintBlockResultByNumber(&res.Height)
+	if err != nil {
+		b.logger.Debug("failed to retrieve block results", "height", res.Height, "error", err.Error())
+		return nil, nil
 	}
 
-	if msg == nil || res.EthTxIndex == -1 {
-		// Fallback to find tx by iterating all valid eth transactions
-		msgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
+	var ethMsg *evmtypes.MsgEthereumTx
+	if additional == nil {
+		tx, err := b.clientCtx.TxConfig.TxDecoder()(resBlock.Block.Txs[res.TxIndex])
+		if err != nil {
+			b.logger.Debug("decoding failed", "error", err.Error())
+			return nil, fmt.Errorf("failed to decode tx: %w", err)
+		}
+		ethMsg = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
+
+		if err != nil {
+			b.logger.Error("failed to unpack tx data", "error", err.Error())
+			return nil, err
+		}
+	} else {
+		recipient := additional.Recipient
+		t := ethtypes.NewTx(&ethtypes.LegacyTx{
+			Nonce:    additional.Nonce,
+			Data:     additional.Data,
+			Gas:      additional.GasUsed,
+			To:       &recipient,
+			GasPrice: nil,
+			Value:    additional.Value,
+			V:        big.NewInt(0),
+			R:        big.NewInt(0),
+			S:        big.NewInt(0),
+		})
+		ethMsg = &evmtypes.MsgEthereumTx{}
+		err = ethMsg.FromEthereumTx(t)
+		if err != nil {
+			b.logger.Error("can not create eth msg", err.Error())
+			return nil, err
+		}
+		ethMsg.Hash = additional.Hash.Hex()
+		ethMsg.From = additional.Sender.Hex()
+	}
+
+	if res.EthTxIndex == -1 {
+		// Fallback to find tx index by iterating all valid eth transactions
+		msgs, _ := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
 				// #nosec G701 always in range
-				msg = msgs[i]
+				res.EthTxIndex = int32(i)
 				break
 			}
 		}
@@ -104,7 +128,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	}
 
 	return rpctypes.NewTransactionFromMsg(
-		msg,
+		ethMsg,
 		common.BytesToHash(block.BlockID.Hash.Bytes()),
 		// #nosec G701 always positive
 		uint64(res.Height),
