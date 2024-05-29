@@ -298,35 +298,6 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 
-	// print transaction inputs
-	runner.Logger.Info("SignRawTransactionWithWallet2 input: %+v", inputsForSign)
-	for _, input := range inputUTXOs {
-		runner.Logger.Print("  txid: %s", input.TxID)
-		runner.Logger.Print("  vout: %d", input.Vout)
-		runner.Logger.Print("  address: %s", input.Address)
-		runner.Logger.Print("  amount: %f", input.Amount)
-		runner.Logger.Print("  confirmations: %d", input.Confirmations)
-	}
-
-	// retry for 10 times if not signed
-	if !signed {
-		for i := 0; i < 10; i++ {
-			runner.Logger.Print(fmt.Sprintf("retrying SignRawTransactionWithWallet2: %d", i+1))
-			stx, signed, err = btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
-			if err != nil {
-				panic(err)
-			}
-			if signed {
-				break
-			}
-			time.Sleep(1 * time.Second)
-			_, err = btcRPC.GenerateToAddress(1, btcDeployerAddress, nil)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
 	if !signed {
 		panic("btc transaction not signed")
 	}
