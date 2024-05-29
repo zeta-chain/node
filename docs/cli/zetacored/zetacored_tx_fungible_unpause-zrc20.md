@@ -1,9 +1,15 @@
-# tx observer update-crosschain-flags
+# tx fungible unpause-zrc20
 
-Update crosschain flags
+Broadcast message UnpauseZRC20
 
 ```
-zetacored tx observer update-crosschain-flags [is-inbound-enabled] [is-outbound-enabled] [flags]
+zetacored tx fungible unpause-zrc20 [contractAddress1, contractAddress2, ...] [flags]
+```
+
+### Examples
+
+```
+zetacored tx fungible unpause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" 
 ```
 
 ### Options
@@ -22,7 +28,7 @@ zetacored tx observer update-crosschain-flags [is-inbound-enabled] [is-outbound-
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-crosschain-flags
+  -h, --help                     help for unpause-zrc20
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -49,5 +55,5 @@ zetacored tx observer update-crosschain-flags [is-inbound-enabled] [is-outbound-
 
 ### SEE ALSO
 
-* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
+* [zetacored tx fungible](zetacored_tx_fungible.md)	 - fungible transactions subcommands
 

@@ -11,6 +11,133 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestChain_Validate(t *testing.T) {
+	tests := []struct {
+		name   string
+		chain  Chain
+		errStr string
+	}{
+		{
+			name: "should pass if chain is valid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+		},
+		{
+			name: "should error if chain ID is zero",
+			chain: Chain{
+				ChainId:     0,
+				ChainName:   ChainName_empty,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "chain ID must be positive",
+		},
+		{
+			name: "should error if chain ID is negative",
+			chain: Chain{
+				ChainId:     0,
+				ChainName:   ChainName_empty,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "chain ID must be positive",
+		},
+		{
+			name: "should error if chain name invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_base_sepolia + 1,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid chain name",
+		},
+		{
+			name: "should error if network invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base + 1,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid network",
+		},
+		{
+			name: "should error if network type invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base,
+				NetworkType: NetworkType_devnet + 1,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid network type",
+		},
+		{
+			name: "should error if vm invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base,
+				NetworkType: NetworkType_devnet,
+				Vm:          Vm_evm + 1,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid vm",
+		},
+		{
+			name: "should error if consensus invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base,
+				NetworkType: NetworkType_devnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack + 1,
+				IsExternal:  true,
+			},
+			errStr: "invalid consensus",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.errStr != "" {
+				require.ErrorContains(t, tt.chain.Validate(), tt.errStr)
+			} else {
+				require.NoError(t, tt.chain.Validate())
+			}
+		})
+	}
+
+	t.Run("all default chains are valid", func(t *testing.T) {
+		for _, chain := range DefaultChainsList() {
+			require.NoError(t, chain.Validate())
+		}
+	})
+}
+
 func TestChain_EncodeAddress(t *testing.T) {
 	tests := []struct {
 		name    string

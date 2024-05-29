@@ -7,6 +7,13 @@
     * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
     * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
 
+### Crosschain Flags update
+
+* `MsgUpdateCrosschainFlags` has been removed,and replaced with `MsgEnableCCTX`, `MsgDisableCCTX` and `MsgUpdateGasPriceIncreaseFlags` messages.
+    * `MsgEnableCCTX` message enables either the IsInboundEnabled flag,or the IsOutboundEnabled flag or both `PolicyType_groupOperational`
+    * `MsgDisableCCTX` message disables either the IsInboundEnabled flag,or the IsOutboundEnabled flag or both `PolicyType_emergency`
+    * `MsgUpdateGasPriceIncreaseFlags` message updates the gas price increase flags and can be triggered via `PolicyType_groupOperational`
+
 ### `BallotMaturityBlocks` moved to `emissions` module
 
 * Observer param `ballot_maturity_blocks` is part of `emissions` module now. Observer `params` are deprecated and removed from `observer` module.
@@ -47,3 +54,7 @@
             * `/zeta-chain/crosschain/inTxHashToCctxData/{hash}` endpoint is now `/zeta-chain/crosschain/inboundHashToCctxData/{hash}`
         * `InTxHashToCctxAll` has been renamed to `InboundHashToCctxAll`
             * `/zeta-chain/crosschain/inTxHashToCctx` endpoint is now `/zeta-chain/crosschain/inboundHashToCctx`
+          
+* `MsgUpdateZRC20` has been removed, and replaced with `MsgPauseZRC20` and `MsgUnpauseZRC20` messages.
+    * `MsgPauseZRC20` message pauses a ZRC20 token and can be triggered via `PolicyType_groupEmergency`
+    * `MsgUnpauseZRC20` message unpauses a ZRC20 token and can be triggered via `PolicyType_groupOperational`
