@@ -30,7 +30,7 @@ import (
 var blockHeaderBTCTimeout = 5 * time.Minute
 
 // ListDeployerUTXOs list and filter the deployer's UTXOs
-func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) []btcjson.ListUnspentResult {
+func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
 	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(
 		1,
@@ -38,7 +38,7 @@ func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) []btcjson.ListUnsp
 		[]btcutil.Address{runner.BTCDeployerAddress},
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// filter UTXOs by `minAmount`
@@ -49,15 +49,18 @@ func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) []btcjson.ListUnsp
 		}
 	}
 
-	return filtered
+	return filtered, nil
 }
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
 func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
 	runner.Logger.Print("⏳ depositing BTC into ZEVM")
 
-	// fetch utxos
-	utxos := runner.ListDeployerUTXOs(1.0)
+	// list deployer utxos
+	utxos, err := runner.ListDeployerUTXOs(1.0)
+	if err != nil {
+		panic(err)
+	}
 
 	spendableAmount := 0.0
 	spendableUTXOs := 0
@@ -78,7 +81,7 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetabitcoin.DefaultDepositorFee
-	txHash, err := runner.SendToTSSFromDeployerToDeposit(
+	txHash, err = runner.SendToTSSFromDeployerToDeposit(
 		runner.BTCTSSAddress,
 		amount,
 		utxos,
@@ -101,9 +104,12 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		runner.Logger.Print("✅ BTC deposited in %s", time.Since(startTime))
 	}()
 
-	// fetch utxos
-	btc := runner.BtcRPCClient
-	utxos := runner.ListDeployerUTXOs(1.0)
+	// list deployer utxos
+	utxos, err := runner.ListDeployerUTXOs(1.0)
+	if err != nil {
+		panic(err)
+	}
+
 	spendableAmount := 0.0
 	spendableUTXOs := 0
 	for _, utxo := range utxos {
@@ -131,7 +137,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		runner.BTCTSSAddress,
 		amount1,
 		utxos[:2],
-		btc,
+		runner.BtcRPCClient,
 		runner.BTCDeployerAddress,
 	)
 	if err != nil {
@@ -142,7 +148,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		runner.BTCTSSAddress,
 		amount2,
 		utxos[2:4],
-		btc,
+		runner.BtcRPCClient,
 		runner.BTCDeployerAddress,
 	)
 	if err != nil {
@@ -155,7 +161,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		runner.BTCTSSAddress,
 		0.11,
 		utxos[4:5],
-		btc,
+		runner.BtcRPCClient,
 		[]byte(constant.DonationMessage),
 		runner.BTCDeployerAddress,
 	)
