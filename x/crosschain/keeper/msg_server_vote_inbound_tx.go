@@ -108,7 +108,10 @@ func (k msgServer) VoteInbound(
 	}
 	// Inititiate outboud, the process function manages the state commit and cctx status change.
 	//	If the process fails, the changes to the evm state are rolled back.
-	k.InitiateOutbound(ctx, &cctx)
+	err = k.InitiateOutbound(ctx, &cctx)
+	if err != nil {
+		return nil, err
+	}
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveInbound(ctx, &cctx, msg.EventIndex)
 	return &types.MsgVoteInboundResponse{}, nil
