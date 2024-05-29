@@ -57750,13 +57750,17 @@ definitions:
     type: object
   observerMsgAddObserverResponse:
     type: object
+  observerMsgDisableCCTXResponse:
+    type: object
+  observerMsgEnableCCTXResponse:
+    type: object
   observerMsgRemoveChainParamsResponse:
     type: object
   observerMsgResetChainNoncesResponse:
     type: object
   observerMsgUpdateChainParamsResponse:
     type: object
-  observerMsgUpdateCrosschainFlagsResponse:
+  observerMsgUpdateGasPriceIncreaseFlagsResponse:
     type: object
   observerMsgUpdateKeygenResponse:
     type: object
