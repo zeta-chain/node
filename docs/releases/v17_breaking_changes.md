@@ -6,6 +6,8 @@
 * `MsgUpdateVerificationFlags` has been removed, and replaced with `MsgEnableHeaderVerification` and `MsgDisableHeaderVerification` messages.
     * `MsgEnableHeaderVerification` message enables block header verification for a list of chains and can be triggered via `PolicyType_groupOperational`
     * `MsgDisableHeaderVerification` message disables block header verification for a list of chains and can be triggered via `PolicyType_emergency`
+### Crosschain Flags update
+
 * `MsgUpdateCrosschainFlags` has been removed,and replaced with `MsgEnableCCTX`, `MsgDisableCCTX` and `MsgUpdateGasPriceIncreaseFlags` messages.
     * `MsgEnableCCTX` message enables either the IsInboundEnabled flag, or the IsOutboundEnabled flag or both `PolicyType_groupOperational`
     * `MsgDisableCCTX` message disables either the IsInboundEnabled flag, or the IsOutboundEnabled flag or both `PolicyType_emergency`
