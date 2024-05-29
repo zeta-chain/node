@@ -167,7 +167,6 @@ func NewTransactionFromMsg(
 	chainID *big.Int,
 	txAdditional *TxResultAdditionalFields,
 ) (*RPCTransaction, error) {
-	// TODO (https://github.com/zeta-chain/node/issues/2283): check if this condition can be removed
 	if txAdditional != nil {
 		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txAdditional)
 	}
