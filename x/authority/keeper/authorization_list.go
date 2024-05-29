@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
-// SetAuthorizationList sets the authorization list to the store
+// SetAuthorizationList sets the authorization list to the store.It returns an error if the list is invalid.
 func (k Keeper) SetAuthorizationList(ctx sdk.Context, list types.AuthorizationList) error {
 	err := list.Validate()
 	if err != nil {

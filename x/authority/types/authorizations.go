@@ -6,6 +6,8 @@ import (
 	"cosmossdk.io/errors"
 )
 
+// DefaultAuthorizationsList list is the list of authorizations that presently exist in the system.
+// This is the minimum set of authorizations that are required to be set when the authorization table is deployed
 func DefaultAuthorizationsList() AuthorizationList {
 	var authorizations []Authorization
 
@@ -178,6 +180,7 @@ func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, erro
 }
 
 // Validate checks if the authorization list is valid. It returns an error if the message url is duplicated with different policies.
+// It does not check if the list is empty or not, as an empty list is also considered valid.
 func (a *AuthorizationList) Validate() error {
 	checkMsgUrls := make(map[string]bool)
 	for _, authorization := range a.Authorizations {

@@ -15,19 +15,21 @@ import (
 )
 
 func TestAuthorizationList_SetAuthorizations(t *testing.T) {
-	t.Run("Set new authorization successfully", func(t *testing.T) {
+	t.Run("set new authorization successfully", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		newAuthorization := sample.Authorization()
 		require.False(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
+
 		authorizationsList.SetAuthorizations(newAuthorization)
 		require.Len(t, authorizationsList.Authorizations, len(types.DefaultAuthorizationsList().Authorizations)+1)
 		require.True(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
 	})
 
-	t.Run("Update existing authorization successfully", func(t *testing.T) {
+	t.Run("update existing authorization successfully", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		newAuthorization := sample.Authorization()
 		require.False(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
+
 		authorizationsList.SetAuthorizations(newAuthorization)
 		require.Len(t, authorizationsList.Authorizations, len(types.DefaultAuthorizationsList().Authorizations)+1)
 		require.True(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
@@ -42,16 +44,17 @@ func TestAuthorizationList_SetAuthorizations(t *testing.T) {
 }
 
 func TestAuthorizationList_GetAuthorizedPolicy(t *testing.T) {
-	t.Run("Get authorized policy successfully", func(t *testing.T) {
+	t.Run("get authorized policy successfully", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		newAuthorization := sample.Authorization()
 		authorizationsList.SetAuthorizations(newAuthorization)
+
 		policy, err := authorizationsList.GetAuthorizedPolicy(newAuthorization.MsgUrl)
 		require.NoError(t, err)
 		require.Equal(t, newAuthorization.AuthorizedPolicy, policy)
 	})
 
-	t.Run("Get authorized policy failed with not found", func(t *testing.T) {
+	t.Run("get authorized policy fails when msg not found in list", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		policy, err := authorizationsList.GetAuthorizedPolicy("ABC")
 		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
@@ -60,21 +63,22 @@ func TestAuthorizationList_GetAuthorizedPolicy(t *testing.T) {
 }
 
 func TestAuthorizationList_CheckAuthorizationExists(t *testing.T) {
-	t.Run("Check authorization exists successfully", func(t *testing.T) {
+	t.Run("check authorization exists successfully", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		newAuthorization := sample.Authorization()
 		require.False(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
+
 		authorizationsList.SetAuthorizations(newAuthorization)
 		require.True(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
 	})
 }
 
 func TestAuthorizationList_Validate(t *testing.T) {
-	t.Run("Validate successfully", func(t *testing.T) {
+	t.Run("validate successfully", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		require.NoError(t, authorizationsList.Validate())
 	})
-	t.Run("Validate failed with duplicate msg url with different policies", func(t *testing.T) {
+	t.Run("validate failed with duplicate msg url with different policies", func(t *testing.T) {
 		authorizationsList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           "ABC",
@@ -89,7 +93,7 @@ func TestAuthorizationList_Validate(t *testing.T) {
 		require.ErrorIs(t, authorizationsList.Validate(), types.ErrInValidAuthorizationList)
 	})
 
-	t.Run("Validate failed with duplicate msg url with same policies", func(t *testing.T) {
+	t.Run("validate failed with duplicate msg url with same policies", func(t *testing.T) {
 		authorizationsList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           "ABC",
@@ -103,11 +107,10 @@ func TestAuthorizationList_Validate(t *testing.T) {
 
 		require.ErrorIs(t, authorizationsList.Validate(), types.ErrInValidAuthorizationList)
 	})
-
 }
 
 func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
-	t.Run("Remove authorization successfully", func(t *testing.T) {
+	t.Run("remove authorization successfully", func(t *testing.T) {
 		authorizationsList := types.DefaultAuthorizationsList()
 		newAuthorization := sample.Authorization()
 		authorizationsList.SetAuthorizations(newAuthorization)
@@ -125,7 +128,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 }
 
 func TestDefaultAuthorizationsList(t *testing.T) {
-	t.Run("Default authorizations list", func(t *testing.T) {
+	t.Run("default authorizations list", func(t *testing.T) {
 		var OperationalPolicyMessageList = []string{
 			sdk.MsgTypeURL(&crosschaintypes.MsgRefundAbortedCCTX{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgAbortStuckCCTX{}),
