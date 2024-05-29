@@ -64,7 +64,16 @@ func DefaultAuthorizationsList() AuthorizationList {
 
 		{
 			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
-			AuthorizedPolicy: PolicyType_groupOperational},
+			AuthorizedPolicy: PolicyType_groupOperational,
+		},
+		{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgEnableCCTX",
+			AuthorizedPolicy: PolicyType_groupOperational,
+		},
+		{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
+			AuthorizedPolicy: PolicyType_groupOperational,
+		},
 		{
 			MsgUrl:           "/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 			AuthorizedPolicy: PolicyType_groupOperational,
@@ -109,6 +118,10 @@ func DefaultAuthorizationsList() AuthorizationList {
 		},
 		{
 			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateKeygen",
+			AuthorizedPolicy: PolicyType_groupEmergency,
+		},
+		{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgDisableCCTX",
 			AuthorizedPolicy: PolicyType_groupEmergency,
 		},
 		{

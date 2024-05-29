@@ -141,8 +141,8 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}),
 			sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
-			//sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
-			//sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
+			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
+			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 		}
 
@@ -153,7 +153,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&crosschaintypes.MsgRemoveOutboundTracker{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{}),
-			//sdk.MsgTypeURL(&observertypes.MsgDisableCCTX{}),
+			sdk.MsgTypeURL(&observertypes.MsgDisableCCTX{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgDisableHeaderVerification{}),
 		}
 
