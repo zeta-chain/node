@@ -84,7 +84,7 @@ func TestMsgUpdateChainInfo_Route(t *testing.T) {
 }
 
 func TestMsgUpdateChainInfo_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress())g
+	msg := types.NewMsgUpdateChainInfo(sample.AccAddress())
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
