@@ -14,14 +14,47 @@ type SigninAlgo string
 // Chains represent a slice of Chain
 type Chains []Chain
 
+// Validate checks whether the chain is valid
+// The function check the chain ID is positive and all enum fields have a defined value
+func (chain Chain) Validate() error {
+	if chain.ChainId <= 0 {
+		return fmt.Errorf("chain ID must be positive")
+	}
+
+	if _, ok := ChainName_name[int32(chain.ChainName)]; !ok {
+		return fmt.Errorf("invalid chain name %d", int32(chain.ChainName))
+	}
+
+	if _, ok := Network_name[int32(chain.Network)]; !ok {
+		return fmt.Errorf("invalid network %d", int32(chain.Network))
+	}
+
+	if _, ok := NetworkType_name[int32(chain.NetworkType)]; !ok {
+		return fmt.Errorf("invalid network type %d", int32(chain.NetworkType))
+	}
+
+	if _, ok := Vm_name[int32(chain.Vm)]; !ok {
+		return fmt.Errorf("invalid vm %d", int32(chain.Vm))
+	}
+
+	if _, ok := Consensus_name[int32(chain.Consensus)]; !ok {
+		return fmt.Errorf("invalid consensus %d", int32(chain.Consensus))
+	}
+
+	return nil
+}
+
 // IsEqual compare two chain to see whether they represent the same chain
 func (chain Chain) IsEqual(c Chain) bool {
 	return chain.ChainId == c.ChainId
 }
 
+// IsZetaChain returns true if the chain is a ZetaChain chain
 func (chain Chain) IsZetaChain() bool {
 	return chain.Network == Network_zeta
 }
+
+// IsExternalChain returns true if the chain is an ExternalChain chain, not ZetaChain
 func (chain Chain) IsExternalChain() bool {
 	return chain.IsExternal
 }
