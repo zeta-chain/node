@@ -137,7 +137,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutboundParam().Hash)
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
-	utxos := r.ListDeployerUTXOs()
+	// Note: the test needs at least 0.1001 BTC
+	utxos := r.ListDeployerUTXOs(1.0)
 	r.Logger.Print(fmt.Sprintf("There are %d utxos before SendToTSSFromDeployerWithMemo", len(utxos)))
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)

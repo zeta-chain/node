@@ -29,8 +29,9 @@ import (
 
 var blockHeaderBTCTimeout = 5 * time.Minute
 
-// ListDeployerUTXOs lists the deployer's UTXOs
-func (runner *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
+// ListDeployerUTXOs list and filter the deployer's UTXOs
+func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) []btcjson.ListUnspentResult {
+	// query UTXOs from node
 	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(
 		1,
 		9999999,
@@ -39,7 +40,16 @@ func (runner *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
 	if err != nil {
 		panic(err)
 	}
-	return utxos
+
+	// filter UTXOs by `minAmount`
+	filtered := []btcjson.ListUnspentResult{}
+	for _, utxo := range utxos {
+		if utxo.Amount >= minAmount {
+			filtered = append(filtered, utxo)
+		}
+	}
+
+	return filtered
 }
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
@@ -47,7 +57,7 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Print("⏳ depositing BTC into ZEVM")
 
 	// fetch utxos
-	utxos := runner.ListDeployerUTXOs()
+	utxos := runner.ListDeployerUTXOs(1.0)
 
 	spendableAmount := 0.0
 	spendableUTXOs := 0
@@ -93,7 +103,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	// fetch utxos
 	btc := runner.BtcRPCClient
-	utxos := runner.ListDeployerUTXOs()
+	utxos := runner.ListDeployerUTXOs(1.0)
 	spendableAmount := 0.0
 	spendableUTXOs := 0
 	for _, utxo := range utxos {
