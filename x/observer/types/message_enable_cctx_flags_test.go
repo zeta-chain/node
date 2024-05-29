@@ -10,29 +10,29 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgEnableCCTXFlags_ValidateBasic(t *testing.T) {
+func TestMsgEnableCCTX_ValidateBasic(t *testing.T) {
 	tt := []struct {
 		name string
-		msg  *types.MsgEnableCCTXFlags
+		msg  *types.MsgEnableCCTX
 		err  require.ErrorAssertionFunc
 	}{
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgEnableCCTXFlags("invalid", true, true),
+			msg:  types.NewMsgEnableCCTX("invalid", true, true),
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.Contains(t, err.Error(), "invalid creator address")
 			},
 		},
 		{
 			name: "invalid flags",
-			msg:  types.NewMsgEnableCCTXFlags(sample.AccAddress(), false, false),
+			msg:  types.NewMsgEnableCCTX(sample.AccAddress(), false, false),
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.Contains(t, err.Error(), "at least one of EnableInbound or EnableOutbound must be true")
 			},
 		},
 		{
 			name: "valid",
-			msg:  types.NewMsgEnableCCTXFlags(sample.AccAddress(), true, true),
+			msg:  types.NewMsgEnableCCTX(sample.AccAddress(), true, true),
 			err:  require.NoError,
 		},
 	}
@@ -43,23 +43,23 @@ func TestMsgEnableCCTXFlags_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgEnableCCTXFlags_GetSigners(t *testing.T) {
+func TestMsgEnableCCTX_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgEnableCCTXFlags
+		msg    types.MsgEnableCCTX
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgEnableCCTXFlags{
+			msg: types.MsgEnableCCTX{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgEnableCCTXFlags{
+			msg: types.MsgEnableCCTX{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -80,22 +80,22 @@ func TestMsgEnableCCTXFlags_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgEnableCCTXFlags_Type(t *testing.T) {
-	msg := types.MsgEnableCCTXFlags{
+func TestMsgEnableCCTX_Type(t *testing.T) {
+	msg := types.MsgEnableCCTX{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgEnableCCTXFlags, msg.Type())
+	require.Equal(t, types.TypeMsgEnableCCTX, msg.Type())
 }
 
-func TestMsgEnableCCTXFlags_Route(t *testing.T) {
-	msg := types.MsgEnableCCTXFlags{
+func TestMsgEnableCCTX_Route(t *testing.T) {
+	msg := types.MsgEnableCCTX{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgEnableCCTXFlags_GetSignBytes(t *testing.T) {
-	msg := types.MsgEnableCCTXFlags{
+func TestMsgEnableCCTX_GetSignBytes(t *testing.T) {
+	msg := types.MsgEnableCCTX{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

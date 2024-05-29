@@ -27,9 +27,8 @@ service Msg {
   rpc ResetChainNonces(MsgResetChainNonces)
       returns (MsgResetChainNoncesResponse);
   rpc VoteTSS(MsgVoteTSS) returns (MsgVoteTSSResponse);
-  rpc EnableCCTXFlags(MsgEnableCCTXFlags) returns (MsgEnableCCTXFlagsResponse);
-  rpc DisableCCTXFlags(MsgDisableCCTXFlags)
-      returns (MsgDisableCCTXFlagsResponse);
+  rpc EnableCCTX(MsgEnableCCTX) returns (MsgEnableCCTXResponse);
+  rpc DisableCCTX(MsgDisableCCTX) returns (MsgDisableCCTXResponse);
   rpc UpdateGasPriceIncreaseFlags(MsgUpdateGasPriceIncreaseFlags)
       returns (MsgUpdateGasPriceIncreaseFlagsResponse);
 }
@@ -115,21 +114,21 @@ message MsgVoteTSSResponse {
   bool keygen_success = 3;
 }
 
-message MsgEnableCCTXFlags {
+message MsgEnableCCTX {
   string creator = 1;
   bool enableInbound = 2;
   bool enableOutbound = 3;
 }
 
-message MsgEnableCCTXFlagsResponse {}
+message MsgEnableCCTXResponse {}
 
-message MsgDisableCCTXFlags {
+message MsgDisableCCTX {
   string creator = 1;
   bool disableInbound = 2;
   bool disableOutbound = 3;
 }
 
-message MsgDisableCCTXFlagsResponse {}
+message MsgDisableCCTXResponse {}
 
 message MsgUpdateGasPriceIncreaseFlags {
   string creator = 1;

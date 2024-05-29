@@ -9,18 +9,18 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// EnableCCTXFlags enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
+// EnableCCTX enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
 // The flags are enabled by the policy account with the groupOperational policy type.
-func (k msgServer) EnableCCTXFlags(
+func (k msgServer) EnableCCTX(
 	goCtx context.Context,
-	msg *types.MsgEnableCCTXFlags,
-) (*types.MsgEnableCCTXFlagsResponse, error) {
+	msg *types.MsgEnableCCTX,
+) (*types.MsgEnableCCTXResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgEnableCCTXFlagsResponse{}, authoritytypes.ErrUnauthorized.Wrap(
-			"EnableCCTXFlags can only be executed by the correct policy account",
+		return &types.MsgEnableCCTXResponse{}, authoritytypes.ErrUnauthorized.Wrap(
+			"EnableCCTX can only be executed by the correct policy account",
 		)
 	}
 
@@ -42,7 +42,7 @@ func (k msgServer) EnableCCTXFlags(
 	k.SetCrosschainFlags(ctx, flags)
 
 	err := ctx.EventManager().EmitTypedEvents(&types.EventCCTXFlagsEnabled{
-		MsgTypeUrl:        sdk.MsgTypeURL(&types.MsgEnableCCTXFlags{}),
+		MsgTypeUrl:        sdk.MsgTypeURL(&types.MsgEnableCCTX{}),
 		IsInboundEnabled:  flags.IsInboundEnabled,
 		IsOutboundEnabled: flags.IsOutboundEnabled,
 	})
@@ -51,5 +51,5 @@ func (k msgServer) EnableCCTXFlags(
 		ctx.Logger().Error("Error emitting EventCCTXFlagsEnabled :", err)
 	}
 
-	return &types.MsgEnableCCTXFlagsResponse{}, nil
+	return &types.MsgEnableCCTXResponse{}, nil
 }

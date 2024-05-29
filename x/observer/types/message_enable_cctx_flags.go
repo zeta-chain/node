@@ -7,28 +7,28 @@ import (
 )
 
 const (
-	TypeMsgEnableCCTXFlags = "enable_crosschain_flags"
+	TypeMsgEnableCCTX = "enable_crosschain"
 )
 
-var _ sdk.Msg = &MsgEnableCCTXFlags{}
+var _ sdk.Msg = &MsgEnableCCTX{}
 
-func NewMsgEnableCCTXFlags(creator string, enableInbound, enableOutbound bool) *MsgEnableCCTXFlags {
-	return &MsgEnableCCTXFlags{
+func NewMsgEnableCCTX(creator string, enableInbound, enableOutbound bool) *MsgEnableCCTX {
+	return &MsgEnableCCTX{
 		Creator:        creator,
 		EnableInbound:  enableInbound,
 		EnableOutbound: enableOutbound,
 	}
 }
 
-func (msg *MsgEnableCCTXFlags) Route() string {
+func (msg *MsgEnableCCTX) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgEnableCCTXFlags) Type() string {
-	return TypeMsgEnableCCTXFlags
+func (msg *MsgEnableCCTX) Type() string {
+	return TypeMsgEnableCCTX
 }
 
-func (msg *MsgEnableCCTXFlags) GetSigners() []sdk.AccAddress {
+func (msg *MsgEnableCCTX) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -36,17 +36,20 @@ func (msg *MsgEnableCCTXFlags) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgEnableCCTXFlags) GetSignBytes() []byte {
+func (msg *MsgEnableCCTX) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgEnableCCTXFlags) ValidateBasic() error {
+func (msg *MsgEnableCCTX) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if !msg.EnableInbound && !msg.EnableOutbound {
-		return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, "at least one of EnableInbound or EnableOutbound must be true")
+		return cosmoserrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"at least one of EnableInbound or EnableOutbound must be true",
+		)
 	}
 	return nil
 }

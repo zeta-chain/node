@@ -30,7 +30,7 @@ func CmdEnableCCTXFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgEnableCCTXFlags(clientCtx.GetFromAddress().String(), enableInbound, enableOutbound)
+			msg := types.NewMsgEnableCCTX(clientCtx.GetFromAddress().String(), enableInbound, enableOutbound)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

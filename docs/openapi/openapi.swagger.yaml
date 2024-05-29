@@ -57712,9 +57712,9 @@ definitions:
     type: object
   observerMsgAddObserverResponse:
     type: object
-  observerMsgDisableCCTXFlagsResponse:
+  observerMsgDisableCCTXResponse:
     type: object
-  observerMsgEnableCCTXFlagsResponse:
+  observerMsgEnableCCTXResponse:
     type: object
   observerMsgRemoveChainParamsResponse:
     type: object

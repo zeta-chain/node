@@ -13,14 +13,14 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgServer_EnableCCTXFlags(t *testing.T) {
+func TestMsgServer_EnableCCTX(t *testing.T) {
 	t.Run("can enable cctx flags if flags dont exist", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgEnableCCTXFlags{
+		msg := &types.MsgEnableCCTX{
 			Creator:        admin,
 			EnableInbound:  true,
 			EnableOutbound: true,
@@ -28,7 +28,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		_, err := srv.EnableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
+		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
 
 		flags, found := k.GetCrosschainFlags(ctx)
@@ -50,7 +50,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgEnableCCTXFlags{
+		msg := &types.MsgEnableCCTX{
 			Creator:        admin,
 			EnableInbound:  true,
 			EnableOutbound: true,
@@ -58,7 +58,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		_, err := srv.EnableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
+		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
 
 		flags, found := k.GetCrosschainFlags(ctx)
@@ -80,7 +80,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgEnableCCTXFlags{
+		msg := &types.MsgEnableCCTX{
 			Creator:        admin,
 			EnableInbound:  true,
 			EnableOutbound: false,
@@ -88,7 +88,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		_, err := srv.EnableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
+		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
 
 		flags, found := k.GetCrosschainFlags(ctx)
@@ -110,7 +110,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgEnableCCTXFlags{
+		msg := &types.MsgEnableCCTX{
 			Creator:        admin,
 			EnableInbound:  false,
 			EnableOutbound: true,
@@ -118,7 +118,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		_, err := srv.EnableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
+		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
 
 		flags, found := k.GetCrosschainFlags(ctx)
@@ -135,7 +135,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgEnableCCTXFlags{
+		msg := &types.MsgEnableCCTX{
 			Creator:        admin,
 			EnableInbound:  true,
 			EnableOutbound: false,
@@ -143,7 +143,7 @@ func TestMsgServer_EnableCCTXFlags(t *testing.T) {
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
-		_, err := srv.EnableCCTXFlags(sdk.WrapSDKContext(ctx), msg)
+		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.ErrorIs(t, authoritytypes.ErrUnauthorized, err)
 
 		_, found := k.GetCrosschainFlags(ctx)

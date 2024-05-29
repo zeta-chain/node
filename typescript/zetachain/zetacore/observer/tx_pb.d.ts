@@ -530,9 +530,9 @@ export declare class MsgVoteTSSResponse extends Message<MsgVoteTSSResponse> {
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgEnableCCTXFlags
+ * @generated from message zetachain.zetacore.observer.MsgEnableCCTX
  */
-export declare class MsgEnableCCTXFlags extends Message<MsgEnableCCTXFlags> {
+export declare class MsgEnableCCTX extends Message<MsgEnableCCTX> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -548,44 +548,44 @@ export declare class MsgEnableCCTXFlags extends Message<MsgEnableCCTXFlags> {
    */
   enableOutbound: boolean;
 
-  constructor(data?: PartialMessage<MsgEnableCCTXFlags>);
+  constructor(data?: PartialMessage<MsgEnableCCTX>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgEnableCCTXFlags";
+  static readonly typeName = "zetachain.zetacore.observer.MsgEnableCCTX";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableCCTXFlags;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableCCTX;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlags;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableCCTX;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlags;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableCCTX;
 
-  static equals(a: MsgEnableCCTXFlags | PlainMessage<MsgEnableCCTXFlags> | undefined, b: MsgEnableCCTXFlags | PlainMessage<MsgEnableCCTXFlags> | undefined): boolean;
+  static equals(a: MsgEnableCCTX | PlainMessage<MsgEnableCCTX> | undefined, b: MsgEnableCCTX | PlainMessage<MsgEnableCCTX> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgEnableCCTXFlagsResponse
+ * @generated from message zetachain.zetacore.observer.MsgEnableCCTXResponse
  */
-export declare class MsgEnableCCTXFlagsResponse extends Message<MsgEnableCCTXFlagsResponse> {
-  constructor(data?: PartialMessage<MsgEnableCCTXFlagsResponse>);
+export declare class MsgEnableCCTXResponse extends Message<MsgEnableCCTXResponse> {
+  constructor(data?: PartialMessage<MsgEnableCCTXResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgEnableCCTXFlagsResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgEnableCCTXResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableCCTXFlagsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgEnableCCTXResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlagsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgEnableCCTXResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableCCTXFlagsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgEnableCCTXResponse;
 
-  static equals(a: MsgEnableCCTXFlagsResponse | PlainMessage<MsgEnableCCTXFlagsResponse> | undefined, b: MsgEnableCCTXFlagsResponse | PlainMessage<MsgEnableCCTXFlagsResponse> | undefined): boolean;
+  static equals(a: MsgEnableCCTXResponse | PlainMessage<MsgEnableCCTXResponse> | undefined, b: MsgEnableCCTXResponse | PlainMessage<MsgEnableCCTXResponse> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgDisableCCTXFlags
+ * @generated from message zetachain.zetacore.observer.MsgDisableCCTX
  */
-export declare class MsgDisableCCTXFlags extends Message<MsgDisableCCTXFlags> {
+export declare class MsgDisableCCTX extends Message<MsgDisableCCTX> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -601,38 +601,38 @@ export declare class MsgDisableCCTXFlags extends Message<MsgDisableCCTXFlags> {
    */
   disableOutbound: boolean;
 
-  constructor(data?: PartialMessage<MsgDisableCCTXFlags>);
+  constructor(data?: PartialMessage<MsgDisableCCTX>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgDisableCCTXFlags";
+  static readonly typeName = "zetachain.zetacore.observer.MsgDisableCCTX";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableCCTXFlags;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableCCTX;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlags;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableCCTX;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlags;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableCCTX;
 
-  static equals(a: MsgDisableCCTXFlags | PlainMessage<MsgDisableCCTXFlags> | undefined, b: MsgDisableCCTXFlags | PlainMessage<MsgDisableCCTXFlags> | undefined): boolean;
+  static equals(a: MsgDisableCCTX | PlainMessage<MsgDisableCCTX> | undefined, b: MsgDisableCCTX | PlainMessage<MsgDisableCCTX> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgDisableCCTXFlagsResponse
+ * @generated from message zetachain.zetacore.observer.MsgDisableCCTXResponse
  */
-export declare class MsgDisableCCTXFlagsResponse extends Message<MsgDisableCCTXFlagsResponse> {
-  constructor(data?: PartialMessage<MsgDisableCCTXFlagsResponse>);
+export declare class MsgDisableCCTXResponse extends Message<MsgDisableCCTXResponse> {
+  constructor(data?: PartialMessage<MsgDisableCCTXResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgDisableCCTXFlagsResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgDisableCCTXResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableCCTXFlagsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableCCTXResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlagsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableCCTXResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableCCTXFlagsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableCCTXResponse;
 
-  static equals(a: MsgDisableCCTXFlagsResponse | PlainMessage<MsgDisableCCTXFlagsResponse> | undefined, b: MsgDisableCCTXFlagsResponse | PlainMessage<MsgDisableCCTXFlagsResponse> | undefined): boolean;
+  static equals(a: MsgDisableCCTXResponse | PlainMessage<MsgDisableCCTXResponse> | undefined, b: MsgDisableCCTXResponse | PlainMessage<MsgDisableCCTXResponse> | undefined): boolean;
 }
 
 /**
