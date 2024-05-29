@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-const TypeMsgVoteBlame = "add_blame_vote"
+const TypeMsgVoteBlame = "vote_blame"
 
 var _ sdk.Msg = &MsgVoteBlame{}
 

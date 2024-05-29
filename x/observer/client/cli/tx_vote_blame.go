@@ -19,8 +19,8 @@ import (
 
 func CmdVoteBlame() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-blame-vote [chain-id] [index] [failure-reason] [node-list]",
-		Short: "Broadcast message add-blame-vote",
+		Use:   "vote-blame [chain-id] [index] [failure-reason] [node-list]",
+		Short: "Broadcast message vote-blame",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			chainID, err := strconv.Atoi(args[0])
