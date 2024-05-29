@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
@@ -25,7 +26,8 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid genesis",
 			gs: &types.GenesisState{
-				Policies: sample.Policies(),
+				Policies:  sample.Policies(),
+				ChainInfo: sample.ChainInfo(42),
 			},
 			errContains: "",
 		},
@@ -40,8 +42,29 @@ func TestGenesisState_Validate(t *testing.T) {
 						},
 					},
 				},
+				ChainInfo: sample.ChainInfo(42),
 			},
 			errContains: "invalid address",
+		},
+		{
+			name: "invalid if policies is invalid",
+			gs: &types.GenesisState{
+				Policies: sample.Policies(),
+				ChainInfo: types.ChainInfo{
+					Chains: []chains.Chain{
+						{
+							ChainId:     0,
+							ChainName:   chains.ChainName_empty,
+							Network:     chains.Network_optimism,
+							NetworkType: chains.NetworkType_testnet,
+							Vm:          chains.Vm_evm,
+							Consensus:   chains.Consensus_op_stack,
+							IsExternal:  true,
+						},
+					},
+				},
+			},
+			errContains: "chain ID must be positive",
 		},
 	}
 	for _, tt := range tests {

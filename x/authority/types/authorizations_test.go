@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -183,6 +184,10 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, types.PolicyType_groupAdmin, policy)
 		}
-		require.Len(t, defaultList.Authorizations, len(OperationalPolicyMessageList)+len(EmergencyPolicyMessageList)+len(AdminPolicyMessageList))
+		require.Len(
+			t,
+			defaultList.Authorizations,
+			len(OperationalPolicyMessageList)+len(EmergencyPolicyMessageList)+len(AdminPolicyMessageList),
+		)
 	})
 }

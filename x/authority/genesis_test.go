@@ -16,6 +16,7 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Policies:          sample.Policies(),
 		AuthorizationList: sample.AuthorizationList("sample"),
+		ChainInfo:         sample.ChainInfo(42),
 	}
 
 	// Init
@@ -31,6 +32,11 @@ func TestGenesis(t *testing.T) {
 	authorizationList, found := k.GetAuthorizationList(ctx)
 	require.True(t, found)
 	require.Equal(t, genesisState.AuthorizationList, authorizationList)
+
+	// Check chain info is set
+	chainInfo, found := k.GetChainInfo(ctx)
+	require.True(t, found)
+	require.Equal(t, genesisState.ChainInfo, chainInfo)
 
 	// Export
 	got := authority.ExportGenesis(ctx, *k)

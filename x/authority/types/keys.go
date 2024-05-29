@@ -25,4 +25,7 @@ func KeyPrefix(p string) []byte {
 const (
 	// PoliciesKey is the key for the policies store
 	PoliciesKey = "Policies-value-"
+
+	// ChainInfoKey is the key for the chain info store
+	ChainInfoKey = "ChainInfo-value-"
 )
