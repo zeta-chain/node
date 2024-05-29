@@ -62,6 +62,7 @@ require (
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.8.0
+	github.com/golang/mock v1.6.0
 	github.com/huandu/skiplist v1.2.0
 	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/onrik/ethrpc v1.2.0
@@ -95,7 +96,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/glog v1.1.2 // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
@@ -353,4 +353,4 @@ replace (
 
 replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db v0.0.0-20230321185329-6dc7c0ca6345
 
-replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240521185249-8bae394152de
+replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240529195014-204348d5452d

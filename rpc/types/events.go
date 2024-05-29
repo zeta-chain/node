@@ -411,14 +411,14 @@ func fillTxAttribute(tx *ParsedTx, key, value string) error {
 		if !success {
 			return nil
 		}
-	case "TxNonce":
+	case evmtypes.AttributeKeyTxNonce:
 		nonce, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
 		tx.Nonce = nonce
 
-	case "TxData":
+	case evmtypes.AttributeKeyTxData:
 		hexBytes, err := hexutil.Decode(value)
 		if err != nil {
 			return err
