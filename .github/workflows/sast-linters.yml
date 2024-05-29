@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   gosec:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
@@ -35,7 +35,7 @@ jobs:
           args: ./...
 
   gosec-cosmos:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
@@ -53,7 +53,7 @@ jobs:
         run: make lint-cosmos-gosec
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
       GO111MODULE: on
@@ -76,7 +76,7 @@ jobs:
           args: --out-format=json
 
   nosec_alert:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     env:
       GO111MODULE: on
