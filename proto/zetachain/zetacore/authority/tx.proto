@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
+import "zetachain/zetacore/authority/chain_info.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
@@ -22,7 +23,10 @@ message MsgUpdatePolicies {
 message MsgUpdatePoliciesResponse {}
 
 // MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
-message MsgUpdateChainInfo { string signer = 1; }
+message MsgUpdateChainInfo {
+  string signer = 1;
+  ChainInfo chain_info = 2 [ (gogoproto.nullable) = false ];
+}
 
 // MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
 message MsgUpdateChainInfoResponse {}
