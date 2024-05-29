@@ -282,7 +282,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 	resBlock *tmrpctypes.ResultBlock,
 	blockRes *tmrpctypes.ResultBlockResults,
 ) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields) {
-	var result []*evmtypes.MsgEthereumTx
+	var ethMsgs []*evmtypes.MsgEthereumTx
 	var txsAdditional []*rpctypes.TxResultAdditionalFields
 	block := resBlock.Block
 
@@ -301,11 +301,10 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
 			// try to check if there is synthetic eth tx in tx result
 			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
-			if ethMsg == nil {
-				continue
+			if ethMsg != nil {
+				ethMsgs = append(ethMsgs, ethMsg)
+				txsAdditional = append(txsAdditional, additional)
 			}
-			result = append(result, ethMsg)
-			txsAdditional = append(txsAdditional, additional)
 			continue
 		}
 
@@ -317,7 +316,7 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 			if ok {
 				shouldCheckForSyntheticTx = false
 				ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
-				result = append(result, ethMsg)
+				ethMsgs = append(ethMsgs, ethMsg)
 				txsAdditional = append(txsAdditional, nil)
 			}
 		}
@@ -325,14 +324,13 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		if shouldCheckForSyntheticTx {
 			// try to check if there is synthetic eth tx in tx result
 			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
-			if ethMsg == nil {
-				continue
+			if ethMsg != nil {
+				ethMsgs = append(ethMsgs, ethMsg)
+				txsAdditional = append(txsAdditional, additional)
 			}
-			result = append(result, ethMsg)
-			txsAdditional = append(txsAdditional, additional)
 		}
 	}
-	return result, txsAdditional
+	return ethMsgs, txsAdditional
 }
 
 func (b *Backend) parseSyntheticTxFromBlockResults(
@@ -342,7 +340,12 @@ func (b *Backend) parseSyntheticTxFromBlockResults(
 	block *tmtypes.Block,
 ) (*evmtypes.MsgEthereumTx, *rpctypes.TxResultAdditionalFields) {
 	res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
-	if err != nil || additional == nil || res == nil {
+	// just skip tx if it can not be parsed, so remaining txs from the block are parsed
+	if err != nil {
+		b.logger.Error(err.Error())
+		return nil, nil
+	}
+	if additional == nil || res == nil {
 		return nil, nil
 	}
 	return b.parseSyntethicTxFromAdditionalFields(additional), additional

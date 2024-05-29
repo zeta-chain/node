@@ -429,17 +429,23 @@ func fillTxAttribute(tx *ParsedTx, key, value string) error {
 }
 
 func fillTxAttributes(tx *ParsedTx, attrs []abci.EventAttribute) error {
+	// before cosmos upgrade to 0.47, attributes are base64 encoded
+	// purpose of this is to support older txs as well
 	isLegacyAttrs := isLegacyAttrEncoding(attrs)
 	for _, attr := range attrs {
 		if isLegacyAttrs {
+			// only decode if value can be decoded
+			// (error should not happen because at this point it is determined it is legacy attr)
 			decKey, err := base64.StdEncoding.DecodeString(attr.Key)
-			if err == nil {
-				attr.Key = string(decKey)
+			if err != nil {
+				return err
 			}
+			attr.Key = string(decKey)
 			decValue, err := base64.StdEncoding.DecodeString(attr.Value)
-			if err == nil {
-				attr.Value = string(decValue)
+			if err != nil {
+				return err
 			}
+			attr.Value = string(decValue)
 		}
 
 		if err := fillTxAttribute(tx, attr.Key, attr.Value); err != nil {

@@ -55,6 +55,10 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 
 	var ethMsg *evmtypes.MsgEthereumTx
 	if additional == nil {
+		if int(res.TxIndex) >= len(resBlock.Block.Txs) {
+			b.logger.Error("tx out of bounds")
+			return nil, fmt.Errorf("tx out of bounds")
+		}
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(resBlock.Block.Txs[res.TxIndex])
 		if err != nil {
 			b.logger.Debug("decoding failed", "error", err.Error())
@@ -176,6 +180,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txData evmtypes.TxData
 	var ethMsg *evmtypes.MsgEthereumTx
 	if additional == nil {
+		if int(res.TxIndex) >= len(resBlock.Block.Txs) {
+			b.logger.Error("tx out of bounds")
+			return nil, fmt.Errorf("tx out of bounds")
+		}
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(resBlock.Block.Txs[res.TxIndex])
 		if err != nil {
 			b.logger.Debug("decoding failed", "error", err.Error())
