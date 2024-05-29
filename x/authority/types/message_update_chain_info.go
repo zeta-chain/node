@@ -10,9 +10,10 @@ const TypeMsgUpdateChainInfo = "UpdateChainInfo"
 
 var _ sdk.Msg = &MsgUpdateChainInfo{}
 
-func NewMsgUpdateChainInfo(signer string) *MsgUpdateChainInfo {
+func NewMsgUpdateChainInfo(signer string, chainInfo ChainInfo) *MsgUpdateChainInfo {
 	return &MsgUpdateChainInfo{
-		Signer: signer,
+		Signer:    signer,
+		ChainInfo: chainInfo,
 	}
 }
 
@@ -38,9 +39,14 @@ func (msg *MsgUpdateChainInfo) GetSignBytes() []byte {
 }
 
 func (msg *MsgUpdateChainInfo) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Signer)
-	if err != nil {
+
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer address (%s)", err)
+	}
+
+	// the chain information must be valid
+	if err := msg.ChainInfo.Validate(); err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return nil

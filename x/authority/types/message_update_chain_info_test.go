@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,12 +20,29 @@ func TestMsgUpdateChainInfo_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgUpdateChainInfo(sample.AccAddress()),
+			msg:  types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.ChainInfo(42)),
 		},
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgUpdateChainInfo("invalid"),
+			msg:  types.NewMsgUpdateChainInfo("invalid", sample.ChainInfo(42)),
 			err:  sdkerrors.ErrInvalidAddress,
+		},
+		{
+			name: "invalid chain info",
+			msg: types.NewMsgUpdateChainInfo(sample.AccAddress(), types.ChainInfo{
+				Chains: []chains.Chain{
+					{
+						ChainId:     0,
+						ChainName:   chains.ChainName_empty,
+						Network:     chains.Network_optimism,
+						NetworkType: chains.NetworkType_testnet,
+						Vm:          chains.Vm_evm,
+						Consensus:   chains.Consensus_op_stack,
+						IsExternal:  true,
+					},
+				},
+			}),
+			err: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -49,12 +67,12 @@ func TestMsgUpdateChainInfo_GetSigners(t *testing.T) {
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgUpdateChainInfo(signer),
+			msg:    types.NewMsgUpdateChainInfo(signer, sample.ChainInfo(42)),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgUpdateChainInfo("invalid"),
+			msg:    types.NewMsgUpdateChainInfo("invalid", sample.ChainInfo(42)),
 			panics: true,
 		},
 	}
@@ -74,17 +92,17 @@ func TestMsgUpdateChainInfo_GetSigners(t *testing.T) {
 }
 
 func TestMsgUpdateChainInfo_Type(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress())
+	msg := types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.ChainInfo(42))
 	require.Equal(t, types.TypeMsgUpdateChainInfo, msg.Type())
 }
 
 func TestMsgUpdateChainInfo_Route(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress())
+	msg := types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.ChainInfo(42))
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMsgUpdateChainInfo_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress())
+	msg := types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.ChainInfo(42))
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
