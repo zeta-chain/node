@@ -47,3 +47,7 @@
             * `/zeta-chain/crosschain/inTxHashToCctxData/{hash}` endpoint is now `/zeta-chain/crosschain/inboundHashToCctxData/{hash}`
         * `InTxHashToCctxAll` has been renamed to `InboundHashToCctxAll`
             * `/zeta-chain/crosschain/inTxHashToCctx` endpoint is now `/zeta-chain/crosschain/inboundHashToCctx`
+          
+* `MsgUpdateZRC20` has been removed, and replaced with `MsgPauseZRC20` and `MsgUnpauseZRC20` messages.
+    * `MsgPauseZRC20` message pauses a ZRC20 token and can be triggered via `PolicyType_groupEmergency`
+    * `MsgUnpauseZRC20` message unpauses a ZRC20 token and can be triggered via `PolicyType_groupOperational`
