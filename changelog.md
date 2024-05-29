@@ -16,6 +16,7 @@
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
 * [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 * [2258](https://github.com/zeta-chain/node/pull/2258) - add Optimism and Base in static chain information
+* [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
 
 ### Refactor
