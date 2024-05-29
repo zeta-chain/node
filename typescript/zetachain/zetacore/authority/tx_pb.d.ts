@@ -6,7 +6,6 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies } from "./policies_pb.js";
-import type { AuthorizationList } from "./authorization_pb.js";
 
 /**
  * MsgUpdatePolicies defines the MsgUpdatePolicies service.
@@ -58,61 +57,5 @@ export declare class MsgUpdatePoliciesResponse extends Message<MsgUpdatePolicies
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdatePoliciesResponse;
 
   static equals(a: MsgUpdatePoliciesResponse | PlainMessage<MsgUpdatePoliciesResponse> | undefined, b: MsgUpdatePoliciesResponse | PlainMessage<MsgUpdatePoliciesResponse> | undefined): boolean;
-}
-
-/**
- * MsgUpdateAuthorizations defines the MsgUpdateAuthorizations service.It
- * accepts a list of authorizations to add and remove.
- *
- * @generated from message zetachain.zetacore.authority.MsgUpdateAuthorizations
- */
-export declare class MsgUpdateAuthorizations extends Message<MsgUpdateAuthorizations> {
-  /**
-   * @generated from field: string signer = 1;
-   */
-  signer: string;
-
-  /**
-   * @generated from field: zetachain.zetacore.authority.AuthorizationList add_authorization_list = 2;
-   */
-  addAuthorizationList?: AuthorizationList;
-
-  /**
-   * @generated from field: zetachain.zetacore.authority.AuthorizationList remove_authorization_list = 3;
-   */
-  removeAuthorizationList?: AuthorizationList;
-
-  constructor(data?: PartialMessage<MsgUpdateAuthorizations>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.authority.MsgUpdateAuthorizations";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateAuthorizations;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateAuthorizations;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateAuthorizations;
-
-  static equals(a: MsgUpdateAuthorizations | PlainMessage<MsgUpdateAuthorizations> | undefined, b: MsgUpdateAuthorizations | PlainMessage<MsgUpdateAuthorizations> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.authority.MsgUpdateAuthorizationsResponse
- */
-export declare class MsgUpdateAuthorizationsResponse extends Message<MsgUpdateAuthorizationsResponse> {
-  constructor(data?: PartialMessage<MsgUpdateAuthorizationsResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.authority.MsgUpdateAuthorizationsResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateAuthorizationsResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateAuthorizationsResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateAuthorizationsResponse;
-
-  static equals(a: MsgUpdateAuthorizationsResponse | PlainMessage<MsgUpdateAuthorizationsResponse> | undefined, b: MsgUpdateAuthorizationsResponse | PlainMessage<MsgUpdateAuthorizationsResponse> | undefined): boolean;
 }
 

@@ -121,28 +121,57 @@ func DefaultAuthorizationsList() AuthorizationList {
 	}
 }
 
-func (a *AuthorizationList) AddAuthorizations(authorizationList AuthorizationList) {
-	a.Authorizations = append(a.Authorizations, authorizationList.Authorizations...)
+// SetAuthorizations adds the authorization to the list. If the authorization already exists, it updates the policy.
+func (a *AuthorizationList) SetAuthorizations(authorization Authorization) {
+	for i, auth := range a.Authorizations {
+		if auth.MsgUrl == authorization.MsgUrl {
+			a.Authorizations[i].AuthorizedPolicy = authorization.AuthorizedPolicy
+			return
+		}
+	}
+	a.Authorizations = append(a.Authorizations, authorization)
 }
 
-func (a *AuthorizationList) RemoveAuthorizations(removeList AuthorizationList) {
-	for _, removeAuth := range removeList.Authorizations {
-		for i, auth := range a.Authorizations {
-			if auth.MsgUrl == removeAuth.MsgUrl {
-				a.Authorizations = append(a.Authorizations[:i], a.Authorizations[i+1:]...)
-			}
+// RemoveAuthorizations removes the authorization from the list. It does not check if the authorization exists or not.
+func (a *AuthorizationList) RemoveAuthorizations(authorization Authorization) {
+	for i, auth := range a.Authorizations {
+		if auth.MsgUrl == authorization.MsgUrl {
+			a.Authorizations = append(a.Authorizations[:i], a.Authorizations[i+1:]...)
 		}
 	}
 }
 
-func (a *AuthorizationList) Validate() error {
-	if len(a.Authorizations) == 0 {
-		return errors.Wrap(ErrInValidAuthorizationList, "empty authorization list")
+// CheckAuthorizationExists checks if the authorization exists in the list.
+func (a *AuthorizationList) CheckAuthorizationExists(authorization Authorization) bool {
+	for _, auth := range a.Authorizations {
+		if auth.MsgUrl == authorization.MsgUrl {
+			return true
+		}
 	}
+	return false
+}
+
+// GetAuthorizedPolicy returns the policy for the given message url.If the message url is not found,
+// it returns an error and the first value of the enum.
+func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, error) {
+	for _, auth := range a.Authorizations {
+		if auth.MsgUrl == msgURL {
+			return auth.AuthorizedPolicy, nil
+		}
+	}
+	// Returning first value of enum, can consider adding a default value of `EmptyPolicy` in the enum.
+	return PolicyType(0), ErrAuthorizationNotFound
+}
+
+// Validate checks if the authorization list is valid. It returns an error if the message url is duplicated with different policies.
+func (a *AuthorizationList) Validate() error {
 	checkMsgUrls := make(map[string]bool)
 	for _, authorization := range a.Authorizations {
 		if checkMsgUrls[authorization.MsgUrl] {
-			return errors.Wrap(ErrInValidAuthorizationList, fmt.Sprintf("duplicate message url: %s", authorization.MsgUrl))
+			return errors.Wrap(
+				ErrInValidAuthorizationList,
+				fmt.Sprintf("duplicate message url: %s", authorization.MsgUrl),
+			)
 		}
 		checkMsgUrls[authorization.MsgUrl] = true
 	}

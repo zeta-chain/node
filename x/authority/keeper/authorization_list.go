@@ -28,13 +28,3 @@ func (k Keeper) GetAuthorizationList(ctx sdk.Context) (val types.AuthorizationLi
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
-
-func (k Keeper) UpdateAuthorizationList(ctx sdk.Context, addList types.AuthorizationList, removeList types.AuthorizationList) types.AuthorizationList {
-	list, found := k.GetAuthorizationList(ctx)
-	if !found {
-		return addList
-	}
-	list.AddAuthorizations(addList)
-	list.RemoveAuthorizations(removeList)
-	return list
-}

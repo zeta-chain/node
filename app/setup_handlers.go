@@ -129,7 +129,7 @@ func SetupHandlers(app *App) {
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		constant.Version,
-		func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			app.Logger().Info("Running upgrade handler for " + constant.Version)
 
 			var err error

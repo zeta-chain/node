@@ -43,3 +43,10 @@ func AuthorizationList(val string) authoritytypes.AuthorizationList {
 		},
 	}
 }
+
+func Authorization() authoritytypes.Authorization {
+	return authoritytypes.Authorization{
+		MsgUrl:           "ABC",
+		AuthorizedPolicy: authoritytypes.PolicyType_groupOperational,
+	}
+}
