@@ -17,7 +17,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdAddBlameVote() *cobra.Command {
+func CmdVoteBlame() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-blame-vote [chain-id] [index] [failure-reason] [node-list]",
 		Short: "Broadcast message add-blame-vote",
@@ -55,7 +55,7 @@ func CmdAddBlameVote() *cobra.Command {
 				Nodes:         blameNodes,
 			}
 
-			msg := types.NewMsgAddBlameVoteMsg(clientCtx.GetFromAddress().String(), int64(chainID), blameInfo)
+			msg := types.NewMsgVoteBlameMsg(clientCtx.GetFromAddress().String(), int64(chainID), blameInfo)
 
 			println("about to broadcast")
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

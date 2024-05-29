@@ -25,7 +25,7 @@ func GetTxCmd() *cobra.Command {
 		CmdRemoveChainParams(),
 		CmdUpdateCrosschainFlags(),
 		CmdUpdateKeygen(),
-		CmdAddBlameVote(),
+		CmdVoteBlame(),
 		CmdUpdateObserver(),
 		CmdEncode(),
 		CmdResetChainNonces(),

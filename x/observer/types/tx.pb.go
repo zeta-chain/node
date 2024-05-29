@@ -542,24 +542,24 @@ func (m *MsgAddObserverResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddObserverResponse proto.InternalMessageInfo
 
-type MsgAddBlameVote struct {
+type MsgVoteBlame struct {
 	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ChainId   int64  `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	BlameInfo Blame  `protobuf:"bytes,3,opt,name=blame_info,json=blameInfo,proto3" json:"blame_info"`
 }
 
-func (m *MsgAddBlameVote) Reset()         { *m = MsgAddBlameVote{} }
-func (m *MsgAddBlameVote) String() string { return proto.CompactTextString(m) }
-func (*MsgAddBlameVote) ProtoMessage()    {}
-func (*MsgAddBlameVote) Descriptor() ([]byte, []int) {
+func (m *MsgVoteBlame) Reset()         { *m = MsgVoteBlame{} }
+func (m *MsgVoteBlame) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteBlame) ProtoMessage()    {}
+func (*MsgVoteBlame) Descriptor() ([]byte, []int) {
 	return fileDescriptor_eda6e3b1d16a4021, []int{10}
 }
-func (m *MsgAddBlameVote) XXX_Unmarshal(b []byte) error {
+func (m *MsgVoteBlame) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddBlameVote) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgVoteBlame) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddBlameVote.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgVoteBlame.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -569,26 +569,26 @@ func (m *MsgAddBlameVote) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *MsgAddBlameVote) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddBlameVote.Merge(m, src)
+func (m *MsgVoteBlame) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteBlame.Merge(m, src)
 }
-func (m *MsgAddBlameVote) XXX_Size() int {
+func (m *MsgVoteBlame) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddBlameVote) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddBlameVote.DiscardUnknown(m)
+func (m *MsgVoteBlame) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteBlame.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddBlameVote proto.InternalMessageInfo
+var xxx_messageInfo_MsgVoteBlame proto.InternalMessageInfo
 
-func (m *MsgAddBlameVote) GetCreator() string {
+func (m *MsgVoteBlame) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgAddBlameVote) GetChainId() int64 {
+func (m *MsgVoteBlame) GetChainId() int64 {
 	if m != nil {
 		return m.ChainId
 	}

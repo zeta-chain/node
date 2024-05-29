@@ -53,10 +53,10 @@ message MsgRemoveChainParams {
 }
 ```
 
-## MsgAddBlameVote
+## MsgVoteBlame
 
 ```proto
-message MsgAddBlameVote {
+message MsgVoteBlame {
 	string creator = 1;
 	int64 chain_id = 2;
 	Blame blame_info = 3;
