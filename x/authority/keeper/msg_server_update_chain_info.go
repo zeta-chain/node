@@ -26,7 +26,7 @@ func (k msgServer) UpdateChainInfo(
 	}
 
 	// set chain info
-	// TODO: ...
+	k.SetChainInfo(ctx, msg.ChainInfo)
 
 	return &types.MsgUpdateChainInfoResponse{}, nil
 }

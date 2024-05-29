@@ -23,9 +23,12 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrUnauthorized)
 	})
 
-	t.Run("can update chain info", func(t *testing.T) {
+	t.Run("can set chain info when it doesn't exist", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, found := k.GetChainInfo(ctx)
+		require.False(t, found)
 
 		// Set group admin policy
 		admin := sample.AccAddress()
@@ -37,10 +40,78 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 				},
 			},
 		})
+		chainInfo := sample.ChainInfo(42)
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Signer: admin,
+			Signer:    admin,
+			ChainInfo: chainInfo,
 		})
 		require.NoError(t, err)
+
+		// Check if the chain info is set
+		storedChainInfo, found := k.GetChainInfo(ctx)
+		require.True(t, found)
+		require.Equal(t, chainInfo, storedChainInfo)
 	})
+
+	t.Run("can update existing chain info", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		k.SetChainInfo(ctx, sample.ChainInfo(42))
+
+		// Set group admin policy
+		admin := sample.AccAddress()
+		k.SetPolicies(ctx, types.Policies{
+			Items: []*types.Policy{
+				{
+					PolicyType: types.PolicyType_groupAdmin,
+					Address:    admin,
+				},
+			},
+		})
+		chainInfo := sample.ChainInfo(84)
+
+		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
+			Signer:    admin,
+			ChainInfo: chainInfo,
+		})
+		require.NoError(t, err)
+
+		// Check if the chain info is set
+		storedChainInfo, found := k.GetChainInfo(ctx)
+		require.True(t, found)
+		require.Equal(t, chainInfo, storedChainInfo)
+	})
+
+	t.Run("can remove chain info", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		k.SetChainInfo(ctx, sample.ChainInfo(42))
+
+		// Set group admin policy
+		admin := sample.AccAddress()
+		k.SetPolicies(ctx, types.Policies{
+			Items: []*types.Policy{
+				{
+					PolicyType: types.PolicyType_groupAdmin,
+					Address:    admin,
+				},
+			},
+		})
+		chainInfo := types.ChainInfo{}
+
+		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
+			Signer:    admin,
+			ChainInfo: chainInfo,
+		})
+		require.NoError(t, err)
+
+		// The structure should still exist but be empty
+		storedChainInfo, found := k.GetChainInfo(ctx)
+		require.True(t, found)
+		require.Equal(t, chainInfo, storedChainInfo)
+	})
+
 }
