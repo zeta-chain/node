@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
+import "zetachain/zetacore/authority/authorization.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
@@ -9,6 +10,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 // Msg defines the Msg service.
 service Msg {
   rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
+  rpc UpdateAuthorizations(MsgUpdateAuthorizations)
+      returns (MsgUpdateAuthorizationsResponse);
 }
 
 // MsgUpdatePolicies defines the MsgUpdatePolicies service.
@@ -19,3 +22,13 @@ message MsgUpdatePolicies {
 
 // MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
 message MsgUpdatePoliciesResponse {}
+
+// MsgUpdateAuthorizations defines the MsgUpdateAuthorizations service.It
+// accepts a list of authorizations to add and remove.
+message MsgUpdateAuthorizations {
+  string signer = 1;
+  AuthorizationList add_authorization_list = 2 [ (gogoproto.nullable) = false ];
+  AuthorizationList remove_authorization_list = 3
+      [ (gogoproto.nullable) = false ];
+}
+message MsgUpdateAuthorizationsResponse {}

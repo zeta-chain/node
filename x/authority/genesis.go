@@ -10,7 +10,10 @@ import (
 // InitGenesis initializes the authority module's state from a provided genesis state
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetPolicies(ctx, genState.Policies)
-	k.SetAuthorizationList(ctx, genState.AuthorizationList)
+	err := k.SetAuthorizationList(ctx, genState.AuthorizationList)
+	if err != nil {
+		ctx.Logger().Error("Failed to set authorization list in InitGenesis", "error", err)
+	}
 }
 
 // ExportGenesis returns the authority module's exported genesis.

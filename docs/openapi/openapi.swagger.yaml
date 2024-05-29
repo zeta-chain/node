@@ -56703,6 +56703,26 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityAuthorization:
+    type: object
+    properties:
+      msg_url:
+        type: string
+        title: The URL of the message that needs to be authorized
+      authorized_policy:
+        $ref: '#/definitions/authorityPolicyType'
+        title: The policy that is authorized to access the message
+  authorityAuthorizationList:
+    type: object
+    properties:
+      authorizations:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/authorityAuthorization'
+    title: AuthorizationList holds the list of authorizations on zetachain
+  authorityMsgUpdateAuthorizationsResponse:
+    type: object
   authorityMsgUpdatePoliciesResponse:
     type: object
     description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
