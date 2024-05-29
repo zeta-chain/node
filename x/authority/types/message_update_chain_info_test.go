@@ -49,7 +49,7 @@ func TestMsgUpdateChainInfo_GetSigners(t *testing.T) {
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgUpdateChainInfo(sample.AccAddress()),
+			msg:    types.NewMsgUpdateChainInfo(signer),
 			panics: false,
 		},
 		{
