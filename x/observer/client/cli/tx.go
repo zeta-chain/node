@@ -29,8 +29,8 @@ func GetTxCmd() *cobra.Command {
 		CmdEncode(),
 		CmdResetChainNonces(),
 		CmdVoteTSS(),
-		CmdEnableCCTXFlags(),
-		CmdDisableCCTXFlags(),
+		CmdEnableCCTX(),
+		CmdDisableCCTX(),
 		CmdUpdateGasPriceIncreaseFlags(),
 	)
 

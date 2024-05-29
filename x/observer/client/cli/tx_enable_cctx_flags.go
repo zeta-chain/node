@@ -11,10 +11,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdEnableCCTXFlags() *cobra.Command {
+func CmdEnableCCTX() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "enable-cctx-flags [enable-inbound] [enable-outbound]",
-		Short: "Enable inbound and outbound cross-chain flags",
+		Use:   "enable-cctx [enable-inbound] [enable-outbound]",
+		Short: "Enable inbound and outbound for CCTX",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 

@@ -128,6 +128,9 @@ message MsgVoteTSS {
 
 ## MsgEnableCCTX
 
+EnableCCTX enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
+The flags are enabled by the policy account with the groupOperational policy type.
+
 ```proto
 message MsgEnableCCTX {
 	string creator = 1;
@@ -137,6 +140,9 @@ message MsgEnableCCTX {
 ```
 
 ## MsgDisableCCTX
+
+DisableCCTX disables the IsInboundEnabled and IsOutboundEnabled flags. These flags control the creation of inbounds and outbounds.
+The flags are disabled by the policy account with the groupEmergency policy type.
 
 ```proto
 message MsgDisableCCTX {

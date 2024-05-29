@@ -130,9 +130,9 @@ export declare class EventNewObserverAdded extends Message<EventNewObserverAdded
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.EventCCTXFlagsDisabled
+ * @generated from message zetachain.zetacore.observer.EventCCTXDisabled
  */
-export declare class EventCCTXFlagsDisabled extends Message<EventCCTXFlagsDisabled> {
+export declare class EventCCTXDisabled extends Message<EventCCTXDisabled> {
   /**
    * @generated from field: string msg_type_url = 1;
    */
@@ -148,25 +148,25 @@ export declare class EventCCTXFlagsDisabled extends Message<EventCCTXFlagsDisabl
    */
   isOutboundEnabled: boolean;
 
-  constructor(data?: PartialMessage<EventCCTXFlagsDisabled>);
+  constructor(data?: PartialMessage<EventCCTXDisabled>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.EventCCTXFlagsDisabled";
+  static readonly typeName = "zetachain.zetacore.observer.EventCCTXDisabled";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventCCTXFlagsDisabled;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventCCTXDisabled;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventCCTXFlagsDisabled;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventCCTXDisabled;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventCCTXFlagsDisabled;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventCCTXDisabled;
 
-  static equals(a: EventCCTXFlagsDisabled | PlainMessage<EventCCTXFlagsDisabled> | undefined, b: EventCCTXFlagsDisabled | PlainMessage<EventCCTXFlagsDisabled> | undefined): boolean;
+  static equals(a: EventCCTXDisabled | PlainMessage<EventCCTXDisabled> | undefined, b: EventCCTXDisabled | PlainMessage<EventCCTXDisabled> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.EventCCTXFlagsEnabled
+ * @generated from message zetachain.zetacore.observer.EventCCTXEnabled
  */
-export declare class EventCCTXFlagsEnabled extends Message<EventCCTXFlagsEnabled> {
+export declare class EventCCTXEnabled extends Message<EventCCTXEnabled> {
   /**
    * @generated from field: string msg_type_url = 1;
    */
@@ -182,19 +182,19 @@ export declare class EventCCTXFlagsEnabled extends Message<EventCCTXFlagsEnabled
    */
   isOutboundEnabled: boolean;
 
-  constructor(data?: PartialMessage<EventCCTXFlagsEnabled>);
+  constructor(data?: PartialMessage<EventCCTXEnabled>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.EventCCTXFlagsEnabled";
+  static readonly typeName = "zetachain.zetacore.observer.EventCCTXEnabled";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventCCTXFlagsEnabled;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventCCTXEnabled;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventCCTXFlagsEnabled;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventCCTXEnabled;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventCCTXFlagsEnabled;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventCCTXEnabled;
 
-  static equals(a: EventCCTXFlagsEnabled | PlainMessage<EventCCTXFlagsEnabled> | undefined, b: EventCCTXFlagsEnabled | PlainMessage<EventCCTXFlagsEnabled> | undefined): boolean;
+  static equals(a: EventCCTXEnabled | PlainMessage<EventCCTXEnabled> | undefined, b: EventCCTXEnabled | PlainMessage<EventCCTXEnabled> | undefined): boolean;
 }
 
 /**

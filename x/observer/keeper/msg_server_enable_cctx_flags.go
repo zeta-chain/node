@@ -41,14 +41,14 @@ func (k msgServer) EnableCCTX(
 
 	k.SetCrosschainFlags(ctx, flags)
 
-	err := ctx.EventManager().EmitTypedEvents(&types.EventCCTXFlagsEnabled{
+	err := ctx.EventManager().EmitTypedEvents(&types.EventCCTXEnabled{
 		MsgTypeUrl:        sdk.MsgTypeURL(&types.MsgEnableCCTX{}),
 		IsInboundEnabled:  flags.IsInboundEnabled,
 		IsOutboundEnabled: flags.IsOutboundEnabled,
 	})
 
 	if err != nil {
-		ctx.Logger().Error("Error emitting EventCCTXFlagsEnabled :", err)
+		ctx.Logger().Error("Error emitting EventCCTXEnabled :", err)
 	}
 
 	return &types.MsgEnableCCTXResponse{}, nil

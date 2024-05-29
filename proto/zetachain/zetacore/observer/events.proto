@@ -29,13 +29,13 @@ message EventNewObserverAdded {
   uint64 observer_last_block_count = 5;
 }
 
-message EventCCTXFlagsDisabled {
+message EventCCTXDisabled {
   string msg_type_url = 1;
   bool isInboundEnabled = 2;
   bool isOutboundEnabled = 3;
 }
 
-message EventCCTXFlagsEnabled {
+message EventCCTXEnabled {
   string msg_type_url = 1;
   bool isInboundEnabled = 2;
   bool isOutboundEnabled = 3;
