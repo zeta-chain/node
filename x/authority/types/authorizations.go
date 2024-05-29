@@ -62,7 +62,8 @@ func DefaultAuthorizationsList() AuthorizationList {
 			AuthorizedPolicy: PolicyType_groupOperational,
 		},
 
-		{MsgUrl: "/zetachain.zetacore.observer.MsgUpdateChainParams",
+		{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
 			AuthorizedPolicy: PolicyType_groupOperational},
 		{
 			MsgUrl:           "/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
