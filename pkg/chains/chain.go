@@ -51,7 +51,7 @@ func (chain Chain) IsEqual(c Chain) bool {
 
 // IsZetaChain returns true if the chain is a ZetaChain chain
 func (chain Chain) IsZetaChain() bool {
-	return !chain.IsExternal
+	return chain.Network == Network_zetag
 }
 
 // IsExternalChain returns true if the chain is an ExternalChain chain, not ZetaChain
