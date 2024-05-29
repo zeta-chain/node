@@ -20,10 +20,14 @@ func NewCCTXGatewayZEVM(crosschainKeeper Keeper) CCTXGatewayZEVM {
 
 /*
 InitiateOutbound handles evm deposit and then ValidateOutbound is called.
-TODO: move this comment to ValidateOutbound once it's added
+TODO: move remaining of this comment to ValidateOutbound once it's added.
+
   - If the deposit is successful, the CCTX status is changed to OutboundMined.
+
   - If the deposit returns an internal error i.e if HandleEVMDeposit() returns an error, but isContractReverted is false, the CCTX status is changed to Aborted.
+
   - If the deposit is reverted, the function tries to create a revert cctx with status PendingRevert.
+
   - If the creation of revert tx also fails it changes the status to Aborted.
 
 Note : Aborted CCTXs are not refunded in this function. The refund is done using a separate refunding mechanism.
