@@ -57437,15 +57437,17 @@ definitions:
         type: string
       systemContract:
         type: string
+  fungibleMsgPauseZRC20Response:
+    type: object
   fungibleMsgRemoveForeignCoinResponse:
+    type: object
+  fungibleMsgUnpauseZRC20Response:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
     type: object
   fungibleMsgUpdateSystemContractResponse:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
-    type: object
-  fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
@@ -57501,12 +57503,6 @@ definitions:
         type: string
       connector_zevm:
         type: string
-  fungibleUpdatePausedStatusAction:
-    type: string
-    enum:
-      - PAUSE
-      - UNPAUSE
-    default: PAUSE
   googlerpcStatus:
     type: object
     properties:
