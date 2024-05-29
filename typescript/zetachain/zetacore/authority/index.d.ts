@@ -1,3 +1,4 @@
+export * from "./chain_info_pb";
 export * from "./genesis_pb";
 export * from "./policies_pb";
 export * from "./query_pb";
