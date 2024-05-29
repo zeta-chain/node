@@ -260,8 +260,8 @@ export declare enum Consensus {
  */
 export declare enum CCTXGateway {
   /**
-   * zevm is the internal CCTX gateway to process outbound on the ZEVM in
-   * ZetaChain only used for ZetaChain chains
+   * zevm is the internal CCTX gateway to process outbound on the ZEVM and read
+   * inbound events from the ZEVM only used for ZetaChain chains
    *
    * @generated from enum value: zevm = 0;
    */

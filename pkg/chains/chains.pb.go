@@ -273,8 +273,8 @@ func (Consensus) EnumDescriptor() ([]byte, []int) {
 type CCTXGateway int32
 
 const (
-	// zevm is the internal CCTX gateway to process outbound on the ZEVM in
-	// ZetaChain only used for ZetaChain chains
+	// zevm is the internal CCTX gateway to process outbound on the ZEVM and read
+	// inbound events from the ZEVM only used for ZetaChain chains
 	CCTXGateway_zevm CCTXGateway = 0
 	// observers is the CCTX gateway for chains relying on the observer set to
 	// observe inbounds and TSS for outbounds
