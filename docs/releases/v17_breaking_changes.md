@@ -51,3 +51,7 @@
 * `MsgUpdateZRC20` has been removed, and replaced with `MsgPauseZRC20` and `MsgUnpauseZRC20` messages.
     * `MsgPauseZRC20` message pauses a ZRC20 token and can be triggered via `PolicyType_groupEmergency`
     * `MsgUnpauseZRC20` message unpauses a ZRC20 token and can be triggered via `PolicyType_groupOperational`
+
+### `MsgAddBlameVote` renaming
+
+* `MsgAddBlameVote` has been renamed to `MsgVoteBlame` to maintain consistency with other voting messages
