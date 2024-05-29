@@ -15,7 +15,7 @@ func DefaultChainInfo() ChainInfo {
 
 // Validate performs basic validation of chain info
 // It checks all chains are valid and they're all of external type
-// The strucure is used to store external chain information
+// The structure is used to store external chain information
 func (ci ChainInfo) Validate() error {
 	for _, chain := range ci.Chains {
 		if err := chain.Validate(); err != nil {
