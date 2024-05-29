@@ -9,7 +9,7 @@
 ### Crosschain Flags update
 
 * `MsgUpdateCrosschainFlags` has been removed,and replaced with `MsgEnableCCTX`, `MsgDisableCCTX` and `MsgUpdateGasPriceIncreaseFlags` messages.
-    * `MsgEnableCCTX` message enables either the IsInboundEnabled flag,or the IsOutboundEnabled flag or both `PolicyType_groupOperational`
+    * `MsgEnableCCTX` message enables either the IsInboundEnabled flag, or the IsOutboundEnabled flag or both `PolicyType_groupOperational`
     * `MsgDisableCCTX` message disables either the IsInboundEnabled flag,or the IsOutboundEnabled flag or both `PolicyType_emergency`
     * `MsgUpdateGasPriceIncreaseFlags` message updates the gas price increase flags and can be triggered via `PolicyType_groupOperational`
 
