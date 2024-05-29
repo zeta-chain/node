@@ -8,7 +8,7 @@ import (
 )
 
 // InitiateOutbound processes the inbound CCTX.
-// It does a conditional dispatch to observer or zevm CCTX gateway based on the receiver chain
+// It does a conditional dispatch to correct CCTX gateway based on the receiver chain
 // which handle the state changes and error handling.
 func (k Keeper) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) error {
 	chainInfo := chains.GetChainFromChainID(cctx.GetCurrentOutboundParam().ReceiverChainId)
