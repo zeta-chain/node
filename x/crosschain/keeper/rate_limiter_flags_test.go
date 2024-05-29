@@ -62,7 +62,7 @@ func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
 	// create test flags
-	chainID := chains.GoerliLocalnetChain.ChainId
+	chainID := chains.GoerliLocalnet.ChainId
 	zrc20GasAddr := sample.EthAddress().Hex()
 	zrc20ERC20Addr1 := sample.EthAddress().Hex()
 	zrc20ERC20Addr2 := sample.EthAddress().Hex()

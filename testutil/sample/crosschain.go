@@ -147,7 +147,7 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
 	return &types.InboundParams{
 		Sender:                 EthAddress().String(),
-		SenderChainId:          chains.GoerliChain.ChainId,
+		SenderChainId:          chains.Goerli.ChainId,
 		TxOrigin:               EthAddress().String(),
 		Asset:                  StringRandom(r, 32),
 		Amount:                 math.NewUint(uint64(r.Int63())),
@@ -178,7 +178,7 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 	return &types.OutboundParams{
 		Receiver:               EthAddress().String(),
-		ReceiverChainId:        chains.GoerliChain.ChainId,
+		ReceiverChainId:        chains.Goerli.ChainId,
 		Amount:                 math.NewUint(uint64(r.Int63())),
 		TssNonce:               r.Uint64(),
 		GasLimit:               r.Uint64(),
@@ -224,7 +224,8 @@ func CustomCctxsInBlockRange(
 	t *testing.T,
 	lowBlock uint64,
 	highBlock uint64,
-	chainID int64,
+	senderChainID int64,
+	receiverChainID int64,
 	coinType coin.CoinType,
 	asset string,
 	amount uint64,
@@ -233,12 +234,13 @@ func CustomCctxsInBlockRange(
 	// create 1 cctx per block
 	for i := lowBlock; i <= highBlock; i++ {
 		nonce := i - 1
-		cctx := CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
+		cctx := CrossChainTx(t, fmt.Sprintf("%d-%d", receiverChainID, nonce))
 		cctx.CctxStatus.Status = status
+		cctx.InboundParams.SenderChainId = senderChainID
 		cctx.InboundParams.CoinType = coinType
 		cctx.InboundParams.Asset = asset
 		cctx.InboundParams.ObservedExternalHeight = i
-		cctx.GetCurrentOutboundParam().ReceiverChainId = chainID
+		cctx.GetCurrentOutboundParam().ReceiverChainId = receiverChainID
 		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(amount)
 		cctx.GetCurrentOutboundParam().TssNonce = nonce
 		cctxs = append(cctxs, cctx)

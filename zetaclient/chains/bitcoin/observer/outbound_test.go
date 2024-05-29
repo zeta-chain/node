@@ -22,7 +22,7 @@ func MockBTCObserverMainnet() *Observer {
 	coreContext := context.NewZetacoreContext(cfg)
 
 	return &Observer{
-		chain:          chains.BtcMainnetChain,
+		chain:          chains.BitcoinMainnet,
 		zetacoreClient: mocks.NewMockZetacoreClient(),
 		Tss:            mocks.NewTSSMainnet(),
 		coreContext:    coreContext,
@@ -85,7 +85,7 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 func TestCheckTSSVout(t *testing.T) {
 	// the archived outbound raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	chainID := chain.ChainId
 	nonce := uint64(148)
 
@@ -167,7 +167,7 @@ func TestCheckTSSVout(t *testing.T) {
 func TestCheckTSSVoutCancelled(t *testing.T) {
 	// the archived outbound raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := chains.BtcMainnetChain
+	chain := chains.BitcoinMainnet
 	chainID := chain.ChainId
 	nonce := uint64(148)
 

@@ -51,7 +51,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 					CoinType:        coin.CoinType_Gas,
 				},
 				{
@@ -109,7 +109,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -148,7 +148,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -211,7 +211,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -273,7 +273,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -315,7 +315,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -367,7 +367,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -425,7 +425,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{
 				{
-					ReceiverChainId: chains.ZetaPrivnetChain.ChainId,
+					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 				},
 				{
 					ReceiverChainId: chainID,

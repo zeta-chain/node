@@ -164,7 +164,7 @@ func GetDefaultChainParams() ChainParamsList {
 
 func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.EthChain.ChainId,
+		ChainId:                     chains.Ethereum.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -182,7 +182,7 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscMainnetChain.ChainId,
+		ChainId:                     chains.BscMainnet.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -200,7 +200,7 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcMainnetChain.ChainId,
+		ChainId:                     chains.BitcoinMainnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -218,7 +218,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:           chains.GoerliChain.ChainId,
+		ChainId:           chains.Goerli.ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
@@ -237,7 +237,7 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscTestnetChain.ChainId,
+		ChainId:                     chains.BscTestnet.ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -255,7 +255,7 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.MumbaiChain.ChainId,
+		ChainId:                     chains.Mumbai.ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -273,7 +273,7 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcTestNetChain.ChainId,
+		ChainId:                     chains.BitcoinTestnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -291,7 +291,7 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcRegtestChain.ChainId,
+		ChainId:                     chains.BitcoinRegtest.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -309,7 +309,7 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.GoerliLocalnetChain.ChainId,
+		ChainId:                     chains.GoerliLocalnet.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
@@ -327,7 +327,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.ZetaPrivnetChain.ChainId,
+		ChainId:                     chains.ZetaChainPrivnet.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

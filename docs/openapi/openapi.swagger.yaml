@@ -56747,21 +56747,31 @@ definitions:
   chainsChain:
     type: object
     properties:
-      chain_name:
-        $ref: '#/definitions/chainsChainName'
       chain_id:
         type: string
         format: int64
+        title: ChainId is the unique identifier of the chain
+      chain_name:
+        $ref: '#/definitions/chainsChainName'
+        title: ChainName is the name of the chain
       network:
         $ref: '#/definitions/chainsNetwork'
+        title: Network is the network of the chain
       network_type:
         $ref: '#/definitions/chainsNetworkType'
+        description: 'NetworkType is the network type of the chain: mainnet, testnet, etc..'
       vm:
         $ref: '#/definitions/chainsVm'
+        title: Vm is the virtual machine used in the chain
       consensus:
         $ref: '#/definitions/chainsConsensus'
+        title: Consensus is the underlying consensus algorithm used by the chain
       is_external:
         type: boolean
+        title: IsExternal describe if the chain is ZetaChain or external
+    title: |-
+      Chain represents static data about a blockchain network
+      it is identified by a unique chain ID
   chainsChainName:
     type: string
     enum:
@@ -56773,8 +56783,6 @@ definitions:
       - bsc_mainnet
       - goerli_testnet
       - mumbai_testnet
-      - ganache_testnet
-      - baobab_testnet
       - bsc_testnet
       - zeta_testnet
       - btc_testnet
@@ -56782,6 +56790,10 @@ definitions:
       - goerli_localnet
       - btc_regtest
       - amoy_testnet
+      - optimism_mainnet
+      - optimism_sepolia
+      - base_mainnet
+      - base_sepolia
     default: empty
     title: ChainName represents the name of the chain
   chainsConsensus:
@@ -56790,8 +56802,12 @@ definitions:
       - ethereum
       - tendermint
       - bitcoin
+      - op_stack
     default: ethereum
-    title: Consensus represents the consensus algorithm used by the chain
+    title: |-
+      Consensus represents the consensus algorithm used by the chain
+      this can represent the consensus of a L1
+      this can also represent the solution of a L2
   chainsNetwork:
     type: string
     enum:
@@ -56800,8 +56816,13 @@ definitions:
       - btc
       - polygon
       - bsc
+      - optimism
+      - base
     default: eth
-    title: Network represents the network type of the chain
+    title: |-
+      Network represents the network of the chain
+      there is a single instance of the network on mainnet
+      then the network can have eventual testnets or devnets
   chainsNetworkType:
     type: string
     enum:
@@ -56810,7 +56831,9 @@ definitions:
       - privnet
       - devnet
     default: mainnet
-    title: NetworkType represents the network type of the chain
+    title: |-
+      NetworkType represents the network type of the chain
+      Mainnet, Testnet, Privnet, Devnet
   chainsReceiveStatus:
     type: string
     enum:
@@ -56818,7 +56841,11 @@ definitions:
       - success
       - failed
     default: created
-    title: '- created: some observer sees inbound tx'
+    description: '- created: Created is used for inbounds'
+    title: |-
+      ReceiveStatus represents the status of an outbound
+      TODO: Rename and move
+      https://github.com/zeta-chain/node/issues/2257
   chainsVm:
     type: string
     enum:
@@ -57395,15 +57422,17 @@ definitions:
         type: string
       systemContract:
         type: string
+  fungibleMsgPauseZRC20Response:
+    type: object
   fungibleMsgRemoveForeignCoinResponse:
+    type: object
+  fungibleMsgUnpauseZRC20Response:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
     type: object
   fungibleMsgUpdateSystemContractResponse:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
-    type: object
-  fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
@@ -57459,12 +57488,6 @@ definitions:
         type: string
       connector_zevm:
         type: string
-  fungibleUpdatePausedStatusAction:
-    type: string
-    enum:
-      - PAUSE
-      - UNPAUSE
-    default: PAUSE
   googlerpcStatus:
     type: object
     properties:

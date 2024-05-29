@@ -13,7 +13,7 @@ import (
 
 func TestCctxRestricted(t *testing.T) {
 	// load archived cctx
-	chain := chains.EthChain
+	chain := chains.Ethereum
 	cctx := testutils.LoadCctxByNonce(t, chain.ChainId, 6270)
 
 	// create config

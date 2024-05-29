@@ -42,21 +42,21 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: true,
 				},
 			},
 		})
 
-		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.EthChain.ChainId)
+		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.Ethereum.ChainId)
 		require.NoError(t, err)
 
-		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BtcMainnetChain.ChainId)
+		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BitcoinMainnet.ChainId)
 		require.Error(t, err)
 		require.ErrorContains(
 			t,
 			err,
-			fmt.Sprintf("proof verification is disabled for chain %d", chains.BtcMainnetChain.ChainId),
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.BitcoinMainnet.ChainId),
 		)
 
 		err = k.CheckBlockHeaderVerificationEnabled(ctx, 1000)
@@ -69,21 +69,21 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.BtcMainnetChain.ChainId,
+					ChainId: chains.BitcoinMainnet.ChainId,
 					Enabled: true,
 				},
 			},
 		})
 
-		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.EthChain.ChainId)
+		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.Ethereum.ChainId)
 		require.Error(t, err)
 		require.ErrorContains(
 			t,
 			err,
-			fmt.Sprintf("proof verification is disabled for chain %d", chains.EthChain.ChainId),
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.Ethereum.ChainId),
 		)
 
-		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BtcMainnetChain.ChainId)
+		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 
 		err = k.CheckBlockHeaderVerificationEnabled(ctx, 1000)
@@ -93,10 +93,10 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 
 	t.Run("check returns false if flag is not set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeper(t)
-		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.EthChain.ChainId)
+		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.Ethereum.ChainId)
 		require.ErrorContains(t, err, "proof verification is disabled for all chains")
 
-		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BtcMainnetChain.ChainId)
+		err = k.CheckBlockHeaderVerificationEnabled(ctx, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "proof verification is disabled for all chains")
 	})
 
@@ -105,17 +105,17 @@ func TestKeeper_CheckVerificationFlagsEnabled(t *testing.T) {
 		k.SetBlockHeaderVerification(ctx, types.BlockHeaderVerification{
 			HeaderSupportedChains: []types.HeaderSupportedChain{
 				{
-					ChainId: chains.EthChain.ChainId,
+					ChainId: chains.Ethereum.ChainId,
 					Enabled: false,
 				},
 			},
 		})
 
-		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.EthChain.ChainId)
+		err := k.CheckBlockHeaderVerificationEnabled(ctx, chains.Ethereum.ChainId)
 		require.ErrorContains(
 			t,
 			err,
-			fmt.Sprintf("proof verification is disabled for chain %d", chains.EthChain.ChainId),
+			fmt.Sprintf("proof verification is disabled for chain %d", chains.Ethereum.ChainId),
 		)
 	})
 }

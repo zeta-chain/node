@@ -13,27 +13,27 @@ func DefaultBlockHeaderVerification() BlockHeaderVerification {
 func DefaultHeaderSupportedChains() []HeaderSupportedChain {
 	return []HeaderSupportedChain{
 		{
-			ChainId: chains.EthChain.ChainId,
+			ChainId: chains.Ethereum.ChainId,
 			Enabled: false,
 		},
 		{
-			ChainId: chains.BscMainnetChain.ChainId,
+			ChainId: chains.BscMainnet.ChainId,
 			Enabled: false,
 		},
 		{
-			ChainId: chains.SepoliaChain.ChainId,
+			ChainId: chains.Sepolia.ChainId,
 			Enabled: false,
 		},
 		{
-			ChainId: chains.BscTestnetChain.ChainId,
+			ChainId: chains.BscTestnet.ChainId,
 			Enabled: false,
 		},
 		{
-			ChainId: chains.GoerliLocalnetChain.ChainId,
+			ChainId: chains.GoerliLocalnet.ChainId,
 			Enabled: false,
 		},
 		{
-			ChainId: chains.GoerliChain.ChainId,
+			ChainId: chains.Goerli.ChainId,
 			Enabled: false,
 		},
 	}
