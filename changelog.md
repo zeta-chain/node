@@ -32,6 +32,7 @@
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 * [2226](https://github.com/zeta-chain/node/pull/2226) - improve Go formatting with imports standardization and max line length to 120
 * [2262](https://github.com/zeta-chain/node/pull/2262) - refactor MsgUpdateZRC20 into MsgPauseZrc20 and MsgUnPauseZRC20
+* [2290](https://github.com/zeta-chain/node/pull/2290) - rename `MsgAddBlameVote` message to `MsgVoteBlame`
 
 ### Tests
 
