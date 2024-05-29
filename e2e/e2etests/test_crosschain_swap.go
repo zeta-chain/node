@@ -141,6 +141,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
+	r.Logger.Print(fmt.Sprintf("There are %d utxos before SendToTSSFromDeployerWithMemo", len(utxos)))
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
 	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.DeployerAddress.Bytes())
@@ -150,6 +151,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
+	r.Logger.Print(fmt.Sprintf("SendToTSSFromDeployerWithMemo deploer address: %s\n", r.BTCDeployerAddress))
+	r.Logger.Print("SendToTSSFromDeployerWithMemo-1")
 	txID, err := r.SendToTSSFromDeployerWithMemo(
 		r.BTCTSSAddress,
 		0.01,
@@ -198,6 +201,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 		r.Logger.Info("memo length %d", len(memo))
 
+		r.Logger.Print("SendToTSSFromDeployerWithMemo-2")
 		amount := 0.1
 		txid, err := r.SendToTSSFromDeployerWithMemo(
 			r.BTCTSSAddress,

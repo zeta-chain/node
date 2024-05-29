@@ -214,7 +214,10 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	scriptPubkeys := make([]string, len(inputUTXOs))
 
 	for i, utxo := range inputUTXOs {
-		inputs[i] = btcjson.TransactionInput{utxo.TxID, utxo.Vout}
+		inputs[i] = btcjson.TransactionInput{
+			Txid: utxo.TxID,
+			Vout: utxo.Vout,
+		}
 		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
 		amounts[i] = utxo.Amount
 		scriptPubkeys[i] = utxo.ScriptPubKey
@@ -253,7 +256,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
 
 	// make sure that TxOut[0] is sent to "to" address; TxOut[2] is change to oneself. TxOut[1] is memo.
-	if bytes.Compare(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) != 0 {
+	if !bytes.Equal(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) {
 		runner.Logger.Info("tx.TxOut[0].PkScript: %x", tx.TxOut[0].PkScript)
 		runner.Logger.Info("to.ScriptAddress():   %x", to.ScriptAddress())
 		runner.Logger.Info("swapping txout[0] with txout[2]")
@@ -281,6 +284,36 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
+
+	// print transaction inputs
+	runner.Logger.Info("SignRawTransactionWithWallet2 input: %+v", inputsForSign)
+	for _, input := range inputUTXOs {
+		runner.Logger.Print("  txid: %s", input.TxID)
+		runner.Logger.Print("  vout: %d", input.Vout)
+		runner.Logger.Print("  address: %s", input.Address)
+		runner.Logger.Print("  amount: %f", input.Amount)
+		runner.Logger.Print("  confirmations: %d", input.Confirmations)
+	}
+
+	// retry for 10 times if not signed
+	if !signed {
+		for i := 0; i < 10; i++ {
+			runner.Logger.Print(fmt.Sprintf("retrying SignRawTransactionWithWallet2: %d", i+1))
+			stx, signed, err = btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
+			if err != nil {
+				panic(err)
+			}
+			if signed {
+				break
+			}
+			time.Sleep(1 * time.Second)
+			_, err = btcRPC.GenerateToAddress(1, btcDeployerAddress, nil)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	if !signed {
 		panic("btc transaction not signed")
 	}
