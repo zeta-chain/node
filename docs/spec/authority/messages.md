@@ -19,6 +19,7 @@ on the hard-coded chain info
 ```proto
 message MsgUpdateChainInfo {
 	string signer = 1;
+	ChainInfo chain_info = 2;
 }
 ```
 

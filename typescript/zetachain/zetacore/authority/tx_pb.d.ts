@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies } from "./policies_pb.js";
+import type { ChainInfo } from "./chain_info_pb.js";
 
 /**
  * MsgUpdatePolicies defines the MsgUpdatePolicies service.
@@ -69,6 +70,11 @@ export declare class MsgUpdateChainInfo extends Message<MsgUpdateChainInfo> {
    * @generated from field: string signer = 1;
    */
   signer: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 2;
+   */
+  chainInfo?: ChainInfo;
 
   constructor(data?: PartialMessage<MsgUpdateChainInfo>);
 

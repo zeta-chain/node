@@ -56703,6 +56703,18 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityChainInfo:
+    type: object
+    properties:
+      chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chainsChain'
+    title: |-
+      ChainInfo contains static information about the chains
+      This structure is used to dynamically update these info on a live network
+      before hardcoding the values in a upgrade
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
