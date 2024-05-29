@@ -38,7 +38,7 @@ func TestKeeper_SetAuthorizationList(t *testing.T) {
 
 		newAuthorizationList := sample.AuthorizationList("sample2")
 		require.NotEqual(t, authorizationList, newAuthorizationList)
-		require.NoError(t, k.SetAuthorizationList(ctx, authorizationList))
+		require.NoError(t, k.SetAuthorizationList(ctx, newAuthorizationList))
 		list, found = k.GetAuthorizationList(ctx)
 		require.True(t, found)
 		require.Equal(t, newAuthorizationList, list)
