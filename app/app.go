@@ -105,6 +105,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/docs/openapi"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
@@ -596,6 +597,12 @@ func New(
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
 	)
+
+	cctxGateways := map[chains.CCTXGateway]crosschainkeeper.CCTXGateway{
+		chains.CCTXGateway_observers: crosschainkeeper.NewCCTXGatewayObservers(app.CrosschainKeeper),
+		chains.CCTXGateway_zevm:      crosschainkeeper.NewCCTXGatewayZEVM(app.CrosschainKeeper),
+	}
+	app.CrosschainKeeper.SetCCTXGateways(cctxGateways)
 
 	// initialize ibccrosschain keeper and set it to the crosschain keeper
 	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
