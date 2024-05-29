@@ -50,10 +50,10 @@
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
 
 ### CI
-* []() - CI: Added nightly EVM performance testing pipeline.
-* []() - CI: Modified localnet testing docker image to utilitze debian:bookworm.
-* []() - CI: Removed build-jet runners where applicable.
-* []() - CI: Removed deprecated/removed upgrade path testing pipeline.
+* [2285](https://github.com/zeta-chain/node/pull/2285) - CI: Added nightly EVM performance testing pipeline.
+* [2285](https://github.com/zeta-chain/node/pull/2285) - CI: Modified localnet testing docker image to utilitze debian:bookworm.
+* [2285](https://github.com/zeta-chain/node/pull/2285) - CI: Removed build-jet runners where applicable.
+* [2285](https://github.com/zeta-chain/node/pull/2285) - CI: Removed deprecated/removed upgrade path testing pipeline.
 * [2268](https://github.com/zeta-chain/node/pull/2268) - CI: updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners.
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
 * [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
