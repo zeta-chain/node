@@ -16,6 +16,7 @@
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
 * [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 * [2258](https://github.com/zeta-chain/node/pull/2258) - add Optimism and Base in static chain information
+* [2287](https://github.com/zeta-chain/node/pull/2287) - implement `MsgUpdateChainInfo` message
 
 ### Refactor
 
