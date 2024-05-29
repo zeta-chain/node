@@ -11,3 +11,14 @@ message MsgUpdatePolicies {
 }
 ```
 
+## MsgUpdateChainInfo
+
+UpdateChainInfo updates the chain inffo structure that adds new static chain info or overwrite existing chain info
+on the hard-coded chain info
+
+```proto
+message MsgUpdateChainInfo {
+	string signer = 1;
+}
+```
+

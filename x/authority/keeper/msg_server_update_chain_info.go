@@ -6,6 +6,7 @@ import (
 
 	cosmoserror "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 

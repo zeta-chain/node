@@ -56703,6 +56703,9 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityMsgUpdateChainInfoResponse:
+    type: object
+    description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
   authorityMsgUpdatePoliciesResponse:
     type: object
     description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
