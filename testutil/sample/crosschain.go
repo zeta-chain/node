@@ -147,7 +147,7 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
 	return &types.InboundParams{
 		Sender:                 EthAddress().String(),
-		SenderChainId:          chains.GoerliChain.ChainId,
+		SenderChainId:          chains.Goerli.ChainId,
 		TxOrigin:               EthAddress().String(),
 		Asset:                  StringRandom(r, 32),
 		Amount:                 math.NewUint(uint64(r.Int63())),
@@ -178,7 +178,7 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 	return &types.OutboundParams{
 		Receiver:               EthAddress().String(),
-		ReceiverChainId:        chains.GoerliChain.ChainId,
+		ReceiverChainId:        chains.Goerli.ChainId,
 		Amount:                 math.NewUint(uint64(r.Int63())),
 		TssNonce:               r.Uint64(),
 		GasLimit:               r.Uint64(),

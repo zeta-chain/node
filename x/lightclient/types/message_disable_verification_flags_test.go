@@ -54,14 +54,14 @@ func TestMsgDisableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "invalid chain id",
 			msg: types.MsgDisableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.ZetaPrivnetChain.ChainId},
+				ChainIdList: []int64{chains.ZetaChainPrivnet.ChainId},
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 				require.ErrorContains(
 					t,
 					err,
-					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaPrivnetChain.ChainId),
+					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaChainPrivnet.ChainId),
 				)
 			},
 		},
@@ -69,7 +69,7 @@ func TestMsgDisableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "valid address",
 			msg: types.MsgDisableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.EthChain.ChainId},
+				ChainIdList: []int64{chains.Ethereum.ChainId},
 			},
 			err: require.NoError,
 		},
@@ -93,7 +93,7 @@ func TestMsgDisableHeaderVerification_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgDisableHeaderVerification(
 				signer,
-				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 			),
 			panics: false,
 		},
@@ -101,7 +101,7 @@ func TestMsgDisableHeaderVerification_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgDisableHeaderVerification(
 				"invalid",
-				[]int64{chains.EthChain.ChainId, chains.BtcMainnetChain.ChainId},
+				[]int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
 			),
 			panics: true,
 		},

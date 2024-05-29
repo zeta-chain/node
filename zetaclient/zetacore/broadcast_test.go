@@ -82,7 +82,7 @@ func TestBroadcast(t *testing.T) {
 		require.NoError(t, err)
 		msg := observerTypes.NewMsgVoteBlockHeader(
 			address.String(),
-			chains.EthChain.ChainId,
+			chains.Ethereum.ChainId,
 			blockHash,
 			18495266,
 			getHeaderData(t),
@@ -101,7 +101,7 @@ func TestBroadcast(t *testing.T) {
 		require.NoError(t, err)
 		msg := observerTypes.NewMsgVoteBlockHeader(
 			address.String(),
-			chains.EthChain.ChainId,
+			chains.Ethereum.ChainId,
 			blockHash,
 			18495266,
 			getHeaderData(t),

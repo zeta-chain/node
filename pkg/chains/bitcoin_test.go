@@ -14,9 +14,9 @@ func TestBitcoinNetParamsFromChainID(t *testing.T) {
 		expected *chaincfg.Params
 		wantErr  bool
 	}{
-		{"Regnet", BtcRegtestChain.ChainId, BitcoinRegnetParams, false},
-		{"Mainnet", BtcMainnetChain.ChainId, BitcoinMainnetParams, false},
-		{"Testnet", BtcTestNetChain.ChainId, BitcoinTestnetParams, false},
+		{"Regnet", BitcoinRegtest.ChainId, BitcoinRegnetParams, false},
+		{"Mainnet", BitcoinMainnet.ChainId, BitcoinMainnetParams, false},
+		{"Testnet", BitcoinTestnet.ChainId, BitcoinTestnetParams, false},
 		{"Unknown", -1, nil, true},
 	}
 
@@ -40,9 +40,9 @@ func TestBitcoinChainIDFromNetParams(t *testing.T) {
 		expectedChainID int64
 		wantErr         bool
 	}{
-		{"Regnet", BitcoinRegnetParams.Name, BtcRegtestChain.ChainId, false},
-		{"Mainnet", BitcoinMainnetParams.Name, BtcMainnetChain.ChainId, false},
-		{"Testnet", BitcoinTestnetParams.Name, BtcTestNetChain.ChainId, false},
+		{"Regnet", BitcoinRegnetParams.Name, BitcoinRegtest.ChainId, false},
+		{"Mainnet", BitcoinMainnetParams.Name, BitcoinMainnet.ChainId, false},
+		{"Testnet", BitcoinTestnetParams.Name, BitcoinTestnet.ChainId, false},
 		{"Unknown", "Unknown", 0, true},
 	}
 
@@ -61,13 +61,13 @@ func TestBitcoinChainIDFromNetParams(t *testing.T) {
 }
 
 func TestIsBitcoinRegnet(t *testing.T) {
-	require.True(t, IsBitcoinRegnet(BtcRegtestChain.ChainId))
-	require.False(t, IsBitcoinRegnet(BtcMainnetChain.ChainId))
-	require.False(t, IsBitcoinRegnet(BtcTestNetChain.ChainId))
+	require.True(t, IsBitcoinRegnet(BitcoinRegtest.ChainId))
+	require.False(t, IsBitcoinRegnet(BitcoinMainnet.ChainId))
+	require.False(t, IsBitcoinRegnet(BitcoinTestnet.ChainId))
 }
 
 func TestIsBitcoinMainnet(t *testing.T) {
-	require.True(t, IsBitcoinMainnet(BtcMainnetChain.ChainId))
-	require.False(t, IsBitcoinMainnet(BtcRegtestChain.ChainId))
-	require.False(t, IsBitcoinMainnet(BtcTestNetChain.ChainId))
+	require.True(t, IsBitcoinMainnet(BitcoinMainnet.ChainId))
+	require.False(t, IsBitcoinMainnet(BitcoinRegtest.ChainId))
+	require.False(t, IsBitcoinMainnet(BitcoinTestnet.ChainId))
 }

@@ -1,15 +1,15 @@
-# tx fungible update-zrc20-paused-status
+# tx fungible unpause-zrc20
 
-Broadcast message UpdateZRC20PausedStatus
+Broadcast message UnpauseZRC20
 
 ```
-zetacored tx fungible update-zrc20-paused-status [contractAddress1, contractAddress2, ...] [pausedStatus] [flags]
+zetacored tx fungible unpause-zrc20 [contractAddress1, contractAddress2, ...] [flags]
 ```
 
 ### Examples
 
 ```
-zetacored tx fungible update-zrc20-paused-status "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" 0 
+zetacored tx fungible unpause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0xece40cbB54d65282c4623f141c4a8a0bEjgksncf" 
 ```
 
 ### Options
@@ -28,7 +28,7 @@ zetacored tx fungible update-zrc20-paused-status "0xece40cbB54d65282c4623f141c4a
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-zrc20-paused-status
+  -h, --help                     help for unpause-zrc20
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device

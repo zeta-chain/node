@@ -37,7 +37,7 @@ func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
 	addressRestricted, err := chains.DecodeBtcAddress(
 		testutils.RestrictedBtcAddressTest,
-		chains.BtcRegtestChain.ChainId,
+		chains.BitcoinRegtest.ChainId,
 	)
 	if err != nil {
 		panic(err)

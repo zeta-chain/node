@@ -37,7 +37,7 @@ func GenerateTss(
 	// Bitcoin chain ID is currently used for using the correct signature format
 	// TODO: remove this once we have a better way to determine the signature format
 	// https://github.com/zeta-chain/node/issues/1397
-	bitcoinChainID := chains.BtcRegtestChain.ChainId
+	bitcoinChainID := chains.BitcoinRegtest.ChainId
 	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
 	if btcEnabled {
 		bitcoinChainID = btcChain.ChainId

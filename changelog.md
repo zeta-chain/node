@@ -15,6 +15,7 @@
 * [2152](https://github.com/zeta-chain/node/pull/2152) - custom priority nonce mempool
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
 * [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
+* [2258](https://github.com/zeta-chain/node/pull/2258) - add Optimism and Base in static chain information
 
 ### Refactor
 
@@ -29,6 +30,7 @@
 * [2210](https://github.com/zeta-chain/node/pull/2210) - removed uncessary panics in the zetaclientd process
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 * [2226](https://github.com/zeta-chain/node/pull/2226) - improve Go formatting with imports standardization and max line length to 120
+* [2262](https://github.com/zeta-chain/node/pull/2262) - refactor MsgUpdateZRC20 into MsgPauseZrc20 and MsgUnPauseZRC20
 
 ### Tests
 
@@ -49,7 +51,7 @@
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
 
 ### CI
-
+* [2268](https://github.com/zeta-chain/node/pull/2268) - CI: updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners.
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
 * [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
 * [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
