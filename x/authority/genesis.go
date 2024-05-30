@@ -1,8 +1,6 @@
 package authority
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -13,10 +11,7 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetPolicies(ctx, genState.Policies)
 	k.SetChainInfo(ctx, genState.ChainInfo)
-	err := k.SetAuthorizationList(ctx, genState.AuthorizationList)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to set authorization list in InitGenesis: %v", err))
-	}
+	k.SetAuthorizationList(ctx, genState.AuthorizationList)
 }
 
 // ExportGenesis returns the authority module's exported genesis.

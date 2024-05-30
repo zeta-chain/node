@@ -48,29 +48,4 @@ func TestGenesis(t *testing.T) {
 		nullify.Fill(got)
 		require.Equal(t, genesisState, *got)
 	})
-
-	t.Run("set genesis panics when trying to set invalid values", func(t *testing.T) {
-		duplicateUrl := "ABC"
-		genesisState := types.GenesisState{
-			Policies: sample.Policies(),
-			AuthorizationList: types.AuthorizationList{Authorizations: []types.Authorization{
-				{
-					MsgUrl:           duplicateUrl,
-					AuthorizedPolicy: types.PolicyType_groupOperational,
-				},
-				{
-					MsgUrl:           duplicateUrl,
-					AuthorizedPolicy: types.PolicyType_groupEmergency,
-				},
-			}},
-			ChainInfo: sample.ChainInfo(42),
-		}
-
-		// Init
-		k, ctx := keepertest.AuthorityKeeper(t)
-		require.Panics(t, func() {
-			authority.InitGenesis(ctx, *k, genesisState)
-		})
-
-	})
 }

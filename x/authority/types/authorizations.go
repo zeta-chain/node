@@ -157,16 +157,6 @@ func (a *AuthorizationList) RemoveAuthorizations(authorization Authorization) {
 	}
 }
 
-// CheckAuthorizationExists checks if the authorization exists in the list.
-func (a *AuthorizationList) CheckAuthorizationExists(authorization Authorization) bool {
-	for _, auth := range a.Authorizations {
-		if auth.MsgUrl == authorization.MsgUrl {
-			return true
-		}
-	}
-	return false
-}
-
 // GetAuthorizedPolicy returns the policy for the given message url.If the message url is not found,
 // it returns an error and the first value of the enum.
 func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, error) {

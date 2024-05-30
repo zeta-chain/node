@@ -7,15 +7,10 @@ import (
 )
 
 // SetAuthorizationList sets the authorization list to the store.It returns an error if the list is invalid.
-func (k Keeper) SetAuthorizationList(ctx sdk.Context, list types.AuthorizationList) error {
-	err := list.Validate()
-	if err != nil {
-		return err
-	}
+func (k Keeper) SetAuthorizationList(ctx sdk.Context, list types.AuthorizationList) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&list)
 	store.Set([]byte{0}, b)
-	return nil
 }
 
 // GetAuthorizationList returns the authorization list from the store
