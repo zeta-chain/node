@@ -7,7 +7,7 @@ on:
 
 jobs:
   nightly_evm_api_performance_test:
-    name: "NIGHTLY:EMV:API:PERFORMANCE:TEST"
+    name: "NIGHTLY:EVM:API:PERFORMANCE:TEST"
     runs-on: "buildjet-16vcpu-ubuntu-2204"
     steps:
       - uses: actions/checkout@v4
