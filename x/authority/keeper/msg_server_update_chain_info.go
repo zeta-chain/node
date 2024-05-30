@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
-// UpdateChainInfo updates the chain inffo structure that adds new static chain info or overwrite existing chain info
+// UpdateChainInfo updates the chain info structure that adds new static chain info or overwrite existing chain info
 // on the hard-coded chain info
 func (k msgServer) UpdateChainInfo(
 	goCtx context.Context,
