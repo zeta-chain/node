@@ -3,7 +3,7 @@ name: "NIGHTLY:EVM:PERFORMANCE:TESTING"
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # Runs every day at midnight
+    - cron: '0 0 * * *' # Runs every day at midnight UTC
 
 jobs:
   nightly_emv_api_performance_test:
