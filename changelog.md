@@ -110,6 +110,7 @@
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
 
 ### CI
+* [2295](https://github.com/zeta-chain/node/pull/2295) - Fix docker build pipeline to build v17 binaries.
 * [2267](https://github.com/zeta-chain/node/pull/2267) - Change publish-release to github action ubuntu runner.
 * [1958](https://github.com/zeta-chain/node/pull/1958) - Fix e2e advanced test debug checkbox.
 * [1945](https://github.com/zeta-chain/node/pull/1945) - update advanced testing pipeline to not execute tests that weren't selected so they show skipped instead of skipping steps.
