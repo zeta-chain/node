@@ -39,7 +39,6 @@ func (msg *MsgUpdateChainInfo) GetSignBytes() []byte {
 }
 
 func (msg *MsgUpdateChainInfo) ValidateBasic() error {
-
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer address (%s)", err)
 	}
