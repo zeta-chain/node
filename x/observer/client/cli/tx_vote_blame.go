@@ -57,7 +57,6 @@ func CmdVoteBlame() *cobra.Command {
 
 			msg := types.NewMsgVoteBlameMsg(clientCtx.GetFromAddress().String(), int64(chainID), blameInfo)
 
-			println("about to broadcast")
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
