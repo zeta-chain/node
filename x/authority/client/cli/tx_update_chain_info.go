@@ -17,13 +17,8 @@ func CmdUpdateChainInfo() *cobra.Command {
 		Short: "Update the chain info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			// Read the chain info from the file using os package and unmarshal it into the chain info variable
-			var chainInfo types.ChainInfo
-			chainInfoBytes, err := os.ReadFile(args[0])
+			chainInfo, err := readChainInfoFromFile(args[0])
 			if err != nil {
-				return err
-			}
-			if err := chainInfo.Unmarshal(chainInfoBytes); err != nil {
 				return err
 			}
 
@@ -44,4 +39,13 @@ func CmdUpdateChainInfo() *cobra.Command {
 	return cmd
 }
 
-func 
+// readChainInfoFromFile read the chain info from the file using os package and unmarshal it into the chain info variable
+func readChainInfoFromFile(filePath string) (types.ChainInfo, error) {
+	var chainInfo types.ChainInfo
+	chainInfoBytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return chainInfo, err
+	}
+	err = chainInfo.Unmarshal(chainInfoBytes)
+	return chainInfo, err
+}
