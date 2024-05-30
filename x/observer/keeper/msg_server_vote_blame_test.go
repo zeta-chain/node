@@ -15,12 +15,12 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgServer_AddBlameVote(t *testing.T) {
+func TestMsgServer_VoteBlame(t *testing.T) {
 	t.Run("should error if supported chain not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
-		res, err := srv.AddBlameVote(ctx, &types.MsgAddBlameVote{
+		res, err := srv.VoteBlame(ctx, &types.MsgVoteBlame{
 			ChainId: 1,
 		})
 		require.Error(t, err)
@@ -34,7 +34,7 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 		chainId := getValidEthChainIDWithIndex(t, 0)
 		setSupportedChain(ctx, *k, chainId)
 
-		res, err := srv.AddBlameVote(ctx, &types.MsgAddBlameVote{
+		res, err := srv.VoteBlame(ctx, &types.MsgVoteBlame{
 			ChainId: chainId,
 		})
 		require.Error(t, err)
@@ -70,13 +70,13 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 		})
 
 		blameInfo := sample.BlameRecord(t, "index")
-		res, err := srv.AddBlameVote(ctx, &types.MsgAddBlameVote{
+		res, err := srv.VoteBlame(ctx, &types.MsgVoteBlame{
 			Creator:   accAddressOfValidator.String(),
 			ChainId:   chainId,
 			BlameInfo: blameInfo,
 		})
 		require.NoError(t, err)
-		require.Equal(t, &types.MsgAddBlameVoteResponse{}, res)
+		require.Equal(t, &types.MsgVoteBlameResponse{}, res)
 
 		blame, found := k.GetBlame(ctx, blameInfo.Index)
 		require.True(t, found)
@@ -111,7 +111,7 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String(), "Observer2"},
 		})
 		blameInfo := sample.BlameRecord(t, "index")
-		vote := &types.MsgAddBlameVote{
+		vote := &types.MsgVoteBlame{
 			Creator:   accAddressOfValidator.String(),
 			ChainId:   chainId,
 			BlameInfo: blameInfo,
@@ -126,7 +126,7 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 		}
 		k.SetBallot(ctx, &ballot)
 
-		_, err = srv.AddBlameVote(ctx, vote)
+		_, err = srv.VoteBlame(ctx, vote)
 		require.Error(t, err)
 	})
 
@@ -158,7 +158,7 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String(), "Observer2"},
 		})
 		blameInfo := sample.BlameRecord(t, "index")
-		vote := &types.MsgAddBlameVote{
+		vote := &types.MsgVoteBlame{
 			Creator:   accAddressOfValidator.String(),
 			ChainId:   chainId,
 			BlameInfo: blameInfo,
@@ -173,9 +173,9 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 		}
 		k.SetBallot(ctx, &ballot)
 
-		res, err := srv.AddBlameVote(ctx, vote)
+		res, err := srv.VoteBlame(ctx, vote)
 		require.NoError(t, err)
-		require.Equal(t, &types.MsgAddBlameVoteResponse{}, res)
+		require.Equal(t, &types.MsgVoteBlameResponse{}, res)
 
 		_, found := k.GetBlame(ctx, blameInfo.Index)
 		require.False(t, found)
