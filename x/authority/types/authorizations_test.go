@@ -71,6 +71,11 @@ func TestAuthorizationList_CheckAuthorizationExists(t *testing.T) {
 		authorizationsList.SetAuthorizations(newAuthorization)
 		require.True(t, authorizationsList.CheckAuthorizationExists(newAuthorization))
 	})
+
+	t.Run("check authorization exists for empty string", func(t *testing.T) {
+		authorizationsList := types.DefaultAuthorizationsList()
+		require.False(t, authorizationsList.CheckAuthorizationExists(types.Authorization{}))
+	})
 }
 
 func TestAuthorizationList_Validate(t *testing.T) {
@@ -90,7 +95,7 @@ func TestAuthorizationList_Validate(t *testing.T) {
 			},
 		}}
 
-		require.ErrorIs(t, authorizationsList.Validate(), types.ErrInValidAuthorizationList)
+		require.ErrorIs(t, authorizationsList.Validate(), types.ErrInvalidAuthorizationList)
 	})
 
 	t.Run("validate failed with duplicate msg url with same policies", func(t *testing.T) {
@@ -105,7 +110,7 @@ func TestAuthorizationList_Validate(t *testing.T) {
 			},
 		}}
 
-		require.ErrorIs(t, authorizationsList.Validate(), types.ErrInValidAuthorizationList)
+		require.ErrorIs(t, authorizationsList.Validate(), types.ErrInvalidAuthorizationList)
 	})
 }
 

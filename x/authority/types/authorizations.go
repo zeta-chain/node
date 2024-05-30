@@ -186,7 +186,7 @@ func (a *AuthorizationList) Validate() error {
 	for _, authorization := range a.Authorizations {
 		if checkMsgUrls[authorization.MsgUrl] {
 			return errors.Wrap(
-				ErrInValidAuthorizationList,
+				ErrInvalidAuthorizationList,
 				fmt.Sprintf("duplicate message url: %s", authorization.MsgUrl),
 			)
 		}

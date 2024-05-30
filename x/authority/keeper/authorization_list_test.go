@@ -59,6 +59,6 @@ func TestKeeper_SetAuthorizationList(t *testing.T) {
 			},
 		}}
 
-		require.ErrorIs(t, k.SetAuthorizationList(ctx, authorizationsList), types.ErrInValidAuthorizationList)
+		require.ErrorIs(t, k.SetAuthorizationList(ctx, authorizationsList), types.ErrInvalidAuthorizationList)
 	})
 }

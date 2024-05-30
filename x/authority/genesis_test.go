@@ -49,16 +49,17 @@ func TestGenesis(t *testing.T) {
 		require.Equal(t, genesisState, *got)
 	})
 
-	t.Run("set genesis and export works but invalid authorization table is not set", func(t *testing.T) {
+	t.Run("set genesis panics when trying to set invalid values", func(t *testing.T) {
+		duplicateUrl := "ABC"
 		genesisState := types.GenesisState{
 			Policies: sample.Policies(),
 			AuthorizationList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
-					MsgUrl:           "ABC",
+					MsgUrl:           duplicateUrl,
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 				{
-					MsgUrl:           "ABC",
+					MsgUrl:           duplicateUrl,
 					AuthorizedPolicy: types.PolicyType_groupEmergency,
 				},
 			}},
@@ -67,30 +68,9 @@ func TestGenesis(t *testing.T) {
 
 		// Init
 		k, ctx := keepertest.AuthorityKeeper(t)
-		authority.InitGenesis(ctx, *k, genesisState)
-
-		// Check policy is set
-		policies, found := k.GetPolicies(ctx)
-		require.True(t, found)
-		require.Equal(t, genesisState.Policies, policies)
-
-		// Check chain info is set
-		chainInfo, found := k.GetChainInfo(ctx)
-		require.True(t, found)
-		require.Equal(t, genesisState.ChainInfo, chainInfo)
-
-		// Check authorization list is not set
-		_, found = k.GetAuthorizationList(ctx)
-		require.False(t, found)
-
-		// Export
-		got := authority.ExportGenesis(ctx, *k)
-		require.NotNil(t, got)
-
-		// Compare genesis after init and export
-		nullify.Fill(&genesisState)
-		nullify.Fill(got)
-		require.Equal(t, genesisState, *got)
+		require.Panics(t, func() {
+			authority.InitGenesis(ctx, *k, genesisState)
+		})
 
 	})
 }
