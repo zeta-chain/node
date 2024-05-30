@@ -22,6 +22,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 
 	cmd.AddCommand(
 		CmdShowPolicies(),
+		CmdShowChainInfo(),
 	)
 
 	return cmd

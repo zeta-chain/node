@@ -296,32 +296,26 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		}
 
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(tx)
-		if err != nil {
-			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
-			// try to check if there is synthetic eth tx in tx result
-			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
-			if ethMsg != nil {
-				ethMsgs = append(ethMsgs, ethMsg)
-				txsAdditional = append(txsAdditional, additional)
-			}
-			continue
-		}
-
 		// assumption is that if regular ethermint msg is found in tx
 		// there should not be synthetic one as well
 		shouldCheckForSyntheticTx := true
-		for _, msg := range tx.GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-			if ok {
-				shouldCheckForSyntheticTx = false
-				ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
-				ethMsgs = append(ethMsgs, ethMsg)
-				txsAdditional = append(txsAdditional, nil)
+		// if tx can be decoded, try to find MsgEthereumTx inside
+		if err == nil {
+			for _, msg := range tx.GetMsgs() {
+				ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+				if ok {
+					shouldCheckForSyntheticTx = false
+					ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
+					ethMsgs = append(ethMsgs, ethMsg)
+					txsAdditional = append(txsAdditional, nil)
+				}
 			}
+		} else {
+			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
 		}
 
+		// if tx can not be decoded or MsgEthereumTx was not found, try to parse it from block results
 		if shouldCheckForSyntheticTx {
-			// try to check if there is synthetic eth tx in tx result
 			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
 			if ethMsg != nil {
 				ethMsgs = append(ethMsgs, ethMsg)

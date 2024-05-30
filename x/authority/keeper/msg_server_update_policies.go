@@ -18,12 +18,12 @@ func (k msgServer) UpdatePolicies(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check called by governance
-	if k.govAddr.String() != msg.Signer {
+	if k.govAddr.String() != msg.Creator {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority, expected %s, got %s",
 			k.govAddr.String(),
-			msg.Signer,
+			msg.Creator,
 		)
 	}
 
