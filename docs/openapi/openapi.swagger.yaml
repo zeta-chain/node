@@ -57746,8 +57746,6 @@ definitions:
       last_change_height:
         type: string
         format: int64
-  observerMsgAddBlameVoteResponse:
-    type: object
   observerMsgAddObserverResponse:
     type: object
   observerMsgDisableCCTXResponse:
@@ -57765,6 +57763,8 @@ definitions:
   observerMsgUpdateKeygenResponse:
     type: object
   observerMsgUpdateObserverResponse:
+    type: object
+  observerMsgVoteBlameResponse:
     type: object
   observerMsgVoteBlockHeaderResponse:
     type: object

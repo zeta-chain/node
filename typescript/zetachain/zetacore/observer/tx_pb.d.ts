@@ -298,9 +298,9 @@ export declare class MsgAddObserverResponse extends Message<MsgAddObserverRespon
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgAddBlameVote
+ * @generated from message zetachain.zetacore.observer.MsgVoteBlame
  */
-export declare class MsgAddBlameVote extends Message<MsgAddBlameVote> {
+export declare class MsgVoteBlame extends Message<MsgVoteBlame> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -316,38 +316,38 @@ export declare class MsgAddBlameVote extends Message<MsgAddBlameVote> {
    */
   blameInfo?: Blame;
 
-  constructor(data?: PartialMessage<MsgAddBlameVote>);
+  constructor(data?: PartialMessage<MsgVoteBlame>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgAddBlameVote";
+  static readonly typeName = "zetachain.zetacore.observer.MsgVoteBlame";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddBlameVote;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteBlame;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddBlameVote;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteBlame;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddBlameVote;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteBlame;
 
-  static equals(a: MsgAddBlameVote | PlainMessage<MsgAddBlameVote> | undefined, b: MsgAddBlameVote | PlainMessage<MsgAddBlameVote> | undefined): boolean;
+  static equals(a: MsgVoteBlame | PlainMessage<MsgVoteBlame> | undefined, b: MsgVoteBlame | PlainMessage<MsgVoteBlame> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgAddBlameVoteResponse
+ * @generated from message zetachain.zetacore.observer.MsgVoteBlameResponse
  */
-export declare class MsgAddBlameVoteResponse extends Message<MsgAddBlameVoteResponse> {
-  constructor(data?: PartialMessage<MsgAddBlameVoteResponse>);
+export declare class MsgVoteBlameResponse extends Message<MsgVoteBlameResponse> {
+  constructor(data?: PartialMessage<MsgVoteBlameResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgAddBlameVoteResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgVoteBlameResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddBlameVoteResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteBlameResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddBlameVoteResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteBlameResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddBlameVoteResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteBlameResponse;
 
-  static equals(a: MsgAddBlameVoteResponse | PlainMessage<MsgAddBlameVoteResponse> | undefined, b: MsgAddBlameVoteResponse | PlainMessage<MsgAddBlameVoteResponse> | undefined): boolean;
+  static equals(a: MsgVoteBlameResponse | PlainMessage<MsgVoteBlameResponse> | undefined, b: MsgVoteBlameResponse | PlainMessage<MsgVoteBlameResponse> | undefined): boolean;
 }
 
 /**
