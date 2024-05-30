@@ -30,7 +30,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgUpdatePolicies defines the MsgUpdatePolicies service.
 type MsgUpdatePolicies struct {
-	Signer   string   `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	Creator  string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Policies Policies `protobuf:"bytes,2,opt,name=policies,proto3" json:"policies"`
 }
 
@@ -67,9 +67,9 @@ func (m *MsgUpdatePolicies) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdatePolicies proto.InternalMessageInfo
 
-func (m *MsgUpdatePolicies) GetSigner() string {
+func (m *MsgUpdatePolicies) GetCreator() string {
 	if m != nil {
-		return m.Signer
+		return m.Creator
 	}
 	return ""
 }
@@ -118,9 +118,101 @@ func (m *MsgUpdatePoliciesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdatePoliciesResponse proto.InternalMessageInfo
 
+// MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
+type MsgUpdateChainInfo struct {
+	Creator   string    `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ChainInfo ChainInfo `protobuf:"bytes,2,opt,name=chain_info,json=chainInfo,proto3" json:"chain_info"`
+}
+
+func (m *MsgUpdateChainInfo) Reset()         { *m = MsgUpdateChainInfo{} }
+func (m *MsgUpdateChainInfo) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateChainInfo) ProtoMessage()    {}
+func (*MsgUpdateChainInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_42e081863c477116, []int{2}
+}
+func (m *MsgUpdateChainInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateChainInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateChainInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateChainInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateChainInfo.Merge(m, src)
+}
+func (m *MsgUpdateChainInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateChainInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateChainInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateChainInfo proto.InternalMessageInfo
+
+func (m *MsgUpdateChainInfo) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgUpdateChainInfo) GetChainInfo() ChainInfo {
+	if m != nil {
+		return m.ChainInfo
+	}
+	return ChainInfo{}
+}
+
+// MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
+type MsgUpdateChainInfoResponse struct {
+}
+
+func (m *MsgUpdateChainInfoResponse) Reset()         { *m = MsgUpdateChainInfoResponse{} }
+func (m *MsgUpdateChainInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateChainInfoResponse) ProtoMessage()    {}
+func (*MsgUpdateChainInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_42e081863c477116, []int{3}
+}
+func (m *MsgUpdateChainInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateChainInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateChainInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateChainInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateChainInfoResponse.Merge(m, src)
+}
+func (m *MsgUpdateChainInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateChainInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateChainInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateChainInfoResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdatePolicies)(nil), "zetachain.zetacore.authority.MsgUpdatePolicies")
 	proto.RegisterType((*MsgUpdatePoliciesResponse)(nil), "zetachain.zetacore.authority.MsgUpdatePoliciesResponse")
+	proto.RegisterType((*MsgUpdateChainInfo)(nil), "zetachain.zetacore.authority.MsgUpdateChainInfo")
+	proto.RegisterType((*MsgUpdateChainInfoResponse)(nil), "zetachain.zetacore.authority.MsgUpdateChainInfoResponse")
 }
 
 func init() {
@@ -128,24 +220,28 @@ func init() {
 }
 
 var fileDescriptor_42e081863c477116 = []byte{
-	// 261 bytes of a gzipped FileDescriptorProto
+	// 336 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xad, 0x4a, 0x2d, 0x49,
 	0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x07, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0x13, 0x4b, 0x4b, 0x32,
 	0xf2, 0x8b, 0x32, 0x4b, 0x2a, 0xf5, 0x4b, 0x2a, 0xf4, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x64,
 	0xe0, 0xca, 0xf4, 0x60, 0xca, 0xf4, 0xe0, 0xca, 0xa4, 0xb4, 0xf1, 0x1a, 0x52, 0x90, 0x9f, 0x93,
-	0x99, 0x9c, 0x99, 0x5a, 0x0c, 0x31, 0x4a, 0x4a, 0x24, 0x3d, 0x3f, 0x3d, 0x1f, 0xcc, 0xd4, 0x07,
-	0xb1, 0x20, 0xa2, 0x4a, 0xa5, 0x5c, 0x82, 0xbe, 0xc5, 0xe9, 0xa1, 0x05, 0x29, 0x89, 0x25, 0xa9,
-	0x01, 0x50, 0x0d, 0x42, 0x62, 0x5c, 0x6c, 0xc5, 0x99, 0xe9, 0x79, 0xa9, 0x45, 0x12, 0x8c, 0x0a,
-	0x8c, 0x1a, 0x9c, 0x41, 0x50, 0x9e, 0x90, 0x07, 0x17, 0x07, 0xcc, 0x50, 0x09, 0x26, 0x05, 0x46,
-	0x0d, 0x6e, 0x23, 0x35, 0x3d, 0x7c, 0x0e, 0xd4, 0x83, 0x99, 0xe8, 0xc4, 0x72, 0xe2, 0x9e, 0x3c,
-	0x43, 0x10, 0x5c, 0xb7, 0x92, 0x34, 0x97, 0x24, 0x86, 0xb5, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79,
-	0xc5, 0xa9, 0x46, 0x8d, 0x8c, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42, 0x55, 0x5c, 0x7c, 0x68, 0x0e,
-	0xd3, 0xc7, 0x6f, 0x1d, 0x86, 0x91, 0x52, 0xe6, 0x24, 0x6a, 0x80, 0xb9, 0xc1, 0xc9, 0xeb, 0xc4,
-	0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1,
-	0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x0c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93,
-	0xf4, 0x92, 0xf3, 0x73, 0xc1, 0xa1, 0xae, 0x8b, 0x16, 0x01, 0x15, 0xc8, 0xf1, 0x58, 0x59, 0x90,
-	0x5a, 0x9c, 0xc4, 0x06, 0x0e, 0x6a, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xdc, 0x18, 0x8a,
-	0x31, 0xf4, 0x01, 0x00, 0x00,
+	0x99, 0x9c, 0x99, 0x5a, 0x0c, 0x31, 0x4a, 0x4a, 0x17, 0xaf, 0x62, 0xb0, 0x44, 0x7c, 0x66, 0x5e,
+	0x5a, 0x3e, 0x54, 0xb9, 0x48, 0x7a, 0x7e, 0x7a, 0x3e, 0x98, 0xa9, 0x0f, 0x62, 0x41, 0x44, 0x95,
+	0xca, 0xb9, 0x04, 0x7d, 0x8b, 0xd3, 0x43, 0x0b, 0x52, 0x12, 0x4b, 0x52, 0x03, 0xa0, 0xe6, 0x0b,
+	0x49, 0x70, 0xb1, 0x27, 0x17, 0xa5, 0x26, 0x96, 0xe4, 0x17, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0x70,
+	0x06, 0xc1, 0xb8, 0x42, 0x1e, 0x5c, 0x1c, 0x30, 0x57, 0x48, 0x30, 0x29, 0x30, 0x6a, 0x70, 0x1b,
+	0xa9, 0xe9, 0xe1, 0xf3, 0x91, 0x1e, 0xcc, 0x4c, 0x27, 0x96, 0x13, 0xf7, 0xe4, 0x19, 0x82, 0xe0,
+	0xba, 0x95, 0xa4, 0xb9, 0x24, 0x31, 0x2c, 0x0e, 0x4a, 0x2d, 0x2e, 0xc8, 0xcf, 0x2b, 0x4e, 0x55,
+	0xaa, 0xe1, 0x12, 0x82, 0x4b, 0x3a, 0x83, 0x8c, 0xf6, 0xcc, 0x4b, 0xcb, 0xc7, 0xe3, 0x2c, 0x1f,
+	0x2e, 0x2e, 0x84, 0x7f, 0xa1, 0x0e, 0x53, 0xc7, 0xef, 0x30, 0xb8, 0xb1, 0x50, 0x97, 0x71, 0x26,
+	0xc3, 0x04, 0x94, 0x64, 0xb8, 0xa4, 0x30, 0x6d, 0x87, 0xb9, 0xcd, 0xa8, 0x81, 0x89, 0x8b, 0xd9,
+	0xb7, 0x38, 0x5d, 0xa8, 0x8a, 0x8b, 0x0f, 0x2d, 0xd8, 0xf4, 0xf1, 0xdb, 0x88, 0xe1, 0x5d, 0x29,
+	0x73, 0x12, 0x35, 0xc0, 0xdc, 0x20, 0x54, 0xcb, 0xc5, 0x8f, 0x1e, 0x38, 0x06, 0x44, 0x9a, 0x05,
+	0xd7, 0x21, 0x65, 0x41, 0xaa, 0x0e, 0x98, 0xf5, 0x4e, 0x5e, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78,
+	0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc,
+	0x78, 0x2c, 0xc7, 0x10, 0x65, 0x90, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0x0b,
+	0x4e, 0x94, 0xba, 0x68, 0xe9, 0xb3, 0x02, 0x39, 0x4f, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81,
+	0xd3, 0xa1, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x42, 0xb9, 0x95, 0xf6, 0x40, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -161,6 +257,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	UpdatePolicies(ctx context.Context, in *MsgUpdatePolicies, opts ...grpc.CallOption) (*MsgUpdatePoliciesResponse, error)
+	UpdateChainInfo(ctx context.Context, in *MsgUpdateChainInfo, opts ...grpc.CallOption) (*MsgUpdateChainInfoResponse, error)
 }
 
 type msgClient struct {
@@ -180,9 +277,19 @@ func (c *msgClient) UpdatePolicies(ctx context.Context, in *MsgUpdatePolicies, o
 	return out, nil
 }
 
+func (c *msgClient) UpdateChainInfo(ctx context.Context, in *MsgUpdateChainInfo, opts ...grpc.CallOption) (*MsgUpdateChainInfoResponse, error) {
+	out := new(MsgUpdateChainInfoResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.authority.Msg/UpdateChainInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	UpdatePolicies(context.Context, *MsgUpdatePolicies) (*MsgUpdatePoliciesResponse, error)
+	UpdateChainInfo(context.Context, *MsgUpdateChainInfo) (*MsgUpdateChainInfoResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -191,6 +298,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdatePolicies(ctx context.Context, req *MsgUpdatePolicies) (*MsgUpdatePoliciesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePolicies not implemented")
+}
+func (*UnimplementedMsgServer) UpdateChainInfo(ctx context.Context, req *MsgUpdateChainInfo) (*MsgUpdateChainInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateChainInfo not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -215,6 +325,24 @@ func _Msg_UpdatePolicies_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateChainInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateChainInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateChainInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.authority.Msg/UpdateChainInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateChainInfo(ctx, req.(*MsgUpdateChainInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.authority.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -222,6 +350,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdatePolicies",
 			Handler:    _Msg_UpdatePolicies_Handler,
+		},
+		{
+			MethodName: "UpdateChainInfo",
+			Handler:    _Msg_UpdateChainInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -258,10 +390,10 @@ func (m *MsgUpdatePolicies) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x12
-	if len(m.Signer) > 0 {
-		i -= len(m.Signer)
-		copy(dAtA[i:], m.Signer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -291,6 +423,69 @@ func (m *MsgUpdatePoliciesResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpdateChainInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateChainInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateChainInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ChainInfo.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateChainInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateChainInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateChainInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -308,7 +503,7 @@ func (m *MsgUpdatePolicies) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Signer)
+	l = len(m.Creator)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -318,6 +513,30 @@ func (m *MsgUpdatePolicies) Size() (n int) {
 }
 
 func (m *MsgUpdatePoliciesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateChainInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.ChainInfo.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateChainInfoResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -363,7 +582,7 @@ func (m *MsgUpdatePolicies) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -391,7 +610,7 @@ func (m *MsgUpdatePolicies) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = string(dAtA[iNdEx:postIndex])
+			m.Creator = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -474,6 +693,171 @@ func (m *MsgUpdatePoliciesResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdatePoliciesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateChainInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateChainInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateChainInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ChainInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateChainInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateChainInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateChainInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

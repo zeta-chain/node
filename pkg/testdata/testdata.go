@@ -17,6 +17,11 @@ const (
 	TxsCount          = 81
 )
 
+// TypesFiles contains the embedded files of different types in ZetaChain
+//
+//go:embed types/*
+var TypesFiles embed.FS
+
 //go:embed ethereum/*
 var ethFiles embed.FS
 

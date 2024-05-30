@@ -16,6 +16,7 @@
 * [2113](https://github.com/zeta-chain/node/pull/2113) - add zetaclientd-supervisor process
 * [2154](https://github.com/zeta-chain/node/pull/2154) - add `ibccrosschain` module
 * [2258](https://github.com/zeta-chain/node/pull/2258) - add Optimism and Base in static chain information
+* [2287](https://github.com/zeta-chain/node/pull/2287) - implement `MsgUpdateChainInfo` message
 * [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
 * [2291](https://github.com/zeta-chain/node/pull/2291) - cctx gateway interface
@@ -34,8 +35,8 @@
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 * [2226](https://github.com/zeta-chain/node/pull/2226) - improve Go formatting with imports standardization and max line length to 120
 * [2262](https://github.com/zeta-chain/node/pull/2262) - refactor MsgUpdateZRC20 into MsgPauseZrc20 and MsgUnPauseZRC20
+* [2290](https://github.com/zeta-chain/node/pull/2290) - rename `MsgAddBlameVote` message to `MsgVoteBlame`
 * [2269](https://github.com/zeta-chain/node/pull/2269) - refactor MsgUpdateCrosschainFlags into MsgEnableCCTX, MsgDisableCCTX and MsgUpdateGasPriceIncreaseFlags
-
 
 ### Tests
 
