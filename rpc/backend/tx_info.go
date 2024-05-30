@@ -55,6 +55,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 
 	var ethMsg *evmtypes.MsgEthereumTx
 	if additional == nil {
+		// #nosec G701 always in range
 		if int(res.TxIndex) >= len(resBlock.Block.Txs) {
 			b.logger.Error("tx out of bounds")
 			return nil, fmt.Errorf("tx out of bounds")
@@ -180,6 +181,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txData evmtypes.TxData
 	var ethMsg *evmtypes.MsgEthereumTx
 	if additional == nil {
+		// #nosec G701 always in range
 		if int(res.TxIndex) >= len(resBlock.Block.Txs) {
 			b.logger.Error("tx out of bounds")
 			return nil, fmt.Errorf("tx out of bounds")
