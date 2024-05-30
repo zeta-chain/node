@@ -40,12 +40,12 @@ func (msg *MsgUpdateChainInfo) GetSignBytes() []byte {
 
 func (msg *MsgUpdateChainInfo) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid crator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	// the chain information must be valid
 	if err := msg.ChainInfo.Validate(); err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain info: %s", err.Error())
 	}
 
 	return nil

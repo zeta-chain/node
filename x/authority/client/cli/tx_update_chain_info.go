@@ -43,3 +43,5 @@ func CmdUpdateChainInfo() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
+
+func 
