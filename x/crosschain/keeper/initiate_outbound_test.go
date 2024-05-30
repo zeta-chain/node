@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -42,7 +43,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		cctx.GetInboundParams().Amount = sdkmath.NewUintFromBigInt(amount)
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundParams().SenderChainId = 0
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	})
 
@@ -69,7 +71,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		cctx.GetInboundParams().Amount = sdkmath.NewUintFromBigInt(amount)
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundParams().SenderChainId = 0
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, "deposit error", cctx.CctxStatus.StatusMessage)
 	})
@@ -101,7 +104,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
-			k.InitiateOutbound(ctx, cctx)
+			err := k.InitiateOutbound(ctx, cctx)
+			require.Nil(t, err)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(
 				t,
@@ -139,7 +143,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(
 			t,
@@ -182,7 +187,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
-			k.InitiateOutbound(ctx, cctx)
+			err := k.InitiateOutbound(ctx, cctx)
+			require.Nil(t, err)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(
 				t,
@@ -226,7 +232,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
-			k.InitiateOutbound(ctx, cctx)
+			err := k.InitiateOutbound(ctx, cctx)
+			require.Nil(t, err)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(
 				t,
@@ -271,7 +278,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
 	})
@@ -309,7 +317,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.StatusMessage)
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
@@ -346,7 +355,8 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			cctx.OutboundParams = append(cctx.OutboundParams, cctx.GetCurrentOutboundParam())
-			k.InitiateOutbound(ctx, cctx)
+			err := k.InitiateOutbound(ctx, cctx)
+			require.Nil(t, err)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Contains(
 				t,
@@ -379,7 +389,8 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
@@ -402,7 +413,8 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, observertypes.ErrSupportedChains.Error(), cctx.CctxStatus.StatusMessage)
 	})
@@ -429,8 +441,50 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
-		k.InitiateOutbound(ctx, cctx)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.Nil(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
 	})
+}
+
+func TestKeeper_InitiateOutboundFailures(t *testing.T) {
+	t.Run("should fail if chain info can not be found for receiver chain id", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		receiverChain := getValidEthChain()
+		receiverChain.ChainId = 123
+		// call InitiateOutbound
+		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.NotNil(t, err)
+		require.Contains(t, err.Error(), "chain info not found")
+	})
+
+	t.Run("should fail if cctx gateway not found for receiver chain id", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		// reset cctx gateways
+		k.SetCCTXGateways(map[chains.CCTXGateway]keeper.CCTXGateway{})
+
+		// Setup mock data
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		receiverChain := getValidEthChain()
+		// call InitiateOutbound
+		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		err := k.InitiateOutbound(ctx, cctx)
+		require.NotNil(t, err)
+		require.Contains(t, err.Error(), "CCTXGateway not defined for receiver chain")
+	})
+
 }

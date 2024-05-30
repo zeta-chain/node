@@ -43,7 +43,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChai
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
 		cctx.SetAbort(err.Error())
-		return err
+		return nil
 	} else if err != nil && isContractReverted {
 		// contract call reverted; should refund via a revert tx
 		revertMessage := err.Error()
