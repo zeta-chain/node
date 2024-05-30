@@ -28254,6 +28254,21 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/authority/chainInfo:
+    get:
+      summary: Queries ChainInfo
+      operationId: Query_ChainInfo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/authorityQueryGetChainInfoResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/authority/policies:
     get:
       summary: Queries Policies
@@ -56703,6 +56718,21 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityChainInfo:
+    type: object
+    properties:
+      chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chainsChain'
+    title: |-
+      ChainInfo contains static information about the chains
+      This structure is used to dynamically update these info on a live network
+      before hardcoding the values in a upgrade
+  authorityMsgUpdateChainInfoResponse:
+    type: object
+    description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
   authorityMsgUpdatePoliciesResponse:
     type: object
     description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
@@ -56736,6 +56766,14 @@ definitions:
 
       Used for administrative tasks like changing sensitive
     title: PolicyType defines the type of policy
+  authorityQueryGetChainInfoResponse:
+    type: object
+    properties:
+      chain_info:
+        $ref: '#/definitions/authorityChainInfo'
+    description: |-
+      QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
+      method.
   authorityQueryGetPoliciesResponse:
     type: object
     properties:
@@ -57746,8 +57784,6 @@ definitions:
       last_change_height:
         type: string
         format: int64
-  observerMsgAddBlameVoteResponse:
-    type: object
   observerMsgAddObserverResponse:
     type: object
   observerMsgDisableCCTXResponse:
@@ -57765,6 +57801,8 @@ definitions:
   observerMsgUpdateKeygenResponse:
     type: object
   observerMsgUpdateObserverResponse:
+    type: object
+  observerMsgVoteBlameResponse:
     type: object
   observerMsgVoteBlockHeaderResponse:
     type: object

@@ -21,7 +21,7 @@ service Msg {
       returns (MsgUpdateChainParamsResponse);
   rpc RemoveChainParams(MsgRemoveChainParams)
       returns (MsgRemoveChainParamsResponse);
-  rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
+  rpc VoteBlame(MsgVoteBlame) returns (MsgVoteBlameResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
   rpc VoteBlockHeader(MsgVoteBlockHeader) returns (MsgVoteBlockHeaderResponse);
   rpc ResetChainNonces(MsgResetChainNonces)
@@ -77,13 +77,13 @@ message MsgAddObserver {
 
 message MsgAddObserverResponse {}
 
-message MsgAddBlameVote {
+message MsgVoteBlame {
   string creator = 1;
   int64 chain_id = 2;
   Blame blame_info = 3 [ (gogoproto.nullable) = false ];
 }
 
-message MsgAddBlameVoteResponse {}
+message MsgVoteBlameResponse {}
 
 message MsgUpdateKeygen {
   string creator = 1;

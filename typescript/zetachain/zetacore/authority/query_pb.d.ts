@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies } from "./policies_pb.js";
+import type { ChainInfo } from "./chain_info_pb.js";
 
 /**
  * QueryGetPoliciesRequest is the request type for the Query/Policies RPC
@@ -54,5 +55,54 @@ export declare class QueryGetPoliciesResponse extends Message<QueryGetPoliciesRe
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetPoliciesResponse;
 
   static equals(a: QueryGetPoliciesResponse | PlainMessage<QueryGetPoliciesResponse> | undefined, b: QueryGetPoliciesResponse | PlainMessage<QueryGetPoliciesResponse> | undefined): boolean;
+}
+
+/**
+ * QueryGetChainInfoRequest is the request type for the Query/ChainInfo RPC
+ * method.
+ *
+ * @generated from message zetachain.zetacore.authority.QueryGetChainInfoRequest
+ */
+export declare class QueryGetChainInfoRequest extends Message<QueryGetChainInfoRequest> {
+  constructor(data?: PartialMessage<QueryGetChainInfoRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.authority.QueryGetChainInfoRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetChainInfoRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetChainInfoRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetChainInfoRequest;
+
+  static equals(a: QueryGetChainInfoRequest | PlainMessage<QueryGetChainInfoRequest> | undefined, b: QueryGetChainInfoRequest | PlainMessage<QueryGetChainInfoRequest> | undefined): boolean;
+}
+
+/**
+ * QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
+ * method.
+ *
+ * @generated from message zetachain.zetacore.authority.QueryGetChainInfoResponse
+ */
+export declare class QueryGetChainInfoResponse extends Message<QueryGetChainInfoResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 1;
+   */
+  chainInfo?: ChainInfo;
+
+  constructor(data?: PartialMessage<QueryGetChainInfoResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.authority.QueryGetChainInfoResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetChainInfoResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetChainInfoResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetChainInfoResponse;
+
+  static equals(a: QueryGetChainInfoResponse | PlainMessage<QueryGetChainInfoResponse> | undefined, b: QueryGetChainInfoResponse | PlainMessage<QueryGetChainInfoResponse> | undefined): boolean;
 }
 

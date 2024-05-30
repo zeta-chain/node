@@ -176,7 +176,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		*crosschaintypes.MsgAddInboundTracker,
 		*observertypes.MsgVoteBlockHeader,
 		*observertypes.MsgVoteTSS,
-		*observertypes.MsgAddBlameVote:
+		*observertypes.MsgVoteBlame:
 		signers := innerMsg.GetSigners()
 		if len(signers) == 1 {
 			return isAuthorizedSigner(signers[0].String())
