@@ -598,6 +598,8 @@ func New(
 		app.LightclientKeeper,
 	)
 
+	// initializing map of cctx gateways so crosschain module can decide which one to use
+	// based on chain info of destination chain
 	cctxGateways := map[chains.CCTXGateway]crosschainkeeper.CCTXGateway{
 		chains.CCTXGateway_observers: crosschainkeeper.NewCCTXGatewayObservers(app.CrosschainKeeper),
 		chains.CCTXGateway_zevm:      crosschainkeeper.NewCCTXGatewayZEVM(app.CrosschainKeeper),

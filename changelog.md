@@ -19,7 +19,7 @@
 * [2287](https://github.com/zeta-chain/node/pull/2287) - implement `MsgUpdateChainInfo` message
 * [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
-* [2291](https://github.com/zeta-chain/node/pull/2291) - cctx gateway interface
+* [2291](https://github.com/zeta-chain/node/pull/2291) - initialize cctx gateway interface
 
 ### Refactor
 

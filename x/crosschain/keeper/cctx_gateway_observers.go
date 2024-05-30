@@ -10,6 +10,7 @@ type CCTXGatewayObservers struct {
 	crosschainKeeper Keeper
 }
 
+// NewCCTXGatewayObservers is implementation of CCTXGateway interface for observers
 func NewCCTXGatewayObservers(crosschainKeeper Keeper) CCTXGatewayObservers {
 	return CCTXGatewayObservers{
 		crosschainKeeper: crosschainKeeper,

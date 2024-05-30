@@ -12,6 +12,7 @@ type CCTXGatewayZEVM struct {
 	crosschainKeeper Keeper
 }
 
+// NewCCTXGatewayZEVM is implementation of CCTXGateway interface for observers
 func NewCCTXGatewayZEVM(crosschainKeeper Keeper) CCTXGatewayZEVM {
 	return CCTXGatewayZEVM{
 		crosschainKeeper: crosschainKeeper,
@@ -38,11 +39,13 @@ func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChai
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, cctx)
 
-	// further processing will be in validateOutbound(...), for now keeping it here
-	if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
+	// TODO: further processing will be in validateOutbound(...), for now keeping it here
+	if err != nil && !isContractReverted {
+		// exceptional case; internal error; should abort CCTX
 		cctx.SetAbort(err.Error())
 		return err
-	} else if err != nil && isContractReverted { // contract call reverted; should refund via a revert tx
+	} else if err != nil && isContractReverted {
+		// contract call reverted; should refund via a revert tx
 		revertMessage := err.Error()
 		senderChain := c.crosschainKeeper.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId)
 		if senderChain == nil {
