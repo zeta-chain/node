@@ -56759,6 +56759,18 @@ definitions:
     description: |-
       QueryGetPoliciesResponse is the response type for the Query/Policies RPC
       method.
+  chainsCCTXGateway:
+    type: string
+    enum:
+      - zevm
+      - observers
+    default: zevm
+    description: |-
+      - zevm: zevm is the internal CCTX gateway to process outbound on the ZEVM and read
+      inbound events from the ZEVM only used for ZetaChain chains
+       - observers: observers is the CCTX gateway for chains relying on the observer set to
+      observe inbounds and TSS for outbounds
+    title: CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
   chainsChain:
     type: object
     properties:
@@ -56784,6 +56796,9 @@ definitions:
       is_external:
         type: boolean
         title: IsExternal describe if the chain is ZetaChain or external
+      cctx_gateway:
+        $ref: '#/definitions/chainsCCTXGateway'
+        title: CCTXGateway is the gateway used to handle CCTX outbounds
     title: |-
       Chain represents static data about a blockchain network
       it is identified by a unique chain ID
@@ -57750,13 +57765,17 @@ definitions:
     type: object
   observerMsgAddObserverResponse:
     type: object
+  observerMsgDisableCCTXResponse:
+    type: object
+  observerMsgEnableCCTXResponse:
+    type: object
   observerMsgRemoveChainParamsResponse:
     type: object
   observerMsgResetChainNoncesResponse:
     type: object
   observerMsgUpdateChainParamsResponse:
     type: object
-  observerMsgUpdateCrosschainFlagsResponse:
+  observerMsgUpdateGasPriceIncreaseFlagsResponse:
     type: object
   observerMsgUpdateKeygenResponse:
     type: object

@@ -255,3 +255,12 @@ func NonceToCCTX(t *testing.T, seed string) types.NonceToCctx {
 		Tss:       Tss().TssPubkey,
 	}
 }
+
+func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
+	return types.GasPriceIncreaseFlags{
+		EpochLength:             1,
+		RetryInterval:           1,
+		GasPriceIncreasePercent: 1,
+		MaxPendingCctxs:         100,
+	}
+}
