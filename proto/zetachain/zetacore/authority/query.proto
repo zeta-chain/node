@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
+import "zetachain/zetacore/authority/chain_info.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -14,6 +15,11 @@ service Query {
   rpc Policies(QueryGetPoliciesRequest) returns (QueryGetPoliciesResponse) {
     option (google.api.http).get = "/zeta-chain/authority/policies";
   }
+
+  // Queries ChainInfo
+  rpc ChainInfo(QueryGetChainInfoRequest) returns (QueryGetChainInfoResponse) {
+    option (google.api.http).get = "/zeta-chain/authority/chainInfo";
+  }
 }
 
 // QueryGetPoliciesRequest is the request type for the Query/Policies RPC
@@ -24,4 +30,14 @@ message QueryGetPoliciesRequest {}
 // method.
 message QueryGetPoliciesResponse {
   Policies policies = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryGetChainInfoRequest is the request type for the Query/ChainInfo RPC
+// method.
+message QueryGetChainInfoRequest {}
+
+// QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
+// method.
+message QueryGetChainInfoResponse {
+  ChainInfo chain_info = 1 [ (gogoproto.nullable) = false ];
 }
