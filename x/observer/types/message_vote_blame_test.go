@@ -12,16 +12,16 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
+func TestNewMsgVoteBlameMsg_ValidateBasic(t *testing.T) {
 	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
-		msg   *types.MsgAddBlameVote
+		msg   *types.MsgVoteBlame
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.NewMsgAddBlameVoteMsg(
+			msg: types.NewMsgVoteBlameMsg(
 				"invalid_address",
 				1,
 				sample.BlameRecordsList(t, 1)[0],
@@ -30,7 +30,7 @@ func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain id",
-			msg: types.NewMsgAddBlameVoteMsg(
+			msg: types.NewMsgVoteBlameMsg(
 				sample.AccAddress(),
 				-1,
 				sample.BlameRecordsList(t, 1)[0],
@@ -39,7 +39,7 @@ func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid",
-			msg: types.NewMsgAddBlameVoteMsg(
+			msg: types.NewMsgVoteBlameMsg(
 				sample.AccAddress(),
 				5,
 				sample.BlameRecordsList(t, 1)[0],
@@ -61,23 +61,23 @@ func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestNewMsgAddBlameVoteMsg_GetSigners(t *testing.T) {
+func TestNewMsgVoteBlameMsg_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgAddBlameVote
+		msg    types.MsgVoteBlame
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgAddBlameVote{
+			msg: types.MsgVoteBlame{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgAddBlameVote{
+			msg: types.MsgVoteBlame{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -98,22 +98,22 @@ func TestNewMsgAddBlameVoteMsg_GetSigners(t *testing.T) {
 	}
 }
 
-func TestNewMsgAddBlameVoteMsg_Type(t *testing.T) {
-	msg := types.MsgAddBlameVote{
+func TestNewMsgVoteBlameMsg_Type(t *testing.T) {
+	msg := types.MsgVoteBlame{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgAddBlameVote, msg.Type())
+	require.Equal(t, types.TypeMsgVoteBlame, msg.Type())
 }
 
-func TestNewMsgAddBlameVoteMsg_Route(t *testing.T) {
-	msg := types.MsgAddBlameVote{
+func TestNewMsgVoteBlameMsg_Route(t *testing.T) {
+	msg := types.MsgVoteBlame{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestNewMsgAddBlameVoteMsg_GetSignBytes(t *testing.T) {
-	msg := types.MsgAddBlameVote{
+func TestNewMsgVoteBlameMsg_GetSignBytes(t *testing.T) {
+	msg := types.MsgVoteBlame{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {
@@ -121,8 +121,8 @@ func TestNewMsgAddBlameVoteMsg_GetSignBytes(t *testing.T) {
 	})
 }
 
-func TestNewMsgAddBlameVoteMsg_Digest(t *testing.T) {
-	msg := types.MsgAddBlameVote{
+func TestNewMsgVoteBlameMsg_Digest(t *testing.T) {
+	msg := types.MsgVoteBlame{
 		Creator: sample.AccAddress(),
 	}
 

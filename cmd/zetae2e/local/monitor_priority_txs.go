@@ -97,7 +97,7 @@ func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 		"\"/zetachain.zetacore.crosschain.MsgAddInboundTracker\"",
 		"\"/zetachain.zetacore.observer.MsgVoteBlockHeader\"",
 		"\"/zetachain.zetacore.observer.MsgVoteTSS\"",
-		"\"/zetachain.zetacore.observer.MsgAddBlameVote\"",
+		"\"/zetachain.zetacore.observer.MsgVoteBlame\"",
 	}
 
 	for _, url := range systemTxsMsgTypeUrls {

@@ -9,27 +9,27 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-const TypeMsgAddBlameVote = "add_blame_vote"
+const TypeMsgVoteBlame = "vote_blame"
 
-var _ sdk.Msg = &MsgAddBlameVote{}
+var _ sdk.Msg = &MsgVoteBlame{}
 
-func NewMsgAddBlameVoteMsg(creator string, chainID int64, blameInfo Blame) *MsgAddBlameVote {
-	return &MsgAddBlameVote{
+func NewMsgVoteBlameMsg(creator string, chainID int64, blameInfo Blame) *MsgVoteBlame {
+	return &MsgVoteBlame{
 		Creator:   creator,
 		ChainId:   chainID,
 		BlameInfo: blameInfo,
 	}
 }
 
-func (m *MsgAddBlameVote) Route() string {
+func (m *MsgVoteBlame) Route() string {
 	return RouterKey
 }
 
-func (m *MsgAddBlameVote) Type() string {
-	return TypeMsgAddBlameVote
+func (m *MsgVoteBlame) Type() string {
+	return TypeMsgVoteBlame
 }
 
-func (m *MsgAddBlameVote) ValidateBasic() error {
+func (m *MsgVoteBlame) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
@@ -40,7 +40,7 @@ func (m *MsgAddBlameVote) ValidateBasic() error {
 	return nil
 }
 
-func (m *MsgAddBlameVote) GetSigners() []sdk.AccAddress {
+func (m *MsgVoteBlame) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(m.Creator)
 	if err != nil {
 		panic(err)
@@ -48,12 +48,12 @@ func (m *MsgAddBlameVote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (m *MsgAddBlameVote) GetSignBytes() []byte {
+func (m *MsgVoteBlame) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(m)
 	return sdk.MustSortJSON(bz)
 }
 
-func (m *MsgAddBlameVote) Digest() string {
+func (m *MsgVoteBlame) Digest() string {
 	msg := *m
 	msg.Creator = ""
 	// Generate an Identifier for the ballot corresponding to specific blame data
