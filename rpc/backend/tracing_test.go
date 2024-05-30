@@ -24,7 +24,8 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 	txHash := msgEthereumTx.AsTransaction().Hash()
 	txHash2 := msgEthereumTx2.AsTransaction().Hash()
 
-	priv, _ := ethsecp256k1.GenerateKey()
+	priv, err := ethsecp256k1.GenerateKey()
+	suite.Require().NoError(err)
 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
 
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -38,13 +39,17 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 	msgEthereumTx.From = from.String()
 	msgEthereumTx.Sign(ethSigner, suite.signer)
-	tx, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
-	txBz, _ := txEncoder(tx)
+	tx, err := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+	suite.Require().NoError(err)
+	txBz, err := txEncoder(tx)
+	suite.Require().NoError(err)
 
 	msgEthereumTx2.From = from.String()
 	msgEthereumTx2.Sign(ethSigner, suite.signer)
-	tx2, _ := msgEthereumTx2.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
-	txBz2, _ := txEncoder(tx2)
+	tx2, err := msgEthereumTx2.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+	suite.Require().NoError(err)
+	txBz2, err := txEncoder(tx2)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name          string

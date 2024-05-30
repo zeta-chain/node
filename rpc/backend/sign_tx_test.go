@@ -22,7 +22,8 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 	gas := hexutil.Uint64(1)
 	zeroGas := hexutil.Uint64(0)
 	toAddr := tests.GenerateAddress()
-	priv, _ := ethsecp256k1.GenerateKey()
+	priv, err := ethsecp256k1.GenerateKey()
+	suite.Require().NoError(err)
 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
 	nonce := hexutil.Uint64(1)
 	baseFee := sdk.NewInt(1)
@@ -104,9 +105,11 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
 				msg := callArgsDefault.ToTransaction()
 				msg.Sign(ethSigner, suite.backend.clientCtx.Keyring)
-				tx, _ := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+				tx, err := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+				suite.Require().NoError(err)
 				txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
-				txBytes, _ := txEncoder(tx)
+				txBytes, err := txEncoder(tx)
+				suite.Require().NoError(err)
 				RegisterBroadcastTxError(client, txBytes)
 			},
 			callArgsDefault,
@@ -129,9 +132,11 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
 				msg := callArgsDefault.ToTransaction()
 				msg.Sign(ethSigner, suite.backend.clientCtx.Keyring)
-				tx, _ := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+				tx, err := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+				suite.Require().NoError(err)
 				txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
-				txBytes, _ := txEncoder(tx)
+				txBytes, err := txEncoder(tx)
+				suite.Require().NoError(err)
 				RegisterBroadcastTx(client, txBytes)
 			},
 			callArgsDefault,
@@ -249,6 +254,7 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 
 			if tc.expPass {
 				sigHash, _, err := apitypes.TypedDataAndHash(tc.inputTypedData)
+				suite.Require().NoError(err)
 				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), sigHash)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)

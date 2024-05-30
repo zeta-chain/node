@@ -42,7 +42,8 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 		},
 	}
 
-	rpcTransaction, _ := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	rpcTransaction, err := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name         string
@@ -124,7 +125,8 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 
 func (suite *BackendTestSuite) TestGetTransactionsByHashPending() {
 	msgEthereumTx, bz := suite.buildEthereumTx()
-	rpcTransaction, _ := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	rpcTransaction, err := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name         string
@@ -184,7 +186,8 @@ func (suite *BackendTestSuite) TestGetTransactionsByHashPending() {
 
 func (suite *BackendTestSuite) TestGetTxByEthHash() {
 	msgEthereumTx, bz := suite.buildEthereumTx()
-	rpcTransaction, _ := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	rpcTransaction, err := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name         string
@@ -294,7 +297,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 		},
 	}
 
-	txFromMsg, _ := rpctypes.NewTransactionFromMsg(
+	txFromMsg, err := rpctypes.NewTransactionFromMsg(
 		msgEthTx,
 		common.BytesToHash(defaultBlock.Hash().Bytes()),
 		1,
@@ -303,6 +306,8 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 		suite.backend.chainID,
 		nil,
 	)
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		name         string
 		registerMock func()
@@ -389,7 +394,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 func (suite *BackendTestSuite) TestGetTransactionByBlockNumberAndIndex() {
 	msgEthTx, bz := suite.buildEthereumTx()
 	defaultBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
-	txFromMsg, _ := rpctypes.NewTransactionFromMsg(
+	txFromMsg, err := rpctypes.NewTransactionFromMsg(
 		msgEthTx,
 		common.BytesToHash(defaultBlock.Hash().Bytes()),
 		1,
@@ -398,6 +403,8 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockNumberAndIndex() {
 		suite.backend.chainID,
 		nil,
 	)
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		name         string
 		registerMock func()
