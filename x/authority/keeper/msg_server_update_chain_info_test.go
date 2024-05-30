@@ -18,7 +18,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Signer: sample.AccAddress(),
+			Creator: sample.AccAddress(),
 		})
 		require.ErrorIs(t, err, types.ErrUnauthorized)
 	})
@@ -43,7 +43,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 		chainInfo := sample.ChainInfo(42)
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Signer:    admin,
+			Creator:   admin,
 			ChainInfo: chainInfo,
 		})
 		require.NoError(t, err)
@@ -73,7 +73,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 		chainInfo := sample.ChainInfo(84)
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Signer:    admin,
+			Creator:   admin,
 			ChainInfo: chainInfo,
 		})
 		require.NoError(t, err)
@@ -103,7 +103,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 		chainInfo := types.ChainInfo{}
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Signer:    admin,
+			Creator:   admin,
 			ChainInfo: chainInfo,
 		})
 		require.NoError(t, err)
