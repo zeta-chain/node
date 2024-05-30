@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/x/authority/types"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 func TestKeeper_GetAuthorizationList(t *testing.T) {
