@@ -188,7 +188,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	// fix msg indexes, because some eth txs indexed here don't have corresponding sdk.Msg
 	currMsgIndex := 0
 	for _, tx := range p.Txs {
-		if tx.Type == 88 {
+		if tx.Type == CosmosEVMTxType {
 			tx.MsgIndex = math.MaxUint32
 			// todo: fix mapping as well
 		} else {
@@ -223,7 +223,7 @@ func ParseTxIndexerResult(
 			txResult.Index,
 		)
 	}
-	if parsedTx.Type == 88 {
+	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height:  txResult.Height,
 				TxIndex: txResult.Index,
@@ -270,7 +270,7 @@ func ParseTxBlockResult(
 		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", height, txIndex)
 	}
 	parsedTx := txs.Txs[0]
-	if parsedTx.Type == 88 {
+	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height: height,
 				// #nosec G701 always in range

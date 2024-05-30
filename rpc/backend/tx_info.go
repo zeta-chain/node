@@ -54,6 +54,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	}
 
 	var ethMsg *evmtypes.MsgEthereumTx
+	// if additional fields are empty we can try to get MsgEthereumTx from sdk.Msg array
 	if additional == nil {
 		// #nosec G701 always in range
 		if int(res.TxIndex) >= len(resBlock.Block.Txs) {
@@ -71,6 +72,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 			return nil, fmt.Errorf("failed to get eth msg")
 		}
 	} else {
+		// if additional fields are not empty try to parse synthetic tx from them
 		ethMsg = b.parseSyntethicTxFromAdditionalFields(additional)
 		if ethMsg == nil {
 			b.logger.Error("failed to parse tx")
@@ -180,6 +182,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 
 	var txData evmtypes.TxData
 	var ethMsg *evmtypes.MsgEthereumTx
+	// if additional fields are empty we can try to get MsgEthereumTx from sdk.Msg array
 	if additional == nil {
 		// #nosec G701 always in range
 		if int(res.TxIndex) >= len(resBlock.Block.Txs) {
@@ -203,6 +206,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 			return nil, err
 		}
 	} else {
+		// if additional fields are not empty try to parse synthetic tx from them
 		ethMsg = b.parseSyntethicTxFromAdditionalFields(additional)
 		if ethMsg == nil {
 			b.logger.Error("failed to parse tx")
