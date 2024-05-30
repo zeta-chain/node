@@ -45,6 +45,7 @@
 * [2184](https://github.com/zeta-chain/node/pull/2184) - add tx priority checks to e2e tests
 * [2199](https://github.com/zeta-chain/node/pull/2199) - custom priority mempool unit tests
 * [2240](https://github.com/zeta-chain/node/pull/2240) - removed hard-coded Bitcoin regnet chainID in E2E withdraw tests
+* [2266](https://github.com/zeta-chain/node/pull/2266) - try fixing E2E test `crosschain_swap` failure `btc transaction not signed`
 
 ### Fixes
 
@@ -56,7 +57,9 @@
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
 
 ### CI
-* [2268](https://github.com/zeta-chain/node/pull/2268) - CI: updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners.
+
+* [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilitze debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline.
+* [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners.
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes.
 * [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments.
 * [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.

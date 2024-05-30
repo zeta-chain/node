@@ -25,7 +25,7 @@ concurrency:
 jobs:
   check_branch:
     if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Branch
         run: |
@@ -34,7 +34,7 @@ jobs:
   gosec:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
@@ -65,7 +65,7 @@ jobs:
   gosec-cosmos:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
@@ -94,7 +94,7 @@ jobs:
   lint:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
       GO111MODULE: on
@@ -128,7 +128,7 @@ jobs:
   check-changelog:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
 
       - name: Checkout code
@@ -170,7 +170,7 @@ jobs:
   check-upgrade-handler-updated:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
 
@@ -202,7 +202,7 @@ jobs:
   build-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     concurrency:
       group: "build-test"
@@ -279,7 +279,7 @@ jobs:
   smoke-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
       - name: "Checkout Code"
@@ -357,7 +357,7 @@ jobs:
   e2e-admin-tests:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
@@ -411,7 +411,7 @@ jobs:
       - e2e-admin-tests
       - e2e-upgrade-test
       - check_branch
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     environment: release
     steps:
