@@ -26,7 +26,6 @@ zetacored tx observer [flags]
 ### SEE ALSO
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
-* [zetacored tx observer add-blame-vote](zetacored_tx_observer_add-blame-vote.md)	 - Broadcast message add-blame-vote
 * [zetacored tx observer add-observer](zetacored_tx_observer_add-observer.md)	 - Broadcast message add-observer
 * [zetacored tx observer disable-cctx](zetacored_tx_observer_disable-cctx.md)	 - Disable inbound and outbound for CCTX
 * [zetacored tx observer enable-cctx](zetacored_tx_observer_enable-cctx.md)	 - Enable inbound and outbound for CCTX
@@ -37,5 +36,6 @@ zetacored tx observer [flags]
 * [zetacored tx observer update-gas-price-increase-flags](zetacored_tx_observer_update-gas-price-increase-flags.md)	 - Update the gas price increase flags
 * [zetacored tx observer update-keygen](zetacored_tx_observer_update-keygen.md)	 - command to update the keygen block via a group proposal
 * [zetacored tx observer update-observer](zetacored_tx_observer_update-observer.md)	 - Broadcast message add-observer
+* [zetacored tx observer vote-blame](zetacored_tx_observer_vote-blame.md)	 - Broadcast message vote-blame
 * [zetacored tx observer vote-tss](zetacored_tx_observer_vote-tss.md)	 - Vote for a new TSS creation
 

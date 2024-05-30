@@ -14,13 +14,13 @@ import (
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
-func CmdUpdatePolices() *cobra.Command {
+func CmdUpdateChainInfo() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-policies [policies-json-file]",
-		Short: "Update the policies",
+		Use:   "update-chain-info [chain-info-json-file]",
+		Short: "Update the chain info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			policies, err := ReadPoliciesFromFile(os.DirFS("."), args[0])
+			chainInfo, err := ReadChainInfoFromFile(os.DirFS("."), args[0])
 			if err != nil {
 				return err
 			}
@@ -30,9 +30,9 @@ func CmdUpdatePolices() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgUpdatePolicies(
+			msg := types.NewMsgUpdateChainInfo(
 				clientCtx.GetFromAddress().String(),
-				policies,
+				chainInfo,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -42,14 +42,14 @@ func CmdUpdatePolices() *cobra.Command {
 	return cmd
 }
 
-// ReadPoliciesFromFile read the policies from the file using os package and unmarshal it into the policies variable
-func ReadPoliciesFromFile(fsys fs.FS, filePath string) (types.Policies, error) {
-	var policies types.Policies
-	policiesBytes, err := fs.ReadFile(fsys, filePath)
+// ReadChainInfoFromFile read the chain info from the file using os package and unmarshal it into the chain info variable
+func ReadChainInfoFromFile(fsys fs.FS, filePath string) (types.ChainInfo, error) {
+	var chainInfo types.ChainInfo
+	chainInfoBytes, err := fs.ReadFile(fsys, filePath)
 	if err != nil {
-		return policies, fmt.Errorf("failed to read file: %w", err)
+		return chainInfo, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	err = json.Unmarshal(policiesBytes, &policies)
-	return policies, err
+	err = json.Unmarshal(chainInfoBytes, &chainInfo)
+	return chainInfo, err
 }

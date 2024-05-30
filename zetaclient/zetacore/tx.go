@@ -192,7 +192,7 @@ func (c *Client) PostBlameData(blame *blame.Blame, chainID int64, index string) 
 		FailureReason: blame.FailReason,
 		Nodes:         observertypes.ConvertNodes(blame.BlameNodes),
 	}
-	msg := observertypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
+	msg := observertypes.NewMsgVoteBlameMsg(signerAddress, chainID, zetaBlame)
 
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {
