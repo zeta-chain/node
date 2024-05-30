@@ -44,7 +44,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	resBlock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(res.Height))
 	if err != nil {
 		b.logger.Debug("block not found", "height", res.Height, "error", err.Error())
-		return nil, nil
+		return nil, err
 	}
 
 	blockRes, err := b.TendermintBlockResultByNumber(&res.Height)
