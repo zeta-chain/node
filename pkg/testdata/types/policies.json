@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "address": "zeta1nl7550unvzyswx5ts9m338ufmfydjsz2g0xt74",
+      "policy_type": 0
+    },
+    {
+      "address": "zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh",
+      "policy_type": 1
+    },
+    {
+      "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk",
+      "policy_type": 2
+    }
+  ]
+}

@@ -21,7 +21,7 @@ func TestMsgServer_UpdatePolicies(t *testing.T) {
 		policies := sample.Policies()
 
 		_, err := msgServer.UpdatePolicies(sdk.WrapSDKContext(ctx), &types.MsgUpdatePolicies{
-			Signer:   sample.AccAddress(),
+			Creator:  sample.AccAddress(),
 			Policies: policies,
 		})
 		require.ErrorIs(t, err, govtypes.ErrInvalidSigner)
@@ -34,7 +34,7 @@ func TestMsgServer_UpdatePolicies(t *testing.T) {
 		policies := sample.Policies()
 
 		res, err := msgServer.UpdatePolicies(sdk.WrapSDKContext(ctx), &types.MsgUpdatePolicies{
-			Signer:   keepertest.AuthorityGovAddress.String(),
+			Creator:  keepertest.AuthorityGovAddress.String(),
 			Policies: policies,
 		})
 		require.NotNil(t, res)

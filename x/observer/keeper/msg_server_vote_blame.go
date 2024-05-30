@@ -11,10 +11,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k msgServer) AddBlameVote(
+func (k msgServer) VoteBlame(
 	goCtx context.Context,
-	vote *types.MsgAddBlameVote,
-) (*types.MsgAddBlameVoteResponse, error) {
+	vote *types.MsgVoteBlame,
+) (*types.MsgVoteBlameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := types.ObservationType_TSSKeySign
 
@@ -52,7 +52,7 @@ func (k msgServer) AddBlameVote(
 	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
-		return &types.MsgAddBlameVoteResponse{}, nil
+		return &types.MsgVoteBlameResponse{}, nil
 	}
 
 	// ******************************************************************************
@@ -60,5 +60,5 @@ func (k msgServer) AddBlameVote(
 	// ******************************************************************************
 
 	k.SetBlame(ctx, vote.BlameInfo)
-	return &types.MsgAddBlameVoteResponse{}, nil
+	return &types.MsgVoteBlameResponse{}, nil
 }
