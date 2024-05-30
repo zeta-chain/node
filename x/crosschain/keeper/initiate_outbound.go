@@ -13,15 +13,15 @@ import (
 // It does a conditional dispatch to correct CCTX gateway based on the receiver chain
 // which handle the state changes and error handling.
 func (k Keeper) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) error {
-	receiverChainId := cctx.GetCurrentOutboundParam().ReceiverChainId
-	chainInfo := chains.GetChainFromChainID(receiverChainId)
+	receiverChainID := cctx.GetCurrentOutboundParam().ReceiverChainId
+	chainInfo := chains.GetChainFromChainID(receiverChainID)
 	if chainInfo == nil {
-		return fmt.Errorf("chain info not found for %d", receiverChainId)
+		return fmt.Errorf("chain info not found for %d", receiverChainID)
 	}
 
 	cctxGateway, ok := k.cctxGateways[chainInfo.CctxGateway]
 	if !ok {
-		return fmt.Errorf("CCTXGateway not defined for receiver chain %d", receiverChainId)
+		return fmt.Errorf("CCTXGateway not defined for receiver chain %d", receiverChainID)
 	}
 	return cctxGateway.InitiateOutbound(ctx, cctx)
 }
