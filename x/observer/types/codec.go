@@ -13,11 +13,13 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRemoveChainParams{}, "observer/RemoveChainParams", nil)
 	cdc.RegisterConcrete(&MsgVoteBlockHeader{}, "observer/VoteBlockHeader", nil)
 	cdc.RegisterConcrete(&MsgVoteBlame{}, "observer/VoteBlame", nil)
-	cdc.RegisterConcrete(&MsgUpdateCrosschainFlags{}, "observer/UpdateCrosschainFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateKeygen{}, "observer/UpdateKeygen", nil)
 	cdc.RegisterConcrete(&MsgUpdateObserver{}, "observer/UpdateObserver", nil)
 	cdc.RegisterConcrete(&MsgResetChainNonces{}, "observer/ResetChainNonces", nil)
 	cdc.RegisterConcrete(&MsgVoteTSS{}, "observer/VoteTSS", nil)
+	cdc.RegisterConcrete(&MsgEnableCCTX{}, "observer/EnableCCTX", nil)
+	cdc.RegisterConcrete(&MsgDisableCCTX{}, "observer/DisableCCTX", nil)
+	cdc.RegisterConcrete(&MsgUpdateGasPriceIncreaseFlags{}, "observer/UpdateGasPriceIncreaseFlags", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -26,12 +28,14 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateChainParams{},
 		&MsgRemoveChainParams{},
 		&MsgVoteBlame{},
-		&MsgUpdateCrosschainFlags{},
 		&MsgUpdateKeygen{},
 		&MsgVoteBlockHeader{},
 		&MsgUpdateObserver{},
 		&MsgResetChainNonces{},
 		&MsgVoteTSS{},
+		&MsgEnableCCTX{},
+		&MsgDisableCCTX{},
+		&MsgUpdateGasPriceIncreaseFlags{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
