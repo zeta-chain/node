@@ -28254,6 +28254,21 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/authority/chainInfo:
+    get:
+      summary: Queries ChainInfo
+      operationId: Query_ChainInfo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/authorityQueryGetChainInfoResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/authority/policies:
     get:
       summary: Queries Policies
@@ -56751,6 +56766,14 @@ definitions:
 
       Used for administrative tasks like changing sensitive
     title: PolicyType defines the type of policy
+  authorityQueryGetChainInfoResponse:
+    type: object
+    properties:
+      chain_info:
+        $ref: '#/definitions/authorityChainInfo'
+    description: |-
+      QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
+      method.
   authorityQueryGetPoliciesResponse:
     type: object
     properties:

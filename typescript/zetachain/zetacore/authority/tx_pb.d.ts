@@ -15,9 +15,9 @@ import type { ChainInfo } from "./chain_info_pb.js";
  */
 export declare class MsgUpdatePolicies extends Message<MsgUpdatePolicies> {
   /**
-   * @generated from field: string signer = 1;
+   * @generated from field: string creator = 1;
    */
-  signer: string;
+  creator: string;
 
   /**
    * @generated from field: zetachain.zetacore.authority.Policies policies = 2;
@@ -67,9 +67,9 @@ export declare class MsgUpdatePoliciesResponse extends Message<MsgUpdatePolicies
  */
 export declare class MsgUpdateChainInfo extends Message<MsgUpdateChainInfo> {
   /**
-   * @generated from field: string signer = 1;
+   * @generated from field: string creator = 1;
    */
-  signer: string;
+  creator: string;
 
   /**
    * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 2;

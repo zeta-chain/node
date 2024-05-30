@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,7 +20,7 @@ func CmdUpdatePolices() *cobra.Command {
 		Short: "Update the policies",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			policies, err := readPoliciesFromFile(args[0])
+			policies, err := ReadPoliciesFromFile(os.DirFS("."), args[0])
 			if err != nil {
 				return err
 			}
@@ -39,14 +42,14 @@ func CmdUpdatePolices() *cobra.Command {
 	return cmd
 }
 
-// readPoliciesFromFile read the policies from the file using os package and unmarshal it into the policies variable
-func readPoliciesFromFile(filePath string) (types.Policies, error) {
+// ReadPoliciesFromFile read the policies from the file using os package and unmarshal it into the policies variable
+func ReadPoliciesFromFile(fsys fs.FS, filePath string) (types.Policies, error) {
 	var policies types.Policies
-	policiesBytes, err := os.ReadFile(filePath)
+	policiesBytes, err := fs.ReadFile(fsys, filePath)
 	if err != nil {
-		return policies, err
+		return policies, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	err = policies.Unmarshal(policiesBytes)
+	err = json.Unmarshal(policiesBytes, &policies)
 	return policies, err
 }

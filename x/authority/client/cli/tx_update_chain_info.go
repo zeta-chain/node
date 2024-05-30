@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,7 +20,7 @@ func CmdUpdateChainInfo() *cobra.Command {
 		Short: "Update the chain info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			chainInfo, err := readChainInfoFromFile(args[0])
+			chainInfo, err := ReadChainInfoFromFile(os.DirFS("."), args[0])
 			if err != nil {
 				return err
 			}
@@ -39,13 +42,14 @@ func CmdUpdateChainInfo() *cobra.Command {
 	return cmd
 }
 
-// readChainInfoFromFile read the chain info from the file using os package and unmarshal it into the chain info variable
-func readChainInfoFromFile(filePath string) (types.ChainInfo, error) {
+// ReadChainInfoFromFile read the chain info from the file using os package and unmarshal it into the chain info variable
+func ReadChainInfoFromFile(fsys fs.FS, filePath string) (types.ChainInfo, error) {
 	var chainInfo types.ChainInfo
-	chainInfoBytes, err := os.ReadFile(filePath)
+	chainInfoBytes, err := fs.ReadFile(fsys, filePath)
 	if err != nil {
-		return chainInfo, err
+		return chainInfo, fmt.Errorf("failed to read file: %w", err)
 	}
-	err = chainInfo.Unmarshal(chainInfoBytes)
+
+	err = json.Unmarshal(chainInfoBytes, &chainInfo)
 	return chainInfo, err
 }
