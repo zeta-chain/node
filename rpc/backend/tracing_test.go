@@ -43,11 +43,12 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 	msgEthereumTx2.From = from.String()
 	msgEthereumTx2.Sign(ethSigner, suite.signer)
-	tx2, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+	tx2, _ := msgEthereumTx2.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
 	txBz2, _ := txEncoder(tx2)
 
 	testCases := []struct {
 		name          string
+		txHash        common.Hash
 		registerMock  func()
 		block         *types.Block
 		responseBlock []*abci.ResponseDeliverTx
@@ -56,6 +57,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 	}{
 		{
 			"fail - tx not found",
+			txHash,
 			func() {},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{}}},
 			[]*abci.ResponseDeliverTx{
@@ -78,6 +80,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 		},
 		{
 			"fail - block not found",
+			txHash,
 			func() {
 				// var header metadata.MD
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
@@ -104,11 +107,42 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 		},
 		{
 			"pass - transaction found in a block with multiple transactions",
+			txHash2, // tx1 is predecessor of tx2
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlockMultipleTxs(client, 1, []types.Tx{txBz, txBz2})
-				RegisterTraceTransactionWithPredecessors(queryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterTraceTransactionWithPredecessors(queryClient, msgEthereumTx2, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				txResults := []*abci.ResponseDeliverTx{
+					{
+						Code: 0,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: "ethereumTxHash", Value: txHash.Hex()},
+								{Key: "txIndex", Value: "0"},
+								{Key: "amount", Value: "1000"},
+								{Key: "txGasUsed", Value: "21000"},
+								{Key: "txHash", Value: ""},
+								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+							}},
+						},
+					},
+					{
+						Code: 0,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: "ethereumTxHash", Value: txHash2.Hex()},
+								{Key: "txIndex", Value: "1"},
+								{Key: "amount", Value: "1000"},
+								{Key: "txGasUsed", Value: "21000"},
+								{Key: "txHash", Value: ""},
+								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+							}},
+						},
+					},
+				}
+
+				RegisterBlockResultsWithTxResults(client, 1, txResults)
 			},
 			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
 			[]*abci.ResponseDeliverTx{
@@ -144,11 +178,29 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 		},
 		{
 			"pass - transaction found",
+			txHash,
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlock(client, 1, txBz)
 				RegisterTraceTransaction(queryClient, msgEthereumTx)
+				txResults := []*abci.ResponseDeliverTx{
+					{
+						Code: 0,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: "ethereumTxHash", Value: txHash.Hex()},
+								{Key: "txIndex", Value: "0"},
+								{Key: "amount", Value: "1000"},
+								{Key: "txGasUsed", Value: "21000"},
+								{Key: "txHash", Value: ""},
+								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+							}},
+						},
+					},
+				}
+				RegisterBlockResultsWithTxResults(client, 1, txResults)
+
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
 			[]*abci.ResponseDeliverTx{
@@ -181,7 +233,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 			err := suite.backend.indexer.IndexBlock(tc.block, tc.responseBlock)
 			suite.Require().NoError(err)
-			txResult, err := suite.backend.TraceTransaction(txHash, nil)
+			txResult, err := suite.backend.TraceTransaction(tc.txHash, nil)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

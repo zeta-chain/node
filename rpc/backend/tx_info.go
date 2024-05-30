@@ -388,7 +388,9 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	if b.indexer != nil {
 		txRes, err := b.indexer.GetByTxHash(hash)
-		if err == nil {
+		if err != nil {
+			return nil, nil, err
+		} else {
 			return txRes, nil, nil
 		}
 	}

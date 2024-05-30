@@ -211,6 +211,21 @@ func RegisterBlockResults(
 	return res, nil
 }
 
+func RegisterBlockResultsWithTxResults(
+	client *mocks.Client,
+	height int64,
+	txResults []*abci.ResponseDeliverTx,
+) (*tmrpctypes.ResultBlockResults, error) {
+	res := &tmrpctypes.ResultBlockResults{
+		Height:     height,
+		TxsResults: txResults,
+	}
+
+	client.On("BlockResults", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).
+		Return(res, nil)
+	return res, nil
+}
+
 func RegisterBlockResultsError(client *mocks.Client, height int64) {
 	client.On("BlockResults", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).
 		Return(nil, errortypes.ErrInvalidRequest)
