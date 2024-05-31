@@ -680,6 +680,9 @@ func (k Keeper) CallEVM(
 // value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
 // to bisect the correct gas limit (this may sometimes result in insufficient gas limit; not sure why)
 //
+// noEthereumTxEvent flag is used to control if ethereum_tx eventsshould emitted
+// which will mean these txs are indexed and available in rpc methods
+//
 // returns (msg,err) the EVM execution result if there is any, even if error is non-nil due to contract reverts
 // Furthermore, err!=nil && msg!=nil && msg.Failed() means the contract call reverted; in which case
 // msg.Ret gives the RET code if contract revert with REVERT opcode with parameters.
@@ -721,7 +724,6 @@ func (k Keeper) CallEVMWithData(
 	if gasLimit != nil {
 		gasCap = gasLimit.Uint64()
 	}
-
 	msg := ethtypes.NewMessage(
 		from,
 		contract,
@@ -789,6 +791,10 @@ func (k Keeper) CallEVMWithData(
 		}
 
 		if !noEthereumTxEvent {
+			// adding txData for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data())))
+			// adding nonce for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxNonce, fmt.Sprint(nonce)))
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					evmtypes.EventTypeEthereumTx,
