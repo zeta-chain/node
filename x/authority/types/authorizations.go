@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	// OperationPolicyMessages keeps track of the message URLs that can, by default, only be executed by operational policy address
 	OperationPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgRefundAbortedCCTX",
 		"/zetachain.zetacore.crosschain.MsgAbortStuckCCTX",
@@ -26,6 +27,7 @@ var (
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
 		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 	}
+	// AdminPolicyMessages keeps track of the message URLs that can, by default, only be executed by admin policy address
 	AdminPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
 		"/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
@@ -33,6 +35,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
 	}
+	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
 	EmergencyPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgAddInboundTracker",
 		"/zetachain.zetacore.crosschain.MsgAddOutboundTracker",
@@ -79,8 +82,8 @@ func DefaultAuthorizationsList() AuthorizationList {
 	}
 }
 
-// SetAuthorizations adds the authorization to the list. If the authorization already exists, it updates the policy.
-func (a *AuthorizationList) SetAuthorizations(authorization Authorization) {
+// SetAuthorization adds the authorization to the list. If the authorization already exists, it updates the policy.
+func (a *AuthorizationList) SetAuthorization(authorization Authorization) {
 	for i, auth := range a.Authorizations {
 		if auth.MsgUrl == authorization.MsgUrl {
 			a.Authorizations[i].AuthorizedPolicy = authorization.AuthorizedPolicy
@@ -90,8 +93,8 @@ func (a *AuthorizationList) SetAuthorizations(authorization Authorization) {
 	a.Authorizations = append(a.Authorizations, authorization)
 }
 
-// RemoveAuthorizations removes the authorization from the list. It does not check if the authorization exists or not.
-func (a *AuthorizationList) RemoveAuthorizations(authorization Authorization) {
+// RemoveAuthorization removes the authorization from the list. It does not check if the authorization exists or not.
+func (a *AuthorizationList) RemoveAuthorization(authorization Authorization) {
 	for i, auth := range a.Authorizations {
 		if auth.MsgUrl == authorization.MsgUrl {
 			a.Authorizations = append(a.Authorizations[:i], a.Authorizations[i+1:]...)
@@ -99,15 +102,14 @@ func (a *AuthorizationList) RemoveAuthorizations(authorization Authorization) {
 	}
 }
 
-// GetAuthorizedPolicy returns the policy for the given message url.If the message url is not found,
-// it returns an error and the first value of the enum.
+// GetAuthorizedPolicy returns the policy for the given message url. If the message url is not found,
+
 func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, error) {
 	for _, auth := range a.Authorizations {
 		if auth.MsgUrl == msgURL {
 			return auth.AuthorizedPolicy, nil
 		}
 	}
-	fmt.Println("Authorization not found", msgURL)
 	// Returning first value of enum, can consider adding a default value of `EmptyPolicy` in the enum.
 	return PolicyType(0), ErrAuthorizationNotFound
 }

@@ -117,7 +117,7 @@ func TestAuthorizationList_SetAuthorizations(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.oldList.SetAuthorizations(tc.addAuthorization)
+			tc.oldList.SetAuthorization(tc.addAuthorization)
 			require.Equal(t, tc.expectedList, tc.oldList)
 		})
 	}
@@ -361,7 +361,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.oldList.RemoveAuthorizations(tc.removeAuthorization)
+			tc.oldList.RemoveAuthorization(tc.removeAuthorization)
 			require.Equal(t, tc.expectedList, tc.oldList)
 		})
 	}
