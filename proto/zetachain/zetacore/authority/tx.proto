@@ -3,6 +3,7 @@ package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
 import "zetachain/zetacore/authority/chain_info.proto";
+import "zetachain/zetacore/authority/authorization.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";

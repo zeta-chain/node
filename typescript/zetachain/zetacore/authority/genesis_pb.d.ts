@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies } from "./policies_pb.js";
+import type { AuthorizationList } from "./authorization_pb.js";
 import type { ChainInfo } from "./chain_info_pb.js";
 
 /**
@@ -20,7 +21,12 @@ export declare class GenesisState extends Message<GenesisState> {
   policies?: Policies;
 
   /**
-   * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 2;
+   * @generated from field: zetachain.zetacore.authority.AuthorizationList authorization_list = 2;
+   */
+  authorizationList?: AuthorizationList;
+
+  /**
+   * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 3;
    */
   chainInfo?: ChainInfo;
 

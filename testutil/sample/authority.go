@@ -1,6 +1,8 @@
 package sample
 
 import (
+	"fmt"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
@@ -35,5 +37,31 @@ func ChainInfo(startChainID int64) authoritytypes.ChainInfo {
 			*chain2,
 			*chain3,
 		},
+	}
+}
+
+func AuthorizationList(val string) authoritytypes.AuthorizationList {
+	return authoritytypes.AuthorizationList{
+		Authorizations: []authoritytypes.Authorization{
+			{
+				MsgUrl:           fmt.Sprintf("/zetachain/%d%s", 0, val),
+				AuthorizedPolicy: authoritytypes.PolicyType_groupEmergency,
+			},
+			{
+				MsgUrl:           fmt.Sprintf("/zetachain/%d%s", 1, val),
+				AuthorizedPolicy: authoritytypes.PolicyType_groupAdmin,
+			},
+			{
+				MsgUrl:           fmt.Sprintf("/zetachain/%d%s", 2, val),
+				AuthorizedPolicy: authoritytypes.PolicyType_groupOperational,
+			},
+		},
+	}
+}
+
+func Authorization() authoritytypes.Authorization {
+	return authoritytypes.Authorization{
+		MsgUrl:           "ABC",
+		AuthorizedPolicy: authoritytypes.PolicyType_groupOperational,
 	}
 }
