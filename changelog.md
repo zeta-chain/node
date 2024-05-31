@@ -36,6 +36,7 @@
 * [2262](https://github.com/zeta-chain/node/pull/2262) - refactor MsgUpdateZRC20 into MsgPauseZrc20 and MsgUnPauseZRC20
 * [2290](https://github.com/zeta-chain/node/pull/2290) - rename `MsgAddBlameVote` message to `MsgVoteBlame`
 * [2269](https://github.com/zeta-chain/node/pull/2269) - refactor MsgUpdateCrosschainFlags into MsgEnableCCTX, MsgDisableCCTX and MsgUpdateGasPriceIncreaseFlags
+* [2296](https://github.com/zeta-chain/node/pull/2296) - move `testdata` package to `testutil` to organize test-related utilities
 
 ### Tests
 
