@@ -73,7 +73,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to deploy")
+		require.ErrorContains(t, err, "failed to deploy")
 	})
 
 	t.Run("should fail if wzeta contract deployment fails", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to deploy")
+		require.ErrorContains(t, err, "failed to deploy")
 	})
 
 	t.Run("should fail if uniswapv2router deployment fails", func(t *testing.T) {
@@ -118,7 +118,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to deploy")
+		require.ErrorContains(t, err, "failed to deploy")
 	})
 
 	t.Run("should fail if connectorzevm deployment fails", func(t *testing.T) {
@@ -142,7 +142,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to deploy")
+		require.ErrorContains(t, err, "failed to deploy")
 	})
 
 	t.Run("should fail if system contract deployment fails", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to deploy")
+		require.ErrorContains(t, err, "failed to deploy")
 	})
 }
 

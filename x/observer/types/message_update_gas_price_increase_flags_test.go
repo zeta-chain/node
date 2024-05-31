@@ -20,7 +20,7 @@ func TestMsgUpdateGasPriceIncreaseFlags_ValidateBasic(t *testing.T) {
 			name: "invalid creator address",
 			msg:  types.NewMsgUpdateGasPriceIncreaseFlags("invalid", types.DefaultGasPriceIncreaseFlags),
 			err: func(t require.TestingT, err error, i ...interface{}) {
-				require.Contains(t, err.Error(), "invalid creator address")
+				require.ErrorContains(t, err, "invalid creator address")
 			},
 		},
 		{
@@ -34,7 +34,7 @@ func TestMsgUpdateGasPriceIncreaseFlags_ValidateBasic(t *testing.T) {
 				},
 			),
 			err: func(t require.TestingT, err error, i ...interface{}) {
-				require.Contains(t, err.Error(), "invalid request")
+				require.ErrorContains(t, err, "invalid request")
 			},
 		},
 		{

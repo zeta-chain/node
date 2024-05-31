@@ -370,7 +370,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			if tt.fail {
 				require.Error(t, err)
 				if tt.message != "" {
-					require.Contains(t, err.Error(), tt.message)
+					require.ErrorContains(t, err, tt.message)
 				}
 				return
 			} else {

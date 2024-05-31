@@ -30,7 +30,7 @@ func TestChainParamsList_Validate(t *testing.T) {
 		list.ChainParams = append(list.ChainParams, list.ChainParams[0])
 		err := list.Validate()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "duplicated chain id")
+		require.ErrorContains(t, err, "duplicated chain id")
 	})
 }
 
