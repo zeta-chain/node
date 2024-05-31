@@ -60,7 +60,7 @@ func (k Keeper) RefundAmountOnZetaChainGas(
 	return nil
 }
 
-// RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
+// RefundAmountOnZetaChainZeta refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
 func (k Keeper) RefundAmountOnZetaChainZeta(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,

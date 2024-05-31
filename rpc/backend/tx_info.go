@@ -68,15 +68,15 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		}
 		ethMsg = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
 		if ethMsg == nil {
-			b.logger.Error("failed to get eth msg")
-			return nil, fmt.Errorf("failed to get eth msg")
+			b.logger.Error("failed to get eth msg from sdk.Msgs")
+			return nil, fmt.Errorf("failed to get eth msg from sdk.Msgs")
 		}
 	} else {
 		// if additional fields are not empty try to parse synthetic tx from them
 		ethMsg = b.parseSyntethicTxFromAdditionalFields(additional)
 		if ethMsg == nil {
-			b.logger.Error("failed to parse tx")
-			return nil, fmt.Errorf("failed to parse tx")
+			b.logger.Error("failed to get synthetic eth msg from additional fields")
+			return nil, fmt.Errorf("failed to get synthetic eth msg from additional fields")
 		}
 	}
 
