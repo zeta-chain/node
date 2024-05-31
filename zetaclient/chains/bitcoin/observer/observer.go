@@ -634,7 +634,7 @@ func GetTxResultByHash(
 	return hash, txResult, nil
 }
 
-// GetBlockHeightByTxHash gets the block height by block hash
+// GetBlockHeightByHash gets the block height by block hash
 func GetBlockHeightByHash(
 	rpcClient interfaces.BTCRPCClient,
 	hash string,
