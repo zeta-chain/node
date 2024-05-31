@@ -390,9 +390,8 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, *rpctyp
 		txRes, err := b.indexer.GetByTxHash(hash)
 		if err != nil {
 			return nil, nil, err
-		} else {
-			return txRes, nil, nil
 		}
+		return txRes, nil, nil
 	}
 
 	// fallback to tendermint tx indexer
