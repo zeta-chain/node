@@ -8,6 +8,9 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PolicyType } from "./policies_pb.js";
 
 /**
+ * Authorization defines the authorization required to access use a message
+ * which needs special permissions
+ *
  * @generated from message zetachain.zetacore.authority.Authorization
  */
 export declare class Authorization extends Message<Authorization> {

@@ -23,6 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Authorization defines the authorization required to access use a message
+// which needs special permissions
 type Authorization struct {
 	// The URL of the message that needs to be authorized
 	MsgUrl string `protobuf:"bytes,1,opt,name=msg_url,json=msgUrl,proto3" json:"msg_url,omitempty"`

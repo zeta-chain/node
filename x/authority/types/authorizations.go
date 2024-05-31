@@ -47,7 +47,10 @@ var (
 // DefaultAuthorizationsList list is the list of authorizations that presently exist in the system.
 // This is the minimum set of authorizations that are required to be set when the authorization table is deployed
 func DefaultAuthorizationsList() AuthorizationList {
-	authorizations := make([]Authorization, len(OperationPolicyMessages)+len(AdminPolicyMessages)+len(EmergencyPolicyMessages))
+	authorizations := make(
+		[]Authorization,
+		len(OperationPolicyMessages)+len(AdminPolicyMessages)+len(EmergencyPolicyMessages),
+	)
 	index := 0
 	for _, msgURL := range OperationPolicyMessages {
 		authorizations[index] = Authorization{
