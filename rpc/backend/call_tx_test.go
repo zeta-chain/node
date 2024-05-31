@@ -12,8 +12,9 @@ import (
 	"github.com/evmos/ethermint/rpc/backend/mocks"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 	"google.golang.org/grpc/metadata"
+
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 func (suite *BackendTestSuite) TestResend() {
@@ -400,7 +401,10 @@ func (suite *BackendTestSuite) TestDoCall() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterBlock(client, 1, bz)
-				RegisterEthCallError(queryClient, &evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()})
+				RegisterEthCallError(
+					queryClient,
+					&evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()},
+				)
 			},
 			rpctypes.BlockNumber(1),
 			callArgs,
@@ -413,7 +417,10 @@ func (suite *BackendTestSuite) TestDoCall() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterBlock(client, 1, bz)
-				RegisterEthCall(queryClient, &evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()})
+				RegisterEthCall(
+					queryClient,
+					&evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()},
+				)
 			},
 			rpctypes.BlockNumber(1),
 			callArgs,

@@ -9,17 +9,19 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"google.golang.org/grpc/metadata"
-
 	"github.com/evmos/ethermint/rpc/backend/mocks"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"google.golang.org/grpc/metadata"
+
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 func (suite *BackendTestSuite) TestGetCode() {
 	blockNr := rpctypes.NewBlockNumber(big.NewInt(1))
-	contractCode := []byte("0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb5735e11e7d3adb6104e0c3ac55180b4ddf5e54d022cc5e8837f6a4f971b")
+	contractCode := []byte(
+		"0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb5735e11e7d3adb6104e0c3ac55180b4ddf5e54d022cc5e8837f6a4f971b",
+	)
 
 	testCases := []struct {
 		name          string
@@ -224,7 +226,40 @@ func (suite *BackendTestSuite) TestGetStorageAt() {
 				RegisterStorageAt(queryClient, addr, key, storage)
 			},
 			true,
-			hexutil.Bytes{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
+			hexutil.Bytes{
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+				0x0,
+			},
 		},
 	}
 	for _, tc := range testCases {

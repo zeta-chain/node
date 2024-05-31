@@ -205,7 +205,10 @@ func (suite *BackendTestSuite) TestSign() {
 
 			responseBz, err := suite.backend.Sign(tc.fromAddr, tc.inputBz)
 			if tc.expPass {
-				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), tc.inputBz)
+				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress(
+					(sdk.AccAddress)(from.Bytes()),
+					tc.inputBz,
+				)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)
 				suite.Require().Equal((hexutil.Bytes)(signature), responseBz)
@@ -255,7 +258,10 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 			if tc.expPass {
 				sigHash, _, err := apitypes.TypedDataAndHash(tc.inputTypedData)
 				suite.Require().NoError(err)
-				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), sigHash)
+				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress(
+					(sdk.AccAddress)(from.Bytes()),
+					sigHash,
+				)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)
 				suite.Require().Equal((hexutil.Bytes)(signature), responseBz)

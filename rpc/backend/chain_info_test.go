@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/evmos/ethermint/tests"
-	rpc "github.com/zeta-chain/zetacore/rpc/types"
-	"google.golang.org/grpc/metadata"
-
 	"github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/evmos/ethermint/rpc/backend/mocks"
+	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"google.golang.org/grpc/metadata"
+
+	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 func (suite *BackendTestSuite) TestBaseFee() {
@@ -424,7 +423,14 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(tests.GenerateAddress().Bytes()),
 			true,

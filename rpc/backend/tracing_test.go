@@ -117,7 +117,11 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlockMultipleTxs(client, 1, []types.Tx{txBz, txBz2})
-				RegisterTraceTransactionWithPredecessors(queryClient, msgEthereumTx2, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterTraceTransactionWithPredecessors(
+					queryClient,
+					msgEthereumTx2,
+					[]*evmtypes.MsgEthereumTx{msgEthereumTx},
+				)
 				txResults := []*abci.ResponseDeliverTx{
 					{
 						Code: 0,
@@ -149,7 +153,10 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 				RegisterBlockResultsWithTxResults(client, 1, txResults)
 			},
-			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
+			&types.Block{
+				Header: types.Header{Height: 1, ChainID: ChainID},
+				Data:   types.Data{Txs: []types.Tx{txBz, txBz2}},
+			},
 			[]*abci.ResponseDeliverTx{
 				{
 					Code: 0,

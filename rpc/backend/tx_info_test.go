@@ -16,8 +16,9 @@ import (
 	"github.com/evmos/ethermint/rpc/backend/mocks"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 	"google.golang.org/grpc/metadata"
+
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 func (suite *BackendTestSuite) TestGetTransactionByHash() {
@@ -42,7 +43,14 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 		},
 	}
 
-	rpcTransaction, err := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	rpcTransaction, err := rpctypes.NewRPCTransaction(
+		msgEthereumTx.AsTransaction(),
+		common.Hash{},
+		0,
+		0,
+		big.NewInt(1),
+		suite.backend.chainID,
+	)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -125,7 +133,14 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 
 func (suite *BackendTestSuite) TestGetTransactionsByHashPending() {
 	msgEthereumTx, bz := suite.buildEthereumTx()
-	rpcTransaction, err := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	rpcTransaction, err := rpctypes.NewRPCTransaction(
+		msgEthereumTx.AsTransaction(),
+		common.Hash{},
+		0,
+		0,
+		big.NewInt(1),
+		suite.backend.chainID,
+	)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -186,7 +201,14 @@ func (suite *BackendTestSuite) TestGetTransactionsByHashPending() {
 
 func (suite *BackendTestSuite) TestGetTxByEthHash() {
 	msgEthereumTx, bz := suite.buildEthereumTx()
-	rpcTransaction, err := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), suite.backend.chainID)
+	rpcTransaction, err := rpctypes.NewRPCTransaction(
+		msgEthereumTx.AsTransaction(),
+		common.Hash{},
+		0,
+		0,
+		big.NewInt(1),
+		suite.backend.chainID,
+	)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -201,7 +223,12 @@ func (suite *BackendTestSuite) TestGetTxByEthHash() {
 			func() {
 				suite.backend.indexer = nil
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				query := fmt.Sprintf("%s.%s='%s'", evmtypes.TypeMsgEthereumTx, evmtypes.AttributeKeyEthereumTxHash, common.HexToHash(msgEthereumTx.Hash).Hex())
+				query := fmt.Sprintf(
+					"%s.%s='%s'",
+					evmtypes.TypeMsgEthereumTx,
+					evmtypes.AttributeKeyEthereumTxHash,
+					common.HexToHash(msgEthereumTx.Hash).Hex(),
+				)
 				RegisterTxSearch(client, query, bz)
 			},
 			msgEthereumTx,
@@ -348,7 +375,10 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 				db := dbm.NewMemDB()
 				suite.backend.indexer = indexer.NewKVIndexer(db, tmlog.NewNopLogger(), suite.backend.clientCtx)
 				txBz := suite.signAndEncodeEthTx(msgEthTx)
-				block := &types.Block{Header: types.Header{Height: 1, ChainID: "test"}, Data: types.Data{Txs: []types.Tx{txBz}}}
+				block := &types.Block{
+					Header: types.Header{Height: 1, ChainID: "test"},
+					Data:   types.Data{Txs: []types.Tx{txBz}},
+				}
 				err := suite.backend.indexer.IndexBlock(block, defaultResponseDeliverTx)
 				suite.Require().NoError(err)
 				RegisterBlockResults(client, 1)

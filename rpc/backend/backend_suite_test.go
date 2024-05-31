@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	dbm "github.com/cometbft/cometbft-db"
-
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -16,18 +15,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/indexer"
 	"github.com/evmos/ethermint/rpc/backend/mocks"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
-
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/suite"
+
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 type BackendTestSuite struct {
@@ -169,7 +167,13 @@ func (suite *BackendTestSuite) buildFormattedBlock(
 func (suite *BackendTestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
 	buf := bufio.NewReader(os.Stdin)
 	encCfg := encoding.MakeConfig(app.ModuleBasics)
-	return keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Codec, []keyring.Option{hd.EthSecp256k1Option()}...)
+	return keyring.New(
+		sdk.KeyringServiceName(),
+		keyring.BackendTest,
+		clientDir,
+		buf,
+		encCfg.Codec,
+		[]keyring.Option{hd.EthSecp256k1Option()}...)
 }
 
 func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {

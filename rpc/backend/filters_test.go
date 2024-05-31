@@ -8,6 +8,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/rpc/backend/mocks"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	ethrpc "github.com/zeta-chain/zetacore/rpc/types"
 )
 
@@ -16,7 +17,10 @@ func (suite *BackendTestSuite) TestGetLogs() {
 	block := tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil)
 	logs := make([]*evmtypes.Log, 0, 1)
 	var log evmtypes.Log
-	json.Unmarshal([]byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d}, &log)
+	json.Unmarshal(
+		[]byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d},
+		&log,
+	)
 	logs = append(logs, &log)
 
 	testCases := []struct {
