@@ -20,6 +20,7 @@
 * [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
 * [2291](https://github.com/zeta-chain/node/pull/2291) - initialize cctx gateway interface
+* [2289](https://github.com/zeta-chain/node/pull/2289) - add an authorization list to keep track of all authorizations on the chain
 
 ### Refactor
 
