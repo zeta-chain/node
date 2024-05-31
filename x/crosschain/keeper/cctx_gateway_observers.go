@@ -29,7 +29,10 @@ InitiateOutbound updates the store so observers can use the PendingCCTX query:
     Instead, we use a temporary context to make changes and then commit the context on for the happy path, i.e cctx is set to PendingOutbound.
     New CCTX status after preprocessing is returned.
 */
-func (c CCTXGatewayObservers) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
+func (c CCTXGatewayObservers) InitiateOutbound(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
 	outboundReceiverChainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	err := func() error {
