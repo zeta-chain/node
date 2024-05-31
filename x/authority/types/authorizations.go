@@ -94,10 +94,11 @@ func (a *AuthorizationList) SetAuthorization(authorization Authorization) {
 }
 
 // RemoveAuthorization removes the authorization from the list. It does not check if the authorization exists or not.
-func (a *AuthorizationList) RemoveAuthorization(authorization Authorization) {
+func (a *AuthorizationList) RemoveAuthorization(msgURL string) {
 	for i, auth := range a.Authorizations {
-		if auth.MsgUrl == authorization.MsgUrl {
+		if auth.MsgUrl == msgURL {
 			a.Authorizations = append(a.Authorizations[:i], a.Authorizations[i+1:]...)
+			return
 		}
 	}
 }

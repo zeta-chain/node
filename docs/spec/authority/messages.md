@@ -23,3 +23,24 @@ message MsgUpdateChainInfo {
 }
 ```
 
+## MsgAddAuthorization
+
+```proto
+message MsgAddAuthorization {
+	string creator = 1;
+	string msg_url = 2;
+	Policy policy = 3;
+}
+```
+
+## MsgRemoveAuthorization
+
+RemoveAuthorization removes the authorization from the list. It does not check if the authorization exists or not.
+
+```proto
+message MsgRemoveAuthorization {
+	string creator = 1;
+	string msg_url = 2;
+}
+```
+
