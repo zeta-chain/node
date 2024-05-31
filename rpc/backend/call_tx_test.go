@@ -9,9 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
 
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"

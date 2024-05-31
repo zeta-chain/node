@@ -6,8 +6,8 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 
 	ethrpc "github.com/zeta-chain/zetacore/rpc/types"
 )

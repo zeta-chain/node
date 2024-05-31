@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
 
 	rpc "github.com/zeta-chain/zetacore/rpc/types"

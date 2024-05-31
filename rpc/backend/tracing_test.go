@@ -13,8 +13,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/evmos/ethermint/indexer"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 )
 
 func (suite *BackendTestSuite) TestTraceTransaction() {
