@@ -61,7 +61,7 @@ func (b *BlockHeaderVerification) IsChainEnabled(chainID int64) bool {
 	return false
 }
 
-// GetHeaderSupportedChainIDList returns a list of chain IDs that have block header verification enabled
+// GetHeaderEnabledChainIDs returns a list of chain IDs that have block header verification enabled
 func (b *BlockHeaderVerification) GetHeaderEnabledChainIDs() []int64 {
 	var enabledChains []int64
 	for _, v := range b.HeaderSupportedChains {
