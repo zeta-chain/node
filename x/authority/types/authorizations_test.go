@@ -46,6 +46,20 @@ func TestAuthorizationList_SetAuthorizations(t *testing.T) {
 			}},
 		},
 		{
+			name:    "set new authorization successfully with empty list",
+			oldList: types.AuthorizationList{Authorizations: []types.Authorization{}},
+			addAuthorization: types.Authorization{
+				MsgUrl:           "XYZ",
+				AuthorizedPolicy: types.PolicyType_groupOperational,
+			},
+			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "XYZ",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+		},
+		{
 			name: "update existing authorization successfully",
 			oldList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
@@ -61,6 +75,41 @@ func TestAuthorizationList_SetAuthorizations(t *testing.T) {
 				{
 					MsgUrl:           "ABC",
 					AuthorizedPolicy: types.PolicyType_groupEmergency,
+				},
+			}},
+		},
+		{
+			name: "update existing authorization successfully in the middle of the list",
+			oldList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "XYZ",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "DEF",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+			addAuthorization: types.Authorization{
+				MsgUrl:           "XYZ",
+				AuthorizedPolicy: types.PolicyType_groupEmergency,
+			},
+			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "XYZ",
+					AuthorizedPolicy: types.PolicyType_groupEmergency,
+				},
+				{
+					MsgUrl:           "DEF",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
 		},
@@ -93,6 +142,42 @@ func TestAuthorizationList_GetAuthorizations(t *testing.T) {
 			getPolicyMsgUrl: "ABC",
 			expectedPolicy:  types.PolicyType_groupOperational,
 			error:           nil,
+		},
+		{
+			name: "get authorizations successfully for admin policy",
+			authorizations: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupAdmin,
+				},
+			}},
+			getPolicyMsgUrl: "ABC",
+			expectedPolicy:  types.PolicyType_groupAdmin,
+			error:           nil,
+		},
+		{
+			name: "get authorizations successfully for emergency policy",
+			authorizations: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupEmergency,
+				},
+			}},
+			getPolicyMsgUrl: "ABC",
+			expectedPolicy:  types.PolicyType_groupEmergency,
+			error:           nil,
+		},
+		{
+			name: "get authorizations fails when msg not found in list",
+			authorizations: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+			getPolicyMsgUrl: "XYZ",
+			expectedPolicy:  types.PolicyType(0),
+			error:           types.ErrAuthorizationNotFound,
 		},
 		{
 			name:            "get authorizations fails when msg not found in list",
@@ -137,6 +222,16 @@ func TestAuthorizationList_Validate(t *testing.T) {
 				},
 			}},
 			expectedError: nil,
+		},
+		{
+			name:           "validate successfully with empty list",
+			authorizations: types.AuthorizationList{Authorizations: []types.Authorization{}},
+			expectedError:  nil,
+		},
+		{
+			name:           "validate successfully for default list",
+			authorizations: types.DefaultAuthorizationsList(),
+			expectedError:  nil,
 		},
 		{
 			name: "validate failed with duplicate msg url with different policies",
@@ -206,6 +301,44 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
+		},
+		{
+			name: "remove authorization successfully in the middle of the list",
+			oldList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "XYZ",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "DEF",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+			removeAuthorization: types.Authorization{
+				MsgUrl: "XYZ",
+			},
+			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "DEF",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+		},
+		{
+			name:    "do not remove anything when trying to remove from an empty list",
+			oldList: types.AuthorizationList{Authorizations: []types.Authorization{}},
+			removeAuthorization: types.Authorization{
+				MsgUrl: "XYZ",
+			},
+			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{}},
 		},
 		{
 			name: "do not remove anything if authorization not found",

@@ -6,130 +6,69 @@ import (
 	"cosmossdk.io/errors"
 )
 
+var (
+	OperationPolicyMessages = []string{
+		"/zetachain.zetacore.crosschain.MsgRefundAbortedCCTX",
+		"/zetachain.zetacore.crosschain.MsgAbortStuckCCTX",
+		"/zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlags",
+		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",
+		"/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
+		"/zetachain.zetacore.fungible.MsgDeploySystemContracts",
+		"/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
+		"/zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap",
+		"/zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee",
+		"/zetachain.zetacore.fungible.MsgUnpauseZRC20",
+		"/zetachain.zetacore.observer.MsgAddObserver",
+		"/zetachain.zetacore.observer.MsgRemoveChainParams",
+		"/zetachain.zetacore.observer.MsgResetChainNonces",
+		"/zetachain.zetacore.observer.MsgUpdateChainParams",
+		"/zetachain.zetacore.observer.MsgEnableCCTX",
+		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
+		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
+	}
+	AdminPolicyMessages = []string{
+		"/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
+		"/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
+		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
+		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
+		"/zetachain.zetacore.observer.MsgUpdateObserver",
+	}
+	EmergencyPolicyMessages = []string{
+		"/zetachain.zetacore.crosschain.MsgAddInboundTracker",
+		"/zetachain.zetacore.crosschain.MsgAddOutboundTracker",
+		"/zetachain.zetacore.crosschain.MsgRemoveOutboundTracker",
+		"/zetachain.zetacore.fungible.MsgPauseZRC20",
+		"/zetachain.zetacore.observer.MsgUpdateKeygen",
+		"/zetachain.zetacore.observer.MsgDisableCCTX",
+		"/zetachain.zetacore.lightclient.MsgDisableHeaderVerification",
+	}
+)
+
 // DefaultAuthorizationsList list is the list of authorizations that presently exist in the system.
 // This is the minimum set of authorizations that are required to be set when the authorization table is deployed
 func DefaultAuthorizationsList() AuthorizationList {
-	var authorizations []Authorization
-
-	authorizations = []Authorization{
-		// OperationalPolicyMessageList
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRefundAbortedCCTX",
-			AuthorizedPolicy: PolicyType_groupOperational},
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgAbortStuckCCTX",
+	authorizations := make([]Authorization, len(OperationPolicyMessages)+len(AdminPolicyMessages)+len(EmergencyPolicyMessages))
+	index := 0
+	for _, msgURL := range OperationPolicyMessages {
+		authorizations[index] = Authorization{
+			MsgUrl:           msgURL,
 			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlags",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgWhitelistERC20",
-			AuthorizedPolicy: PolicyType_groupOperational},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgDeploySystemContracts",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgUnpauseZRC20",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgAddObserver",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgRemoveChainParams",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgResetChainNonces",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgEnableCCTX",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
-			AuthorizedPolicy: PolicyType_groupOperational,
-		},
-		// AdminPolicyMessageList
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
+		}
+		index++
+	}
+	for _, msgURL := range AdminPolicyMessages {
+		authorizations[index] = Authorization{
+			MsgUrl:           msgURL,
 			AuthorizedPolicy: PolicyType_groupAdmin,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
-			AuthorizedPolicy: PolicyType_groupAdmin,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
-			AuthorizedPolicy: PolicyType_groupAdmin,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateSystemContract",
-			AuthorizedPolicy: PolicyType_groupAdmin,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateObserver",
-			AuthorizedPolicy: PolicyType_groupAdmin,
-		},
-		// EmergencyPolicyMessageList
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgAddInboundTracker",
+		}
+		index++
+	}
+	for _, msgURL := range EmergencyPolicyMessages {
+		authorizations[index] = Authorization{
+			MsgUrl:           msgURL,
 			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgAddOutboundTracker",
-			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRemoveOutboundTracker",
-			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgPauseZRC20",
-			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateKeygen",
-			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgDisableCCTX",
-			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
-		{
-			MsgUrl:           "/zetachain.zetacore.lightclient.MsgDisableHeaderVerification",
-			AuthorizedPolicy: PolicyType_groupEmergency,
-		},
+		}
+		index++
 	}
 
 	return AuthorizationList{
@@ -165,6 +104,7 @@ func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, erro
 			return auth.AuthorizedPolicy, nil
 		}
 	}
+	fmt.Println("Authorization not found", msgURL)
 	// Returning first value of enum, can consider adding a default value of `EmptyPolicy` in the enum.
 	return PolicyType(0), ErrAuthorizationNotFound
 }
