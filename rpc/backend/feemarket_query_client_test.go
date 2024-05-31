@@ -3,6 +3,7 @@ package backend
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+
 	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )

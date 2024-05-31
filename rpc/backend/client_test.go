@@ -17,8 +17,8 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )
 

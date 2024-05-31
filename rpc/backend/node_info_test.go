@@ -12,8 +12,9 @@ import (
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/spf13/viper"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 )
 
 func (suite *BackendTestSuite) TestRPCMinGasPrice() {

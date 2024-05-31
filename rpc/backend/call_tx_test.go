@@ -11,9 +11,9 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 

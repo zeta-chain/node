@@ -23,8 +23,8 @@ import (
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 

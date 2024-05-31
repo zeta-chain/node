@@ -15,9 +15,9 @@ import (
 	"github.com/evmos/ethermint/indexer"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 

@@ -12,9 +12,9 @@ import (
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )
 

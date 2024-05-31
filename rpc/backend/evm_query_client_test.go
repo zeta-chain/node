@@ -16,12 +16,12 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )
 
