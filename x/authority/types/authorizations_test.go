@@ -295,7 +295,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 			removeMsgUrl: "XYZ",
 			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
-					MsgUrl:           "XYZ",
+					MsgUrl:           "ABC",
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
@@ -352,7 +352,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 		},
 		// The list is invalid, but this test case tries to assert the expected functionality
 		{
-			name: "return after removing first occurance",
+			name: "return after removing first occurrence",
 			oldList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
 					MsgUrl:           "ABC",
