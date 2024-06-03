@@ -16,14 +16,18 @@
 package types
 
 import (
+	"encoding/base64"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
+	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
@@ -68,6 +72,7 @@ const (
 
 // ParsedTx is the tx infos parsed from events.
 type ParsedTx struct {
+	// max uint32 means there is no sdk.Msg corresponding to eth tx
 	MsgIndex int
 
 	// the following fields are parsed from events
@@ -83,6 +88,8 @@ type ParsedTx struct {
 	Amount    *big.Int
 	Recipient common.Address
 	Sender    common.Address
+	Nonce     uint64
+	Data      []byte
 }
 
 // NewParsedTx initialize a ParsedTx
@@ -177,6 +184,18 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 			p.Txs[i].GasUsed = gasLimit
 		}
 	}
+
+	// fix msg indexes, because some eth txs indexed here don't have corresponding sdk.Msg
+	currMsgIndex := 0
+	for _, tx := range p.Txs {
+		if tx.Type == CosmosEVMTxType {
+			tx.MsgIndex = math.MaxUint32
+			// todo: fix mapping as well
+		} else {
+			tx.MsgIndex = currMsgIndex
+			currMsgIndex++
+		}
+	}
 	return p, nil
 }
 
@@ -204,7 +223,7 @@ func ParseTxIndexerResult(
 			txResult.Index,
 		)
 	}
-	if parsedTx.Type == 88 {
+	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height:  txResult.Height,
 				TxIndex: txResult.Index,
@@ -251,7 +270,7 @@ func ParseTxBlockResult(
 		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", height, txIndex)
 	}
 	parsedTx := txs.Txs[0]
-	if parsedTx.Type == 88 {
+	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height: height,
 				// #nosec G701 always in range
@@ -270,6 +289,8 @@ func ParseTxBlockResult(
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
+				Data:      parsedTx.Data,
+				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
 	return &ethermint.TxResult{
@@ -353,19 +374,19 @@ func (p *ParsedTxs) AccumulativeGasUsed(msgIndex int) (result uint64) {
 
 // fillTxAttribute parse attributes by name, less efficient than hardcode the index, but more stable against event
 // format changes.
-func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
-	switch string(key) {
+func fillTxAttribute(tx *ParsedTx, key, value string) error {
+	switch key {
 	case evmtypes.AttributeKeyEthereumTxHash:
-		tx.Hash = common.HexToHash(string(value))
+		tx.Hash = common.HexToHash(value)
 	case evmtypes.AttributeKeyTxIndex:
-		txIndex, err := strconv.ParseUint(string(value), 10, 31)
+		txIndex, err := strconv.ParseUint(value, 10, 31)
 		if err != nil {
 			return err
 		}
 		// #nosec G701 always in range
 		tx.EthTxIndex = int32(txIndex)
 	case evmtypes.AttributeKeyTxGasUsed:
-		gasUsed, err := strconv.ParseUint(string(value), 10, 64)
+		gasUsed, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
@@ -373,32 +394,73 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
 	case SenderType:
-		tx.Sender = common.HexToAddress(string(value))
+		tx.Sender = common.HexToAddress(value)
 	case evmtypes.AttributeKeyRecipient:
-		tx.Recipient = common.HexToAddress(string(value))
+		tx.Recipient = common.HexToAddress(value)
 	case evmtypes.AttributeKeyTxHash:
-		tx.TxHash = string(value)
+		tx.TxHash = value
 	case evmtypes.AttributeKeyTxType:
-		txType, err := strconv.ParseUint(string(value), 10, 31)
+		txType, err := strconv.ParseUint(value, 10, 31)
 		if err != nil {
 			return err
 		}
 		tx.Type = txType
 	case AmountType:
 		var success bool
-		tx.Amount, success = big.NewInt(0).SetString(string(value), 10)
+		tx.Amount, success = big.NewInt(0).SetString(value, 10)
 		if !success {
 			return nil
 		}
+	case evmtypes.AttributeKeyTxNonce:
+		nonce, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return err
+		}
+		tx.Nonce = nonce
+
+	case evmtypes.AttributeKeyTxData:
+		hexBytes, err := hexutil.Decode(value)
+		if err != nil {
+			return err
+		}
+		tx.Data = hexBytes
 	}
 	return nil
 }
 
 func fillTxAttributes(tx *ParsedTx, attrs []abci.EventAttribute) error {
+	// before cosmos upgrade to 0.47, attributes are base64 encoded
+	// purpose of this is to support older txs as well
+	isLegacyAttrs := isLegacyAttrEncoding(attrs)
 	for _, attr := range attrs {
-		if err := fillTxAttribute(tx, []byte(attr.Key), []byte(attr.Value)); err != nil {
+		if isLegacyAttrs {
+			// only decode if value can be decoded
+			// (error should not happen because at this point it is determined it is legacy attr)
+			decKey, err := base64.StdEncoding.DecodeString(attr.Key)
+			if err != nil {
+				return err
+			}
+			attr.Key = string(decKey)
+			decValue, err := base64.StdEncoding.DecodeString(attr.Value)
+			if err != nil {
+				return err
+			}
+			attr.Value = string(decValue)
+		}
+
+		if err := fillTxAttribute(tx, attr.Key, attr.Value); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func isLegacyAttrEncoding(attrs []abci.EventAttribute) bool {
+	for _, attr := range attrs {
+		if strings.Contains(attr.Key, "==") || strings.Contains(attr.Value, "==") {
+			return true
+		}
+	}
+
+	return false
 }
