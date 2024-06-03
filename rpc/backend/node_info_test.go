@@ -96,7 +96,7 @@ func (suite *BackendTestSuite) TestSetGasPrice() {
 	}
 }
 
-// TODO: Combine these 2 into one test since the code is identical
+// TODO (https://github.com/zeta-chain/node/issues/2302): Combine these 2 into one test since the code is identical
 func (suite *BackendTestSuite) TestListAccounts() {
 	testCases := []struct {
 		name         string
@@ -255,7 +255,7 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 				RegisterStatus(client)
 				RegisterValidatorAccount(queryClient, suite.acc)
 				RegisterParams(queryClient, &header, 1)
-				c := sdk.NewDecCoin("aphoton", sdk.NewIntFromBigInt(big.NewInt(1)))
+				c := sdk.NewDecCoin("azeta", sdk.NewIntFromBigInt(big.NewInt(1)))
 				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
 				delAddr, _ := suite.backend.GetCoinbase()
 				// account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
@@ -272,7 +272,7 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 			common.Address{},
 			false,
 		},
-		// TODO: Finish this test case once ABCIQuery GetAccount is fixed
+		// TODO (https://github.com/zeta-chain/node/issues/2302): Finish this test case once ABCIQuery GetAccount is fixed
 		//{
 		//	"pass - set the etherbase for the miner",
 		//	func() {
@@ -280,7 +280,7 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 		//		queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 		//		RegisterStatus(client)
 		//		RegisterValidatorAccount(queryClient, suite.acc)
-		//		c := sdk.NewDecCoin("aphoton", sdk.NewIntFromBigInt(big.NewInt(1)))
+		//		c := sdk.NewDecCoin("azeta", sdk.NewIntFromBigInt(big.NewInt(1)))
 		//		suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
 		//		delAddr, _ := suite.backend.GetCoinbase()
 		//		account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)

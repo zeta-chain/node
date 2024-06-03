@@ -415,7 +415,7 @@ func (suite *BackendTestSuite) TestGetTransactionCount() {
 			false,
 			hexutil.Uint64(0),
 		},
-		// TODO: Error mocking the GetAccount call - problem with Any type
+		// TODO (https://github.com/zeta-chain/node/issues/2302): Error mocking the GetAccount call - problem with Any type
 		//{
 		//	"pass - returns the number of transactions at the given address up to the given block number",
 		//	true,

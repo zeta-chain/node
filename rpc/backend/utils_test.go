@@ -6,7 +6,7 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 )
 
-func mookProofs(num int, withData bool) *crypto.ProofOps {
+func mockProofs(num int, withData bool) *crypto.ProofOps {
 	var proofOps *crypto.ProofOps
 	if num > 0 {
 		proofOps = new(crypto.ProofOps)
@@ -30,17 +30,17 @@ func (suite *BackendTestSuite) TestGetHexProofs() {
 	}{
 		{
 			"no proof provided",
-			mookProofs(0, false),
+			mockProofs(0, false),
 			defaultRes,
 		},
 		{
 			"no proof data provided",
-			mookProofs(1, false),
+			mockProofs(1, false),
 			defaultRes,
 		},
 		{
 			"valid proof provided",
-			mookProofs(1, true),
+			mockProofs(1, true),
 			[]string{"0x0a190a034b4559120556414c55451a0b0801180120012a03000202"},
 		},
 	}

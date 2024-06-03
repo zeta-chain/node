@@ -106,7 +106,7 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
 				msg := callArgsDefault.ToTransaction()
 				msg.Sign(ethSigner, suite.backend.clientCtx.Keyring)
-				tx, err := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+				tx, err := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "azeta")
 				suite.Require().NoError(err)
 				txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
 				txBytes, err := txEncoder(tx)
@@ -133,7 +133,7 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
 				msg := callArgsDefault.ToTransaction()
 				msg.Sign(ethSigner, suite.backend.clientCtx.Keyring)
-				tx, err := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+				tx, err := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "azeta")
 				suite.Require().NoError(err)
 				txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
 				txBytes, err := txEncoder(tx)
@@ -246,7 +246,7 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 			apitypes.TypedData{},
 			false,
 		},
-		// TODO: Generate a TypedData msg
+		// TODO (https://github.com/zeta-chain/node/issues/2302): Generate a TypedData msg
 	}
 
 	for _, tc := range testCases {

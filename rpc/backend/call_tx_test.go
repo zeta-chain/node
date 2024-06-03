@@ -274,7 +274,7 @@ func (suite *BackendTestSuite) TestSendRawTransaction() {
 	ethTx, bz := suite.buildEthereumTx()
 	rlpEncodedBz, err := rlp.EncodeToBytes(ethTx.AsTransaction())
 	suite.Require().NoError(err)
-	cosmosTx, err := ethTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+	cosmosTx, err := ethTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "azeta")
 	suite.Require().NoError(err)
 	txBytes, err := suite.backend.clientCtx.TxConfig.TxEncoder()(cosmosTx)
 	suite.Require().NoError(err)
