@@ -22,6 +22,8 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		CmdUpdatePolices(),
 		CmdUpdateChainInfo(),
+		CmdAddAuthorization(),
+		CmdRemoveAuthorization(),
 	)
 
 	return cmd
