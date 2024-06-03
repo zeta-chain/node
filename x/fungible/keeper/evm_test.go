@@ -575,7 +575,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 
 		// check reason is included for revert error
 		// 0xbfb4ebcf is the hash of "Foo()"
-		require.Contains(t, err.Error(), "reason: 0xbfb4ebcf")
+		require.ErrorContains(t, err, "reason: 0xbfb4ebcf")
 
 		res, err = k.CallEVM(
 			ctx,

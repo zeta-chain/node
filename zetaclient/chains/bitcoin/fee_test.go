@@ -60,13 +60,13 @@ var exampleTxids = []string{
 
 func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, btcutil.Address, []byte) {
 	privateKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	pubKeyHash := btcutil.Hash160(privateKey.PubKey().SerializeCompressed())
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	//fmt.Printf("New address: %s\n", addr.EncodeAddress())
 	pkScript, err := PayToAddrScript(addr)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	return privateKey, addr, pkScript
 }
 
@@ -98,7 +98,7 @@ func addTxInputs(t *testing.T, tx *wire.MsgTx, txids []string) {
 	preTxSize := tx.SerializeSize()
 	for _, txid := range txids {
 		hash, err := chainhash.NewHashFromStr(txid)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		outpoint := wire.NewOutPoint(hash, uint32(rand.Intn(100)))
 		txIn := wire.NewTxIn(outpoint, nil, nil)
 		tx.AddTxIn(txIn)
@@ -158,9 +158,9 @@ func signTx(t *testing.T, tx *wire.MsgTx, payerScript []byte, privateKey *btcec.
 	for ix := range tx.TxIn {
 		amount := int64(1 + rand.Intn(100000000))
 		witnessHash, err := txscript.CalcWitnessSigHash(payerScript, sigHashes, txscript.SigHashAll, tx, ix, amount)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		sig, err := privateKey.Sign(witnessHash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		pkCompressed := privateKey.PubKey().SerializeCompressed()
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pkCompressed}

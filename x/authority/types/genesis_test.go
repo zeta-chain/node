@@ -72,7 +72,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			err := tt.gs.Validate()
 			if tt.errContains != "" {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.errContains)
+				require.ErrorContains(t, err, tt.errContains)
 			} else {
 				require.NoError(t, err)
 			}
