@@ -69,6 +69,7 @@ ignore:
   - "contrib/**/*"
   - "docs/**/*"
   - "rpc/**/*"
+  - "!rpc/backend/**/*"
   - "proto/**/*"
   - "scripts/**/*"
   - "server/**/*"
