@@ -102,3 +102,28 @@ func TestMsgAddAuthorization_GetSignBytes(t *testing.T) {
 		msg.GetSignBytes()
 	})
 }
+
+func TestValidateMsgUrl(t *testing.T) {
+	tests := []struct {
+		name      string
+		url       string
+		expectErr error
+	}{
+		{
+			name:      "empty url",
+			url:       "",
+			expectErr: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name:      "valid url",
+			url:       "/zetachain.zetacore.crosschain.MsgRefundAbortedCCTX",
+			expectErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := types.ValidateMsgUrl(tt.url)
+			require.ErrorIs(t, err, tt.expectErr)
+		})
+	}
+}
