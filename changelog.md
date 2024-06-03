@@ -68,6 +68,13 @@
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
 
+## v17.0.0
+
+### Fixes
+
+* [2249](https://github.com/zeta-chain/node/pull/2249) - fix inbound and outbound validation for BSC chain
+* [2265](https://github.com/zeta-chain/node/pull/2265) - fix rate limiter query for revert cctxs
+
 ## v16.0.0
 
 ### Breaking Changes
