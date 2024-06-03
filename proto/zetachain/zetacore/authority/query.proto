@@ -3,6 +3,7 @@ package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
 import "zetachain/zetacore/authority/chain_info.proto";
+import "zetachain/zetacore/authority/authorization.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -20,6 +21,36 @@ service Query {
   rpc ChainInfo(QueryGetChainInfoRequest) returns (QueryGetChainInfoResponse) {
     option (google.api.http).get = "/zeta-chain/authority/chainInfo";
   }
+
+  rpc AuthorizationList(QueryAuthorizationListRequest)
+      returns (QueryAuthorizationListResponse) {
+    option (google.api.http).get = "/zeta-chain/authority/authorizationList";
+  }
+
+  rpc Authorization(QueryAuthorizationRequest)
+      returns (QueryAuthorizationResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/authority/authorization/{msg_url}";
+  }
+}
+
+// QueryAuthorizationListRequest is the request type for the
+// Query/AuthorizationList RPC method.
+message QueryAuthorizationListRequest {}
+// QueryAuthorizationListResponse is the response type for the
+// Query/AuthorizationList RPC
+message QueryAuthorizationListResponse {
+  AuthorizationList authorization_list = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAuthorizationRequest is the request type for the Query/Authorization RPC
+// method.
+message QueryAuthorizationRequest { string msg_url = 1; }
+
+// QueryAuthorizationResponse is the response type for the Query/Authorization
+// RPC method.
+message QueryAuthorizationResponse {
+  Authorization authorization = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryGetPoliciesRequest is the request type for the Query/Policies RPC
