@@ -365,7 +365,7 @@ func TestGetEVMAddress(t *testing.T) {
 	t.Run("should error if non bech32", func(t *testing.T) {
 		pk := PubKey("invalid")
 		e, err := pk.GetEVMAddress()
-		require.Error(t, err)
+		require.ErrorContains(t, err, "decoding bech32 failed")
 		require.Equal(t, chains.NoAddress, e)
 	})
 }

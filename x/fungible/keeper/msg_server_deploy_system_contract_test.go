@@ -72,7 +72,6 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		mockFailedContractDeployment(ctx, t, k)
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
-		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to deploy")
 	})
 

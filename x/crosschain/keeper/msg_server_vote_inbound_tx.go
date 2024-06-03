@@ -106,8 +106,8 @@ func (k msgServer) VoteInbound(
 	if err != nil {
 		return nil, err
 	}
-	// Inititiate outbound, the process function manages the state commit and cctx status change.
-	//	If the process fails, the changes to the evm state are rolled back.
+	// Initiate outbound, the process function manages the state commit and cctx status change.
+	// If the process fails, the changes to the evm state are rolled back.
 	_, err = k.InitiateOutbound(ctx, &cctx)
 	if err != nil {
 		return nil, err
