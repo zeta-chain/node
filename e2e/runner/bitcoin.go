@@ -29,6 +29,11 @@ import (
 
 var blockHeaderBTCTimeout = 5 * time.Minute
 
+// IsLocalBitcoin returns true if the runner is running on a local bitcoin network
+func (runner *E2ERunner) IsLocalBitcoin() bool {
+	return runner.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
+}
+
 // ListDeployerUTXOs list the deployer's UTXOs that have at least `minAmount`
 func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
