@@ -38,7 +38,7 @@ message MsgAddAuthorization {
 
 ## MsgRemoveAuthorization
 
-RemoveAuthorization removes the authorization from the list. It does not check if the authorization exists or not.
+RemoveAuthorization removes the authorization from the list. It should be called by the admin policy account.
 
 ```proto
 message MsgRemoveAuthorization {

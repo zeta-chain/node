@@ -22,7 +22,7 @@ func TestMsgAddAuthorization_ValidateBasic(t *testing.T) {
 			msg:  types.NewMsgAddAuthorization("invalid", "url", types.PolicyType_groupAdmin),
 			expectErr: func(t require.TestingT, err error, msgAndArgs ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
-				require.Contains(t, err.Error(), "invalid creator address")
+				require.ErrorContains(t, err, "invalid creator address")
 			},
 		},
 		{
@@ -30,7 +30,7 @@ func TestMsgAddAuthorization_ValidateBasic(t *testing.T) {
 			msg:  types.NewMsgAddAuthorization(sample.AccAddress(), "url", types.PolicyType_groupEmpty),
 			expectErr: func(t require.TestingT, err error, msgAndArgs ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.Contains(t, err.Error(), "invalid authorized policy")
+				require.ErrorContains(t, err, "invalid authorized policy")
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func TestMsgAddAuthorization_ValidateBasic(t *testing.T) {
 			msg:  types.NewMsgAddAuthorization(sample.AccAddress(), "", types.PolicyType_groupAdmin),
 			expectErr: func(t require.TestingT, err error, msgAndArgs ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.Contains(t, err.Error(), "invalid msg url")
+				require.ErrorContains(t, err, "invalid msg url")
 			},
 		},
 		{

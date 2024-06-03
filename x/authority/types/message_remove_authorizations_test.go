@@ -22,7 +22,7 @@ func TestMsgRemoveAuthorization_ValidateBasic(t *testing.T) {
 			msg:  types.NewMsgRemoveAuthorization("invalid", "url"),
 			expectErr: func(t require.TestingT, err error, msgAndArgs ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
-				require.Contains(t, err.Error(), "invalid creator address")
+				require.ErrorContains(t, err, "invalid creator address")
 			},
 		},
 		{
@@ -30,7 +30,7 @@ func TestMsgRemoveAuthorization_ValidateBasic(t *testing.T) {
 			msg:  types.NewMsgRemoveAuthorization(sample.AccAddress(), ""),
 			expectErr: func(t require.TestingT, err error, msgAndArgs ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.Contains(t, err.Error(), "invalid msg url")
+				require.ErrorContains(t, err, "invalid msg url")
 			},
 		},
 		{

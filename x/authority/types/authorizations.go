@@ -93,7 +93,7 @@ func (a *AuthorizationList) SetAuthorization(authorization Authorization) {
 	a.Authorizations = append(a.Authorizations, authorization)
 }
 
-// RemoveAuthorization removes the authorization from the list. It does not check if the authorization exists or not.
+// RemoveAuthorization removes the authorization from the list. It should be called by the admin policy account.
 func (a *AuthorizationList) RemoveAuthorization(msgURL string) {
 	for i, auth := range a.Authorizations {
 		if auth.MsgUrl == msgURL {
@@ -112,7 +112,7 @@ func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, erro
 		}
 	}
 	// Returning first value of enum, can consider adding a default value of `EmptyPolicy` in the enum.
-	return PolicyType(0), ErrAuthorizationNotFound
+	return PolicyType_groupEmpty, ErrAuthorizationNotFound
 }
 
 // Validate checks if the authorization list is valid. It returns an error if the message url is duplicated with different policies.

@@ -3,7 +3,7 @@
 removes an existing authorization
 
 ```
-zetacored tx authority remove-authorization [msg-url [flags]
+zetacored tx authority remove-authorization [msg-url] [flags]
 ```
 
 ### Options

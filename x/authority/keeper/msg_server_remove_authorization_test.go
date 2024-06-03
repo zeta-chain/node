@@ -13,12 +13,64 @@ import (
 )
 
 func TestMsgServer_RemoveAuthorization(t *testing.T) {
-	t.Run("successfully remove authorization", func(t *testing.T) {
+	t.Run("successfully remove operational policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		admin := keepertest.SetAdminPolices(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		msgServer := keeper.NewMsgServerImpl(*k)
 		url := types.OperationPolicyMessages[0]
+
+		msg := &types.MsgRemoveAuthorization{
+			Creator: admin,
+			MsgUrl:  url,
+		}
+
+		authorizationList, found := k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		_, err := authorizationList.GetAuthorizedPolicy(url)
+		require.NoError(t, err, types.ErrAuthorizationNotFound)
+
+		_, err = msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
+		require.NoError(t, err)
+
+		authorizationList, found = k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		_, err = authorizationList.GetAuthorizedPolicy(url)
+		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
+	})
+
+	t.Run("successfully remove admin policy authorization", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		admin := keepertest.SetAdminPolices(ctx, k)
+		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		msgServer := keeper.NewMsgServerImpl(*k)
+		url := types.AdminPolicyMessages[0]
+
+		msg := &types.MsgRemoveAuthorization{
+			Creator: admin,
+			MsgUrl:  url,
+		}
+
+		authorizationList, found := k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		_, err := authorizationList.GetAuthorizedPolicy(url)
+		require.NoError(t, err, types.ErrAuthorizationNotFound)
+
+		_, err = msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
+		require.NoError(t, err)
+
+		authorizationList, found = k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		_, err = authorizationList.GetAuthorizedPolicy(url)
+		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
+	})
+
+	t.Run("successfully remove emergency policy authorization", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		admin := keepertest.SetAdminPolices(ctx, k)
+		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		msgServer := keeper.NewMsgServerImpl(*k)
+		url := types.EmergencyPolicyMessages[0]
 
 		msg := &types.MsgRemoveAuthorization{
 			Creator: admin,

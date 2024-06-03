@@ -11,7 +11,7 @@ import (
 
 func CmdRemoveAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-authorization [msg-url",
+		Use:   "remove-authorization [msg-url]",
 		Short: "removes an existing authorization",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
