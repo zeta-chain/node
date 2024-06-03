@@ -9,7 +9,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
@@ -81,13 +80,7 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetabitcoin.DefaultDepositorFee
-	txHash, err = runner.SendToTSSFromDeployerToDeposit(
-		runner.BTCTSSAddress,
-		amount,
-		utxos,
-		runner.BtcRPCClient,
-		runner.BTCDeployerAddress,
-	)
+	txHash, err = runner.SendToTSSFromDeployerToDeposit(amount, utxos)
 	if err != nil {
 		panic(err)
 	}
@@ -133,38 +126,19 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	// send two transactions to the TSS address
 	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
-	txHash1, err := runner.SendToTSSFromDeployerToDeposit(
-		runner.BTCTSSAddress,
-		amount1,
-		utxos[:2],
-		runner.BtcRPCClient,
-		runner.BTCDeployerAddress,
-	)
+	txHash1, err := runner.SendToTSSFromDeployerToDeposit(amount1, utxos[:2])
 	if err != nil {
 		panic(err)
 	}
 	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
-	txHash2, err := runner.SendToTSSFromDeployerToDeposit(
-		runner.BTCTSSAddress,
-		amount2,
-		utxos[2:4],
-		runner.BtcRPCClient,
-		runner.BTCDeployerAddress,
-	)
+	txHash2, err := runner.SendToTSSFromDeployerToDeposit(amount2, utxos[2:4])
 	if err != nil {
 		panic(err)
 	}
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
-	_, err = runner.SendToTSSFromDeployerWithMemo(
-		runner.BTCTSSAddress,
-		0.11,
-		utxos[4:5],
-		runner.BtcRPCClient,
-		[]byte(constant.DonationMessage),
-		runner.BTCDeployerAddress,
-	)
+	_, err = runner.SendToTSSFromDeployerWithMemo(0.11, utxos[4:5], []byte(constant.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
@@ -201,31 +175,22 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 	}
 }
 
-func (runner *E2ERunner) SendToTSSFromDeployerToDeposit(
-	to btcutil.Address,
-	amount float64,
-	inputUTXOs []btcjson.ListUnspentResult,
-	btc *rpcclient.Client,
-	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
-) (*chainhash.Hash, error) {
-	return runner.SendToTSSFromDeployerWithMemo(
-		to,
-		amount,
-		inputUTXOs,
-		btc,
-		runner.DeployerAddress.Bytes(),
-		btcDeployerAddress,
-	)
+func (runner *E2ERunner) SendToTSSFromDeployerToDeposit(amount float64, inputUTXOs []btcjson.ListUnspentResult) (
+	*chainhash.Hash,
+	error,
+) {
+	return runner.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, runner.DeployerAddress.Bytes())
 }
 
 func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
-	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
-	btcRPC *rpcclient.Client,
 	memo []byte,
-	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
+	btcRPC := runner.BtcRPCClient
+	to := runner.BTCTSSAddress
+	btcDeployerAddress := runner.BTCDeployerAddress
+
 	// prepare inputs
 	inputs := make([]btcjson.TransactionInput, len(inputUTXOs))
 	inputSats := btcutil.Amount(0)

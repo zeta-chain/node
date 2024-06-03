@@ -151,14 +151,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
-	txID, err := r.SendToTSSFromDeployerWithMemo(
-		r.BTCTSSAddress,
-		0.01,
-		utxos[0:1],
-		r.BtcRPCClient,
-		memo,
-		r.BTCDeployerAddress,
-	)
+	txID, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos[0:1], memo)
 	if err != nil {
 		panic(err)
 	}
@@ -200,14 +193,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-		txid, err := r.SendToTSSFromDeployerWithMemo(
-			r.BTCTSSAddress,
-			amount,
-			utxos[1:2],
-			r.BtcRPCClient,
-			memo,
-			r.BTCDeployerAddress,
-		)
+		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[1:2], memo)
 		if err != nil {
 			panic(err)
 		}
