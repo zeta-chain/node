@@ -2,7 +2,9 @@ package e2etests
 
 import (
 	"fmt"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -26,7 +28,9 @@ func TestDeployContract(r *runner.E2ERunner, args []string) {
 	availableContractNamesMessage := fmt.Sprintf("Available contract names: %v", availableContractNames)
 
 	if len(args) != 1 {
-		panic("TestDeployContract requires exactly one argument for the contract name. " + availableContractNamesMessage)
+		panic(
+			"TestDeployContract requires exactly one argument for the contract name. " + availableContractNamesMessage,
+		)
 	}
 	contractName := args[0]
 
