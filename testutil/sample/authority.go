@@ -3,6 +3,7 @@ package sample
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
@@ -63,5 +64,24 @@ func Authorization() authoritytypes.Authorization {
 	return authoritytypes.Authorization{
 		MsgUrl:           "ABC",
 		AuthorizedPolicy: authoritytypes.PolicyType_groupOperational,
+	}
+}
+
+func MultipleSignerMessage() sdk.Msg {
+	return &TestMessage{}
+}
+
+type TestMessage struct{}
+
+var _ sdk.Msg = &TestMessage{}
+
+func (m *TestMessage) Reset()               {}
+func (m *TestMessage) String() string       { return "TestMessage" }
+func (m *TestMessage) ProtoMessage()        {}
+func (m *TestMessage) ValidateBasic() error { return nil }
+func (m *TestMessage) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{
+		sdk.MustAccAddressFromBech32(AccAddress()),
+		sdk.MustAccAddressFromBech32(AccAddress()),
 	}
 }
