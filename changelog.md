@@ -48,6 +48,7 @@
 * [2199](https://github.com/zeta-chain/node/pull/2199) - custom priority mempool unit tests
 * [2240](https://github.com/zeta-chain/node/pull/2240) - removed hard-coded Bitcoin regnet chainID in E2E withdraw tests
 * [2266](https://github.com/zeta-chain/node/pull/2266) - try fixing E2E test `crosschain_swap` failure `btc transaction not signed`
+* [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
 
 ### Fixes
 
