@@ -26,6 +26,7 @@ InitiateOutbound updates the store so observers can use the PendingCCTX query:
   - if preprocessing of outbound, such as paying the gas fee for the destination fails, the state is reverted to aborted
 
     We do not return an error from this function, as all changes need to be persisted to the state.
+
     Instead, we use a temporary context to make changes and then commit the context on for the happy path, i.e cctx is set to PendingOutbound.
     New CCTX status after preprocessing is returned.
 */
