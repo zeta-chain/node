@@ -34,12 +34,12 @@ func (runner *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
 		}
 
 		// mine some blocks to get some BTC into the deployer address
-		_, err = runner.BtcRPCClient.GenerateToAddress(101, runner.BTCDeployerAddress, nil)
+		_, err = runner.GenerateToAddressOnLocalBitcoin(101, runner.BTCDeployerAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		_, err = runner.BtcRPCClient.GenerateToAddress(4, runner.BTCDeployerAddress, nil)
+		_, err = runner.GenerateToAddressOnLocalBitcoin(4, runner.BTCDeployerAddress)
 		if err != nil {
 			panic(err)
 		}

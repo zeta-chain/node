@@ -81,7 +81,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// mine 10 blocks to confirm the withdraw tx
-	_, err = r.BtcRPCClient.GenerateToAddress(10, to, nil)
+	_, err = r.GenerateToAddressOnLocalBitcoin(10, to)
 	if err != nil {
 		panic(err)
 	}

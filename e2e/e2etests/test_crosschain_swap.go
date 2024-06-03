@@ -110,7 +110,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// mine 10 blocks to confirm the outbound tx
-	_, err = r.BtcRPCClient.GenerateToAddress(10, r.BTCDeployerAddress, nil)
+	_, err = r.GenerateToAddressOnLocalBitcoin(10, r.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}

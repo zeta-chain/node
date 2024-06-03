@@ -29,11 +29,6 @@ import (
 
 var blockHeaderBTCTimeout = 5 * time.Minute
 
-// IsLocalBitcoin returns true if the runner is running on a local bitcoin network
-func (runner *E2ERunner) IsLocalBitcoin() bool {
-	return runner.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
-}
-
 // ListDeployerUTXOs list the deployer's UTXOs that have at least `minAmount`
 func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
@@ -317,7 +312,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 	runner.Logger.Info("txid: %+v", txid)
-	_, err = btcRPC.GenerateToAddress(6, btcDeployerAddress, nil)
+	_, err = runner.GenerateToAddressOnLocalBitcoin(6, btcDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -364,6 +359,24 @@ func (runner *E2ERunner) GetBitcoinChainID() int64 {
 	return chainID
 }
 
+// IsLocalBitcoin returns true if the runner is running on a local bitcoin network
+func (runner *E2ERunner) IsLocalBitcoin() bool {
+	return runner.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
+}
+
+// GenerateToAddressOnLocalBitcoin generates blocks to an address if the runner is interacting
+// with a local bitcoin network
+func (runner *E2ERunner) GenerateToAddressOnLocalBitcoin(
+	numBlocks int64,
+	address btcutil.Address,
+) ([]*chainhash.Hash, error) {
+	// if not local bitcoin network, do nothing
+	if runner.IsLocalBitcoin() {
+		return runner.BtcRPCClient.GenerateToAddress(numBlocks, address, nil)
+	}
+	return nil, nil
+}
+
 // MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
 func (runner *E2ERunner) MineBlocks() func() {
@@ -374,7 +387,7 @@ func (runner *E2ERunner) MineBlocks() func() {
 			case <-stopChan:
 				return
 			default:
-				_, err := runner.BtcRPCClient.GenerateToAddress(1, runner.BTCDeployerAddress, nil)
+				_, err := runner.GenerateToAddressOnLocalBitcoin(1, runner.BTCDeployerAddress)
 				if err != nil {
 					panic(err)
 				}
