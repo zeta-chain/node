@@ -20,6 +20,7 @@
 * [2287](https://github.com/zeta-chain/node/pull/2287) - implement `MsgUpdateChainInfo` message
 * [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
+* [2291](https://github.com/zeta-chain/node/pull/2291) - initialize cctx gateway interface
 * [2289](https://github.com/zeta-chain/node/pull/2289) - add an authorization list to keep track of all authorizations on the chain
 
 ### Refactor
@@ -67,6 +68,13 @@
 * [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
+
+## v17.0.0
+
+### Fixes
+
+* [2249](https://github.com/zeta-chain/node/pull/2249) - fix inbound and outbound validation for BSC chain
+* [2265](https://github.com/zeta-chain/node/pull/2265) - fix rate limiter query for revert cctxs
 
 ## v16.0.0
 
