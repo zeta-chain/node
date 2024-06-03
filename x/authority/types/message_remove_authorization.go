@@ -10,10 +10,10 @@ const TypeRemoveAuthorization = "RemoveAuthorization"
 
 var _ sdk.Msg = &MsgRemoveAuthorization{}
 
-func NewMsgRemoveAuthorization(creator string, msgUrl string) *MsgRemoveAuthorization {
+func NewMsgRemoveAuthorization(creator string, msgURL string) *MsgRemoveAuthorization {
 	return &MsgRemoveAuthorization{
 		Creator: creator,
-		MsgUrl:  msgUrl,
+		MsgUrl:  msgURL,
 	}
 }
 
@@ -43,7 +43,7 @@ func (msg *MsgRemoveAuthorization) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if err := ValidateMsgUrl(msg.MsgUrl); err != nil {
+	if err := ValidateMsgURL(msg.MsgUrl); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg url: %s", err.Error())
 	}
 

@@ -25,11 +25,14 @@ message MsgUpdateChainInfo {
 
 ## MsgAddAuthorization
 
+AddAuthorization defines a method to add an authorization.If the authorization already exists, it will be overwritten with the provided policy.
+This should be called by the admin policy account.
+
 ```proto
 message MsgAddAuthorization {
 	string creator = 1;
 	string msg_url = 2;
-	Policy policy = 3;
+	PolicyType authorized_policy = 3;
 }
 ```
 

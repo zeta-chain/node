@@ -10,10 +10,10 @@ const TypeMsgAddAuthorization = "AddAuthorization"
 
 var _ sdk.Msg = &MsgAddAuthorization{}
 
-func NewMsgAddAuthorization(creator string, msgUrl string, authorizedPolicy PolicyType) *MsgAddAuthorization {
+func NewMsgAddAuthorization(creator string, msgURL string, authorizedPolicy PolicyType) *MsgAddAuthorization {
 	return &MsgAddAuthorization{
 		Creator:          creator,
-		MsgUrl:           msgUrl,
+		MsgUrl:           msgURL,
 		AuthorizedPolicy: authorizedPolicy,
 	}
 }
@@ -50,14 +50,14 @@ func (msg *MsgAddAuthorization) ValidateBasic() error {
 	}
 
 	// the message URL must be valid
-	if err := ValidateMsgUrl(msg.MsgUrl); err != nil {
+	if err := ValidateMsgURL(msg.MsgUrl); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg url: %s", err.Error())
 	}
 
 	return nil
 }
 
-func ValidateMsgUrl(url string) error {
+func ValidateMsgURL(url string) error {
 	if len(url) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message URL cannot be empty")
 	}

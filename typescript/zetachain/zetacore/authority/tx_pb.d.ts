@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Policies, Policy } from "./policies_pb.js";
+import type { Policies, PolicyType } from "./policies_pb.js";
 import type { ChainInfo } from "./chain_info_pb.js";
 
 /**
@@ -27,9 +27,9 @@ export declare class MsgAddAuthorization extends Message<MsgAddAuthorization> {
   msgUrl: string;
 
   /**
-   * @generated from field: zetachain.zetacore.authority.Policy policy = 3;
+   * @generated from field: zetachain.zetacore.authority.PolicyType authorized_policy = 3;
    */
-  policy?: Policy;
+  authorizedPolicy: PolicyType;
 
   constructor(data?: PartialMessage<MsgAddAuthorization>);
 

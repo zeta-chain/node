@@ -5,12 +5,16 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 // AddAuthorization defines a method to add an authorization.If the authorization already exists, it will be overwritten with the provided policy.
 // This should be called by the admin policy account.
-func (k msgServer) AddAuthorization(goCtx context.Context, msg *types.MsgAddAuthorization) (*types.MsgAddAuthorizationResponse, error) {
+func (k msgServer) AddAuthorization(
+	goCtx context.Context,
+	msg *types.MsgAddAuthorization,
+) (*types.MsgAddAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.IsAuthorized(ctx, msg.Creator, types.PolicyType_groupAdmin) {

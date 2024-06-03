@@ -6,12 +6,16 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 // RemoveAuthorization defines a method to remove an authorization.
 // This should be called by the admin policy account.
-func (k msgServer) RemoveAuthorization(goCtx context.Context, msg *types.MsgRemoveAuthorization) (*types.MsgRemoveAuthorizationResponse, error) {
+func (k msgServer) RemoveAuthorization(
+	goCtx context.Context,
+	msg *types.MsgRemoveAuthorization,
+) (*types.MsgRemoveAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.IsAuthorized(ctx, msg.Creator, types.PolicyType_groupAdmin) {
