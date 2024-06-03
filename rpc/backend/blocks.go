@@ -22,8 +22,10 @@ import (
 	"math/big"
 	"strconv"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/ethereum/go-ethereum/common"
@@ -272,14 +274,14 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 	return big.NewInt(resBlock.Block.Height), nil
 }
 
-// EthMsgsFromTendermintBlock returns all real MsgEthereumTxs from a
+// EthMsgsFromTendermintBlock returns all real and synthetic MsgEthereumTxs from a
 // Tendermint block. It also ensures consistency over the correct txs indexes
 // across RPC endpoints
 func (b *Backend) EthMsgsFromTendermintBlock(
 	resBlock *tmrpctypes.ResultBlock,
 	blockRes *tmrpctypes.ResultBlockResults,
 ) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields) {
-	var result []*evmtypes.MsgEthereumTx
+	var ethMsgs []*evmtypes.MsgEthereumTx
 	var txsAdditional []*rpctypes.TxResultAdditionalFields
 	block := resBlock.Block
 
@@ -294,30 +296,78 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		}
 
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(tx)
-		if err != nil {
-			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
-			continue
-		}
-		for _, msg := range tx.GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-			if !ok {
-				res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
-				if err != nil || additional == nil || res == nil {
-					continue
+		// assumption is that if regular ethermint msg is found in tx
+		// there should not be synthetic one as well
+		shouldCheckForSyntheticTx := true
+		// if tx can be decoded, try to find MsgEthereumTx inside
+		if err == nil {
+			for _, msg := range tx.GetMsgs() {
+				ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+				if ok {
+					shouldCheckForSyntheticTx = false
+					ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
+					ethMsgs = append(ethMsgs, ethMsg)
+					txsAdditional = append(txsAdditional, nil)
 				}
-				ethMsg = &evmtypes.MsgEthereumTx{
-					From: additional.Sender.Hex(),
-					Hash: additional.Hash.Hex(),
-				}
-				txsAdditional = append(txsAdditional, additional)
-			} else {
-				ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
-				txsAdditional = append(txsAdditional, nil)
 			}
-			result = append(result, ethMsg)
+		} else {
+			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
+		}
+
+		// if tx can not be decoded or MsgEthereumTx was not found, try to parse it from block results
+		if shouldCheckForSyntheticTx {
+			ethMsg, additional := b.parseSyntheticTxFromBlockResults(txResults, i, tx, block)
+			if ethMsg != nil {
+				ethMsgs = append(ethMsgs, ethMsg)
+				txsAdditional = append(txsAdditional, additional)
+			}
 		}
 	}
-	return result, txsAdditional
+	return ethMsgs, txsAdditional
+}
+
+func (b *Backend) parseSyntheticTxFromBlockResults(
+	txResults []*abci.ResponseDeliverTx,
+	i int,
+	tx sdk.Tx,
+	block *tmtypes.Block,
+) (*evmtypes.MsgEthereumTx, *rpctypes.TxResultAdditionalFields) {
+	res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
+	// just skip tx if it can not be parsed, so remaining txs from the block are parsed
+	if err != nil {
+		b.logger.Error(err.Error())
+		return nil, nil
+	}
+	if additional == nil || res == nil {
+		return nil, nil
+	}
+	return b.parseSyntethicTxFromAdditionalFields(additional), additional
+}
+
+func (b *Backend) parseSyntethicTxFromAdditionalFields(
+	additional *rpctypes.TxResultAdditionalFields,
+) *evmtypes.MsgEthereumTx {
+	recipient := additional.Recipient
+	t := ethtypes.NewTx(&ethtypes.LegacyTx{
+		Nonce:    additional.Nonce,
+		Data:     additional.Data,
+		Gas:      additional.GasUsed,
+		To:       &recipient,
+		GasPrice: nil,
+		Value:    additional.Value,
+		V:        big.NewInt(0),
+		R:        big.NewInt(0),
+		S:        big.NewInt(0),
+	})
+	ethMsg := &evmtypes.MsgEthereumTx{}
+	err := ethMsg.FromEthereumTx(t)
+	if err != nil {
+		b.logger.Error("can not create eth msg", err.Error())
+		return nil
+	}
+	ethMsg.Hash = additional.Hash.Hex()
+	ethMsg.From = additional.Sender.Hex()
+	return ethMsg
 }
 
 // HeaderByNumber returns the block header identified by height.
