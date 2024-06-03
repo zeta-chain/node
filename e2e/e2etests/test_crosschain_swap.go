@@ -116,7 +116,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// mine blocks if testing on regnet
-	var stop chan struct{}
+	var stop func()
 	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
 	if isRegnet {
 		stop = r.MineBlocks()
@@ -240,6 +240,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	// stop mining
 	if isRegnet {
-		stop <- struct{}{}
+		stop()
 	}
 }

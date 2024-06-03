@@ -366,12 +366,12 @@ func (runner *E2ERunner) GetBitcoinChainID() int64 {
 
 // MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
-func (runner *E2ERunner) MineBlocks() chan struct{} {
-	stop := make(chan struct{})
+func (runner *E2ERunner) MineBlocks() func() {
+	stopChan := make(chan struct{})
 	go func() {
 		for {
 			select {
-			case <-stop:
+			case <-stopChan:
 				return
 			default:
 				_, err := runner.BtcRPCClient.GenerateToAddress(1, runner.BTCDeployerAddress, nil)
@@ -382,7 +382,10 @@ func (runner *E2ERunner) MineBlocks() chan struct{} {
 			}
 		}
 	}()
-	return stop
+
+	return func() {
+		close(stopChan)
+	}
 }
 
 // ProveBTCTransaction proves that a BTC transaction is in a block header and that the block header is in ZetaChain

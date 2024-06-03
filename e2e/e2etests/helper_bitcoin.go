@@ -64,7 +64,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// mine blocks if testing on regnet
-	var stop chan struct{}
+	var stop func()
 	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
 	if isRegnet {
 		stop = r.MineBlocks()
@@ -119,7 +119,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 	// stop mining
 	if isRegnet {
-		stop <- struct{}{}
+		stop()
 	}
 
 	return rawTx
