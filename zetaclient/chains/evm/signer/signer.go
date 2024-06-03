@@ -39,12 +39,10 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-const (
-	// EthTransferGasLimit is the gas limit for a standard ETH transfer
-	EthTransferGasLimit = 21000
+var (
+	zeroValue                        = int64(0)
+	_         interfaces.ChainSigner = &Signer{}
 )
-
-var _ interfaces.ChainSigner = &Signer{}
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
@@ -213,7 +211,7 @@ func (signer *Signer) SignOutbound(txData *OutboundData) (*ethtypes.Transaction,
 
 	tx, _, _, err := signer.Sign(data,
 		signer.zetaConnectorAddress,
-		big.NewInt(0),
+		big.NewInt(zeroValue),
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -253,7 +251,7 @@ func (signer *Signer) SignRevertTx(txData *OutboundData) (*ethtypes.Transaction,
 
 	tx, _, _, err := signer.Sign(data,
 		signer.zetaConnectorAddress,
-		big.NewInt(0),
+		big.NewInt(zeroValue),
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -270,8 +268,8 @@ func (signer *Signer) SignCancelTx(txData *OutboundData) (*ethtypes.Transaction,
 	tx, _, _, err := signer.Sign(
 		nil,
 		signer.tssSigner.EVMAddress(),
-		big.NewInt(0), // zero out the amount to cancel the tx
-		EthTransferGasLimit,
+		big.NewInt(zeroValue), // zero out the amount to cancel the tx
+		evm.EthTransferGasLimit,
 		txData.gasPrice,
 		txData.nonce,
 		txData.height,
@@ -289,7 +287,7 @@ func (signer *Signer) SignWithdrawTx(txData *OutboundData) (*ethtypes.Transactio
 		nil,
 		txData.to,
 		txData.amount,
-		EthTransferGasLimit,
+		evm.EthTransferGasLimit,
 		txData.gasPrice,
 		txData.nonce,
 		txData.height,
@@ -585,7 +583,7 @@ func (signer *Signer) SignERC20WithdrawTx(txData *OutboundData) (*ethtypes.Trans
 	tx, _, _, err := signer.Sign(
 		data,
 		signer.er20CustodyAddress,
-		big.NewInt(0),
+		big.NewInt(zeroValue),
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -649,7 +647,7 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string)
 	tx, _, _, err := signer.Sign(
 		data,
 		txData.to,
-		big.NewInt(0),
+		big.NewInt(zeroValue),
 		txData.gasLimit,
 		txData.gasPrice,
 		outboundParams.TssNonce,
