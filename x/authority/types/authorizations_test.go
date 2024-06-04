@@ -292,10 +292,10 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
-			removeMsgUrl: "XYZ",
+			removeMsgUrl: "ABC",
 			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
-					MsgUrl:           "ABC",
+					MsgUrl:           "XYZ",
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
@@ -420,6 +420,8 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
+			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
+			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {

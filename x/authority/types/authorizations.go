@@ -105,15 +105,13 @@ func (a *AuthorizationList) RemoveAuthorization(msgURL string) {
 	}
 }
 
-// GetAuthorizedPolicy returns the policy for the given message url. If the message url is not found,
-
+// GetAuthorizedPolicy returns the policy for the given message url. If the message url is not found, it returns an error.
 func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, error) {
 	for _, auth := range a.Authorizations {
 		if auth.MsgUrl == msgURL {
 			return auth.AuthorizedPolicy, nil
 		}
 	}
-	// Returning first value of enum, can consider adding a default value of `EmptyPolicy` in the enum.
 	return PolicyType_groupEmpty, ErrAuthorizationNotFound
 }
 
