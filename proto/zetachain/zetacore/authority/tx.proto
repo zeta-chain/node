@@ -12,7 +12,34 @@ option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 service Msg {
   rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
   rpc UpdateChainInfo(MsgUpdateChainInfo) returns (MsgUpdateChainInfoResponse);
+  rpc AddAuthorization(MsgAddAuthorization)
+      returns (MsgAddAuthorizationResponse);
+  rpc RemoveAuthorization(MsgRemoveAuthorization)
+      returns (MsgRemoveAuthorizationResponse);
 }
+
+// MsgAddAuthorization defines the MsgAddAuthorization service.
+// Adds an authorization to the chain. If the authorization already exists, it
+// will be updated.
+message MsgAddAuthorization {
+  string creator = 1;
+  string msg_url = 2;
+  PolicyType authorized_policy = 3;
+}
+
+// MsgAddAuthorizationResponse defines the MsgAddAuthorizationResponse service.
+message MsgAddAuthorizationResponse {}
+
+// MsgRemoveAuthorization defines the MsgRemoveAuthorization service.
+// Removes an authorization from the chain.
+message MsgRemoveAuthorization {
+  string creator = 1;
+  string msg_url = 2;
+}
+
+// MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
+// service.
+message MsgRemoveAuthorizationResponse {}
 
 // MsgUpdatePolicies defines the MsgUpdatePolicies service.
 message MsgUpdatePolicies {
