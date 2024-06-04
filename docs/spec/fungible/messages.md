@@ -2,10 +2,6 @@
 
 ## MsgDeploySystemContracts
 
-DeploySystemContracts deploy new instances of the system contracts
-
-Authorized: admin policy group 2.
-
 ```proto
 message MsgDeploySystemContracts {
 	string creator = 1;
@@ -13,25 +9,6 @@ message MsgDeploySystemContracts {
 ```
 
 ## MsgDeployFungibleCoinZRC20
-
-DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
-
-If this is a gas coin, the following happens:
-
-* ZRC20 contract for the coin is deployed
-* contract address of ZRC20 is set as a token address in the system
-contract
-* ZETA tokens are minted and deposited into the module account
-* setGasZetaPool is called on the system contract to add the information
-about the pool to the system contract
-* addLiquidityETH is called to add liquidity to the pool
-
-If this is a non-gas coin, the following happens:
-
-* ZRC20 contract for the coin is deployed
-* The coin is added to the list of foreign coins in the module's state
-
-Authorized: admin policy group 2.
 
 ```proto
 message MsgDeployFungibleCoinZRC20 {
@@ -48,11 +25,6 @@ message MsgDeployFungibleCoinZRC20 {
 
 ## MsgRemoveForeignCoin
 
-RemoveForeignCoin removes a coin from the list of foreign coins in the
-module's state.
-
-Authorized: admin policy group 2.
-
 ```proto
 message MsgRemoveForeignCoin {
 	string creator = 1;
@@ -61,8 +33,6 @@ message MsgRemoveForeignCoin {
 ```
 
 ## MsgUpdateSystemContract
-
-UpdateSystemContract updates the system contract
 
 ```proto
 message MsgUpdateSystemContract {
@@ -73,14 +43,6 @@ message MsgUpdateSystemContract {
 
 ## MsgUpdateContractBytecode
 
-UpdateContractBytecode updates the bytecode of a contract from the bytecode
-of an existing contract Only a ZRC20 contract or the WZeta connector contract
-can be updated IMPORTANT: the new contract bytecode must have the same
-storage layout as the old contract bytecode the new contract can add new
-variable but cannot remove any existing variable
-
-Authozied: admin policy group 2
-
 ```proto
 message MsgUpdateContractBytecode {
 	string creator = 1;
@@ -90,8 +52,6 @@ message MsgUpdateContractBytecode {
 ```
 
 ## MsgUpdateZRC20WithdrawFee
-
-UpdateZRC20WithdrawFee updates the withdraw fee and gas limit of a zrc20 token
 
 ```proto
 message MsgUpdateZRC20WithdrawFee {
@@ -104,10 +64,6 @@ message MsgUpdateZRC20WithdrawFee {
 
 ## MsgUpdateZRC20LiquidityCap
 
-UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
-
-Authorized: admin policy group 2.
-
 ```proto
 message MsgUpdateZRC20LiquidityCap {
 	string creator = 1;
@@ -118,9 +74,6 @@ message MsgUpdateZRC20LiquidityCap {
 
 ## MsgPauseZRC20
 
-PauseZRC20 pauses a list of ZRC20 tokens
-Authorized: admin policy group groupEmergency.
-
 ```proto
 message MsgPauseZRC20 {
 	string creator = 1;
@@ -129,9 +82,6 @@ message MsgPauseZRC20 {
 ```
 
 ## MsgUnpauseZRC20
-
-UnpauseZRC20 unpauses the ZRC20 token
-Authorized: admin policy group groupOperational.
 
 ```proto
 message MsgUnpauseZRC20 {

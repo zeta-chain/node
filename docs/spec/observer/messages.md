@@ -2,8 +2,6 @@
 
 ## MsgAddObserver
 
-AddObserver adds an observer address to the observer set
-
 ```proto
 message MsgAddObserver {
 	string creator = 1;
@@ -14,10 +12,6 @@ message MsgAddObserver {
 ```
 
 ## MsgUpdateObserver
-
-UpdateObserver handles updating an observer address
-Authorized: admin policy (admin update), old observer address (if the
-reason is that the observer was tombstoned).
 
 ```proto
 message MsgUpdateObserver {
@@ -30,11 +24,6 @@ message MsgUpdateObserver {
 
 ## MsgUpdateChainParams
 
-UpdateChainParams updates chain parameters for a specific chain, or add a new one.
-Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
-connector and ERC20 custody contract addresses, etc.
-Only the admin policy account is authorized to broadcast this message.
-
 ```proto
 message MsgUpdateChainParams {
 	string creator = 1;
@@ -43,8 +32,6 @@ message MsgUpdateChainParams {
 ```
 
 ## MsgRemoveChainParams
-
-RemoveChainParams removes chain parameters for a specific chain.
 
 ```proto
 message MsgRemoveChainParams {
@@ -65,11 +52,6 @@ message MsgVoteBlame {
 
 ## MsgUpdateKeygen
 
-UpdateKeygen updates the block height of the keygen and sets the status to
-"pending keygen".
-
-Authorized: admin policy group 1.
-
 ```proto
 message MsgUpdateKeygen {
 	string creator = 1;
@@ -78,8 +60,6 @@ message MsgUpdateKeygen {
 ```
 
 ## MsgVoteBlockHeader
-
-VoteBlockHeader vote for a new block header to the storers
 
 ```proto
 message MsgVoteBlockHeader {
@@ -93,8 +73,6 @@ message MsgVoteBlockHeader {
 
 ## MsgResetChainNonces
 
-ResetChainNonces handles resetting chain nonces
-
 ```proto
 message MsgResetChainNonces {
 	string creator = 1;
@@ -105,17 +83,6 @@ message MsgResetChainNonces {
 ```
 
 ## MsgVoteTSS
-
-VoteTSS votes on creating a TSS key and recording the information about it (public
-key, participant and operator addresses, finalized and keygen heights).
-
-If the vote passes, the information about the TSS key is recorded on chain
-and the status of the keygen is set to "success".
-
-Fails if the keygen does not exist, the keygen has been already
-completed, or the keygen has failed.
-
-Only node accounts are authorized to broadcast this message.
 
 ```proto
 message MsgVoteTSS {
@@ -128,9 +95,6 @@ message MsgVoteTSS {
 
 ## MsgEnableCCTX
 
-EnableCCTX enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
-The flags are enabled by the policy account with the groupOperational policy type.
-
 ```proto
 message MsgEnableCCTX {
 	string creator = 1;
@@ -141,9 +105,6 @@ message MsgEnableCCTX {
 
 ## MsgDisableCCTX
 
-DisableCCTX disables the IsInboundEnabled and IsOutboundEnabled flags. These flags control the creation of inbounds and outbounds.
-The flags are disabled by the policy account with the groupEmergency policy type.
-
 ```proto
 message MsgDisableCCTX {
 	string creator = 1;
@@ -153,9 +114,6 @@ message MsgDisableCCTX {
 ```
 
 ## MsgUpdateGasPriceIncreaseFlags
-
-UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
-The flags are updated by the policy account with the groupOperational policy type.
 
 ```proto
 message MsgUpdateGasPriceIncreaseFlags {

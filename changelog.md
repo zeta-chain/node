@@ -21,7 +21,7 @@
 * [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
 * [2289](https://github.com/zeta-chain/node/pull/2289) - add an authorization list to keep track of all authorizations on the chain
-* [2305](https://github.com/zeta-chain/node/pull/2305) - add `MsgAddAuthorization` and `MsgRemoveAuthorization` whcih can be used to update the authorization list
+* [2305](https://github.com/zeta-chain/node/pull/2305) - add new messages `MsgAddAuthorization` and `MsgRemoveAuthorization` that can be used to update the authorization list
 
 ### Refactor
 
