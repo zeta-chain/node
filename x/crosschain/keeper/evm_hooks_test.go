@@ -470,7 +470,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
@@ -516,7 +516,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(
@@ -538,7 +538,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
@@ -570,7 +570,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
@@ -634,7 +634,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
@@ -699,7 +699,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")

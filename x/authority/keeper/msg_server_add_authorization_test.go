@@ -16,7 +16,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 	const url = "/zetachain.zetacore.sample.ABC"
 	t.Run("successfully add authorization of type admin to existing authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		msgServer := keeper.NewMsgServerImpl(*k)
 		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
@@ -40,7 +40,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 	t.Run("successfully add authorization of type operational to existing authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -64,7 +64,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 	t.Run("successfully add authorization of type emergency to existing authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -88,7 +88,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 	t.Run("successfully add authorization to empty authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.AuthorizationList{})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -111,7 +111,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 	t.Run("successfully set authorization when list is not found ", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		authorizationList, found := k.GetAuthorizationList(ctx)
 		require.False(t, found)
@@ -135,7 +135,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 	t.Run("update existing authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           "/zetachain.zetacore.sample.ABC",
@@ -188,7 +188,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 	// This scenario is not possible as the authorization list is always valid.But it is good to have in case the validation logic is changed in the future
 	t.Run("fail to set invalid authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           url,

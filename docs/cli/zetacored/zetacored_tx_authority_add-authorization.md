@@ -1,6 +1,6 @@
 # tx authority add-authorization
 
-add a new authorization or update the policy of an existing authorization.Policy type can be 0 for groupEmergency, 1 for groupOperational, 2 for groupAdmin
+Add a new authorization or update the policy of an existing authorization. Policy type can be 0 for groupEmergency, 1 for groupOperational, 2 for groupAdmin.
 
 ```
 zetacored tx authority add-authorization [msg-url] [authorized-policy] [flags]

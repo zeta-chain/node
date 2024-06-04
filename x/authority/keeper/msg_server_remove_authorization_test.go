@@ -15,7 +15,7 @@ import (
 func TestMsgServer_RemoveAuthorization(t *testing.T) {
 	t.Run("successfully remove operational policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -43,7 +43,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 
 	t.Run("successfully remove admin policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -71,7 +71,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 
 	t.Run("successfully remove emergency policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -125,7 +125,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 
 	t.Run("unable to remove authorization if authorization list does not exist", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		url := types.OperationPolicyMessages[0]
 
@@ -140,7 +140,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 
 	t.Run("unable to remove authorization if authorization does not exist", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           "ABC",
@@ -171,7 +171,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 
 	t.Run("unable to remove authorization if authorization list is invalid", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           "ABC",
