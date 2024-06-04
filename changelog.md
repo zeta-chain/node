@@ -22,6 +22,7 @@
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
 * [2291](https://github.com/zeta-chain/node/pull/2291) - initialize cctx gateway interface
 * [2289](https://github.com/zeta-chain/node/pull/2289) - add an authorization list to keep track of all authorizations on the chain
+* [2313](https://github.com/zeta-chain/node/pull/2313) - add `CheckAuthorization` function to replace the `IsAuthorized` function. The new function uses the authorization list to verify the signer's authorization.
 
 ### Refactor
 
