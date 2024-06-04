@@ -6,6 +6,8 @@ import (
 	"cosmossdk.io/errors"
 )
 
+// TODO : Refactor this file to authorization_list.go
+
 var (
 	// OperationPolicyMessages keeps track of the message URLs that can, by default, only be executed by operational policy address
 	OperationPolicyMessages = []string{

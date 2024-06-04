@@ -10,8 +10,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
-// TODO : Refactor this file to authorization_list.go
-
 // SetAuthorizationList sets the authorization list to the store.It returns an error if the list is invalid.
 func (k Keeper) SetAuthorizationList(ctx sdk.Context, list types.AuthorizationList) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.AuthorizationListKey))
