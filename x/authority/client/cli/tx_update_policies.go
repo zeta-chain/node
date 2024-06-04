@@ -14,10 +14,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
-func CmdUpdatePolices() *cobra.Command {
+func CmdUpdatePolicies() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-policies [policies-json-file]",
-		Short: "Update the policies",
+		Short: "Update policies to values provided in the JSON file.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			policies, err := ReadPoliciesFromFile(os.DirFS("."), args[0])
