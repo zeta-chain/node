@@ -5,11 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
 func TestKeeper_GetAuthorizationList(t *testing.T) {
@@ -200,5 +200,33 @@ func TestKeeper_CheckAuthorization(t *testing.T) {
 
 		err := k.CheckAuthorization(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrSignerDoesntMatch)
+	})
+
+	t.Run("unable to check authorization when the required policy is empty", func(t *testing.T) {
+		k, ctx := keepertest.AuthorityKeeper(t)
+		signer := sample.AccAddress()
+		msg := lightclienttypes.MsgDisableHeaderVerification{
+			Creator: signer,
+		}
+		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
+			{
+				MsgUrl:           sdk.MsgTypeURL(&msg),
+				AuthorizedPolicy: types.PolicyType_groupEmpty,
+			},
+		},
+		}
+		policies := types.Policies{
+			Items: []*types.Policy{
+				{
+					Address:    signer,
+					PolicyType: types.PolicyType_groupOperational,
+				},
+			},
+		}
+		k.SetPolicies(ctx, policies)
+		k.SetAuthorizationList(ctx, authorizationList)
+
+		err := k.CheckAuthorization(ctx, &msg)
+		require.ErrorIs(t, err, types.ErrInvalidPolicyType)
 	})
 }

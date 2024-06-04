@@ -43,13 +43,16 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, policyType types.P
 }
 
 // CheckAuthorization checks if the signer is authorized to sign the message
+// It uses both the authorization list and the policies to check if the signer is authorized
 func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	// Policy transactions must have only one signer
 	if len(msg.GetSigners()) != 1 {
 		return errors.Wrap(types.ErrSigners, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
 	}
+
 	signer := msg.GetSigners()[0].String()
 	msgURL := sdk.MsgTypeURL(msg)
+
 	authorizationsList, found := k.GetAuthorizationList(ctx)
 	if !found {
 		return types.ErrAuthorizationListNotFound
@@ -58,10 +61,10 @@ func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	if err != nil {
 		return errors.Wrap(types.ErrAuthorizationNotFound, fmt.Sprintf("msg: %v", msgURL))
 	}
-	//// TODO : check for empty policy
-	//if policyRequired == types.PolicyType_groupOperational {
-	//	return errors.Wrap(types.ErrMsgNotAuthorized, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
-	//}
+	if policyRequired == types.PolicyType_groupEmpty {
+		return errors.Wrap(types.ErrInvalidPolicyType, fmt.Sprintf("Empty policy for msg: %v", msgURL))
+	}
+
 	policies, found := k.GetPolicies(ctx)
 	if !found {
 		return errors.Wrap(types.ErrPoliciesNotFound, fmt.Sprintf("msg: %v", msgURL))

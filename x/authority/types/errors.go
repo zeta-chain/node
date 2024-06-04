@@ -11,4 +11,5 @@ var (
 	ErrMsgNotAuthorized          = errorsmod.Register(ModuleName, 1107, "msg type is not authorized")
 	ErrPoliciesNotFound          = errorsmod.Register(ModuleName, 1108, "policies not found")
 	ErrSignerDoesntMatch         = errorsmod.Register(ModuleName, 1109, "signer doesn't match required policy")
+	ErrInvalidPolicyType         = errorsmod.Register(ModuleName, 1110, "invalid policy type")
 )
