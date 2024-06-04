@@ -29,7 +29,7 @@ import (
 var blockHeaderBTCTimeout = 5 * time.Minute
 
 // ListDeployerUTXOs list the deployer's UTXOs that have at least `minAmount`
-func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUnspentResult, error) {
+func (runner *E2ERunner) ListDeployerUTXOs(_ float64) ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
 	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(
 		1,
@@ -43,9 +43,9 @@ func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUns
 	// filter UTXOs by `minAmount`
 	filtered := []btcjson.ListUnspentResult{}
 	for _, utxo := range utxos {
-		if utxo.Amount >= minAmount {
-			filtered = append(filtered, utxo)
-		}
+		//if utxo.Amount >= minAmount {
+		filtered = append(filtered, utxo)
+		//}
 	}
 
 	return filtered, nil
