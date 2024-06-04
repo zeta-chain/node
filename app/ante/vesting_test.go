@@ -94,8 +94,7 @@ func TestVesting_AnteHandle(t *testing.T) {
 			_, err = decorator.AnteHandle(ctx, tx, false, mmd.AnteHandle)
 
 			if tt.wantHasErr {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.wantErr)
+				require.ErrorContains(t, err, tt.wantErr)
 			} else {
 				require.NoError(t, err)
 			}

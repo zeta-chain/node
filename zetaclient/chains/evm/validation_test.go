@@ -296,7 +296,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 			err := evm.ValidateEvmTransaction(tt.tx)
 			if tt.fail {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.msg)
+				require.ErrorContains(t, err, tt.msg)
 				return
 			}
 			require.NoError(t, err)

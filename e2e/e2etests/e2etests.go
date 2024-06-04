@@ -98,6 +98,12 @@ const (
 	TestUpdateBytecodeZRC20Name      = "update_bytecode_zrc20"
 	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
 	TestRateLimiterName              = "rate_limiter"
+
+	/*
+	 Special tests
+	 Not used to test functionalities but do various interactions with the netwoks
+	*/
+	TestDeploy = "deploy"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -506,5 +512,16 @@ var AllE2ETests = []runner.E2ETest{
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
 		TestRateLimiter,
+	),
+	/*
+	 Special tests
+	*/
+	runner.NewE2ETest(
+		TestDeploy,
+		"deploy a contract",
+		[]runner.ArgDefinition{
+			{Description: "contract name", DefaultValue: ""},
+		},
+		TestDeployContract,
 	),
 }
