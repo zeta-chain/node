@@ -79,7 +79,7 @@ func MockIsAuthorized(m *mock.Mock, address string, policyType types.PolicyType,
 	m.On("IsAuthorized", mock.Anything, address, policyType).Return(isAuthorized).Once()
 }
 
-func SetAdminPolices(ctx sdk.Context, ak *keeper.Keeper) string {
+func SetAdminPolicies(ctx sdk.Context, ak *keeper.Keeper) string {
 	admin := sample.AccAddress()
 	ak.SetPolicies(ctx, types.Policies{Items: []*types.Policy{
 		{

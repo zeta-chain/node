@@ -18,7 +18,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+	"github.com/zeta-chain/zetacore/testutil/testdata"
 )
 
 const (

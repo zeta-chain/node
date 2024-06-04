@@ -15,7 +15,7 @@ import (
 func CmdAddAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-authorization [msg-url] [authorized-policy]",
-		Short: "add a new authorization or update the policy of an existing authorization.Policy type can be 0 for groupEmergency, 1 for groupOperational, 2 for groupAdmin",
+		Short: "Add a new authorization or update the policy of an existing authorization. Policy type can be 0 for groupEmergency, 1 for groupOperational, 2 for groupAdmin.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)

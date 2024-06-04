@@ -26,8 +26,6 @@ zetacored query authority [flags]
 ### SEE ALSO
 
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
-* [zetacored query authority list-authorizations](zetacored_query_authority_list-authorizations.md)	 - lists all authorizations
-* [zetacored query authority show-authorization](zetacored_query_authority_show-authorization.md)	 - shows the authorization for a given message URL
 * [zetacored query authority show-chain-info](zetacored_query_authority_show-chain-info.md)	 - show the chain info
 * [zetacored query authority show-policies](zetacored_query_authority_show-policies.md)	 - show the policies
 

@@ -13,12 +13,13 @@ import (
 )
 
 func TestMsgServer_AddAuthorization(t *testing.T) {
+	const url = "/zetachain.zetacore.sample.ABC"
 	t.Run("successfully add authorization of type admin to existing authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -34,14 +35,15 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		policy, err := authorizationList.GetAuthorizedPolicy(url)
 		require.NoError(t, err)
 		require.Equal(t, types.PolicyType_groupAdmin, policy)
+		require.Equal(t, prevLen+1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("successfully add authorization of type operational to existing authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -57,14 +59,15 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		policy, err := authorizationList.GetAuthorizedPolicy(url)
 		require.NoError(t, err)
 		require.Equal(t, types.PolicyType_groupOperational, policy)
+		require.Equal(t, prevLen+1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("successfully add authorization of type emergency to existing authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -80,14 +83,14 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		policy, err := authorizationList.GetAuthorizedPolicy(url)
 		require.NoError(t, err)
 		require.Equal(t, types.PolicyType_groupEmergency, policy)
+		require.Equal(t, prevLen+1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("successfully add authorization to empty authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		k.SetAuthorizationList(ctx, types.AuthorizationList{})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -103,13 +106,15 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		policy, err := authorizationList.GetAuthorizedPolicy(url)
 		require.NoError(t, err)
 		require.Equal(t, types.PolicyType_groupAdmin, policy)
+		require.Equal(t, 1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("successfully set authorization when list is not found ", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
+		admin := keepertest.SetAdminPolicies(ctx, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
+		authorizationList, found := k.GetAuthorizationList(ctx)
+		require.False(t, found)
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -120,25 +125,28 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		_, err := msgServer.AddAuthorization(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
 
-		authorizationList, found := k.GetAuthorizationList(ctx)
+		authorizationList, found = k.GetAuthorizationList(ctx)
 		require.True(t, found)
 		policy, err := authorizationList.GetAuthorizedPolicy(url)
 		require.NoError(t, err)
 		require.Equal(t, types.PolicyType_groupAdmin, policy)
+		require.Equal(t, 1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("update existing authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
-		k.SetAuthorizationList(ctx, types.AuthorizationList{Authorizations: []types.Authorization{
+		admin := keepertest.SetAdminPolicies(ctx, k)
+		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           "/zetachain.zetacore.sample.ABC",
 				AuthorizedPolicy: types.PolicyType_groupOperational,
 			},
 		},
-		})
+		}
+		k.SetAuthorizationList(ctx, authorizationList)
+		prevLen := len(authorizationList.Authorizations)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -154,13 +162,14 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		policy, err := authorizationList.GetAuthorizedPolicy(url)
 		require.NoError(t, err)
 		require.Equal(t, types.PolicyType_groupAdmin, policy)
+		require.Equal(t, prevLen, len(authorizationList.Authorizations))
 	})
 
 	t.Run("fail to add authorization with invalid policy as creator", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          sample.AccAddress(),
@@ -170,24 +179,29 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 		_, err := msgServer.AddAuthorization(sdk.WrapSDKContext(ctx), msg)
 		require.ErrorIs(t, err, types.ErrUnauthorized)
+
+		authorizationList, found := k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		require.Equal(t, prevLen, len(authorizationList.Authorizations))
 	})
 
 	// This scenario is not possible as the authorization list is always valid.But it is good to have in case the validation logic is changed in the future
 	t.Run("fail to set invalid authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolices(ctx, k)
-		k.SetAuthorizationList(ctx, types.AuthorizationList{Authorizations: []types.Authorization{
+		admin := keepertest.SetAdminPolicies(ctx, k)
+		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
-				MsgUrl:           "/zetachain.zetacore.sample.ABC",
+				MsgUrl:           url,
 				AuthorizedPolicy: types.PolicyType_groupOperational,
 			},
 			{
-				MsgUrl:           "/zetachain.zetacore.sample.ABC",
+				MsgUrl:           url,
 				AuthorizedPolicy: types.PolicyType_groupOperational,
 			},
-		}})
+		}}
+		k.SetAuthorizationList(ctx, authorizationList)
+		prevLen := len(authorizationList.Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		url := "/zetachain.zetacore.sample.ABC"
 
 		msg := &types.MsgAddAuthorization{
 			Creator:          admin,
@@ -197,5 +211,9 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 
 		_, err := msgServer.AddAuthorization(sdk.WrapSDKContext(ctx), msg)
 		require.ErrorIs(t, err, types.ErrInvalidAuthorizationList)
+
+		authorizationList, found := k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		require.Equal(t, prevLen, len(authorizationList.Authorizations))
 	})
 }

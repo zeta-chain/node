@@ -35,6 +35,11 @@ func TestPolicyType_Validate(t *testing.T) {
 			wantErr:    true,
 		},
 		{
+			name:       "invalid policy type more than max length",
+			policyType: types.PolicyType(len(types.PolicyType_name) + 1),
+			wantErr:    true,
+		},
+		{
 			name:       "empty policy type",
 			policyType: types.PolicyType_groupEmpty,
 			wantErr:    true,
