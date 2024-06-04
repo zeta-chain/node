@@ -40,8 +40,10 @@ import (
 )
 
 var (
-	zeroValue                        = int64(0)
-	_         interfaces.ChainSigner = &Signer{}
+	_ interfaces.ChainSigner = &Signer{}
+
+	// zeroValue is for outbounds that carry no ETH (gas token) value
+	zeroValue = big.NewInt(0)
 )
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
@@ -211,7 +213,7 @@ func (signer *Signer) SignOutbound(txData *OutboundData) (*ethtypes.Transaction,
 
 	tx, _, _, err := signer.Sign(data,
 		signer.zetaConnectorAddress,
-		big.NewInt(zeroValue),
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -251,7 +253,7 @@ func (signer *Signer) SignRevertTx(txData *OutboundData) (*ethtypes.Transaction,
 
 	tx, _, _, err := signer.Sign(data,
 		signer.zetaConnectorAddress,
-		big.NewInt(zeroValue),
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -268,7 +270,7 @@ func (signer *Signer) SignCancelTx(txData *OutboundData) (*ethtypes.Transaction,
 	tx, _, _, err := signer.Sign(
 		nil,
 		signer.tssSigner.EVMAddress(),
-		big.NewInt(zeroValue), // zero out the amount to cancel the tx
+		zeroValue, // zero out the amount to cancel the tx
 		evm.EthTransferGasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -583,7 +585,7 @@ func (signer *Signer) SignERC20WithdrawTx(txData *OutboundData) (*ethtypes.Trans
 	tx, _, _, err := signer.Sign(
 		data,
 		signer.er20CustodyAddress,
-		big.NewInt(zeroValue),
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -647,7 +649,7 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string)
 	tx, _, _, err := signer.Sign(
 		data,
 		txData.to,
-		big.NewInt(zeroValue),
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		outboundParams.TssNonce,
