@@ -23,6 +23,7 @@
 * [2291](https://github.com/zeta-chain/node/pull/2291) - initialize cctx gateway interface
 * [2289](https://github.com/zeta-chain/node/pull/2289) - add an authorization list to keep track of all authorizations on the chain
 * [2305](https://github.com/zeta-chain/node/pull/2305) - add new messages `MsgAddAuthorization` and `MsgRemoveAuthorization` that can be used to update the authorization list
+* [2312](https://github.com/zeta-chain/node/pull/2312) - add queries `ShowAuthorization` and `ListAuthorizations`
 
 ### Refactor
 
