@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -38,63 +36,7 @@ Instead we use a temporary context to make changes and then commit the context o
 New CCTX status after preprocessing is returned.
 */
 func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
-	tmpCtx, commit := ctx.CacheContext()
-	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, cctx)
+	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(ctx, cctx)
 
-	// TODO (https://github.com/zeta-chain/node/issues/2278): further processing will be in validateOutbound(...), for now keeping it here
-	if err != nil && !isContractReverted {
-		// exceptional case; internal error; should abort CCTX
-		cctx.SetAbort(err.Error())
-		return types.CctxStatus_Aborted
-	} else if err != nil && isContractReverted {
-		// contract call reverted; should refund via a revert tx
-		revertMessage := err.Error()
-		senderChain := c.crosschainKeeper.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId)
-		if senderChain == nil {
-			cctx.SetAbort(fmt.Sprintf("invalid sender chain id %d", cctx.InboundParams.SenderChainId))
-			return types.CctxStatus_Aborted
-		}
-		gasLimit, err := c.crosschainKeeper.GetRevertGasLimit(ctx, *cctx)
-		if err != nil {
-			cctx.SetAbort(fmt.Sprintf("revert gas limit error: %s", err.Error()))
-			return types.CctxStatus_Aborted
-		}
-		if gasLimit == 0 {
-			// use same gas limit of outbound as a fallback -- should not be required
-			gasLimit = cctx.GetCurrentOutboundParam().GasLimit
-		}
-
-		err = cctx.AddRevertOutbound(gasLimit)
-		if err != nil {
-			cctx.SetAbort(fmt.Sprintf("revert outbound error: %s", err.Error()))
-			return types.CctxStatus_Aborted
-		}
-		// we create a new cached context, and we don't commit the previous one with EVM deposit
-		tmpCtxRevert, commitRevert := ctx.CacheContext()
-		err = func() error {
-			err := c.crosschainKeeper.PayGasAndUpdateCctx(
-				tmpCtxRevert,
-				senderChain.ChainId,
-				cctx,
-				cctx.InboundParams.Amount,
-				false,
-			)
-			if err != nil {
-				return err
-			}
-			// Update nonce using senderchain id as this is a revert tx and would go back to the original sender
-			return c.crosschainKeeper.UpdateNonce(tmpCtxRevert, senderChain.ChainId, cctx)
-		}()
-		if err != nil {
-			cctx.SetAbort(fmt.Sprintf("deposit revert message: %s err : %s", revertMessage, err.Error()))
-			return types.CctxStatus_Aborted
-		}
-		commitRevert()
-		cctx.SetPendingRevert(revertMessage)
-		return types.CctxStatus_PendingRevert
-	}
-	// successful HandleEVMDeposit;
-	commit()
-	cctx.SetOutBoundMined("Remote omnichain contract call completed")
-	return types.CctxStatus_OutboundMined
+	return c.crosschainKeeper.ValidateOutboundZEVM(ctx, cctx, err, isContractReverted)
 }
