@@ -18,17 +18,18 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
-
 		admin := sample.AccAddress()
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
+			Creator:   admin,
+			TssPubkey: "",
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
-			Creator:   admin,
-			TssPubkey: "",
-		})
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.Error(t, err)
 	})
 

@@ -10,6 +10,7 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -30,11 +31,9 @@ func (k msgServer) MigrateTssFunds(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(
-			authoritytypes.ErrUnauthorized,
-			"Update can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
@@ -73,7 +72,7 @@ func (k msgServer) MigrateTssFunds(
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot migrate funds when there are pending nonces")
 	}
 
-	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss, tssHistory)
+	err = k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss, tssHistory)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, err.Error())
 	}

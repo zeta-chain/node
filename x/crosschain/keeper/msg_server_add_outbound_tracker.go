@@ -57,7 +57,13 @@ func (k msgServer) AddOutboundTracker(
 		return &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, nil
 	}
 
-	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
+	// check if the msg signer is from the emergency group policy address.It is okay to ignore the error as the sender can also be an observer
+	isEmergencyGroup := false
+	if k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil {
+		isEmergencyGroup = true
+	}
+
+	// check if the msg signer is an observer
 	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 	isProven := false
 
