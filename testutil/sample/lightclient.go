@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+	"github.com/zeta-chain/zetacore/testutil/testdata"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 

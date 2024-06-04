@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+	"github.com/zeta-chain/zetacore/testutil/testdata"
 	"github.com/zeta-chain/zetacore/x/authority/client/cli"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
