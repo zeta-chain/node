@@ -20,6 +20,11 @@ import (
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
+const (
+	// DefaultBlockCacheSize is the default size of the block cache
+	DefaultBlockCacheSize = 1000
+)
+
 // Observer is the base chain observer
 type Observer struct {
 	// the external chain
@@ -63,6 +68,7 @@ func NewObserver(
 	zetacoreContext *context.ZetacoreContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	blockCacheSize int,
 	dbPath string,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -80,15 +86,15 @@ func NewObserver(
 
 	// create block cache
 	var err error
-	ob.blockCache, err = lru.New(1000)
+	ob.blockCache, err = lru.New(blockCacheSize)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating block cache")
 	}
 
 	// open database
 	err = ob.OpenDB(dbPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("error opening observer db for chain: %s", chain.ChainName))
 	}
 
 	return &ob, nil
@@ -121,32 +127,44 @@ func (ob *Observer) ZetacoreContext() *context.ZetacoreContext {
 	return ob.zetacoreContext
 }
 
+// ZetacoreClient returns the zetacore client for the observer
+func (ob *Observer) ZetacoreClient() interfaces.ZetacoreClient {
+	return ob.zetacoreClient
+}
+
 // WithZetacoreClient attaches a new zetacore client to the observer
 func (ob *Observer) WithZetacoreClient(client interfaces.ZetacoreClient) *Observer {
 	ob.zetacoreClient = client
 	return ob
 }
 
-// GetLastBlock get external last block height
-func (ob *Observer) GetLastBlock() uint64 {
+// Tss returns the tss signer for the observer
+func (ob *Observer) TSS() interfaces.TSSSigner {
+	return ob.tss
+}
+
+// LastBlock get external last block height
+func (ob *Observer) LastBlock() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
 }
 
-// SetLastBlock set external last block height
-func (ob *Observer) SetLastBlock(height uint64) {
-	atomic.StoreUint64(&ob.lastBlock, height)
+// WithLastBlock set external last block height
+func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
+	atomic.StoreUint64(&ob.lastBlock, lastBlock)
+	return ob
 }
 
-// GetLastBlockScanned get last block scanned (not necessarily caught up with external block; could be slow/paused)
-func (ob *Observer) GetLastBlockScanned() uint64 {
+// LastBlockScanned get last block scanned (not necessarily caught up with external block; could be slow/paused)
+func (ob *Observer) LastBlockScanned() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
 
-// SetLastBlockScanned set last block scanned (not necessarily caught up with external block; could be slow/paused)
-func (ob *Observer) SetLastBlockScanned(blockNumber uint64) {
+// WithLastBlockScanned set last block scanned (not necessarily caught up with external block; could be slow/paused)
+func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(blockNumber))
+	return ob
 }
 
 // BlockCache returns the block cache for the observer
@@ -170,37 +188,6 @@ func (ob *Observer) TelemetryServer() *metrics.TelemetryServer {
 	return ob.ts
 }
 
-// OpenDB open sql database in the given path
-func (ob *Observer) OpenDB(dbPath string) error {
-	if dbPath != "" {
-		// create db path if not exist
-		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-			err := os.MkdirAll(dbPath, os.ModePerm)
-			if err != nil {
-				return errors.Wrap(err, "error creating db path")
-			}
-		}
-
-		// open db by chain name
-		chainName := ob.chain.ChainName.String()
-		path := fmt.Sprintf("%s/%s", dbPath, chainName)
-		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("error opening observer db for chain: %s", chainName))
-		}
-
-		// migrate db
-		err = db.AutoMigrate(&clienttypes.ReceiptSQLType{},
-			&clienttypes.TransactionSQLType{},
-			&clienttypes.LastBlockSQLType{})
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("error migrating observer db for chain: %s", chainName))
-		}
-		ob.db = db
-	}
-	return nil
-}
-
 // LoadLastBlockScanned loads last scanned block from environment variable or from database
 // The last scanned block is the height from which the observer should start scanning for inbound transactions
 func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) (fromLatest bool, err error) {
@@ -219,7 +206,7 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) (fromLatest bool
 		if err != nil {
 			return false, err
 		}
-		ob.SetLastBlockScanned(blockNumber)
+		ob.WithLastBlockScanned(blockNumber)
 		return false, nil
 	}
 
@@ -229,9 +216,9 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) (fromLatest bool
 		logger.Info().Msgf("LoadLastBlockScanned: chain %d starts scanning from latest block", ob.chain.ChainId)
 		return true, nil
 	}
-	ob.SetLastBlockScanned(blockNumber)
+	ob.WithLastBlockScanned(blockNumber)
 	logger.Info().
-		Msgf("LoadLastBlockScanned: chain %d starts scanning from block %d", ob.chain.ChainId, ob.GetLastBlockScanned())
+		Msgf("LoadLastBlockScanned: chain %d starts scanning from block %d", ob.chain.ChainId, ob.LastBlockScanned())
 
 	return false, nil
 }
@@ -245,8 +232,39 @@ func (ob *Observer) WriteLastBlockScannedToDB(lastScannedBlock uint64) error {
 func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 	var lastBlock clienttypes.LastBlockSQLType
 	if err := ob.db.First(&lastBlock, clienttypes.LastBlockNumID).Error; err != nil {
-		// not found
+		// record not found
 		return 0, err
 	}
 	return lastBlock.Num, nil
+}
+
+// OpenDB open sql database in the given path
+func (ob *Observer) OpenDB(dbPath string) error {
+	if dbPath != "" {
+		// create db path if not exist
+		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+			err := os.MkdirAll(dbPath, os.ModePerm)
+			if err != nil {
+				return errors.Wrap(err, "error creating db path")
+			}
+		}
+
+		// open db by chain name
+		chainName := ob.chain.ChainName.String()
+		path := fmt.Sprintf("%s/%s", dbPath, chainName)
+		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+		if err != nil {
+			return errors.Wrap(err, "error opening db")
+		}
+
+		// migrate db
+		err = db.AutoMigrate(&clienttypes.ReceiptSQLType{},
+			&clienttypes.TransactionSQLType{},
+			&clienttypes.LastBlockSQLType{})
+		if err != nil {
+			return errors.Wrap(err, "error migrating db")
+		}
+		ob.db = db
+	}
+	return nil
 }
