@@ -28,10 +28,7 @@ func (k msgServer) RemoveAuthorization(
 	// check if the authorization list exists, we can return early if there is no list.
 	authorizationList, found := k.GetAuthorizationList(ctx)
 	if !found {
-		return nil, errorsmod.Wrap(
-			types.ErrAuthorizationListNotFound,
-			"authorization list not found",
-		)
+		return nil, types.ErrAuthorizationListNotFound
 	}
 
 	// check if the authorization exists, we can return early if the authorization does not exist.

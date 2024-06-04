@@ -34,6 +34,8 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
+		"/zetachain.zetacore.authority.MsgAddAuthorization",
+		"/zetachain.zetacore.authority.MsgRemoveAuthorization",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
 	EmergencyPolicyMessages = []string{
