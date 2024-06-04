@@ -17,6 +17,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		admin := keepertest.SetAdminPolices(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		url := types.OperationPolicyMessages[0]
 
@@ -37,12 +38,14 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		require.True(t, found)
 		_, err = authorizationList.GetAuthorizedPolicy(url)
 		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
+		require.Equal(t, prevLen-1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("successfully remove admin policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		admin := keepertest.SetAdminPolices(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		url := types.AdminPolicyMessages[0]
 
@@ -63,12 +66,14 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		require.True(t, found)
 		_, err = authorizationList.GetAuthorizedPolicy(url)
 		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
+		require.Equal(t, prevLen-1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("successfully remove emergency policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		admin := keepertest.SetAdminPolices(ctx, k)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		url := types.EmergencyPolicyMessages[0]
 
@@ -89,11 +94,13 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		require.True(t, found)
 		_, err = authorizationList.GetAuthorizedPolicy(url)
 		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
+		require.Equal(t, prevLen-1, len(authorizationList.Authorizations))
 	})
 
 	t.Run("unable to remove authorization if creator is not the correct policy", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+		prevLen := len(types.DefaultAuthorizationsList().Authorizations)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		url := types.OperationPolicyMessages[0]
 
@@ -113,6 +120,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		authorizationList, found = k.GetAuthorizationList(ctx)
 		require.True(t, found)
 		require.Equal(t, types.DefaultAuthorizationsList(), authorizationList)
+		require.Equal(t, prevLen, len(authorizationList.Authorizations))
 	})
 
 	t.Run("unable to remove authorization if authorization list does not exist", func(t *testing.T) {
@@ -188,5 +196,9 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 
 		_, err := msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
 		require.ErrorIs(t, err, types.ErrInvalidAuthorizationList)
+
+		authorizationListNew, found := k.GetAuthorizationList(ctx)
+		require.True(t, found)
+		require.Equal(t, authorizationList, authorizationListNew)
 	})
 }

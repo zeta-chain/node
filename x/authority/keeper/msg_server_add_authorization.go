@@ -24,7 +24,10 @@ func (k msgServer) AddAuthorization(
 		)
 	}
 
-	authorizationList, _ := k.GetAuthorizationList(ctx)
+	authorizationList, found := k.GetAuthorizationList(ctx)
+	if !found {
+		authorizationList = types.AuthorizationList{Authorizations: []types.Authorization{}}
+	}
 	authorizationList.SetAuthorization(types.Authorization{MsgUrl: msg.MsgUrl, AuthorizedPolicy: msg.AuthorizedPolicy})
 
 	// validate the authorization list after adding the authorization as a precautionary measure.
