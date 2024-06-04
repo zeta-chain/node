@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
+// AuthorizationList returns the list of authorizations
 func (k Keeper) AuthorizationList(c context.Context,
 	req *types.QueryAuthorizationListRequest,
 ) (*types.QueryAuthorizationListResponse, error) {
@@ -24,6 +25,7 @@ func (k Keeper) AuthorizationList(c context.Context,
 	return &types.QueryAuthorizationListResponse{AuthorizationList: authorizationList}, nil
 }
 
+// Authorization returns the authorization for a given message URL
 func (k Keeper) Authorization(c context.Context,
 	req *types.QueryAuthorizationRequest,
 ) (*types.QueryAuthorizationResponse, error) {
