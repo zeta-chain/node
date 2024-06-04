@@ -672,7 +672,7 @@ func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Tr
 		txData.height,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
 	}
 	return tx, nil
 }
