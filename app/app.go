@@ -630,7 +630,7 @@ func New(
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
 		group.Config{
-			MaxExecutionPeriod: 2 * time.Hour, // Two hours.
+			MaxExecutionPeriod: 24 * time.Hour, // 24 hours.
 			MaxMetadataLen:     255,
 		},
 	)
