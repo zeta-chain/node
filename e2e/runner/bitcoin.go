@@ -71,7 +71,11 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	}
 
 	if spendableAmount < amount {
-		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
+		panic(fmt.Errorf(
+			"not enough spendable BTC to run the test; have %f, require %f",
+			spendableAmount,
+			amount,
+		))
 	}
 
 	runner.Logger.Info("ListUnspent:")
