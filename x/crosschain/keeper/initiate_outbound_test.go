@@ -112,7 +112,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Equal(
 				t,
-				fmt.Sprintf("invalid sender chain id %d", cctx.InboundParams.SenderChainId),
+				fmt.Sprintf("chain not supported"),
 				cctx.CctxStatus.StatusMessage,
 			)
 		},
