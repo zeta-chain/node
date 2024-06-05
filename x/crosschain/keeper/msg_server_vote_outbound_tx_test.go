@@ -203,6 +203,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain)
 		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
 
 		//Successfully mock SaveOutBound
@@ -264,7 +266,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
-
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain)
 		//Successfully mock SaveOutBound
 		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
 		oldParamsLen := len(cctx.OutboundParams)
@@ -327,6 +330,9 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Fail ProcessOutbound so that changes are not committed to the state
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
 			Return(fungibletypes.ForeignCoins{}, false)
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain)
 
 		//Successfully mock SaveFailedOutbound
 		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
