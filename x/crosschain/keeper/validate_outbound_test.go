@@ -26,14 +26,29 @@ func TestKeeper_ValidateSuccessfulOutbound(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	// transition to reverted if pending revert
 	cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-	k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
+	k.ValidateOutboundObservers(
+		ctx,
+		cctx,
+		observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+		sample.String(),
+	)
 	require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Reverted)
 	// transition to outbound mined if pending outbound
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-	k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
+	k.ValidateOutboundObservers(
+		ctx,
+		cctx,
+		observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+		sample.String(),
+	)
 	require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
 	// do nothing if it's in any other state
-	k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
+	k.ValidateOutboundObservers(
+		ctx,
+		cctx,
+		observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+		sample.String(),
+	)
 	require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
 }
 
@@ -45,7 +60,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.InboundParams.SenderChainId = chains.Ethereum.ChainId
 		cctx.OutboundParams[0].ReceiverChainId = chains.Ethereum.ChainId
 		cctx.OutboundParams[1].ReceiverChainId = chains.Ethereum.ChainId
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
@@ -58,7 +78,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		cctx.OutboundParams[0].ReceiverChainId = chains.Ethereum.ChainId
 		cctx.OutboundParams[1].ReceiverChainId = chains.Ethereum.ChainId
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
@@ -71,7 +96,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		cctx.OutboundParams[0].ReceiverChainId = chains.Ethereum.ChainId
 		cctx.OutboundParams[1].ReceiverChainId = chains.Ethereum.ChainId
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
@@ -89,7 +119,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		)
 		require.NoError(t, err)
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
-		err = k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err = k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
@@ -101,7 +136,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.Index = ""
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorContains(t, err, "failed reverting GetCCTXIndexBytes")
 	})
 
@@ -110,7 +150,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorContains(t, err, "failed AddRevertOutbound")
 	})
 
@@ -132,7 +177,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
 			mock.Anything,
 			mock.Anything).Return(nil, errorFailedZETARevertAndCallContract).Once()
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorContains(t, err, "failed ZETARevertAndCallContract")
 	})
 
@@ -151,7 +201,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.InboundParams.Sender = dAppContract.String()
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
 
-		err = k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err = k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
@@ -203,7 +258,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingRevert)
 		require.Equal(t, types.TxFinalizationStatus_NotFinalized, cctx.GetCurrentOutboundParam().TxFinalizationStatus)
@@ -235,7 +295,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingRevert)
 		require.Equal(t, types.TxFinalizationStatus_NotFinalized, cctx.GetCurrentOutboundParam().TxFinalizationStatus)
@@ -268,7 +333,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorIs(t, err, types.ErrCannotFindReceiverNonce)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
 	})
@@ -296,7 +366,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
 	})
@@ -321,7 +396,12 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		err := k.ValidateOutboundObservers(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
 	})
