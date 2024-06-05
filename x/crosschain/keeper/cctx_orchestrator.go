@@ -142,7 +142,7 @@ func (k Keeper) validateFailedOutbound(
 	case types.CctxStatus_PendingOutbound:
 		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId)
 		if senderChain == nil {
-			return fmt.Errorf("invalid sender chain id %d", cctx.InboundParams.SenderChainId)
+			return observertypes.ErrSupportedChains
 		}
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, *cctx)
