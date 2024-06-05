@@ -90,7 +90,9 @@ func TestKeeper_CheckAuthorization(t *testing.T) {
 		authorizationList := types.DefaultAuthorizationsList()
 		// Add 300 more authorizations to the list
 		for i := 0; i < 100; i++ {
-			authorizationList.Authorizations = append(authorizationList.Authorizations, sample.AuthorizationList(fmt.Sprintf("sample%d", i)).Authorizations...)
+			authorizationList.Authorizations = append(
+				authorizationList.Authorizations,
+				sample.AuthorizationList(fmt.Sprintf("sample%d", i)).Authorizations...)
 		}
 		policies := types.Policies{
 			Items: []*types.Policy{
@@ -121,7 +123,9 @@ func TestKeeper_CheckAuthorization(t *testing.T) {
 		authorizationList := types.AuthorizationList{}
 		// Add 300 more authorizations to the list
 		for i := 0; i < 100; i++ {
-			authorizationList.Authorizations = append(authorizationList.Authorizations, sample.AuthorizationList(fmt.Sprintf("sample%d", i)).Authorizations...)
+			authorizationList.Authorizations = append(
+				authorizationList.Authorizations,
+				sample.AuthorizationList(fmt.Sprintf("sample%d", i)).Authorizations...)
 		}
 		policies := types.Policies{
 			Items: []*types.Policy{
