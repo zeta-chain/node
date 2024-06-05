@@ -195,7 +195,12 @@ func (k Keeper) validateFailedOutbound(
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
 // For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the validateFailedOutboundObservers function, so we can just return and error to trigger that
-func (k Keeper) validateSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string, emitEvent bool) {
+func (k Keeper) validateSuccessfulOutbound(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	valueReceived string,
+	emitEvent bool,
+) {
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
