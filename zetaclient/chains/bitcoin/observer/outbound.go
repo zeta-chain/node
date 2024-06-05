@@ -327,6 +327,8 @@ func (ob *Observer) refreshPendingNonce() {
 	}
 }
 
+// getOutboundIDByNonce gets the outbound ID from the nonce of the outbound transaction.
+// test is true for unit test only.
 func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error) {
 
 	// There are 2 types of txids an observer can trust
@@ -362,6 +364,7 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 	return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 }
 
+// findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := chains.NonceMarkAmount(nonce)

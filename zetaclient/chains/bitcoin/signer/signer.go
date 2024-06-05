@@ -45,14 +45,26 @@ var _ interfaces.ChainSigner = &Signer{}
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
-	tssSigner        interfaces.TSSSigner
-	rpcClient        interfaces.BTCRPCClient
-	logger           zerolog.Logger
+	// tssSigner is the TSS signer object used to sign transactions
+	tssSigner interfaces.TSSSigner
+
+	// rpcClient is the RPC client used to broadcast transactions on the external network
+	rpcClient interfaces.BTCRPCClient
+
+	// logger is the logger used by the signer
+	logger zerolog.Logger
+
+	// loggerCompliance is the logger used for compliance logging
 	loggerCompliance zerolog.Logger
-	ts               *metrics.TelemetryServer
-	coreContext      *context.ZetacoreContext
+
+	// ts is the telemetry server used to record metrics
+	ts *metrics.TelemetryServer
+
+	// coreContext contains context data of ZetaChain
+	coreContext *context.ZetacoreContext
 }
 
+// NewSigner creates a new BTC signer
 func NewSigner(
 	cfg config.BTCConfig,
 	tssSigner interfaces.TSSSigner,
@@ -287,6 +299,7 @@ func (signer *Signer) SignWithdrawTx(
 	return tx, nil
 }
 
+// Broadcast sends the signed transaction to the network
 func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
 
@@ -307,6 +320,7 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	return nil
 }
 
+// TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
 func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,

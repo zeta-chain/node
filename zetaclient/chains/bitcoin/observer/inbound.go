@@ -25,7 +25,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// WatchInbound watches Bitcoin chain for incoming txs and post votes to zetacore
+// WatchInbound watches Bitcoin chain for inbounds
+// It starts a ticker and run ObserveInbound
 func (ob *Observer) WatchInbound() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.GetChainParams().InboundTicker)
 	if err != nil {
@@ -37,6 +38,7 @@ func (ob *Observer) WatchInbound() {
 	ob.logger.Inbound.Info().Msgf("WatchInbound started for chain %d", ob.chain.ChainId)
 	sampledLogger := ob.logger.Inbound.Sample(&zerolog.BasicSampler{N: 10})
 
+	// ticker loop
 	for {
 		select {
 		case <-ticker.C():
@@ -57,6 +59,7 @@ func (ob *Observer) WatchInbound() {
 	}
 }
 
+// ObserveInbound observes Bitcoin chain for inbounds and post votes to zetacore
 func (ob *Observer) ObserveInbound() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
@@ -328,6 +331,7 @@ func FilterAndParseIncomingTx(
 	return inbounds, nil
 }
 
+// GetInboundVoteMessageFromBtcEvent converts a BTCInboundEvent to a MsgVoteInbound to enable voting on the inbound on zetacore
 func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	ob.logger.Inbound.Debug().Msgf("Processing inbound: %s", inbound.TxHash)
 	amount := big.NewFloat(inbound.Value)

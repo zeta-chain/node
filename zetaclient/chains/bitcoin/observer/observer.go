@@ -90,7 +90,7 @@ type BTCInboundEvent struct {
 	TxHash      string
 }
 
-// BTCOutboundEvent contains bitcoin block and the header
+// BTCBlockNHeader contains bitcoin block and the header
 type BTCBlockNHeader struct {
 	Header *wire.BlockHeader
 	Block  *btcjson.GetBlockVerboseTxResult
@@ -98,23 +98,44 @@ type BTCBlockNHeader struct {
 
 // Observer is the Bitcoin chain observer
 type Observer struct {
+	// BlockCache caches last block height and hash
 	BlockCache *lru.Cache
 
 	// Mu is lock for all the maps, utxos and core params
 	Mu *sync.Mutex
 
+	// Tss is the TSS signer
 	Tss interfaces.TSSSigner
 
-	chain            chains.Chain
-	netParams        *chaincfg.Params
-	rpcClient        interfaces.BTCRPCClient
-	zetacoreClient   interfaces.ZetacoreClient
-	lastBlock        int64
+	// chain contains static information about the chain being observed
+	chain chains.Chain
+
+	// netParams contains the Bitcoin network parameters for the chain
+	netParams *chaincfg.Params
+
+	// rpcClient is the Bitcoin RPC client to interact with the observed chain
+	rpcClient interfaces.BTCRPCClient
+
+	// zetacoreClient is the Zetacore client to interact with ZetaChain
+	zetacoreClient interfaces.ZetacoreClient
+
+	// lastBlock is the last block height of the observed chain
+	lastBlock int64
+
+	// lastBlockScanned is the last block height scanned by the observer
 	lastBlockScanned int64
-	pendingNonce     uint64
-	utxos            []btcjson.ListUnspentResult
-	params           observertypes.ChainParams
-	coreContext      *context.ZetacoreContext
+
+	// pendingNonce is the number of pending nonces for outbounds
+	pendingNonce uint64
+
+	// utxos contains the UTXOs owned by the TSS address
+	utxos []btcjson.ListUnspentResult
+
+	// params contains the dynamic chain params for the observed chain
+	params observertypes.ChainParams
+
+	// coreContext contains context for ZetaChain
+	coreContext *context.ZetacoreContext
 
 	// includedTxHashes indexes included tx with tx hash
 	includedTxHashes map[string]bool
@@ -125,10 +146,17 @@ type Observer struct {
 	// broadcastedTx indexes the outbound hash with the outbound tx identifier
 	broadcastedTx map[string]string
 
-	db     *gorm.DB
-	stop   chan struct{}
+	// db is the database for the observer used to persist observation data
+	db *gorm.DB
+
+	// stop is the channel to stop the observer
+	stop chan struct{}
+
+	// logger contains the loggers used by the observer
 	logger Logger
-	ts     *metrics.TelemetryServer
+
+	// ts is the telemetry server for metrics
+	ts *metrics.TelemetryServer
 }
 
 // NewObserver returns a new Bitcoin chain observer
@@ -219,12 +247,14 @@ func NewObserver(
 	return &ob, nil
 }
 
+// WithZetacoreClient attaches the Zetacore client to the observer
 func (ob *Observer) WithZetacoreClient(client *zetacore.Client) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.zetacoreClient = client
 }
 
+// WithLogger attaches the logger to the observer
 func (ob *Observer) WithLogger(logger zerolog.Logger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
@@ -237,37 +267,42 @@ func (ob *Observer) WithLogger(logger zerolog.Logger) {
 	}
 }
 
+// WithBtcClient attaches the Bitcoin RPC client to the observer
 func (ob *Observer) WithBtcClient(client *rpcclient.Client) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.rpcClient = client
 }
 
+// WithChain attaches the chain to the observer
 func (ob *Observer) WithChain(chain chains.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
 }
 
+// Chain returns the chain associated to the observed chain
 func (ob *Observer) Chain() chains.Chain {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.chain
 }
 
+// SetChainParams sets the chain params for the observer for the observed chain
 func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
+// GetChainParams returns the chain params for the observer for the observed chain
 func (ob *Observer) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.params
 }
 
-// Start starts the Go routine to observe the Bitcoin chain
+// Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start() {
 	ob.logger.Chain.Info().Msgf("Bitcoin client is starting")
 	go ob.WatchInbound()        // watch bitcoin chain for incoming txs and post votes to zetacore
@@ -340,36 +375,43 @@ func (ob *Observer) WatchRPCStatus() {
 	}
 }
 
+// Stop stops the Go routine processes observing the Bitcoin chain
 func (ob *Observer) Stop() {
 	ob.logger.Chain.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	ob.logger.Chain.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
+// SetLastBlockHeight sets the last block height of the chain
 func (ob *Observer) SetLastBlockHeight(height int64) {
 	atomic.StoreInt64(&ob.lastBlock, height)
 }
 
+// GetLastBlockHeight gets the last block height of the chain
 func (ob *Observer) GetLastBlockHeight() int64 {
 	return atomic.LoadInt64(&ob.lastBlock)
 }
 
+// SetLastBlockHeightScanned sets the last block height scanned by the observer
 func (ob *Observer) SetLastBlockHeightScanned(height int64) {
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
+// GetLastBlockHeightScanned gets the last block height scanned by the observer
 func (ob *Observer) GetLastBlockHeightScanned() int64 {
 	return atomic.LoadInt64(&ob.lastBlockScanned)
 }
 
+// GetPendingNonce returns the number of pending nonces for outbounds
 func (ob *Observer) GetPendingNonce() uint64 {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.pendingNonce
 }
 
-// GetBaseGasPrice ...
+// GetBaseGasPrice returns the base gas price for the chain
+// Currently not used for Bitcoin
 // TODO: implement
 // https://github.com/zeta-chain/node/issues/868
 func (ob *Observer) GetBaseGasPrice() *big.Int {
@@ -425,6 +467,7 @@ func (ob *Observer) WatchGasPrice() {
 	}
 }
 
+// PostGasPrice posts the gas price to Zetacore
 func (ob *Observer) PostGasPrice() error {
 	if ob.chain.ChainId == 18444 { //bitcoin regtest; hardcode here since this RPC is not available on regtest
 		blockNumber, err := ob.rpcClient.GetBlockCount()
@@ -512,6 +555,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 }
 
 // WatchUTXOS watches bitcoin chain for UTXOs owned by the TSS address
+// It starts a ticker to fetch UTXOs at regular intervals
 func (ob *Observer) WatchUTXOS() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
@@ -538,6 +582,7 @@ func (ob *Observer) WatchUTXOS() {
 	}
 }
 
+// FetchUTXOS fetches UTXOs owned by the TSS address
 func (ob *Observer) FetchUTXOS() error {
 	defer func() {
 		if err := recover(); err != nil {
@@ -689,6 +734,7 @@ func GetRawTxResult(
 	return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
 }
 
+// BuildBroadcastedTxMap creates a map of broadcasted transactions from the database
 func (ob *Observer) BuildBroadcastedTxMap() error {
 	var broadcastedTransactions []clienttypes.OutboundHashSQLType
 	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
@@ -734,6 +780,7 @@ func (ob *Observer) LoadLastScannedBlock() error {
 	return nil
 }
 
+// GetBlockByNumberCached returns the block by number from the cache
 func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
 	if result, ok := ob.BlockCache.Get(blockNumber); ok {
 		return result.(*BTCBlockNHeader), nil
@@ -805,6 +852,7 @@ func (ob *Observer) postBlockHeader(tip int64) error {
 	return err
 }
 
+// loadDB loads the observer database
 func (ob *Observer) loadDB(dbpath string) error {
 	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
 		err := os.MkdirAll(dbpath, os.ModePerm)

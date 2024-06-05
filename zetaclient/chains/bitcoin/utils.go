@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// PrettyPrintStruct returns a pretty-printed string representation of a struct
 func PrettyPrintStruct(val interface{}) (string, error) {
 	prettyStruct, err := json.MarshalIndent(
 		val,
@@ -20,6 +21,7 @@ func PrettyPrintStruct(val interface{}) (string, error) {
 	return string(prettyStruct), nil
 }
 
+// GetSatoshis converts a bitcoin amount to satoshis
 func GetSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
 	// as an integer type.  This may happen if f is NaN or +-Infinity.
@@ -39,6 +41,7 @@ func GetSatoshis(btc float64) (int64, error) {
 	return round(btc * btcutil.SatoshiPerBitcoin), nil
 }
 
+// round rounds a float64 to the nearest integer
 func round(f float64) int64 {
 	if f < 0 {
 		// #nosec G701 always in range
