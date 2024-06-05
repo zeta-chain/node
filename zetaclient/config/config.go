@@ -11,7 +11,10 @@ import (
 // restrictedAddressBook is a map of restricted addresses
 var restrictedAddressBook = map[string]bool{}
 
+// filename is config file name for ZetaClient
 const filename string = "zetaclient_config.json"
+
+// folder is the folder name for ZetaClient config
 const folder string = "config"
 
 // Save saves ZetaClient config
@@ -78,10 +81,12 @@ func Load(path string) (Config, error) {
 	return cfg, nil
 }
 
+// LoadComplianceConfig loads compliance data (restricted addresses) from config
 func LoadComplianceConfig(cfg Config) {
 	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 
+// GetPath returns the absolute path of the input path
 func GetPath(inputPath string) string {
 	path := strings.Split(inputPath, "/")
 	if len(path) > 0 {
@@ -93,6 +98,7 @@ func GetPath(inputPath string) string {
 			path[0] = home
 		}
 	}
+
 	return filepath.Join(path...)
 }
 
