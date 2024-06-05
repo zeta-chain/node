@@ -37,15 +37,18 @@ import (
 )
 
 const (
+	// envFlagPostBlame is the environment flag to enable posting blame data to core
 	envFlagPostBlame = "POST_BLAME"
 )
 
+// Key is a struct that holds the public key, bech32 pubkey, and address for the TSS
 type Key struct {
 	PubkeyInBytes  []byte
 	PubkeyInBech32 string
 	AddressInHex   string
 }
 
+// NewTSSKey creates a new TSS key
 func NewTSSKey(pk string) (*Key, error) {
 	TSSKey := &Key{
 		PubkeyInBech32: pk,
@@ -141,6 +144,8 @@ func NewTSS(
 	return &newTss, nil
 }
 
+// SetupTSSServer creates a new TSS server
+// TODO(revamp): move to TSS server file
 func SetupTSSServer(
 	peer p2p.AddrList,
 	privkey tmcrypto.PrivKey,
@@ -207,6 +212,7 @@ func SetupTSSServer(
 	return tssServer, nil
 }
 
+// Pubkey returns the current pubkey
 func (tss *TSS) Pubkey() []byte {
 	return tss.Keys[tss.CurrentPubkey].PubkeyInBytes
 }
@@ -404,6 +410,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	return sigBytes, nil
 }
 
+// Validate validates the TSS
 func (tss *TSS) Validate() error {
 	evmAddress := tss.EVMAddress()
 	blankAddress := ethcommon.Address{}
@@ -419,6 +426,7 @@ func (tss *TSS) Validate() error {
 	return nil
 }
 
+// EVMAddress generates an EVM address from pubkey
 func (tss *TSS) EVMAddress() ethcommon.Address {
 	addr, err := GetTssAddrEVM(tss.CurrentPubkey)
 	if err != nil {
@@ -438,6 +446,7 @@ func (tss *TSS) BTCAddress() string {
 	return addr
 }
 
+// BTCAddressWitnessPubkeyHash generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, tss.BitcoinChainID)
 	if err != nil {
@@ -447,6 +456,7 @@ func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash 
 	return addrWPKH
 }
 
+// PubKeyCompressedBytes returns the compressed bytes of the current pubkey
 func (tss *TSS) PubKeyCompressedBytes() []byte {
 	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tss.CurrentPubkey)
 	if err != nil {
@@ -466,6 +476,7 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
+// VerifyKeysharesForPubkeys verifies the keyshares for the pubkeys
 func (tss *TSS) VerifyKeysharesForPubkeys(tssList []observertypes.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
 		if wasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
@@ -477,6 +488,7 @@ func (tss *TSS) VerifyKeysharesForPubkeys(tssList []observertypes.TSS, granteePu
 	return nil
 }
 
+// LoadTssFilesFromDirectory loads the TSS files from the directory
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
 	if err != nil {
@@ -528,6 +540,7 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	return nil
 }
 
+// GetTssAddrBTC generates a bech32 p2wpkh address from pubkey
 func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinChainID)
 	if err != nil {
@@ -538,6 +551,7 @@ func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
 	return addrWPKH.EncodeAddress(), nil
 }
 
+// GetTssAddrEVM generates an EVM address from pubkey
 func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
@@ -558,6 +572,8 @@ func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
+// TestKeysign tests the keysign
+// TODO(revamp): move to a test package
 func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	log.Info().Msg("trying keysign...")
 	data := []byte("hello meta")
@@ -594,11 +610,14 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	return fmt.Errorf("verify signature fail")
 }
 
+// IsEnvFlagEnabled checks if the environment flag is enabled
 func IsEnvFlagEnabled(flag string) bool {
 	value := os.Getenv(flag)
 	return value == "true" || value == "1"
 }
 
+// verifySignature verifies the signature
+// TODO(revamp): move to a test package
 func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
 	if len(signature) == 0 {
 		log.Warn().Msg("verify_signature: empty signature array")
@@ -640,12 +659,14 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	return bytes.Equal(pubkey.Bytes(), compressedPubkey)
 }
 
+// combineDigests combines the digests
 func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
 }
 
+// wasNodePartOfTss checks if the node was part of the TSS
 func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	for _, grantee := range granteeList {
 		if granteePubKey32 == grantee {
@@ -655,6 +676,7 @@ func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	return false
 }
 
+// getKeyAddrBTCWitnessPubkeyHash generates a bech32 p2wpkh address from pubkey
 func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
 	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {

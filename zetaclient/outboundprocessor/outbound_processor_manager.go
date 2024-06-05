@@ -8,6 +8,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Processor is a struct that contains data about outbound being processed
+// TODO(revamp): rename this struct as it is not used to process outbound but track their processing
+// We can also consider removing it once we refactor chain client to contains common logic to sign outbounds
 type Processor struct {
 	outboundStartTime  map[string]time.Time
 	outboundEndTime    map[string]time.Time
@@ -17,6 +20,7 @@ type Processor struct {
 	numActiveProcessor int64
 }
 
+// NewProcessor creates a new Processor
 func NewProcessor(logger zerolog.Logger) *Processor {
 	return &Processor{
 		outboundStartTime:  make(map[string]time.Time),
@@ -28,6 +32,7 @@ func NewProcessor(logger zerolog.Logger) *Processor {
 	}
 }
 
+// StartTryProcess register a new outbound ID to track
 func (p *Processor) StartTryProcess(outboundID string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -37,6 +42,7 @@ func (p *Processor) StartTryProcess(outboundID string) {
 	p.Logger.Info().Msgf("StartTryProcess %s, numActiveProcessor %d", outboundID, p.numActiveProcessor)
 }
 
+// EndTryProcess remove the outbound ID from tracking
 func (p *Processor) EndTryProcess(outboundID string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -47,6 +53,7 @@ func (p *Processor) EndTryProcess(outboundID string) {
 		Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outboundID, p.numActiveProcessor, time.Since(p.outboundStartTime[outboundID]))
 }
 
+// IsOutboundActive checks if the outbound ID is being processed
 func (p *Processor) IsOutboundActive(outboundID string) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -54,6 +61,7 @@ func (p *Processor) IsOutboundActive(outboundID string) bool {
 	return found
 }
 
+// TimeInTryProcess returns the time elapsed since the outbound ID is being processed
 func (p *Processor) TimeInTryProcess(outboundID string) time.Duration {
 	p.mu.Lock()
 	defer p.mu.Unlock()
