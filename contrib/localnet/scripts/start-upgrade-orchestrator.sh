@@ -34,7 +34,7 @@ done
 
 # copy zetacore0 config and keys if not running on zetacore0
 if [[ $(hostname) != "zetacore0" ]]; then
-  scp -r zetacore0:"~/.zetacored/config ~/.zetacored/os_info ~/.zetacored/config ~/.zetacored/keyring-file ~/.zetacored/keyring-test" ~/.zetacored/
+  scp -r 'zetacore0:~/.zetacored/config' 'zetacore0:~/.zetacored/os_info' 'zetacore0:~/.zetacored/config' 'zetacore0:~/.zetacored/keyring-file' 'zetacore0:~/.zetacored/keyring-test' ~/.zetacored/
   sed -i 's|tcp://localhost:26657|tcp://zetacore0:26657|g' ~/.zetacored/config/client.toml
 fi
 
