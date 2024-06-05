@@ -26,6 +26,8 @@ func (ob *Observer) GetTxID(nonce uint64) string {
 }
 
 // WatchOutbound watches Bitcoin chain for outgoing txs status
+// TODO(revamp): move ticker functions to a specific file
+// TODO(revamp): move into a separate package
 func (ob *Observer) WatchOutbound() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.GetChainParams().OutboundTicker)
 	if err != nil {
@@ -109,6 +111,7 @@ func (ob *Observer) WatchOutbound() {
 }
 
 // IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
+// TODO(revamp): rename as it vote the outbound and doesn't only check if outbound is processed
 func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	params := *cctx.GetCurrentOutboundParam()
 	sendHash := cctx.Index
@@ -211,6 +214,8 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 //   - the total value of the selected UTXOs.
 //   - the number of consolidated UTXOs.
 //   - the total value of the consolidated UTXOs.
+//
+// TODO(revamp): move to utxo file
 func (ob *Observer) SelectUTXOs(
 	amount float64,
 	utxosToSpend uint16,

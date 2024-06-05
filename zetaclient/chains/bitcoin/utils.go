@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TODO(revamp): Remove utils.go and move the functions to the appropriate files
+
 // PrettyPrintStruct returns a pretty-printed string representation of a struct
 func PrettyPrintStruct(val interface{}) (string, error) {
 	prettyStruct, err := json.MarshalIndent(

@@ -52,7 +52,7 @@ const (
 var _ interfaces.ChainObserver = &Observer{}
 
 // Logger contains list of loggers used by Bitcoin chain observer
-// TODO: Merge this logger with the one in evm
+// TODO(revamp): Merge this logger with the one in evm
 // https://github.com/zeta-chain/node/issues/2022
 type Logger struct {
 	// Chain is the parent logger for the chain
@@ -75,6 +75,7 @@ type Logger struct {
 }
 
 // BTCInboundEvent represents an incoming transaction event
+// TODO(revamp): Move to inbound
 type BTCInboundEvent struct {
 	// FromAddress is the first input address
 	FromAddress string
@@ -314,6 +315,8 @@ func (ob *Observer) Start() {
 }
 
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
+// TODO(revamp): move ticker related functions to a specific file
+// TODO(revamp): move inner logic in a separate function
 func (ob *Observer) WatchRPCStatus() {
 	ob.logger.Chain.Info().Msgf("RPCStatus is starting")
 	ticker := time.NewTicker(60 * time.Second)
@@ -432,6 +435,8 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
+// TODO(revamp): move ticker related functions to a specific file
+// TODO(revamp): move inner logic in a separate function
 func (ob *Observer) WatchGasPrice() {
 	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
@@ -468,6 +473,7 @@ func (ob *Observer) WatchGasPrice() {
 }
 
 // PostGasPrice posts the gas price to Zetacore
+// TODO(revamp): move to gas price file
 func (ob *Observer) PostGasPrice() error {
 	if ob.chain.ChainId == 18444 { //bitcoin regtest; hardcode here since this RPC is not available on regtest
 		blockNumber, err := ob.rpcClient.GetBlockCount()
@@ -513,6 +519,7 @@ func (ob *Observer) PostGasPrice() error {
 }
 
 // GetSenderAddressByVin get the sender address from the previous transaction
+// TODO(revamp): move in upper package
 func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
 	// query previous raw transaction by txid
 	// GetTransaction requires reconfiguring the bitcoin node (txindex=1), so we use GetRawTransaction instead
@@ -556,6 +563,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 
 // WatchUTXOS watches bitcoin chain for UTXOs owned by the TSS address
 // It starts a ticker to fetch UTXOs at regular intervals
+// TODO(revamp): move ticker related functions to a specific file
 func (ob *Observer) WatchUTXOS() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
@@ -583,6 +591,7 @@ func (ob *Observer) WatchUTXOS() {
 }
 
 // FetchUTXOS fetches UTXOs owned by the TSS address
+// TODO(revamp): move to UTXO file
 func (ob *Observer) FetchUTXOS() error {
 	defer func() {
 		if err := recover(); err != nil {
@@ -646,6 +655,7 @@ func (ob *Observer) FetchUTXOS() error {
 }
 
 // SaveBroadcastedTx saves successfully broadcasted transaction
+// TODO(revamp): move to db file
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outboundID := ob.GetTxID(nonce)
 	ob.Mu.Lock()
@@ -662,6 +672,7 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 }
 
 // GetTxResultByHash gets the transaction result by hash
+// TODO(revamp): move to client package
 func GetTxResultByHash(
 	rpcClient interfaces.BTCRPCClient,
 	txID string,
@@ -680,6 +691,7 @@ func GetTxResultByHash(
 }
 
 // GetBlockHeightByHash gets the block height by block hash
+// TODO(revamp): move to client package
 func GetBlockHeightByHash(
 	rpcClient interfaces.BTCRPCClient,
 	hash string,
@@ -700,6 +712,7 @@ func GetBlockHeightByHash(
 }
 
 // GetRawTxResult gets the raw tx result
+// TODO(revamp): move to client package
 func GetRawTxResult(
 	rpcClient interfaces.BTCRPCClient,
 	hash *chainhash.Hash,
@@ -735,6 +748,7 @@ func GetRawTxResult(
 }
 
 // BuildBroadcastedTxMap creates a map of broadcasted transactions from the database
+// TODO(revamp): move to db file
 func (ob *Observer) BuildBroadcastedTxMap() error {
 	var broadcastedTransactions []clienttypes.OutboundHashSQLType
 	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
@@ -749,6 +763,7 @@ func (ob *Observer) BuildBroadcastedTxMap() error {
 
 // LoadLastScannedBlock loads last scanned block from database
 // The last scanned block is the height from which the observer should continue scanning for inbound transactions
+// TODO(revamp): move to db file
 func (ob *Observer) LoadLastScannedBlock() error {
 	// Get the latest block number from node
 	bn, err := ob.rpcClient.GetBlockCount()
@@ -817,6 +832,7 @@ func (ob *Observer) isTssTransaction(txid string) bool {
 }
 
 // postBlockHeader posts block header to zetacore
+// TODO(revamp): move to block header file
 func (ob *Observer) postBlockHeader(tip int64) error {
 	ob.logger.Inbound.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
@@ -853,6 +869,7 @@ func (ob *Observer) postBlockHeader(tip int64) error {
 }
 
 // loadDB loads the observer database
+// TODO(revamp): move to db file
 func (ob *Observer) loadDB(dbpath string) error {
 	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
 		err := os.MkdirAll(dbpath, os.ModePerm)

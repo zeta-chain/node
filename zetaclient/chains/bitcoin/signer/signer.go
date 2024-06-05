@@ -177,6 +177,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
+// TODO(revamp): simplify the function
 func (signer *Signer) SignWithdrawTx(
 	to btcutil.Address,
 	amount float64,
@@ -321,6 +322,7 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 }
 
 // TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
+// TODO(revamp): simplify the function
 func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,
