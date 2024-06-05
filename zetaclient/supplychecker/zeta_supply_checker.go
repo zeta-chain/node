@@ -1,3 +1,5 @@
+// Package supplychecker provides functionalities to check the total supply of Zeta tokens
+// Currently not used in the codebase
 package supplychecker
 
 import (

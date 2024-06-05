@@ -1,3 +1,4 @@
+// Package observer implements the Bitcoin chain observer
 package observer
 
 import (

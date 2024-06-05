@@ -1,3 +1,4 @@
+// Package authz provides a signer object for transactions using grants
 package authz
 
 import (

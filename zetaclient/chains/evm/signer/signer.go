@@ -1,3 +1,4 @@
+// Package signer implements the ChainSigner interface for EVM chains
 package signer
 
 import (

@@ -1,3 +1,4 @@
+// Package zetacore provides functionalities for interacting with ZetaChain
 package zetacore
 
 import (

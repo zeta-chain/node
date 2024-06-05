@@ -1,3 +1,4 @@
+// Package signer implements the ChainSigner interface for BTC
 package signer
 
 import (

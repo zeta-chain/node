@@ -1,3 +1,4 @@
+// Package outboundprocessor provides functionalities to track outbound processing
 package outboundprocessor
 
 import (

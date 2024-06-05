@@ -1,3 +1,4 @@
+// Package observer implements the EVM chain observer
 package observer
 
 import (

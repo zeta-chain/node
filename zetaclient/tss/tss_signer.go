@@ -1,3 +1,4 @@
+// Package tss provides the TSS signer functionalities for the zetaclient to sign transactions on external chains
 package tss
 
 import (

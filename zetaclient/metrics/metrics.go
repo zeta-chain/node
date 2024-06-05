@@ -1,3 +1,4 @@
+// Package metrics provides metrics functionalities for the zetaclient
 package metrics
 
 import (

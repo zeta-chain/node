@@ -1,3 +1,4 @@
+// Package interfaces provides interfaces for clients and signers for the chain to interact with
 package interfaces
 
 import (

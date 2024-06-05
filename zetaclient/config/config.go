@@ -1,3 +1,4 @@
+// Package config provides functions to load and save ZetaClient config
 package config
 
 import (
