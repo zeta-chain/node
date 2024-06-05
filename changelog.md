@@ -72,6 +72,10 @@
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
 
+### Documentation
+
+* [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
+
 ## v17.0.0
 
 ### Fixes
