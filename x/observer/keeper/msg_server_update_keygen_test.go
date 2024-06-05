@@ -20,15 +20,16 @@ func TestMsgServer_UpdateKeygen(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
+		msg := types.MsgUpdateKeygen{
+			Creator: admin,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		srv := keeper.NewMsgServerImpl(*k)
-		res, err := srv.UpdateKeygen(wctx, &types.MsgUpdateKeygen{
-			Creator: admin,
-		})
-		require.Error(t, err)
-		require.Equal(t, &types.MsgUpdateKeygenResponse{}, res)
+		res, err := srv.UpdateKeygen(wctx, &msg)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
+		require.Nil(t, res)
 	})
 
 	t.Run("should error if keygen not found", func(t *testing.T) {
@@ -37,13 +38,14 @@ func TestMsgServer_UpdateKeygen(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+		msg := types.MsgUpdateKeygen{
+			Creator: admin,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		srv := keeper.NewMsgServerImpl(*k)
-		res, err := srv.UpdateKeygen(wctx, &types.MsgUpdateKeygen{
-			Creator: admin,
-		})
+		res, err := srv.UpdateKeygen(wctx, &msg)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
@@ -54,17 +56,19 @@ func TestMsgServer_UpdateKeygen(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+		msg := types.MsgUpdateKeygen{
+			Creator: admin,
+			Block:   2,
+		}
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		wctx := sdk.WrapSDKContext(ctx)
 		item := types.Keygen{
 			BlockNumber: 10,
 		}
 		k.SetKeygen(ctx, item)
 		srv := keeper.NewMsgServerImpl(*k)
-		res, err := srv.UpdateKeygen(wctx, &types.MsgUpdateKeygen{
-			Creator: admin,
-			Block:   2,
-		})
+		res, err := srv.UpdateKeygen(wctx, &msg)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
@@ -75,7 +79,11 @@ func TestMsgServer_UpdateKeygen(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
+		msg := types.MsgUpdateKeygen{
+			Creator: admin,
+			Block:   ctx.BlockHeight() + 30,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		wctx := sdk.WrapSDKContext(ctx)
 		item := types.Keygen{
 			BlockNumber: 10,
@@ -89,10 +97,7 @@ func TestMsgServer_UpdateKeygen(t *testing.T) {
 			GranteePubkey: granteePubKey,
 		})
 
-		res, err := srv.UpdateKeygen(wctx, &types.MsgUpdateKeygen{
-			Creator: admin,
-			Block:   ctx.BlockHeight() + 30,
-		})
+		res, err := srv.UpdateKeygen(wctx, &msg)
 		require.NoError(t, err)
 		require.Equal(t, &types.MsgUpdateKeygenResponse{}, res)
 

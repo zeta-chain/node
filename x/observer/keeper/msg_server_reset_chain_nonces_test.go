@@ -21,17 +21,18 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		chainId := chains.GoerliLocalnet.ChainId
-
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-
-		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
+		msg := types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
 			ChainNonceLow:  1,
 			ChainNonceHigh: 5,
-		})
+		}
+
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+
+		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
@@ -42,16 +43,18 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		srv := keeper.NewMsgServerImpl(*k)
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		chainId := chains.GoerliLocalnet.ChainId
-		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
+		msg := types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
 			ChainNonceLow:  1,
 			ChainNonceHigh: 5,
-		})
+		}
+
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
+		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, types.ErrTssNotFound)
 	})
 
@@ -64,15 +67,17 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		k.SetTSS(ctx, tss)
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
+		msg := types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        999,
 			ChainNonceLow:  1,
 			ChainNonceHigh: 5,
-		})
+		}
+
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
+		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, types.ErrSupportedChains)
 	})
 
@@ -85,11 +90,29 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		k.SetTSS(ctx, tss)
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		chainId := chains.GoerliLocalnet.ChainId
+		nonceLow := 1
+		nonceHigh := 5
+
+		// Reset nonces to nonceLow and nonceHigh
+		msg := types.MsgResetChainNonces{
+			Creator:        admin,
+			ChainId:        chainId,
+			ChainNonceLow:  int64(nonceLow),
+			ChainNonceHigh: int64(nonceHigh),
+		}
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		// Reset nonces back to 0
+		msg2 := types.MsgResetChainNonces{
+			Creator:        admin,
+			ChainId:        chainId,
+			ChainNonceLow:  0,
+			ChainNonceHigh: 0,
+		}
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg2, nil)
+
 		index := chains.GoerliLocalnet.ChainName.String()
 
 		// check existing chain nonces
@@ -99,14 +122,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		require.False(t, found)
 
 		// reset chain nonces
-		nonceLow := 1
-		nonceHigh := 5
-		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
-			Creator:        admin,
-			ChainId:        chainId,
-			ChainNonceLow:  int64(nonceLow),
-			ChainNonceHigh: int64(nonceHigh),
-		})
+		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check updated chain nonces
@@ -124,12 +140,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		require.Equal(t, int64(nonceHigh), pendingNonces.NonceHigh)
 
 		// reset nonces back to 0
-		_, err = srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
-			Creator:        admin,
-			ChainId:        chainId,
-			ChainNonceLow:  0,
-			ChainNonceHigh: 0,
-		})
+		_, err = srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg2)
 		require.NoError(t, err)
 
 		// check updated chain nonces

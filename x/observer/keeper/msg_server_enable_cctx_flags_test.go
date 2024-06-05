@@ -26,7 +26,7 @@ func TestMsgServer_EnableCCTX(t *testing.T) {
 			EnableOutbound: true,
 		}
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
 		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestMsgServer_EnableCCTX(t *testing.T) {
 			EnableOutbound: true,
 		}
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
 		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
@@ -86,7 +86,7 @@ func TestMsgServer_EnableCCTX(t *testing.T) {
 			EnableOutbound: false,
 		}
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
 		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
@@ -116,7 +116,7 @@ func TestMsgServer_EnableCCTX(t *testing.T) {
 			EnableOutbound: true,
 		}
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
 		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.NoError(t, err)
@@ -141,7 +141,7 @@ func TestMsgServer_EnableCCTX(t *testing.T) {
 			EnableOutbound: false,
 		}
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
 
 		_, err := srv.EnableCCTX(sdk.WrapSDKContext(ctx), msg)
 		require.ErrorIs(t, authoritytypes.ErrUnauthorized, err)

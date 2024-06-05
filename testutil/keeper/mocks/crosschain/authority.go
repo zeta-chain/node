@@ -4,7 +4,6 @@ package mocks
 
 import (
 	mock "github.com/stretchr/testify/mock"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,24 +26,6 @@ func (_m *CrosschainAuthorityKeeper) CheckAuthorization(ctx types.Context, msg t
 		r0 = rf(ctx, msg)
 	} else {
 		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// IsAuthorized provides a mock function with given fields: ctx, address, policyType
-func (_m *CrosschainAuthorityKeeper) IsAuthorized(ctx types.Context, address string, policyType authoritytypes.PolicyType) bool {
-	ret := _m.Called(ctx, address, policyType)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsAuthorized")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string, authoritytypes.PolicyType) bool); ok {
-		r0 = rf(ctx, address, policyType)
-	} else {
-		r0 = ret.Get(0).(bool)
 	}
 
 	return r0

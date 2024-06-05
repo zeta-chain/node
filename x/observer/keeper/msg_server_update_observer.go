@@ -6,8 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -98,8 +98,9 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 	case types.ObserverUpdateReason_AdminUpdate:
 		{
 			// Operational policy is required to update an observer for admin update
-			if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-				return false, authoritytypes.ErrUnauthorized
+			err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+			if err != nil {
+				return false, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 			}
 			return true, nil
 		}

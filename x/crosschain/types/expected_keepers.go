@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -209,7 +208,6 @@ type FungibleKeeper interface {
 }
 
 type AuthorityKeeper interface {
-	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
 }
 

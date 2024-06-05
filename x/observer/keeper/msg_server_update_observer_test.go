@@ -12,7 +12,6 @@ import (
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -325,8 +324,6 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -366,12 +363,16 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Count: count,
 		})
 
-		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
+		msg := types.MsgUpdateObserver{
 			Creator:            admin,
 			OldObserverAddress: accAddressOfValidator.String(),
 			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
-		})
+		}
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
+		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		acc, found := k.GetNodeAccount(ctx, newOperatorAddress.String())

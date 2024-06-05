@@ -22,15 +22,16 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
+		msg := types.MsgAddObserver{
+			Creator: admin,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		srv := keeper.NewMsgServerImpl(*k)
-		res, err := srv.AddObserver(wctx, &types.MsgAddObserver{
-			Creator: admin,
-		})
-		require.Error(t, err)
-		require.Equal(t, &types.MsgAddObserverResponse{}, res)
+		res, err := srv.AddObserver(wctx, &msg)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
+		require.Nil(t, res)
 	})
 
 	t.Run("should error if pub key not valid", func(t *testing.T) {
@@ -39,14 +40,15 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		msg := types.MsgAddObserver{
+			Creator:                 admin,
+			ZetaclientGranteePubkey: "invalid",
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		srv := keeper.NewMsgServerImpl(*k)
-		res, err := srv.AddObserver(wctx, &types.MsgAddObserver{
-			Creator:                 admin,
-			ZetaclientGranteePubkey: "invalid",
-		})
+		res, err := srv.AddObserver(wctx, &msg)
 		require.Error(t, err)
 		require.Equal(t, &types.MsgAddObserverResponse{}, res)
 	})
@@ -57,19 +59,22 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
+		msg := types.MsgAddObserver{
+			Creator:                 admin,
+			ZetaclientGranteePubkey: sample.PubKeyString(),
+			AddNodeAccountOnly:      false,
+			ObserverAddress:         observerAddress.String(),
+		}
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		_, found := k.GetLastObserverCount(ctx)
 		require.False(t, found)
 		srv := keeper.NewMsgServerImpl(*k)
-		observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
-		res, err := srv.AddObserver(wctx, &types.MsgAddObserver{
-			Creator:                 admin,
-			ZetaclientGranteePubkey: sample.PubKeyString(),
-			AddNodeAccountOnly:      false,
-			ObserverAddress:         observerAddress.String(),
-		})
+
+		res, err := srv.AddObserver(wctx, &msg)
 		require.NoError(t, err)
 		require.Equal(t, &types.MsgAddObserverResponse{}, res)
 
@@ -84,24 +89,27 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
+		msg := types.MsgAddObserver{
+			Creator:                 admin,
+			ZetaclientGranteePubkey: sample.PubKeyString(),
+			AddNodeAccountOnly:      true,
+			ObserverAddress:         observerAddress.String(),
+		}
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		wctx := sdk.WrapSDKContext(ctx)
 
 		_, found := k.GetLastObserverCount(ctx)
 		require.False(t, found)
 		srv := keeper.NewMsgServerImpl(*k)
-		observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
+
 		_, found = k.GetKeygen(ctx)
 		require.False(t, found)
 		_, found = k.GetNodeAccount(ctx, observerAddress.String())
 		require.False(t, found)
 
-		res, err := srv.AddObserver(wctx, &types.MsgAddObserver{
-			Creator:                 admin,
-			ZetaclientGranteePubkey: sample.PubKeyString(),
-			AddNodeAccountOnly:      true,
-			ObserverAddress:         observerAddress.String(),
-		})
+		res, err := srv.AddObserver(wctx, &msg)
 		require.NoError(t, err)
 		require.Equal(t, &types.MsgAddObserverResponse{}, res)
 
