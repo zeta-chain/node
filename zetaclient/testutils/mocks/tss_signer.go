@@ -31,6 +31,8 @@ var _ interfaces.TSSSigner = (*TSS)(nil)
 
 // TSS is a mock of TSS signer for testing
 type TSS struct {
+	paused bool
+
 	// set evmAddress/btcAddress if just want to mock EVMAddress()/BTCAddress()
 	chain      chains.Chain
 	evmAddress string
@@ -42,6 +44,7 @@ type TSS struct {
 
 func NewMockTSS(chain chains.Chain, evmAddress string, btcAddress string) *TSS {
 	return &TSS{
+		paused:     false,
 		chain:      chain,
 		evmAddress: evmAddress,
 		btcAddress: btcAddress,
@@ -65,6 +68,11 @@ func (s *TSS) WithPrivKey(privKey *ecdsa.PrivateKey) *TSS {
 
 // Sign uses test key unrelated to any tss key in production
 func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *chains.Chain, _ string) ([65]byte, error) {
+	// return error if tss is paused
+	if s.paused {
+		return [65]byte{}, fmt.Errorf("tss is paused")
+	}
+
 	signature, err := crypto.Sign(data, s.PrivKey)
 	if err != nil {
 		return [65]byte{}, err
@@ -160,4 +168,15 @@ func (s *TSS) btcAddressPubkey() *btcutil.AddressPubKey {
 		return nil
 	}
 	return testnet3Addr
+}
+
+// ----------------------------------------------------------------------------
+// methods to control the mock for testing
+// ----------------------------------------------------------------------------
+func (s *TSS) Pause() {
+	s.paused = true
+}
+
+func (s *TSS) Unpause() {
+	s.paused = false
 }
