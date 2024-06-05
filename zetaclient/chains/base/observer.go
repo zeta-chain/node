@@ -9,14 +9,14 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -25,7 +25,7 @@ const (
 	DefaultBlockCacheSize = 1000
 )
 
-// Observer is the base chain observer
+// Observer is the base chain observer for external chains
 type Observer struct {
 	// the external chain
 	chain chains.Chain

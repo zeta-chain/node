@@ -6,6 +6,7 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -16,10 +17,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
-// create a temporary path for database
-func tempDbPath(t *testing.T) string {
-	// Create a temporary file to get a unique name
-	tempPath, err := os.MkdirTemp("", "tempdb-")
+// create a temporary directory for testing
+func createTempDir(t *testing.T) string {
+	tempPath, err := os.MkdirTemp("", "tempdir-")
 	require.NoError(t, err)
 	return tempPath
 }
@@ -33,7 +33,7 @@ func createObserver(t *testing.T) *base.Observer {
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
-	dbPath := tempDbPath(t)
+	dbPath := createTempDir(t)
 
 	// create observer
 	ob, err := base.NewObserver(chain, chainParams, zetacoreContext, zetacoreClient, tss, blockCacheSize, dbPath, nil)
@@ -50,7 +50,7 @@ func TestNewObserver(t *testing.T) {
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
-	dbPath := tempDbPath(t)
+	dbPath := createTempDir(t)
 
 	// test cases
 	tests := []struct {
@@ -105,7 +105,16 @@ func TestNewObserver(t *testing.T) {
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob, err := base.NewObserver(tt.chain, tt.chainParams, tt.zetacoreContext, tt.zetacoreClient, tt.tss, tt.blockCacheSize, tt.dbPath, nil)
+			ob, err := base.NewObserver(
+				tt.chain,
+				tt.chainParams,
+				tt.zetacoreContext,
+				tt.zetacoreClient,
+				tt.tss,
+				tt.blockCacheSize,
+				tt.dbPath,
+				nil,
+			)
 			if tt.fail {
 				require.ErrorContains(t, err, tt.message)
 				require.Nil(t, ob)
@@ -173,7 +182,7 @@ func TestObserverSetters(t *testing.T) {
 
 func TestOpenDB(t *testing.T) {
 	ob := createObserver(t)
-	dbPath := tempDbPath(t)
+	dbPath := createTempDir(t)
 
 	t.Run("should be able to open db", func(t *testing.T) {
 		err := ob.OpenDB(dbPath)
