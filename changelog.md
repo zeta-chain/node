@@ -20,7 +20,9 @@
 * [2287](https://github.com/zeta-chain/node/pull/2287) - implement `MsgUpdateChainInfo` message
 * [2279](https://github.com/zeta-chain/node/pull/2279) - add a CCTXGateway field to chain static data
 * [2275](https://github.com/zeta-chain/node/pull/2275) - add ChainInfo singleton state variable in authority
+* [2291](https://github.com/zeta-chain/node/pull/2291) - initialize cctx gateway interface
 * [2289](https://github.com/zeta-chain/node/pull/2289) - add an authorization list to keep track of all authorizations on the chain
+* [2305](https://github.com/zeta-chain/node/pull/2305) - add new messages `MsgAddAuthorization` and `MsgRemoveAuthorization` that can be used to update the authorization list
 
 ### Refactor
 
@@ -38,6 +40,7 @@
 * [2262](https://github.com/zeta-chain/node/pull/2262) - refactor MsgUpdateZRC20 into MsgPauseZrc20 and MsgUnPauseZRC20
 * [2290](https://github.com/zeta-chain/node/pull/2290) - rename `MsgAddBlameVote` message to `MsgVoteBlame`
 * [2269](https://github.com/zeta-chain/node/pull/2269) - refactor MsgUpdateCrosschainFlags into MsgEnableCCTX, MsgDisableCCTX and MsgUpdateGasPriceIncreaseFlags
+* [2296](https://github.com/zeta-chain/node/pull/2296) - move `testdata` package to `testutil` to organize test-related utilities
 
 ### Tests
 
@@ -47,6 +50,7 @@
 * [2199](https://github.com/zeta-chain/node/pull/2199) - custom priority mempool unit tests
 * [2240](https://github.com/zeta-chain/node/pull/2240) - removed hard-coded Bitcoin regnet chainID in E2E withdraw tests
 * [2266](https://github.com/zeta-chain/node/pull/2266) - try fixing E2E test `crosschain_swap` failure `btc transaction not signed`
+* [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
 
 ### Fixes
 
@@ -66,6 +70,13 @@
 * [2189](https://github.com/zeta-chain/node/pull/2189) - Updated the docker tag when a release trigger runs to be the github event for the release name which should be the version. Removed mac specific build as the arm build should handle that.
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag.
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network.
+
+## v17.0.0
+
+### Fixes
+
+* [2249](https://github.com/zeta-chain/node/pull/2249) - fix inbound and outbound validation for BSC chain
+* [2265](https://github.com/zeta-chain/node/pull/2265) - fix rate limiter query for revert cctxs
 
 ## v16.0.0
 

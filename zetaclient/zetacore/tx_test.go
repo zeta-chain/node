@@ -123,7 +123,7 @@ func MockBroadcastError(_ *Client, _ uint64, _ sdktypes.Msg, _ authz.Signer) (st
 
 func getHeaderData(t *testing.T) proofs.HeaderData {
 	var header ethtypes.Header
-	file, err := os.Open("../../pkg/testdata/eth_header_18495266.json")
+	file, err := os.Open("../../testutil/testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)

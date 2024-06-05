@@ -20,14 +20,14 @@ func TestMsgDisableCCTX_ValidateBasic(t *testing.T) {
 			name: "invalid creator address",
 			msg:  types.NewMsgDisableCCTX("invalid", true, true),
 			err: func(t require.TestingT, err error, i ...interface{}) {
-				require.Contains(t, err.Error(), "invalid creator address")
+				require.ErrorContains(t, err, "invalid creator address")
 			},
 		},
 		{
 			name: "invalid flags",
 			msg:  types.NewMsgDisableCCTX(sample.AccAddress(), false, false),
 			err: func(t require.TestingT, err error, i ...interface{}) {
-				require.Contains(t, err.Error(), "at least one of DisableInbound or DisableOutbound must be true")
+				require.ErrorContains(t, err, "at least one of DisableInbound or DisableOutbound must be true")
 			},
 		},
 		{

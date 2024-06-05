@@ -48,4 +48,5 @@ var (
 	ErrUnableToDecodeMessageString   = errorsmod.Register(ModuleName, 1151, "unable to decode message string")
 	ErrInvalidRateLimiterFlags       = errorsmod.Register(ModuleName, 1152, "invalid rate limiter flags")
 	ErrMaxTxOutTrackerHashesReached  = errorsmod.Register(ModuleName, 1153, "max tx out tracker hashes reached")
+	ErrInitiatitingOutbound          = errorsmod.Register(ModuleName, 1154, "cannot initiate outbound")
 )
