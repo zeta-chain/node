@@ -56730,6 +56730,14 @@ definitions:
       ChainInfo contains static information about the chains
       This structure is used to dynamically update these info on a live network
       before hardcoding the values in a upgrade
+  authorityMsgAddAuthorizationResponse:
+    type: object
+    description: MsgAddAuthorizationResponse defines the MsgAddAuthorizationResponse service.
+  authorityMsgRemoveAuthorizationResponse:
+    type: object
+    description: |-
+      MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
+      service.
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
@@ -56758,6 +56766,7 @@ definitions:
       - groupEmergency
       - groupOperational
       - groupAdmin
+      - groupEmpty
     default: groupEmergency
     description: |-
       - groupEmergency: Used for emergency situations that require immediate action
@@ -56765,6 +56774,9 @@ definitions:
        - groupAdmin: non-sensitive protocol parameters
 
       Used for administrative tasks like changing sensitive
+       - groupEmpty: protocol parameters or moving funds
+
+      Used for empty policy, no action is allowed
     title: PolicyType defines the type of policy
   authorityQueryGetChainInfoResponse:
     type: object

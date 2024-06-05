@@ -176,21 +176,21 @@ func TestAuthorizationList_GetAuthorizations(t *testing.T) {
 				},
 			}},
 			getPolicyMsgUrl: "XYZ",
-			expectedPolicy:  types.PolicyType(0),
+			expectedPolicy:  types.PolicyType_groupEmpty,
 			error:           types.ErrAuthorizationNotFound,
 		},
 		{
 			name:            "get authorizations fails when msg not found in list",
 			authorizations:  types.AuthorizationList{Authorizations: []types.Authorization{}},
 			getPolicyMsgUrl: "ABC",
-			expectedPolicy:  types.PolicyType(0),
+			expectedPolicy:  types.PolicyType_groupEmpty,
 			error:           types.ErrAuthorizationNotFound,
 		},
 		{
 			name:            "get authorizations fails when when queried for empty string",
 			authorizations:  types.AuthorizationList{Authorizations: []types.Authorization{}},
 			getPolicyMsgUrl: "",
-			expectedPolicy:  types.PolicyType(0),
+			expectedPolicy:  types.PolicyType_groupEmpty,
 			error:           types.ErrAuthorizationNotFound,
 		},
 	}
@@ -275,10 +275,10 @@ func TestAuthorizationList_Validate(t *testing.T) {
 
 func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 	tt := []struct {
-		name                string
-		oldList             types.AuthorizationList
-		removeAuthorization types.Authorization
-		expectedList        types.AuthorizationList
+		name         string
+		oldList      types.AuthorizationList
+		removeMsgUrl string
+		expectedList types.AuthorizationList
 	}{
 		{
 			name: "remove authorization successfully",
@@ -292,9 +292,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
-			removeAuthorization: types.Authorization{
-				MsgUrl: "ABC",
-			},
+			removeMsgUrl: "ABC",
 			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
 					MsgUrl:           "XYZ",
@@ -318,9 +316,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
-			removeAuthorization: types.Authorization{
-				MsgUrl: "XYZ",
-			},
+			removeMsgUrl: "XYZ",
 			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
 					MsgUrl:           "ABC",
@@ -333,11 +329,9 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 			}},
 		},
 		{
-			name:    "do not remove anything when trying to remove from an empty list",
-			oldList: types.AuthorizationList{Authorizations: []types.Authorization{}},
-			removeAuthorization: types.Authorization{
-				MsgUrl: "XYZ",
-			},
+			name:         "do not remove anything when trying to remove from an empty list",
+			oldList:      types.AuthorizationList{Authorizations: []types.Authorization{}},
+			removeMsgUrl: "XYZ",
 			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{}},
 		},
 		{
@@ -348,9 +342,28 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 					AuthorizedPolicy: types.PolicyType_groupOperational,
 				},
 			}},
-			removeAuthorization: types.Authorization{
-				MsgUrl: "XYZ",
-			},
+			removeMsgUrl: "XYZ",
+			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+		},
+		// The list is invalid, but this test case tries to assert the expected functionality
+		{
+			name: "return after removing first occurrence",
+			oldList: types.AuthorizationList{Authorizations: []types.Authorization{
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+				{
+					MsgUrl:           "ABC",
+					AuthorizedPolicy: types.PolicyType_groupOperational,
+				},
+			}},
+			removeMsgUrl: "ABC",
 			expectedList: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
 					MsgUrl:           "ABC",
@@ -361,7 +374,7 @@ func TestAuthorizationList_RemoveAuthorizations(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.oldList.RemoveAuthorization(tc.removeAuthorization)
+			tc.oldList.RemoveAuthorization(tc.removeMsgUrl)
 			require.Equal(t, tc.expectedList, tc.oldList)
 		})
 	}
@@ -407,6 +420,8 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
+			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
+			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {
