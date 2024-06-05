@@ -95,6 +95,6 @@ func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChai
 	}
 	// successful HandleEVMDeposit;
 	commit()
-	cctx.SetOutBoundMined("Remote omnichain contract call completed")
+	cctx.SetOutboundMined("Remote omnichain contract call completed")
 	return types.CctxStatus_OutboundMined
 }

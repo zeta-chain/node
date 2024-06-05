@@ -530,7 +530,7 @@ func (ob *Observer) WatchUTXOs() {
 			if err != nil {
 				ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOS)
+			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.stop:
 			ob.logger.UTXOs.Info().Msgf("WatchUTXOs stopped for chain %d", ob.chain.ChainId)
 			return

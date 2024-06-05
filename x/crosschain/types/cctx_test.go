@@ -296,10 +296,10 @@ func TestCrossChainTx_SetPendingOutbound(t *testing.T) {
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 }
 
-func TestCrossChainTx_SetOutBoundMined(t *testing.T) {
+func TestCrossChainTx_SetOutboundMined(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-	cctx.SetOutBoundMined("test")
+	cctx.SetOutboundMined("test")
 	require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 }

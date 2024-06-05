@@ -9,8 +9,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 enum ObservationType {
   option (gogoproto.goproto_enum_stringer) = true;
   EmptyObserverType = 0;
-  InBoundTx = 1;
-  OutBoundTx = 2;
+  InboundTx = 1;
+  OutboundTx = 2;
   TSSKeyGen = 3;
   TSSKeySign = 4;
 }

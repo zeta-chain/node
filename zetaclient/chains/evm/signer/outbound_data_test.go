@@ -27,7 +27,7 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 		require.Equal(t, big.NewInt(cctx.InboundParams.SenderChainId), txData.toChainID)
 	})
 
-	t.Run("SetChainAndSender PendingOutBound", func(t *testing.T) {
+	t.Run("SetChainAndSender PendingOutbound", func(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		skipTx := txData.SetChainAndSender(cctx, logger)
 

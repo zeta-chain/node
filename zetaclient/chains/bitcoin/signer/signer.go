@@ -416,7 +416,7 @@ func (signer *Signer) TryProcessOutbound(
 	if err != nil {
 		logger.Warn().
 			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutBoundTx.String())
+			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
