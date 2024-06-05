@@ -47,7 +47,7 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, policyType types.P
 func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	// Policy transactions must have only one signer
 	if len(msg.GetSigners()) != 1 {
-		return errors.Wrap(types.ErrSigners, fmt.Sprintf("msg: %v", sdk.MsgTypeURL(msg)))
+		return errors.Wrapf(types.ErrSigners, "msg: %v", sdk.MsgTypeURL(msg))
 	}
 
 	signer := msg.GetSigners()[0].String()
@@ -57,6 +57,7 @@ func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	if !found {
 		return types.ErrAuthorizationListNotFound
 	}
+
 	policyRequired, err := authorizationsList.GetAuthorizedPolicy(msgURL)
 	if err != nil {
 		return errors.Wrap(types.ErrAuthorizationNotFound, fmt.Sprintf("msg: %v", msgURL))

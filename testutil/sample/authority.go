@@ -72,6 +72,7 @@ func MultipleSignerMessage() sdk.Msg {
 	return &TestMessage{}
 }
 
+// TestMessage is a sample message which has two signers instead of one. This is used to test cases when we have checks for number of signers such as authorized transactions.
 type TestMessage struct{}
 
 var _ sdk.Msg = &TestMessage{}
