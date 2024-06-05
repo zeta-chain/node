@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -23,14 +23,15 @@ func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
+		msg := types.MsgRemoveOutboundTracker{
+			Creator: admin,
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.RemoveOutboundTracker(ctx, &types.MsgRemoveOutboundTracker{
-			Creator: admin,
-		})
+		res, err := msgServer.RemoveOutboundTracker(ctx, &msg)
 		require.Error(t, err)
 		require.Empty(t, res)
 
@@ -48,16 +49,17 @@ func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
-		res, err := msgServer.RemoveOutboundTracker(ctx, &types.MsgRemoveOutboundTracker{
+		msg := types.MsgRemoveOutboundTracker{
 			Creator: admin,
 			ChainId: 1,
 			Nonce:   1,
-		})
+		}
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		res, err := msgServer.RemoveOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		require.Empty(t, res)
 

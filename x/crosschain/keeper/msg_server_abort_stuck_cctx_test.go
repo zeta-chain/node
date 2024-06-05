@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -25,7 +24,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -57,7 +56,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -89,7 +88,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -121,7 +120,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, false)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -149,7 +148,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &msg)
@@ -168,7 +167,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")

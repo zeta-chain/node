@@ -44,13 +44,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -68,11 +73,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			"foobar",
 		)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
 		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
@@ -91,13 +92,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -110,11 +116,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
 		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
@@ -133,13 +135,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -153,11 +160,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
 		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
@@ -176,13 +179,19 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = true
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -196,11 +205,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.Error(t, err)
 	})
 
@@ -211,13 +216,19 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -231,11 +242,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.Error(t, err)
 	})
 
@@ -246,13 +253,19 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		refundAddress := sample.EthAddress()
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: refundAddress.String(),
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -262,12 +275,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		refundAddress := sample.EthAddress()
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: refundAddress.String(),
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
 		refundAddressCosmos := sdk.AccAddress(refundAddress.Bytes())
@@ -286,13 +294,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
 		asset := sample.EthAddress().String()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.SenderChainId = chainID
@@ -312,11 +325,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			"bar",
 		)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
 		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.Sender)
@@ -335,18 +344,24 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidBtcChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
+		cctx.CctxStatus.IsAbortRefunded = false
+		cctx.InboundParams.SenderChainId = chainID
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.TxOrigin,
+		}
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
-		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.CctxStatus.IsAbortRefunded = false
-		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
-		cctx.InboundParams.SenderChainId = chainID
-		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(
@@ -359,11 +374,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			"foobar",
 		)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.TxOrigin,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
 		refundAddress := ethcommon.HexToAddress(cctx.InboundParams.TxOrigin)
@@ -382,13 +393,19 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: "invalid-address",
+		}
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -398,11 +415,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: "invalid-address",
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorContains(t, err, "invalid refund address")
 	})
 
@@ -413,13 +426,19 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: "0x0000000000000000000000000000000000000000",
+		}
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -429,11 +448,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: "0x0000000000000000000000000000000000000000",
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorContains(t, err, "invalid refund address")
 	})
 
@@ -445,12 +460,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: "",
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -459,11 +479,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: "",
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorContains(t, err, "CCTX is not aborted")
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
@@ -477,13 +493,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: "",
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -491,11 +512,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundParams.CoinType = coin.CoinType_Gas
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: "",
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorContains(t, err, "cannot find cctx")
 	})
 
@@ -506,13 +523,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidBtcChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: "",
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -530,11 +552,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			"foobar",
 		)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: "",
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorContains(t, err, "refund address is required")
 	})
 
@@ -545,13 +563,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -560,11 +583,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorContains(t, err, "unable to find zeta accounting")
 	})
 
@@ -575,13 +594,19 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
+		cctx := sample.CrossChainTx(t, "sample-index")
+		msg := crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundParams.Sender,
+		}
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundParams.TxOrigin = cctx.InboundParams.Sender
@@ -599,11 +624,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			"foobar",
 		)
 
-		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       admin,
-			CctxIndex:     cctx.Index,
-			RefundAddress: cctx.InboundParams.Sender,
-		})
+		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 }

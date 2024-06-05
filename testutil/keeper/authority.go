@@ -79,8 +79,8 @@ func MockIsAuthorized(m *mock.Mock, address string, policyType types.PolicyType,
 	m.On("IsAuthorized", mock.Anything, address, policyType).Return(isAuthorized).Once()
 }
 
-func MockCheckAuthorization(m *mock.Mock, _ sdk.Msg, isAuthorized bool) {
-	m.On("IsAuthorized", mock.Anything).Return(isAuthorized).Once()
+func MockCheckAuthorization(m *mock.Mock, msg sdk.Msg, isAuthorized error) {
+	m.On("CheckAuthorization", mock.Anything, msg).Return(isAuthorized).Once()
 }
 
 func SetAdminPolices(ctx sdk.Context, ak *keeper.Keeper) string {

@@ -25,9 +25,11 @@ func (k msgServer) AddInboundTracker(
 
 	// check if the msg signer is from the emergency group policy address.It is okay to ignore the error as the sender can also be an observer
 	isEmergencyGroup := false
-	if k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil {
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err == nil {
 		isEmergencyGroup = true
 	}
+	fmt.Println("checking", msg.Creator)
 
 	// check if the msg signer is an observer
 	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
