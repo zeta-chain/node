@@ -16,16 +16,19 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx, zevmError error, isContractReverted bool) (newCCTXStatus types.CctxStatus) {
-	if zevmError != nil && !isContractReverted {
+func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
+	tmpCtx, commit := ctx.CacheContext()
+	isContractReverted, err := k.HandleEVMDeposit(tmpCtx, cctx)
+
+	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		cctx.SetAbort(zevmError.Error())
+		cctx.SetAbort(err.Error())
 		return types.CctxStatus_Aborted
 	}
 
-	if zevmError != nil && isContractReverted {
+	if err != nil && isContractReverted {
 		// contract call reverted; should refund via a revert tx
-		err := k.tryRevertOutbound(ctx, cctx, zevmError)
+		err := k.tryRevertOutboundZEVM(ctx, cctx, err)
 		if err != nil {
 			cctx.SetAbort(err.Error())
 			return types.CctxStatus_Aborted
@@ -33,13 +36,12 @@ func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx, 
 
 		return types.CctxStatus_PendingRevert
 	}
-	_, commit := ctx.CacheContext()
 	commit()
 	cctx.SetOutBoundMined("Remote omnichain contract call completed")
 	return types.CctxStatus_OutboundMined
 }
 
-func (k Keeper) tryRevertOutbound(ctx sdk.Context, cctx *types.CrossChainTx, zevmError error) error {
+func (k Keeper) tryRevertOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx, zevmError error) error {
 	senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId)
 	if senderChain == nil {
 		return fmt.Errorf("invalid sender chain id %d", cctx.InboundParams.SenderChainId)
@@ -91,9 +93,9 @@ func (k Keeper) ValidateOutboundObservers(ctx sdk.Context, cctx *types.CrossChai
 	err := func() error {
 		switch ballotStatus {
 		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
-			k.processSuccessfulOutbound(tmpCtx, cctx, valueReceived)
+			k.validateSuccessfulOutboundObservers(tmpCtx, cctx, valueReceived)
 		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
-			err := k.processFailedOutbound(tmpCtx, cctx, valueReceived)
+			err := k.validateFailedOutboundObservers(tmpCtx, cctx, valueReceived)
 			if err != nil {
 				return err
 			}
@@ -111,7 +113,7 @@ func (k Keeper) ValidateOutboundObservers(ctx sdk.Context, cctx *types.CrossChai
 	return nil
 }
 
-// ProcessFailedOutbound processes a failed outbound transaction. It does the following things in one function:
+// validateFailedOutboundObservers processes a failed outbound transaction. It does the following things in one function:
 //
 // 1. For Admin Tx or a withdrawal from Zeta chain, it aborts the CCTX
 //
@@ -125,8 +127,8 @@ func (k Keeper) ValidateOutboundObservers(ctx sdk.Context, cctx *types.CrossChai
 //
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
-// For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the ProcessFailedOutbound function, so we can just return and error to trigger that
-func (k Keeper) processFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) error {
+// For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the validateFailedOutboundObservers function, so we can just return and error to trigger that
+func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) error {
 	oldStatus := cctx.CctxStatus.Status
 	// The following logic is used to handler the mentioned conditions separately. The reason being
 	// All admin tx is created using a policy message , there is no associated inbound tx , therefore we do not need any revert logic
@@ -142,9 +144,9 @@ func (k Keeper) processFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		// Try revert if the coin-type is ZETA
 		case coin.CoinType_Zeta:
 			{
-				err := k.processFailedOutboundForZEVM(ctx, cctx)
+				err := k.validateFailedOutboundObserversForZEVM(ctx, cctx)
 				if err != nil {
-					return cosmoserrors.Wrap(err, "ProcessFailedOutboundForZEVMTx")
+					return cosmoserrors.Wrap(err, "validateFailedOutboundObserversForZEVMTx")
 				}
 			}
 		// For all other coin-types, we do not revert, the cctx is aborted
@@ -155,9 +157,9 @@ func (k Keeper) processFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			}
 		}
 	} else {
-		err := k.processFailedOutboundForExternalChainTx(ctx, cctx, oldStatus)
+		err := k.validateFailedOutboundObserversForExternalChainTx(ctx, cctx, oldStatus)
 		if err != nil {
-			return cosmoserrors.Wrap(err, "ProcessFailedOutBoundForExternalChainTx")
+			return cosmoserrors.Wrap(err, "validateFailedOutBoundObserversForExternalChainTx")
 		}
 	}
 	newStatus := cctx.CctxStatus.Status.String()
@@ -165,8 +167,8 @@ func (k Keeper) processFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 	return nil
 }
 
-// processFailedOutboundForExternalChainTx processes the failed outbound transaction for external chain tx
-func (k Keeper) processFailedOutboundForExternalChainTx(
+// validateFailedOutboundObserversForExternalChainTx processes the failed outbound transaction for external chain tx
+func (k Keeper) validateFailedOutboundObserversForExternalChainTx(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
@@ -212,7 +214,7 @@ func (k Keeper) processFailedOutboundForExternalChainTx(
 	return nil
 }
 
-// processSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
+// validateSuccessfulOutboundObservers processes a successful outbound transaction. It does the following things in one function:
 //
 //  1. Change the status of the CCTX from
 //     - PendingRevert to Reverted
@@ -224,8 +226,8 @@ func (k Keeper) processFailedOutboundForExternalChainTx(
 //
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
-// For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the ProcessFailedOutbound function, so we can just return and error to trigger that
-func (k Keeper) processSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) {
+// For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the validateFailedOutboundObservers function, so we can just return and error to trigger that
+func (k Keeper) validateSuccessfulOutboundObservers(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) {
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
@@ -240,8 +242,8 @@ func (k Keeper) processSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
 }
 
-// processFailedOutboundForZEVM processes the failed outbound transaction for ZEVM
-func (k Keeper) processFailedOutboundForZEVM(ctx sdk.Context, cctx *types.CrossChainTx) error {
+// validateFailedOutboundObserversForZEVM processes the failed outbound transaction for ZEVM
+func (k Keeper) validateFailedOutboundObserversForZEVM(ctx sdk.Context, cctx *types.CrossChainTx) error {
 	indexBytes, err := cctx.GetCCTXIndexBytes()
 	if err != nil {
 		// Return err to save the failed outbound ad set to aborted

@@ -36,7 +36,5 @@ Instead we use a temporary context to make changes and then commit the context o
 New CCTX status after preprocessing is returned.
 */
 func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
-	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(ctx, cctx)
-
-	return c.crosschainKeeper.ValidateOutboundZEVM(ctx, cctx, err, isContractReverted)
+	return c.crosschainKeeper.ValidateOutboundZEVM(ctx, cctx)
 }
