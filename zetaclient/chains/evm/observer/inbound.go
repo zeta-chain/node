@@ -34,6 +34,7 @@ import (
 )
 
 // WatchInbound watches evm chain for incoming txs and post votes to zetacore
+// TODO(revamp): move ticker function to a separate file
 func (ob *Observer) WatchInbound() {
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchInbound_%d", ob.chain.ChainId),
@@ -70,6 +71,7 @@ func (ob *Observer) WatchInbound() {
 
 // WatchInboundTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
+// TODO(revamp): move inbound tracker function to a separate file
 func (ob *Observer) WatchInboundTracker() {
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchInboundTracker_%d", ob.chain.ChainId),
@@ -101,6 +103,7 @@ func (ob *Observer) WatchInboundTracker() {
 }
 
 // ProcessInboundTrackers processes inbound trackers from zetacore
+// TODO(revamp): move inbound tracker function to a separate file
 func (ob *Observer) ProcessInboundTrackers() error {
 	trackers, err := ob.zetacoreClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
@@ -147,6 +150,7 @@ func (ob *Observer) ProcessInboundTrackers() error {
 	return nil
 }
 
+// ObserveInbound observes the evm chain for inbounds and posts votes to zetacore
 func (ob *Observer) ObserveInbound(sampledLogger zerolog.Logger) error {
 	// get and update latest block height
 	blockNumber, err := ob.evmClient.BlockNumber(context.Background())

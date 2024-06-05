@@ -65,6 +65,7 @@ type Signer struct {
 	outboundHashBeingReported map[string]bool
 }
 
+// NewSigner creates a new EVM signer
 func NewSigner(
 	chain chains.Chain,
 	endpoint string,
@@ -318,6 +319,7 @@ func (signer *Signer) SignCommandTx(txData *OutboundData, cmd string, params str
 // TryProcessOutbound - signer interface implementation
 // This function will attempt to build and sign an evm transaction using the TSS signer.
 // It will then broadcast the signed transaction to the outbound chain.
+// TODO(revamp): simplify function
 func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProc *outboundprocessor.Processor,
@@ -607,14 +609,19 @@ func (signer *Signer) GetReportedTxList() *map[string]bool {
 	return &signer.outboundHashBeingReported
 }
 
+// EvmClient returns the EVM RPC client
 func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
 	return signer.client
 }
 
+// EvmSigner returns the EVM signer object for the signer
 func (signer *Signer) EvmSigner() ethtypes.Signer {
+	// TODO(revamp): rename field into evmSigner
 	return signer.ethSigner
 }
 
+// IsSenderZetaChain checks if the sender chain is ZetaChain
+// TODO(revamp): move to another package more general for cctx functions
 func IsSenderZetaChain(
 	cctx *types.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -624,6 +631,7 @@ func IsSenderZetaChain(
 		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled
 }
 
+// ErrorMsg returns a error message for SignOutbound failure with cctx data
 func ErrorMsg(cctx *types.CrossChainTx) string {
 	return fmt.Sprintf(
 		"signer SignOutbound error: nonce %d chain %d",
@@ -632,6 +640,8 @@ func ErrorMsg(cctx *types.CrossChainTx) string {
 	)
 }
 
+// SignWhitelistERC20Cmd signs a whitelist command for ERC20 token
+// TODO(revamp): move the cmd in a specific file
 func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string) (*ethtypes.Transaction, error) {
 	outboundParams := txData.outboundParams
 	erc20 := ethcommon.HexToAddress(params)
@@ -661,6 +671,8 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string)
 	return tx, nil
 }
 
+// SignMigrateTssFundsCmd signs a migrate TSS funds command
+// TODO(revamp): move the cmd in a specific file
 func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
 		nil,
@@ -678,6 +690,7 @@ func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Tr
 }
 
 // reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
+// TODO(revamp): move outbound tracker function to a outbound tracker file
 func (signer *Signer) reportToOutboundTracker(
 	zetacoreClient interfaces.ZetacoreClient,
 	chainID int64,
@@ -810,6 +823,7 @@ func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error
 	return client, ethSigner, nil
 }
 
+// roundUpToNearestGwei rounds up the gas price to the nearest Gwei
 func roundUpToNearestGwei(gasPrice *big.Int) *big.Int {
 	oneGwei := big.NewInt(1_000_000_000) // 1 Gwei
 	mod := new(big.Int)

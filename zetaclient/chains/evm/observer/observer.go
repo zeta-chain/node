@@ -40,7 +40,7 @@ import (
 )
 
 // Logger is the logger for evm chains
-// TODO: Merge this logger with the one in bitcoin
+// TODO(revamp): Merge this logger with the one in bitcoin
 // https://github.com/zeta-chain/node/issues/2022
 type Logger struct {
 	// Chain is the parent logger for the chain
@@ -63,27 +63,61 @@ var _ interfaces.ChainObserver = &Observer{}
 
 // Observer is the observer for evm chains
 type Observer struct {
+	// Tss is the TSS signer for the chain
 	Tss interfaces.TSSSigner
 
+	// Mu is the mutex for the observer
 	Mu *sync.Mutex
 
-	chain                         chains.Chain
-	evmClient                     interfaces.EVMRPCClient
-	evmJSONRPC                    interfaces.EVMJSONRPCClient
-	zetacoreClient                interfaces.ZetacoreClient
-	lastBlockScanned              uint64
-	lastBlock                     uint64
-	db                            *gorm.DB
-	outboundPendingTransactions   map[string]*ethtypes.Transaction
-	outboundConfirmedReceipts     map[string]*ethtypes.Receipt
-	outboundConfirmedTransactions map[string]*ethtypes.Transaction
-	stop                          chan struct{}
-	logger                        Logger
-	coreContext                   *clientcontext.ZetacoreContext
-	chainParams                   observertypes.ChainParams
-	ts                            *metrics.TelemetryServer
+	// chain contains static chain information of the observed chain
+	chain chains.Chain
 
-	blockCache  *lru.Cache
+	// evmClient is the EVM client for the observed chain
+	evmClient interfaces.EVMRPCClient
+
+	// evmJSONRPC is the EVM JSON RPC client for the observed chain
+	evmJSONRPC interfaces.EVMJSONRPCClient
+
+	// zetacoreClient is the client to interact with ZetaChain
+	zetacoreClient interfaces.ZetacoreClient
+
+	// lastBlockScanned is the last block height scanned by the observer
+	lastBlockScanned uint64
+
+	// lastBlock is the last block height of the chain
+	lastBlock uint64
+
+	// db is the database to persist observation data
+	db *gorm.DB
+
+	// outboundPendingTransactions is the map to index pending transactions by hash
+	outboundPendingTransactions map[string]*ethtypes.Transaction
+
+	// outboundConfirmedReceipts is the map to index confirmed receipts by hash
+	outboundConfirmedReceipts map[string]*ethtypes.Receipt
+
+	// outboundConfirmedTransactions is the map to index confirmed transactions by hash
+	outboundConfirmedTransactions map[string]*ethtypes.Transaction
+
+	// stop is the channel to signal the observer to stop
+	stop chan struct{}
+
+	// logger is the logger for the observer
+	logger Logger
+
+	// coreContext contains context data of ZetaChain
+	coreContext *clientcontext.ZetacoreContext
+
+	// chainParams contains the dynamic chain parameters of the observed chain
+	chainParams observertypes.ChainParams
+
+	// ts is the telemetry server for metrics
+	ts *metrics.TelemetryServer
+
+	// blockCache is the cache for blocks
+	blockCache *lru.Cache
+
+	// headerCache is the cache for headers
 	headerCache *lru.Cache
 }
 
@@ -251,6 +285,8 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 	return addr, contract, err
 }
 
+// FetchConnectorContract fetches the connector contract
+// TODO(revamp): move this to a contract package
 func FetchConnectorContract(
 	addr ethcommon.Address,
 	client interfaces.EVMRPCClient,
@@ -258,6 +294,8 @@ func FetchConnectorContract(
 	return zetaconnector.NewZetaConnectorNonEth(addr, client)
 }
 
+// FetchConnectorContractEth fetches the connector contract for eth
+// TODO(revamp): move this to a contract package
 func FetchConnectorContractEth(
 	addr ethcommon.Address,
 	client interfaces.EVMRPCClient,
@@ -265,6 +303,8 @@ func FetchConnectorContractEth(
 	return zetaconnectoreth.NewZetaConnectorEth(addr, client)
 }
 
+// FetchZetaZetaNonEthTokenContract fetches the zeta token contract
+// TODO(revamp): move this to a contract package
 func FetchZetaZetaNonEthTokenContract(
 	addr ethcommon.Address,
 	client interfaces.EVMRPCClient,
@@ -272,6 +312,8 @@ func FetchZetaZetaNonEthTokenContract(
 	return zeta.NewZetaNonEth(addr, client)
 }
 
+// FetchERC20CustodyContract fetches the erc20 custody contract
+// TODO(revamp): move this to a contract package
 func FetchERC20CustodyContract(
 	addr ethcommon.Address,
 	client interfaces.EVMRPCClient,
@@ -298,6 +340,8 @@ func (ob *Observer) Start() {
 }
 
 // WatchRPCStatus watches the RPC status of the evm chain
+// TODO(revamp): move ticker to ticker file
+// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchRPCStatus() {
 	ob.logger.Chain.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
 	ticker := time.NewTicker(60 * time.Second)
@@ -338,6 +382,7 @@ func (ob *Observer) WatchRPCStatus() {
 	}
 }
 
+// Stop all observation routines for the evm chain
 func (ob *Observer) Stop() {
 	ob.logger.Chain.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
@@ -442,6 +487,8 @@ func (ob *Observer) GetLastBlockHeight() uint64 {
 }
 
 // WatchGasPrice watches evm chain for gas prices and post to zetacore
+// TODO(revamp): move ticker to ticker file
+// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchGasPrice() {
 	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
@@ -480,6 +527,8 @@ func (ob *Observer) WatchGasPrice() {
 	}
 }
 
+// PostGasPrice posts gas price to zetacore
+// TODO(revamp): move to gas price file
 func (ob *Observer) PostGasPrice() error {
 
 	// GAS PRICE
@@ -508,6 +557,7 @@ func (ob *Observer) PostGasPrice() error {
 }
 
 // TransactionByHash query transaction by hash via JSON-RPC
+// TODO(revamp): move to a tx file
 func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
 	tx, err := ob.evmJSONRPC.EthGetTransactionByHash(txHash)
 	if err != nil {
@@ -520,6 +570,7 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	return tx, tx.BlockNumber == nil, nil
 }
 
+// GetBlockHeaderCached get block header by number from cache
 func (ob *Observer) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
 	if header, ok := ob.headerCache.Get(blockNumber); ok {
 		return header.(*ethtypes.Header), nil
@@ -572,6 +623,7 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 
 // LoadLastScannedBlock loads last scanned block from specified height or from database
 // The last scanned block is the height from which the observer should continue scanning for inbound transactions
+// TODO(revamp): move to a db file
 func (ob *Observer) LoadLastScannedBlock() error {
 	// get environment variable
 	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
@@ -618,6 +670,7 @@ func (ob *Observer) LoadLastScannedBlock() error {
 }
 
 // LoadDB open sql database and load data into EVM observer
+// TODO(revamp): move to a db file
 func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 	if dbPath != "" {
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -652,6 +705,8 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 	return nil
 }
 
+// postBlockHeader posts the block header to zetacore
+// TODO(revamp): move to a block header file
 func (ob *Observer) postBlockHeader(tip uint64) error {
 	bn := tip
 
