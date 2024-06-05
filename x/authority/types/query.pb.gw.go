@@ -368,7 +368,7 @@ var (
 
 	pattern_Query_ChainInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "authority", "chainInfo"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AuthorizationList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "authority", "authorizationList"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AuthorizationList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "authority", "authorizations"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_Authorization_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "authority", "authorization", "msg_url"}, "", runtime.AssumeColonVerbOpt(false)))
 )

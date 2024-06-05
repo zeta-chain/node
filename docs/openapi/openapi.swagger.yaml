@@ -28273,7 +28273,7 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/authority/authorizationList:
+  /zeta-chain/authority/authorizations:
     get:
       operationId: Query_AuthorizationList
       responses:

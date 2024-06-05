@@ -20,7 +20,7 @@ func (k Keeper) AuthorizationList(c context.Context,
 	ctx := sdk.UnwrapSDKContext(c)
 	authorizationList, found := k.GetAuthorizationList(ctx)
 	if !found {
-		return nil, types.ErrAuthorizationListNotFound
+		return nil, status.Error(codes.Internal, types.ErrAuthorizationListNotFound.Error())
 	}
 	return &types.QueryAuthorizationListResponse{AuthorizationList: authorizationList}, nil
 }
@@ -40,11 +40,11 @@ func (k Keeper) Authorization(c context.Context,
 	ctx := sdk.UnwrapSDKContext(c)
 	authorizationList, found := k.GetAuthorizationList(ctx)
 	if !found {
-		return nil, types.ErrAuthorizationListNotFound
+		return nil, status.Error(codes.Internal, types.ErrAuthorizationListNotFound.Error())
 	}
 	authorization, err := authorizationList.GetAuthorizedPolicy(req.MsgUrl)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryAuthorizationResponse{Authorization: types.Authorization{
 		MsgUrl:           req.MsgUrl,

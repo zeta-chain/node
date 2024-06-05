@@ -24,7 +24,7 @@ service Query {
 
   rpc AuthorizationList(QueryAuthorizationListRequest)
       returns (QueryAuthorizationListResponse) {
-    option (google.api.http).get = "/zeta-chain/authority/authorizationList";
+    option (google.api.http).get = "/zeta-chain/authority/authorizations";
   }
 
   rpc Authorization(QueryAuthorizationRequest)
