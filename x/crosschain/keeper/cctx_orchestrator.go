@@ -33,7 +33,13 @@ func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx) 
 	if err != nil && isContractReverted {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
-		err := k.validateFailedOutbound(tmpCtxRevert, cctx, types.CctxStatus_PendingOutbound, err.Error(), cctx.InboundParams.Amount)
+		err := k.validateFailedOutbound(
+			tmpCtxRevert,
+			cctx,
+			types.CctxStatus_PendingOutbound,
+			err.Error(),
+			cctx.InboundParams.Amount,
+		)
 		if err != nil {
 			cctx.SetAbort(err.Error())
 			return types.CctxStatus_Aborted
