@@ -90,6 +90,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	return router
 }
 
+// Start starts the telemetry server
 func (t *TelemetryServer) Start() error {
 	if t.s == nil {
 		return errors.New("invalid http server instance")
@@ -103,6 +104,7 @@ func (t *TelemetryServer) Start() error {
 	return nil
 }
 
+// Stop stops the telemetry server
 func (t *TelemetryServer) Stop() error {
 	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -113,10 +115,12 @@ func (t *TelemetryServer) Stop() error {
 	return err
 }
 
+// pingHandler returns a 200 OK response
 func (t *TelemetryServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// p2pHandler returns the p2p id
 func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
@@ -124,6 +128,7 @@ func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintf(w, "%s", t.p2pid)
 }
 
+// ipHandler returns the ip address
 func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
@@ -131,6 +136,7 @@ func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintf(w, "%s", t.ipAddress)
 }
 
+// hotKeyFeeBurnRate returns the hot key fee burn rate
 func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
@@ -138,6 +144,7 @@ func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Reque
 	fmt.Fprintf(w, "%v", t.HotKeyBurnRate.GetBurnRate())
 }
 
+// logMiddleware logs the incoming HTTP request
 func logMiddleware() mux.MiddlewareFunc {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
