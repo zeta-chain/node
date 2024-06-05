@@ -118,7 +118,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		},
 	)
 
-	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at and GetRevertGasLimit", func(t *testing.T) {
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at GetRevertGasLimit", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 			UseObserverMock: true,
@@ -152,13 +152,12 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
 		require.Equal(
 			t,
-			fmt.Sprintf("revert gas limit error: %s", types.ErrForeignCoinNotFound),
+			"GetRevertGasLimit: foreign coin not found for sender chain",
 			cctx.CctxStatus.StatusMessage,
 		)
 	})
 
-	t.Run(
-		"unable to process zevm deposit HandleEVMDeposit revert fails at PayGasInERC20AndUpdateCctx",
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at PayGasInERC20AndUpdateCctx",
 		func(t *testing.T) {
 			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 				UseFungibleMock: true,
@@ -197,7 +196,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Equal(
 				t,
-				fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains),
+				"chain not supported",
 				cctx.CctxStatus.StatusMessage,
 			)
 		},
@@ -243,7 +242,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Equal(
 				t,
-				fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains),
+				fmt.Sprintf("chain not supported"),
 				cctx.CctxStatus.StatusMessage,
 			)
 		},
@@ -332,8 +331,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
 
-	t.Run(
-		"unable to process zevm deposit HandleEVMDeposit revert fails as the cctx has already been reverted",
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails as the cctx has already been reverted",
 		func(t *testing.T) {
 			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 				UseFungibleMock: true,
@@ -370,7 +368,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Contains(
 				t,
 				cctx.CctxStatus.StatusMessage,
-				fmt.Sprintf("revert outbound error: %s", "cannot revert a revert tx"),
+				fmt.Sprintf("cannot revert a revert tx"),
 			)
 		},
 	)
