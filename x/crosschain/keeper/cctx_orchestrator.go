@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,14 +31,15 @@ func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx) 
 	cctx.SetPendingOutbound("")
 
 	if err != nil && isContractReverted {
+		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
-		err := k.validateFailedOutbound(tmpCtx, cctx, types.CctxStatus_PendingOutbound, err.Error())
+		err := k.validateFailedOutbound(tmpCtxRevert, cctx, types.CctxStatus_PendingOutbound, err.Error(), cctx.InboundParams.Amount)
 		if err != nil {
 			cctx.SetAbort(err.Error())
 			return types.CctxStatus_Aborted
 		}
 
-		commit()
+		commitRevert()
 		return types.CctxStatus_PendingRevert
 	}
 	commit()
@@ -121,7 +123,7 @@ func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.Cro
 			}
 		}
 	} else {
-		err := k.validateFailedOutbound(ctx, cctx, oldStatus, "")
+		err := k.validateFailedOutbound(ctx, cctx, oldStatus, "", cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "validateFailedOutbound")
 		}
@@ -137,6 +139,7 @@ func (k Keeper) validateFailedOutbound(
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
 	revertMsg string,
+	inputAmount math.Uint, // TODO: find different way for this
 ) error {
 	switch oldStatus {
 	case types.CctxStatus_PendingOutbound:
@@ -164,7 +167,7 @@ func (k Keeper) validateFailedOutbound(
 			ctx,
 			cctx.InboundParams.SenderChainId,
 			cctx,
-			cctx.OutboundParams[0].Amount,
+			inputAmount,
 			false,
 		)
 		if err != nil {
