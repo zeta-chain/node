@@ -23,7 +23,7 @@ func NewProcessor(logger zerolog.Logger) *Processor {
 		outboundEndTime:    make(map[string]time.Time),
 		outboundActive:     make(map[string]struct{}),
 		mu:                 sync.Mutex{},
-		Logger:             logger.With().Str("module", "OutboundProcessorManager").Logger(),
+		Logger:             logger.With().Str("module", "OutboundProcessor").Logger(),
 		numActiveProcessor: 0,
 	}
 }
@@ -63,7 +63,7 @@ func (p *Processor) TimeInTryProcess(outboundID string) time.Duration {
 	return 0
 }
 
-// ToOutboundID returns the outbound ID for OutboundProcessorManager to track
+// ToOutboundID returns the outbound ID for OutboundProcessor to track
 func ToOutboundID(index string, receiverChainID int64, nonce uint64) string {
 	return fmt.Sprintf("%s-%d-%d", index, receiverChainID, nonce)
 }
