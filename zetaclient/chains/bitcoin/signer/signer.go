@@ -180,9 +180,9 @@ func (signer *Signer) SignWithdrawTx(
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
-	err := observer.FetchUTXOS()
+	err := observer.FetchUTXOs()
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOS error: nonce %d chain %d", nonce, chain.ChainId)
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
 	}
 
 	// select N UTXOs to cover the total expense
