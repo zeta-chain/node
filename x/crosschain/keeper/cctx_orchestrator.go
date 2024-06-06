@@ -34,7 +34,12 @@ We do not return an error from this function , as all changes need to be persist
 Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to OutboundMined.
 New CCTX status after preprocessing is returned.
 */
-func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx, depositErr error, isContractReverted bool) (newCCTXStatus types.CctxStatus) {
+func (k Keeper) ValidateOutboundZEVM(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	depositErr error,
+	isContractReverted bool,
+) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
 	if depositErr != nil && isContractReverted {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
