@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v17.0.1
+
+### Fixes
+
+* hotfix/v17.0.1 - modify the amount field in CCTXs that carry dust BTC amounts to avoid dust output error
+
 ## v17.0.0
 
 ### Fixes

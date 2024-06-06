@@ -350,6 +350,15 @@ func (co *CoreObserver) scheduleCctxBTC(
 			co.logger.ZetaChainWatcher.Warn().Msgf("scheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
 			break
 		}
+
+		// hotfix/v17.0.1: before scheduling keysign, we adjust tiny amount to 2000 satoshi to avoid dust output
+		// #nosec G701 always in range
+		dustAmount := uint64(chains.BtcDustOffset())
+		if params.Amount.Uint64() < dustAmount {
+			params.Amount = sdkmath.NewUint(dustAmount)
+			co.logger.ZetaChainWatcher.Warn().Msgf("scheduleCctxBTC: outtx %s amount %d is too small, adjusted to %d", outTxID, params.Amount, chains.BtcDustOffset())
+		}
+
 		// try confirming the outtx or scheduling a keysign
 		if nonce%interval == zetaHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 			outTxMan.StartTryProcess(outTxID)
