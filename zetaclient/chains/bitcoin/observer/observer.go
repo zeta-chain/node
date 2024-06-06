@@ -520,7 +520,7 @@ func (ob *Observer) PostGasPrice() error {
 }
 
 // GetSenderAddressByVin get the sender address from the previous transaction
-// TODO(revamp): move in upper package
+// TODO(revamp): move in upper package to separate file (e.g., rpc.go)
 func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
 	// query previous raw transaction by txid
 	// GetTransaction requires reconfiguring the bitcoin node (txindex=1), so we use GetRawTransaction instead
