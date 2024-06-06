@@ -673,7 +673,7 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 }
 
 // GetTxResultByHash gets the transaction result by hash
-// TODO(revamp): move to client package
+// TODO(revamp): move in upper package to separate file (e.g., rpc.go)
 func GetTxResultByHash(
 	rpcClient interfaces.BTCRPCClient,
 	txID string,
