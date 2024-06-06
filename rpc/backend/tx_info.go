@@ -44,7 +44,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	resBlock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(res.Height))
 	if err != nil {
 		b.logger.Debug("block not found", "height", res.Height, "error", err.Error())
-		return nil, nil
+		return nil, err
 	}
 
 	blockRes, err := b.TendermintBlockResultByNumber(&res.Height)
@@ -388,9 +388,10 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	if b.indexer != nil {
 		txRes, err := b.indexer.GetByTxHash(hash)
-		if err == nil {
-			return txRes, nil, nil
+		if err != nil {
+			return nil, nil, err
 		}
+		return txRes, nil, nil
 	}
 
 	// fallback to tendermint tx indexer
