@@ -30,20 +30,6 @@ func (k Keeper) GetAuthorizationList(ctx sdk.Context) (val types.AuthorizationLi
 	return val, true
 }
 
-// IsAuthorized checks if the address is authorized for the given policy type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, policyType types.PolicyType) bool {
-	policies, found := k.GetPolicies(ctx)
-	if !found {
-		return false
-	}
-	for _, policy := range policies.Items {
-		if policy.Address == address && policy.PolicyType == policyType {
-			return true
-		}
-	}
-	return false
-}
-
 // CheckAuthorization checks if the signer is authorized to sign the message
 func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	// Policy transactions must have only one signer

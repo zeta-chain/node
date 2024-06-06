@@ -32,24 +32,6 @@ func (_m *ObserverAuthorityKeeper) CheckAuthorization(ctx types.Context, msg typ
 	return r0
 }
 
-// IsAuthorized provides a mock function with given fields: ctx, address, policyType
-func (_m *ObserverAuthorityKeeper) IsAuthorized(ctx types.Context, address string, policyType authoritytypes.PolicyType) bool {
-	ret := _m.Called(ctx, address, policyType)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsAuthorized")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string, authoritytypes.PolicyType) bool); ok {
-		r0 = rf(ctx, address, policyType)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
 // SetPolicies provides a mock function with given fields: ctx, policies
 func (_m *ObserverAuthorityKeeper) SetPolicies(ctx types.Context, policies authoritytypes.Policies) {
 	_m.Called(ctx, policies)

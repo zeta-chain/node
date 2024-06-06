@@ -407,6 +407,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
+			sdk.MsgTypeURL(&types.MsgUpdateChainInfo{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {
