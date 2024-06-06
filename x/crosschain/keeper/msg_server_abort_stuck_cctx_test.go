@@ -97,7 +97,6 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.AbortStuckCCTX(ctx, &msg)
 
@@ -130,7 +129,6 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		}
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := msgServer.AbortStuckCCTX(ctx, &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
