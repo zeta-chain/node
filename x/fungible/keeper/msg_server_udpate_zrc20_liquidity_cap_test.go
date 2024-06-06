@@ -28,28 +28,30 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 		k.SetForeignCoins(ctx, foreignCoin)
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can update liquidity cap
-		_, err := msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
+		msg := types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(42),
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		// can update liquidity cap
+		_, err := msgServer.UpdateZRC20LiquidityCap(ctx, msg)
 		require.NoError(t, err)
 
 		coin, found := k.GetForeignCoins(ctx, coinAddress)
 		require.True(t, found)
 		require.True(t, coin.LiquidityCap.Equal(math.NewUint(42)), "invalid liquidity cap", coin.LiquidityCap.String())
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can update liquidity cap again
-		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
+		msg2 := types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(4200000),
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
+
+		// can update liquidity cap again
+		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg2)
 		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
@@ -60,29 +62,31 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			"invalid liquidity cap",
 			coin.LiquidityCap.String(),
 		)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can set liquidity cap to 0
-		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
+		msg3 := types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(0),
-		))
+		)
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
+
+		// can set liquidity cap to 0
+		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg3)
 		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
 		require.True(t, found)
 		require.True(t, coin.LiquidityCap.Equal(math.ZeroUint()), "invalid liquidity cap", coin.LiquidityCap.String())
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can set liquidity cap to nil
-		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
+		msg4 := types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.Uint{},
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg4, nil)
+
+		// can set liquidity cap to nil
+		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg4)
 		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
@@ -103,14 +107,16 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 		foreignCoin.LiquidityCap = math.Uint{}
 		k.SetForeignCoins(ctx, foreignCoin)
 
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-
-		_, err := msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
+		msg := types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(42),
-		))
+		)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+
+		_, err := msgServer.UpdateZRC20LiquidityCap(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
@@ -123,15 +129,16 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		coinAddress := sample.EthAddress().String()
-
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		_, err := msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
+		msg := types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(42),
-		))
+		)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		_, err := msgServer.UpdateZRC20LiquidityCap(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})

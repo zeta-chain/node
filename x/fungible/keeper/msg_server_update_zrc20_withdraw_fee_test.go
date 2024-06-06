@@ -41,15 +41,16 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		require.Zero(t, protocolFee.Uint64())
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can update the protocol fee and gas limit
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(42),
 			math.NewUint(42),
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		// can update the protocol fee and gas limit
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.NoError(t, err)
 
 		// can query the updated fee
@@ -60,15 +61,16 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(42), gasLimit.Uint64())
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can update protocol fee only
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg2 := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(43),
 			math.Uint{},
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
+
+		// can update protocol fee only
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg2)
 		require.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
 		require.NoError(t, err)
@@ -77,15 +79,16 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(42), gasLimit.Uint64())
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		// can update gas limit only
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg3 := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.Uint{},
 			math.NewUint(44),
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
+
+		// can update gas limit only
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg3)
 		require.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
 		require.NoError(t, err)
@@ -103,14 +106,15 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-
-		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			sample.EthAddress().String(),
 			math.NewUint(42),
 			math.Uint{},
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
@@ -122,14 +126,15 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			"invalid_address",
 			math.NewUint(42),
 			math.Uint{},
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
@@ -140,15 +145,16 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			sample.EthAddress().String(),
 			math.NewUint(42),
 			math.Uint{},
-		))
+		)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 
@@ -163,18 +169,19 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		// setup
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		zrc20 := sample.EthAddress()
-		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20.String()))
-
-		// the method shall fail since we only set the foreign coin manually in the store but didn't deploy the contract
-		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20.String(),
 			math.NewUint(42),
 			math.Uint{},
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20.String()))
+
+		// the method shall fail since we only set the foreign coin manually in the store but didn't deploy the contract
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 
@@ -190,7 +197,6 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		// setup
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		zrc20Addr := sample.EthAddress()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20Addr.String()))
@@ -217,12 +223,15 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		// this is the update call (commit == true)
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(42),
 			math.Uint{},
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		mockEVMKeeper.AssertExpectations(t)
@@ -240,7 +249,6 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		// setup
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		zrc20Addr := sample.EthAddress()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20Addr.String()))
@@ -264,12 +272,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.Uint{},
 			math.NewUint(42),
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		mockEVMKeeper.AssertExpectations(t)

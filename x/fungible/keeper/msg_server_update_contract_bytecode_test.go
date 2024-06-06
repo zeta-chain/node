@@ -94,15 +94,16 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		)
 		require.NoError(t, err)
 		codeHash := codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		// update the bytecode
-		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		msg := types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20.Hex(),
 			codeHash,
-		))
+		)
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		// update the bytecode
+		_, err = msgServer.UpdateContractBytecode(ctx, msg)
 		require.NoError(t, err)
 
 		// check the returned new bytecode hash matches the one in the account
@@ -141,13 +142,14 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		codeHash = codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 		require.NoError(t, err)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		msg2 := types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20.Hex(),
 			codeHash,
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
+
+		_, err = msgServer.UpdateContractBytecode(ctx, msg2)
 		require.NoError(t, err)
 		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)
 		require.NoError(t, err)
@@ -180,14 +182,16 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.NotEmpty(t, newConnector)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, newConnector)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		// can update the bytecode of the new connector with the old connector contract
-		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		msg := types.NewMsgUpdateContractBytecode(
 			admin,
 			newConnector.Hex(),
 			codeHash,
-		))
+		)
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		// can update the bytecode of the new connector with the old connector contract
+		_, err = msgServer.UpdateContractBytecode(ctx, msg)
 		require.NoError(t, err)
 	})
 
@@ -199,13 +203,15 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
-		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		msg := types.NewMsgUpdateContractBytecode(
 			admin,
 			sample.EthAddress().Hex(),
 			sample.Hash().Hex(),
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+
+		_, err := msgServer.UpdateContractBytecode(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
@@ -217,13 +223,14 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		msg := types.NewMsgUpdateContractBytecode(
+			admin,
+			"invalid",
+			sample.Hash().Hex(),
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
-		_, err := msgServer.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
-			Creator:         admin,
-			ContractAddress: "invalid",
-			NewCodeHash:     sample.Hash().Hex(),
-		})
+		_, err := msgServer.UpdateContractBytecode(ctx, msg)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
@@ -238,7 +245,13 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		contractAddr := sample.EthAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		msg := types.NewMsgUpdateContractBytecode(
+			admin,
+			contractAddr.Hex(),
+			sample.Hash().Hex(),
+		)
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
 		mockEVMKeeper.On(
 			"GetAccount",
@@ -246,11 +259,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			contractAddr,
 		).Return(nil)
 
-		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			admin,
-			contractAddr.Hex(),
-			sample.Hash().Hex(),
-		))
+		_, err := msgServer.UpdateContractBytecode(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 
 		mockEVMKeeper.AssertExpectations(t)
@@ -265,15 +274,18 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
-		// can't update the bytecode of the wzeta contract
-		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		msg := types.NewMsgUpdateContractBytecode(
 			admin,
 			wzeta.Hex(),
 			sample.Hash().Hex(),
-		))
+		)
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		// can't update the bytecode of the wzeta contract
+		_, err := msgServer.UpdateContractBytecode(ctx, msg)
 		require.ErrorIs(t, err, types.ErrInvalidContract)
 	})
 
@@ -286,19 +298,19 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		_, _, _, connector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		msg := types.NewMsgUpdateContractBytecode(
+			admin,
+			connector.Hex(),
+			sample.Hash().Hex(),
+		)
 
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 		// remove system contract
 		k.RemoveSystemContract(ctx)
 
 		// can't update the bytecode of the wzeta contract
-		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			admin,
-			connector.Hex(),
-			sample.Hash().Hex(),
-		))
+		_, err := msgServer.UpdateContractBytecode(ctx, msg)
 		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
 	})
 
@@ -313,10 +325,14 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		contractAddr := sample.EthAddress()
 		newCodeHash := sample.Hash().Hex()
+		msg := types.NewMsgUpdateContractBytecode(
+			admin,
+			contractAddr.Hex(),
+			newCodeHash,
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
 		// set the contract as the connector
 		k.SetSystemContract(ctx, types.SystemContract{
@@ -336,11 +352,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			mock.Anything,
 		).Return(errors.New("can't set account"))
 
-		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			admin,
-			contractAddr.Hex(),
-			newCodeHash,
-		))
+		_, err := msgServer.UpdateContractBytecode(ctx, msg)
 		require.ErrorIs(t, err, types.ErrSetBytecode)
 
 		mockEVMKeeper.AssertExpectations(t)

@@ -25,15 +25,13 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
+		chainID := getValidChainID(t)
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
-		res, err := msgServer.DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
+		msg := types.NewMsgDeployFungibleCoinZRC20(
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
@@ -42,7 +40,9 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
-		))
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		res, err := msgServer.DeployFungibleCoinZRC20(ctx, msg)
 		require.NoError(t, err)
 		gasAddress := res.Address
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(gasAddress))
@@ -61,11 +61,8 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		gas, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 		require.NoError(t, err)
 		require.Equal(t, gasAddress, gas.Hex())
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		// can deploy non-gas zrc20
-		res, err = msgServer.DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
+		msg2 := types.NewMsgDeployFungibleCoinZRC20(
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
@@ -74,8 +71,12 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"bar",
 			coin.CoinType_ERC20,
 			2000000,
-		))
+		)
+
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
+		res, err = msgServer.DeployFungibleCoinZRC20(ctx, msg2)
 		require.NoError(t, err)
+
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.Address))
 
 		foreignCoin, found = k.GetForeignCoins(ctx, res.Address)
@@ -101,15 +102,8 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
-
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-
-		// should not deploy a new zrc20 if not admin
-		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
+		msg := types.NewMsgDeployFungibleCoinZRC20(
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
@@ -118,7 +112,14 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
-		))
+		)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// should not deploy a new zrc20 if not admin
+		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
@@ -130,13 +131,8 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
-
 		chainID := getValidChainID(t)
-
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-
-		// should not deploy a new zrc20 if not admin
-		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
+		msg := types.NewMsgDeployFungibleCoinZRC20(
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
@@ -145,7 +141,12 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
-		))
+		)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// should not deploy a new zrc20 if not admin
+		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
@@ -157,13 +158,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-
-		// should not deploy a new zrc20 if not admin
-		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
+		msg := types.NewMsgDeployFungibleCoinZRC20(
 			admin,
 			sample.EthAddress().Hex(),
 			9999999,
@@ -172,7 +167,14 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
-		))
+		)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// should not deploy a new zrc20 if not admin
+		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 	})
@@ -201,13 +203,13 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			1000000,
 		)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, deployMsg, nil)
 
 		// Attempt to deploy the same gas token twice should result in error
 		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.NoError(t, err)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, deployMsg, nil)
 
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.Error(t, err)
@@ -215,12 +217,12 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 
 		// Similar to above, redeploying existing erc20 should also fail
 		deployMsg.CoinType = coin.CoinType_ERC20
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, deployMsg, nil)
 
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.NoError(t, err)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, deployMsg, nil)
 
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.Error(t, err)
