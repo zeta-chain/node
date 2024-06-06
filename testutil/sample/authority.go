@@ -3,6 +3,8 @@ package sample
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
@@ -63,5 +65,21 @@ func Authorization() authoritytypes.Authorization {
 	return authoritytypes.Authorization{
 		MsgUrl:           "ABC",
 		AuthorizedPolicy: authoritytypes.PolicyType_groupOperational,
+	}
+}
+
+// MultipleSignerMessage is a sample message which has two signers instead of one. This is used to test cases when we have checks for number of signers such as authorized transactions.
+type MultipleSignerMessage struct{}
+
+var _ sdk.Msg = &MultipleSignerMessage{}
+
+func (m *MultipleSignerMessage) Reset()               {}
+func (m *MultipleSignerMessage) String() string       { return "MultipleSignerMessage" }
+func (m *MultipleSignerMessage) ProtoMessage()        {}
+func (m *MultipleSignerMessage) ValidateBasic() error { return nil }
+func (m *MultipleSignerMessage) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{
+		sdk.MustAccAddressFromBech32(AccAddress()),
+		sdk.MustAccAddressFromBech32(AccAddress()),
 	}
 }
