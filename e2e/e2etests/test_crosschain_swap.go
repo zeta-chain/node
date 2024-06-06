@@ -10,7 +10,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -110,17 +109,13 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// mine 10 blocks to confirm the outbound tx
-	_, err = r.BtcRPCClient.GenerateToAddress(10, r.BTCDeployerAddress, nil)
+	_, err = r.GenerateToAddressIfLocalBitcoin(10, r.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	// mine blocks if testing on regnet
-	var stop chan struct{}
-	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
-	if isRegnet {
-		stop = r.MineBlocks()
-	}
+	stop := r.MineBlocksIfLocalBitcoin()
 
 	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -137,8 +132,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutboundParam().Hash)
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
-	// list deployer utxos that have at least 1 BTC
-	utxos, err := r.ListDeployerUTXOs(1.0)
+	// list deployer utxos
+	utxos, err := r.ListDeployerUTXOs()
 	if err != nil {
 		panic(err)
 	}
@@ -151,14 +146,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
-	txID, err := r.SendToTSSFromDeployerWithMemo(
-		r.BTCTSSAddress,
-		0.01,
-		utxos[0:1],
-		r.BtcRPCClient,
-		memo,
-		r.BTCDeployerAddress,
-	)
+	txID, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos[0:1], memo)
 	if err != nil {
 		panic(err)
 	}
@@ -200,14 +188,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-		txid, err := r.SendToTSSFromDeployerWithMemo(
-			r.BTCTSSAddress,
-			amount,
-			utxos[1:2],
-			r.BtcRPCClient,
-			memo,
-			r.BTCDeployerAddress,
-		)
+		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[1:2], memo)
 		if err != nil {
 			panic(err)
 		}
@@ -239,7 +220,5 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	}
 
 	// stop mining
-	if isRegnet {
-		stop <- struct{}{}
-	}
+	stop()
 }

@@ -1,9 +1,12 @@
 package signer
 
 import (
+	"math/big"
 	"testing"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -14,6 +17,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -29,16 +33,23 @@ var (
 	ERC20CustodyAddress = sample.EthAddress()
 )
 
-func getNewEvmSigner() (*Signer, error) {
+// getNewEvmSigner creates a new EVM chain signer for testing
+func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
+	// use default mock TSS if not provided
+	if tss == nil {
+		tss = mocks.NewTSSMainnet()
+	}
+
 	mpiAddress := ConnectorAddress
 	erc20CustodyAddress := ERC20CustodyAddress
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
+
 	return NewSigner(
 		chains.BscMainnet,
 		mocks.EVMRPCEnabled,
-		mocks.NewTSSMainnet(),
+		tss,
 		config.GetConnectorABI(),
 		config.GetERC20CustodyABI(),
 		mpiAddress,
@@ -48,11 +59,16 @@ func getNewEvmSigner() (*Signer, error) {
 		ts)
 }
 
-func getNewEvmChainObserver() (*observer.Observer, error) {
+// getNewEvmChainObserver creates a new EVM chain observer for testing
+func getNewEvmChainObserver(tss interfaces.TSSSigner) (*observer.Observer, error) {
+	// use default mock TSS if not provided
+	if tss == nil {
+		tss = mocks.NewTSSMainnet()
+	}
+
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
-	tss := mocks.NewTSSMainnet()
 
 	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
@@ -78,8 +94,31 @@ func getInvalidCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
 	return cctx
 }
 
+// verifyTxSignature is a helper function to verify the signature of a transaction
+func verifyTxSignature(t *testing.T, tx *ethtypes.Transaction, tssPubkey []byte, signer ethtypes.Signer) {
+	_, r, s := tx.RawSignatureValues()
+	signature := append(r.Bytes(), s.Bytes()...)
+	hash := signer.Hash(tx)
+
+	verified := crypto.VerifySignature(tssPubkey, hash.Bytes(), signature)
+	require.True(t, verified)
+}
+
+// verifyTxBodyBasics is a helper function to verify 'to', 'nonce' and 'amount' of a transaction
+func verifyTxBodyBasics(
+	t *testing.T,
+	tx *ethtypes.Transaction,
+	to ethcommon.Address,
+	nonce uint64,
+	amount *big.Int,
+) {
+	require.Equal(t, to, *tx.To())
+	require.Equal(t, nonce, tx.Nonce())
+	require.True(t, amount.Cmp(tx.Value()) == 0)
+}
+
 func TestSigner_SetGetConnectorAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 	// Get and compare
 	require.Equal(t, ConnectorAddress, evmSigner.GetZetaConnectorAddress())
@@ -91,7 +130,7 @@ func TestSigner_SetGetConnectorAddress(t *testing.T) {
 }
 
 func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 	// Get and compare
 	require.Equal(t, ERC20CustodyAddress, evmSigner.GetERC20CustodyAddress())
@@ -103,11 +142,11 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 }
 
 func TestSigner_TryProcessOutbound(t *testing.T) {
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 	cctx := getCCTX(t)
 	processorManager := getNewOutboundProcessor()
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(nil)
 	require.NoError(t, err)
 
 	// Test with mock client that has keys
@@ -121,13 +160,14 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 
 func TestSigner_SignOutbound(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
 
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
@@ -140,23 +180,28 @@ func TestSigner_SignOutbound(t *testing.T) {
 
 		// Verify Signature
 		tss := mocks.NewTSSMainnet()
-		_, r, s := tx.RawSignatureValues()
-		signature := append(r.Bytes(), s.Bytes()...)
-		hash := evmSigner.EvmSigner().Hash(tx)
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+	})
+	t.Run("SignOutbound - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
 
-		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
-		require.True(t, verified)
+		// Call SignOutbound
+		tx, err := evmSigner.SignOutbound(txData)
+		require.ErrorContains(t, err, "sign onReceive error")
+		require.Nil(t, tx)
 	})
 }
 
 func TestSigner_SignRevertTx(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
@@ -167,25 +212,72 @@ func TestSigner_SignRevertTx(t *testing.T) {
 		tx, err := evmSigner.SignRevertTx(txData)
 		require.NoError(t, err)
 
-		// Verify Signature
+		// Verify tx signature
 		tss := mocks.NewTSSMainnet()
-		_, r, s := tx.RawSignatureValues()
-		signature := append(r.Bytes(), s.Bytes()...)
-		hash := evmSigner.EvmSigner().Hash(tx)
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
 
-		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
-		require.True(t, verified)
+		// Verify tx body basics
+		// Note: Revert tx calls connector contract with 0 gas token
+		verifyTxBodyBasics(t, tx, evmSigner.zetaConnectorAddress, txData.nonce, big.NewInt(0))
+	})
+	t.Run("SignRevertTx - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		// Call SignRevertTx
+		tx, err := evmSigner.SignRevertTx(txData)
+		require.ErrorContains(t, err, "sign onRevert error")
+		require.Nil(t, tx)
+	})
+}
+
+func TestSigner_SignCancelTx(t *testing.T) {
+	// Setup evm signer
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
+	require.NoError(t, err)
+
+	// Setup txData struct
+	cctx := getCCTX(t)
+	mockObserver, err := getNewEvmChainObserver(tss)
+	require.NoError(t, err)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignCancelTx - should successfully sign", func(t *testing.T) {
+		// Call SignRevertTx
+		tx, err := evmSigner.SignCancelTx(txData)
+		require.NoError(t, err)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		// Note: Cancel tx sends 0 gas token to TSS self address
+		verifyTxBodyBasics(t, tx, evmSigner.tssSigner.EVMAddress(), txData.nonce, big.NewInt(0))
+	})
+	t.Run("SignCancelTx - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		// Call SignCancelTx
+		tx, err := evmSigner.SignCancelTx(txData)
+		require.ErrorContains(t, err, "SignCancelTx error")
+		require.Nil(t, tx)
 	})
 }
 
 func TestSigner_SignWithdrawTx(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
@@ -196,25 +288,32 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 		tx, err := evmSigner.SignWithdrawTx(txData)
 		require.NoError(t, err)
 
-		// Verify Signature
+		// Verify tx signature
 		tss := mocks.NewTSSMainnet()
-		_, r, s := tx.RawSignatureValues()
-		signature := append(r.Bytes(), s.Bytes()...)
-		hash := evmSigner.EvmSigner().Hash(tx)
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
 
-		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
-		require.True(t, verified)
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
+	})
+	t.Run("SignWithdrawTx - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		// Call SignWithdrawTx
+		tx, err := evmSigner.SignWithdrawTx(txData)
+		require.ErrorContains(t, err, "SignWithdrawTx error")
+		require.Nil(t, tx)
 	})
 }
 
 func TestSigner_SignCommandTx(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(nil)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
@@ -227,14 +326,13 @@ func TestSigner_SignCommandTx(t *testing.T) {
 		tx, err := evmSigner.SignCommandTx(txData, cmd, params)
 		require.NoError(t, err)
 
-		// Verify Signature
+		// Verify tx signature
 		tss := mocks.NewTSSMainnet()
-		_, r, s := tx.RawSignatureValues()
-		signature := append(r.Bytes(), s.Bytes()...)
-		hash := evmSigner.EvmSigner().Hash(tx)
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
 
-		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
-		require.True(t, verified)
+		// Verify tx body basics
+		// Note: Revert tx calls erc20 custody contract with 0 gas token
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, big.NewInt(0))
 	})
 
 	t.Run("SignCommandTx CmdMigrateTssFunds", func(t *testing.T) {
@@ -243,25 +341,24 @@ func TestSigner_SignCommandTx(t *testing.T) {
 		tx, err := evmSigner.SignCommandTx(txData, cmd, "")
 		require.NoError(t, err)
 
-		// Verify Signature
+		// Verify tx signature
 		tss := mocks.NewTSSMainnet()
-		_, r, s := tx.RawSignatureValues()
-		signature := append(r.Bytes(), s.Bytes()...)
-		hash := evmSigner.EvmSigner().Hash(tx)
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
 
-		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
-		require.True(t, verified)
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
 	})
 }
 
 func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
@@ -272,25 +369,34 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		// Verify Signature
+		// Verify tx signature
 		tss := mocks.NewTSSMainnet()
-		_, r, s := tx.RawSignatureValues()
-		signature := append(r.Bytes(), s.Bytes()...)
-		hash := evmSigner.EvmSigner().Hash(tx)
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
 
-		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
-		require.True(t, verified)
+		// Verify tx body basics
+		// Note: Withdraw tx calls erc20 custody contract with 0 gas token
+		verifyTxBodyBasics(t, tx, evmSigner.er20CustodyAddress, txData.nonce, big.NewInt(0))
+	})
+
+	t.Run("SignERC20WithdrawTx - should fail if keysign fails", func(t *testing.T) {
+		// pause tss to make keysign fail
+		tss.Pause()
+
+		// Call SignERC20WithdrawTx
+		tx, err := evmSigner.SignERC20WithdrawTx(txData)
+		require.ErrorContains(t, err, "sign withdraw error")
+		require.Nil(t, tx)
 	})
 }
 
 func TestSigner_BroadcastOutbound(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(nil)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
@@ -334,18 +440,82 @@ func TestSigner_SignerErrorMsg(t *testing.T) {
 
 func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 	require.False(t, skip)
 	require.NoError(t, err)
 
-	tx, err := evmSigner.SignWhitelistERC20Cmd(txData, "")
-	require.Nil(t, tx)
-	require.ErrorContains(t, err, "invalid erc20 address")
+	t.Run("SignWhitelistERC20Cmd - should successfully sign", func(t *testing.T) {
+		// Call SignWhitelistERC20Cmd
+		tx, err := evmSigner.SignWhitelistERC20Cmd(txData, sample.EthAddress().Hex())
+		require.NoError(t, err)
+		require.NotNil(t, tx)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
+	})
+	t.Run("SignWhitelistERC20Cmd - should fail on invalid erc20 address", func(t *testing.T) {
+		tx, err := evmSigner.SignWhitelistERC20Cmd(txData, "")
+		require.Nil(t, tx)
+		require.ErrorContains(t, err, "invalid erc20 address")
+	})
+	t.Run("SignWhitelistERC20Cmd - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		// Call SignWhitelistERC20Cmd
+		tx, err := evmSigner.SignWhitelistERC20Cmd(txData, sample.EthAddress().Hex())
+		require.ErrorContains(t, err, "sign whitelist error")
+		require.Nil(t, tx)
+	})
+}
+
+func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
+	// Setup evm signer
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
+	require.NoError(t, err)
+
+	// Setup txData struct
+	cctx := getCCTX(t)
+	mockObserver, err := getNewEvmChainObserver(tss)
+	require.NoError(t, err)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignMigrateTssFundsCmd - should successfully sign", func(t *testing.T) {
+		// Call SignMigrateTssFundsCmd
+		tx, err := evmSigner.SignMigrateTssFundsCmd(txData)
+		require.NoError(t, err)
+		require.NotNil(t, tx)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
+	})
+
+	t.Run("SignMigrateTssFundsCmd - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		// Call SignMigrateTssFundsCmd
+		tx, err := evmSigner.SignMigrateTssFundsCmd(txData)
+		require.ErrorContains(t, err, "SignMigrateTssFundsCmd error")
+		require.Nil(t, tx)
+	})
 }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
@@ -29,8 +28,8 @@ import (
 
 var blockHeaderBTCTimeout = 5 * time.Minute
 
-// ListDeployerUTXOs list the deployer's UTXOs that have at least `minAmount`
-func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUnspentResult, error) {
+// ListDeployerUTXOs list the deployer's UTXOs
+func (runner *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
 	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(
 		1,
@@ -41,23 +40,15 @@ func (runner *E2ERunner) ListDeployerUTXOs(minAmount float64) ([]btcjson.ListUns
 		return nil, err
 	}
 
-	// filter UTXOs by `minAmount`
-	filtered := []btcjson.ListUnspentResult{}
-	for _, utxo := range utxos {
-		if utxo.Amount >= minAmount {
-			filtered = append(filtered, utxo)
-		}
-	}
-
-	return filtered, nil
+	return utxos, nil
 }
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
 func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
 	runner.Logger.Print("⏳ depositing BTC into ZEVM")
 
-	// list deployer utxos that have at least 1 BTC
-	utxos, err := runner.ListDeployerUTXOs(1.0)
+	// list deployer utxos
+	utxos, err := runner.ListDeployerUTXOs()
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +63,11 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	}
 
 	if spendableAmount < amount {
-		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
+		panic(fmt.Errorf(
+			"not enough spendable BTC to run the test; have %f, require %f",
+			spendableAmount,
+			amount,
+		))
 	}
 
 	runner.Logger.Info("ListUnspent:")
@@ -81,13 +76,7 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetabitcoin.DefaultDepositorFee
-	txHash, err = runner.SendToTSSFromDeployerToDeposit(
-		runner.BTCTSSAddress,
-		amount,
-		utxos,
-		runner.BtcRPCClient,
-		runner.BTCDeployerAddress,
-	)
+	txHash, err = runner.SendToTSSFromDeployerToDeposit(amount, utxos)
 	if err != nil {
 		panic(err)
 	}
@@ -104,8 +93,8 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		runner.Logger.Print("✅ BTC deposited in %s", time.Since(startTime))
 	}()
 
-	// list deployer utxos that have at least 1 BTC
-	utxos, err := runner.ListDeployerUTXOs(1.0)
+	// list deployer utxos
+	utxos, err := runner.ListDeployerUTXOs()
 	if err != nil {
 		panic(err)
 	}
@@ -133,38 +122,19 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 
 	// send two transactions to the TSS address
 	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
-	txHash1, err := runner.SendToTSSFromDeployerToDeposit(
-		runner.BTCTSSAddress,
-		amount1,
-		utxos[:2],
-		runner.BtcRPCClient,
-		runner.BTCDeployerAddress,
-	)
+	txHash1, err := runner.SendToTSSFromDeployerToDeposit(amount1, utxos[:2])
 	if err != nil {
 		panic(err)
 	}
 	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
-	txHash2, err := runner.SendToTSSFromDeployerToDeposit(
-		runner.BTCTSSAddress,
-		amount2,
-		utxos[2:4],
-		runner.BtcRPCClient,
-		runner.BTCDeployerAddress,
-	)
+	txHash2, err := runner.SendToTSSFromDeployerToDeposit(amount2, utxos[2:4])
 	if err != nil {
 		panic(err)
 	}
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
-	_, err = runner.SendToTSSFromDeployerWithMemo(
-		runner.BTCTSSAddress,
-		0.11,
-		utxos[4:5],
-		runner.BtcRPCClient,
-		[]byte(constant.DonationMessage),
-		runner.BTCDeployerAddress,
-	)
+	_, err = runner.SendToTSSFromDeployerWithMemo(0.11, utxos[4:5], []byte(constant.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
@@ -201,31 +171,22 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 	}
 }
 
-func (runner *E2ERunner) SendToTSSFromDeployerToDeposit(
-	to btcutil.Address,
-	amount float64,
-	inputUTXOs []btcjson.ListUnspentResult,
-	btc *rpcclient.Client,
-	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
-) (*chainhash.Hash, error) {
-	return runner.SendToTSSFromDeployerWithMemo(
-		to,
-		amount,
-		inputUTXOs,
-		btc,
-		runner.DeployerAddress.Bytes(),
-		btcDeployerAddress,
-	)
+func (runner *E2ERunner) SendToTSSFromDeployerToDeposit(amount float64, inputUTXOs []btcjson.ListUnspentResult) (
+	*chainhash.Hash,
+	error,
+) {
+	return runner.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, runner.DeployerAddress.Bytes())
 }
 
 func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
-	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
-	btcRPC *rpcclient.Client,
 	memo []byte,
-	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
+	btcRPC := runner.BtcRPCClient
+	to := runner.BTCTSSAddress
+	btcDeployerAddress := runner.BTCDeployerAddress
+
 	// prepare inputs
 	inputs := make([]btcjson.TransactionInput, len(inputUTXOs))
 	inputSats := btcutil.Amount(0)
@@ -312,7 +273,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 	runner.Logger.Info("txid: %+v", txid)
-	_, err = btcRPC.GenerateToAddress(6, btcDeployerAddress, nil)
+	_, err = runner.GenerateToAddressIfLocalBitcoin(6, btcDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -359,17 +320,36 @@ func (runner *E2ERunner) GetBitcoinChainID() int64 {
 	return chainID
 }
 
-// MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
+// IsLocalBitcoin returns true if the runner is running on a local bitcoin network
+func (runner *E2ERunner) IsLocalBitcoin() bool {
+	return runner.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
+}
+
+// GenerateToAddressIfLocalBitcoin generates blocks to an address if the runner is interacting
+// with a local bitcoin network
+func (runner *E2ERunner) GenerateToAddressIfLocalBitcoin(
+	numBlocks int64,
+	address btcutil.Address,
+) ([]*chainhash.Hash, error) {
+	// if not local bitcoin network, do nothing
+	if runner.IsLocalBitcoin() {
+		return runner.BtcRPCClient.GenerateToAddress(numBlocks, address, nil)
+	}
+	return nil, nil
+}
+
+// MineBlocksIfLocalBitcoin mines blocks on the local BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
-func (runner *E2ERunner) MineBlocks() chan struct{} {
-	stop := make(chan struct{})
+// If the chain is not local, the function does nothing
+func (runner *E2ERunner) MineBlocksIfLocalBitcoin() func() {
+	stopChan := make(chan struct{})
 	go func() {
 		for {
 			select {
-			case <-stop:
+			case <-stopChan:
 				return
 			default:
-				_, err := runner.BtcRPCClient.GenerateToAddress(1, runner.BTCDeployerAddress, nil)
+				_, err := runner.GenerateToAddressIfLocalBitcoin(1, runner.BTCDeployerAddress)
 				if err != nil {
 					panic(err)
 				}
@@ -377,7 +357,10 @@ func (runner *E2ERunner) MineBlocks() chan struct{} {
 			}
 		}
 	}()
-	return stop
+
+	return func() {
+		close(stopChan)
+	}
 }
 
 // ProveBTCTransaction proves that a BTC transaction is in a block header and that the block header is in ZetaChain

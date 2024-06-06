@@ -39,7 +39,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-var _ interfaces.ChainSigner = &Signer{}
+var (
+	_ interfaces.ChainSigner = &Signer{}
+
+	// zeroValue is for outbounds that carry no ETH (gas token) value
+	zeroValue = big.NewInt(0)
+)
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
@@ -138,6 +143,7 @@ func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 func (signer *Signer) Sign(
 	data []byte,
 	to ethcommon.Address,
+	amount *big.Int,
 	gasLimit uint64,
 	gasPrice *big.Int,
 	nonce uint64,
@@ -147,7 +153,7 @@ func (signer *Signer) Sign(
 
 	// TODO: use EIP-1559 transaction type
 	// https://github.com/zeta-chain/node/issues/1952
-	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
+	tx := ethtypes.NewTransaction(nonce, to, amount, gasLimit, gasPrice, data)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
@@ -207,12 +213,13 @@ func (signer *Signer) SignOutbound(txData *OutboundData) (*ethtypes.Transaction,
 
 	tx, _, _, err := signer.Sign(data,
 		signer.zetaConnectorAddress,
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
 		txData.height)
 	if err != nil {
-		return nil, fmt.Errorf("onReceive sign error: %w", err)
+		return nil, fmt.Errorf("sign onReceive error: %w", err)
 	}
 
 	return tx, nil
@@ -241,74 +248,57 @@ func (signer *Signer) SignRevertTx(txData *OutboundData) (*ethtypes.Transaction,
 		txData.message,
 		txData.cctxIndex)
 	if err != nil {
-		return nil, fmt.Errorf("pack error: %w", err)
+		return nil, fmt.Errorf("onRevert pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(data,
 		signer.zetaConnectorAddress,
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
 		txData.height)
 	if err != nil {
-		return nil, fmt.Errorf("Sign error: %w", err)
+		return nil, fmt.Errorf("sign onRevert error: %w", err)
 	}
 
 	return tx, nil
 }
 
 // SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
-func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
-	// TODO: use EIP-1559 transaction type
-	// https://github.com/zeta-chain/node/issues/1952
-	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
-
-	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes, height, nonce, signer.chain, "")
+func (signer *Signer) SignCancelTx(txData *OutboundData) (*ethtypes.Transaction, error) {
+	tx, _, _, err := signer.Sign(
+		nil,
+		signer.tssSigner.EVMAddress(),
+		zeroValue, // zero out the amount to cancel the tx
+		evm.EthTransferGasLimit,
+		txData.gasPrice,
+		txData.nonce,
+		txData.height,
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SignCancelTx error: %w", err)
 	}
 
-	pubk, err := crypto.SigToPub(hashBytes, sig[:])
-	if err != nil {
-		signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
-	}
-
-	addr := crypto.PubkeyToAddress(*pubk)
-	signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
-	if err != nil {
-		return nil, err
-	}
-
-	return signedTX, nil
+	return tx, nil
 }
 
 // SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
 func (signer *Signer) SignWithdrawTx(txData *OutboundData) (*ethtypes.Transaction, error) {
-	// TODO: use EIP-1559 transaction type
-	// https://github.com/zeta-chain/node/issues/1952
-	tx := ethtypes.NewTransaction(txData.nonce, txData.to, txData.amount, 21000, txData.gasPrice, nil)
-
-	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes, txData.height, txData.nonce, signer.chain, "")
+	tx, _, _, err := signer.Sign(
+		nil,
+		txData.to,
+		txData.amount,
+		evm.EthTransferGasLimit,
+		txData.gasPrice,
+		txData.nonce,
+		txData.height,
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SignWithdrawTx error: %w", err)
 	}
 
-	pubk, err := crypto.SigToPub(hashBytes, sig[:])
-	if err != nil {
-		signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
-	}
-
-	addr := crypto.PubkeyToAddress(*pubk)
-	signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
-	if err != nil {
-		return nil, err
-	}
-
-	return signedTX, nil
+	return tx, nil
 }
 
 // SignCommandTx signs a transaction based on the given command includes:
@@ -389,7 +379,7 @@ func (signer *Signer) TryProcessOutbound(
 			cctx.GetCurrentOutboundParam().CoinType.String(),
 		)
 
-		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
+		tx, err = signer.SignCancelTx(txData) // cancel the tx
 		if err != nil {
 			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
 			return
@@ -589,52 +579,20 @@ func (signer *Signer) SignERC20WithdrawTx(txData *OutboundData) (*ethtypes.Trans
 	var err error
 	data, err = signer.erc20CustodyABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
 	if err != nil {
-		return nil, fmt.Errorf("pack error: %w", err)
+		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(
 		data,
 		signer.er20CustodyAddress,
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign error: %w", err)
-	}
-
-	return tx, nil
-}
-
-// SignWhitelistTx
-// function whitelist(
-// address asset,
-// ) external onlyTssAddress
-// function unwhitelist(
-// address asset,
-// ) external onlyTssAddress
-func (signer *Signer) SignWhitelistTx(
-	action string,
-	_ ethcommon.Address,
-	asset ethcommon.Address,
-	gasLimit uint64,
-	nonce uint64,
-	gasPrice *big.Int,
-	height uint64,
-) (*ethtypes.Transaction, error) {
-	var data []byte
-
-	var err error
-
-	data, err = signer.erc20CustodyABI.Pack(action, asset)
-	if err != nil {
-		return nil, fmt.Errorf("pack error: %w", err)
-	}
-
-	tx, _, _, err := signer.Sign(data, signer.er20CustodyAddress, gasLimit, gasPrice, nonce, height)
-	if err != nil {
-		return nil, fmt.Errorf("Sign error: %w", err)
+		return nil, fmt.Errorf("sign withdraw error: %w", err)
 	}
 
 	return tx, nil
@@ -686,34 +644,35 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string)
 	}
 	data, err := custodyAbi.Pack("whitelist", erc20)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("whitelist pack error: %w", err)
 	}
 	tx, _, _, err := signer.Sign(
 		data,
 		txData.to,
+		zeroValue,
 		txData.gasLimit,
 		txData.gasPrice,
 		outboundParams.TssNonce,
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign error: %w", err)
+		return nil, fmt.Errorf("sign whitelist error: %w", err)
 	}
 	return tx, nil
 }
 
 func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Transaction, error) {
-	outboundParams := txData.outboundParams
 	tx, _, _, err := signer.Sign(
 		nil,
 		txData.to,
+		txData.amount,
 		txData.gasLimit,
 		txData.gasPrice,
-		outboundParams.TssNonce,
+		txData.nonce,
 		txData.height,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
 	}
 	return tx, nil
 }
