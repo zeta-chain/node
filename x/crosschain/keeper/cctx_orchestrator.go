@@ -41,7 +41,6 @@ func (k Keeper) ValidateOutboundZEVM(
 	depositErr error,
 	isContractReverted bool,
 ) (newCCTXStatus types.CctxStatus) {
-	tmpCtx, commit := ctx.CacheContext()
 	if depositErr != nil && isContractReverted {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
@@ -60,8 +59,7 @@ func (k Keeper) ValidateOutboundZEVM(
 		commitRevert()
 		return types.CctxStatus_PendingRevert
 	}
-	k.validateSuccessfulOutbound(tmpCtx, cctx, "", false)
-	commit()
+	k.validateSuccessfulOutbound(ctx, cctx, "", false)
 	return types.CctxStatus_OutboundMined
 }
 
