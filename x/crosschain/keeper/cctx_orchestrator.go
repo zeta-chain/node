@@ -18,6 +18,22 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+/*
+ValidateOutboundObservers processes the finalization of an outbound transaction if receiver is ZEVM
+
+- If the deposit is successful, the CCTX status is changed to OutboundMined.
+
+- If the deposit returns an internal error i.e if HandleEVMDeposit() returns an error, but isContractReverted is false, the CCTX status is changed to Aborted.
+
+- If the deposit is reverted, the function tries to create a revert cctx with status PendingRevert.
+
+- If the creation of revert tx also fails it changes the status to Aborted.
+
+Note : Aborted CCTXs are not refunded in this function. The refund is done using a separate refunding mechanism.
+We do not return an error from this function , as all changes need to be persisted to the state.
+Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to OutboundMined.
+New CCTX status after preprocessing is returned.
+*/
 func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := k.HandleEVMDeposit(tmpCtx, cctx)
@@ -203,7 +219,7 @@ func (k Keeper) validateFailedOutbound(
 //
 //  2. Set the finalization status of the current outbound tx to executed
 //
-//  3. Emit an event for the successful outbound transaction
+//  3. Emit an event for the successful outbound transaction if flag is provided
 //
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
