@@ -64,11 +64,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// mine blocks if testing on regnet
-	var stop chan struct{}
-	isRegnet := chains.IsBitcoinRegnet(r.GetBitcoinChainID())
-	if isRegnet {
-		stop = r.MineBlocks()
-	}
+	stop := r.MineBlocksIfLocalBitcoin()
 
 	// withdraw 'amount' of BTC from ZRC20 to BTC address
 	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
@@ -81,7 +77,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// mine 10 blocks to confirm the withdraw tx
-	_, err = r.BtcRPCClient.GenerateToAddress(10, to, nil)
+	_, err = r.GenerateToAddressIfLocalBitcoin(10, to)
 	if err != nil {
 		panic(err)
 	}
@@ -118,9 +114,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	// stop mining
-	if isRegnet {
-		stop <- struct{}{}
-	}
+	stop()
 
 	return rawTx
 }
