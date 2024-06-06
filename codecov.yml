@@ -68,7 +68,6 @@ ignore:
   - "cmd/**/*"
   - "contrib/**/*"
   - "docs/**/*"
-  - "rpc/**/*"
   - "proto/**/*"
   - "scripts/**/*"
   - "server/**/*"
