@@ -31,8 +31,8 @@ It takes deposit error and information if contract revert happened during deposi
 - If the creation of revert tx also fails it changes the status to Aborted.
 
 Note : Aborted CCTXs are not refunded in this function. The refund is done using a separate refunding mechanism.
-We do not return an error from this function , as all changes need to be persisted to the state.
-Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to OutboundMined.
+We do not return an error from this function, as all changes need to be persisted to the state.
+Instead we use a temporary context to make changes and then commit the context on for the happy path, i.e cctx is set to OutboundMined.
 New CCTX status after preprocessing is returned.
 */
 func (k Keeper) ValidateOutboundZEVM(
@@ -65,8 +65,8 @@ func (k Keeper) ValidateOutboundZEVM(
 	return types.CctxStatus_OutboundMined
 }
 
-// ValidateOutboundObservers processes the finalization of an outbound transaction based on the ballot status
-// The state is committed only if the individual steps are successful
+// ValidateOutboundObservers processes the finalization of an outbound transaction based on the ballot status.
+// The state is committed only if the individual steps are successful.
 func (k Keeper) ValidateOutboundObservers(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
@@ -97,7 +97,7 @@ func (k Keeper) ValidateOutboundObservers(
 	return nil
 }
 
-// validateFailedOutboundObservers processes a failed outbound transaction. It does the following things in one function:
+// validateFailedOutboundObservers processes a failed outbound transaction for observers. It does the following things in one function:
 //
 // 1. For Admin Tx or a withdrawal from Zeta chain, it aborts the CCTX
 //
@@ -115,8 +115,8 @@ func (k Keeper) ValidateOutboundObservers(
 func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) error {
 	oldStatus := cctx.CctxStatus.Status
 	// The following logic is used to handler the mentioned conditions separately. The reason being
-	// All admin tx is created using a policy message , there is no associated inbound tx , therefore we do not need any revert logic
-	// For transactions which originated from ZEVM , we can process the outbound in the same block as there is no TSS signing required for the revert
+	// All admin tx is created using a policy message, there is no associated inbound tx, therefore we do not need any revert logic
+	// For transactions which originated from ZEVM, we can process the outbound in the same block as there is no TSS signing required for the revert
 	// For all other transactions we need to create a revert tx and set the status to pending revert
 
 	if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
@@ -217,7 +217,7 @@ func (k Keeper) validateFailedOutbound(
 //
 //  3. Emit an event for the successful outbound transaction if flag is provided
 //
-// This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
+// This function sets CCTX status, in cases where the outbound tx is successful, but tx itself fails
 // This is done because SaveSuccessfulOutbound does not set the cctx status
 // For cases where the outbound tx is unsuccessful, the cctx status is automatically set to Aborted in the validateFailedOutboundObservers function, so we can just return and error to trigger that
 func (k Keeper) validateSuccessfulOutbound(
@@ -246,7 +246,7 @@ func (k Keeper) validateSuccessfulOutbound(
 func (k Keeper) validateFailedOutboundObserversForZEVM(ctx sdk.Context, cctx *types.CrossChainTx) error {
 	indexBytes, err := cctx.GetCCTXIndexBytes()
 	if err != nil {
-		// Return err to save the failed outbound ad set to aborted
+		// Return err to save the failed outbound and set to aborted
 		return fmt.Errorf("failed reverting GetCCTXIndexBytes: %s", err.Error())
 	}
 	// Finalize the older outbound tx
