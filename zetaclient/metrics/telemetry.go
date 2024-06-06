@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
