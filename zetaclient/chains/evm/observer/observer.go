@@ -422,6 +422,7 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 // SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
 func (ob *Observer) SetLastBlockHeightScanned(height uint64) {
 	atomic.StoreUint64(&ob.lastBlockScanned, height)
+	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, height)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
