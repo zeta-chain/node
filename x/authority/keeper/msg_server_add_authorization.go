@@ -17,6 +17,7 @@ func (k msgServer) AddAuthorization(
 ) (*types.MsgAddAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// check if the caller is authorized to add an authorization
 	err := k.CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUnauthorized, err.Error())

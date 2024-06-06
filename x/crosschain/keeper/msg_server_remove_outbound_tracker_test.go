@@ -23,14 +23,14 @@ func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
+
 		msg := types.MsgRemoveOutboundTracker{
 			Creator: admin,
 		}
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
 		res, err := msgServer.RemoveOutboundTracker(ctx, &msg)
 		require.Error(t, err)
 		require.Empty(t, res)
@@ -49,16 +49,15 @@ func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
+
 		msg := types.MsgRemoveOutboundTracker{
 			Creator: admin,
 			ChainId: 1,
 			Nonce:   1,
 		}
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
 		res, err := msgServer.RemoveOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		require.Empty(t, res)

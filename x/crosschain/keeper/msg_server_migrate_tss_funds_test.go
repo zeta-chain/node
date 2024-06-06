@@ -94,19 +94,20 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 		require.True(t, found)
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -126,19 +127,20 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidBTCChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 		require.True(t, found)
+
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -158,17 +160,17 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -182,19 +184,19 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(true)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -208,14 +210,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(false)
@@ -223,6 +219,12 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -236,14 +238,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(false)
@@ -252,6 +248,12 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -265,14 +267,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(false)
@@ -282,6 +278,12 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -295,14 +297,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(false)
@@ -314,6 +310,13 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		observerMock.On("GetAllTSS", mock.Anything).Return([]observertypes.TSS{tss2})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
+
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -327,14 +330,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("IsInboundEnabled", mock.Anything).Return(false)
@@ -349,6 +346,12 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.Error(t, err)
 	})
@@ -361,18 +364,18 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -392,18 +395,17 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("100")
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.ErrorContains(t, err, crosschaintypes.ErrCannotMigrateTssFunds.Error())
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -420,18 +422,17 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, true)
+
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
-
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.ErrorContains(t, err, "no new tss address has been generated")
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -448,15 +449,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
-
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
@@ -466,6 +459,13 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId:   chain.ChainId,
 			Tss:       tssPubkey,
 		})
+
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
 		require.ErrorContains(t, err, "cannot migrate funds when there are pending nonces")
@@ -483,14 +483,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		admin := sample.AccAddress()
 		chain := getValidEthChain()
 		amount := sdkmath.NewUintFromString("10000000000000000000")
-		msg := crosschaintypes.MsgMigrateTssFunds{
-			Creator: admin,
-			ChainId: chain.ChainId,
-			Amount:  amount,
-		}
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
@@ -507,6 +500,13 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId:            chain.ChainId,
 			MigrationCctxIndex: existingCctx.Index,
 		})
+
+		msg := crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
 		require.ErrorContains(t, err, "cannot migrate funds while there are pending migrations")
@@ -528,14 +528,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			admin := sample.AccAddress()
 			chain := getValidEthChain()
 			amount := sdkmath.NewUintFromString("10000000000000000000")
-			msg := crosschaintypes.MsgMigrateTssFunds{
-				Creator: admin,
-				ChainId: chain.ChainId,
-				Amount:  amount,
-			}
-
 			authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-			keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 			msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -546,6 +539,14 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			newTss.FinalizedZetaHeight = currentTss.FinalizedZetaHeight - 10
 			newTss.KeyGenZetaHeight = currentTss.KeyGenZetaHeight - 10
 			k.GetObserverKeeper().SetTSSHistory(ctx, newTss)
+
+			msg := crosschaintypes.MsgMigrateTssFunds{
+				Creator: admin,
+				ChainId: chain.ChainId,
+				Amount:  amount,
+			}
+
+			keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 			_, err := msgServer.MigrateTssFunds(ctx, &msg)
 			require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
 			require.ErrorContains(t, err, "current tss is the latest")

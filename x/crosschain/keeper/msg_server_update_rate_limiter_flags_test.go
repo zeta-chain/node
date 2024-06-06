@@ -20,17 +20,16 @@ func TestMsgServer_UpdateRateLimiterFlags(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		flags := sample.RateLimiterFlags()
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		_, found := k.GetRateLimiterFlags(ctx)
+		require.False(t, found)
+
 		msg := types.NewMsgUpdateRateLimiterFlags(
 			admin,
 			flags,
 		)
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-
-		_, found := k.GetRateLimiterFlags(ctx)
-		require.False(t, found)
-
 		_, err := msgServer.UpdateRateLimiterFlags(ctx, msg)
 		require.NoError(t, err)
 
@@ -46,14 +45,13 @@ func TestMsgServer_UpdateRateLimiterFlags(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		flags := sample.RateLimiterFlags()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
 		msg := types.NewMsgUpdateRateLimiterFlags(
 			admin,
 			flags,
 		)
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
-
 		_, err := msgServer.UpdateRateLimiterFlags(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})

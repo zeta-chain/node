@@ -18,6 +18,7 @@ func (k msgServer) RemoveAuthorization(
 ) (*types.MsgRemoveAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// check if the caller is authorized to remove an authorization
 	err := k.CheckAuthorization(ctx, msg)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUnauthorized, err.Error())

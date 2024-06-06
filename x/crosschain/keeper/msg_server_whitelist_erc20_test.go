@@ -31,18 +31,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		erc20Address := sample.EthAddress().Hex()
-		msg := types.MsgWhitelistERC20{
-			Creator:      admin,
-			Erc20Address: erc20Address,
-			ChainId:      chainID,
-			Name:         "foo",
-			Symbol:       "FOO",
-			Decimals:     18,
-			GasLimit:     100000,
-		}
-
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
@@ -53,6 +42,16 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Prices:      []uint64{1},
 		})
 
+		msg := types.MsgWhitelistERC20{
+			Creator:      admin,
+			Erc20Address: erc20Address,
+			ChainId:      chainID,
+			Name:         "foo",
+			Symbol:       "FOO",
+			Decimals:     18,
+			GasLimit:     100000,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		res, err := msgServer.WhitelistERC20(ctx, &msg)
 		require.NoError(t, err)
 		require.NotNil(t, res)
@@ -73,6 +72,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		gasLimit, err := zk.FungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(zrc20))
 		require.NoError(t, err)
 		require.Equal(t, uint64(100000), gasLimit.Uint64())
+
 		msgNew := types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: sample.EthAddress().Hex(),
@@ -82,7 +82,6 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		}
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msgNew, nil)
 
 		// Ensure that whitelist a new erc20 create a cctx with a different index
@@ -101,6 +100,8 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
 		msg := types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: sample.EthAddress().Hex(),
@@ -110,10 +111,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
@@ -127,6 +125,8 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
 		msg := types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: "invalid",
@@ -136,7 +136,6 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		}
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
@@ -154,6 +153,13 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
 		asset := sample.EthAddress().Hex()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
+		fc := sample.ForeignCoins(t, sample.EthAddress().Hex())
+		fc.Asset = asset
+		fc.ForeignChainId = chainID
+		zk.FungibleKeeper.SetForeignCoins(ctx, fc)
+
 		msg := types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: asset,
@@ -163,15 +169,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		fc := sample.ForeignCoins(t, sample.EthAddress().Hex())
-		fc.Asset = asset
-		fc.ForeignChainId = chainID
-		zk.FungibleKeeper.SetForeignCoins(ctx, fc)
-
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
 		require.ErrorIs(t, err, fungibletypes.ErrForeignCoinAlreadyExist)
 	})
@@ -187,6 +185,8 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID()
 		erc20Address := sample.EthAddress().Hex()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
 		msg := types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: erc20Address,
@@ -196,9 +196,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		}
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
 	})
@@ -213,6 +211,10 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		erc20Address := sample.EthAddress().Hex()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
+		k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, sample.Tss())
+
 		msg := types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: erc20Address,
@@ -222,11 +224,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		}
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, sample.Tss())
-
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrInvalidChainID)
 	})

@@ -35,6 +35,14 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getEthereumChainID()
 		hash := sample.Hash().Hex()
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
+
 		msg := types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
@@ -44,15 +52,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			TxIndex:   0,
 			Nonce:     0,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
-
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 0)
@@ -73,6 +73,11 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getEthereumChainID()
 		hash := sample.Hash().Hex()
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
+
 		msg := types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
@@ -82,12 +87,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			TxIndex:   0,
 			Nonce:     0,
 		}
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
-		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
-
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 0)
@@ -109,17 +109,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		existinghHash := sample.Hash().Hex()
 		newHash := sample.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    newHash,
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -134,6 +124,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			},
 		})
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    newHash,
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
@@ -244,17 +244,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		chainID := getEthereumChainID()
 		newHash := sample.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    newHash,
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -272,6 +262,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			HashList: hashes,
 		})
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    newHash,
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrMaxTxOutTrackerHashesReached)
 	})
@@ -287,20 +287,10 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 
 		chainID := getEthereumChainID()
 		existinghHash := sample.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    existinghHash,
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -315,6 +305,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			},
 		})
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    existinghHash,
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
@@ -335,21 +335,11 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		ethTx, ethTxBytes, tssAddress := sample.EthTxSigned(t, chainID, sample.EthAddress(), 42)
 		txHash := ethTx.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    txHash,
-			Proof:     &proofs.Proof{},
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -359,6 +349,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ethTxBytes, nil)
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
@@ -379,21 +379,11 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		ethTx, ethTxBytes, tssAddress := sample.EthTxSigned(t, chainID, sample.EthAddress(), 42)
 		txHash := ethTx.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    txHash,
-			Proof:     &proofs.Proof{},
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -418,6 +408,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			},
 		})
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
@@ -439,6 +439,17 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		ethTx, ethTxBytes, _ := sample.EthTxSigned(t, chainID, sample.EthAddress(), 42)
 		txHash := ethTx.Hash().Hex()
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
+		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ethTxBytes, errors.New("error"))
+
 		msg := types.MsgAddOutboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
@@ -448,18 +459,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			TxIndex:   0,
 			Nonce:     42,
 		}
-
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
-		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ethTxBytes, errors.New("error"))
-
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrProofVerificationFail)
 	})
@@ -476,21 +476,11 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		ethTx, ethTxBytes, tssAddress := sample.EthTxSigned(t, chainID, sample.EthAddress(), 42)
 		txHash := ethTx.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    txHash,
-			Proof:     &proofs.Proof{},
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -500,6 +490,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			Eth: tssAddress.Hex(),
 		}, errors.New("error"))
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, observertypes.ErrTssNotFound)
 	})
@@ -516,21 +516,10 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		chainID := getEthereumChainID()
 		ethTx, _, tssAddress := sample.EthTxSigned(t, chainID, sample.EthAddress(), 42)
 		txHash := ethTx.Hash().Hex()
-		msg := types.MsgAddOutboundTracker{
-			Creator:   admin,
-			ChainId:   chainID,
-			TxHash:    txHash,
-			Proof:     &proofs.Proof{},
-			BlockHash: "",
-			TxIndex:   0,
-			Nonce:     42,
-		}
-
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
@@ -542,6 +531,16 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(sample.Bytes(), nil)
 
+		msg := types.MsgAddOutboundTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    txHash,
+			Proof:     &proofs.Proof{},
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     42,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 	})
