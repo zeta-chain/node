@@ -127,7 +127,7 @@ type Observer struct {
 	// lastBlockScanned is the last block height scanned by the observer
 	lastBlockScanned int64
 
-	// pendingNonce is the number of pending nonces for outbounds
+	// pendingNonce is the pending nonce for outbounds
 	pendingNonce uint64
 
 	// utxos contains the UTXOs owned by the TSS address
