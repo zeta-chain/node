@@ -101,13 +101,13 @@ func TestKeeper_PauseZRC20(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+
 		msg := types.NewMsgPauseZRC20(
 			admin,
 			[]string{sample.EthAddress().String()},
 		)
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
-
 		_, err := msgServer.PauseZRC20(ctx, msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
@@ -126,6 +126,7 @@ func TestKeeper_PauseZRC20(t *testing.T) {
 		zrc20A, zrc20B := sample.EthAddress().String(), sample.EthAddress().String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20B))
+
 		msg := types.NewMsgPauseZRC20(
 			admin,
 			[]string{

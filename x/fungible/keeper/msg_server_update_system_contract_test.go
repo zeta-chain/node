@@ -74,10 +74,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
+		// can update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-
-		// can update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
@@ -122,10 +121,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		newSystemContract, err := k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
 		require.NoError(t, err)
 
+		// can update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-
-		// can update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
@@ -138,10 +136,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		newSystemContract, err = k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
 		require.NoError(t, err)
 
+		// can overwrite the previous system contract
 		msg2 := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-
-		// can overwrite the previous system contract
 		_, err = msgServer.UpdateSystemContract(ctx, msg2)
 		require.NoError(t, err)
 
@@ -168,10 +165,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
+		// should not update the system contract if not admin
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
-
-		// should not update the system contract if not admin
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
@@ -193,9 +189,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
+		// should not update the system contract if invalid address
 		msg := types.NewMsgUpdateSystemContract(admin, "invalid")
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-		// should not update the system contract if invalid address
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
@@ -246,10 +242,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// fail on first evm call
 		mockEVMKeeper.MockEVMFailCallOnce()
 
+		// can't update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-
-		// can't update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
@@ -257,9 +252,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		mockEVMKeeper.MockEVMSuccessCallOnce()
 		mockEVMKeeper.MockEVMFailCallOnce()
 
+		// can't update the system contract
 		msg2 := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		// can't update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, msg2)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
@@ -267,9 +262,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		mockEVMKeeper.MockEVMSuccessCallTimes(2)
 		mockEVMKeeper.MockEVMFailCallOnce()
 
+		// can't update the system contract
 		msg3 := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
-		// can't update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, msg3)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})

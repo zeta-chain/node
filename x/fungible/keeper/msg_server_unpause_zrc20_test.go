@@ -49,6 +49,7 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
+		// can unpause zrc20
 		msg := types.NewMsgUnpauseZRC20(
 			admin,
 			[]string{
@@ -56,28 +57,27 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 			},
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-
-		// can unpause zrc20
 		_, err := msgServer.UnpauseZRC20(ctx, msg)
 		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
+
+		// can unpause already unpaused zrc20
 		msg2 := types.NewMsgUnpauseZRC20(
 			admin,
 			[]string{
 				zrc20C,
 			},
 		)
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-
-		// can unpause already unpaused zrc20
 		_, err = msgServer.UnpauseZRC20(ctx, msg2)
 		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
+
+		// can unpause all zrc20
 		msg3 := types.NewMsgUnpauseZRC20(
 			admin,
 			[]string{
@@ -86,10 +86,7 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 				zrc20C,
 			},
 		)
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
-
-		// can unpause all zrc20
 		_, err = msgServer.UnpauseZRC20(ctx, msg3)
 		require.NoError(t, err)
 		assertUnpaused(zrc20A)
@@ -106,13 +103,12 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+
 		msg := types.NewMsgUnpauseZRC20(
 			admin,
 			[]string{sample.EthAddress().String()},
 		)
-
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
-
 		_, err := msgServer.UnpauseZRC20(ctx, msg)
 
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
@@ -141,7 +137,6 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 			},
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-
 		_, err := msgServer.UnpauseZRC20(ctx, msg)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
