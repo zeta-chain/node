@@ -9,6 +9,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
@@ -351,12 +352,12 @@ func (co *CoreObserver) scheduleCctxBTC(
 			break
 		}
 
-		// hotfix/v17.0.1: before scheduling keysign, we adjust tiny amount to 2000 satoshi to avoid dust output
+		// hotfix/v17.0.1: before scheduling keysign, we adjust tiny amount to 1000 satoshi to avoid dust output
 		// #nosec G701 always in range
-		dustAmount := uint64(chains.BtcDustOffset())
-		if params.Amount.Uint64() < dustAmount {
-			params.Amount = sdkmath.NewUint(dustAmount)
-			co.logger.ZetaChainWatcher.Warn().Msgf("scheduleCctxBTC: outtx %s amount %d is too small, adjusted to %d", outTxID, params.Amount, chains.BtcDustOffset())
+		if params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
+			params.Amount = sdkmath.NewUint(constant.BTCWithdrawalDustAmount)
+			co.logger.ZetaChainWatcher.Warn().Msgf(
+				"scheduleCctxBTC: outtx %s amount %d is too small, adjusted to %d", outTxID, params.Amount, constant.BTCWithdrawalDustAmount)
 		}
 
 		// try confirming the outtx or scheduling a keysign

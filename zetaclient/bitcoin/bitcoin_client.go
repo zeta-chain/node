@@ -25,6 +25,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -1403,12 +1404,11 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", receiverVout, params.Receiver)
 			}
 
-			// hotfix/v17.0.1: check against 2000 satoshis because we've adjusted the dust amount to 2000 satoshi.
+			// hotfix/v17.0.1: check against 'BTCWithdrawalDustAmount' because we've adjusted the dust amount to 1000 satoshi.
 			// #nosec G701 always in range
-			dustAmount := uint64(chains.BtcDustOffset())
-			if params.Amount.Uint64() < dustAmount {
-				if amount != chains.BtcDustOffset() {
-					return fmt.Errorf("checkTSSVout: output amount %d not match dust amount %d", amount, dustAmount)
+			if params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
+				if amount != constant.BTCWithdrawalDustAmount {
+					return fmt.Errorf("checkTSSVout: output amount %d not match dust amount %d", amount, constant.BTCWithdrawalDustAmount)
 				}
 				ob.logger.OutTx.Info().Msgf("checkTSSVout: amount was successfully modified to %d", amount)
 				continue // move to the 3rd vout
