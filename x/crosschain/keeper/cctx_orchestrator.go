@@ -34,26 +34,16 @@ We do not return an error from this function , as all changes need to be persist
 Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to OutboundMined.
 New CCTX status after preprocessing is returned.
 */
-func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
+func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx, depositErr error, isContractReverted bool) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
-	isContractReverted, err := k.HandleEVMDeposit(tmpCtx, cctx)
-
-	if err != nil && !isContractReverted {
-		// exceptional case; internal error; should abort CCTX
-		cctx.SetAbort(err.Error())
-		return types.CctxStatus_Aborted
-	}
-
-	cctx.SetPendingOutbound("")
-
-	if err != nil && isContractReverted {
+	if depositErr != nil && isContractReverted {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
 		err := k.validateFailedOutbound(
 			tmpCtxRevert,
 			cctx,
 			types.CctxStatus_PendingOutbound,
-			err.Error(),
+			depositErr.Error(),
 			cctx.InboundParams.Amount,
 		)
 		if err != nil {
@@ -64,8 +54,8 @@ func (k Keeper) ValidateOutboundZEVM(ctx sdk.Context, cctx *types.CrossChainTx) 
 		commitRevert()
 		return types.CctxStatus_PendingRevert
 	}
+	k.validateSuccessfulOutbound(tmpCtx, cctx, "", false)
 	commit()
-	k.validateSuccessfulOutbound(ctx, cctx, "", false)
 	return types.CctxStatus_OutboundMined
 }
 
