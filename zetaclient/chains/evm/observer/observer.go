@@ -581,7 +581,7 @@ func (ob *Observer) LoadLastScannedBlock() error {
 	if scanFromBlock != "" {
 		ob.logger.Chain.Info().
 			Msgf("LoadLastScannedBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
-		if scanFromBlock == clienttypes.EnvVarLatest {
+		if scanFromBlock == base.EnvVarLatestBlock {
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return err
