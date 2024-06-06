@@ -90,32 +90,35 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		require.Equal(t, prevLen+1, len(authorizationList.Authorizations))
 	})
 
-	t.Run("successfully add authorization to list containing only authorization for AddAuthorization", func(t *testing.T) {
-		k, ctx := keepertest.AuthorityKeeper(t)
-		admin := keepertest.SetAdminPolicies(ctx, k)
-		k.SetAuthorizationList(ctx, types.AuthorizationList{
-			Authorizations: []types.Authorization{
-				AddAuthorization,
-			},
-		})
-		msgServer := keeper.NewMsgServerImpl(*k)
+	t.Run(
+		"successfully add authorization to list containing only authorization for AddAuthorization",
+		func(t *testing.T) {
+			k, ctx := keepertest.AuthorityKeeper(t)
+			admin := keepertest.SetAdminPolicies(ctx, k)
+			k.SetAuthorizationList(ctx, types.AuthorizationList{
+				Authorizations: []types.Authorization{
+					AddAuthorization,
+				},
+			})
+			msgServer := keeper.NewMsgServerImpl(*k)
 
-		msg := &types.MsgAddAuthorization{
-			Creator:          admin,
-			MsgUrl:           url,
-			AuthorizedPolicy: types.PolicyType_groupAdmin,
-		}
+			msg := &types.MsgAddAuthorization{
+				Creator:          admin,
+				MsgUrl:           url,
+				AuthorizedPolicy: types.PolicyType_groupAdmin,
+			}
 
-		_, err := msgServer.AddAuthorization(sdk.WrapSDKContext(ctx), msg)
-		require.NoError(t, err)
+			_, err := msgServer.AddAuthorization(sdk.WrapSDKContext(ctx), msg)
+			require.NoError(t, err)
 
-		authorizationList, found := k.GetAuthorizationList(ctx)
-		require.True(t, found)
-		policy, err := authorizationList.GetAuthorizedPolicy(url)
-		require.NoError(t, err)
-		require.Equal(t, types.PolicyType_groupAdmin, policy)
-		require.Equal(t, 2, len(authorizationList.Authorizations))
-	})
+			authorizationList, found := k.GetAuthorizationList(ctx)
+			require.True(t, found)
+			policy, err := authorizationList.GetAuthorizedPolicy(url)
+			require.NoError(t, err)
+			require.Equal(t, types.PolicyType_groupAdmin, policy)
+			require.Equal(t, 2, len(authorizationList.Authorizations))
+		},
+	)
 
 	t.Run("unable to add authorization to empty authorization list", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)

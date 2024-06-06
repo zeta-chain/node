@@ -33,7 +33,11 @@ func (k msgServer) UpdateContractBytecode(
 
 	// fetch account to update
 	if !ethcommon.IsHexAddress(msg.ContractAddress) {
-		return nil, cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
+		return nil, cosmoserrors.Wrapf(
+			sdkerrors.ErrInvalidAddress,
+			"invalid contract address (%s)",
+			msg.ContractAddress,
+		)
 	}
 	contractAddress := ethcommon.HexToAddress(msg.ContractAddress)
 	acct := k.evmKeeper.GetAccount(ctx, contractAddress)

@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
