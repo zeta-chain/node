@@ -357,7 +357,7 @@ func (ob *Observer) GetLastBlockHeight() int64 {
 func (ob *Observer) SetLastBlockHeightScanned(height int64) {
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
 	// #nosec G701 checked as positive
-	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainName), uint64(height))
+	ob.ts.SetLastScannedBlockNumber(ob.chain, uint64(height))
 }
 
 func (ob *Observer) GetLastBlockHeightScanned() int64 {

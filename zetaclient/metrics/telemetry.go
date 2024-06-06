@@ -18,12 +18,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
-// TelemetryServer provide http endpoint for Tss server
+// TelemetryServer provides http endpoint for Tss server
 type TelemetryServer struct {
 	logger                 zerolog.Logger
 	s                      *http.Server
 	p2pid                  string
-	lastScannedBlockNumber map[string]uint64 // chainName => block number
+	lastScannedBlockNumber map[int64]uint64 // chainId => block number
 	lastCoreBlockNumber    int64
 	mu                     sync.Mutex
 	lastStartTimestamp     time.Time
@@ -36,7 +36,7 @@ type TelemetryServer struct {
 func NewTelemetryServer() *TelemetryServer {
 	hs := &TelemetryServer{
 		logger:                 log.With().Str("module", "http").Logger(),
-		lastScannedBlockNumber: make(map[string]uint64),
+		lastScannedBlockNumber: make(map[int64]uint64),
 		lastStartTimestamp:     time.Now(),
 		HotKeyBurnRate:         NewBurnRate(100),
 	}
@@ -78,25 +78,29 @@ func (t *TelemetryServer) GetIPAddress() string {
 	return t.ipAddress
 }
 
+// GetLastStartTimestamp returns last start timestamp
 func (t *TelemetryServer) GetLastStartTimestamp() time.Time {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.lastStartTimestamp
 }
 
-func (t *TelemetryServer) SetLastScannedBlockNumber(chainName chains.ChainName, blockNumber uint64) {
+// SetLastScannedBlockNumber last scanned block number for chain in telemetry and metrics
+func (t *TelemetryServer) SetLastScannedBlockNumber(chain chains.Chain, blockNumber uint64) {
 	t.mu.Lock()
-	t.lastScannedBlockNumber[chainName.String()] = blockNumber
-	LastScannedBlockNumber.WithLabelValues(chainName.String()).Set(float64(blockNumber))
+	t.lastScannedBlockNumber[chain.ChainId] = blockNumber
+	LastScannedBlockNumber.WithLabelValues(chain.ChainName.String()).Set(float64(blockNumber))
 	t.mu.Unlock()
 }
 
-func (t *TelemetryServer) GetLastScannedBlockNumber(chainName chains.ChainName) uint64 {
+// GetLastScannedBlockNumber returns last scanned block number for chain
+func (t *TelemetryServer) GetLastScannedBlockNumber(chainId int64) uint64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.lastScannedBlockNumber[chainName.String()]
+	return t.lastScannedBlockNumber[chainId]
 }
 
+// SetCoreBlockNumber sets core block number in telemetry and metrics
 func (t *TelemetryServer) SetCoreBlockNumber(blockNumber int64) {
 	t.mu.Lock()
 	t.lastCoreBlockNumber = blockNumber
@@ -104,12 +108,14 @@ func (t *TelemetryServer) SetCoreBlockNumber(blockNumber int64) {
 	t.mu.Unlock()
 }
 
+// GetCoreBlockNumber returns core block number
 func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.lastCoreBlockNumber
 }
 
+// SetNumberOfUTXOs sets number of UTXOs in telemetry and metrics
 func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Lock()
 	t.status.BTCNumberOfUTXOs = numberOfUTXOs
@@ -145,6 +151,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	return router
 }
 
+// Start starts telemetry server
 func (t *TelemetryServer) Start() error {
 	if t.s == nil {
 		return errors.New("invalid http server instance")
@@ -158,6 +165,7 @@ func (t *TelemetryServer) Start() error {
 	return nil
 }
 
+// Stop stops telemetry server
 func (t *TelemetryServer) Stop() error {
 	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -187,7 +195,6 @@ func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (t *TelemetryServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {
-	//w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 
 	t.mu.Lock()
