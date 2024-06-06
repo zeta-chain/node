@@ -19,11 +19,12 @@ import (
 )
 
 /*
-ValidateOutboundObservers processes the finalization of an outbound transaction if receiver is ZEVM
+ValidateOutboundZEVM processes the finalization of an outbound transaction if receiver is ZEVM.
+It takes deposit error and information if contract revert happened during deposit, to make a decision:
 
-- If the deposit is successful, the CCTX status is changed to OutboundMined.
+- If the deposit was successful, the CCTX status is changed to OutboundMined.
 
-- If the deposit returns an internal error i.e if HandleEVMDeposit() returns an error, but isContractReverted is false, the CCTX status is changed to Aborted.
+- If the deposit returned an internal error, but isContractReverted is false, the CCTX status is changed to Aborted.
 
 - If the deposit is reverted, the function tries to create a revert cctx with status PendingRevert.
 
@@ -206,7 +207,7 @@ func (k Keeper) validateFailedOutbound(
 	return nil
 }
 
-// validateSuccessfulOutboundObservers processes a successful outbound transaction. It does the following things in one function:
+// validateSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
 //
 //  1. Change the status of the CCTX from
 //     - PendingRevert to Reverted
