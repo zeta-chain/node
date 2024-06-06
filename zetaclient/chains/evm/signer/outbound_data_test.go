@@ -45,7 +45,7 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 
 func TestSigner_SetupGas(t *testing.T) {
 	cctx := getCCTX(t)
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 
 	txData := &OutboundData{}
@@ -67,10 +67,10 @@ func TestSigner_SetupGas(t *testing.T) {
 
 func TestSigner_NewOutboundData(t *testing.T) {
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner()
+	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 
-	mockObserver, err := getNewEvmChainObserver()
+	mockObserver, err := getNewEvmChainObserver(nil)
 	require.NoError(t, err)
 
 	t.Run("NewOutboundData success", func(t *testing.T) {
