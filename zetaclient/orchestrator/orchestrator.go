@@ -326,7 +326,6 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 					// update last processed block number
 					lastBlockNum = bn
 					oc.ts.SetCoreBlockNumber(lastBlockNum)
-					metrics.LastCoreBlockNumber.Set(float64(lastBlockNum))
 				}
 			}
 		}

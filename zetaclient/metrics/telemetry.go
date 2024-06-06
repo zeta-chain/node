@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -21,7 +22,7 @@ type TelemetryServer struct {
 	logger                 zerolog.Logger
 	s                      *http.Server
 	p2pid                  string
-	lastScannedBlockNumber map[int64]uint64 // chainid => block number
+	lastScannedBlockNumber map[string]uint64 // chainName => block number
 	lastCoreBlockNumber    int64
 	mu                     sync.Mutex
 	lastStartTimestamp     time.Time
@@ -34,7 +35,7 @@ type TelemetryServer struct {
 func NewTelemetryServer() *TelemetryServer {
 	hs := &TelemetryServer{
 		logger:                 log.With().Str("module", "http").Logger(),
-		lastScannedBlockNumber: make(map[int64]uint64),
+		lastScannedBlockNumber: make(map[string]uint64),
 		lastStartTimestamp:     time.Now(),
 		HotKeyBurnRate:         NewBurnRate(100),
 	}
@@ -82,21 +83,23 @@ func (t *TelemetryServer) GetLastStartTimestamp() time.Time {
 	return t.lastStartTimestamp
 }
 
-func (t *TelemetryServer) SetLastScannedBlockNumber(chainID int64, blockNumber uint64) {
+func (t *TelemetryServer) SetLastScannedBlockNumber(chainName chains.ChainName, blockNumber uint64) {
 	t.mu.Lock()
-	t.lastScannedBlockNumber[chainID] = blockNumber
+	t.lastScannedBlockNumber[chainName.String()] = blockNumber
+	LastScannedBlockNumber.WithLabelValues(chainName.String()).Set(float64(blockNumber))
 	t.mu.Unlock()
 }
 
-func (t *TelemetryServer) GetLastScannedBlockNumber(chainID int64) uint64 {
+func (t *TelemetryServer) GetLastScannedBlockNumber(chainName chains.ChainName) uint64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.lastScannedBlockNumber[chainID]
+	return t.lastScannedBlockNumber[chainName.String()]
 }
 
 func (t *TelemetryServer) SetCoreBlockNumber(blockNumber int64) {
 	t.mu.Lock()
 	t.lastCoreBlockNumber = blockNumber
+	LastCoreBlockNumber.Set(float64(blockNumber))
 	t.mu.Unlock()
 }
 
@@ -109,6 +112,7 @@ func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Lock()
 	t.status.BTCNumberOfUTXOs = numberOfUTXOs
+	NumberOfUTXO.Set(float64(numberOfUTXOs))
 	t.mu.Unlock()
 }
 
