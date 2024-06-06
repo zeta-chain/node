@@ -23,7 +23,7 @@ type TelemetryServer struct {
 	logger                 zerolog.Logger
 	s                      *http.Server
 	p2pid                  string
-	lastScannedBlockNumber map[int64]uint64 // chainId => block number
+	lastScannedBlockNumber map[int64]uint64 // chainID => block number
 	lastCoreBlockNumber    int64
 	mu                     sync.Mutex
 	lastStartTimestamp     time.Time
@@ -94,10 +94,10 @@ func (t *TelemetryServer) SetLastScannedBlockNumber(chain chains.Chain, blockNum
 }
 
 // GetLastScannedBlockNumber returns last scanned block number for chain
-func (t *TelemetryServer) GetLastScannedBlockNumber(chainId int64) uint64 {
+func (t *TelemetryServer) GetLastScannedBlockNumber(chainID int64) uint64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.lastScannedBlockNumber[chainId]
+	return t.lastScannedBlockNumber[chainID]
 }
 
 // SetCoreBlockNumber sets core block number in telemetry and metrics
