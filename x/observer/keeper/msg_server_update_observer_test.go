@@ -362,6 +362,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{
 			Count: count,
 		})
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 
 		msg := types.MsgUpdateObserver{
 			Creator:            admin,
@@ -369,9 +370,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
 		}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 

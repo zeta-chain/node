@@ -20,14 +20,14 @@ func TestMsgServer_MsgDisableCCTX(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
 		msg := types.MsgDisableCCTX{
 			Creator:         admin,
 			DisableOutbound: true,
 			DisableInbound:  true,
 		}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		_, err := srv.DisableCCTX(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
@@ -50,14 +50,14 @@ func TestMsgServer_MsgDisableCCTX(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
 		msg := types.MsgDisableCCTX{
 			Creator:         admin,
 			DisableOutbound: true,
 			DisableInbound:  true,
 		}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		_, err := srv.DisableCCTX(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
@@ -80,14 +80,14 @@ func TestMsgServer_MsgDisableCCTX(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
 		msg := types.MsgDisableCCTX{
 			Creator:         admin,
 			DisableOutbound: true,
 			DisableInbound:  false,
 		}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		_, err := srv.DisableCCTX(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
@@ -110,14 +110,14 @@ func TestMsgServer_MsgDisableCCTX(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
 		msg := types.MsgDisableCCTX{
 			Creator:         admin,
 			DisableOutbound: false,
 			DisableInbound:  true,
 		}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
 		_, err := srv.DisableCCTX(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
@@ -135,14 +135,14 @@ func TestMsgServer_MsgDisableCCTX(t *testing.T) {
 
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
 		msg := types.MsgDisableCCTX{
 			Creator:         admin,
 			DisableOutbound: true,
 			DisableInbound:  false,
 		}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-
 		_, err := srv.DisableCCTX(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, authoritytypes.ErrUnauthorized, err)
 
