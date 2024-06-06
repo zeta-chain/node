@@ -42,7 +42,7 @@ package e2etests
 //	go func() {
 //		for {
 //			time.Sleep(3 * time.Second)
-//			_, err = r.GenerateToAddressOnLocalBitcoin(1, r.BTCDeployerAddress)
+//			_, err = r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
 //			if err != nil {
 //				panic(err)
 //			}
@@ -64,7 +64,7 @@ package e2etests
 //		if receipt.Status != 1 {
 //			panic(fmt.Errorf("withdraw receipt status is not 1"))
 //		}
-//		_, err = r.GenerateToAddressOnLocalBitcoin(10, r.BTCDeployerAddress)
+//		_, err = r.GenerateToAddressIfLocalBitcoin(10, r.BTCDeployerAddress)
 //		if err != nil {
 //			panic(err)
 //		}

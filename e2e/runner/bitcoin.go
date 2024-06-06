@@ -273,7 +273,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 	runner.Logger.Info("txid: %+v", txid)
-	_, err = runner.GenerateToAddressOnLocalBitcoin(6, btcDeployerAddress)
+	_, err = runner.GenerateToAddressIfLocalBitcoin(6, btcDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -325,9 +325,9 @@ func (runner *E2ERunner) IsLocalBitcoin() bool {
 	return runner.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
 }
 
-// GenerateToAddressOnLocalBitcoin generates blocks to an address if the runner is interacting
+// GenerateToAddressIfLocalBitcoin generates blocks to an address if the runner is interacting
 // with a local bitcoin network
-func (runner *E2ERunner) GenerateToAddressOnLocalBitcoin(
+func (runner *E2ERunner) GenerateToAddressIfLocalBitcoin(
 	numBlocks int64,
 	address btcutil.Address,
 ) ([]*chainhash.Hash, error) {
@@ -338,9 +338,10 @@ func (runner *E2ERunner) GenerateToAddressOnLocalBitcoin(
 	return nil, nil
 }
 
-// MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
+// MineBlocksIfLocalBitcoin mines blocks on the local BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
-func (runner *E2ERunner) MineBlocks() func() {
+// If the chain is not local, the function does nothing
+func (runner *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 	stopChan := make(chan struct{})
 	go func() {
 		for {
@@ -348,7 +349,7 @@ func (runner *E2ERunner) MineBlocks() func() {
 			case <-stopChan:
 				return
 			default:
-				_, err := runner.GenerateToAddressOnLocalBitcoin(1, runner.BTCDeployerAddress)
+				_, err := runner.GenerateToAddressIfLocalBitcoin(1, runner.BTCDeployerAddress)
 				if err != nil {
 					panic(err)
 				}
