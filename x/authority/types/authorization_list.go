@@ -34,6 +34,8 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
+		"/zetachain.zetacore.authority.MsgAddAuthorization",
+		"/zetachain.zetacore.authority.MsgRemoveAuthorization",
 		"/zetachain.zetacore.authority.MsgUpdateChainInfo",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
@@ -94,25 +96,24 @@ func (a *AuthorizationList) SetAuthorization(authorization Authorization) {
 	a.Authorizations = append(a.Authorizations, authorization)
 }
 
-// RemoveAuthorization removes the authorization from the list. It does not check if the authorization exists or not.
-func (a *AuthorizationList) RemoveAuthorization(authorization Authorization) {
+// RemoveAuthorization removes the authorization from the list. It should be called by the admin policy account.
+func (a *AuthorizationList) RemoveAuthorization(msgURL string) {
 	for i, auth := range a.Authorizations {
-		if auth.MsgUrl == authorization.MsgUrl {
+		if auth.MsgUrl == msgURL {
 			a.Authorizations = append(a.Authorizations[:i], a.Authorizations[i+1:]...)
+			return
 		}
 	}
 }
 
-// GetAuthorizedPolicy returns the policy for the given message url. If the message url is not found,
-
+// GetAuthorizedPolicy returns the policy for the given message url. If the message url is not found, it returns an error.
 func (a *AuthorizationList) GetAuthorizedPolicy(msgURL string) (PolicyType, error) {
 	for _, auth := range a.Authorizations {
 		if auth.MsgUrl == msgURL {
 			return auth.AuthorizedPolicy, nil
 		}
 	}
-	// Returning first value of enum, can consider adding a default value of `EmptyPolicy` in the enum.
-	return PolicyType(0), ErrAuthorizationNotFound
+	return PolicyType_groupEmpty, ErrAuthorizationNotFound
 }
 
 // Validate checks if the authorization list is valid. It returns an error if the message url is duplicated with different policies.

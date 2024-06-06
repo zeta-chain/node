@@ -1,6 +1,6 @@
 # tx authority update-policies
 
-Update the policies
+Update policies to values provided in the JSON file.
 
 ```
 zetacored tx authority update-policies [policies-json-file] [flags]

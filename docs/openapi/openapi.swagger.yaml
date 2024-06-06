@@ -28254,6 +28254,39 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/authority/authorization/{msg_url}:
+    get:
+      operationId: Query_Authorization
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/authorityQueryAuthorizationResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: msg_url
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/authority/authorizations:
+    get:
+      operationId: Query_AuthorizationList
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/authorityQueryAuthorizationListResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/authority/chainInfo:
     get:
       summary: Queries ChainInfo
@@ -56718,6 +56751,27 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityAuthorization:
+    type: object
+    properties:
+      msg_url:
+        type: string
+        title: The URL of the message that needs to be authorized
+      authorized_policy:
+        $ref: '#/definitions/authorityPolicyType'
+        title: The policy that is authorized to access the message
+    title: |-
+      Authorization defines the authorization required to access use a message
+      which needs special permissions
+  authorityAuthorizationList:
+    type: object
+    properties:
+      authorizations:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/authorityAuthorization'
+    title: AuthorizationList holds the list of authorizations on zetachain
   authorityChainInfo:
     type: object
     properties:
@@ -56730,6 +56784,14 @@ definitions:
       ChainInfo contains static information about the chains
       This structure is used to dynamically update these info on a live network
       before hardcoding the values in a upgrade
+  authorityMsgAddAuthorizationResponse:
+    type: object
+    description: MsgAddAuthorizationResponse defines the MsgAddAuthorizationResponse service.
+  authorityMsgRemoveAuthorizationResponse:
+    type: object
+    description: |-
+      MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
+      service.
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
@@ -56758,6 +56820,7 @@ definitions:
       - groupEmergency
       - groupOperational
       - groupAdmin
+      - groupEmpty
     default: groupEmergency
     description: |-
       - groupEmergency: Used for emergency situations that require immediate action
@@ -56765,7 +56828,26 @@ definitions:
        - groupAdmin: non-sensitive protocol parameters
 
       Used for administrative tasks like changing sensitive
+       - groupEmpty: protocol parameters or moving funds
+
+      Used for empty policy, no action is allowed
     title: PolicyType defines the type of policy
+  authorityQueryAuthorizationListResponse:
+    type: object
+    properties:
+      authorization_list:
+        $ref: '#/definitions/authorityAuthorizationList'
+    title: |-
+      QueryAuthorizationListResponse is the response type for the
+      Query/AuthorizationList RPC
+  authorityQueryAuthorizationResponse:
+    type: object
+    properties:
+      authorization:
+        $ref: '#/definitions/authorityAuthorization'
+    description: |-
+      QueryAuthorizationResponse is the response type for the Query/Authorization
+      RPC method.
   authorityQueryGetChainInfoResponse:
     type: object
     properties:
