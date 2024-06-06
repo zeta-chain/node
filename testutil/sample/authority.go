@@ -68,20 +68,16 @@ func Authorization() authoritytypes.Authorization {
 	}
 }
 
-func MultipleSignerMessage() sdk.Msg {
-	return &TestMessage{}
-}
+// MultipleSignerMessage is a sample message which has two signers instead of one. This is used to test cases when we have checks for number of signers such as authorized transactions.
+type MultipleSignerMessage struct{}
 
-// TestMessage is a sample message which has two signers instead of one. This is used to test cases when we have checks for number of signers such as authorized transactions.
-type TestMessage struct{}
+var _ sdk.Msg = &MultipleSignerMessage{}
 
-var _ sdk.Msg = &TestMessage{}
-
-func (m *TestMessage) Reset()               {}
-func (m *TestMessage) String() string       { return "TestMessage" }
-func (m *TestMessage) ProtoMessage()        {}
-func (m *TestMessage) ValidateBasic() error { return nil }
-func (m *TestMessage) GetSigners() []sdk.AccAddress {
+func (m *MultipleSignerMessage) Reset()               {}
+func (m *MultipleSignerMessage) String() string       { return "MultipleSignerMessage" }
+func (m *MultipleSignerMessage) ProtoMessage()        {}
+func (m *MultipleSignerMessage) ValidateBasic() error { return nil }
+func (m *MultipleSignerMessage) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{
 		sdk.MustAccAddressFromBech32(AccAddress()),
 		sdk.MustAccAddressFromBech32(AccAddress()),

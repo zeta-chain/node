@@ -150,7 +150,7 @@ func TestKeeper_CheckAuthorization(t *testing.T) {
 	t.Run("unable to check authorization with multiple signers", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		signer := sample.AccAddress()
-		msg := sample.MultipleSignerMessage()
+		msg := &sample.MultipleSignerMessage{}
 		authorizationList := types.AuthorizationList{Authorizations: []types.Authorization{
 			{
 				MsgUrl:           sdk.MsgTypeURL(msg),
