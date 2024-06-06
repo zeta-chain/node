@@ -25,6 +25,7 @@
 * [2305](https://github.com/zeta-chain/node/pull/2305) - add new messages `MsgAddAuthorization` and `MsgRemoveAuthorization` that can be used to update the authorization list
 * [2313](https://github.com/zeta-chain/node/pull/2313) - add `CheckAuthorization` function to replace the `IsAuthorized` function. The new function uses the authorization list to verify the signer's authorization.
 * [2312](https://github.com/zeta-chain/node/pull/2312) - add queries `ShowAuthorization` and `ListAuthorizations`
+* [2319](https://github.com/zeta-chain/node/pull/2319) - use `CheckAuthorization` function in all messages .
 
 ### Refactor
 
