@@ -226,7 +226,7 @@ func (k Keeper) validateSuccessfulOutbound(
 	case types.CctxStatus_PendingRevert:
 		cctx.SetReverted("Outbound succeeded, revert executed")
 	case types.CctxStatus_PendingOutbound:
-		cctx.SetOutBoundMined("Outbound succeeded, mined")
+		cctx.SetOutboundMined("Outbound succeeded, mined")
 	default:
 		return
 	}
