@@ -146,11 +146,11 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, *senderChain, observer)
 
-		// Successfully mock GetOutBound
-		keepertest.MockGetOutBound(observerMock, ctx)
+		// Successfully mock GetOutbound
+		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Successfully mock SaveSuccessfulOutbound
-		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
+		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.VoteOutbound(ctx, &types.MsgVoteOutbound{
@@ -197,8 +197,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
 
-		// Successfully mock GetOutBound
-		keepertest.MockGetOutBound(observerMock, ctx)
+		// Successfully mock GetOutbound
+		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Successfully mock ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
@@ -207,8 +207,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 			Return(senderChain)
 		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
 
-		//Successfully mock SaveOutBound
-		keepertest.MockSaveOutBoundNewRevertCreated(observerMock, ctx, cctx, tss)
+		//Successfully mock SaveOutbound
+		keepertest.MockSaveOutboundNewRevertCreated(observerMock, ctx, cctx, tss)
 		oldParamsLen := len(cctx.OutboundParams)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.VoteOutbound(ctx, &types.MsgVoteOutbound{
@@ -258,8 +258,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
 
-		// Successfully mock GetOutBound
-		keepertest.MockGetOutBound(observerMock, ctx)
+		// Successfully mock GetOutbound
+		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Mock Failed ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
@@ -269,7 +269,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 			Return(senderChain)
 		//Successfully mock SaveOutBound
-		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
+		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss)
 		oldParamsLen := len(cctx.OutboundParams)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.VoteOutbound(ctx, &types.MsgVoteOutbound{
@@ -324,8 +324,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
 
-		// Successfully mock GetOutBound
-		keepertest.MockGetOutBound(observerMock, ctx)
+		// Successfully mock GetOutbound
+		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Fail ProcessOutbound so that changes are not committed to the state
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
@@ -335,7 +335,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 			Return(senderChain)
 
 		//Successfully mock SaveFailedOutbound
-		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
+		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.VoteOutbound(ctx, &types.MsgVoteOutbound{
@@ -456,7 +456,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 	})
 }
 
-func TestKeeper_SaveFailedOutBound(t *testing.T) {
+func TestKeeper_SaveFailedOutbound(t *testing.T) {
 	t.Run("successfully save failed outbound", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
@@ -478,7 +478,7 @@ func TestKeeper_SaveFailedOutBound(t *testing.T) {
 	})
 }
 
-func TestKeeper_SaveSuccessfulOutBound(t *testing.T) {
+func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 	t.Run("successfully save successful outbound", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")

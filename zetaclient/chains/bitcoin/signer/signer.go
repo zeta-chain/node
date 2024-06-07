@@ -180,9 +180,9 @@ func (signer *Signer) SignWithdrawTx(
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
-	err := observer.FetchUTXOS()
+	err := observer.FetchUTXOs()
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOS error: nonce %d chain %d", nonce, chain.ChainId)
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
 	}
 
 	// select N UTXOs to cover the total expense
@@ -416,7 +416,7 @@ func (signer *Signer) TryProcessOutbound(
 	if err != nil {
 		logger.Warn().
 			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutBoundTx.String())
+			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
