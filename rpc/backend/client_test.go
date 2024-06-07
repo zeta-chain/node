@@ -281,11 +281,12 @@ func RegisterABCIQueryWithOptions(
 	path string,
 	data bytes.HexBytes,
 	opts tmrpcclient.ABCIQueryOptions,
+	respValue []byte,
 ) {
 	client.On("ABCIQueryWithOptions", context.Background(), path, data, opts).
 		Return(&tmrpctypes.ResultABCIQuery{
 			Response: abci.ResponseQuery{
-				Value:  data.Bytes(),
+				Value:  respValue,
 				Height: height,
 			},
 		}, nil)

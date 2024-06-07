@@ -82,6 +82,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 	blockNrInvalid := rpctypes.NewBlockNumber(big.NewInt(1))
 	blockNr := rpctypes.NewBlockNumber(big.NewInt(4))
 	address1 := tests.GenerateAddress()
+	expProofValue := big.NewInt(2)
 
 	testCases := []struct {
 		name          string
@@ -93,7 +94,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 		expAccRes     *rpctypes.AccountResult
 	}{
 		{
-			"fail - BlockNumeber = 1 (invalidBlockNumber)",
+			"fail - BlockNumber = 1 (invalidBlockNumber)",
 			address1,
 			[]string{},
 			rpctypes.BlockNumberOrHash{BlockNumber: &blockNrInvalid},
@@ -139,6 +140,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 					"store/evm/key",
 					evmtypes.StateKey(address1, common.HexToHash("0x0").Bytes()),
 					tmrpcclient.ABCIQueryOptions{Height: iavlHeight, Prove: true},
+					expProofValue.Bytes(),
 				)
 				RegisterABCIQueryWithOptions(
 					client,
@@ -146,6 +148,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 					"store/acc/key",
 					authtypes.AddressStoreKey(sdk.AccAddress(address1.Bytes())),
 					tmrpcclient.ABCIQueryOptions{Height: iavlHeight, Prove: true},
+					expProofValue.Bytes(),
 				)
 			},
 			true,
@@ -159,7 +162,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 				StorageProof: []rpctypes.StorageResult{
 					{
 						Key:   "0x0",
-						Value: (*hexutil.Big)(big.NewInt(2)),
+						Value: (*hexutil.Big)(expProofValue),
 						Proof: []string{""},
 					},
 				},
