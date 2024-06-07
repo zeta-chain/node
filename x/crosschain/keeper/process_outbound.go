@@ -68,7 +68,7 @@ func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	case types.CctxStatus_PendingRevert:
 		cctx.SetReverted("Outbound succeeded, revert executed")
 	case types.CctxStatus_PendingOutbound:
-		cctx.SetOutBoundMined("Outbound succeeded, mined")
+		cctx.SetOutboundMined("Outbound succeeded, mined")
 	default:
 		return
 	}
@@ -123,7 +123,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 	} else {
 		err := k.processFailedOutboundForExternalChainTx(ctx, cctx, oldStatus)
 		if err != nil {
-			return cosmoserrors.Wrap(err, "ProcessFailedOutBoundForExternalChainTx")
+			return cosmoserrors.Wrap(err, "ProcessFailedOutboundForExternalChainTx")
 		}
 	}
 	newStatus := cctx.CctxStatus.Status.String()

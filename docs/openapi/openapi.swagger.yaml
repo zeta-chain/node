@@ -57938,8 +57938,8 @@ definitions:
     type: string
     enum:
       - EmptyObserverType
-      - InBoundTx
-      - OutBoundTx
+      - InboundTx
+      - OutboundTx
       - TSSKeyGen
       - TSSKeySign
     default: EmptyObserverType
