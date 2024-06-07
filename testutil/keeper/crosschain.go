@@ -392,11 +392,11 @@ func MockVoteOnOutboundFailedBallot(
 		Once()
 }
 
-func MockGetOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
+func MockGetOutbound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 }
 
-func MockSaveOutBound(
+func MockSaveOutbound(
 	m *crosschainmocks.CrosschainObserverKeeper,
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
@@ -408,7 +408,7 @@ func MockSaveOutBound(
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
-func MockSaveOutBoundNewRevertCreated(
+func MockSaveOutboundNewRevertCreated(
 	m *crosschainmocks.CrosschainObserverKeeper,
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,

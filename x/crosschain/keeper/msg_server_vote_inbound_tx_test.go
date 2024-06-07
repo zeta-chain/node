@@ -82,7 +82,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			ctx,
 			msg.Digest(),
 			zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId),
-			observertypes.ObservationType_InBoundTx,
+			observertypes.ObservationType_InboundTx,
 		)
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
@@ -223,7 +223,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			ctx,
 			msg.Digest(),
 			zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId),
-			observertypes.ObservationType_InBoundTx,
+			observertypes.ObservationType_InboundTx,
 		)
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotInProgress)
 		require.Equal(t, ballot.Votes[0], observertypes.VoteType_SuccessObservation)

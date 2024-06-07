@@ -266,7 +266,7 @@ func TestBallot_AddVote(t *testing.T) {
 				BallotIdentifier: "identifier",
 				VoterList:        test.voterList,
 				Votes:            CreateVotes(len(test.voterList)),
-				ObservationType:  ObservationType_InBoundTx,
+				ObservationType:  ObservationType_InboundTx,
 				BallotThreshold:  test.threshold,
 				BallotStatus:     BallotStatus_BallotInProgress,
 			}

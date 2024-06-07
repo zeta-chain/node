@@ -405,7 +405,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 				sample.AccAddress(),
 			},
 			Votes:           types.CreateVotes(5),
-			ObservationType: types.ObservationType_InBoundTx,
+			ObservationType: types.ObservationType_InboundTx,
 			BallotThreshold: threshold,
 			BallotStatus:    types.BallotStatus_BallotInProgress,
 		}
@@ -467,7 +467,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 				sample.AccAddress(),
 			},
 			Votes:           types.CreateVotes(3),
-			ObservationType: types.ObservationType_InBoundTx,
+			ObservationType: types.ObservationType_InboundTx,
 			BallotThreshold: threshold,
 			BallotStatus:    types.BallotStatus_BallotInProgress,
 		}
