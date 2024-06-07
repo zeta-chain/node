@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/metadata"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 )
 
@@ -105,17 +106,17 @@ func (suite *BackendTestSuite) TestAccounts() {
 		expPass                 bool
 	}{
 		{
-			"pass - returns empty address from ListAccounts",
+			"pass - returns acc from keyring from ListAccounts",
 			suite.backend.ListAccounts,
 			func() {},
-			[]common.Address{},
+			[]common.Address{common.Address(suite.acc)},
 			true,
 		},
 		{
-			"pass - returns empty address from Accounts",
+			"pass - returns acc from keyring from Accounts",
 			suite.backend.Accounts,
 			func() {},
-			[]common.Address{},
+			[]common.Address{common.Address(suite.acc)},
 			true,
 		},
 	}
@@ -248,31 +249,36 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 			common.Address{},
 			false,
 		},
-		// TODO (https://github.com/zeta-chain/node/issues/2302): Finish this test case once ABCIQuery GetAccount is fixed
-		//{
-		//	"pass - set the etherbase for the miner",
-		//	func() {
-		//		client := suite.backend.clientCtx.Client.(*mocks.Client)
-		//		queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-		//		RegisterStatus(client)
-		//		RegisterValidatorAccount(queryClient, suite.acc)
-		//		c := sdk.NewDecCoin("azeta", sdk.NewIntFromBigInt(big.NewInt(1)))
-		//		suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
-		//		delAddr, _ := suite.backend.GetCoinbase()
-		//		account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
-		//		delCommonAddr := common.BytesToAddress(delAddr.Bytes())
-		//		request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
-		//		requestMarshal, _ := request.Marshal()
-		//		RegisterABCIQueryAccount(
-		//			client,
-		//			requestMarshal,
-		//			tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
-		//			account,
-		//		)
-		//	},
-		//	common.Address{},
-		//	false,
-		//},
+		{
+			"pass - set the etherbase for the miner",
+			func() {
+				var header metadata.MD
+				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParams(queryClient, &header, 1)
+				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(codectypes.NewInterfaceRegistry())
+				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				RegisterStatus(client)
+				RegisterValidatorAccount(queryClient, suite.acc)
+				c := sdk.NewDecCoin("azeta", sdk.NewIntFromBigInt(big.NewInt(1)))
+				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
+				delAddr, _ := suite.backend.GetCoinbase()
+				account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
+				delCommonAddr := common.BytesToAddress(delAddr.Bytes())
+				request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
+				requestMarshal, _ := request.Marshal()
+				RegisterUnconfirmedTxsEmpty(client, nil)
+				RegisterABCIQueryAccount(
+					client,
+					requestMarshal,
+					tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
+					account,
+				)
+				RegisterABCIQuerySimulate(client, tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false})
+				RegisterBroadcastTxAny(client)
+			},
+			common.Address{},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {

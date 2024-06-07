@@ -12,12 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )
@@ -49,6 +51,11 @@ func RegisterTxSearchError(client *mocks.Client, query string) {
 // Broadcast Tx
 func RegisterBroadcastTx(client *mocks.Client, tx types.Tx) {
 	client.On("BroadcastTxSync", context.Background(), tx).
+		Return(&tmrpctypes.ResultBroadcastTx{}, nil)
+}
+
+func RegisterBroadcastTxAny(client *mocks.Client) {
+	client.On("BroadcastTxSync", context.Background(), mock.Anything).
 		Return(&tmrpctypes.ResultBroadcastTx{}, nil)
 }
 
@@ -310,6 +317,23 @@ func RegisterABCIQueryAccount(
 	accResponse := authtypes.QueryAccountResponse{Account: accAny}
 	respBz, _ := accResponse.Marshal()
 	clients.On("ABCIQueryWithOptions", context.Background(), "/cosmos.auth.v1beta1.Query/Account", data, opts).
+		Return(&tmrpctypes.ResultABCIQuery{
+			Response: abci.ResponseQuery{
+				Value:  respBz,
+				Height: 1,
+			},
+		}, nil)
+}
+
+func RegisterABCIQuerySimulate(
+	clients *mocks.Client,
+	opts tmrpcclient.ABCIQueryOptions,
+) {
+	simResp := &tx.SimulateResponse{
+		GasInfo: &sdk.GasInfo{GasWanted: uint64(21000), GasUsed: uint64(21000)},
+	}
+	respBz, _ := simResp.Marshal()
+	clients.On("ABCIQueryWithOptions", context.Background(), "/cosmos.tx.v1beta1.Service/Simulate", mock.Anything, opts).
 		Return(&tmrpctypes.ResultABCIQuery{
 			Response: abci.ResponseQuery{
 				Value:  respBz,
