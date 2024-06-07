@@ -278,7 +278,7 @@ func RegisterABCIQueryWithOptions(
 	client.On("ABCIQueryWithOptions", context.Background(), path, data, opts).
 		Return(&tmrpctypes.ResultABCIQuery{
 			Response: abci.ResponseQuery{
-				Value:  []byte{2}, // TODO (https://github.com/zeta-chain/node/issues/2302) replace with data.Bytes(),
+				Value:  data.Bytes(),
 				Height: height,
 			},
 		}, nil)

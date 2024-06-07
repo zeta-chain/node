@@ -96,48 +96,24 @@ func (suite *BackendTestSuite) TestSetGasPrice() {
 	}
 }
 
-// TODO (https://github.com/zeta-chain/node/issues/2302): Combine these 2 into one test since the code is identical
-func (suite *BackendTestSuite) TestListAccounts() {
-	testCases := []struct {
-		name         string
-		registerMock func()
-		expAddr      []common.Address
-		expPass      bool
-	}{
-		{
-			"pass - returns empty address",
-			func() {},
-			[]common.Address{},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
-			tc.registerMock()
-
-			output, err := suite.backend.ListAccounts()
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expAddr, output)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
-	}
-}
-
 func (suite *BackendTestSuite) TestAccounts() {
 	testCases := []struct {
-		name         string
-		registerMock func()
-		expAddr      []common.Address
-		expPass      bool
+		name                    string
+		accountsRetrievalMethod func() ([]common.Address, error)
+		registerMock            func()
+		expAddr                 []common.Address
+		expPass                 bool
 	}{
 		{
-			"pass - returns empty address",
+			"pass - returns empty address from ListAccounts",
+			suite.backend.ListAccounts,
+			func() {},
+			[]common.Address{},
+			true,
+		},
+		{
+			"pass - returns empty address from Accounts",
+			suite.backend.Accounts,
 			func() {},
 			[]common.Address{},
 			true,
@@ -149,7 +125,7 @@ func (suite *BackendTestSuite) TestAccounts() {
 			suite.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			output, err := suite.backend.Accounts()
+			output, err := tc.accountsRetrievalMethod()
 
 			if tc.expPass {
 				suite.Require().NoError(err)
