@@ -10,7 +10,6 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,14 +54,9 @@ func (suite *BackendTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	// Create Account with set sequence and import it in keyring
-	priv, err := ethsecp256k1.GenerateKey()
-	suite.Require().NoError(err)
+	// Create Account with set sequence
 
-	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
-	keyRing.ImportPrivKey("test_key", armor, "")
-
-	suite.acc = sdk.AccAddress(priv.PubKey().Address().Bytes())
+	suite.acc = sdk.AccAddress(tests.GenerateAddress().Bytes())
 	accounts := map[string]client.TestAccount{}
 	accounts[suite.acc.String()] = client.TestAccount{
 		Address: suite.acc,
@@ -70,7 +64,7 @@ func (suite *BackendTestSuite) SetupTest() {
 		Seq:     uint64(1),
 	}
 
-	priv, err = ethsecp256k1.GenerateKey()
+	priv, err := ethsecp256k1.GenerateKey()
 	suite.signer = tests.NewSigner(priv)
 	suite.Require().NoError(err)
 

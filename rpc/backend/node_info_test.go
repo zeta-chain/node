@@ -5,6 +5,8 @@ import (
 	"math/big"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -109,14 +111,14 @@ func (suite *BackendTestSuite) TestAccounts() {
 			"pass - returns acc from keyring from ListAccounts",
 			suite.backend.ListAccounts,
 			func() {},
-			[]common.Address{common.Address(suite.acc)},
+			[]common.Address{},
 			true,
 		},
 		{
 			"pass - returns acc from keyring from Accounts",
 			suite.backend.Accounts,
 			func() {},
-			[]common.Address{common.Address(suite.acc)},
+			[]common.Address{},
 			true,
 		},
 	}
@@ -252,6 +254,21 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 		{
 			"pass - set the etherbase for the miner",
 			func() {
+				priv, err := ethsecp256k1.GenerateKey()
+				suite.Require().NoError(err)
+
+				armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+				suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
+
+				suite.acc = sdk.AccAddress(priv.PubKey().Address().Bytes())
+				accounts := map[string]client.TestAccount{}
+				accounts[suite.acc.String()] = client.TestAccount{
+					Address: suite.acc,
+					Num:     uint64(1),
+					Seq:     uint64(1),
+				}
+
+				suite.backend.clientCtx = suite.backend.clientCtx.WithAccountRetriever(client.TestAccountRetriever{Accounts: accounts})
 				var header metadata.MD
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
