@@ -356,7 +356,8 @@ func (ob *Observer) GetLastBlockHeight() int64 {
 
 func (ob *Observer) SetLastBlockHeightScanned(height int64) {
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
-	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
+	// #nosec G701 checked as positive
+	ob.ts.SetLastScannedBlockNumber(ob.chain, uint64(height))
 }
 
 func (ob *Observer) GetLastBlockHeightScanned() int64 {
@@ -594,7 +595,7 @@ func (ob *Observer) FetchUTXOs() error {
 	}
 
 	ob.Mu.Lock()
-	metrics.NumberOfUTXO.Set(float64(len(utxosFiltered)))
+	ob.ts.SetNumberOfUTXOs(len(utxosFiltered))
 	ob.utxos = utxosFiltered
 	ob.Mu.Unlock()
 	return nil
