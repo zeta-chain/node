@@ -82,7 +82,7 @@ func NewOrchestrator(
 	oc.signerMap = signerMap
 	oc.observerMap = observerMap
 
-	// create outbound processor manager
+	// create outbound processor
 	oc.outboundProc = outboundprocessor.NewProcessor(logger)
 
 	balance, err := zetacoreClient.GetZetaHotKeyBalance()

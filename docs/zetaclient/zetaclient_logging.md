@@ -23,7 +23,7 @@
             - WatchInbound  : chain = `BTC`   module=`WatchInbound`
             - WatchGasPrice : chain = `BTC`   module=`WatchGasPrice`
             - ObserverOutbound : chain = `BTC`  module=`ObserveOutbound`
-            - WatchUTXOS:chain = `BTC`  module=`WatchUTXOS`
+            - WatchUTXOs:chain = `BTC`  module=`WatchUTXOs`
     - EVMLoggers ( Individual sections for each EVM Chain)
         - ChainLogger   : chain = `evm_chain_name`
             - BuildBlockIndex : chain = `evm_chain_name`   module=`BuildBlockIndex`

@@ -316,7 +316,7 @@ func TestKeeper_FindBallot(t *testing.T) {
 
 		_, _, err := k.FindBallot(ctx, "index", &chains.Chain{
 			ChainId: 987,
-		}, types.ObservationType_InBoundTx)
+		}, types.ObservationType_InboundTx)
 		require.Error(t, err)
 	})
 }

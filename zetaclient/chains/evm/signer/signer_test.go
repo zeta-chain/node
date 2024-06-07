@@ -145,13 +145,13 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 	cctx := getCCTX(t)
-	processorManager := getNewOutboundProcessor()
+	processor := getNewOutboundProcessor()
 	mockObserver, err := getNewEvmChainObserver(nil)
 	require.NoError(t, err)
 
 	// Test with mock client that has keys
 	client := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
-	evmSigner.TryProcessOutbound(cctx, processorManager, "123", mockObserver, client, 123)
+	evmSigner.TryProcessOutbound(cctx, processor, "123", mockObserver, client, 123)
 
 	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()

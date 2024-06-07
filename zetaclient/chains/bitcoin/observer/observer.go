@@ -64,8 +64,8 @@ type Logger struct {
 	// Outbound is the logger for outgoing transactions
 	Outbound zerolog.Logger // The logger for outgoing transactions
 
-	// UTXOS is the logger for UTXOs management
-	UTXOS zerolog.Logger // The logger for UTXOs management
+	// UTXOs is the logger for UTXOs management
+	UTXOs zerolog.Logger // The logger for UTXOs management
 
 	// GasPrice is the logger for gas price
 	GasPrice zerolog.Logger // The logger for gas price
@@ -163,7 +163,7 @@ func NewObserver(
 		Chain:      chainLogger,
 		Inbound:    chainLogger.With().Str("module", "WatchInbound").Logger(),
 		Outbound:   chainLogger.With().Str("module", "WatchOutbound").Logger(),
-		UTXOS:      chainLogger.With().Str("module", "WatchUTXOS").Logger(),
+		UTXOs:      chainLogger.With().Str("module", "WatchUTXOs").Logger(),
 		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		Compliance: loggers.Compliance,
 	}
@@ -232,7 +232,7 @@ func (ob *Observer) WithLogger(logger zerolog.Logger) {
 		Chain:    logger,
 		Inbound:  logger.With().Str("module", "WatchInbound").Logger(),
 		Outbound: logger.With().Str("module", "WatchOutbound").Logger(),
-		UTXOS:    logger.With().Str("module", "WatchUTXOS").Logger(),
+		UTXOs:    logger.With().Str("module", "WatchUTXOs").Logger(),
 		GasPrice: logger.With().Str("module", "WatchGasPrice").Logger(),
 	}
 }
@@ -272,7 +272,7 @@ func (ob *Observer) Start() {
 	ob.logger.Chain.Info().Msgf("Bitcoin client is starting")
 	go ob.WatchInbound()        // watch bitcoin chain for incoming txs and post votes to zetacore
 	go ob.WatchOutbound()       // watch bitcoin chain for outgoing txs status
-	go ob.WatchUTXOS()          // watch bitcoin chain for UTXOs owned by the TSS address
+	go ob.WatchUTXOs()          // watch bitcoin chain for UTXOs owned by the TSS address
 	go ob.WatchGasPrice()       // watch bitcoin chain for gas rate and post to zetacore
 	go ob.WatchInboundTracker() // watch zetacore for bitcoin inbound trackers
 	go ob.WatchRPCStatus()      // watch the RPC status of the bitcoin chain
@@ -512,11 +512,11 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 	return "", nil
 }
 
-// WatchUTXOS watches bitcoin chain for UTXOs owned by the TSS address
-func (ob *Observer) WatchUTXOS() {
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
+// WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
+func (ob *Observer) WatchUTXOs() {
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
-		ob.logger.UTXOS.Error().Err(err).Msg("error creating ticker")
+		ob.logger.UTXOs.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 
@@ -527,22 +527,22 @@ func (ob *Observer) WatchUTXOS() {
 			if !ob.GetChainParams().IsSupported {
 				continue
 			}
-			err := ob.FetchUTXOS()
+			err := ob.FetchUTXOs()
 			if err != nil {
-				ob.logger.UTXOS.Error().Err(err).Msg("error fetching btc utxos")
+				ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOS)
+			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.stop:
-			ob.logger.UTXOS.Info().Msgf("WatchUTXOS stopped for chain %d", ob.chain.ChainId)
+			ob.logger.UTXOs.Info().Msgf("WatchUTXOs stopped for chain %d", ob.chain.ChainId)
 			return
 		}
 	}
 }
 
-func (ob *Observer) FetchUTXOS() error {
+func (ob *Observer) FetchUTXOs() error {
 	defer func() {
 		if err := recover(); err != nil {
-			ob.logger.UTXOS.Error().Msgf("BTC FetchUTXOS: caught panic error: %v", err)
+			ob.logger.UTXOs.Error().Msgf("BTC FetchUTXOs: caught panic error: %v", err)
 		}
 	}()
 
