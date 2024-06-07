@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -17,7 +18,6 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"google.golang.org/grpc/metadata"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 )
 
@@ -224,7 +224,16 @@ func (suite *BackendTestSuite) TestSign() {
 }
 
 func (suite *BackendTestSuite) TestSignTypedData() {
-	data := legacytx.StdSignBytes("0", 1, 1, 0, legacytx.StdFee{Gas: 10, Amount: sdk.Coins{}}, []sdk.Msg{&banktypes.MsgSend{}}, "", nil)
+	data := legacytx.StdSignBytes(
+		"0",
+		1,
+		1,
+		0,
+		legacytx.StdFee{Gas: 10, Amount: sdk.Coins{}},
+		[]sdk.Msg{&banktypes.MsgSend{}},
+		"",
+		nil,
+	)
 	typedData, err := eip712.WrapTxToTypedData(0, data)
 	suite.Require().NoError(err)
 	from, priv := tests.NewAddrKey()

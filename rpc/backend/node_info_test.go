@@ -6,6 +6,7 @@ import (
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,7 +17,6 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/metadata"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 )
 
@@ -268,11 +268,15 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 					Seq:     uint64(1),
 				}
 
-				suite.backend.clientCtx = suite.backend.clientCtx.WithAccountRetriever(client.TestAccountRetriever{Accounts: accounts})
+				suite.backend.clientCtx = suite.backend.clientCtx.WithAccountRetriever(
+					client.TestAccountRetriever{Accounts: accounts},
+				)
 				var header metadata.MD
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
-				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(codectypes.NewInterfaceRegistry())
+				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(
+					codectypes.NewInterfaceRegistry(),
+				)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterStatus(client)
 				RegisterValidatorAccount(queryClient, suite.acc)

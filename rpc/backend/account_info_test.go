@@ -427,7 +427,9 @@ func (suite *BackendTestSuite) TestGetTransactionCount() {
 				var header metadata.MD
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterParams(queryClient, &header, 1)
-				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(codectypes.NewInterfaceRegistry())
+				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(
+					codectypes.NewInterfaceRegistry(),
+				)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				account, err := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, suite.acc)
 				suite.Require().NoError(err)
