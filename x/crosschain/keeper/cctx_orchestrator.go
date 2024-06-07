@@ -139,7 +139,7 @@ func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.Cro
 			}
 		}
 	} else {
-		err := k.validateFailedOutbound(ctx, cctx, oldStatus, "", cctx.GetCurrentOutboundParam().Amount)
+		err := k.validateFailedOutbound(ctx, cctx, oldStatus, "Outbound failed, start revert", cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "validateFailedOutbound")
 		}
@@ -192,9 +192,6 @@ func (k Keeper) validateFailedOutbound(
 		err = k.UpdateNonce(ctx, cctx.InboundParams.SenderChainId, cctx)
 		if err != nil {
 			return err
-		}
-		if revertMsg == "" {
-			revertMsg = "Outbound failed, start revert"
 		}
 		// Not setting the finalization status here, the required changes have been made while creating the revert tx
 		cctx.SetPendingRevert(revertMsg)
