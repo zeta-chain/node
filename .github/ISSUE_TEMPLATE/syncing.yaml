@@ -1,4 +1,5 @@
 name: Issue with setting up or syncing a node
+description: Please fill out the following form to help us understand and resolve your issue with setting up or syncing a node. Provide as much detail as possible to ensure a quick and accurate resolution.
 body:
   - type: dropdown
     attributes:
