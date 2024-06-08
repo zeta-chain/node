@@ -3,8 +3,7 @@ description: Please fill out the following form to help us understand and resolv
 body:
   - type: dropdown
     attributes:
-      label: Network
-      description: Which environment are you setting a node for?
+      label: Which environment are you setting a node for?
       options:
         - Mainnet
         - Testnet
@@ -32,11 +31,11 @@ body:
         - KSYNC
   - type: textarea
     attributes:
-      label: Please, share the contents of `config.toml`
+      label: Please, share the contents of config.toml
       description: By default the file is in `$HOME/.zetacored/config/`
   - type: textarea
     attributes:
-      label: Please, share the contents of `app.toml`
+      label: Please, share the contents of app.toml
       description: By default the file is in `$HOME/.zetacored/config/`
   - type: textarea
     attributes:
