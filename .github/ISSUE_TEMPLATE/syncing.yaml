@@ -19,8 +19,8 @@ body:
       label: Have you completed the setup?
       description: See https://www.zetachain.com/docs/validators/setup/
       options:
-        - Yes
-        - No
+        - "Yes"
+        - "No"
   - type: dropdown
     attributes:
       label: Which method are you using?
