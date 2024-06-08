@@ -12,8 +12,8 @@ body:
       label: Does your machine match the technical requirements?
       description: See https://www.zetachain.com/docs/validators/requirements/
       options:
-        - Yes
-        - No
+        - "Yes"
+        - "No"
   - type: dropdown
     attributes:
       label: Have you completed the setup?
