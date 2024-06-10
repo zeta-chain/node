@@ -97,23 +97,14 @@ func (k msgServer) VoteInbound(
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
 	}
-	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
-	if !tssFound {
-		return nil, types.ErrCannotFindTSSKeys
-	}
-	// create a new CCTX from the inbound message.The status of the new CCTX is set to PendingInbound.
-	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+
+	cctx, err := k.ValidateInboundObservers(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
-	// Initiate outbound, the process function manages the state commit and cctx status change.
-	// If the process fails, the changes to the evm state are rolled back.
-	_, err = k.InitiateOutbound(ctx, &cctx)
-	if err != nil {
-		return nil, err
-	}
+
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
-	k.SaveInbound(ctx, &cctx, msg.EventIndex)
+	k.SaveInbound(ctx, cctx, msg.EventIndex)
 	return &types.MsgVoteInboundResponse{}, nil
 }
 
