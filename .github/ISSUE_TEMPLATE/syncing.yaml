@@ -1,0 +1,43 @@
+name: Issue with setting up or syncing a node
+description: Please fill out the following form to help us understand and resolve your issue with setting up or syncing a node. Provide as much detail as possible to ensure a quick and accurate resolution.
+body:
+  - type: dropdown
+    attributes:
+      label: Which environment are you setting a node for?
+      options:
+        - Mainnet
+        - Testnet
+  - type: dropdown
+    attributes:
+      label: Does your machine match the technical requirements?
+      description: See https://www.zetachain.com/docs/validators/requirements/
+      options:
+        - "Yes"
+        - "No"
+  - type: dropdown
+    attributes:
+      label: Have you completed the setup?
+      description: See https://www.zetachain.com/docs/validators/setup/
+      options:
+        - "Yes"
+        - "No"
+  - type: dropdown
+    attributes:
+      label: Which method are you using?
+      description: If you used different methods, please, create separate issues.
+      options:
+        - State-Sync
+        - Snapshot
+        - KSYNC
+  - type: textarea
+    attributes:
+      label: Please, share the contents of config.toml
+      description: By default the file is in `$HOME/.zetacored/config/`
+  - type: textarea
+    attributes:
+      label: Please, share the contents of app.toml
+      description: By default the file is in `$HOME/.zetacored/config/`
+  - type: textarea
+    attributes:
+      label: Additional details
+      description: Any other information that might help us resolve your issue.
