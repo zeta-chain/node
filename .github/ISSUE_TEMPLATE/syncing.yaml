@@ -1,4 +1,4 @@
-name: Issue with setting up or syncing a node
+name: Having difficulties setting up or syncing a node
 description: Please fill out the following form to help us understand and resolve your issue with setting up or syncing a node. Provide as much detail as possible to ensure a quick and accurate resolution.
 body:
   - type: dropdown
@@ -26,7 +26,6 @@ body:
       label: Which method are you using?
       description: If you used different methods, please, create separate issues.
       options:
-        - State-Sync
         - Snapshot
         - KSYNC
   - type: textarea
