@@ -19,16 +19,4 @@ jobs:
       - name: "EXECUTE:LOADTESTS"
         uses: artilleryio/action-cli@v1
         with:
-          command: run .github/actions/performance-tests/art.yaml --output ./report.json
-
-      - name: "GENERATE:REPORT"
-        uses: artilleryio/action-cli@v1
-        with:
-          command: report report.json --output artillery_report.html
-
-      - name: "UPLOAD:REPORT"
-        uses: actions/upload-artifact@v3
-        if: success()
-        with:
-          name: artillery-report
-          path: ./artillery_report.html
+          command: run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }}
