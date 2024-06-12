@@ -78,17 +78,6 @@ func (k Keeper) ProcessLogs(
 		return fmt.Errorf("connectorZEVM address is empty")
 	}
 
-	// These cannot be processed without TSS keys, return an error if TSS is not found
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
-	if !found {
-		return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "Cannot process logs without TSS keys")
-	}
-
-	// Do not process withdrawal events if inbound is disabled
-	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-		return observertypes.ErrInboundDisabled
-	}
-
 	for _, log := range logs {
 		eventZrc20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
 		eventZetaSent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
@@ -120,13 +109,13 @@ func (k Keeper) ProcessLogs(
 			}
 			// If the event is valid, we will process it and create a new CCTX
 			// If the process fails, we will return an error and roll back the transaction
-			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZrc20Withdrawal, emittingContract, txOrigin, tss); err != nil {
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZrc20Withdrawal, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
 		// if eventZetaSent is not nil we will try to validate it and see if it can be processed
 		if eventZetaSent != nil {
-			if err := k.ProcessZetaSentEvent(ctx, eventZetaSent, emittingContract, txOrigin, tss); err != nil {
+			if err := k.ProcessZetaSentEvent(ctx, eventZetaSent, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
@@ -141,7 +130,6 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 	event *zrc20.ZRC20Withdrawal,
 	emittingContract ethcommon.Address,
 	txOrigin string,
-	tss observertypes.TSS,
 ) error {
 
 	ctx.Logger().Info(fmt.Sprintf("ZRC20 withdrawal to %s amount %d", hex.EncodeToString(event.To), event.Value))
@@ -200,7 +188,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 
 	EmitZRCWithdrawCreated(ctx, *cctx)
 
-	return k.ProcessCCTX(ctx, *cctx, receiverChain)
+	return k.ProcessCCTX(ctx, *cctx)
 }
 
 func (k Keeper) ProcessZetaSentEvent(
@@ -208,7 +196,6 @@ func (k Keeper) ProcessZetaSentEvent(
 	event *connectorzevm.ZetaConnectorZEVMZetaSent,
 	emittingContract ethcommon.Address,
 	txOrigin string,
-	tss observertypes.TSS,
 ) error {
 	ctx.Logger().Info(fmt.Sprintf(
 		"Zeta withdrawal to %s amount %d to chain with chainId %d",
@@ -274,10 +261,10 @@ func (k Keeper) ProcessZetaSentEvent(
 	}
 
 	EmitZetaWithdrawCreated(ctx, *cctx)
-	return k.ProcessCCTX(ctx, *cctx, receiverChain)
+	return k.ProcessCCTX(ctx, *cctx)
 }
 
-func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *chains.Chain) error {
+func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx) error {
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
 		cctx.InboundParams.ObservedHash = inCctxIndex

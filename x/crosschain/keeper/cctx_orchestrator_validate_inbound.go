@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k Keeper) ValidateInboundObservers(
@@ -14,6 +15,11 @@ func (k Keeper) ValidateInboundObservers(
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
+	}
+
+	// Do not process if inbound is disabled
+	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
+		return nil, observertypes.ErrInboundDisabled
 	}
 	// create a new CCTX from the inbound message.The status of the new CCTX is set to PendingInbound.
 	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
