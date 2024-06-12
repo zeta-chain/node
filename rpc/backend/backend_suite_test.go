@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -116,6 +117,28 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 	bz, err := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	suite.Require().NoError(err)
 	return msgEthereumTx, bz
+}
+
+func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) abci.ResponseDeliverTx {
+	return abci.ResponseDeliverTx{
+		Code: 0,
+		Events: []abci.Event{
+			{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+				{Key: "ethereumTxHash", Value: txHash},
+				{Key: "txIndex", Value: "8888"},
+				{Key: "amount", Value: "1000"},
+				{Key: "txGasUsed", Value: "21000"},
+				{Key: "txHash", Value: ""},
+				{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+			}},
+			{
+				Type: "message", Attributes: []abci.EventAttribute{
+					{Key: "sender", Value: "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"},
+					{Key: "txType", Value: "88"},
+				},
+			},
+		},
+	}
 }
 
 // buildFormattedBlock returns a formatted block for testing

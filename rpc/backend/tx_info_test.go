@@ -19,7 +19,31 @@ import (
 
 	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 )
+
+func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
+	hash := sample.Hash().Hex()
+	txRes := suite.buildSyntheticTxResult(hash)
+
+	suite.backend.indexer = nil
+	client := suite.backend.clientCtx.Client.(*mocks.Client)
+	query := fmt.Sprintf(
+		"%s.%s='%s'",
+		evmtypes.TypeMsgEthereumTx,
+		evmtypes.AttributeKeyEthereumTxHash,
+		common.HexToHash(hash).Hex(),
+	)
+	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+	RegisterBaseFee(queryClient, sdk.NewInt(1))
+	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
+	RegisterBlock(client, 1, []byte{})
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
+
+	// TODO: assert response fields
+	_, err := suite.backend.GetTransactionByHash(common.HexToHash(hash))
+	suite.Require().NoError(err)
+}
 
 func (suite *BackendTestSuite) TestGetTransactionByHash() {
 	msgEthereumTx, _ := suite.buildEthereumTx()

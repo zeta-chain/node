@@ -38,6 +38,12 @@ func RegisterTxSearch(client *mocks.Client, query string, txBz []byte) {
 		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
 }
 
+func RegisterTxSearchWithTxResult(client *mocks.Client, query string, txBz []byte, res abci.ResponseDeliverTx) {
+	resulTxs := []*tmrpctypes.ResultTx{{Tx: txBz, TxResult: res}}
+	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
+		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
+}
+
 func RegisterTxSearchEmpty(client *mocks.Client, query string) {
 	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
 		Return(&tmrpctypes.ResultTxSearch{}, nil)
