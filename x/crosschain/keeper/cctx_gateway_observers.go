@@ -36,7 +36,7 @@ InitiateOutbound updates the store so observers can use the PendingCCTX query:
 func (c CCTXGatewayObservers) InitiateOutbound(
 	ctx sdk.Context,
 	config InitiateOutboundConfig,
-) (newCCTXStatus types.CctxStatus) {
+) (newCCTXStatus types.CctxStatus, err error) {
 	tmpCtx, commit := ctx.CacheContext()
 	outboundReceiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
 	// TODO: does this condition make sense?
@@ -45,7 +45,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 		noEthereumTxEvent = true
 	}
 
-	err := func() error {
+	err = func() error {
 		if config.PayGas {
 			err := c.crosschainKeeper.PayGasAndUpdateCctx(
 				tmpCtx,
@@ -70,9 +70,9 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
 		config.CCTX.SetAbort(err.Error())
-		return types.CctxStatus_Aborted
+		return types.CctxStatus_Aborted, err
 	}
 	commit()
 	config.CCTX.SetPendingOutbound("")
-	return types.CctxStatus_PendingOutbound
+	return types.CctxStatus_PendingOutbound, nil
 }

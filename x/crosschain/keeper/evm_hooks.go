@@ -131,7 +131,6 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 	emittingContract ethcommon.Address,
 	txOrigin string,
 ) error {
-
 	ctx.Logger().Info(fmt.Sprintf("ZRC20 withdrawal to %s amount %d", hex.EncodeToString(event.To), event.Value))
 	foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
 	if !found {

@@ -22,14 +22,14 @@ func NewCCTXGatewayZEVM(crosschainKeeper Keeper) CCTXGatewayZEVM {
 func (c CCTXGatewayZEVM) InitiateOutbound(
 	ctx sdk.Context,
 	config InitiateOutboundConfig,
-) (newCCTXStatus types.CctxStatus) {
+) (newCCTXStatus types.CctxStatus, err error) {
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
 		config.CCTX.SetAbort(err.Error())
-		return types.CctxStatus_Aborted
+		return types.CctxStatus_Aborted, err
 	}
 
 	config.CCTX.SetPendingOutbound("")
@@ -38,5 +38,5 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 		commit()
 	}
 
-	return newCCTXStatus
+	return newCCTXStatus, nil
 }

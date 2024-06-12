@@ -12,7 +12,7 @@ import (
 type CCTXGateway interface {
 	// Initiate a new outbound, this tells the CCTXGateway to carry out the action to execute the outbound.
 	// It is the only entry point to initiate an outbound and it returns new CCTX status after it is completed.
-	InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig) (newCCTXStatus types.CctxStatus)
+	InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig) (newCCTXStatus types.CctxStatus, err error)
 }
 
 var cctxGateways map[chains.CCTXGateway]CCTXGateway
@@ -26,7 +26,12 @@ func InitCCTXGateways(keeper Keeper) {
 	}
 }
 
-func ResolveCCTXGateway(c chains.CCTXGateway) (CCTXGateway, bool) {
+func ResolveCCTXGateway(c chains.CCTXGateway, keeper Keeper) (CCTXGateway, bool) {
+	cctxGateways = map[chains.CCTXGateway]CCTXGateway{
+		chains.CCTXGateway_observers: NewCCTXGatewayObservers(keeper),
+		chains.CCTXGateway_zevm:      NewCCTXGatewayZEVM(keeper),
+	}
+
 	cctxGateway, ok := cctxGateways[c]
 	return cctxGateway, ok
 }

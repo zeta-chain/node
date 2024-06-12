@@ -34,7 +34,7 @@ func (k Keeper) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig)
 		)
 	}
 
-	cctxGateway, found := ResolveCCTXGateway(chainInfo.CctxGateway)
+	cctxGateway, found := ResolveCCTXGateway(chainInfo.CctxGateway, k)
 	if !found {
 		return config.CCTX.CctxStatus.Status, cosmoserrors.Wrap(
 			types.ErrInitiatitingOutbound,
@@ -44,5 +44,5 @@ func (k Keeper) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig)
 		)
 	}
 
-	return cctxGateway.InitiateOutbound(ctx, config), nil
+	return cctxGateway.InitiateOutbound(ctx, config)
 }
