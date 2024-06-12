@@ -19,18 +19,18 @@ func NewCCTXGatewayZEVM(crosschainKeeper Keeper) CCTXGatewayZEVM {
 }
 
 // InitiateOutbound handles evm deposit and immediately validates pending outbound
-func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus) {
+func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
-	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, cctx)
+	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		cctx.SetAbort(err.Error())
+		config.CCTX.SetAbort(err.Error())
 		return types.CctxStatus_Aborted
 	}
 
-	cctx.SetPendingOutbound("")
-	newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, cctx, err, isContractReverted)
+	config.CCTX.SetPendingOutbound("")
+	newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, err, isContractReverted)
 	if newCCTXStatus == types.CctxStatus_OutboundMined {
 		commit()
 	}

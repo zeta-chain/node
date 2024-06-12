@@ -98,7 +98,7 @@ func (k msgServer) VoteInbound(
 		return &types.MsgVoteInboundResponse{}, nil
 	}
 
-	cctx, err := k.ValidateInboundObservers(ctx, msg)
+	cctx, err := k.ValidateInboundObservers(ctx, msg, true)
 	if err != nil {
 		return nil, err
 	}

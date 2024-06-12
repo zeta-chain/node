@@ -5,7 +5,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) ValidateInboundObservers(ctx sdk.Context, msg *types.MsgVoteInbound) (*types.CrossChainTx, error) {
+func (k Keeper) ValidateInboundObservers(ctx sdk.Context, msg *types.MsgVoteInbound, payGas bool) (*types.CrossChainTx, error) {
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
@@ -17,7 +17,10 @@ func (k Keeper) ValidateInboundObservers(ctx sdk.Context, msg *types.MsgVoteInbo
 	}
 	// Initiate outbound, the process function manages the state commit and cctx status change.
 	// If the process fails, the changes to the evm state are rolled back.
-	_, err = k.InitiateOutbound(ctx, &cctx)
+	_, err = k.InitiateOutbound(ctx, InitiateOutboundConfig{
+		CCTX:   &cctx,
+		PayGas: payGas,
+	})
 	if err != nil {
 		return nil, err
 	}

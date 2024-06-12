@@ -12,14 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// CCTXGateway is interface implemented by every gateway. It is one of interfaces used for communication
-// between CCTX gateways and crosschain module, and it is called by crosschain module.
-type CCTXGateway interface {
-	// Initiate a new outbound, this tells the CCTXGateway to carry out the action to execute the outbound.
-	// It is the only entry point to initiate an outbound and it returns new CCTX status after it is completed.
-	InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) (newCCTXStatus types.CctxStatus)
-}
-
 type (
 	Keeper struct {
 		cdc          codec.Codec

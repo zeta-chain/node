@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -32,29 +33,37 @@ InitiateOutbound updates the store so observers can use the PendingCCTX query:
 */
 func (c CCTXGatewayObservers) InitiateOutbound(
 	ctx sdk.Context,
-	cctx *types.CrossChainTx,
+	config InitiateOutboundConfig,
 ) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
-	outboundReceiverChainID := cctx.GetCurrentOutboundParam().ReceiverChainId
+	outboundReceiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
+	// TODO: does this condition make sense?
+	noEthereumTxEvent := false
+	if chains.IsZetaChain(config.CCTX.InboundParams.SenderChainId) {
+		noEthereumTxEvent = true
+	}
+
 	err := func() error {
-		err := c.crosschainKeeper.PayGasAndUpdateCctx(
-			tmpCtx,
-			outboundReceiverChainID,
-			cctx,
-			cctx.InboundParams.Amount,
-			false,
-		)
-		if err != nil {
-			return err
+		if config.PayGas {
+			err := c.crosschainKeeper.PayGasAndUpdateCctx(
+				tmpCtx,
+				outboundReceiverChainID,
+				config.CCTX,
+				config.CCTX.InboundParams.Amount,
+				noEthereumTxEvent,
+			)
+			if err != nil {
+				return err
+			}
 		}
-		return c.crosschainKeeper.UpdateNonce(tmpCtx, outboundReceiverChainID, cctx)
+		return c.crosschainKeeper.UpdateNonce(tmpCtx, outboundReceiverChainID, config.CCTX)
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
-		cctx.SetAbort(err.Error())
+		config.CCTX.SetAbort(err.Error())
 		return types.CctxStatus_Aborted
 	}
 	commit()
-	cctx.SetPendingOutbound("")
+	config.CCTX.SetPendingOutbound("")
 	return types.CctxStatus_PendingOutbound
 }

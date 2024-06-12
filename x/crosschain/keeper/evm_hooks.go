@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -76,6 +77,18 @@ func (k Keeper) ProcessLogs(
 	if connectorZEVMAddr == (ethcommon.Address{}) {
 		return fmt.Errorf("connectorZEVM address is empty")
 	}
+
+	// These cannot be processed without TSS keys, return an error if TSS is not found
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	if !found {
+		return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "Cannot process logs without TSS keys")
+	}
+
+	// Do not process withdrawal events if inbound is disabled
+	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
+		return observertypes.ErrInboundDisabled
+	}
+
 	for _, log := range logs {
 		eventZrc20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
 		eventZetaSent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
@@ -88,18 +101,6 @@ func (k Keeper) ProcessLogs(
 			ctx.Logger().
 				Error(fmt.Sprintf("ProcessLogs: log contains both ZRC20Withdrawal and ZetaSent events, %s , %s", log.Topics, log.Data))
 			continue
-		}
-
-		// We have found either eventZrc20Withdrawal or eventZetaSent
-		// These cannot be processed without TSS keys, return an error if TSS is not found
-		tss, found := k.zetaObserverKeeper.GetTSS(ctx)
-		if !found {
-			return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "Cannot process logs without TSS keys")
-		}
-
-		// Do not process withdrawal events if inbound is disabled
-		if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-			return observertypes.ErrInboundDisabled
 		}
 
 		// if eventZrc20Withdrawal is not nil we will try to validate it and see if it can be processed
@@ -188,13 +189,15 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		event.Raw.Index,
 	)
 
-	// Create a new cctx with status as pending Inbound, this is created directly from the event without waiting for any observer votes
-	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	cctx, err := k.ValidateInboundObservers(ctx, msg, false)
 	if err != nil {
-		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to initialize cctx: %s", err.Error())
+		return err
 	}
-	cctx.SetPendingOutbound("ZRC20 withdrawal event setting to pending outbound directly")
-	// Get gas price and amount
+
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		return errors.New("cctx aborted")
+	}
+
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
@@ -202,8 +205,9 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 	cctx.GetCurrentOutboundParam().GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
 	cctx.GetCurrentOutboundParam().Amount = cctx.InboundParams.Amount
 
-	EmitZRCWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, receiverChain)
+	EmitZRCWithdrawCreated(ctx, *cctx)
+
+	return k.ProcessCCTX(ctx, *cctx, receiverChain)
 }
 
 func (k Keeper) ProcessZetaSentEvent(
@@ -267,36 +271,23 @@ func (k Keeper) ProcessZetaSentEvent(
 		event.Raw.Index,
 	)
 
-	// create a new cctx with status as pending Inbound,
-	// this is created directly from the event without waiting for any observer votes
-	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	cctx, err := k.ValidateInboundObservers(ctx, msg, true)
 	if err != nil {
-		return fmt.Errorf("ProcessZetaSentEvent: failed to initialize cctx: %s", err.Error())
-	}
-	cctx.SetPendingOutbound("ZetaSent event setting to pending outbound directly")
-
-	if err := k.PayGasAndUpdateCctx(
-		ctx,
-		receiverChain.ChainId,
-		&cctx,
-		amount,
-		true,
-	); err != nil {
-		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
+		return err
 	}
 
-	EmitZetaWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, receiverChain)
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		return errors.New("cctx aborted")
+	}
+
+	EmitZetaWithdrawCreated(ctx, *cctx)
+	return k.ProcessCCTX(ctx, *cctx, receiverChain)
 }
 
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *chains.Chain) error {
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
 		cctx.InboundParams.ObservedHash = inCctxIndex
-	}
-
-	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {
-		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
 
 	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
