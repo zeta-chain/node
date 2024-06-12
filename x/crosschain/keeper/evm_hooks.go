@@ -198,13 +198,6 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		return errors.New("cctx aborted")
 	}
 
-	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
-	if !found {
-		return fmt.Errorf("gasprice not found for %s", receiverChain)
-	}
-	cctx.GetCurrentOutboundParam().GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-	cctx.GetCurrentOutboundParam().Amount = cctx.InboundParams.Amount
-
 	EmitZRCWithdrawCreated(ctx, *cctx)
 
 	return k.ProcessCCTX(ctx, *cctx, receiverChain)

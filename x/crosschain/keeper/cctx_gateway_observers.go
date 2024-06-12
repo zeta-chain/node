@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -55,6 +57,13 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 			if err != nil {
 				return err
 			}
+		} else {
+			gasprice, found := c.crosschainKeeper.GetGasPrice(ctx, config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
+			if !found {
+				return fmt.Errorf("gasprice not found for %d", config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
+			}
+			config.CCTX.GetCurrentOutboundParam().GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+			config.CCTX.GetCurrentOutboundParam().Amount = config.CCTX.InboundParams.Amount
 		}
 		return c.crosschainKeeper.UpdateNonce(tmpCtx, outboundReceiverChainID, config.CCTX)
 	}()
