@@ -30,7 +30,7 @@ body:
         - KSYNC
   - type: dropdown
     attributes:
-      label: Did you build your binary locally or download it from the Releases[https://github.com/zeta-chain/node/releases] page?
+      label: Did you build your binary from source or download it from the Releases[https://github.com/zeta-chain/node/releases] page?
       description: We recommend using binaries from our releases page.
       options:
         - "Downloaded from releases page"
