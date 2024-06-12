@@ -2,10 +2,15 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) ValidateInboundObservers(ctx sdk.Context, msg *types.MsgVoteInbound, payGas bool) (*types.CrossChainTx, error) {
+func (k Keeper) ValidateInboundObservers(
+	ctx sdk.Context,
+	msg *types.MsgVoteInbound,
+	payGas bool,
+) (*types.CrossChainTx, error) {
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys

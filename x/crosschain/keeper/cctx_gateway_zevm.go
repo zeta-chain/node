@@ -19,7 +19,10 @@ func NewCCTXGatewayZEVM(crosschainKeeper Keeper) CCTXGatewayZEVM {
 }
 
 // InitiateOutbound handles evm deposit and immediately validates pending outbound
-func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig) (newCCTXStatus types.CctxStatus) {
+func (c CCTXGatewayZEVM) InitiateOutbound(
+	ctx sdk.Context,
+	config InitiateOutboundConfig,
+) (newCCTXStatus types.CctxStatus) {
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 
