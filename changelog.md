@@ -26,6 +26,7 @@
 * [2313](https://github.com/zeta-chain/node/pull/2313) - add `CheckAuthorization` function to replace the `IsAuthorized` function. The new function uses the authorization list to verify the signer's authorization.
 * [2312](https://github.com/zeta-chain/node/pull/2312) - add queries `ShowAuthorization` and `ListAuthorizations`
 * [2325](https://github.com/zeta-chain/node/pull/2325) - revert telemetry server changes
+* [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 
 ### Refactor
 

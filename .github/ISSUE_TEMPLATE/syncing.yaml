@@ -28,6 +28,13 @@ body:
       options:
         - Snapshot
         - KSYNC
+  - type: dropdown
+    attributes:
+      label: Did you build your binary from source or download it from the Releases[https://github.com/zeta-chain/node/releases] page?
+      description: We recommend using binaries from our releases page.
+      options:
+        - "Downloaded from releases page"
+        - "Built locally"
   - type: textarea
     attributes:
       label: Please, share the contents of config.toml
