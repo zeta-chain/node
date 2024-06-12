@@ -8,16 +8,14 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 type (
 	Keeper struct {
-		cdc          codec.Codec
-		storeKey     storetypes.StoreKey
-		memKey       storetypes.StoreKey
-		cctxGateways map[chains.CCTXGateway]CCTXGateway
+		cdc      codec.Codec
+		storeKey storetypes.StoreKey
+		memKey   storetypes.StoreKey
 
 		stakingKeeper       types.StakingKeeper
 		authKeeper          types.AccountKeeper
@@ -100,10 +98,6 @@ func (k Keeper) GetIBCCrosschainKeeper() types.IBCCrosschainKeeper {
 
 func (k *Keeper) SetIBCCrosschainKeeper(ibcCrosschainKeeper types.IBCCrosschainKeeper) {
 	k.ibcCrosschainKeeper = ibcCrosschainKeeper
-}
-
-func (k *Keeper) SetCCTXGateways(cctxGateways map[chains.CCTXGateway]CCTXGateway) {
-	k.cctxGateways = cctxGateways
 }
 
 func (k Keeper) GetStoreKey() storetypes.StoreKey {
