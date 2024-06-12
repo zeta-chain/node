@@ -17,15 +17,7 @@ type CCTXGateway interface {
 
 var cctxGateways map[chains.CCTXGateway]CCTXGateway
 
-// initializing map of cctx gateways so crosschain module can decide which one to use
-// based on chain info of destination chain
-func InitCCTXGateways(keeper Keeper) {
-	cctxGateways = map[chains.CCTXGateway]CCTXGateway{
-		chains.CCTXGateway_observers: NewCCTXGatewayObservers(keeper),
-		chains.CCTXGateway_zevm:      NewCCTXGatewayZEVM(keeper),
-	}
-}
-
+// ResolveCCTXGateway respolves cctx gateway implementation based on provided cctx gateway
 func ResolveCCTXGateway(c chains.CCTXGateway, keeper Keeper) (CCTXGateway, bool) {
 	cctxGateways = map[chains.CCTXGateway]CCTXGateway{
 		chains.CCTXGateway_observers: NewCCTXGatewayObservers(keeper),

@@ -597,8 +597,6 @@ func New(
 		app.LightclientKeeper,
 	)
 
-	crosschainkeeper.InitCCTXGateways(app.CrosschainKeeper)
-
 	// initialize ibccrosschain keeper and set it to the crosschain keeper
 	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
 
