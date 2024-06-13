@@ -29,7 +29,6 @@ func (c CCTXGatewayZEVM) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChai
 		return types.CctxStatus_Aborted
 	}
 
-	cctx.SetPendingOutbound("")
 	newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, cctx, err, isContractReverted)
 	if newCCTXStatus == types.CctxStatus_OutboundMined {
 		commit()

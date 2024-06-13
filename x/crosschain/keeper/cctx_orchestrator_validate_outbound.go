@@ -155,7 +155,7 @@ func (k Keeper) validateFailedOutbound(
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
 	revertMsg string,
-	inputAmount math.Uint, // TODO: find different way for this
+	inputAmount math.Uint,
 ) error {
 	switch oldStatus {
 	case types.CctxStatus_PendingOutbound:
