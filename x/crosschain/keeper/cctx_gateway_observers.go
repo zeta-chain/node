@@ -73,6 +73,5 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 		return types.CctxStatus_Aborted, err
 	}
 	commit()
-	config.CCTX.SetPendingOutbound("")
 	return types.CctxStatus_PendingOutbound, nil
 }
