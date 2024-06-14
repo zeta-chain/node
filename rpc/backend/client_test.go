@@ -101,18 +101,6 @@ func RegisterStatusError(client *mocks.Client) {
 }
 
 // Block
-func RegisterBlockMultipleTxs(
-	client *mocks.Client,
-	height int64,
-	txs []types.Tx,
-) (*tmrpctypes.ResultBlock, error) {
-	block := types.MakeBlock(height, txs, nil, nil)
-	block.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: block}
-	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
-	return resBlock, nil
-}
-
 func RegisterBlock(
 	client *mocks.Client,
 	height int64,
@@ -163,7 +151,8 @@ func TestRegisterBlock(t *testing.T) {
 
 	emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 	emptyBlock.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: blockHash}}
 	require.Equal(t, resBlock, res)
 	require.NoError(t, err)
 }
