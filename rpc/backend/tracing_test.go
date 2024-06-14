@@ -195,7 +195,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlock(client, 1, txBz)
+				RegisterBlock(client, 1, []types.Tx{txBz})
 				RegisterTraceTransaction(queryClient, msgEthereumTx)
 				txResults := []*abci.ResponseDeliverTx{
 					{

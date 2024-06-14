@@ -116,10 +116,10 @@ func RegisterBlockMultipleTxs(
 func RegisterBlock(
 	client *mocks.Client,
 	height int64,
-	tx []byte,
+	txs []types.Tx,
 ) (*tmrpctypes.ResultBlock, error) {
 	// without tx
-	if tx == nil {
+	if len(txs) == 0 {
 		emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 		emptyBlock.ChainID = ChainID
 		blockHash := common.BigToHash(big.NewInt(height)).Bytes()
@@ -129,7 +129,7 @@ func RegisterBlock(
 	}
 
 	// with tx
-	block := types.MakeBlock(height, []types.Tx{tx}, nil, nil)
+	block := types.MakeBlock(height, txs, nil, nil)
 	block.ChainID = ChainID
 	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
 	resBlock := &tmrpctypes.ResultBlock{Block: block, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}

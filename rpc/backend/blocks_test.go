@@ -140,7 +140,7 @@ func (suite *BackendTestSuite) TestGetBlockByNumber() {
 			func(blockNum ethrpc.BlockNumber, baseFee sdkmath.Int, validator sdk.AccAddress, txBz []byte) {
 				height := blockNum.Int64()
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				resBlock, _ = RegisterBlock(client, height, txBz)
+				resBlock, _ = RegisterBlock(client, height, []tmtypes.Tx{txBz})
 				RegisterBlockResultsError(client, blockNum.Int64())
 			},
 			true,
@@ -157,7 +157,7 @@ func (suite *BackendTestSuite) TestGetBlockByNumber() {
 			func(blockNum ethrpc.BlockNumber, baseFee sdkmath.Int, validator sdk.AccAddress, txBz []byte) {
 				height := blockNum.Int64()
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				resBlock, _ = RegisterBlock(client, height, txBz)
+				resBlock, _ = RegisterBlock(client, height, []tmtypes.Tx{txBz})
 				blockRes, _ = RegisterBlockResults(client, blockNum.Int64())
 				RegisterConsensusParams(client, height)
 
@@ -179,7 +179,7 @@ func (suite *BackendTestSuite) TestGetBlockByNumber() {
 			func(blockNum ethrpc.BlockNumber, baseFee sdkmath.Int, validator sdk.AccAddress, txBz []byte) {
 				height := blockNum.Int64()
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				resBlock, _ = RegisterBlock(client, height, txBz)
+				resBlock, _ = RegisterBlock(client, height, []tmtypes.Tx{txBz})
 				blockRes, _ = RegisterBlockResults(client, blockNum.Int64())
 				RegisterConsensusParams(client, height)
 
@@ -497,7 +497,7 @@ func (suite *BackendTestSuite) TestGetBlockTransactionCountByNumber() {
 			func(blockNum ethrpc.BlockNumber) {
 				height := blockNum.Int64()
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlock(client, height, bz)
+				RegisterBlock(client, height, []tmtypes.Tx{bz})
 				RegisterBlockResults(client, height)
 			},
 			hexutil.Uint(1),
@@ -1268,7 +1268,7 @@ func (suite *BackendTestSuite) TestHeaderByNumber() {
 			func(blockNum ethrpc.BlockNumber, baseFee sdkmath.Int) {
 				height := blockNum.Int64()
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				expResultBlock, _ = RegisterBlock(client, height, bz)
+				expResultBlock, _ = RegisterBlock(client, height, []tmtypes.Tx{bz})
 				RegisterBlockResults(client, height)
 
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -1471,7 +1471,7 @@ func (suite *BackendTestSuite) TestEthBlockByNumber() {
 			func(blockNum ethrpc.BlockNumber) {
 				height := blockNum.Int64()
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlock(client, height, bz)
+				RegisterBlock(client, height, []tmtypes.Tx{bz})
 
 				RegisterBlockResults(client, blockNum.Int64())
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
