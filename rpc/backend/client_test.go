@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -39,7 +40,7 @@ func RegisterTxSearch(client *mocks.Client, query string, txBz []byte) {
 }
 
 func RegisterTxSearchWithTxResult(client *mocks.Client, query string, txBz []byte, res abci.ResponseDeliverTx) {
-	resulTxs := []*tmrpctypes.ResultTx{{Tx: txBz, TxResult: res}}
+	resulTxs := []*tmrpctypes.ResultTx{{Tx: txBz, Height: 1, TxResult: res}}
 	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
 		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
 }
@@ -121,7 +122,8 @@ func RegisterBlock(
 	if tx == nil {
 		emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 		emptyBlock.ChainID = ChainID
-		resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock}
+		blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+		resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 		client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 		return resBlock, nil
 	}

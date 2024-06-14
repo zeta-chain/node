@@ -37,12 +37,24 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	RegisterBaseFee(queryClient, sdk.NewInt(1))
 	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
-	RegisterBlock(client, 1, []byte{})
+	RegisterBlock(client, 1, nil)
 	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
 
-	// TODO: assert response fields
-	_, err := suite.backend.GetTransactionByHash(common.HexToHash(hash))
+	res, err := suite.backend.GetTransactionByHash(common.HexToHash(hash))
 	suite.Require().NoError(err)
+
+	suite.Require().Equal(hash, res.Hash.Hex())
+	suite.Require().Equal(int64(1), res.BlockNumber.ToInt().Int64())
+	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", res.To.Hex())
+	txIndex, _ := hexutil.DecodeUint64(res.TransactionIndex.String())
+	suite.Require().Equal(uint64(8888), txIndex)
+	txType, _ := hexutil.DecodeUint64(res.Type.String())
+	suite.Require().Equal(uint64(88), txType)
+	suite.Require().Equal(int64(7001), res.ChainID.ToInt().Int64())
+	suite.Require().Equal(int64(1000), res.Value.ToInt().Int64())
+	suite.Require().Nil(res.V)
+	suite.Require().Nil(res.R)
+	suite.Require().Nil(res.S)
 }
 
 func (suite *BackendTestSuite) TestGetTransactionByHash() {
