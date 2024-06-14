@@ -43,11 +43,13 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 	res, err := suite.backend.GetTransactionByHash(common.HexToHash(hash))
 	suite.Require().NoError(err)
 
+	// assert fields
 	suite.Require().Equal(hash, res.Hash.Hex())
 	nonce, _ := hexutil.DecodeUint64(res.Nonce.String())
 	suite.Require().Equal(uint64(1), nonce)
 	suite.Require().Equal(int64(1), res.BlockNumber.ToInt().Int64())
 	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", res.To.Hex())
+	suite.Require().Equal("0x735b14BB79463307AAcBED86DAf3322B1e6226aB", res.From.Hex())
 	txIndex, _ := hexutil.DecodeUint64(res.TransactionIndex.String())
 	suite.Require().Equal(uint64(8888), txIndex)
 	txType, _ := hexutil.DecodeUint64(res.Type.String())
@@ -57,6 +59,45 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 	suite.Require().Nil(res.V)
 	suite.Require().Nil(res.R)
 	suite.Require().Nil(res.S)
+}
+
+func (suite *BackendTestSuite) TestGetSyntheticTransactionReceiptByHash() {
+	hash := sample.Hash().Hex()
+	txRes := suite.buildSyntheticTxResult(hash)
+
+	suite.backend.indexer = nil
+	client := suite.backend.clientCtx.Client.(*mocks.Client)
+	query := fmt.Sprintf(
+		"%s.%s='%s'",
+		evmtypes.TypeMsgEthereumTx,
+		evmtypes.AttributeKeyEthereumTxHash,
+		common.HexToHash(hash).Hex(),
+	)
+	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+	var header metadata.MD
+	RegisterParams(queryClient, &header, 1)
+	RegisterParamsWithoutHeader(queryClient, 1)
+	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
+	RegisterBlock(client, 1, nil)
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
+
+	res, err := suite.backend.GetTransactionReceipt(common.HexToHash(hash))
+	suite.Require().NoError(err)
+
+	// assert fields
+	suite.Require().Equal(common.HexToHash(hash), res["transactionHash"])
+	blockNumber, _ := hexutil.DecodeUint64(res["blockNumber"].(hexutil.Uint64).String())
+	suite.Require().Equal(uint64(1), blockNumber)
+	toAddress := common.HexToAddress("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7")
+	fromAddress := common.HexToAddress("0x735b14BB79463307AAcBED86DAf3322B1e6226aB")
+	suite.Require().Equal(&toAddress, res["to"])
+	suite.Require().Equal(fromAddress, res["from"])
+	status, _ := hexutil.DecodeUint64(res["status"].(hexutil.Uint).String())
+	suite.Require().Equal(uint64(1), status)
+	txType, _ := hexutil.DecodeUint64(res["type"].(hexutil.Uint).String())
+	suite.Require().Equal(uint64(88), txType)
+	txIndex, _ := hexutil.DecodeUint64(res["transactionIndex"].(hexutil.Uint64).String())
+	suite.Require().Equal(uint64(8888), txIndex)
 }
 
 func (suite *BackendTestSuite) TestGetTransactionByHash() {
