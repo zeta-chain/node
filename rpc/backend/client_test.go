@@ -131,7 +131,8 @@ func RegisterBlock(
 	// with tx
 	block := types.MakeBlock(height, []types.Tx{tx}, nil, nil)
 	block.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: block}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: block, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 	return resBlock, nil
 }
