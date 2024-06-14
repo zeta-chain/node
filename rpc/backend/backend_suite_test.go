@@ -135,6 +135,7 @@ func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) abci.Respon
 				Type: "message", Attributes: []abci.EventAttribute{
 					{Key: "sender", Value: "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"},
 					{Key: "txType", Value: "88"},
+					{Key: "txNonce", Value: "1"},
 				},
 			},
 		},

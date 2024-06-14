@@ -44,6 +44,8 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(hash, res.Hash.Hex())
+	nonce, _ := hexutil.DecodeUint64(res.Nonce.String())
+	suite.Require().Equal(uint64(1), nonce)
 	suite.Require().Equal(int64(1), res.BlockNumber.ToInt().Int64())
 	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", res.To.Hex())
 	txIndex, _ := hexutil.DecodeUint64(res.TransactionIndex.String())
