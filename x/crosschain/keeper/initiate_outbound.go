@@ -10,13 +10,13 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// TODO: this is just a tmp solution, tbd if info can be passed to CCTX constructor somehow
-// and not initialize CCTX using MsgVoteInbound but for example (InboundParams, OutboundParams)
-// then PayGas can be decided based on GasPrice already presend in OutboundParams
-// check if msg.Digest can be replaced to calculate index
+// TODO (https://github.com/zeta-chain/node/issues/2345): this is just a tmp solution because some flows require gas payment and others don't.
+// TBD during implementation of issue above if info can be passed to CCTX constructor somehow.
+// and not initialize CCTX using MsgVoteInbound and instead use something like (InboundParams, OutboundParams).
+// Also check if msg.Digest can be replaced to calculate index
 type InitiateOutboundConfig struct {
-	CCTX   *types.CrossChainTx
-	PayGas bool
+	CCTX         *types.CrossChainTx
+	ShouldPayGas bool
 }
 
 // InitiateOutbound initiates the outbound for the CCTX depending on the CCTX gateway.

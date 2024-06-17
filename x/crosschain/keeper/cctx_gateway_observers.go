@@ -46,7 +46,9 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	}
 
 	err = func() error {
-		if config.PayGas {
+		// If ShouldPayGas flag is set during ValidateInbound PayGasAndUpdateCctx should be called
+		// which will set GasPrice and Amount. Otherwise, use median gas price and InboundParams amount.
+		if config.ShouldPayGas {
 			err := c.crosschainKeeper.PayGasAndUpdateCctx(
 				tmpCtx,
 				outboundReceiverChainID,
@@ -58,11 +60,11 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 				return err
 			}
 		} else {
-			gasprice, found := c.crosschainKeeper.GetGasPrice(ctx, config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
+			gasPrice, found := c.crosschainKeeper.GetMedianGasPriceInUint(ctx, config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
 			if !found {
 				return fmt.Errorf("gasprice not found for %d", config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
 			}
-			config.CCTX.GetCurrentOutboundParam().GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+			config.CCTX.GetCurrentOutboundParam().GasPrice = gasPrice.String()
 			config.CCTX.GetCurrentOutboundParam().Amount = config.CCTX.InboundParams.Amount
 		}
 		return c.crosschainKeeper.UpdateNonce(tmpCtx, outboundReceiverChainID, config.CCTX)

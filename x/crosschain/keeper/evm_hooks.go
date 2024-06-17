@@ -176,7 +176,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		event.Raw.Index,
 	)
 
-	cctx, err := k.ValidateInboundObservers(ctx, msg, false)
+	cctx, err := k.ValidateInbound(ctx, msg, false)
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		event.Raw.Index,
 	)
 
-	cctx, err := k.ValidateInboundObservers(ctx, msg, true)
+	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
 		return err
 	}

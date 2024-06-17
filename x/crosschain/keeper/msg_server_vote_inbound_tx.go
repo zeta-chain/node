@@ -98,17 +98,17 @@ func (k msgServer) VoteInbound(
 		return &types.MsgVoteInboundResponse{}, nil
 	}
 
-	cctx, err := k.ValidateInboundObservers(ctx, msg, true)
+	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
 		return nil, err
 	}
 
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
-	k.SaveInbound(ctx, cctx, msg.EventIndex)
+	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
 	return &types.MsgVoteInboundResponse{}, nil
 }
 
-/* SaveInbound saves the inbound CCTX to the store.It does the following:
+/* SaveObservedInboundInformation saves the inbound CCTX to the store.It does the following:
     - Emits an event for the finalized inbound CCTX.
 	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
 	- Updates the CCTX with the finalized height and finalization status.
@@ -116,7 +116,7 @@ func (k msgServer) VoteInbound(
 	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
 */
 
-func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
+func (k Keeper) SaveObservedInboundInformation(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	EmitEventInboundFinalized(ctx, cctx)
 	k.AddFinalizedInbound(ctx,
 		cctx.GetInboundParams().ObservedHash,
