@@ -186,8 +186,8 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 
 	rpcTransaction, err := rpctypes.NewRPCTransaction(
 		msgEthereumTx.AsTransaction(),
-		common.Hash{},
-		0,
+		common.HexToHash("0x1"),
+		1,
 		0,
 		big.NewInt(1),
 		suite.backend.chainID,
