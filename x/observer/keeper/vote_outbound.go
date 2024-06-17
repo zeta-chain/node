@@ -37,7 +37,7 @@ func (k Keeper) VoteOnOutboundBallot(
 	}
 
 	// fetch or create ballot
-	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, observationChain, observertypes.ObservationType_OutBoundTx)
+	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, observationChain, observertypes.ObservationType_OutboundTx)
 	if err != nil {
 		return false, false, ballot, "", err
 	}

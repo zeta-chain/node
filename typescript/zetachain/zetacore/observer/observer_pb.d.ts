@@ -16,14 +16,14 @@ export declare enum ObservationType {
   EmptyObserverType = 0,
 
   /**
-   * @generated from enum value: InBoundTx = 1;
+   * @generated from enum value: InboundTx = 1;
    */
-  InBoundTx = 1,
+  InboundTx = 1,
 
   /**
-   * @generated from enum value: OutBoundTx = 2;
+   * @generated from enum value: OutboundTx = 2;
    */
-  OutBoundTx = 2,
+  OutboundTx = 2,
 
   /**
    * @generated from enum value: TSSKeyGen = 3;

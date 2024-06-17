@@ -229,7 +229,7 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 			BallotIdentifier:     identifier.Hex(),
 			VoterList:            observerSet,
 			Votes:                VotesSuccessOnly(len(observerSet)),
-			ObservationType:      types.ObservationType_InBoundTx,
+			ObservationType:      types.ObservationType_InboundTx,
 			BallotThreshold:      sdk.OneDec(),
 			BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
 			BallotCreationHeight: 0,

@@ -612,7 +612,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 		Msgf("ERC20CustodyDeposited inbound detected on chain %d tx %s block %d from %s value %s message %s",
 			ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender.Hex(), event.Amount.String(), message)
 
-	return zetacore.GetInBoundVoteMessage(
+	return zetacore.GetInboundVoteMessage(
 		sender.Hex(),
 		ob.chain.ChainId,
 		"",
@@ -667,7 +667,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	ob.logger.Inbound.Info().Msgf("ZetaSent inbound detected on chain %d tx %s block %d from %s value %s message %s",
 		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender, event.ZetaValueAndGas.String(), message)
 
-	return zetacore.GetInBoundVoteMessage(
+	return zetacore.GetInboundVoteMessage(
 		sender,
 		ob.chain.ChainId,
 		event.SourceTxOriginAddress.Hex(),
@@ -716,7 +716,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 	ob.logger.Inbound.Info().Msgf("TSS inbound detected on chain %d tx %s block %d from %s value %s message %s",
 		ob.chain.ChainId, tx.Hash, blockNumber, sender.Hex(), tx.Value.String(), message)
 
-	return zetacore.GetInBoundVoteMessage(
+	return zetacore.GetInboundVoteMessage(
 		sender.Hex(),
 		ob.chain.ChainId,
 		sender.Hex(),
