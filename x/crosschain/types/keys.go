@@ -19,6 +19,8 @@ const (
 	RouterKey = ModuleName
 
 	// MemStoreKey defines the in-memory store key
+	// NOTE: named metacore because previous module name was metacore
+	// we keep the current value for backward compatibility
 	MemStoreKey = "mem_metacore"
 
 	ProtocolFee = 2000000000000000000

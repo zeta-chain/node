@@ -411,11 +411,11 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 	})
 }
 
-func TestZetacore_GetInBoundVoteMessage(t *testing.T) {
+func TestZetacore_GetInboundVoteMessage(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	t.Run("get inbound vote message", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		msg := GetInBoundVoteMessage(
+		msg := GetInboundVoteMessage(
 			address.String(),
 			chains.Ethereum.ChainId,
 			"",

@@ -14,7 +14,7 @@ import type { InboundTracker } from "./inbound_tracker_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
- * GenesisState defines the metacore module's genesis state.
+ * GenesisState defines the crosschain module's genesis state.
  *
  * @generated from message zetachain.zetacore.crosschain.GenesisState
  */

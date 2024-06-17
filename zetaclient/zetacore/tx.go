@@ -23,8 +23,8 @@ import (
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
-// GetInBoundVoteMessage returns a new MsgVoteInbound
-func GetInBoundVoteMessage(
+// GetInboundVoteMessage returns a new MsgVoteInbound
+func GetInboundVoteMessage(
 	sender string,
 	senderChain int64,
 	txOrigin string,
