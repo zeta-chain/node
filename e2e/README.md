@@ -77,6 +77,7 @@ It's possible to debug a single test using Delve debugger.
     - Hit "+" > "Go Remote". Keep port as default (`2345`). Toggle "On Disconnect" > "Stop Delve process"
 3. Make sure that localnet is running. For a quick start, you can use `make start-localnet-skip-build`.
    Networks need some time to generate blocks.
-4. Run test as following: `./e2e/scripts/debug.sh my_test_name arg1 arg2 arg_n`
+4. Run test as following: `./e2e/scripts/debug.sh my_test_name arg1 arg2 arg_n`.
+   Example: `./e2e/scripts/debug.sh bitcoin_withdraw_restricted 0.001`
 5. Place a breakpoint in the code.
 6. Go to the editor's debug panel and hit "Debug" button.
