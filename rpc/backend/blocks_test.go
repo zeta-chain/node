@@ -6,7 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/abci/types"
-	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1626,12 +1626,15 @@ func (suite *BackendTestSuite) TestEthAndSyntheticMsgsFromTendermintBlock() {
 	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
 
 	suite.backend.indexer = nil
-	client := suite.backend.clientCtx.Client.(*mocks.Client)
-	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	// block contains block real and synthetic tx
-	resBlock, _ := RegisterBlock(client, 1, []tmtypes.Tx{realTx, tx})
-	blockRes, _ := RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{{}, &txRes})
-	RegisterBaseFee(queryClient, sdk.NewInt(1))
+	emptyBlock := tmtypes.MakeBlock(1, []tmtypes.Tx{realTx, tx}, nil, nil)
+	emptyBlock.ChainID = ChainID
+	blockHash := common.BigToHash(big.NewInt(1)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: tmtypes.BlockID{Hash: bytes.HexBytes(blockHash)}}
+	blockRes := &tmrpctypes.ResultBlockResults{
+		Height:     1,
+		TxsResults: []*types.ResponseDeliverTx{{}, &txRes},
+	}
 
 	// both real and synthetic should be returned
 	msgs, additionals := suite.backend.EthMsgsFromTendermintBlock(resBlock, blockRes)
@@ -1659,7 +1662,7 @@ func (suite *BackendTestSuite) TestEthAndSyntheticEthBlockByNumber() {
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	// block contains block real and synthetic tx
 	RegisterBlock(client, 1, []tmtypes.Tx{realTx, tx})
-	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{{}, &txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*types.ResponseDeliverTx{{}, &txRes})
 	RegisterBaseFee(queryClient, sdk.NewInt(1))
 
 	// only real should be returned
@@ -1683,7 +1686,7 @@ func (suite *BackendTestSuite) TestEthAndSyntheticGetBlockByNumber() {
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	// block contains block real and synthetic tx
 	RegisterBlock(client, 1, []tmtypes.Tx{realTx, tx})
-	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{{}, &txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*types.ResponseDeliverTx{{}, &txRes})
 	RegisterBaseFee(queryClient, sdk.NewInt(1))
 	RegisterValidatorAccount(queryClient, sdk.AccAddress(common.Address{}.Bytes()))
 	RegisterConsensusParams(client, 1)
