@@ -1,13 +1,13 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -55,50 +55,36 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 		r.BTCZRC20Addr,
 		big.NewInt(amount.Int64()*2),
 	) // approve more to cover withdraw fee
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic(fmt.Errorf("approve receipt status is not 1"))
-	}
+	require.Equal(r, uint64(1), receipt.Status, "approve receipt status is not 1")
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
 
 	// withdraw 'amount' of BTC from ZRC20 to BTC address
 	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic(fmt.Errorf("withdraw receipt status is not 1"))
-	}
+	require.NoError(r, err)
 
-	// mine 10 blocks to confirm the withdraw tx
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	require.Equal(r, uint64(1), receipt.Status, "withdraw receipt status is not 1")
+
+	// mine 10 blocks to confirm the withdrawal tx
 	_, err = r.GenerateToAddressIfLocalBitcoin(10, to)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Errorf("cctx status is not OutboundMined"))
-	}
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status, "cctx status is not OutboundMined")
 
 	// get bitcoin tx according to the outTxHash in cctx
 	outTxHash := cctx.GetCurrentOutboundParam().Hash
 	hash, err := chainhash.NewHashFromStr(outTxHash)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(hash)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("raw tx:")
 	r.Logger.Info("  TxIn: %d", len(rawTx.Vin))
 	for idx, txIn := range rawTx.Vin {
