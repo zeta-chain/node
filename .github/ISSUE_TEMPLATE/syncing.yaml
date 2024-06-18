@@ -10,14 +10,14 @@ body:
   - type: dropdown
     attributes:
       label: Does your machine match the technical requirements?
-      description: See https://www.zetachain.com/docs/validators/requirements/
+      description: See https://www.zetachain.com/docs/nodes/start-here/requirements/
       options:
         - "Yes"
         - "No"
   - type: dropdown
     attributes:
       label: Have you completed the setup?
-      description: See https://www.zetachain.com/docs/validators/setup/
+      description: See https://www.zetachain.com/docs/nodes/start-here/setup/
       options:
         - "Yes"
         - "No"
