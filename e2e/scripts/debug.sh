@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+# Make sure that dlv is installed!
+# go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Check if at least one argument is provided
+if [ "$#" -lt 1 ]; then
+  echo "Usage: $0 <test> [args...]"
+  exit 1
+fi
+
+# Extract the test argument
+test=$1
+shift
+
+# Collect additional arguments
+e2e_test_args=$(echo "$@" | tr ' ' ',')
+
+dlv_opts="--headless --listen=:2345 --api-version=2 --accept-multiclient"
+e2e_config="cmd/zetae2e/config/local.yml"
+
+# Echo commands
+# shellcheck disable=SC2086
+set -x
+dlv debug ./cmd/zetae2e/ $dlv_opts -- run $test:$e2e_test_args --config $e2e_config
