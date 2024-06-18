@@ -7,7 +7,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-// Signer is the base signer
+// Signer is the base structure for grouping the common logic between chain signers.
+// The common logic includes: chain, chainParams, contexts, tss, metrics, loggers etc.
 type Signer struct {
 	// chain contains static information about the external chain
 	chain chains.Chain

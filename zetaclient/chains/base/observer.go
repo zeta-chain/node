@@ -21,17 +21,20 @@ import (
 )
 
 const (
-	// EnvVarLatestBlock is the environment variable to indicate latest block height
+	// EnvVarLatestBlock is the environment variable that forces the observer to scan from the latest block
 	EnvVarLatestBlock = "latest"
 
-	// DefaultBlockCacheSize is the default size of the block cache
+	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
+	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
 
-	// DefaultHeadersCacheSize is the default size of the headers cache
+	// DefaultHeadersCacheSize is the default number of headers that the observer will keep in cache for performance (without RPC calls)
+	// Cached headers can be used to get header information
 	DefaultHeadersCacheSize = 1000
 )
 
-// Observer is the base observer.
+// Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
+// The common logic includes: chain, chainParams, contexts, zetacore client, tss, lastBlock, db, metrics, loggers etc.
 type Observer struct {
 	// chain contains static information about the observed chain
 	chain chains.Chain
