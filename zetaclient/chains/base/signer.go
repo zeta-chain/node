@@ -4,6 +4,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 // Signer is the base signer
@@ -17,6 +18,9 @@ type Signer struct {
 	// tss is the TSS signer
 	tss interfaces.TSSSigner
 
+	// ts is the telemetry server for metrics
+	ts *metrics.TelemetryServer
+
 	// logger contains the loggers used by signer
 	logger Logger
 }
@@ -26,12 +30,14 @@ func NewSigner(
 	chain chains.Chain,
 	zetacoreContext *context.ZetacoreContext,
 	tss interfaces.TSSSigner,
+	ts *metrics.TelemetryServer,
 	logger Logger,
 ) *Signer {
 	return &Signer{
 		chain:           chain,
 		zetacoreContext: zetacoreContext,
 		tss:             tss,
+		ts:              ts,
 		logger: Logger{
 			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
 			Compliance: logger.Compliance,
@@ -72,7 +78,18 @@ func (s *Signer) WithTSS(tss interfaces.TSSSigner) *Signer {
 	return s
 }
 
+// TelemetryServer returns the telemetry server for the signer
+func (s *Signer) TelemetryServer() *metrics.TelemetryServer {
+	return s.ts
+}
+
+// WithTelemetryServer attaches a new telemetry server to the signer
+func (s *Signer) WithTelemetryServer(ts *metrics.TelemetryServer) *Signer {
+	s.ts = ts
+	return s
+}
+
 // Logger returns the logger for the signer
-func (s *Signer) Logger() Logger {
-	return s.logger
+func (s *Signer) Logger() *Logger {
+	return &s.logger
 }

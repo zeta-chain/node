@@ -26,6 +26,9 @@ const (
 
 	// DefaultBlockCacheSize is the default size of the block cache
 	DefaultBlockCacheSize = 1000
+
+	// DefaultHeadersCacheSize is the default size of the headers cache
+	DefaultHeadersCacheSize = 1000
 )
 
 // Observer is the base observer.
@@ -54,8 +57,14 @@ type Observer struct {
 	// blockCache is the cache for blocks
 	blockCache *lru.Cache
 
+	// headerCache is the cache for headers
+	headerCache *lru.Cache
+
 	// db is the database to persist data
 	db *gorm.DB
+
+	// ts is the telemetry server for metrics
+	ts *metrics.TelemetryServer
 
 	// logger contains the loggers used by observer
 	logger ObserverLogger
@@ -72,7 +81,9 @@ func NewObserver(
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
+	headersCacheSize int,
 	dbPath string,
+	ts *metrics.TelemetryServer,
 	logger Logger,
 ) (*Observer, error) {
 	ob := Observer{
@@ -83,6 +94,7 @@ func NewObserver(
 		tss:              tss,
 		lastBlock:        0,
 		lastBlockScanned: 0,
+		ts:               ts,
 		stop:             make(chan struct{}),
 	}
 
@@ -94,6 +106,12 @@ func NewObserver(
 	ob.blockCache, err = lru.New(blockCacheSize)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating block cache")
+	}
+
+	// create header cache
+	ob.headerCache, err = lru.New(headersCacheSize)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating header cache")
 	}
 
 	// open database
@@ -192,6 +210,17 @@ func (ob *Observer) BlockCache() *lru.Cache {
 // WithBlockCache attaches a new block cache to the observer.
 func (ob *Observer) WithBlockCache(cache *lru.Cache) *Observer {
 	ob.blockCache = cache
+	return ob
+}
+
+// HeaderCache returns the header cache for the observer.
+func (ob *Observer) HeaderCache() *lru.Cache {
+	return ob.headerCache
+}
+
+// WithHeaderCache attaches a new header cache to the observer.
+func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
+	ob.headerCache = cache
 	return ob
 }
 

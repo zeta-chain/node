@@ -33,7 +33,6 @@ func createObserver(t *testing.T, dbPath string) *base.Observer {
 	zetacoreContext := context.NewZetacoreContext(config.NewConfig())
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
-	blockCacheSize := base.DefaultBlockCacheSize
 
 	// create observer
 	logger := base.DefaultLogger()
@@ -43,8 +42,10 @@ func createObserver(t *testing.T, dbPath string) *base.Observer {
 		zetacoreContext,
 		zetacoreClient,
 		tss,
-		blockCacheSize,
+		base.DefaultBlockCacheSize,
+		base.DefaultHeadersCacheSize,
 		dbPath,
+		nil,
 		logger,
 	)
 	require.NoError(t, err)
@@ -60,55 +61,73 @@ func TestNewObserver(t *testing.T) {
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
+	headersCacheSize := base.DefaultHeadersCacheSize
 	dbPath := createTempDir(t)
 
 	// test cases
 	tests := []struct {
-		name            string
-		chain           chains.Chain
-		chainParams     observertypes.ChainParams
-		zetacoreContext *context.ZetacoreContext
-		zetacoreClient  interfaces.ZetacoreClient
-		tss             interfaces.TSSSigner
-		blockCacheSize  int
-		dbPath          string
-		fail            bool
-		message         string
+		name             string
+		chain            chains.Chain
+		chainParams      observertypes.ChainParams
+		zetacoreContext  *context.ZetacoreContext
+		zetacoreClient   interfaces.ZetacoreClient
+		tss              interfaces.TSSSigner
+		blockCacheSize   int
+		headersCacheSize int
+		dbPath           string
+		fail             bool
+		message          string
 	}{
 		{
-			name:            "should be able to create new observer",
-			chain:           chain,
-			chainParams:     chainParams,
-			zetacoreContext: zetacoreContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  blockCacheSize,
-			dbPath:          dbPath,
-			fail:            false,
+			name:             "should be able to create new observer",
+			chain:            chain,
+			chainParams:      chainParams,
+			zetacoreContext:  zetacoreContext,
+			zetacoreClient:   zetacoreClient,
+			tss:              tss,
+			blockCacheSize:   blockCacheSize,
+			headersCacheSize: headersCacheSize,
+			dbPath:           dbPath,
+			fail:             false,
 		},
 		{
-			name:            "should return error on invalid block cache size",
-			chain:           chain,
-			chainParams:     chainParams,
-			zetacoreContext: zetacoreContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  0,
-			dbPath:          dbPath,
-			fail:            true,
-			message:         "error creating block cache",
+			name:             "should return error on invalid block cache size",
+			chain:            chain,
+			chainParams:      chainParams,
+			zetacoreContext:  zetacoreContext,
+			zetacoreClient:   zetacoreClient,
+			tss:              tss,
+			blockCacheSize:   0,
+			headersCacheSize: headersCacheSize,
+			dbPath:           dbPath,
+			fail:             true,
+			message:          "error creating block cache",
 		},
 		{
-			name:            "should return error on invalid db path",
-			chain:           chain,
-			chainParams:     chainParams,
-			zetacoreContext: zetacoreContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  blockCacheSize,
-			dbPath:          "/invalid/123db",
-			fail:            true,
-			message:         "error opening observer db",
+			name:             "should return error on invalid header cache size",
+			chain:            chain,
+			chainParams:      chainParams,
+			zetacoreContext:  zetacoreContext,
+			zetacoreClient:   zetacoreClient,
+			tss:              tss,
+			blockCacheSize:   blockCacheSize,
+			headersCacheSize: 0,
+			dbPath:           dbPath,
+			fail:             true,
+			message:          "error creating header cache",
+		},
+		{
+			name:             "should return error on invalid db path",
+			chain:            chain,
+			chainParams:      chainParams,
+			zetacoreContext:  zetacoreContext,
+			zetacoreClient:   zetacoreClient,
+			tss:              tss,
+			blockCacheSize:   blockCacheSize,
+			headersCacheSize: headersCacheSize,
+			dbPath:           "/invalid/123db",
+			fail:             true,
+			message:          "error opening observer db",
 		},
 	}
 
@@ -122,7 +141,9 @@ func TestNewObserver(t *testing.T) {
 				tt.zetacoreClient,
 				tt.tss,
 				tt.blockCacheSize,
+				tt.headersCacheSize,
 				tt.dbPath,
+				nil,
 				base.DefaultLogger(),
 			)
 			if tt.fail {
@@ -196,7 +217,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithLastBlockScanned(newLastBlockScanned)
 		require.Equal(t, newLastBlockScanned, ob.LastBlockScanned())
 	})
-	t.Run("should be able to update block cache", func(t *testing.T) {
+	t.Run("should be able to replace block cache", func(t *testing.T) {
 		ob := createObserver(t, dbPath)
 
 		// update block cache
@@ -205,6 +226,16 @@ func TestObserverGetterAndSetter(t *testing.T) {
 
 		ob = ob.WithBlockCache(newBlockCache)
 		require.Equal(t, newBlockCache, ob.BlockCache())
+	})
+	t.Run("should be able to replace headers cache", func(t *testing.T) {
+		ob := createObserver(t, dbPath)
+
+		// update headers cache
+		newHeadersCache, err := lru.New(200)
+		require.NoError(t, err)
+
+		ob = ob.WithHeaderCache(newHeadersCache)
+		require.Equal(t, newHeadersCache, ob.HeaderCache())
 	})
 	t.Run("should be able to get database", func(t *testing.T) {
 		ob := createObserver(t, dbPath)
