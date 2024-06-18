@@ -67,7 +67,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 			config.CCTX.GetCurrentOutboundParam().GasPrice = gasPrice.String()
 			config.CCTX.GetCurrentOutboundParam().Amount = config.CCTX.InboundParams.Amount
 		}
-		return c.crosschainKeeper.UpdateNonce(tmpCtx, outboundReceiverChainID, config.CCTX)
+		return c.crosschainKeeper.SetObserverOutboundInfo(tmpCtx, outboundReceiverChainID, config.CCTX)
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted

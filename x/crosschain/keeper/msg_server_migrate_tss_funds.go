@@ -201,7 +201,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 		return errorsmod.Wrap(types.ErrReceiverIsEmpty, fmt.Sprintf("chain %d is not supported", chainID))
 	}
 
-	err := k.UpdateNonce(ctx, chainID, &cctx)
+	err := k.SetObserverOutboundInfo(ctx, chainID, &cctx)
 	if err != nil {
 		return err
 	}

@@ -164,7 +164,7 @@ func (k msgServer) WhitelistERC20(
 			},
 		},
 	}
-	err = k.UpdateNonce(ctx, msg.ChainId, &cctx)
+	err = k.SetObserverOutboundInfo(ctx, msg.ChainId, &cctx)
 	if err != nil {
 		return nil, err
 	}

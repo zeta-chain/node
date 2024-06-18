@@ -187,7 +187,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 
 	EmitZRCWithdrawCreated(ctx, *cctx)
 
-	return k.ProcessCCTX(ctx, *cctx)
+	return nil
 }
 
 func (k Keeper) ProcessZetaSentEvent(
@@ -260,17 +260,6 @@ func (k Keeper) ProcessZetaSentEvent(
 	}
 
 	EmitZetaWithdrawCreated(ctx, *cctx)
-	return k.ProcessCCTX(ctx, *cctx)
-}
-
-func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx) error {
-	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
-	if ok {
-		cctx.InboundParams.ObservedHash = inCctxIndex
-	}
-
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
-	ctx.Logger().Debug("ProcessCCTX successful \n")
 	return nil
 }
 
