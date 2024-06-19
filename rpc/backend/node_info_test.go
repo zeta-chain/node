@@ -5,6 +5,9 @@ import (
 	"math/big"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -96,48 +99,24 @@ func (suite *BackendTestSuite) TestSetGasPrice() {
 	}
 }
 
-// TODO (https://github.com/zeta-chain/node/issues/2302): Combine these 2 into one test since the code is identical
-func (suite *BackendTestSuite) TestListAccounts() {
-	testCases := []struct {
-		name         string
-		registerMock func()
-		expAddr      []common.Address
-		expPass      bool
-	}{
-		{
-			"pass - returns empty address",
-			func() {},
-			[]common.Address{},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
-			tc.registerMock()
-
-			output, err := suite.backend.ListAccounts()
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expAddr, output)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
-	}
-}
-
 func (suite *BackendTestSuite) TestAccounts() {
 	testCases := []struct {
-		name         string
-		registerMock func()
-		expAddr      []common.Address
-		expPass      bool
+		name                    string
+		accountsRetrievalMethod func() ([]common.Address, error)
+		registerMock            func()
+		expAddr                 []common.Address
+		expPass                 bool
 	}{
 		{
-			"pass - returns empty address",
+			"pass - returns acc from keyring from ListAccounts",
+			suite.backend.ListAccounts,
+			func() {},
+			[]common.Address{},
+			true,
+		},
+		{
+			"pass - returns acc from keyring from Accounts",
+			suite.backend.Accounts,
 			func() {},
 			[]common.Address{},
 			true,
@@ -149,7 +128,7 @@ func (suite *BackendTestSuite) TestAccounts() {
 			suite.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			output, err := suite.backend.Accounts()
+			output, err := tc.accountsRetrievalMethod()
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -272,31 +251,55 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 			common.Address{},
 			false,
 		},
-		// TODO (https://github.com/zeta-chain/node/issues/2302): Finish this test case once ABCIQuery GetAccount is fixed
-		//{
-		//	"pass - set the etherbase for the miner",
-		//	func() {
-		//		client := suite.backend.clientCtx.Client.(*mocks.Client)
-		//		queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-		//		RegisterStatus(client)
-		//		RegisterValidatorAccount(queryClient, suite.acc)
-		//		c := sdk.NewDecCoin("azeta", sdk.NewIntFromBigInt(big.NewInt(1)))
-		//		suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
-		//		delAddr, _ := suite.backend.GetCoinbase()
-		//		account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
-		//		delCommonAddr := common.BytesToAddress(delAddr.Bytes())
-		//		request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
-		//		requestMarshal, _ := request.Marshal()
-		//		RegisterABCIQueryAccount(
-		//			client,
-		//			requestMarshal,
-		//			tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
-		//			account,
-		//		)
-		//	},
-		//	common.Address{},
-		//	false,
-		//},
+		{
+			"pass - set the etherbase for the miner",
+			func() {
+				priv, err := ethsecp256k1.GenerateKey()
+				suite.Require().NoError(err)
+
+				armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+				suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
+
+				suite.acc = sdk.AccAddress(priv.PubKey().Address().Bytes())
+				accounts := map[string]client.TestAccount{}
+				accounts[suite.acc.String()] = client.TestAccount{
+					Address: suite.acc,
+					Num:     uint64(1),
+					Seq:     uint64(1),
+				}
+
+				suite.backend.clientCtx = suite.backend.clientCtx.WithAccountRetriever(
+					client.TestAccountRetriever{Accounts: accounts},
+				)
+				var header metadata.MD
+				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParams(queryClient, &header, 1)
+				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(
+					codectypes.NewInterfaceRegistry(),
+				)
+				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				RegisterStatus(client)
+				RegisterValidatorAccount(queryClient, suite.acc)
+				c := sdk.NewDecCoin("azeta", sdk.NewIntFromBigInt(big.NewInt(1)))
+				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
+				delAddr, _ := suite.backend.GetCoinbase()
+				account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
+				delCommonAddr := common.BytesToAddress(delAddr.Bytes())
+				request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
+				requestMarshal, _ := request.Marshal()
+				RegisterUnconfirmedTxsEmpty(client, nil)
+				RegisterABCIQueryAccount(
+					client,
+					requestMarshal,
+					tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
+					account,
+				)
+				RegisterABCIQuerySimulate(client, tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false})
+				RegisterBroadcastTxAny(client)
+			},
+			common.Address{},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {

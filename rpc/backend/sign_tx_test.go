@@ -5,12 +5,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	goethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
+	"github.com/evmos/ethermint/ethereum/eip712"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"google.golang.org/grpc/metadata"
@@ -221,6 +224,18 @@ func (suite *BackendTestSuite) TestSign() {
 }
 
 func (suite *BackendTestSuite) TestSignTypedData() {
+	data := legacytx.StdSignBytes(
+		"0",
+		1,
+		1,
+		0,
+		legacytx.StdFee{Gas: 10, Amount: sdk.Coins{}},
+		[]sdk.Msg{&banktypes.MsgSend{}},
+		"",
+		nil,
+	)
+	typedData, err := eip712.WrapTxToTypedData(0, data)
+	suite.Require().NoError(err)
 	from, priv := tests.NewAddrKey()
 	testCases := []struct {
 		name           string
@@ -246,7 +261,16 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 			apitypes.TypedData{},
 			false,
 		},
-		// TODO (https://github.com/zeta-chain/node/issues/2302): Generate a TypedData msg
+		{
+			"sucess - valid typed data",
+			func() {
+				armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+				suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
+			},
+			from,
+			typedData,
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
