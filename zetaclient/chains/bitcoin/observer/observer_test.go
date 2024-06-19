@@ -70,6 +70,7 @@ func setupDBTxResults(t *testing.T) (*gorm.DB, map[string]btcjson.GetTransaction
 func TestNewBitcoinObserver(t *testing.T) {
 	t.Run("should return error because zetacore doesn't update zetacore context", func(t *testing.T) {
 		cfg := config.NewConfig()
+		params := mocks.MockChainParams(chains.BitcoinMainnet.ChainId, 10)
 		coreContext := context.NewZetacoreContext(cfg)
 		appContext := context.NewAppContext(coreContext, cfg)
 		chain := chains.BitcoinMainnet
@@ -79,8 +80,8 @@ func TestNewBitcoinObserver(t *testing.T) {
 		btcCfg := cfg.BitcoinConfig
 		ts := metrics.NewTelemetryServer()
 
-		client, err := NewObserver(appContext, chain, zetacoreClient, tss, tempSQLiteDbPath, logger, btcCfg, ts)
-		require.ErrorContains(t, err, "btc chains params not initialized")
+		client, err := NewObserver(params, appContext, chain, zetacoreClient, tss, tempSQLiteDbPath, logger, btcCfg, ts)
+		require.ErrorContains(t, err, "error ping the bitcoin server")
 		require.Nil(t, client)
 	})
 }

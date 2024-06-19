@@ -47,8 +47,9 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
+	params := mocks.MockChainParams(chains.BitcoinMainnet.ChainId, 10)
 	appContext := clientcontext.NewAppContext(&clientcontext.ZetacoreContext{}, config.Config{})
-	client, err := NewObserver(appContext, chains.BitcoinRegtest, nil, tss, tempSQLiteDbPath,
+	client, err := NewObserver(params, appContext, chains.BitcoinRegtest, nil, tss, tempSQLiteDbPath,
 		base.DefaultLogger(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.rpcClient, err = getRPCClient(18332)

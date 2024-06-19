@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
@@ -21,7 +22,7 @@ func createSigner(_ *testing.T) *base.Signer {
 	logger := base.DefaultLogger()
 
 	// create signer
-	return base.NewSigner(chain, zetacoreContext, tss, logger)
+	return base.NewSigner(chain, zetacoreContext, tss, nil, logger)
 }
 
 func TestNewSigner(t *testing.T) {
@@ -53,6 +54,14 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		newTSS := mocks.NewTSSAthens3()
 		signer = signer.WithTSS(newTSS)
 		require.Equal(t, newTSS, signer.TSS())
+	})
+	t.Run("should be able to update telemetry server", func(t *testing.T) {
+		signer := createSigner(t)
+
+		// update telemetry server
+		newTs := metrics.NewTelemetryServer()
+		signer = signer.WithTelemetryServer(newTs)
+		require.Equal(t, newTs, signer.TelemetryServer())
 	})
 	t.Run("should be able to get logger", func(t *testing.T) {
 		ob := createSigner(t)

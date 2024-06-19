@@ -133,6 +133,7 @@ type Observer struct {
 
 // NewObserver returns a new Bitcoin chain observer
 func NewObserver(
+	chainParams observertypes.ChainParams,
 	appcontext *context.AppContext,
 	chain chains.Chain,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -168,19 +169,13 @@ func NewObserver(
 		Compliance: logger.Compliance,
 	}
 
+	ob.params = chainParams
 	ob.zetacoreClient = zetacoreClient
 	ob.Tss = tss
 	ob.coreContext = appcontext.ZetacoreContext()
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
-
-	// set the Bitcoin chain params
-	_, chainParams, found := appcontext.ZetacoreContext().GetBTCChainParams()
-	if !found {
-		return nil, fmt.Errorf("btc chains params not initialized")
-	}
-	ob.params = *chainParams
 
 	// create the RPC client
 	ob.logger.Chain.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
