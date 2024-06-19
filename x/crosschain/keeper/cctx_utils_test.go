@@ -233,7 +233,8 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
+		// mock failed GetSupportedChainFromChainID
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
 
 		err := k.UpdateNonce(ctx, 5, nil)
 		require.Error(t, err)
@@ -245,10 +246,13 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
+
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{}, false)
 		cctx := types.CrossChainTx{
 			InboundParams: &types.InboundParams{
@@ -268,10 +272,13 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
+
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
 			Nonce: 100,
 		}, true)
@@ -295,10 +302,13 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
+
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
 			Nonce: 100,
 		}, true)
@@ -324,10 +334,13 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
+
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
 			Nonce: 100,
 		}, true)
@@ -355,10 +368,13 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
+
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
 			Nonce: 100,
 		}, true)
