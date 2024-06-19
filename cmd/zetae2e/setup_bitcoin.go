@@ -10,10 +10,8 @@ import (
 
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 // NewSetupBitcoinCmd sets up bitcoin wallet for e2e tests
@@ -58,8 +56,6 @@ func runSetupBitcoin(_ *cobra.Command, args []string) error {
 		conf,
 		ethcommon.HexToAddress(evmAddr),
 		conf.Accounts.EVMPrivKey,
-		utils.FungibleAdminName,     // placeholder value, not used
-		local.FungibleAdminMnemonic, // placeholder value, not used
 		logger,
 	)
 	if err != nil {

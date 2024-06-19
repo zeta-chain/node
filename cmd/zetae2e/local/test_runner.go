@@ -6,7 +6,6 @@ import (
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 // initTestRunner initializes a runner form tests
@@ -18,6 +17,7 @@ func initTestRunner(
 	userAddress ethcommon.Address,
 	userPrivKey string,
 	logger *runner.Logger,
+	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
 	// initialize runner for test
 	testRunner, err := zetae2econfig.RunnerFromConfig(
@@ -27,9 +27,8 @@ func initTestRunner(
 		conf,
 		userAddress,
 		userPrivKey,
-		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
 		logger,
+		opts...,
 	)
 	if err != nil {
 		return nil, err

@@ -149,8 +149,6 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		conf,
 		local.DeployerAddress,
 		local.DeployerPrivateKey,
-		utils.FungibleAdminName,
-		local.FungibleAdminMnemonic,
 		logger,
 	)
 	if err != nil {
