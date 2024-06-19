@@ -4,7 +4,6 @@ import (
 	"math"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -59,7 +58,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
+		observerAddress := sample.AccAddress()
 		wctx := sdk.WrapSDKContext(ctx)
 
 		_, found := k.GetLastObserverCount(ctx)
@@ -70,7 +69,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 			Creator:                 admin,
 			ZetaclientGranteePubkey: sample.PubKeyString(),
 			AddNodeAccountOnly:      false,
-			ObserverAddress:         observerAddress.String(),
+			ObserverAddress:         observerAddress,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		res, err := srv.AddObserver(wctx, &msg)
@@ -88,7 +87,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		})
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 		admin := sample.AccAddress()
-		observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
+		observerAddress := sample.AccAddress()
 
 		wctx := sdk.WrapSDKContext(ctx)
 
@@ -98,14 +97,14 @@ func TestMsgServer_AddObserver(t *testing.T) {
 
 		_, found = k.GetKeygen(ctx)
 		require.False(t, found)
-		_, found = k.GetNodeAccount(ctx, observerAddress.String())
+		_, found = k.GetNodeAccount(ctx, observerAddress)
 		require.False(t, found)
 
 		msg := types.MsgAddObserver{
 			Creator:                 admin,
 			ZetaclientGranteePubkey: sample.PubKeyString(),
 			AddNodeAccountOnly:      true,
-			ObserverAddress:         observerAddress.String(),
+			ObserverAddress:         observerAddress,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		res, err := srv.AddObserver(wctx, &msg)
@@ -119,7 +118,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, types.Keygen{BlockNumber: math.MaxInt64}, keygen)
 
-		_, found = k.GetNodeAccount(ctx, observerAddress.String())
+		_, found = k.GetNodeAccount(ctx, observerAddress)
 		require.True(t, found)
 	})
 }
