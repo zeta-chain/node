@@ -680,7 +680,7 @@ func (k Keeper) CallEVM(
 // value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
 // to bisect the correct gas limit (this may sometimes result in insufficient gas limit; not sure why)
 //
-// noEthereumTxEvent flag is used to control if ethereum_tx eventsshould emitted
+// noEthereumTxEvent flag is used to control if ethereum_tx events should be emitted
 // which will mean these txs are indexed and available in rpc methods
 //
 // returns (msg,err) the EVM execution result if there is any, even if error is non-nil due to contract reverts

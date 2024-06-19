@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -34,6 +35,12 @@ var _ tmrpcclient.Client = &mocks.Client{}
 // Tx Search
 func RegisterTxSearch(client *mocks.Client, query string, txBz []byte) {
 	resulTxs := []*tmrpctypes.ResultTx{{Tx: txBz}}
+	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
+		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
+}
+
+func RegisterTxSearchWithTxResult(client *mocks.Client, query string, txBz []byte, res abci.ResponseDeliverTx) {
+	resulTxs := []*tmrpctypes.ResultTx{{Tx: txBz, Height: 1, TxResult: res}}
 	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
 		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
 }
@@ -94,36 +101,26 @@ func RegisterStatusError(client *mocks.Client) {
 }
 
 // Block
-func RegisterBlockMultipleTxs(
+func RegisterBlock(
 	client *mocks.Client,
 	height int64,
 	txs []types.Tx,
 ) (*tmrpctypes.ResultBlock, error) {
-	block := types.MakeBlock(height, txs, nil, nil)
-	block.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: block}
-	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
-	return resBlock, nil
-}
-
-func RegisterBlock(
-	client *mocks.Client,
-	height int64,
-	tx []byte,
-) (*tmrpctypes.ResultBlock, error) {
 	// without tx
-	if tx == nil {
+	if len(txs) == 0 {
 		emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 		emptyBlock.ChainID = ChainID
-		resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock}
+		blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+		resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 		client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 		return resBlock, nil
 	}
 
 	// with tx
-	block := types.MakeBlock(height, []types.Tx{tx}, nil, nil)
+	block := types.MakeBlock(height, txs, nil, nil)
 	block.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: block}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: block, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 	return resBlock, nil
 }
@@ -154,7 +151,8 @@ func TestRegisterBlock(t *testing.T) {
 
 	emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 	emptyBlock.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: blockHash}}
 	require.Equal(t, resBlock, res)
 	require.NoError(t, err)
 }

@@ -59,6 +59,7 @@
 * [2266](https://github.com/zeta-chain/node/pull/2266) - try fixing E2E test `crosschain_swap` failure `btc transaction not signed`
 * [2294](https://github.com/zeta-chain/node/pull/2294) - add and fix existing ethermint rpc unit test
 * [2329](https://github.com/zeta-chain/node/pull/2329) - fix TODOs in rpc unit tests
+* [2342](https://github.com/zeta-chain/node/pull/2342) - extend rpc unit tests with testing extension to include synthetic ethereum txs
 * [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
 
 ### Fixes
