@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -82,6 +83,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 	blockNrInvalid := rpctypes.NewBlockNumber(big.NewInt(1))
 	blockNr := rpctypes.NewBlockNumber(big.NewInt(4))
 	address1 := tests.GenerateAddress()
+	expProofValue := big.NewInt(2)
 
 	testCases := []struct {
 		name          string
@@ -93,7 +95,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 		expAccRes     *rpctypes.AccountResult
 	}{
 		{
-			"fail - BlockNumeber = 1 (invalidBlockNumber)",
+			"fail - BlockNumber = 1 (invalidBlockNumber)",
 			address1,
 			[]string{},
 			rpctypes.BlockNumberOrHash{BlockNumber: &blockNrInvalid},
@@ -139,6 +141,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 					"store/evm/key",
 					evmtypes.StateKey(address1, common.HexToHash("0x0").Bytes()),
 					tmrpcclient.ABCIQueryOptions{Height: iavlHeight, Prove: true},
+					expProofValue.Bytes(),
 				)
 				RegisterABCIQueryWithOptions(
 					client,
@@ -146,6 +149,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 					"store/acc/key",
 					authtypes.AddressStoreKey(sdk.AccAddress(address1.Bytes())),
 					tmrpcclient.ABCIQueryOptions{Height: iavlHeight, Prove: true},
+					expProofValue.Bytes(),
 				)
 			},
 			true,
@@ -159,7 +163,7 @@ func (suite *BackendTestSuite) TestGetProof() {
 				StorageProof: []rpctypes.StorageResult{
 					{
 						Key:   "0x0",
-						Value: (*hexutil.Big)(big.NewInt(2)),
+						Value: (*hexutil.Big)(expProofValue),
 						Proof: []string{""},
 					},
 				},
@@ -415,27 +419,32 @@ func (suite *BackendTestSuite) TestGetTransactionCount() {
 			false,
 			hexutil.Uint64(0),
 		},
-		// TODO (https://github.com/zeta-chain/node/issues/2302): Error mocking the GetAccount call - problem with Any type
-		//{
-		//	"pass - returns the number of transactions at the given address up to the given block number",
-		//	true,
-		//	rpctypes.NewBlockNumber(big.NewInt(1)),
-		//	func(addr common.Address, bn rpctypes.BlockNumber) {
-		//		client := suite.backend.clientCtx.Client.(*mocks.Client)
-		//		account, err := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, suite.acc)
-		//		suite.Require().NoError(err)
-		//		request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(suite.acc.Bytes()).String()}
-		//		requestMarshal, _ := request.Marshal()
-		//		RegisterABCIQueryAccount(
-		//			client,
-		//			requestMarshal,
-		//			tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
-		//			account,
-		//		)
-		//	},
-		//	true,
-		//	hexutil.Uint64(0),
-		//},
+		{
+			"pass - returns the number of transactions at the given address up to the given block number",
+			true,
+			rpctypes.NewBlockNumber(big.NewInt(1)),
+			func(addr common.Address, bn rpctypes.BlockNumber) {
+				var header metadata.MD
+				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParams(queryClient, &header, 1)
+				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(
+					codectypes.NewInterfaceRegistry(),
+				)
+				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				account, err := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, suite.acc)
+				suite.Require().NoError(err)
+				request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(suite.acc.Bytes()).String()}
+				requestMarshal, _ := request.Marshal()
+				RegisterABCIQueryAccount(
+					client,
+					requestMarshal,
+					tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
+					account,
+				)
+			},
+			true,
+			hexutil.Uint64(1),
+		},
 	}
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
