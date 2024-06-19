@@ -133,7 +133,7 @@ func TestMsgServer_AddAuthorization(t *testing.T) {
 		}
 
 		_, err := msgServer.AddAuthorization(sdk.WrapSDKContext(ctx), msg)
-		require.ErrorContains(t, err, types.ErrUnauthorized.Error())
+		require.ErrorIs(t, err, types.ErrUnauthorized)
 	})
 
 	t.Run("update existing authorization", func(t *testing.T) {

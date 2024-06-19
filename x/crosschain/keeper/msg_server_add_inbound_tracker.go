@@ -29,7 +29,6 @@ func (k msgServer) AddInboundTracker(
 	if err == nil {
 		isAuthorizedPolicy = true
 	}
-	fmt.Println("checking", msg.Creator)
 
 	// check if the msg signer is an observer
 	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)

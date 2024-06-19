@@ -119,7 +119,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		require.NoError(t, err, types.ErrAuthorizationNotFound)
 
 		_, err = msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
-		require.ErrorContains(t, err, types.ErrUnauthorized.Error())
+		require.ErrorIs(t, err, types.ErrUnauthorized)
 
 		authorizationList, found = k.GetAuthorizationList(ctx)
 		require.True(t, found)
