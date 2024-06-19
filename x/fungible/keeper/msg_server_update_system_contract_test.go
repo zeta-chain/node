@@ -137,9 +137,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NoError(t, err)
 
 		// can overwrite the previous system contract
-		msg2 := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		_, err = msgServer.UpdateSystemContract(ctx, msg2)
+		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
 		// can retrieve the system contract
@@ -253,9 +253,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		mockEVMKeeper.MockEVMFailCallOnce()
 
 		// can't update the system contract
-		msg2 := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		_, err = msgServer.UpdateSystemContract(ctx, msg2)
+		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		// fail on third evm call
@@ -263,9 +263,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		mockEVMKeeper.MockEVMFailCallOnce()
 
 		// can't update the system contract
-		msg3 := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
-		_, err = msgServer.UpdateSystemContract(ctx, msg3)
+		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 }

@@ -56,12 +56,12 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		require.Equal(t, chain3, chainParamsList.ChainParams[1].ChainId)
 
 		// remove chain params
-		msg2 := types.MsgRemoveChainParams{
+		msg = types.MsgRemoveChainParams{
 			Creator: admin,
 			ChainId: chain1,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg2, nil)
-		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has one chain params
@@ -71,12 +71,12 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		require.Equal(t, chain3, chainParamsList.ChainParams[0].ChainId)
 
 		// remove chain params
-		msg3 := types.MsgRemoveChainParams{
+		msg = types.MsgRemoveChainParams{
 			Creator: admin,
 			ChainId: chain3,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg3, nil)
-		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg3)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has no chain params
@@ -135,12 +135,12 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		})
 
 		// not found if chain ID not in list
-		msg2 := types.MsgRemoveChainParams{
+		msg = types.MsgRemoveChainParams{
 			Creator: admin,
 			ChainId: chains.ExternalChainList()[3].ChainId,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg2, nil)
-		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 	})
 }

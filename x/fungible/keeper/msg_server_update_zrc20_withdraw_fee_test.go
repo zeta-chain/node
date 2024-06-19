@@ -61,14 +61,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.Equal(t, uint64(42), gasLimit.Uint64())
 
 		// can update protocol fee only
-		msg2 := types.NewMsgUpdateZRC20WithdrawFee(
+		msg = types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(43),
 			math.Uint{},
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
 		require.NoError(t, err)
@@ -78,14 +78,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.Equal(t, uint64(42), gasLimit.Uint64())
 
 		// can update gas limit only
-		msg3 := types.NewMsgUpdateZRC20WithdrawFee(
+		msg = types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.Uint{},
 			math.NewUint(44),
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
-		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg3)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
 		require.NoError(t, err)

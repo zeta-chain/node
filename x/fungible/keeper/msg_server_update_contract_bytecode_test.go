@@ -141,13 +141,13 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		codeHash = codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 		require.NoError(t, err)
 
-		msg2 := types.NewMsgUpdateContractBytecode(
+		msg = types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20.Hex(),
 			codeHash,
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		_, err = msgServer.UpdateContractBytecode(ctx, msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateContractBytecode(ctx, msg)
 		require.NoError(t, err)
 		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)
 		require.NoError(t, err)

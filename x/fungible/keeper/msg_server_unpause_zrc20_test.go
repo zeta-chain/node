@@ -64,21 +64,21 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 		assertUnpaused(zrc20C)
 
 		// can unpause already unpaused zrc20
-		msg2 := types.NewMsgUnpauseZRC20(
+		msg = types.NewMsgUnpauseZRC20(
 			admin,
 			[]string{
 				zrc20C,
 			},
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		_, err = msgServer.UnpauseZRC20(ctx, msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UnpauseZRC20(ctx, msg)
 		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
 		// can unpause all zrc20
-		msg3 := types.NewMsgUnpauseZRC20(
+		msg = types.NewMsgUnpauseZRC20(
 			admin,
 			[]string{
 				zrc20A,
@@ -86,8 +86,8 @@ func TestKeeper_UnpauseZRC20(t *testing.T) {
 				zrc20C,
 			},
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
-		_, err = msgServer.UnpauseZRC20(ctx, msg3)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UnpauseZRC20(ctx, msg)
 		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertUnpaused(zrc20B)

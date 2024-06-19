@@ -128,14 +128,14 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 
 		// reset nonces back to 0
 		// Reset nonces back to 0
-		msg2 := types.MsgResetChainNonces{
+		msg = types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
 			ChainNonceLow:  0,
 			ChainNonceHigh: 0,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg2, nil)
-		_, err = srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check updated chain nonces

@@ -44,13 +44,13 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 		require.True(t, coin.LiquidityCap.Equal(math.NewUint(42)), "invalid liquidity cap", coin.LiquidityCap.String())
 
 		// can update liquidity cap again
-		msg2 := types.NewMsgUpdateZRC20LiquidityCap(
+		msg = types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(4200000),
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg)
 		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
@@ -63,13 +63,13 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 		)
 
 		// can set liquidity cap to 0
-		msg3 := types.NewMsgUpdateZRC20LiquidityCap(
+		msg = types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.NewUint(0),
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg3, nil)
-		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg3)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg)
 		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
@@ -77,13 +77,13 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 		require.True(t, coin.LiquidityCap.Equal(math.ZeroUint()), "invalid liquidity cap", coin.LiquidityCap.String())
 
 		// can set liquidity cap to nil
-		msg4 := types.NewMsgUpdateZRC20LiquidityCap(
+		msg = types.NewMsgUpdateZRC20LiquidityCap(
 			admin,
 			coinAddress,
 			math.Uint{},
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg4, nil)
-		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg4)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, msg)
 		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)

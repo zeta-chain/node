@@ -51,12 +51,12 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		chainParams2 := sample.ChainParams(chain2)
 
 		// a new chian params can be added
-		msg2 := types.MsgUpdateChainParams{
+		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams2,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg2, nil)
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has two chain params
@@ -68,12 +68,12 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		chainParams3 := sample.ChainParams(chain3)
 
 		// a new chain params can be added
-		msg3 := types.MsgUpdateChainParams{
+		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams3,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg3, nil)
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg3)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has three chain params
@@ -86,12 +86,12 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		// chain params can be updated
 		chainParams2.ConfirmationCount = chainParams2.ConfirmationCount + 1
-		msg4 := types.MsgUpdateChainParams{
+		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams2,
 		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg4, nil)
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg4)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has three chain params

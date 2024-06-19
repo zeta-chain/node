@@ -63,7 +63,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		require.Equal(t, gasAddress, gas.Hex())
 
 		// can deploy non-gas zrc20
-		msg2 := types.NewMsgDeployFungibleCoinZRC20(
+		msg = types.NewMsgDeployFungibleCoinZRC20(
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
@@ -73,8 +73,8 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			coin.CoinType_ERC20,
 			2000000,
 		)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg2, nil)
-		res, err = msgServer.DeployFungibleCoinZRC20(ctx, msg2)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		res, err = msgServer.DeployFungibleCoinZRC20(ctx, msg)
 		require.NoError(t, err)
 
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.Address))
