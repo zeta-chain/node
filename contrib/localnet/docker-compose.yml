@@ -40,6 +40,14 @@ services:
       - "26657:26657"
       - "6060:6060"
       - "9090:9090"
+    healthcheck:
+      # use the zevm endpoint for the healthcheck as it is the slowest to come up
+      test: ["CMD", "curl", "-f", "-X", "POST", "--data", '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}', "-H", "Content-Type: application/json", "http://localhost:8545"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      start_interval: 1s
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
@@ -127,8 +135,10 @@ services:
     tty: true
     container_name: orchestrator
     depends_on:
-      - zetacore0
-      - eth
+      zetacore0:
+        condition: service_healthy
+      eth:
+        condition: service_started
     hostname: orchestrator
     networks:
       mynetwork:
