@@ -76,7 +76,12 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status, "cctx status is not OutboundMined")
+	require.Equal(
+		r,
+		crosschaintypes.CctxStatus_OutboundMined,
+		cctx.CctxStatus.Status,
+		"cctx status is not OutboundMined",
+	)
 
 	// get bitcoin tx according to the outTxHash in cctx
 	outTxHash := cctx.GetCurrentOutboundParam().Hash

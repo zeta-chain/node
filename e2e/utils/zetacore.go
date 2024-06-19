@@ -8,9 +8,10 @@ import (
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 type CCTXClient = crosschaintypes.QueryClient
@@ -192,7 +193,13 @@ type waitConfig struct {
 }
 
 // WaitCctxByInboundHash waits until cctx appears by inbound hash.
-func WaitCctxByInboundHash(ctx context.Context, t require.TestingT, hash string, c CCTXClient, opts ...WaitOpts) []crosschaintypes.CrossChainTx {
+func WaitCctxByInboundHash(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+	opts ...WaitOpts,
+) []crosschaintypes.CrossChainTx {
 	const tick = time.Millisecond * 200
 
 	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
