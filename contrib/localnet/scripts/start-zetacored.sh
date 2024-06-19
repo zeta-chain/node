@@ -189,7 +189,7 @@ then
 
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
-  zetacored add-observer-list --keygen-block 20
+  zetacored add-observer-list --keygen-block 25
 
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
