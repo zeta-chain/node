@@ -18,7 +18,7 @@ shift
 
 # Collect additional arguments
 e2e_test_args=$(echo "$@" | tr ' ' ',')
-e2e_opts="--config cmd/zetae2e/config/local.yml"
+e2e_opts="--config cmd/zetae2e/config/local.yml --verbose"
 
 # Echo commands
 # shellcheck disable=SC2086

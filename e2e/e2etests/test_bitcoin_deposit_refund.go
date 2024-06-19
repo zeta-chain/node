@@ -1,10 +1,10 @@
 package e2etests
 
 import (
-	"context"
 	"strconv"
-	"time"
 
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -14,13 +14,17 @@ import (
 
 func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
 	// ARRANGE
+	// Given BTC address
+	r.SetBtcAddress(r.Name, false)
+
+	// Given "Live" BTC network
+	stop := r.MineBlocksIfLocalBitcoin()
+	defer stop()
+
 	// Given amount to send
 	require.Len(r, args, 1)
 	amount := parseFloat(r, args[0])
 	amount += zetabitcoin.DefaultDepositorFee
-
-	// Given BTC address
-	r.SetBtcAddress(r.Name, false)
 
 	// Given a list of UTXOs
 	utxos, err := r.ListDeployerUTXOs()
@@ -33,38 +37,33 @@ func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
-	// Wait for processing in zetaclient
-	cctxs := utils.WaitCctxByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
-
 	// ASSERT
-	require.Len(r, cctxs, 1)
-
-	// Check that it's status is related to tx reversal
-	expectedStatuses := []string{types.CctxStatus_PendingRevert.String(), types.CctxStatus_Reverted.String()}
-	actualStatus := cctxs[0].CctxStatus.Status.String()
-
-	require.Contains(r, expectedStatuses, actualStatus)
-
-	r.Logger.Info("CCTX revert status: %s", actualStatus)
-
-	// Now we want to make sure refund TX is completed. Let's check that zetaclient issued a refund on BTC
-	ctx, cancel := context.WithTimeout(r.Ctx, time.Minute*10)
-	defer cancel()
-
+	// Now we want to make sure refund TX is completed.
+	// Let's check that zetaclient issued a refund on BTC
 	searchForCrossChainWithBtcRefund := utils.Matches(func(tx types.CrossChainTx) bool {
-		if len(tx.OutboundParams) != 2 {
-			return false
-		}
-
-		btcRefundTx := tx.OutboundParams[1]
-
-		return btcRefundTx.Hash != ""
+		return tx.GetCctxStatus().Status == types.CctxStatus_Reverted &&
+			len(tx.OutboundParams) == 2 &&
+			tx.OutboundParams[1].Hash != ""
 	})
 
-	cctxs = utils.WaitCctxByInboundHash(ctx, r, txHash.String(), r.CctxClient, searchForCrossChainWithBtcRefund)
+	cctxs := utils.WaitCctxByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient, searchForCrossChainWithBtcRefund)
 	require.Len(r, cctxs, 1)
 
-	// todo check that BTC refund is completed
+	// Pick btc tx hash from the cctx
+	btcTxHash, err := chainhash.NewHashFromStr(cctxs[0].OutboundParams[1].Hash)
+	require.NoError(r, err)
+
+	// Query the BTC network to check the refund transaction
+	refundTx, err := r.BtcRPCClient.GetTransaction(btcTxHash)
+	require.NoError(r, err, refundTx)
+
+	// Finally, check the refund transaction details
+	refundTxDetails := refundTx.Details[0]
+	assert.Equal(r, "receive", refundTxDetails.Category)
+	assert.Equal(r, r.BTCDeployerAddress.EncodeAddress(), refundTxDetails.Address)
+	assert.NotEmpty(r, refundTxDetails.Amount)
+
+	r.Logger.InfoLoud("Sent %f BTC to TSS with invalid memo, got refund of %f BTC", amount, refundTxDetails.Amount)
 }
 
 func parseFloat(t require.TestingT, s string) float64 {
