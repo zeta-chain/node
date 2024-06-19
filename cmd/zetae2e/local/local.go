@@ -262,6 +262,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		erc20Tests := []string{
 			e2etests.TestERC20WithdrawName,
 			e2etests.TestMultipleERC20WithdrawsName,
+			e2etests.TestERC20DepositAndCallRefundName,
 			e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
@@ -334,7 +335,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
-			e2etests.TestERC20DepositAndCallRefundName,
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details

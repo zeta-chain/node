@@ -44,11 +44,12 @@ const (
 	 EVM erc20 tests
 	 Test transfer of EVM erc20 asset across chains
 	*/
-	TestERC20WithdrawName          = "erc20_withdraw"
-	TestERC20DepositName           = "erc20_deposit"
-	TestMultipleERC20DepositName   = "erc20_multiple_deposit"
-	TestMultipleERC20WithdrawsName = "erc20_multiple_withdraw"
-	TestERC20DepositRestrictedName = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestERC20WithdrawName             = "erc20_withdraw"
+	TestERC20DepositName              = "erc20_deposit"
+	TestMultipleERC20DepositName      = "erc20_multiple_deposit"
+	TestMultipleERC20WithdrawsName    = "erc20_multiple_withdraw"
+	TestERC20DepositRestrictedName    = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
 	 Bitcoin tests
@@ -91,13 +92,12 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
-	TestMigrateChainSupportName       = "migrate_chain_support"
-	TestPauseZRC20Name                = "pause_zrc20"
-	TestUpdateBytecodeZRC20Name       = "update_bytecode_zrc20"
-	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
-	TestRateLimiterName               = "rate_limiter"
-	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
+	TestDepositEtherLiquidityCapName = "deposit_eth_liquidity_cap"
+	TestMigrateChainSupportName      = "migrate_chain_support"
+	TestPauseZRC20Name               = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name      = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
+	TestRateLimiterName              = "rate_limiter"
 
 	/*
 	 Special tests
@@ -315,6 +315,12 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestERC20DepositRestricted,
 	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallRefundName,
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{},
+		TestERC20DepositAndCallRefund,
+	),
 	/*
 	 Bitcoin tests
 	*/
@@ -506,12 +512,6 @@ var AllE2ETests = []runner.E2ETest{
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
 		TestRateLimiter,
-	),
-	runner.NewE2ETest(
-		TestERC20DepositAndCallRefundName,
-		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
-		[]runner.ArgDefinition{},
-		TestERC20DepositAndCallRefund,
 	),
 	/*
 	 Special tests
