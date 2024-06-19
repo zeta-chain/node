@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -35,6 +36,30 @@ type BackendTestSuite struct {
 	signer  keyring.Signer
 }
 
+// testTx is a dummy implementation of cosmos Tx used for testing.
+type testTx struct {
+}
+
+func (tx testTx) GetMsgs() []sdk.Msg           { return nil }
+func (tx testTx) GetSigners() []sdk.AccAddress { return nil }
+
+func (tx testTx) ValidateBasic() error { return nil }
+func (t testTx) ProtoMessage()         { panic("not implemented") }
+func (t testTx) Reset()                { panic("not implemented") }
+
+func (t testTx) String() string { panic("not implemented") }
+
+func (t testTx) Bytes() []byte { panic("not implemented") }
+
+func (t testTx) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+
+func (t testTx) Type() string { panic("not implemented") }
+
+var (
+	_ sdk.Tx  = (*testTx)(nil)
+	_ sdk.Msg = (*testTx)(nil)
+)
+
 func TestBackendTestSuite(t *testing.T) {
 	suite.Run(t, new(BackendTestSuite))
 }
@@ -55,6 +80,7 @@ func (suite *BackendTestSuite) SetupTest() {
 	}
 
 	// Create Account with set sequence
+
 	suite.acc = sdk.AccAddress(tests.GenerateAddress().Bytes())
 	accounts := map[string]client.TestAccount{}
 	accounts[suite.acc.String()] = client.TestAccount{
@@ -115,6 +141,34 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 	bz, err := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	suite.Require().NoError(err)
 	return msgEthereumTx, bz
+}
+
+func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.ResponseDeliverTx) {
+	testTx := &testTx{}
+	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
+	txBuilder.SetSignatures()
+	txBuilder.SetMsgs(testTx)
+	bz, _ := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	return bz, abci.ResponseDeliverTx{
+		Code: 0,
+		Events: []abci.Event{
+			{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+				{Key: "ethereumTxHash", Value: txHash},
+				{Key: "txIndex", Value: "8888"},
+				{Key: "amount", Value: "1000"},
+				{Key: "txGasUsed", Value: "21000"},
+				{Key: "txHash", Value: ""},
+				{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+			}},
+			{
+				Type: "message", Attributes: []abci.EventAttribute{
+					{Key: "sender", Value: "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"},
+					{Key: "txType", Value: "88"},
+					{Key: "txNonce", Value: "1"},
+				},
+			},
+		},
+	}
 }
 
 // buildFormattedBlock returns a formatted block for testing

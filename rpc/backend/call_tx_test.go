@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -400,7 +401,7 @@ func (suite *BackendTestSuite) TestDoCall() {
 			func() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, bz)
+				RegisterBlock(client, 1, []tmtypes.Tx{bz})
 				RegisterEthCallError(
 					queryClient,
 					&evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()},
@@ -416,7 +417,7 @@ func (suite *BackendTestSuite) TestDoCall() {
 			func() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, bz)
+				RegisterBlock(client, 1, []tmtypes.Tx{bz})
 				RegisterEthCall(
 					queryClient,
 					&evmtypes.EthCallRequest{Args: argsBz, ChainId: suite.backend.chainID.Int64()},

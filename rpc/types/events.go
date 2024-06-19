@@ -240,6 +240,8 @@ func ParseTxIndexerResult(
 				Type:      parsedTx.Type,
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
+				Data:      parsedTx.Data,
+				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
 	return &ethermint.TxResult{
