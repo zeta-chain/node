@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -49,7 +49,7 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	}
 	appContext := clientcontext.NewAppContext(&clientcontext.ZetacoreContext{}, config.Config{})
 	client, err := NewObserver(appContext, chains.BitcoinRegtest, nil, tss, tempSQLiteDbPath,
-		clientcommon.DefaultLoggers(), config.BTCConfig{}, nil)
+		base.DefaultLogger(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.rpcClient, err = getRPCClient(18332)
 	suite.Require().NoError(err)
