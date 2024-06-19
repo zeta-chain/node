@@ -336,7 +336,7 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestBitcoinDepositRefundName,
 		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.001"},
+			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositRefund,
 	),
