@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestDepositBTCRefund(r *runner.E2ERunner, args []string) {
@@ -25,13 +26,16 @@ func TestDepositBTCRefund(r *runner.E2ERunner, args []string) {
 	// ACT
 	// Send a single UTXO to TSS address
 	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, []byte("gibberish-memo"))
-	require.NotEmpty(r, err)
+	require.NoError(r, err)
 
 	// Wait for processing in zetaclient
-	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// ASSERT
-	// todo...
+	// Check that it's status is related to tx reversal
+	actualStatus := cctx.CctxStatus.Status
+
+	require.Contains(r, []types.CctxStatus{types.CctxStatus_PendingRevert, types.CctxStatus_Reverted}, actualStatus)
 }
 
 func parseFloat(t require.TestingT, s string) float64 {

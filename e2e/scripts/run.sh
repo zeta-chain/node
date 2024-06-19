@@ -18,9 +18,9 @@ shift
 
 # Collect additional arguments
 e2e_test_args=$(echo "$@" | tr ' ' ',')
-e2e_opts="--config cmd/zetae2e/config/local.yml --skip-header-proof --skip-setup"
+e2e_opts="--config cmd/zetae2e/config/local.yml"
 
 # Echo commands
 # shellcheck disable=SC2086
 set -x
-go run ./cmd/zetae2e/ run $test:$e2e_test_args --config $e2e_opts
+go run ./cmd/zetae2e/ run $test:$e2e_test_args $e2e_opts
