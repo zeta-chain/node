@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -166,6 +168,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		time.Sleep(70 * time.Second)
 	}
 
+	zetaTxServer, err := txserver.NewZetaTxServer(
+		conf.RPCs.ZetaCoreRPC,
+		[]string{utils.FungibleAdminName},
+		[]string{UserFungibleAdminPrivateKey},
+		conf.ZetaChainID,
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to initialize ZetaChain tx server: %w", err))
+	}
+
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
@@ -174,9 +186,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf,
 		DeployerAddress,
 		DeployerPrivateKey,
-		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
 		logger,
+		runner.WithZetaTxServer(zetaTxServer),
 	)
 	if err != nil {
 		panic(err)
@@ -251,7 +262,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		erc20Tests := []string{
 			e2etests.TestERC20WithdrawName,
 			e2etests.TestMultipleERC20WithdrawsName,
-			e2etests.TestERC20DepositAndCallRefundName,
 			e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
@@ -324,6 +334,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
+			e2etests.TestERC20DepositAndCallRefundName,
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
