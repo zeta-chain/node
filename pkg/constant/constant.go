@@ -10,4 +10,7 @@ const (
 
 	// CmdMigrateTssFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
 	CmdMigrateTssFunds = "cmd_migrate_tss_funds"
+
+	// BTCWithdrawalDustAmount is the minimum satoshis that can be withdrawn from zEVM to avoid outbound dust output
+	BTCWithdrawalDustAmount = 1000
 )
