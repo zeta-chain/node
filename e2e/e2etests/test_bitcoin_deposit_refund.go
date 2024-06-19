@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestDepositBTCRefund(r *runner.E2ERunner, args []string) {
+func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
 	// ARRANGE
 	// Given amount to send
 	require.Len(r, args, 1)
