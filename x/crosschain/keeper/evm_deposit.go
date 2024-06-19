@@ -18,6 +18,8 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+const InCCTXIndexKey = "inCctxIndex"
+
 // HandleEVMDeposit handles a deposit from an inbound tx
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
@@ -102,7 +104,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			if len(logs) > 0 {
-				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
+				ctx = ctx.WithValue(InCCTXIndexKey, cctx.Index)
 				txOrigin := cctx.InboundParams.TxOrigin
 				if txOrigin == "" {
 					txOrigin = inboundSender

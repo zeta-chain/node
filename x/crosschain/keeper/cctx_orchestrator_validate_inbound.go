@@ -40,7 +40,7 @@ func (k Keeper) ValidateInbound(
 		return nil, err
 	}
 
-	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
+	inCctxIndex, ok := ctx.Value(InCCTXIndexKey).(string)
 	if ok {
 		cctx.InboundParams.ObservedHash = inCctxIndex
 	}
