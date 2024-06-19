@@ -265,7 +265,8 @@ var (
 	}
 )
 
-func BtcDustOffset() int64 {
+// BtcNonceMarkOffset is the offset satoshi amount to calculate the nonce mark output
+func BtcNonceMarkOffset() int64 {
 	return 2000
 }
 
