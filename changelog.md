@@ -67,6 +67,7 @@
 * [2233](https://github.com/zeta-chain/node/pull/2233) - fix `IsSupported` flag not properly updated in zetaclient's context
 * [2243](https://github.com/zeta-chain/node/pull/2243) - fix incorrect bitcoin outbound height in the CCTX outbound parameter
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
+* [2327](https://github.com/zeta-chain/node/pull/2327) - partially cherry picked the fix to Bitcoin outbound dust amount
 
 ### CI
 
