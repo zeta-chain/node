@@ -21,10 +21,10 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -56,7 +56,7 @@ type Signer struct {
 func NewSigner(
 	cfg config.BTCConfig,
 	tssSigner interfaces.TSSSigner,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	ts *metrics.TelemetryServer,
 	coreContext *context.ZetacoreContext) (*Signer, error) {
 	connCfg := &rpcclient.ConnConfig{
@@ -75,8 +75,8 @@ func NewSigner(
 	return &Signer{
 		tssSigner:        tssSigner,
 		rpcClient:        client,
-		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
-		loggerCompliance: loggers.Compliance,
+		logger:           logger.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
+		loggerCompliance: logger.Compliance,
 		ts:               ts,
 		coreContext:      coreContext,
 	}, nil

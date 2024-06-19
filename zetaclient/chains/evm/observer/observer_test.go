@@ -15,9 +15,9 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -83,7 +83,7 @@ func MockEVMObserver(
 	appCtx, evmCfg := getAppContext(chain, &params)
 
 	// create chain observer
-	client, err := observer.NewObserver(appCtx, zetacoreClient, tss, "", common.ClientLogger{}, evmCfg, nil)
+	client, err := observer.NewObserver(appCtx, zetacoreClient, tss, "", base.Logger{}, evmCfg, nil)
 	require.NoError(t, err)
 	client.WithEvmClient(evmClient)
 	client.WithEvmJSONRPC(evmJSONRPC)
