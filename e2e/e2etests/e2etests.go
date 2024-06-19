@@ -59,6 +59,7 @@ const (
 	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
 	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
 	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
 	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
 	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
@@ -366,6 +367,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawLegacy,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawMultipleName,
+		"withdraw BTC from ZEVM multiple times",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "0.01"},
+			{Description: "times", DefaultValue: "2"},
+		},
+		WithdrawBitcoinMultipleTimes,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawP2WSHName,
