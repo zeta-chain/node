@@ -278,6 +278,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 		bitcoinTests := []string{
+			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
