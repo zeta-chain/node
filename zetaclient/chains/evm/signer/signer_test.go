@@ -15,9 +15,9 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -42,7 +42,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 
 	mpiAddress := ConnectorAddress
 	erc20CustodyAddress := ERC20CustodyAddress
-	logger := common.ClientLogger{}
+	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 
@@ -66,7 +66,7 @@ func getNewEvmChainObserver(tss interfaces.TSSSigner) (*observer.Observer, error
 		tss = mocks.NewTSSMainnet()
 	}
 
-	logger := common.ClientLogger{}
+	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 

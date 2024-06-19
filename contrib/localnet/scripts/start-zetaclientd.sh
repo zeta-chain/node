@@ -27,7 +27,6 @@ if [ "$HOTKEY_BACKEND" == "file" ]; then
     BACKEND="file"
 fi
 
-cp /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
 num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"
 
@@ -42,7 +41,6 @@ echo "Start zetaclientd"
 # skip initialization if the config file already exists (zetaclientd init has already been run)
 if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
 then
-    rm ~/.tss/*
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
 
@@ -63,7 +61,6 @@ then
   do
     SEED=$(curl --retry 10 --retry-delay 5 --retry-connrefused  -s zetaclient0:8123/p2p)
   done
-  rm ~/.tss/*
   zetaclientd init --peer "/ip4/172.20.0.21/tcp/6668/p2p/${SEED}" --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND"
 
   # check if the option is additional-evm
