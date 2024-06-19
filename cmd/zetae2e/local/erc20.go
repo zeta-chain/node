@@ -40,6 +40,7 @@ func erc20TestRoutine(
 			UserERC20Address,
 			UserERC20PrivateKey,
 			runner.NewLogger(verbose, color.FgGreen, "erc20"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err

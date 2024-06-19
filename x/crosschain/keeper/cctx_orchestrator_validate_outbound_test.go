@@ -253,8 +253,8 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(senderChain)
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock successful UpdateNonce
 		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
@@ -293,8 +293,8 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(senderChain)
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock successful UpdateNonce
 		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
@@ -333,8 +333,8 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(senderChain)
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock failed UpdateNonce
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
@@ -369,13 +369,11 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		// mock successful GetRevertGasLimit for ERC20
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
-		// mock first check
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(senderChain).Once()
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
-		// mock failed PayGasAndUpdateCctx
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(nil).Once()
+		// mock failed failed GetSupportedChainFromChainID to fail PayGasAndUpdateCctx
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
@@ -565,8 +563,8 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(senderChain)
+		// mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock successful UpdateNonce
 		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)

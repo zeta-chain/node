@@ -262,9 +262,23 @@ func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainm
 }
 
 func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
-	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-		Return(senderChain).Once()
+	if senderChain != nil {
+		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain).Once()
+	} else {
+		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
+			Return(&chains.Chain{}).Once()
+	}
+}
 
+func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
+	if senderChain != nil {
+		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(nil).Once()
+	} else {
+		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
+			Return(nil).Once()
+	}
 }
 
 func MockGetRevertGasLimitForERC20(
@@ -321,7 +335,6 @@ func MockPayGasAndUpdateCCTX(
 		Once()
 	m.On("CallZRC20Burn", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).Once()
-
 }
 
 func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) (nonce uint64) {
