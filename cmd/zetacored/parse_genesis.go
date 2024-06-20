@@ -41,7 +41,6 @@ const MaxItemsForList = 10
 // Copy represents a set of modules for which, the entire state is copied without any modifications
 var Copy = map[string]bool{
 	slashingtypes.ModuleName:  true,
-	govtypes.ModuleName:       true,
 	crisistypes.ModuleName:    true,
 	feemarkettypes.ModuleName: true,
 	paramstypes.ModuleName:    true,
@@ -72,14 +71,14 @@ var Skip = map[string]bool{
 	// Skipping authz as it is not used when starting a new chain, new grants should be created based on the validator hotkeys abd operator keys
 	authz.ModuleName: true,
 	// Skipping fungible module as new fungible tokens would be created and system contract would be deployed
-	fungibletypes.ModuleName: true,
+	fungibletypes.ModuleName:   true,
+	observertypes.ModuleName:   true,
+	crosschaintypes.ModuleName: true,
+	govtypes.ModuleName:        true,
 }
 
 // Modify represents a set of modules for which, the state is modified before importing. Each Module should have a corresponding Modify function
-var Modify = map[string]bool{
-	crosschaintypes.ModuleName: true,
-	observertypes.ModuleName:   true,
-}
+var Modify = map[string]bool{}
 
 func CmdParseGenesisFile() *cobra.Command {
 	cmd := &cobra.Command{

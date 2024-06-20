@@ -21,6 +21,15 @@ while [ ! -f ~/.ssh/authorized_keys ]; do
     sleep 1
 done
 
+
+
+# need to wait for zetacore0 to be up
+while ! curl -s -o /dev/null zetacore0:26657/status ; do
+    echo "Waiting for zetacore0 rpc"
+    sleep 10
+done
+
+
 # read HOTKEY_BACKEND env var for hotkey keyring backend and set default to test
 BACKEND="test"
 if [ "$HOTKEY_BACKEND" == "file" ]; then
