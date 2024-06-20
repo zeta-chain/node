@@ -1,4 +1,4 @@
-package observer
+package observer_test
 
 import (
 	"context"
@@ -23,8 +23,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -47,34 +46,39 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
-	appContext := clientcontext.NewAppContext(&clientcontext.ZetacoreContext{}, config.Config{})
-	client, err := NewObserver(appContext, chains.BitcoinRegtest, nil, tss, tempSQLiteDbPath,
-		base.DefaultLogger(), config.BTCConfig{}, nil)
+
+	// create mock arguments for constructor
+	chain := chains.BitcoinMainnet
+	params := mocks.MockChainParams(chain.ChainId, 10)
+	btcClient := mocks.NewMockBTCRPCClient()
+
+	// create observer
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, base.TempSQLiteDBPath,
+		base.DefaultLogger(), nil)
 	suite.Require().NoError(err)
+	suite.Require().NotNil(ob)
 	suite.rpcClient, err = getRPCClient(18332)
 	suite.Require().NoError(err)
 	skBytes, err := hex.DecodeString(skHex)
 	suite.Require().NoError(err)
 	suite.T().Logf("skBytes: %d", len(skBytes))
 
-	btc := client.rpcClient
-
-	_, err = btc.CreateWallet("e2e")
+	_, err = btcClient.CreateWallet("e2e")
 	suite.Require().NoError(err)
-	addr, err := btc.GetNewAddress("test")
+	addr, err := btcClient.GetNewAddress("test")
 	suite.Require().NoError(err)
 	suite.T().Logf("deployer address: %s", addr)
 	//err = btc.ImportPrivKey(privkeyWIF)
 	//suite.Require().NoError(err)
 
-	btc.GenerateToAddress(101, addr, nil)
+	btcClient.GenerateToAddress(101, addr, nil)
 	suite.Require().NoError(err)
 
-	bal, err := btc.GetBalance("*")
+	bal, err := btcClient.GetBalance("*")
 	suite.Require().NoError(err)
 	suite.T().Logf("balance: %f", bal.ToBTC())
 
-	utxo, err := btc.ListUnspent()
+	utxo, err := btcClient.ListUnspent()
 	suite.Require().NoError(err)
 	suite.T().Logf("utxo: %d", len(utxo))
 	for _, u := range utxo {
@@ -153,7 +157,7 @@ func (suite *BitcoinObserverTestSuite) Test1() {
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inbounds, err := FilterAndParseIncomingTx(
+	inbounds, err := observer.FilterAndParseIncomingTx(
 		suite.rpcClient,
 		block.Tx,
 		uint64(block.Height),
@@ -190,7 +194,7 @@ func (suite *BitcoinObserverTestSuite) Test2() {
 	suite.T().Logf("block height %d", block.Height)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inbounds, err := FilterAndParseIncomingTx(
+	inbounds, err := observer.FilterAndParseIncomingTx(
 		suite.rpcClient,
 		block.Tx,
 		uint64(block.Height),
@@ -242,11 +246,11 @@ func LiveTestGetBlockHeightByHash(t *testing.T) {
 	invalidHash := "invalidhash"
 
 	// get block by invalid hash
-	_, err = GetBlockHeightByHash(client, invalidHash)
+	_, err = observer.GetBlockHeightByHash(client, invalidHash)
 	require.ErrorContains(t, err, "error decoding block hash")
 
 	// get block height by block hash
-	height, err := GetBlockHeightByHash(client, hash)
+	height, err := observer.GetBlockHeightByHash(client, hash)
 	require.NoError(t, err)
 	require.Equal(t, expectedHeight, height)
 }
@@ -460,7 +464,7 @@ BLOCKLOOP:
 					Txid: mpvin.TxID,
 					Vout: mpvin.Vout,
 				}
-				senderAddr, err := GetSenderAddressByVin(client, vin, net)
+				senderAddr, err := observer.GetSenderAddressByVin(client, vin, net)
 				if err != nil {
 					fmt.Printf("error GetSenderAddressByVin for block %d, tx %s vout %d: %s\n", bn, vin.Txid, vin.Vout, err)
 					time.Sleep(3 * time.Second)

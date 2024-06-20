@@ -70,7 +70,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 
-	mockObserver, err := getNewEvmChainObserver(nil)
+	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 
 	t.Run("NewOutboundData success", func(t *testing.T) {

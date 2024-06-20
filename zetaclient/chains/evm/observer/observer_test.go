@@ -1,6 +1,8 @@
 package observer_test
 
 import (
+	"fmt"
+	"os"
 	"sync"
 	"testing"
 
@@ -21,6 +23,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -28,17 +31,24 @@ import (
 // the relative path to the testdata directory
 var TestDataDir = "../../../"
 
-// getAppContext creates an app context for unit tests
-func getAppContext(
+// getZetacoreContext creates a zetacore context for unit tests
+func getZetacoreContext(
 	evmChain chains.Chain,
+	endpoint string,
 	evmChainParams *observertypes.ChainParams,
-) (*context.AppContext, config.EVMConfig) {
+) (*context.ZetacoreContext, config.EVMConfig) {
+	// use default endpoint if not provided
+	if endpoint == "" {
+		endpoint = "http://localhost:8545"
+	}
+
 	// create config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain:    evmChain,
-		Endpoint: "http://localhost:8545",
+		Endpoint: endpoint,
 	}
+
 	// create zetacore context
 	coreCtx := context.NewZetacoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
@@ -57,8 +67,7 @@ func getAppContext(
 		zerolog.Logger{},
 	)
 	// create app context
-	appCtx := context.NewAppContext(coreCtx, cfg)
-	return appCtx, cfg.EVMChainConfigs[evmChain.ChainId]
+	return coreCtx, cfg.EVMChainConfigs[evmChain.ChainId]
 }
 
 // MockEVMObserver creates a mock ChainObserver with custom chain, TSS, params etc
@@ -69,8 +78,15 @@ func MockEVMObserver(
 	evmJSONRPC interfaces.EVMJSONRPCClient,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	dbpath string,
 	lastBlock uint64,
-	params observertypes.ChainParams) *observer.Observer {
+	params observertypes.ChainParams,
+) *observer.Observer {
+	// use default mock evm client if not provided
+	if evmClient == nil {
+		evmClient = mocks.NewMockEvmClient().WithBlockNumber(1000)
+	}
+
 	// use default mock zetacore client if not provided
 	if zetacoreClient == nil {
 		zetacoreClient = mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
@@ -79,17 +95,203 @@ func MockEVMObserver(
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
-	// create app context
-	appCtx, evmCfg := getAppContext(chain, &params)
+	// create zetacore context
+	coreCtx, evmCfg := getZetacoreContext(chain, "", &params)
 
-	// create chain observer
-	client, err := observer.NewObserver(appCtx, zetacoreClient, tss, "", base.Logger{}, evmCfg, nil)
+	// create observer
+	ob, err := observer.NewObserver(evmCfg, evmClient, params, coreCtx, zetacoreClient, tss, dbpath, base.Logger{}, nil)
 	require.NoError(t, err)
-	client.WithEvmClient(evmClient)
-	client.WithEvmJSONRPC(evmJSONRPC)
-	client.SetLastBlockHeight(lastBlock)
+	ob.WithEvmJSONRPC(evmJSONRPC)
+	ob.WithLastBlock(lastBlock)
 
-	return client
+	return ob
+}
+
+func Test_NewObserver(t *testing.T) {
+	// use Ethereum chain for testing
+	chain := chains.Ethereum
+	params := mocks.MockChainParams(chain.ChainId, 10)
+
+	// test cases
+	tests := []struct {
+		name        string
+		evmCfg      config.EVMConfig
+		chainParams observertypes.ChainParams
+		evmClient   interfaces.EVMRPCClient
+		tss         interfaces.TSSSigner
+		dbpath      string
+		logger      base.Logger
+		ts          *metrics.TelemetryServer
+		fail        bool
+		message     string
+	}{
+		{
+			name: "should be able to create observer",
+			evmCfg: config.EVMConfig{
+				Chain:    chain,
+				Endpoint: "http://localhost:8545",
+			},
+			chainParams: params,
+			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
+			tss:         mocks.NewTSSMainnet(),
+			dbpath:      testutils.CreateTempDir(t),
+			logger:      base.Logger{},
+			ts:          nil,
+			fail:        false,
+		},
+		{
+			name: "should fail on invalid dbpath",
+			evmCfg: config.EVMConfig{
+				Chain:    chain,
+				Endpoint: "http://localhost:8545",
+			},
+			chainParams: params,
+			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
+			tss:         mocks.NewTSSMainnet(),
+			dbpath:      "/invalid/dbpath", // invalid dbpath
+			logger:      base.Logger{},
+			ts:          nil,
+			fail:        true,
+			message:     "error creating db path",
+		},
+		{
+			name: "should fail if RPC call fails",
+			evmCfg: config.EVMConfig{
+				Chain:    chain,
+				Endpoint: "http://localhost:8545",
+			},
+			chainParams: params,
+			evmClient:   mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
+			tss:         mocks.NewTSSMainnet(),
+			dbpath:      testutils.CreateTempDir(t),
+			logger:      base.Logger{},
+			ts:          nil,
+			fail:        true,
+			message:     "error RPC",
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create zetacore context, client and tss
+			zetacoreCtx, _ := getZetacoreContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
+			zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
+
+			// create observer
+			ob, err := observer.NewObserver(
+				tt.evmCfg,
+				tt.evmClient,
+				tt.chainParams,
+				zetacoreCtx,
+				zetacoreClient,
+				tt.tss,
+				tt.dbpath,
+				tt.logger,
+				tt.ts,
+			)
+
+			// check result
+			if tt.fail {
+				require.ErrorContains(t, err, tt.message)
+				require.Nil(t, ob)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, ob)
+			}
+		})
+	}
+}
+
+func Test_LoadDB(t *testing.T) {
+	// use Ethereum chain for testing
+	chain := chains.Ethereum
+	params := mocks.MockChainParams(chain.ChainId, 10)
+	dbpath := testutils.CreateTempDir(t)
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, dbpath, 1, params)
+
+	t.Run("should load db successfully", func(t *testing.T) {
+		err := ob.LoadDB(dbpath)
+		require.NoError(t, err)
+		require.EqualValues(t, 1000, ob.LastBlockScanned())
+	})
+	t.Run("should fail on invalid dbpath", func(t *testing.T) {
+		// load db with empty dbpath
+		err := ob.LoadDB("")
+		require.ErrorContains(t, err, "empty db path")
+
+		// load db with invalid dbpath
+		err = ob.LoadDB("/invalid/dbpath")
+		require.ErrorContains(t, err, "error OpenDB")
+	})
+	t.Run("should fail on invalid env var", func(t *testing.T) {
+		// set invalid environment variable
+		envvar := base.EnvVarLatestBlockByChain(chain)
+		os.Setenv(envvar, "invalid")
+		defer os.Unsetenv(envvar)
+
+		// load db
+		err := ob.LoadDB(dbpath)
+		require.ErrorContains(t, err, "error LoadLastBlockScanned")
+	})
+	t.Run("should fail on RPC error", func(t *testing.T) {
+		// create observer
+		tempClient := mocks.NewMockEvmClient()
+		ob := MockEVMObserver(t, chain, tempClient, nil, nil, nil, dbpath, 1, params)
+
+		// set RPC error
+		tempClient.WithError(fmt.Errorf("error RPC"))
+
+		// load db
+		err := ob.LoadDB(dbpath)
+		require.ErrorContains(t, err, "error RPC")
+	})
+}
+
+func Test_LoadLastBlockScanned(t *testing.T) {
+	// use Ethereum chain for testing
+	chain := chains.Ethereum
+	params := mocks.MockChainParams(chain.ChainId, 10)
+
+	// create observer using mock evm client
+	evmClient := mocks.NewMockEvmClient().WithBlockNumber(100)
+	dbpath := testutils.CreateTempDir(t)
+	ob := MockEVMObserver(t, chain, evmClient, nil, nil, nil, dbpath, 1, params)
+
+	t.Run("should load last block scanned", func(t *testing.T) {
+		// create db and write 123 as last block scanned
+		ob.WriteLastBlockScannedToDB(123)
+
+		// load last block scanned
+		err := ob.LoadLastBlockScanned()
+		require.NoError(t, err)
+		require.EqualValues(t, 123, ob.LastBlockScanned())
+	})
+	t.Run("should fail on invalid env var", func(t *testing.T) {
+		// set invalid environment variable
+		envvar := base.EnvVarLatestBlockByChain(chain)
+		os.Setenv(envvar, "invalid")
+		defer os.Unsetenv(envvar)
+
+		// load last block scanned
+		err := ob.LoadLastBlockScanned()
+		require.ErrorContains(t, err, "error LoadLastBlockScanned")
+	})
+	t.Run("should fail on RPC error", func(t *testing.T) {
+		// create observer on separate path, as we need to reset last block scanned
+		otherPath := testutils.CreateTempDir(t)
+		obOther := MockEVMObserver(t, chain, evmClient, nil, nil, nil, otherPath, 1, params)
+
+		// reset last block scanned to 0 so that it will be loaded from RPC
+		obOther.WithLastBlockScanned(0)
+
+		// set RPC error
+		evmClient.WithError(fmt.Errorf("error RPC"))
+
+		// load last block scanned
+		err := obOther.LoadLastBlockScanned()
+		require.ErrorContains(t, err, "error RPC")
+	})
 }
 
 func Test_BlockCache(t *testing.T) {
