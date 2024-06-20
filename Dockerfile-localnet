@@ -44,10 +44,11 @@ RUN mkdir -p /root/.zetacored/cosmovisor/genesis/bin && \
 ENV PATH /root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/current/:${PATH}
 
 COPY contrib/localnet/scripts /root
-COPY contrib/localnet/ssh_config /root/.ssh/config
+COPY contrib/localnet/ssh_config /etc/ssh/ssh_config.d/localnet.conf
 COPY contrib/localnet/zetacored /root/zetacored
 
-RUN chmod 755 /root/*.sh
+RUN chmod 755 /root/*.sh && \
+    chmod 644 /etc/ssh/ssh_config.d/localnet.conf
 
 WORKDIR /usr/local/bin
 EXPOSE 22
