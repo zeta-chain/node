@@ -78,6 +78,7 @@ func MockEVMObserver(
 	evmJSONRPC interfaces.EVMJSONRPCClient,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	dbpath string,
 	lastBlock uint64,
 	params observertypes.ChainParams,
 ) *observer.Observer {
@@ -96,9 +97,6 @@ func MockEVMObserver(
 	}
 	// create zetacore context
 	coreCtx, evmCfg := getZetacoreContext(chain, "", &params)
-
-	// create dbpath
-	dbpath := testutils.CreateTempDir(t)
 
 	// create observer
 	ob, err := observer.NewObserver(evmCfg, evmClient, params, coreCtx, zetacoreClient, tss, dbpath, base.Logger{}, nil)
@@ -119,7 +117,7 @@ func Test_NewObserver(t *testing.T) {
 		name        string
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
-		mockClient  interfaces.EVMRPCClient
+		evmClient   interfaces.EVMRPCClient
 		tss         interfaces.TSSSigner
 		dbpath      string
 		logger      base.Logger
@@ -134,7 +132,7 @@ func Test_NewObserver(t *testing.T) {
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
-			mockClient:  mocks.NewMockEvmClient().WithBlockNumber(1000),
+			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      testutils.CreateTempDir(t),
 			logger:      base.Logger{},
@@ -148,7 +146,7 @@ func Test_NewObserver(t *testing.T) {
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
-			mockClient:  mocks.NewMockEvmClient().WithBlockNumber(1000),
+			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      "/invalid/dbpath", // invalid dbpath
 			logger:      base.Logger{},
@@ -163,7 +161,7 @@ func Test_NewObserver(t *testing.T) {
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
-			mockClient:  mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
+			evmClient:   mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      testutils.CreateTempDir(t),
 			logger:      base.Logger{},
@@ -183,7 +181,7 @@ func Test_NewObserver(t *testing.T) {
 			// create observer
 			ob, err := observer.NewObserver(
 				tt.evmCfg,
-				tt.mockClient,
+				tt.evmClient,
 				tt.chainParams,
 				zetacoreCtx,
 				zetacoreClient,
@@ -209,42 +207,21 @@ func Test_LoadDB(t *testing.T) {
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
-	evmCfg := config.EVMConfig{
-		Chain:    chain,
-		Endpoint: "http://localhost:8545",
-	}
-
-	// create mock client, tss and test dbpath
-	mockClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
-	tss := mocks.NewTSSMainnet()
-
-	// create zetacore context and client
-	zetacoreCtx, _ := getZetacoreContext(evmCfg.Chain, evmCfg.Endpoint, &params)
-	zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
-
-	// create observer
 	dbpath := testutils.CreateTempDir(t)
-	ob, err := observer.NewObserver(
-		evmCfg,
-		mockClient,
-		params,
-		zetacoreCtx,
-		zetacoreClient,
-		tss,
-		dbpath,
-		base.Logger{},
-		nil,
-	)
-	require.NoError(t, err)
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, dbpath, 1, params)
 
 	t.Run("should load db successfully", func(t *testing.T) {
-		err := ob.LoadDB(dbpath, chain)
+		err := ob.LoadDB(dbpath)
 		require.NoError(t, err)
 		require.EqualValues(t, 1000, ob.LastBlockScanned())
 	})
 	t.Run("should fail on invalid dbpath", func(t *testing.T) {
+		// load db with empty dbpath
+		err := ob.LoadDB("")
+		require.ErrorContains(t, err, "empty db path")
+
 		// load db with invalid dbpath
-		err := ob.LoadDB("/invalid/dbpath", chain)
+		err = ob.LoadDB("/invalid/dbpath")
 		require.ErrorContains(t, err, "error OpenDB")
 	})
 	t.Run("should fail on invalid env var", func(t *testing.T) {
@@ -254,30 +231,65 @@ func Test_LoadDB(t *testing.T) {
 		defer os.Unsetenv(envvar)
 
 		// load db
-		err := ob.LoadDB(dbpath, chain)
+		err := ob.LoadDB(dbpath)
 		require.ErrorContains(t, err, "error LoadLastBlockScanned")
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer
 		tempClient := mocks.NewMockEvmClient()
-		ob, err := observer.NewObserver(
-			evmCfg,
-			tempClient,
-			params,
-			zetacoreCtx,
-			zetacoreClient,
-			tss,
-			dbpath,
-			base.Logger{},
-			nil,
-		)
-		require.NoError(t, err)
+		ob := MockEVMObserver(t, chain, tempClient, nil, nil, nil, dbpath, 1, params)
 
 		// set RPC error
 		tempClient.WithError(fmt.Errorf("error RPC"))
 
 		// load db
-		err = ob.LoadDB(dbpath, chain)
+		err := ob.LoadDB(dbpath)
+		require.ErrorContains(t, err, "error RPC")
+	})
+}
+
+func Test_LoadLastBlockScanned(t *testing.T) {
+	// use Ethereum chain for testing
+	chain := chains.Ethereum
+	params := mocks.MockChainParams(chain.ChainId, 10)
+
+	// create observer using mock evm client
+	evmClient := mocks.NewMockEvmClient().WithBlockNumber(100)
+	dbpath := testutils.CreateTempDir(t)
+	ob := MockEVMObserver(t, chain, evmClient, nil, nil, nil, dbpath, 1, params)
+
+	t.Run("should load last block scanned", func(t *testing.T) {
+		// create db and write 123 as last block scanned
+		ob.WriteLastBlockScannedToDB(123)
+
+		// load last block scanned
+		err := ob.LoadLastBlockScanned()
+		require.NoError(t, err)
+		require.EqualValues(t, 123, ob.LastBlockScanned())
+	})
+	t.Run("should fail on invalid env var", func(t *testing.T) {
+		// set invalid environment variable
+		envvar := base.EnvVarLatestBlockByChain(chain)
+		os.Setenv(envvar, "invalid")
+		defer os.Unsetenv(envvar)
+
+		// load last block scanned
+		err := ob.LoadLastBlockScanned()
+		require.ErrorContains(t, err, "error LoadLastBlockScanned")
+	})
+	t.Run("should fail on RPC error", func(t *testing.T) {
+		// create observer on separate path, as we need to reset last block scanned
+		otherPath := testutils.CreateTempDir(t)
+		obOther := MockEVMObserver(t, chain, evmClient, nil, nil, nil, otherPath, 1, params)
+
+		// reset last block scanned to 0 so that it will be loaded from RPC
+		obOther.WithLastBlockScanned(0)
+
+		// set RPC error
+		evmClient.WithError(fmt.Errorf("error RPC"))
+
+		// load last block scanned
+		err := obOther.LoadLastBlockScanned()
 		require.ErrorContains(t, err, "error RPC")
 	})
 }

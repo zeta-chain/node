@@ -3,7 +3,6 @@ package observer
 import (
 	"math"
 	"sort"
-	"sync"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -11,22 +10,27 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
-func MockBTCObserverMainnet() *Observer {
-	cfg := config.NewConfig()
-	coreContext := context.NewZetacoreContext(cfg)
+// the relative path to the testdata directory
+var TestDataDir = "../../../"
 
-	return &Observer{
-		chain:          chains.BitcoinMainnet,
-		zetacoreClient: mocks.NewMockZetacoreClient(),
-		Tss:            mocks.NewTSSMainnet(),
-		coreContext:    coreContext,
-	}
+// MockBTCObserverMainnet creates a mock Bitcoin mainnet observer for testing
+func MockBTCObserverMainnet(t *testing.T) *Observer {
+	// setup mock arguments
+	chain := chains.BitcoinMainnet
+	btcClient := mocks.NewMockBTCRPCClient().WithBlockCount(100)
+	params := mocks.MockChainParams(chain.ChainId, 10)
+	tss := mocks.NewTSSMainnet()
+
+	// create Bitcoin observer
+	ob, err := NewObserver(chain, btcClient, params, nil, nil, tss, base.TempSQLiteDBPath, base.Logger{}, nil)
+	require.NoError(t, err)
+
+	return ob
 }
 
 // helper function to create a test Bitcoin observer
@@ -37,26 +41,27 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
-	return &Observer{
-		Tss:               tss,
-		Mu:                &sync.Mutex{},
-		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
-	}
+
+	// create Bitcoin observer with mock tss
+	ob := MockBTCObserverMainnet(t)
+	ob.WithTSS(tss)
+
+	return ob
 }
 
 // helper function to create a test Bitcoin observer with UTXOs
 func createObserverWithUTXOs(t *testing.T) *Observer {
 	// Create Bitcoin observer
-	client := createObserverWithPrivateKey(t)
-	tssAddress := client.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	ob := createObserverWithPrivateKey(t)
+	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash().EncodeAddress()
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
-	client.utxos = make([]btcjson.ListUnspentResult, 0, 10)
+	ob.utxos = make([]btcjson.ListUnspentResult, 0, 10)
 	amounts := []float64{0.01, 0.12, 0.18, 0.24, 0.5, 1.26, 2.97, 3.28, 5.16, 8.72}
 	for _, amount := range amounts {
-		client.utxos = append(client.utxos, btcjson.ListUnspentResult{Address: tssAddress, Amount: amount})
+		ob.utxos = append(ob.utxos, btcjson.ListUnspentResult{Address: tssAddress, Amount: amount})
 	}
-	return client
+	return ob
 }
 
 func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex int) {
@@ -65,7 +70,7 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
-	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash().EncodeAddress()
 	nonceMark := btcjson.ListUnspentResult{
 		TxID:    txid,
 		Address: tssAddress,
@@ -90,22 +95,22 @@ func TestCheckTSSVout(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	btcClient := MockBTCObserverMainnet()
+	ob := MockBTCObserverMainnet(t)
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
 
-		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}})
+		err := ob.checkTSSVout(params, []btcjson.Vout{{}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 
-		err = btcClient.checkTSSVout(params, []btcjson.Vout{{}, {}, {}, {}})
+		err = ob.checkTSSVout(params, []btcjson.Vout{{}, {}, {}, {}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
@@ -114,7 +119,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// invalid TSS vout
 		rawResult.Vout[0].ScriptPubKey.Hex = "invalid script"
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.Error(t, err)
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
@@ -123,7 +128,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
@@ -132,7 +137,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
@@ -141,7 +146,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not receiver address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match params receiver")
 	})
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
@@ -150,7 +155,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not match payment amount
 		rawResult.Vout[1].Value = 0.00011000
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match params amount")
 	})
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
@@ -159,7 +164,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[2].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVout(params, rawResult.Vout)
+		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 }
@@ -172,7 +177,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	btcClient := MockBTCObserverMainnet()
+	ob := MockBTCObserverMainnet(t)
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
@@ -181,17 +186,17 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutboundParam()
 
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
+		err := ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 1 or > 2", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
 
-		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{})
+		err := ob.checkTSSVoutCancelled(params, []btcjson.Vout{})
 		require.ErrorContains(t, err, "invalid number of vouts")
 
-		err = btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{{}, {}, {}})
+		err = ob.checkTSSVoutCancelled(params, []btcjson.Vout{{}, {}, {}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
@@ -203,7 +208,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
+		err := ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
@@ -215,7 +220,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
+		err := ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
 	t.Run("should fail if vout 1 is not to the TSS address", func(t *testing.T) {
@@ -228,7 +233,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
+		err := ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 }

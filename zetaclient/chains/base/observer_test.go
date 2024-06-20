@@ -214,7 +214,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		ob.OpenDB(dbPath)
+		ob.OpenDB(dbPath, "")
 
 		db := ob.DB()
 		require.NotNil(t, db)
@@ -247,7 +247,16 @@ func TestOpenCloseDB(t *testing.T) {
 
 	t.Run("should be able to open/close db", func(t *testing.T) {
 		// open db
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// close db
+		err = ob.CloseDB()
+		require.NoError(t, err)
+	})
+	t.Run("should use memory db if specified", func(t *testing.T) {
+		// open db with memory
+		err := ob.OpenDB(base.TempSQLiteDBPath, "")
 		require.NoError(t, err)
 
 		// close db
@@ -255,7 +264,7 @@ func TestOpenCloseDB(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("should return error on invalid db path", func(t *testing.T) {
-		err := ob.OpenDB("/invalid/123db")
+		err := ob.OpenDB("/invalid/123db", "")
 		require.ErrorContains(t, err, "error creating db path")
 	})
 }
@@ -268,7 +277,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// create db and write 100 as last block scanned
@@ -283,7 +292,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// read last block scanned
@@ -295,7 +304,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// create db and write 100 as last block scanned
@@ -313,7 +322,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// create db and write 100 as last block scanned
@@ -331,7 +340,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// set invalid env var
@@ -348,7 +357,7 @@ func TestSaveLastBlockScanned(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// save 100 as last block scanned
@@ -370,7 +379,7 @@ func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 		// create observer and open db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		// write last block scanned
@@ -385,7 +394,7 @@ func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 		// create empty db
 		dbPath := testutils.CreateTempDir(t)
 		ob := createObserver(t)
-		err := ob.OpenDB(dbPath)
+		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
 
 		lastScannedBlock, err := ob.ReadLastBlockScannedFromDB()

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -159,7 +160,7 @@ func CreateChainObserverMap(
 	}
 
 	// BTC observer
-	_, chainParams, found := appContext.ZetacoreContext().GetBTCChainParams()
+	_, chainParams, found := zetacoreContext.GetBTCChainParams()
 	if !found {
 		return nil, fmt.Errorf("bitcoin chains params not found")
 	}
@@ -167,15 +168,34 @@ func CreateChainObserverMap(
 	// create BTC chain observer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
+		// create BTC client
+		connCfg := &rpcclient.ConnConfig{
+			Host:         btcConfig.RPCHost,
+			User:         btcConfig.RPCUsername,
+			Pass:         btcConfig.RPCPassword,
+			HTTPPostMode: true,
+			DisableTLS:   true,
+			Params:       btcConfig.RPCParams,
+		}
+		btcClient, err := rpcclient.New(connCfg, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error creating rpc client: %s", err)
+		}
+		err = btcClient.Ping()
+		if err != nil {
+			return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
+		}
+
+		// create BTC chain observer
 		co, err := btcobserver.NewObserver(
-			*chainParams,
-			appContext,
 			btcChain,
+			btcClient,
+			*chainParams,
+			zetacoreContext,
 			zetacoreClient,
 			tss,
 			dbpath,
 			logger,
-			btcConfig,
 			ts,
 		)
 		if err != nil {

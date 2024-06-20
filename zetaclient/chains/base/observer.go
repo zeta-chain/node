@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -31,6 +32,9 @@ const (
 	// DefaultHeaderCacheSize is the default number of headers that the observer will keep in cache for performance (without RPC calls)
 	// Cached headers can be used to get header information
 	DefaultHeaderCacheSize = 1000
+
+	// TempSQLiteDBPath is the temporary in-memory SQLite database used for testing
+	TempSQLiteDBPath = "file::memory:?cache=shared"
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -117,6 +121,19 @@ func NewObserver(
 	}
 
 	return &ob, nil
+}
+
+// Stop notifies all goroutines to stop and closes the database.
+func (ob *Observer) Stop() {
+	ob.logger.Chain.Info().Msgf("observer is stopping for chain %d", ob.Chain().ChainId)
+	close(ob.stop)
+
+	// close database
+	err := ob.CloseDB()
+	if err != nil {
+		ob.Logger().Chain.Error().Err(err).Msgf("CloseDB failed for chain %d", ob.Chain().ChainId)
+	}
+	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
 }
 
 // Chain returns the chain for the observer.
@@ -261,7 +278,7 @@ func (ob *Observer) StopChannel() chan struct{} {
 }
 
 // OpenDB open sql database in the given path.
-func (ob *Observer) OpenDB(dbPath string) error {
+func (ob *Observer) OpenDB(dbPath string, dbName string) error {
 	// create db path if not exist
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		err := os.MkdirAll(dbPath, os.ModePerm)
@@ -270,10 +287,19 @@ func (ob *Observer) OpenDB(dbPath string) error {
 		}
 	}
 
-	// open db by chain name
-	chainName := ob.chain.ChainName.String()
-	path := fmt.Sprintf("%s/%s", dbPath, chainName)
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+	// use custom dbName or chain name if not provided
+	if dbName == "" {
+		dbName = ob.chain.ChainName.String()
+	}
+	path := fmt.Sprintf("%s/%s", dbPath, dbName)
+
+	// use memory db if specified
+	if dbPath == TempSQLiteDBPath {
+		path = TempSQLiteDBPath
+	}
+
+	// open db
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		return errors.Wrap(err, "error opening db")
 	}

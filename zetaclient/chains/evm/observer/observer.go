@@ -19,7 +19,6 @@ import (
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -53,7 +52,7 @@ type Observer struct {
 	// outboundConfirmedTransactions is the map to index confirmed transactions by hash
 	outboundConfirmedTransactions map[string]*ethtypes.Transaction
 
-	// Mu protects fields from concurrent access
+	// Mu protects the maps and chain params from concurrent access
 	Mu *sync.Mutex
 }
 
@@ -86,7 +85,7 @@ func NewObserver(
 	}
 
 	// create evm observer
-	ob := Observer{
+	ob := &Observer{
 		Observer:                      *baseObserver,
 		evmClient:                     evmClient,
 		evmJSONRPC:                    ethrpc.NewEthRPC(evmCfg.Endpoint),
@@ -97,12 +96,12 @@ func NewObserver(
 	}
 
 	// open database and load data
-	err = ob.LoadDB(dbpath, evmCfg.Chain)
+	err = ob.LoadDB(dbpath)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ob, nil
+	return ob, nil
 }
 
 // WithEvmClient attaches a new evm client to the observer
@@ -120,7 +119,7 @@ func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.Observer.WithChainParams(params)
+	ob.WithChainParams(params)
 }
 
 // GetChainParams returns the chain params for the observer
@@ -128,7 +127,7 @@ func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 func (ob *Observer) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	return ob.Observer.ChainParams()
+	return ob.ChainParams()
 }
 
 // GetConnectorContract returns the non-Eth connector address and binder
@@ -170,6 +169,8 @@ func FetchZetaTokenContract(
 
 // Start all observation routines for the evm chain
 func (ob *Observer) Start() {
+	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
+
 	// watch evm chain for incoming txs and post votes to zetacore
 	go ob.WatchInbound()
 
@@ -225,20 +226,6 @@ func (ob *Observer) WatchRPCStatus() {
 			return
 		}
 	}
-}
-
-// Stop all goroutines and closes the database
-func (ob *Observer) Stop() {
-	// notifies all goroutines to stop
-	ob.Logger().Chain.Info().Msgf("stopping observer for chain %d", ob.Chain().ChainId)
-	close(ob.StopChannel())
-
-	// close database
-	err := ob.CloseDB()
-	if err != nil {
-		ob.Logger().Chain.Error().Err(err).Msg("CloseDB failed")
-	}
-	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
 }
 
 // SetPendingTx sets the pending transaction in memory
@@ -435,15 +422,15 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 }
 
 // LoadDB open sql database and load data into EVM observer
-func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
+func (ob *Observer) LoadDB(dbPath string) error {
 	if dbPath == "" {
 		return errors.New("empty db path")
 	}
 
 	// open database
-	err := ob.OpenDB(dbPath)
+	err := ob.OpenDB(dbPath, "")
 	if err != nil {
-		return errors.Wrapf(err, "error OpenDB for chain %d", chain.ChainId)
+		return errors.Wrapf(err, "error OpenDB for chain %d", ob.Chain().ChainId)
 	}
 
 	// run auto migration
@@ -453,13 +440,20 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 		&clienttypes.TransactionSQLType{},
 	)
 	if err != nil {
-		return errors.Wrapf(err, "error AutoMigrate for chain %d", chain.ChainId)
+		return errors.Wrapf(err, "error AutoMigrate for chain %d", ob.Chain().ChainId)
 	}
 
-	// try reading last scanned block from env variable or DB
-	err = ob.LoadLastBlockScanned(ob.Logger().Chain)
+	// load last block scanned
+	err = ob.LoadLastBlockScanned()
+
+	return err
+}
+
+// LoadLastBlockScanned loads the last scanned block from the database
+func (ob *Observer) LoadLastBlockScanned() error {
+	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
 	if err != nil {
-		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", chain.ChainId)
+		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", ob.Chain().ChainId)
 	}
 
 	// observer will scan from the last block when 'lastBlockScanned == 0', this happens when:
@@ -468,11 +462,11 @@ func (ob *Observer) LoadDB(dbPath string, chain chains.Chain) error {
 	if ob.LastBlockScanned() == 0 {
 		blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 		if err != nil {
-			return errors.Wrapf(err, "error BlockNumber for chain %d", chain.ChainId)
+			return errors.Wrapf(err, "error BlockNumber for chain %d", ob.Chain().ChainId)
 		}
 		ob.WithLastBlockScanned(blockNumber)
 	}
-	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from block %d", chain.ChainId, ob.LastBlockScanned())
+	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from block %d", ob.Chain().ChainId, ob.LastBlockScanned())
 
 	return nil
 }
