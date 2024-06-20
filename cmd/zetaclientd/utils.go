@@ -1,12 +1,8 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -120,84 +116,28 @@ func CreateChainObserverMap(
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainObserver, error) {
-	zetacoreContext := appContext.ZetacoreContext()
 	observerMap := make(map[int64]interfaces.ChainObserver)
 	// EVM observers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		chainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
+		_, found := appContext.ZetacoreContext().GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
 			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
-
-		// create EVM client
-		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error dailing endpoint %s", evmConfig.Endpoint)
-			continue
-		}
-
-		// create EVM chain observer
-		co, err := evmobserver.NewObserver(
-			evmConfig,
-			evmClient,
-			*chainParams,
-			zetacoreContext,
-			zetacoreClient,
-			tss,
-			dbpath,
-			logger,
-			ts,
-		)
+		co, err := evmobserver.NewObserver(appContext, zetacoreClient, tss, dbpath, logger, evmConfig, ts)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
 			continue
 		}
 		observerMap[evmConfig.Chain.ChainId] = co
 	}
-
 	// BTC observer
-	_, chainParams, found := zetacoreContext.GetBTCChainParams()
-	if !found {
-		return nil, fmt.Errorf("bitcoin chains params not found")
-	}
-
-	// create BTC chain observer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		// create BTC client
-		connCfg := &rpcclient.ConnConfig{
-			Host:         btcConfig.RPCHost,
-			User:         btcConfig.RPCUsername,
-			Pass:         btcConfig.RPCPassword,
-			HTTPPostMode: true,
-			DisableTLS:   true,
-			Params:       btcConfig.RPCParams,
-		}
-		btcClient, err := rpcclient.New(connCfg, nil)
-		if err != nil {
-			return nil, fmt.Errorf("error creating rpc client: %s", err)
-		}
-		err = btcClient.Ping()
-		if err != nil {
-			return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
-		}
-
-		// create BTC chain observer
-		co, err := btcobserver.NewObserver(
-			btcChain,
-			btcClient,
-			*chainParams,
-			zetacoreContext,
-			zetacoreClient,
-			tss,
-			dbpath,
-			logger,
-			ts,
-		)
+		co, err := btcobserver.NewObserver(appContext, btcChain, zetacoreClient, tss, dbpath, logger, btcConfig, ts)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
 
