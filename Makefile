@@ -233,7 +233,6 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
-#TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
