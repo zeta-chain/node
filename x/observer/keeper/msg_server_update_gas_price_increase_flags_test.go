@@ -21,16 +21,16 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		updatedFlags := sample.GasPriceIncreaseFlags()
-		msg := &types.MsgUpdateGasPriceIncreaseFlags{
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		// mock the authority keeper for authorization
+
+		msg := types.MsgUpdateGasPriceIncreaseFlags{
 			Creator:               admin,
 			GasPriceIncreaseFlags: updatedFlags,
 		}
-
-		// mock the authority keeper for authorization
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), msg)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		flags, found := k.GetCrosschainFlags(ctx)
@@ -49,16 +49,16 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 		defaultCrosschainFlags := types.DefaultCrosschainFlags()
 		k.SetCrosschainFlags(ctx, *defaultCrosschainFlags)
 		updatedFlags := sample.GasPriceIncreaseFlags()
-		msg := &types.MsgUpdateGasPriceIncreaseFlags{
-			Creator:               admin,
-			GasPriceIncreaseFlags: updatedFlags,
-		}
 
 		// mock the authority keeper for authorization
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), msg)
+		msg := types.MsgUpdateGasPriceIncreaseFlags{
+			Creator:               admin,
+			GasPriceIncreaseFlags: updatedFlags,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		flags, found := k.GetCrosschainFlags(ctx)
@@ -74,7 +74,11 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgUpdateGasPriceIncreaseFlags{
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		// mock the authority keeper for authorization
+
+		msg := types.MsgUpdateGasPriceIncreaseFlags{
 			Creator: admin,
 			GasPriceIncreaseFlags: types.GasPriceIncreaseFlags{
 				EpochLength:             -1,
@@ -82,12 +86,8 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 				GasPriceIncreasePercent: 1,
 			},
 		}
-
-		// mock the authority keeper for authorization
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
-		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), msg)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorContains(t, err, "epoch length must be positive")
 
 		_, found := k.GetCrosschainFlags(ctx)
@@ -101,16 +101,15 @@ func TestKeeper_UpdateGasPriceIncreaseFlags(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		msg := &types.MsgUpdateGasPriceIncreaseFlags{
-			Creator:               admin,
-			GasPriceIncreaseFlags: sample.GasPriceIncreaseFlags(),
-		}
 
 		// mock the authority keeper for authorization
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-
-		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), msg)
+		msg := types.MsgUpdateGasPriceIncreaseFlags{
+			Creator:               admin,
+			GasPriceIncreaseFlags: sample.GasPriceIncreaseFlags(),
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := srv.UpdateGasPriceIncreaseFlags(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorContains(t, err, "sender not authorized")
 	})
 }

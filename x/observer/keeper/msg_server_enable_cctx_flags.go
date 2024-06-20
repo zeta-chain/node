@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -18,10 +19,9 @@ func (k msgServer) EnableCCTX(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgEnableCCTXResponse{}, authoritytypes.ErrUnauthorized.Wrap(
-			"EnableCCTX can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// check if the value exists,
@@ -41,7 +41,7 @@ func (k msgServer) EnableCCTX(
 
 	k.SetCrosschainFlags(ctx, flags)
 
-	err := ctx.EventManager().EmitTypedEvents(&types.EventCCTXEnabled{
+	err = ctx.EventManager().EmitTypedEvents(&types.EventCCTXEnabled{
 		MsgTypeUrl:        sdk.MsgTypeURL(&types.MsgEnableCCTX{}),
 		IsInboundEnabled:  flags.IsInboundEnabled,
 		IsOutboundEnabled: flags.IsOutboundEnabled,

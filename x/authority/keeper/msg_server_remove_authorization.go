@@ -18,11 +18,10 @@ func (k msgServer) RemoveAuthorization(
 ) (*types.MsgRemoveAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.IsAuthorized(ctx, msg.Creator, types.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(
-			types.ErrUnauthorized,
-			"RemoveAuthorization can only be executed by the admin policy account",
-		)
+	// check if the caller is authorized to remove an authorization
+	err := k.CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrUnauthorized, err.Error())
 	}
 
 	// check if the authorization list exists, we can return early if there is no list.
@@ -32,7 +31,7 @@ func (k msgServer) RemoveAuthorization(
 	}
 
 	// check if the authorization exists, we can return early if the authorization does not exist.
-	_, err := authorizationList.GetAuthorizedPolicy(msg.MsgUrl)
+	_, err = authorizationList.GetAuthorizedPolicy(msg.MsgUrl)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, fmt.Sprintf("msg url %s", msg.MsgUrl))
 	}
