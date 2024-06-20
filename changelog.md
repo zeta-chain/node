@@ -48,7 +48,7 @@
 * [2296](https://github.com/zeta-chain/node/pull/2296) - move `testdata` package to `testutil` to organize test-related utilities
 * [2344](https://github.com/zeta-chain/node/pull/2344) - group common data of EVM/Bitcoin signer and observer using base structs
 * [2317](https://github.com/zeta-chain/node/pull/2317) - add ValidateOutbound method for cctx orchestrator
-* [2356](https://github.com/zeta-chain/node/pull/2357) - integrated base Signer structure into EVM/Bitcoin Signer
+* [2357](https://github.com/zeta-chain/node/pull/2357) - integrated base Signer structure into EVM/Bitcoin Signer
 
 ### Tests
 
