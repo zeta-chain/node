@@ -1,4 +1,2 @@
-
 Host *
     StrictHostKeyChecking no
-    IdentityFile ~/.ssh/localtest.pem

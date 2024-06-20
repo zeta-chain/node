@@ -86,6 +86,7 @@ services:
       - HOTKEY_PASSWORD=password # test purposes only
     volumes:
       - ssh:/root/.ssh
+      - preparams:/root/preparams
 
   zetaclient1:
     image: zetanode:latest
@@ -101,6 +102,7 @@ services:
       - HOTKEY_PASSWORD=password # test purposes only
     volumes:
       - ssh:/root/.ssh
+      - preparams:/root/preparams
 
   eth:
     image: ethereum/client-go:v1.10.26
@@ -148,3 +150,4 @@ services:
       - ssh:/root/.ssh
 volumes:
   ssh:
+  preparams:
