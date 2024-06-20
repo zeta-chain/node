@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -11,7 +12,9 @@ import (
 	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -36,6 +39,12 @@ func RegisterTxSearch(client *mocks.Client, query string, txBz []byte) {
 		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
 }
 
+func RegisterTxSearchWithTxResult(client *mocks.Client, query string, txBz []byte, res abci.ResponseDeliverTx) {
+	resulTxs := []*tmrpctypes.ResultTx{{Tx: txBz, Height: 1, TxResult: res}}
+	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
+		Return(&tmrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
+}
+
 func RegisterTxSearchEmpty(client *mocks.Client, query string) {
 	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
 		Return(&tmrpctypes.ResultTxSearch{}, nil)
@@ -49,6 +58,11 @@ func RegisterTxSearchError(client *mocks.Client, query string) {
 // Broadcast Tx
 func RegisterBroadcastTx(client *mocks.Client, tx types.Tx) {
 	client.On("BroadcastTxSync", context.Background(), tx).
+		Return(&tmrpctypes.ResultBroadcastTx{}, nil)
+}
+
+func RegisterBroadcastTxAny(client *mocks.Client) {
+	client.On("BroadcastTxSync", context.Background(), mock.Anything).
 		Return(&tmrpctypes.ResultBroadcastTx{}, nil)
 }
 
@@ -87,36 +101,26 @@ func RegisterStatusError(client *mocks.Client) {
 }
 
 // Block
-func RegisterBlockMultipleTxs(
+func RegisterBlock(
 	client *mocks.Client,
 	height int64,
 	txs []types.Tx,
 ) (*tmrpctypes.ResultBlock, error) {
-	block := types.MakeBlock(height, txs, nil, nil)
-	block.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: block}
-	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
-	return resBlock, nil
-}
-
-func RegisterBlock(
-	client *mocks.Client,
-	height int64,
-	tx []byte,
-) (*tmrpctypes.ResultBlock, error) {
 	// without tx
-	if tx == nil {
+	if len(txs) == 0 {
 		emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 		emptyBlock.ChainID = ChainID
-		resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock}
+		blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+		resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 		client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 		return resBlock, nil
 	}
 
 	// with tx
-	block := types.MakeBlock(height, []types.Tx{tx}, nil, nil)
+	block := types.MakeBlock(height, txs, nil, nil)
 	block.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: block}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: block, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 	return resBlock, nil
 }
@@ -147,7 +151,8 @@ func TestRegisterBlock(t *testing.T) {
 
 	emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 	emptyBlock.ChainID = ChainID
-	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: blockHash}}
 	require.Equal(t, resBlock, res)
 	require.NoError(t, err)
 }
@@ -274,11 +279,12 @@ func RegisterABCIQueryWithOptions(
 	path string,
 	data bytes.HexBytes,
 	opts tmrpcclient.ABCIQueryOptions,
+	respValue []byte,
 ) {
 	client.On("ABCIQueryWithOptions", context.Background(), path, data, opts).
 		Return(&tmrpctypes.ResultABCIQuery{
 			Response: abci.ResponseQuery{
-				Value:  []byte{2}, // TODO (https://github.com/zeta-chain/node/issues/2302) replace with data.Bytes(),
+				Value:  respValue,
 				Height: height,
 			},
 		}, nil)
@@ -310,6 +316,23 @@ func RegisterABCIQueryAccount(
 	accResponse := authtypes.QueryAccountResponse{Account: accAny}
 	respBz, _ := accResponse.Marshal()
 	clients.On("ABCIQueryWithOptions", context.Background(), "/cosmos.auth.v1beta1.Query/Account", data, opts).
+		Return(&tmrpctypes.ResultABCIQuery{
+			Response: abci.ResponseQuery{
+				Value:  respBz,
+				Height: 1,
+			},
+		}, nil)
+}
+
+func RegisterABCIQuerySimulate(
+	clients *mocks.Client,
+	opts tmrpcclient.ABCIQueryOptions,
+) {
+	simResp := &tx.SimulateResponse{
+		GasInfo: &sdk.GasInfo{GasWanted: uint64(21000), GasUsed: uint64(21000)},
+	}
+	respBz, _ := simResp.Marshal()
+	clients.On("ABCIQueryWithOptions", context.Background(), "/cosmos.tx.v1beta1.Service/Simulate", mock.Anything, opts).
 		Return(&tmrpctypes.ResultABCIQuery{
 			Response: abci.ResponseQuery{
 				Value:  respBz,

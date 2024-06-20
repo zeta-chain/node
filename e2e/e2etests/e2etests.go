@@ -48,8 +48,8 @@ const (
 	TestERC20DepositName              = "erc20_deposit"
 	TestMultipleERC20DepositName      = "erc20_multiple_deposit"
 	TestMultipleERC20WithdrawsName    = "erc20_multiple_withdraw"
-	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 	TestERC20DepositRestrictedName    = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
 	 Bitcoin tests
@@ -310,18 +310,18 @@ var AllE2ETests = []runner.E2ETest{
 		TestMultipleERC20Withdraws,
 	),
 	runner.NewE2ETest(
-		TestERC20DepositAndCallRefundName,
-		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
-		[]runner.ArgDefinition{},
-		TestERC20DepositAndCallRefund,
-	),
-	runner.NewE2ETest(
 		TestERC20DepositRestrictedName,
 		"deposit ERC20 into ZEVM restricted address",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000"},
 		},
 		TestERC20DepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallRefundName,
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{},
+		TestERC20DepositAndCallRefund,
 	),
 	/*
 	 Bitcoin tests

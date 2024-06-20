@@ -95,7 +95,7 @@ func (k msgServer) VoteOutbound(
 	// Fund the gas stability pool with the remaining funds
 	k.FundStabilityPool(ctx, &cctx)
 
-	err = k.ProcessOutbound(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
+	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
 		k.SaveFailedOutbound(ctx, &cctx, err.Error(), ballotIndex)
 		return &types.MsgVoteOutboundResponse{}, nil

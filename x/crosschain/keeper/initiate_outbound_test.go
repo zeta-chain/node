@@ -100,8 +100,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
 			// mock unsuccessful GetSupportedChainFromChainID
-			observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-				Return(nil)
+			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
@@ -112,13 +111,13 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Equal(
 				t,
-				fmt.Sprintf("invalid sender chain id %d", cctx.InboundParams.SenderChainId),
+				"chain not supported",
 				cctx.CctxStatus.StatusMessage,
 			)
 		},
 	)
 
-	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at and GetRevertGasLimit", func(t *testing.T) {
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at GetRevertGasLimit", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 			UseObserverMock: true,
@@ -152,13 +151,12 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
 		require.Equal(
 			t,
-			fmt.Sprintf("revert gas limit error: %s", types.ErrForeignCoinNotFound),
+			"GetRevertGasLimit: foreign coin not found for sender chain",
 			cctx.CctxStatus.StatusMessage,
 		)
 	})
 
-	t.Run(
-		"unable to process zevm deposit HandleEVMDeposit revert fails at PayGasInERC20AndUpdateCctx",
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at PayGasInERC20AndUpdateCctx",
 		func(t *testing.T) {
 			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 				UseFungibleMock: true,
@@ -185,8 +183,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
 			// mock unsuccessful PayGasInERC20AndUpdateCctx
-			observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-				Return(nil).Once()
+			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
@@ -197,7 +194,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Equal(
 				t,
-				fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains),
+				"chain not supported",
 				cctx.CctxStatus.StatusMessage,
 			)
 		},
@@ -231,8 +228,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 0)
 
 			// mock unsuccessful PayGasInERC20AndUpdateCctx
-			observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-				Return(nil).Once()
+			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
@@ -243,7 +239,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Equal(
 				t,
-				fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains),
+				"chain not supported",
 				cctx.CctxStatus.StatusMessage,
 			)
 		},
@@ -332,8 +328,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
 
-	t.Run(
-		"unable to process zevm deposit HandleEVMDeposit revert fails as the cctx has already been reverted",
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails as the cctx has already been reverted",
 		func(t *testing.T) {
 			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 				UseFungibleMock: true,
@@ -370,7 +365,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Contains(
 				t,
 				cctx.CctxStatus.StatusMessage,
-				fmt.Sprintf("revert outbound error: %s", "cannot revert a revert tx"),
+				"cannot revert a revert tx",
 			)
 		},
 	)
@@ -418,8 +413,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		receiverChain := getValidEthChain()
 
 		// mock unsuccessful PayGasAndUpdateCctx
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, receiverChain.ChainId).
-			Return(nil).Once()
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
 
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)

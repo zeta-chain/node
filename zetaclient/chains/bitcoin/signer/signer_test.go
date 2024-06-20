@@ -18,8 +18,8 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -52,7 +52,7 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	s.btcSigner, err = NewSigner(
 		config.BTCConfig{},
 		tss,
-		clientcommon.DefaultLoggers(),
+		base.DefaultLogger(),
 		&metrics.TelemetryServer{},
 		context.NewZetacoreContext(cfg))
 	c.Assert(err, IsNil)
@@ -233,7 +233,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	signer, err := NewSigner(
 		config.BTCConfig{},
 		mocks.NewTSSMainnet(),
-		clientcommon.DefaultLoggers(),
+		base.DefaultLogger(),
 		&metrics.TelemetryServer{},
 		nil,
 	)
@@ -396,7 +396,7 @@ func TestNewBTCSigner(t *testing.T) {
 	btcSigner, err := NewSigner(
 		config.BTCConfig{},
 		tss,
-		clientcommon.DefaultLoggers(),
+		base.DefaultLogger(),
 		&metrics.TelemetryServer{},
 		context.NewZetacoreContext(cfg))
 	require.NoError(t, err)

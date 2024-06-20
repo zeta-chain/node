@@ -27,10 +27,10 @@ import (
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -52,7 +52,7 @@ type Signer struct {
 	chain       *chains.Chain
 	tssSigner   interfaces.TSSSigner
 	ethSigner   ethtypes.Signer
-	logger      clientcommon.ClientLogger
+	logger      base.Logger
 	ts          *metrics.TelemetryServer
 	coreContext *clientcontext.ZetacoreContext
 
@@ -74,7 +74,7 @@ func NewSigner(
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 	coreContext *clientcontext.ZetacoreContext,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
 	client, ethSigner, err := getEVMRPC(endpoint)
@@ -100,9 +100,9 @@ func NewSigner(
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
 		coreContext:          coreContext,
-		logger: clientcommon.ClientLogger{
-			Std:        loggers.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
-			Compliance: loggers.Compliance,
+		logger: base.Logger{
+			Std:        logger.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
+			Compliance: logger.Compliance,
 		},
 		ts:                        ts,
 		mu:                        &sync.Mutex{},
