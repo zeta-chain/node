@@ -71,14 +71,16 @@ var Skip = map[string]bool{
 	// Skipping authz as it is not used when starting a new chain, new grants should be created based on the validator hotkeys abd operator keys
 	authz.ModuleName: true,
 	// Skipping fungible module as new fungible tokens would be created and system contract would be deployed
-	fungibletypes.ModuleName:   true,
-	observertypes.ModuleName:   true,
-	crosschaintypes.ModuleName: true,
-	govtypes.ModuleName:        true,
+	fungibletypes.ModuleName: true,
+	// Skipping gov types as new parameters are set for the new chain
+	govtypes.ModuleName: true,
 }
 
 // Modify represents a set of modules for which, the state is modified before importing. Each Module should have a corresponding Modify function
-var Modify = map[string]bool{}
+var Modify = map[string]bool{
+	observertypes.ModuleName:   true,
+	crosschaintypes.ModuleName: true,
+}
 
 func CmdParseGenesisFile() *cobra.Command {
 	cmd := &cobra.Command{
@@ -88,6 +90,10 @@ func CmdParseGenesisFile() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
+			modifyEnabled, err := cmd.Flags().GetBool("modify")
+			if err != nil {
+				return err
+			}
 			genesisFilePath := filepath.Join(app.DefaultNodeHome, "config", "genesis.json")
 			if len(args) == 2 {
 				genesisFilePath = args[1]
@@ -100,7 +106,7 @@ func CmdParseGenesisFile() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = ImportDataIntoFile(genDoc, importData, cdc)
+			err = ImportDataIntoFile(genDoc, importData, cdc, modifyEnabled)
 			if err != nil {
 				return err
 			}
@@ -113,10 +119,11 @@ func CmdParseGenesisFile() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.PersistentFlags().Bool("modify", false, "Modify the genesis file before importing")
 	return cmd
 }
 
-func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, cdc codec.Codec) error {
+func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, cdc codec.Codec, modifyEnabled bool) error {
 
 	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
 	if err != nil {
@@ -134,7 +141,7 @@ func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, 
 		if Copy[m] {
 			appState[m] = importAppState[m]
 		}
-		if Modify[m] {
+		if Modify[m] && modifyEnabled {
 			switch m {
 			case crosschaintypes.ModuleName:
 				err := ModifyCrosschainState(appState, importAppState, cdc)

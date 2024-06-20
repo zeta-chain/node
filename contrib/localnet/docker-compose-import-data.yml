@@ -17,139 +17,22 @@ networks:
 
 services:
   rosetta:
-    image: zetanode:latest
-    container_name: rosetta
-    hostname: rosetta
-    ports:
-      - "8080:8080"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.200
     entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore" ,"--retries", "500"]
-    volumes:
-      - ssh:/root/.ssh
+
 
   zetacore0:
-    image: zetanode:latest
-    container_name: zetacore0
-    build:
-      context: ..
-      dockerfile: Dockerfile-localnet
-    hostname: zetacore0
-    ports:
-      - "1317:1317"
-      - "9545:8545"
-      - "9546:8546"
-      - "26657:26657"
-      - "6060:6060"
-      - "9090:9090"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.11
     entrypoint: ["/root/start-zetacored.sh", "2","import-data"]
-    environment:
-      - HOTKEY_BACKEND=file
-      - HOTKEY_PASSWORD=password # test purposes only
     volumes:
       - ~/genesis_export/:/root/genesis_data
-      - ssh:/root/.ssh
 
   zetacore1:
-    image: zetanode:latest
-    container_name: zetacore1
-    build:
-      context: ..
-      dockerfile: Dockerfile-localnet
-    hostname: zetacore1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.12
     entrypoint: ["/root/start-zetacored.sh", "2","import-data"]
-    environment:
-      - HOTKEY_BACKEND=file
-      - HOTKEY_PASSWORD=password # test purposes only
-    volumes:
-      - ssh:/root/.ssh
-
 
   zetaclient0:
-    image: zetanode:latest
-    container_name: zetaclient0
-    build:
-      context: ..
-      dockerfile: Dockerfile-localnet
-    hostname: zetaclient0
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.21
     entrypoint: ["/root/start-zetaclientd.sh", "import-data"]
-    environment:
-      - ETHDEV_ENDPOINT=http://eth:8545
-      - HOTKEY_BACKEND=file
-      - HOTKEY_PASSWORD=password # test purposes only
-    volumes:
-      - ssh:/root/.ssh
 
   zetaclient1:
-    image: zetanode:latest
-    container_name: zetaclient1
-    build:
-      context: ..
-      dockerfile: Dockerfile-localnet
-    hostname: zetaclient1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.22
     entrypoint: ["/root/start-zetaclientd.sh", "import-data"]
-    environment:
-      - ETHDEV_ENDPOINT=http://eth:8545
-      - HOTKEY_BACKEND=file
-      - HOTKEY_PASSWORD=password # test purposes only
-    volumes:
-      - ssh:/root/.ssh
-
-  eth:
-    image: ethereum/client-go:v1.10.26
-    container_name: eth
-    hostname: eth
-    ports:
-      - "8545:8545"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
-
-  bitcoin:
-    image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
-    container_name: bitcoin
-    hostname: bitcoin
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.101
-    ports:
-      - "18443:18443"
-    command:
-      -printtoconsole
-      -regtest=1
-      -rpcallowip=0.0.0.0/0
-      -rpcbind=0.0.0.0
-      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
-      -txindex=1
 
   orchestrator:
-    image: orchestrator:latest
-    tty: true
-    container_name: orchestrator
-    build:
-      context: ..
-      dockerfile: contrib/localnet/orchestrator/Dockerfile
-    depends_on:
-      - zetacore0
-      - eth
-    hostname: orchestrator
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.2
     entrypoint: ["/work/start-zetae2e.sh", "local","import-data"]
-    volumes:
-      - ssh:/root/.ssh
