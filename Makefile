@@ -236,7 +236,7 @@ start-stress-test: zetanode
 #TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v16' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 
@@ -255,6 +255,10 @@ start-localnet: zetanode
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
+
+start-e2e-import-mainnet-upgrade: zetanode-upgrade
+	@echo "--> Starting upgrade test"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
 
 stop-test:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
