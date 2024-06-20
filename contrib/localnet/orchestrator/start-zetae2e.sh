@@ -83,7 +83,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml --skip-header-proof
+    zetae2e local $E2E_ARGS --setup-only --config-out deployed.yml --skip-header-proof
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -97,7 +97,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
