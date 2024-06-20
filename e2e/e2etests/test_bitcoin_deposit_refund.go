@@ -1,8 +1,6 @@
 package e2etests
 
 import (
-	"strconv"
-
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -64,11 +62,5 @@ func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
 	assert.Equal(r, r.BTCDeployerAddress.EncodeAddress(), refundTxDetails.Address)
 	assert.NotEmpty(r, refundTxDetails.Amount)
 
-	r.Logger.InfoLoud("Sent %f BTC to TSS with invalid memo, got refund of %f BTC", amount, refundTxDetails.Amount)
-}
-
-func parseFloat(t require.TestingT, s string) float64 {
-	f, err := strconv.ParseFloat(s, 64)
-	require.NoError(t, err, "unable to parse float %q", s)
-	return f
+	r.Logger.Info("Sent %f BTC to TSS with invalid memo, got refund of %f BTC", amount, refundTxDetails.Amount)
 }
