@@ -184,6 +184,8 @@ func MatchStatus(s crosschaintypes.CctxStatus) WaitOpts {
 	})
 }
 
+// Matches adds a filter to WaitCctxByInboundHash that checks cctxs match provided callback.
+// ALL cctxs should match this filter.
 func Matches(fn func(tx crosschaintypes.CrossChainTx) bool) WaitOpts {
 	return func(c *waitConfig) { c.matchFunction = fn }
 }

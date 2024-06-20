@@ -71,3 +71,8 @@ It's possible to debug a single test using Delve debugger.
    Example: `./e2e/scripts/debug.sh bitcoin_withdraw_restricted 0.001`
 5. Place a breakpoint in the code.
 6. Go to the editor's debug panel and hit "Debug" button.
+
+You can also run an alias of `zetae2e run` like so:
+```shell
+  `./e2e/scripts/run.sh bitcoin_withdraw_restricted 0.001`
+```

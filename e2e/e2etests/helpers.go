@@ -26,7 +26,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	receiptApproved(r, receipt)
+	requireReceiptApproved(r, receipt)
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
@@ -37,7 +37,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	receiptApproved(r, receipt)
+	requireReceiptApproved(r, receipt)
 
 	// mine 10 blocks to confirm the withdrawal tx
 	_, err = r.GenerateToAddressIfLocalBitcoin(10, to)
@@ -45,7 +45,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	cctxStatusEquals(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	requireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// get bitcoin tx according to the outTxHash in cctx
 	outTxHash := cctx.GetCurrentOutboundParam().Hash
@@ -137,11 +137,11 @@ func parseBitcoinWithdrawArgs(r *runner.E2ERunner, args []string, defaultReceive
 
 // Testify aliases ==========================================>
 
-func receiptApproved(t require.TestingT, receipt *ethtypes.Receipt) {
+func requireReceiptApproved(t require.TestingT, receipt *ethtypes.Receipt) {
 	require.Equal(t, ethtypes.ReceiptStatusSuccessful, receipt.Status, "receipt status is not successful")
 }
 
-func cctxStatusEquals(t require.TestingT, cctx *crosschaintypes.CrossChainTx, expected crosschaintypes.CctxStatus) {
+func requireCCTXStatus(t require.TestingT, cctx *crosschaintypes.CrossChainTx, expected crosschaintypes.CctxStatus) {
 	require.NotNil(t, cctx.CctxStatus)
 	require.Equal(t, expected, cctx.CctxStatus.Status, "cctx status is not %q", expected.String())
 }

@@ -3,8 +3,12 @@
 # Exit on any error
 set -e
 
-# Make sure that dlv is installed!
-# go install github.com/go-delve/delve/cmd/dlv@latest
+# Check if dlv is installed
+if ! command -v dlv &> /dev/null
+then
+    echo "dlv could not be found, installing..."
+    go install github.com/go-delve/delve/cmd/dlv@latest
+fi
 
 # Check if at least one argument is provided
 if [ "$#" -lt 1 ]; then
