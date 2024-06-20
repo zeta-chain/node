@@ -1,5 +1,6 @@
 name: Having difficulties setting up or syncing a node
 description: Please fill out the following form to help us understand and resolve your issue with setting up or syncing a node. Provide as much detail as possible to ensure a quick and accurate resolution.
+labels: ["infra"]
 body:
   - type: dropdown
     attributes:
@@ -10,14 +11,14 @@ body:
   - type: dropdown
     attributes:
       label: Does your machine match the technical requirements?
-      description: See https://www.zetachain.com/docs/validators/requirements/
+      description: See https://www.zetachain.com/docs/nodes/start-here/requirements/
       options:
         - "Yes"
         - "No"
   - type: dropdown
     attributes:
       label: Have you completed the setup?
-      description: See https://www.zetachain.com/docs/validators/setup/
+      description: See https://www.zetachain.com/docs/nodes/start-here/setup/
       options:
         - "Yes"
         - "No"
@@ -30,10 +31,10 @@ body:
         - KSYNC
   - type: dropdown
     attributes:
-      label: Did you build your binary from source or download it from the Releases[https://github.com/zeta-chain/node/releases] page?
-      description: We recommend using binaries from our releases page.
+      label: Did you build your binary from source or download it from the Releases page?
+      description: "We recommend using binaries from our Releases page: https://github.com/zeta-chain/node/releases"
       options:
-        - "Downloaded from releases page"
+        - "Downloaded from Releases page"
         - "Built locally"
   - type: textarea
     attributes:

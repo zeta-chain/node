@@ -11,7 +11,7 @@ import (
 // A very special value to mark current nonce in UTXO
 func NonceMarkAmount(nonce uint64) int64 {
 	// #nosec G701 always in range
-	return int64(nonce) + BtcDustOffset() // +2000 to avoid being a dust rejection
+	return int64(nonce) + BtcNonceMarkOffset()
 }
 
 // HashToString convert hash bytes to string

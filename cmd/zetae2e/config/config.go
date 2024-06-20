@@ -8,7 +8,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
 )
 
 // RunnerFromConfig create test runner from config
@@ -19,9 +18,8 @@ func RunnerFromConfig(
 	conf config.Config,
 	evmUserAddr ethcommon.Address,
 	evmUserPrivKey string,
-	zetaUserName string,
-	zetaUserMnemonic string,
 	logger *runner.Logger,
+	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
 	// initialize clients
 	btcRPCClient,
@@ -39,16 +37,6 @@ func RunnerFromConfig(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clients from config: %w", err)
 	}
-	// initialize client to send messages to ZetaChain
-	zetaTxServer, err := txserver.NewZetaTxServer(
-		conf.RPCs.ZetaCoreRPC,
-		[]string{zetaUserName},
-		[]string{zetaUserMnemonic},
-		conf.ZetaChainID,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize ZetaChain tx server: %w", err)
-	}
 
 	// initialize E2E test runner
 	newRunner := runner.NewE2ERunner(
@@ -57,11 +45,9 @@ func RunnerFromConfig(
 		ctxCancel,
 		evmUserAddr,
 		evmUserPrivKey,
-		zetaUserMnemonic,
 		evmClient,
 		zevmClient,
 		cctxClient,
-		zetaTxServer,
 		fungibleClient,
 		authClient,
 		bankClient,
@@ -71,6 +57,7 @@ func RunnerFromConfig(
 		zevmAuth,
 		btcRPCClient,
 		logger,
+		opts...,
 	)
 
 	// set contracts

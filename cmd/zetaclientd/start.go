@@ -268,7 +268,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(appContext, tss, telemetryServer, logger)
+	signerMap, err := CreateSignerMap(appContext, tss, logger, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -282,7 +282,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, telemetryServer, logger)
+	observerMap, err := CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, logger, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateChainObserverMap")
 		return err

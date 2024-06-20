@@ -238,11 +238,9 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.CtxCancel,
 		r.DeployerAddress,
 		r.DeployerPrivateKey,
-		r.FungibleAdminMnemonic,
 		r.EVMClient,
 		r.ZEVMClient,
 		r.CctxClient,
-		r.ZetaTxServer,
 		r.FungibleClient,
 		r.AuthClient,
 		r.BankClient,
@@ -252,6 +250,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.ZEVMAuth,
 		r.BtcRPCClient,
 		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
+		runner.WithZetaTxServer(r.ZetaTxServer),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM

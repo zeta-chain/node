@@ -13,6 +13,7 @@ services:
       context: ./anvil
     container_name: eth2
     hostname: eth2
+    platform: linux/amd64
     ports:
       - "8546:8545"
     networks:

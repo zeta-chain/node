@@ -62,8 +62,8 @@ func CreateZetacoreClient(
 func CreateSignerMap(
 	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
+	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
 	zetacoreContext := appContext.ZetacoreContext()
 	signerMap := make(map[int64]interfaces.ChainSigner)
@@ -117,8 +117,8 @@ func CreateChainObserverMap(
 	zetacoreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
+	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainObserver, error) {
 	zetacoreContext := appContext.ZetacoreContext()
 	observerMap := make(map[int64]interfaces.ChainObserver)
