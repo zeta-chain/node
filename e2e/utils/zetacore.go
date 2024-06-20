@@ -7,9 +7,14 @@ import (
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+type CCTXClient = crosschaintypes.QueryClient
 
 const (
 	FungibleAdminName = "fungibleadmin"
@@ -167,6 +172,81 @@ func WaitCCTXMinedByIndex(
 		}
 
 		return cctx
+	}
+}
+
+type WaitOpts func(c *waitConfig)
+
+// MatchStatus waits for a specific CCTX status.
+func MatchStatus(s crosschaintypes.CctxStatus) WaitOpts {
+	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
+		return tx.CctxStatus != nil && tx.CctxStatus.Status == s
+	})
+}
+
+// Matches adds a filter to WaitCctxByInboundHash that checks cctxs match provided callback.
+// ALL cctxs should match this filter.
+func Matches(fn func(tx crosschaintypes.CrossChainTx) bool) WaitOpts {
+	return func(c *waitConfig) { c.matchFunction = fn }
+}
+
+type waitConfig struct {
+	matchFunction func(tx crosschaintypes.CrossChainTx) bool
+}
+
+// WaitCctxByInboundHash waits until cctx appears by inbound hash.
+func WaitCctxByInboundHash(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+	opts ...WaitOpts,
+) []crosschaintypes.CrossChainTx {
+	const tick = time.Millisecond * 200
+
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel func()
+		ctx, cancel = context.WithTimeout(ctx, DefaultCctxTimeout)
+		defer cancel()
+	}
+
+	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: hash}
+
+	var cfg waitConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	matches := func(txs []crosschaintypes.CrossChainTx) bool {
+		if cfg.matchFunction == nil {
+			return true
+		}
+
+		for _, tx := range txs {
+			if ok := cfg.matchFunction(tx); !ok {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	for {
+		out, err := c.InTxHashToCctxData(ctx, in)
+		statusCode, _ := status.FromError(err)
+
+		switch {
+		case statusCode.Code() == codes.NotFound:
+			// expected; let's retry
+		case err != nil:
+			require.NoError(t, err, "failed to get cctx by inbound hash: %s", hash)
+		case len(out.CrossChainTxs) > 0 && matches(out.CrossChainTxs):
+			return out.CrossChainTxs
+		case ctx.Err() == nil:
+			require.NoError(t, err, "failed to get cctx by inbound hash (ctx error): %s", hash)
+		}
+
+		time.Sleep(tick)
 	}
 }
 
