@@ -10,10 +10,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
