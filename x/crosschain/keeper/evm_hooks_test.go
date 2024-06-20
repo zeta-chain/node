@@ -179,7 +179,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		// 999 satoshis cannot be withdrawn
 		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount - 1)
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid amount")
+		require.ErrorContains(t, err, "less than minimum amount")
 	})
 
 	t.Run("unable to validate a event with an invalid chain ID", func(t *testing.T) {
