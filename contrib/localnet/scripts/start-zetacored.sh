@@ -4,6 +4,8 @@
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
 # The number of nodes is passed as an first argument to the script
+# The second argument is optional and can have the following value:
+#  - import-data: import data into the genesis file
 
 /usr/sbin/sshd
 

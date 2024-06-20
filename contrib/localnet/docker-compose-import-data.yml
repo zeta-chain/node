@@ -17,8 +17,7 @@ networks:
 
 services:
   rosetta:
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore" ,"--retries", "500"]
-
+    entrypoint: ["/root/start-rosetta.sh"]
 
   zetacore0:
     entrypoint: ["/root/start-zetacored.sh", "2","import-data"]
