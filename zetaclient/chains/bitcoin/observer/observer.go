@@ -28,9 +28,9 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -138,7 +138,7 @@ func NewObserver(
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	btcCfg config.BTCConfig,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -158,14 +158,14 @@ func NewObserver(
 
 	ob.Mu = &sync.Mutex{}
 
-	chainLogger := loggers.Std.With().Str("chain", chain.ChainName.String()).Logger()
+	chainLogger := logger.Std.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = Logger{
 		Chain:      chainLogger,
 		Inbound:    chainLogger.With().Str("module", "WatchInbound").Logger(),
 		Outbound:   chainLogger.With().Str("module", "WatchOutbound").Logger(),
 		UTXOs:      chainLogger.With().Str("module", "WatchUTXOs").Logger(),
 		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
-		Compliance: loggers.Compliance,
+		Compliance: logger.Compliance,
 	}
 
 	ob.zetacoreClient = zetacoreClient

@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -166,6 +168,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		time.Sleep(70 * time.Second)
 	}
 
+	zetaTxServer, err := txserver.NewZetaTxServer(
+		conf.RPCs.ZetaCoreRPC,
+		[]string{utils.FungibleAdminName},
+		[]string{UserFungibleAdminPrivateKey},
+		conf.ZetaChainID,
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to initialize ZetaChain tx server: %w", err))
+	}
+
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
@@ -174,9 +186,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf,
 		DeployerAddress,
 		DeployerPrivateKey,
-		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
 		logger,
+		runner.WithZetaTxServer(zetaTxServer),
 	)
 	if err != nil {
 		panic(err)

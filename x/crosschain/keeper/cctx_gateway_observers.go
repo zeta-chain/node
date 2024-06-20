@@ -55,6 +55,5 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 		return types.CctxStatus_Aborted
 	}
 	commit()
-	cctx.SetPendingOutbound("")
 	return types.CctxStatus_PendingOutbound
 }

@@ -39,6 +39,7 @@ func adminTestRoutine(
 			UserAdminAddress,
 			UserAdminPrivateKey,
 			runner.NewLogger(verbose, color.FgHiGreen, "admin"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err

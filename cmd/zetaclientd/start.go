@@ -24,6 +24,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -61,7 +62,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	loggers, err := InitLogger(cfg)
+	logger, err := base.InitLogger(cfg)
 	if err != nil {
 		log.Error().Err(err).Msg("InitLogger failed")
 		return err
@@ -76,7 +77,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	masterLogger := loggers.Std
+	masterLogger := logger.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 
 	// Wait until zetacore is up
@@ -267,7 +268,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(appContext, tss, loggers, telemetryServer)
+	signerMap, err := CreateSignerMap(appContext, tss, logger, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -281,7 +282,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, loggers, telemetryServer)
+	observerMap, err := CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, logger, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateChainObserverMap")
 		return err
