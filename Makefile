@@ -26,9 +26,10 @@ HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
 export DOCKER_BUILDKIT := 1
 # set defaults to empty to prevent docker warning
-export LOCALNET_MODE := ""
-export E2E_ARGS := ""
-export UPGRADE_HEIGHT := ""
+export LOCALNET_MODE
+export E2E_ARGS := $(E2E_ARGS)
+export UPGRADE_HEIGHT
+export ZETACORED_START_PERIOD := 30s
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
