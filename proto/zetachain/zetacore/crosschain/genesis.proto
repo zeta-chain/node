@@ -12,7 +12,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-// GenesisState defines the metacore module's genesis state.
+// GenesisState defines the crosschain module's genesis state.
 message GenesisState {
   repeated OutboundTracker outboundTrackerList = 2
       [ (gogoproto.nullable) = false ];

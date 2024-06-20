@@ -21,10 +21,10 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -56,7 +56,7 @@ type Signer struct {
 func NewSigner(
 	cfg config.BTCConfig,
 	tssSigner interfaces.TSSSigner,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	ts *metrics.TelemetryServer,
 	coreContext *context.ZetacoreContext) (*Signer, error) {
 	connCfg := &rpcclient.ConnConfig{
@@ -75,8 +75,8 @@ func NewSigner(
 	return &Signer{
 		tssSigner:        tssSigner,
 		rpcClient:        client,
-		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
-		loggerCompliance: loggers.Compliance,
+		logger:           logger.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
+		loggerCompliance: logger.Compliance,
 		ts:               ts,
 		coreContext:      coreContext,
 	}, nil
@@ -180,9 +180,9 @@ func (signer *Signer) SignWithdrawTx(
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
-	err := observer.FetchUTXOS()
+	err := observer.FetchUTXOs()
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOS error: nonce %d chain %d", nonce, chain.ChainId)
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
 	}
 
 	// select N UTXOs to cover the total expense
@@ -416,7 +416,7 @@ func (signer *Signer) TryProcessOutbound(
 	if err != nil {
 		logger.Warn().
 			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutBoundTx.String())
+			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()

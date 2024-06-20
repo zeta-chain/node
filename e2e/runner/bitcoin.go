@@ -14,6 +14,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -186,6 +187,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	btcRPC := runner.BtcRPCClient
 	to := runner.BTCTSSAddress
 	btcDeployerAddress := runner.BTCDeployerAddress
+	require.NotNil(runner, runner.BTCDeployerAddress, "btcDeployerAddress is nil")
 
 	// prepare inputs
 	inputs := make([]btcjson.TransactionInput, len(inputUTXOs))
@@ -261,13 +263,9 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	}
 
 	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(runner, err)
+	require.True(runner, signed, "btc transaction is not signed")
 
-	if !signed {
-		panic("btc transaction not signed")
-	}
 	txid, err := btcRPC.SendRawTransaction(stx, true)
 	if err != nil {
 		panic(err)

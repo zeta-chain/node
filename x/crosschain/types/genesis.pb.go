@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines the metacore module's genesis state.
+// GenesisState defines the crosschain module's genesis state.
 type GenesisState struct {
 	OutboundTrackerList   []OutboundTracker   `protobuf:"bytes,2,rep,name=outboundTrackerList,proto3" json:"outboundTrackerList"`
 	GasPriceList          []*GasPrice         `protobuf:"bytes,5,rep,name=gasPriceList,proto3" json:"gasPriceList,omitempty"`

@@ -35,5 +35,6 @@ func (k Keeper) InitiateOutbound(ctx sdk.Context, cctx *types.CrossChainTx) (typ
 		)
 	}
 
+	cctx.SetPendingOutbound("")
 	return cctxGateway.InitiateOutbound(ctx, cctx), nil
 }

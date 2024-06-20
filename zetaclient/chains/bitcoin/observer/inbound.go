@@ -341,7 +341,7 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) 
 		return nil
 	}
 
-	return zetacore.GetInBoundVoteMessage(
+	return zetacore.GetInboundVoteMessage(
 		inbound.FromAddress,
 		ob.chain.ChainId,
 		inbound.FromAddress,

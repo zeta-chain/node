@@ -82,7 +82,7 @@ func NewOrchestrator(
 	oc.signerMap = signerMap
 	oc.observerMap = observerMap
 
-	// create outbound processor manager
+	// create outbound processor
 	oc.outboundProc = outboundprocessor.NewProcessor(logger)
 
 	balance, err := zetacoreClient.GetZetaHotKeyBalance()
@@ -325,7 +325,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 
 					// update last processed block number
 					lastBlockNum = bn
-					metrics.LastCoreBlockNumber.Set(float64(lastBlockNum))
+					oc.ts.SetCoreBlockNumber(lastBlockNum)
 				}
 			}
 		}

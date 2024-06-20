@@ -15,9 +15,9 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -42,7 +42,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 
 	mpiAddress := ConnectorAddress
 	erc20CustodyAddress := ERC20CustodyAddress
-	logger := common.ClientLogger{}
+	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 
@@ -66,7 +66,7 @@ func getNewEvmChainObserver(tss interfaces.TSSSigner) (*observer.Observer, error
 		tss = mocks.NewTSSMainnet()
 	}
 
-	logger := common.ClientLogger{}
+	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 
@@ -145,13 +145,13 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 	cctx := getCCTX(t)
-	processorManager := getNewOutboundProcessor()
+	processor := getNewOutboundProcessor()
 	mockObserver, err := getNewEvmChainObserver(nil)
 	require.NoError(t, err)
 
 	// Test with mock client that has keys
 	client := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
-	evmSigner.TryProcessOutbound(cctx, processorManager, "123", mockObserver, client, 123)
+	evmSigner.TryProcessOutbound(cctx, processor, "123", mockObserver, client, 123)
 
 	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()

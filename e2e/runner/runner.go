@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"os"
 	"sync"
 	"time"
 
@@ -33,17 +34,24 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+type E2ERunnerOption func(*E2ERunner)
+
+func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
+	return func(r *E2ERunner) {
+		r.ZetaTxServer = txServer
+	}
+}
+
 // E2ERunner stores all the clients and addresses needed for E2E test
 // Exposes a method to run E2E test
 // It also provides some helper functions
 type E2ERunner struct {
 	// accounts
-	DeployerAddress       ethcommon.Address
-	DeployerPrivateKey    string
-	TSSAddress            ethcommon.Address
-	BTCTSSAddress         btcutil.Address
-	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
-	FungibleAdminMnemonic string
+	DeployerAddress    ethcommon.Address
+	DeployerPrivateKey string
+	TSSAddress         ethcommon.Address
+	BTCTSSAddress      btcutil.Address
+	BTCDeployerAddress *btcutil.AddressWitnessPubKeyHash
 
 	// rpc clients
 	ZEVMClient   *ethclient.Client
@@ -58,8 +66,10 @@ type E2ERunner struct {
 	ObserverClient    observertypes.QueryClient
 	LightclientClient lightclienttypes.QueryClient
 
-	// zeta client
-	ZetaTxServer txserver.ZetaTxServer
+	// optional zeta (cosmos) client
+	// typically only in test runners that need it
+	// (like admin tests)
+	ZetaTxServer *txserver.ZetaTxServer
 
 	// evm auth
 	EVMAuth  *bind.TransactOpts
@@ -108,7 +118,6 @@ type E2ERunner struct {
 	Ctx           context.Context
 	CtxCancel     context.CancelFunc
 	Logger        *Logger
-	WG            sync.WaitGroup
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
 }
@@ -119,11 +128,9 @@ func NewE2ERunner(
 	ctxCancel context.CancelFunc,
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
-	fungibleAdminMnemonic string,
 	evmClient *ethclient.Client,
 	zevmClient *ethclient.Client,
 	cctxClient crosschaintypes.QueryClient,
-	zetaTxServer txserver.ZetaTxServer,
 	fungibleClient fungibletypes.QueryClient,
 	authClient authtypes.QueryClient,
 	bankClient banktypes.QueryClient,
@@ -133,19 +140,18 @@ func NewE2ERunner(
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
 	logger *Logger,
+	opts ...E2ERunnerOption,
 ) *E2ERunner {
-	return &E2ERunner{
+	r := &E2ERunner{
 		Name:      name,
 		Ctx:       ctx,
 		CtxCancel: ctxCancel,
 
-		DeployerAddress:       deployerAddress,
-		DeployerPrivateKey:    deployerPrivateKey,
-		FungibleAdminMnemonic: fungibleAdminMnemonic,
+		DeployerAddress:    deployerAddress,
+		DeployerPrivateKey: deployerPrivateKey,
 
 		ZEVMClient:        zevmClient,
 		EVMClient:         evmClient,
-		ZetaTxServer:      zetaTxServer,
 		CctxClient:        cctxClient,
 		FungibleClient:    fungibleClient,
 		AuthClient:        authClient,
@@ -158,9 +164,11 @@ func NewE2ERunner(
 		BtcRPCClient: btcRPCClient,
 
 		Logger: logger,
-
-		WG: sync.WaitGroup{},
 	}
+	for _, opt := range opts {
+		opt(r)
+	}
+	return r
 }
 
 // CopyAddressesFrom copies addresses from another E2ETestRunner that initialized the contracts
@@ -284,4 +292,15 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print("ERC20Custody:   %s", runner.ERC20CustodyAddr.Hex())
 	runner.Logger.Print("ERC20:      %s", runner.ERC20Addr.Hex())
 	runner.Logger.Print("TestDappEVM:       %s", runner.EvmTestDAppAddr.Hex())
+}
+
+// Errorf logs an error message. Mimics the behavior of testing.T.Errorf
+func (runner *E2ERunner) Errorf(format string, args ...any) {
+	runner.Logger.Error(format, args...)
+}
+
+// FailNow implemented to mimic the behavior of testing.T.FailNow
+func (runner *E2ERunner) FailNow() {
+	runner.Logger.Error("Test failed")
+	os.Exit(1)
 }

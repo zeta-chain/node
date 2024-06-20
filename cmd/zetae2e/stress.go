@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"os"
 	"sort"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,8 +150,6 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		conf,
 		local.DeployerAddress,
 		local.DeployerPrivateKey,
-		utils.FungibleAdminName,
-		local.FungibleAdminMnemonic,
 		logger,
 	)
 	if err != nil {
@@ -225,11 +224,25 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	fmt.Println("	1. Periodically Withdraw ETH from ZEVM to EVM")
 	fmt.Println("	2. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
-	e2eTest.WG.Add(2)
-	go WithdrawCCtx(e2eTest)       // Withdraw from ZEVM to EVM
-	go EchoNetworkMetrics(e2eTest) // Display Network metrics periodically to monitor performance
+	var wg sync.WaitGroup
 
-	e2eTest.WG.Wait()
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		// Withdraw from ZEVM to EVM
+		WithdrawCCtx(e2eTest)
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		// Display Network metrics periodically to monitor performance
+		EchoNetworkMetrics(e2eTest)
+	}()
+
+	wg.Wait()
 }
 
 // WithdrawCCtx withdraw ETHZRC20 from ZEVM to EVM

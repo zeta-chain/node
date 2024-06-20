@@ -37,8 +37,8 @@ func TestParseStringToObservationType(t *testing.T) {
 		expected        types.ObservationType
 	}{
 		{"TestValidObservationType1", "EmptyObserverType", types.ObservationType(0)},
-		{"TestValidObservationType1", "InBoundTx", types.ObservationType(1)},
-		{"TestValidObservationType1", "OutBoundTx", types.ObservationType(2)},
+		{"TestValidObservationType1", "InboundTx", types.ObservationType(1)},
+		{"TestValidObservationType1", "OutboundTx", types.ObservationType(2)},
 		{"TestValidObservationType1", "TSSKeyGen", types.ObservationType(3)},
 		{"TestValidObservationType1", "TSSKeySign", types.ObservationType(4)},
 		{"TestInvalidObservationType", "InvalidType", types.ObservationType(0)},

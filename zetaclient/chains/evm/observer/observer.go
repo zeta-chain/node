@@ -30,9 +30,9 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -93,7 +93,7 @@ func NewObserver(
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	evmCfg config.EVMConfig,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -101,13 +101,13 @@ func NewObserver(
 		ts: ts,
 	}
 
-	chainLogger := loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
+	chainLogger := logger.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Logger{
 		Chain:      chainLogger,
 		Inbound:    chainLogger.With().Str("module", "WatchInbound").Logger(),
 		Outbound:   chainLogger.With().Str("module", "WatchOutbound").Logger(),
 		GasPrice:   chainLogger.With().Str("module", "WatchGasPrice").Logger(),
-		Compliance: loggers.Compliance,
+		Compliance: logger.Compliance,
 	}
 
 	ob.coreContext = appContext.ZetacoreContext()
@@ -422,7 +422,7 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 // SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
 func (ob *Observer) SetLastBlockHeightScanned(height uint64) {
 	atomic.StoreUint64(&ob.lastBlockScanned, height)
-	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
+	ob.ts.SetLastScannedBlockNumber(ob.chain, height)
 }
 
 // GetLastBlockHeightScanned get last block height scanned (not necessarily caught up with external block; could be slow/paused)
@@ -581,7 +581,7 @@ func (ob *Observer) LoadLastScannedBlock() error {
 	if scanFromBlock != "" {
 		ob.logger.Chain.Info().
 			Msgf("LoadLastScannedBlock: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
-		if scanFromBlock == clienttypes.EnvVarLatest {
+		if scanFromBlock == base.EnvVarLatestBlock {
 			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return err
