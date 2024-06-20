@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"os"
 	"sync"
 	"time"
 
@@ -117,7 +118,6 @@ type E2ERunner struct {
 	Ctx           context.Context
 	CtxCancel     context.CancelFunc
 	Logger        *Logger
-	WG            sync.WaitGroup
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
 }
@@ -164,8 +164,6 @@ func NewE2ERunner(
 		BtcRPCClient: btcRPCClient,
 
 		Logger: logger,
-
-		WG: sync.WaitGroup{},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -294,4 +292,15 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print("ERC20Custody:   %s", runner.ERC20CustodyAddr.Hex())
 	runner.Logger.Print("ERC20:      %s", runner.ERC20Addr.Hex())
 	runner.Logger.Print("TestDappEVM:       %s", runner.EvmTestDAppAddr.Hex())
+}
+
+// Errorf logs an error message. Mimics the behavior of testing.T.Errorf
+func (runner *E2ERunner) Errorf(format string, args ...any) {
+	runner.Logger.Error(format, args...)
+}
+
+// FailNow implemented to mimic the behavior of testing.T.FailNow
+func (runner *E2ERunner) FailNow() {
+	runner.Logger.Error("Test failed")
+	os.Exit(1)
 }
