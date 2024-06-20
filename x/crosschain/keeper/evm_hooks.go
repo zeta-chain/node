@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -327,7 +328,7 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
 	if chains.IsBitcoinChain(chainID) {
-		if event.Value.Cmp(big.NewInt(0)) <= 0 {
+		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) <= 0 {
 			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid amount %s", event.Value.String())
 		}
 		addr, err := chains.DecodeBtcAddress(string(event.To), chainID)
