@@ -63,7 +63,7 @@ then
     # check if the option is additional-evm
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
     # in /root/.zetacored/config/zetaclient_config.json
-    if [ "$OPTION" == "additional-evm" ]; then
+    if [[ -n $ADDITIONAL_EVM ]]; then
      set_sepolia_endpoint
     fi
 fi
@@ -82,7 +82,7 @@ then
   # check if the option is additional-evm
   # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
   # in /root/.zetacored/config/zetaclient_config.json
-  if [ "$OPTION" == "additional-evm" ]; then
+  if [[ -n $ADDITIONAL_EVM ]]; then
    set_sepolia_endpoint
   fi
 fi
