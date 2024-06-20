@@ -27,4 +27,4 @@ services:
     entrypoint: ["/root/start-zetaclientd.sh"]
 
   orchestrator:
-    entrypoint: ["/work/start-zetae2e.sh", "local","import-data"]
+    entrypoint: ["/work/start-zetae2e.sh", "local"]
