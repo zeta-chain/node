@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"fmt"
-	"runtime"
 	"time"
 )
 
@@ -17,18 +15,7 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 }
 
 // RunE2ETest runs a e2e test
-func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err error) {
-	// return an error on panic
-	// https://github.com/zeta-chain/node/issues/1500
-	defer func() {
-		if r := recover(); r != nil {
-			// print stack trace
-			stack := make([]byte, 4096)
-			n := runtime.Stack(stack, false)
-			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTest.Name, r, stack[:n])
-		}
-	}()
-
+func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	startTime := time.Now()
 	r.Logger.Print("⏳running - %s", e2eTest.Description)
 
@@ -48,7 +35,7 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err error
 
 	r.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)
 
-	return err
+	return nil
 }
 
 // RunE2ETestsIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report

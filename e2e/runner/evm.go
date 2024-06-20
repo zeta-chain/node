@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -21,35 +22,27 @@ var blockHeaderETHTimeout = 5 * time.Minute
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
 func (r *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	r.requireReceiptApproved(receipt)
 }
 
 // MintERC20OnEvm mints ERC20 on EVM
 // amount is a multiple of 1e18
 func (r *E2ERunner) MintERC20OnEvm(amountERC20 int64) {
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountERC20))
 
 	tx, err := r.ERC20.Mint(r.EVMAuth, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("mint failed")
-	}
+	r.requireReceiptApproved(receipt)
+
 	r.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 }
 
@@ -58,18 +51,15 @@ func (r *E2ERunner) MintERC20OnEvm(amountERC20 int64) {
 // amountERC20 is a multiple of 1e18
 func (r *E2ERunner) SendERC20OnEvm(address ethcommon.Address, amountERC20 int64) *ethtypes.Transaction {
 	// the deployer might be sending ERC20 in different goroutines
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountERC20))
 
 	// transfer
 	tx, err := r.ERC20.Transfer(r.EVMAuth, address, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	return tx
 }
 
@@ -79,42 +69,32 @@ func (r *E2ERunner) DepositERC20() ethcommon.Hash {
 	return r.DepositERC20WithAmountAndMessage(r.DeployerAddress, big.NewInt(1e18), []byte{})
 }
 
-func (r *E2ERunner) DepositERC20WithAmountAndMessage(
-	to ethcommon.Address,
-	amount *big.Int,
-	msg []byte,
-) ethcommon.Hash {
+func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
 	// reset allowance, necessary for USDT
 	tx, err := r.ERC20.Approve(r.EVMAuth, r.ERC20CustodyAddr, big.NewInt(0))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("approve failed")
-	}
+	r.requireReceiptApproved(receipt)
+
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = r.ERC20.Approve(r.EVMAuth, r.ERC20CustodyAddr, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("approve failed")
-	}
+	r.requireReceiptApproved(receipt)
+
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = r.ERC20Custody.Deposit(r.EVMAuth, to.Bytes(), r.ERC20Addr, amount, msg)
+	require.NoError(r, err)
+
 	r.Logger.Info("TX: %v", tx)
 
-	if err != nil {
-		panic(err)
-	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("deposit failed")
-	}
+	r.requireReceiptApproved(receipt)
+
 	r.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := r.ERC20Custody.ParseDeposited(*log)
@@ -141,15 +121,13 @@ func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) eth
 	r.Logger.Print("⏳ depositing Ethers into ZEVM")
 
 	signedTx, err := r.SendEther(r.TSSAddress, amount, nil)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.EVMTransaction(*signedTx, "send to TSS")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("deposit failed")
-	}
+	r.requireReceiptApproved(receipt, "deposit failed")
+
 	r.Logger.EVMReceipt(*receipt, "send to TSS")
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
@@ -210,14 +188,12 @@ func (r *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	txIndex := int(receipt.TransactionIndex)
 
 	block, err := r.EVMClient.BlockByHash(r.Ctx, blockHash)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	for {
 		// check timeout
-		if time.Since(startTime) > blockHeaderETHTimeout {
-			panic("timeout waiting for block header")
-		}
+		reachedTimeout := time.Since(startTime) > blockHeaderETHTimeout
+		require.False(r, reachedTimeout, "timeout waiting for block header")
 
 		_, err := r.LightclientClient.BlockHeader(r.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
 			BlockHash: blockHash.Bytes(),
@@ -233,22 +209,17 @@ func (r *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	}
 
 	trie := ethereum.NewTrie(block.Transactions())
-	if trie.Hash() != block.Header().TxHash {
-		panic("tx root hash & block tx root mismatch")
-	}
+	require.Equal(r, trie.Hash(), block.Header().TxHash, "tx root hash & block tx root mismatch")
+
 	txProof, err := trie.GenerateProof(txIndex)
-	if err != nil {
-		panic("error generating txProof")
-	}
+	require.NoError(r, err, "error generating txProof")
+
 	val, err := txProof.Verify(block.TxHash(), txIndex)
-	if err != nil {
-		panic("error verifying txProof")
-	}
+	require.NoError(r, err, "error verifying txProof")
+
 	var txx ethtypes.Transaction
-	err = txx.UnmarshalBinary(val)
-	if err != nil {
-		panic("error unmarshalling txProof'd tx")
-	}
+	require.NoError(r, txx.UnmarshalBinary(val))
+
 	res, err := r.LightclientClient.Prove(r.Ctx, &lightclienttypes.QueryProveRequest{
 		BlockHash: blockHash.Hex(),
 		TxIndex:   int64(txIndex),
@@ -256,12 +227,11 @@ func (r *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 		Proof:     proofs.NewEthereumProof(txProof),
 		ChainId:   chains.GoerliLocalnet.ChainId,
 	})
-	if err != nil {
-		panic(err)
-	}
-	if !res.Valid {
-		panic("txProof invalid") // FIXME: don't do this in production
-	}
+
+	// FIXME: @lumtis: don't do this in production
+	require.NoError(r, err)
+	require.True(r, res.Valid, "txProof invalid")
+
 	r.Logger.Info("OK: txProof verified")
 }
 

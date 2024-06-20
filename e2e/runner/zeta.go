@@ -1,11 +1,11 @@
 package runner
 
 import (
-	"fmt"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
@@ -15,23 +15,17 @@ import (
 
 // WaitForTxReceiptOnZEVM waits for a tx receipt on ZEVM
 func (r *E2ERunner) WaitForTxReceiptOnZEVM(tx *ethtypes.Transaction) {
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	r.requireReceiptApproved(receipt)
 }
 
 // WaitForMinedCCTX waits for a cctx to be mined from a tx
 func (r *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	cctx := utils.WaitCctxMinedByInboundHash(
 		r.Ctx,
@@ -40,45 +34,30 @@ func (r *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 		r.Logger,
 		r.CctxTimeout,
 	)
-	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage),
-		)
-	}
+	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 }
 
 // WaitForMinedCCTXFromIndex waits for a cctx to be mined from its index
 func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) {
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	cctx := utils.WaitCCTXMinedByIndex(r.Ctx, index, r.CctxClient, r.Logger, r.CctxTimeout)
-	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage),
-		)
-	}
+	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 }
 
 // SendZetaOnEvm sends ZETA to an address on EVM
 // this allows the ZETA contract deployer to funds other accounts on EVM
 func (r *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
 	// the deployer might be sending ZETA in different goroutines
-	defer func() {
-		r.Unlock()
-	}()
 	r.Lock()
+	defer r.Unlock()
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(zetaAmount))
 	tx, err := r.ZetaEth.Transfer(r.EVMAuth, address, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	return tx
 }
 
@@ -93,22 +72,17 @@ func (r *E2ERunner) DepositZeta() ethcommon.Hash {
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
 func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
 	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.ConnectorEthAddr, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "approve")
-	if receipt.Status != 1 {
-		panic("approve tx failed")
-	}
+	r.requireReceiptApproved(receipt, "approve tx failed")
 
 	// query the chain ID using zevm client
 	zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	tx, err = r.ConnectorEth.Send(r.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
@@ -120,16 +94,13 @@ func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int)
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
 	})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "send")
-	if receipt.Status != 1 {
-		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
-	}
+	r.requireReceiptApproved(receipt, "send tx failed")
 
 	r.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -151,38 +122,30 @@ func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int)
 func (r *E2ERunner) DepositAndApproveWZeta(amount *big.Int) {
 	r.ZEVMAuth.Value = amount
 	tx, err := r.WZeta.Deposit(r.ZEVMAuth)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.ZEVMAuth.Value = big.NewInt(0)
 	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta deposit")
-	if receipt.Status == 0 {
-		panic("deposit failed")
-	}
+	r.requireReceiptApproved(receipt, "deposit failed")
 
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, r.ConnectorZEVMAddr, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("wzeta approve tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
-	if receipt.Status == 0 {
-		panic(fmt.Sprintf("approve failed, logs: %+v", receipt.Logs))
-	}
+	r.requireReceiptApproved(receipt, "approve failed, logs: %+v", receipt.Logs)
 }
 
 // WithdrawZeta withdraws ZETA from ZetaChain to the ZETA smart contract on EVM
 // waitReceipt specifies whether to wait for the tx receipt and check if the tx was successful
 func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Transaction {
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	tx, err := r.ConnectorZEVM.Send(r.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
@@ -192,18 +155,14 @@ func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Tr
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
 	})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("send tx hash: %s", tx.Hash().Hex())
 
 	if waitReceipt {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		r.Logger.EVMReceipt(*receipt, "send")
-		if receipt.Status == 0 {
-			panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
-
-		}
+		r.requireReceiptApproved(receipt, "send failed, logs: %+v", receipt.Logs)
 
 		r.Logger.Info("  Logs:")
 		for _, log := range receipt.Logs {
@@ -224,15 +183,13 @@ func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Tr
 func (r *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
 	// withdraw
 	tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("withdraw failed")
-	}
+	r.requireReceiptApproved(receipt, "withdraw failed")
+
 	r.Logger.EVMReceipt(*receipt, "withdraw")
 	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")
 
@@ -242,9 +199,8 @@ func (r *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
 // WithdrawERC20 withdraws an ERC20 token from ZetaChain to the ZETA smart contract on EVM
 func (r *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 	tx, err := r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

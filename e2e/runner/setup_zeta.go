@@ -7,6 +7,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
@@ -56,9 +57,7 @@ func (r *E2ERunner) SetTSSAddresses() error {
 	tssAddress := ethcommon.HexToAddress(res.Eth)
 
 	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, r.BitcoinParams)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.TSSAddress = tssAddress
 	r.BTCTSSAddress = btcTSSAddress
@@ -79,64 +78,48 @@ func (r *E2ERunner) SetZEVMContracts() {
 		e2eutils.FungibleAdminName,
 		r.ERC20Addr.Hex(),
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// Set ERC20ZRC20Addr
 	r.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
 	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// UniswapV2FactoryAddr
 	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(uniswapV2FactoryAddr)
 	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// UniswapV2RouterAddr
 	r.UniswapV2RouterAddr = ethcommon.HexToAddress(uniswapV2RouterAddr)
 	r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// ZevmConnectorAddr
 	r.ConnectorZEVMAddr = ethcommon.HexToAddress(zevmConnectorAddr)
 	r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// WZetaAddr
 	r.WZetaAddr = ethcommon.HexToAddress(wzetaAddr)
 	r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// query system contract address from the chain
 	systemContractRes, err := r.FungibleClient.SystemContract(
 		r.Ctx,
 		&fungibletypes.QueryGetSystemContractRequest{},
 	)
-	if err != nil {
-		panic(err)
-	}
-	systemContractAddr := ethcommon.HexToAddress(systemContractRes.SystemContract.SystemContract)
+	require.NoError(r, err)
 
-	SystemContract, err := systemcontract.NewSystemContract(
+	systemContractAddr := ethcommon.HexToAddress(systemContractRes.SystemContract.SystemContract)
+	systemContract, err := systemcontract.NewSystemContract(
 		systemContractAddr,
 		r.ZEVMClient,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
-	r.SystemContract = SystemContract
+	r.SystemContract = systemContract
 	r.SystemContractAddr = systemContractAddr
 
 	// set ZRC20 contracts
@@ -150,9 +133,8 @@ func (r *E2ERunner) SetZEVMContracts() {
 		r.ConnectorZEVMAddr,
 		r.WZetaAddr,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.ZevmTestDAppAddr = appAddr
 	r.Logger.Info("TestDApp Zevm contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
 
@@ -163,14 +145,10 @@ func (r *E2ERunner) SetZEVMContracts() {
 		r.UniswapV2RouterAddr,
 		r.SystemContractAddr,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(r.ZEVMAuth, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	receipt := e2eutils.MustWaitForTxReceipt(
 		r.Ctx,
@@ -179,9 +157,8 @@ func (r *E2ERunner) SetZEVMContracts() {
 		r.Logger,
 		r.ReceiptTimeout,
 	)
-	if receipt.Status != 1 {
-		panic("ZEVMSwapApp deployment failed")
-	}
+	r.requireReceiptApproved(receipt, "ZEVMSwapApp deployment failed")
+
 	r.ZEVMSwapAppAddr = zevmSwapAppAddr
 	r.ZEVMSwapApp = zevmSwapApp
 
@@ -192,12 +169,10 @@ func (r *E2ERunner) SetZEVMContracts() {
 		r.Logger,
 		r.ReceiptTimeout,
 	)
-	if receipt.Status != 1 {
-		panic("ContextApp deployment failed")
-	}
+	r.requireReceiptApproved(receipt, "ContextApp deployment failed")
+
 	r.ContextAppAddr = contextAppAddr
 	r.ContextApp = contextApp
-
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
@@ -206,17 +181,13 @@ func (r *E2ERunner) SetupETHZRC20() {
 		&bind.CallOpts{},
 		big.NewInt(chains.GoerliLocalnet.ChainId),
 	)
-	if err != nil {
-		panic(err)
-	}
-	if (ethZRC20Addr == ethcommon.Address{}) {
-		panic("eth zrc20 not found")
-	}
+	require.NoError(r, err)
+	require.NotEqual(r, ethcommon.Address{}, ethZRC20Addr, "eth zrc20 not found")
+
 	r.ETHZRC20Addr = ethZRC20Addr
 	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.ETHZRC20 = ethZRC20
 }
 
@@ -226,15 +197,11 @@ func (r *E2ERunner) SetupBTCZRC20() {
 		&bind.CallOpts{},
 		big.NewInt(chains.BitcoinRegtest.ChainId),
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.BTCZRC20Addr = BTCZRC20Addr
 	r.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
 	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.BTCZRC20 = BTCZRC20
 }
 

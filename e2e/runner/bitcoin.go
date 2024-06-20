@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -45,14 +44,12 @@ func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 }
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
-func (r *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
+func (r *E2ERunner) DepositBTCWithAmount(amount float64) *chainhash.Hash {
 	r.Logger.Print("⏳ depositing BTC into ZEVM")
 
 	// list deployer utxos
 	utxos, err := r.ListDeployerUTXOs()
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	spendableAmount := 0.0
 	spendableUTXOs := 0
@@ -63,24 +60,17 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash
 		}
 	}
 
-	if spendableAmount < amount {
-		panic(fmt.Errorf(
-			"not enough spendable BTC to run the test; have %f, require %f",
-			spendableAmount,
-			amount,
-		))
-	}
+	require.LessOrEqual(r, amount, spendableAmount, "not enough spendable BTC to run the test")
 
 	r.Logger.Info("ListUnspent:")
 	r.Logger.Info("  spendableAmount: %f", spendableAmount)
 	r.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
 	r.Logger.Info("Now sending two txs to TSS address...")
 
-	amount = amount + zetabitcoin.DefaultDepositorFee
-	txHash, err = r.SendToTSSFromDeployerToDeposit(amount, utxos)
-	if err != nil {
-		panic(err)
-	}
+	amount += zetabitcoin.DefaultDepositorFee
+	txHash, err := r.SendToTSSFromDeployerToDeposit(amount, utxos)
+	require.NoError(r, err)
+
 	r.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
 
 	return txHash
@@ -96,9 +86,7 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 
 	// list deployer utxos
 	utxos, err := r.ListDeployerUTXOs()
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	spendableAmount := 0.0
 	spendableUTXOs := 0
@@ -109,12 +97,8 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 		}
 	}
 
-	if spendableAmount < 1.15 {
-		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
-	}
-	if spendableUTXOs < 5 {
-		panic(fmt.Errorf("not enough spendable BTC UTXOs to run the test; have %d", spendableUTXOs))
-	}
+	require.GreaterOrEqual(r, spendableAmount, 1.15, "not enough spendable BTC to run the test")
+	require.GreaterOrEqual(r, spendableUTXOs, 5, "not enough spendable BTC UTXOs to run the test")
 
 	r.Logger.Info("ListUnspent:")
 	r.Logger.Info("  spendableAmount: %f", spendableAmount)
@@ -124,21 +108,16 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 	// send two transactions to the TSS address
 	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
 	txHash1, err := r.SendToTSSFromDeployerToDeposit(amount1, utxos[:2])
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
 	txHash2, err := r.SendToTSSFromDeployerToDeposit(amount2, utxos[2:4])
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
 	_, err = r.SendToTSSFromDeployerWithMemo(0.11, utxos[4:5], []byte(constant.DonationMessage))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
@@ -149,21 +128,11 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 		r.Logger,
 		r.CctxTimeout,
 	)
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf(
-			"expected mined status; got %s, message: %s",
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage),
-		)
-	}
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	if balance.Cmp(big.NewInt(0)) != 1 {
-		panic("balance should be positive")
-	}
+	require.NoError(r, err)
+	require.Equal(r, 1, balance.Sign(), "balance should be positive")
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
@@ -220,19 +189,13 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	// create raw
 	r.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
 	tx, err := btcRPC.CreateRawTransaction(inputs, amountMap, nil)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// this adds a OP_RETURN + single BYTE len prefix to the data
 	nullData, err := txscript.NullDataScript(memo)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	memoOutput := wire.TxOut{Value: 0, PkScript: nullData}
 	tx.TxOut = append(tx.TxOut, &memoOutput)
 	tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
@@ -267,23 +230,15 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	require.True(r, signed, "btc transaction is not signed")
 
 	txid, err := btcRPC.SendRawTransaction(stx, true)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("txid: %+v", txid)
 	_, err = r.GenerateToAddressIfLocalBitcoin(6, btcDeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	gtx, err := btcRPC.GetTransaction(txid)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
 	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
@@ -295,9 +250,7 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		r.BitcoinParams,
 		depositorFee,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("bitcoin inbound events:")
 	for _, event := range events {
 		r.Logger.Info("  TxHash: %s", event.TxHash)
@@ -312,9 +265,7 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 // GetBitcoinChainID gets the bitcoin chain ID from the network params
 func (r *E2ERunner) GetBitcoinChainID() int64 {
 	chainID, err := chains.BitcoinChainIDFromNetworkName(r.BitcoinParams.Name)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	return chainID
 }
 
@@ -348,9 +299,8 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 				return
 			default:
 				_, err := r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
-				if err != nil {
-					panic(err)
-				}
+				require.NoError(r, err)
+
 				time.Sleep(3 * time.Second)
 			}
 		}
@@ -366,68 +316,51 @@ func (r *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	// get tx result
 	btc := r.BtcRPCClient
 	txResult, err := btc.GetTransaction(txHash)
-	if err != nil {
-		panic("should get outTx result")
-	}
-	if txResult.Confirmations <= 0 {
-		panic("outTx should have already confirmed")
-	}
+	require.NoError(r, err, "should get tx result")
+	require.True(r, txResult.Confirmations > 0, "tx should have already confirmed")
+
 	txBytes, err := hex.DecodeString(txResult.Hex)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// get the block with verbose transactions
 	blockHash, err := chainhash.NewHashFromStr(txResult.BlockHash)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	blockVerbose, err := btc.GetBlockVerboseTx(blockHash)
-	if err != nil {
-		panic("should get block verbose tx")
-	}
+	require.NoError(r, err, "should get block verbose tx")
 
 	// get the block header
 	header, err := btc.GetBlockHeader(blockHash)
-	if err != nil {
-		panic("should get block header")
-	}
+	require.NoError(r, err, "should get block header")
 
 	// collect all the txs in the block
 	txns := []*btcutil.Tx{}
 	for _, res := range blockVerbose.Tx {
 		txBytes, err := hex.DecodeString(res.Hex)
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(r, err)
+
 		tx, err := btcutil.NewTxFromBytes(txBytes)
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(r, err)
+
 		txns = append(txns, tx)
 	}
 
 	// build merkle proof
 	mk := bitcoin.NewMerkle(txns)
 	path, index, err := mk.BuildMerkleProof(int(txResult.BlockIndex))
-	if err != nil {
-		panic("should build merkle proof")
-	}
+	require.NoError(r, err, "should build merkle proof")
 
 	// verify merkle proof statically
 	pass := bitcoin.Prove(*txHash, header.MerkleRoot, path, index)
-	if !pass {
-		panic("should verify merkle proof")
-	}
+	require.True(r, pass, "should verify merkle proof")
 
 	// wait for block header to show up in ZetaChain
 	startTime := time.Now()
 	hash := header.BlockHash()
 	for {
 		// timeout
-		if time.Since(startTime) > blockHeaderBTCTimeout {
-			panic("timed out waiting for block header to show up in observer")
-		}
+		reachedTimeout := time.Since(startTime) > blockHeaderBTCTimeout
+		require.False(r, reachedTimeout, "timed out waiting for block header to show up in observer")
 
 		_, err := r.LightclientClient.BlockHeader(r.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
 			BlockHash: hash.CloneBytes(),
@@ -453,11 +386,8 @@ func (r *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 		Proof:     proofs.NewBitcoinProof(txBytes, path, index),
 		TxIndex:   0, // bitcoin doesn't use txIndex
 	})
-	if err != nil {
-		panic(err)
-	}
-	if !res.Valid {
-		panic("txProof should be valid")
-	}
+	require.NoError(r, err)
+	require.True(r, res.Valid, "txProof should be valid")
+
 	r.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }
