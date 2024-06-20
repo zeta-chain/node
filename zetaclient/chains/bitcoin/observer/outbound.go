@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -163,7 +164,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	}
 
 	// Get outbound block height
-	blockHeight, err := GetBlockHeightByHash(ob.btcClient, res.BlockHash)
+	blockHeight, err := rpc.GetBlockHeightByHash(ob.btcClient, res.BlockHash)
 	if err != nil {
 		return true, false, errors.Wrapf(
 			err,
@@ -346,7 +347,7 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 			return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 		}
 		// make sure it's a real Bitcoin txid
-		_, getTxResult, err := GetTxResultByHash(ob.btcClient, txid)
+		_, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txid)
 		if err != nil {
 			return "", errors.Wrapf(
 				err,
@@ -387,7 +388,7 @@ func (ob *Observer) checkIncludedTx(
 	txHash string,
 ) (*btcjson.GetTransactionResult, bool) {
 	outboundID := ob.GetTxID(cctx.GetCurrentOutboundParam().TssNonce)
-	hash, getTxResult, err := GetTxResultByHash(ob.btcClient, txHash)
+	hash, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
 	if err != nil {
 		ob.logger.Outbound.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
 		return nil, false
@@ -471,7 +472,7 @@ func (ob *Observer) checkTssOutboundResult(
 ) error {
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
-	rawResult, err := GetRawTxResult(ob.btcClient, hash, res)
+	rawResult, err := rpc.GetRawTxResult(ob.btcClient, hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTxResultByHash %s", hash.String())
 	}
