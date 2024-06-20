@@ -26,11 +26,12 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		res, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
+		msg := types.NewMsgDeploySystemContracts(admin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		res, err := msgServer.DeploySystemContracts(ctx, msg)
+
 		require.NoError(t, err)
 		require.NotNil(t, res)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.UniswapV2Factory))
@@ -48,11 +49,12 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		nonadmin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, nonadmin, authoritytypes.PolicyType_groupOperational, false)
 
-		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(nonadmin))
+		msg := types.NewMsgDeploySystemContracts(nonadmin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.DeploySystemContracts(ctx, msg)
+
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
@@ -64,14 +66,14 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// mock failed uniswapv2factory deployment
 		mockFailedContractDeployment(ctx, t, k)
 
-		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
+		msg := types.NewMsgDeploySystemContracts(admin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.DeploySystemContracts(ctx, msg)
 		require.ErrorContains(t, err, "failed to deploy")
 	})
 
@@ -83,16 +85,16 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// mock successful uniswapv2factory deployment
 		mockSuccessfulContractDeployment(ctx, t, k)
 		// mock failed wzeta deployment deployment
 		mockFailedContractDeployment(ctx, t, k)
 
-		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
+		msg := types.NewMsgDeploySystemContracts(admin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.DeploySystemContracts(ctx, msg)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to deploy")
 	})
@@ -107,15 +109,15 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		// mock successful uniswapv2factory and wzeta deployments
 		mockSuccessfulContractDeployment(ctx, t, k)
 		mockSuccessfulContractDeployment(ctx, t, k)
 		// mock failed uniswapv2router deployment
 		mockFailedContractDeployment(ctx, t, k)
 
-		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
+		msg := types.NewMsgDeploySystemContracts(admin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.DeploySystemContracts(ctx, msg)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to deploy")
 	})
@@ -128,9 +130,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// mock successful uniswapv2factory, wzeta and uniswapv2router deployments
 		mockSuccessfulContractDeployment(ctx, t, k)
@@ -139,7 +139,10 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		// mock failed connectorzevm deployment
 		mockFailedContractDeployment(ctx, t, k)
 
-		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
+		msg := types.NewMsgDeploySystemContracts(admin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+
+		_, err := msgServer.DeploySystemContracts(ctx, msg)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to deploy")
 	})
@@ -152,9 +155,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// mock successful uniswapv2factory, wzeta, uniswapv2router and connectorzevm deployments
 		mockSuccessfulContractDeployment(ctx, t, k)
@@ -164,7 +165,9 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		// mock failed system contract deployment
 		mockFailedContractDeployment(ctx, t, k)
 
-		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
+		msg := types.NewMsgDeploySystemContracts(admin)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.DeploySystemContracts(ctx, msg)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to deploy")
 	})

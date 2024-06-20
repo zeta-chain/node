@@ -23,13 +23,19 @@ func (k msgServer) AddInboundTracker(
 		return nil, observertypes.ErrSupportedChains
 	}
 
-	// emergency or observer group can submit tracker without proof
-	isEmergencyGroup := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
+	// check if the msg signer is from the emergency group policy address.It is okay to ignore the error as the sender can also be an observer
+	isAuthorizedPolicy := false
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err == nil {
+		isAuthorizedPolicy = true
+	}
+
+	// check if the msg signer is an observer
 	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
 
 	// only emergency group and observer can submit tracker without proof
 	// if the sender is not from the emergency group or observer, the inbound proof must be provided
-	if !(isEmergencyGroup || isObserver) {
+	if !(isAuthorizedPolicy || isObserver) {
 		if msg.Proof == nil {
 			return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 		}

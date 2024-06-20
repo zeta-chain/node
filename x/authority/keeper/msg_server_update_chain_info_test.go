@@ -16,10 +16,17 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 	t.Run("can't update chain info if not authorized", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
-
-		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
+		msg := types.MsgUpdateChainInfo{
 			Creator: sample.AccAddress(),
-		})
+		}
+		k.SetAuthorizationList(ctx, types.AuthorizationList{Authorizations: []types.Authorization{
+			{
+				MsgUrl:           sdk.MsgTypeURL(&msg),
+				AuthorizedPolicy: types.PolicyType_groupAdmin,
+			},
+		}})
+
+		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, types.ErrUnauthorized)
 	})
 
@@ -41,6 +48,8 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 			},
 		})
 		chainInfo := sample.ChainInfo(42)
+
+		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
 			Creator:   admin,
@@ -71,6 +80,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 			},
 		})
 		chainInfo := sample.ChainInfo(84)
+		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
 			Creator:   admin,
@@ -101,6 +111,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 			},
 		})
 		chainInfo := types.ChainInfo{}
+		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
 			Creator:   admin,
