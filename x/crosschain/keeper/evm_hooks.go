@@ -329,15 +329,15 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 
 	if chains.IsBitcoinChain(chainID) {
 		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: withdraw amount %s is less than minimum amount %d",
+			return errorsmod.Wrapf(types.ErrInvalidWithdrawalAmount, "withdraw amount %s is less than minimum amount %d",
 				event.Value.String(), constant.BTCWithdrawalDustAmount)
 		}
 		addr, err := chains.DecodeBtcAddress(string(event.To), chainID)
 		if err != nil {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(event.To))
 		}
 		if !chains.IsBtcAddressSupported(addr) {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: unsupported address %s", string(event.To))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(event.To))
 		}
 	}
 	return nil

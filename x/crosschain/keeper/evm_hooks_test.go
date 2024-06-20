@@ -165,7 +165,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("unable to validate a event with an invalid amount", func(t *testing.T) {
+	t.Run("unable to validate a btc withdrawal event with an invalid amount", func(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)

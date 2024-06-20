@@ -49,4 +49,5 @@ var (
 	ErrInvalidRateLimiterFlags       = errorsmod.Register(ModuleName, 1152, "invalid rate limiter flags")
 	ErrMaxTxOutTrackerHashesReached  = errorsmod.Register(ModuleName, 1153, "max tx out tracker hashes reached")
 	ErrInitiatitingOutbound          = errorsmod.Register(ModuleName, 1154, "cannot initiate outbound")
+	ErrInvalidWithdrawalAmount       = errorsmod.Register(ModuleName, 1155, "invalid withdrawal amount")
 )
