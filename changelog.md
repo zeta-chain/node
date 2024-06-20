@@ -72,6 +72,7 @@
 * [2243](https://github.com/zeta-chain/node/pull/2243) - fix incorrect bitcoin outbound height in the CCTX outbound parameter
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
 * [2327](https://github.com/zeta-chain/node/pull/2327) - partially cherry picked the fix to Bitcoin outbound dust amount
+* [2362](https://github.com/zeta-chain/node/pull/2362) - set 1000 satoshis as minimum BTC amount that can be withdrawn from zEVM
 
 ### CI
 
