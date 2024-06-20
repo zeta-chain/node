@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
+	"github.com/stretchr/testify/require"
 )
 
 func (runner *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
@@ -85,10 +86,8 @@ func (runner *E2ERunner) SetBtcAddress(name string, rescan bool) {
 	}
 
 	if rescan {
-		err = runner.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
-		if err != nil {
-			panic(err)
-		}
+		err := runner.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
+		require.NoError(runner, err, "failed to execute ImportPrivKeyRescan")
 	}
 
 	runner.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
