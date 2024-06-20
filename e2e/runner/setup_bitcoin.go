@@ -11,36 +11,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (runner *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
-	runner.Logger.Print("⚙️ setting up Bitcoin account")
+func (r *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
+	r.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
-		runner.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
+		r.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
 	}()
 
-	_, err := runner.BtcRPCClient.CreateWallet(runner.Name, rpcclient.WithCreateWalletBlank())
+	_, err := r.BtcRPCClient.CreateWallet(r.Name, rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		if !strings.Contains(err.Error(), "Database already exists") {
 			panic(err)
 		}
 	}
 
-	runner.SetBtcAddress(runner.Name, true)
+	r.SetBtcAddress(r.Name, true)
 
 	if initNetwork {
 		// import the TSS address
-		err = runner.BtcRPCClient.ImportAddress(runner.BTCTSSAddress.EncodeAddress())
+		err = r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
 		if err != nil {
 			panic(err)
 		}
 
 		// mine some blocks to get some BTC into the deployer address
-		_, err = runner.GenerateToAddressIfLocalBitcoin(101, runner.BTCDeployerAddress)
+		_, err = r.GenerateToAddressIfLocalBitcoin(101, r.BTCDeployerAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
+		_, err = r.GenerateToAddressIfLocalBitcoin(4, r.BTCDeployerAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -48,21 +48,21 @@ func (runner *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
 }
 
 // GetBtcAddress returns the BTC address of the deployer from its EVM private key
-func (runner *E2ERunner) GetBtcAddress() (string, string, error) {
-	skBytes, err := hex.DecodeString(runner.DeployerPrivateKey)
+func (r *E2ERunner) GetBtcAddress() (string, string, error) {
+	skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
 	if err != nil {
 		return "", "", err
 	}
 
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, runner.BitcoinParams, true)
+	privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
 	if err != nil {
 		return "", "", err
 	}
 
 	address, err := btcutil.NewAddressWitnessPubKeyHash(
 		btcutil.Hash160(privkeyWIF.SerializePubKey()),
-		runner.BitcoinParams,
+		r.BitcoinParams,
 	)
 	if err != nil {
 		return "", "", err
@@ -73,30 +73,30 @@ func (runner *E2ERunner) GetBtcAddress() (string, string, error) {
 }
 
 // SetBtcAddress imports the deployer's private key into the Bitcoin node
-func (runner *E2ERunner) SetBtcAddress(name string, rescan bool) {
-	skBytes, err := hex.DecodeString(runner.DeployerPrivateKey)
+func (r *E2ERunner) SetBtcAddress(name string, rescan bool) {
+	skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
 	if err != nil {
 		panic(err)
 	}
 
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, runner.BitcoinParams, true)
+	privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
 	if err != nil {
 		panic(err)
 	}
 
 	if rescan {
-		err := runner.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
-		require.NoError(runner, err, "failed to execute ImportPrivKeyRescan")
+		err := r.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
+		require.NoError(r, err, "failed to execute ImportPrivKeyRescan")
 	}
 
-	runner.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
+	r.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
 		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
-		runner.BitcoinParams,
+		r.BitcoinParams,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	runner.Logger.Info("BTCDeployerAddress: %s", runner.BTCDeployerAddress.EncodeAddress())
+	r.Logger.Info("BTCDeployerAddress: %s", r.BTCDeployerAddress.EncodeAddress())
 }
