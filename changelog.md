@@ -61,6 +61,7 @@
 * [2329](https://github.com/zeta-chain/node/pull/2329) - fix TODOs in rpc unit tests
 * [2342](https://github.com/zeta-chain/node/pull/2342) - extend rpc unit tests with testing extension to include synthetic ethereum txs
 * [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
+* [2360](https://github.com/zeta-chain/node/pull/2360) - add stateful e2e tests.
 
 ### Fixes
 

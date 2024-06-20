@@ -123,7 +123,12 @@ func CmdParseGenesisFile() *cobra.Command {
 	return cmd
 }
 
-func ImportDataIntoFile(genDoc *types.GenesisDoc, importFile *types.GenesisDoc, cdc codec.Codec, modifyEnabled bool) error {
+func ImportDataIntoFile(
+	genDoc *types.GenesisDoc,
+	importFile *types.GenesisDoc,
+	cdc codec.Codec,
+	modifyEnabled bool,
+) error {
 
 	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
 	if err != nil {
