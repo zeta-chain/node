@@ -249,7 +249,7 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
 
-  if [[ "$OPTION" == "import-data" || "$OPTION" == "import-data-upgrade" ]]; then
+  if [[ -n "$ZETACORED_IMPORT_GENESIS_DATA" ]]; then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi

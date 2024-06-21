@@ -29,6 +29,7 @@ export DOCKER_BUILDKIT := 1
 export LOCALNET_MODE
 export E2E_ARGS := $(E2E_ARGS)
 export UPGRADE_HEIGHT
+export ZETACORED_IMPORT_GENESIS_DATA
 export ZETACORED_START_PERIOD := 30s
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
@@ -260,12 +261,13 @@ start-localnet-skip-build:
 	export LOCALNET_MODE=setup-only && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
 
-stop-localnet:
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
+	export ZETACORED_IMPORT_GENESIS_DATA=true && \
+	export ZETACORED_START_PERIOD=10m && \
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
 
-stop-test:
+stop-localnet:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
 
 ###############################################################################

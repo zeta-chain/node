@@ -54,8 +54,10 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - ZETACORED_REPLICAS=2
+      - ZETACORED_IMPORT_GENESIS_DATA=${ZETACORED_IMPORT_GENESIS_DATA}
     volumes:
       - ssh:/root/.ssh
+      - ~/.zetacored/genesis_data:/root/genesis_data
 
   zetacore1:
     image: zetanode:latest
