@@ -248,10 +248,13 @@ start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml -f docker-compose-upgrade-light.yml up -d
 
-start-localnet: zetanode
+start-localnet: zetanode start-localnet-skip-build
+
+start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d
 
+stop-localnet:
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d

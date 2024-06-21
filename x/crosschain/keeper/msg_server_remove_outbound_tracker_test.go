@@ -23,14 +23,15 @@ func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
 
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.RemoveOutboundTracker(ctx, &types.MsgRemoveOutboundTracker{
+		msg := types.MsgRemoveOutboundTracker{
 			Creator: admin,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		res, err := msgServer.RemoveOutboundTracker(ctx, &msg)
 		require.Error(t, err)
 		require.Empty(t, res)
 
@@ -49,15 +50,15 @@ func TestMsgServer_RemoveFromOutboundTracker(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		res, err := msgServer.RemoveOutboundTracker(ctx, &types.MsgRemoveOutboundTracker{
+		msg := types.MsgRemoveOutboundTracker{
 			Creator: admin,
 			ChainId: 1,
 			Nonce:   1,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		res, err := msgServer.RemoveOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		require.Empty(t, res)
 

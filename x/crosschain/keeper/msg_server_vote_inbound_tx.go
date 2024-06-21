@@ -97,27 +97,18 @@ func (k msgServer) VoteInbound(
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
 	}
-	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
-	if !tssFound {
-		return nil, types.ErrCannotFindTSSKeys
-	}
-	// create a new CCTX from the inbound message.The status of the new CCTX is set to PendingInbound.
-	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+
+	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
 		return nil, err
 	}
-	// Initiate outbound, the process function manages the state commit and cctx status change.
-	// If the process fails, the changes to the evm state are rolled back.
-	_, err = k.InitiateOutbound(ctx, &cctx)
-	if err != nil {
-		return nil, err
-	}
+
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
-	k.SaveInbound(ctx, &cctx, msg.EventIndex)
+	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
 	return &types.MsgVoteInboundResponse{}, nil
 }
 
-/* SaveInbound saves the inbound CCTX to the store.It does the following:
+/* SaveObservedInboundInformation saves the inbound CCTX to the store.It does the following:
     - Emits an event for the finalized inbound CCTX.
 	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
 	- Updates the CCTX with the finalized height and finalization status.
@@ -125,7 +116,7 @@ func (k msgServer) VoteInbound(
 	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
 */
 
-func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
+func (k Keeper) SaveObservedInboundInformation(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	EmitEventInboundFinalized(ctx, cctx)
 	k.AddFinalizedInbound(ctx,
 		cctx.GetInboundParams().ObservedHash,
@@ -135,5 +126,5 @@ func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventInde
 	cctx.InboundParams.FinalizedZetaHeight = uint64(ctx.BlockHeight())
 	cctx.InboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	k.RemoveInboundTrackerIfExists(ctx, cctx.InboundParams.SenderChainId, cctx.InboundParams.ObservedHash)
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
+	k.SetCrossChainTx(ctx, *cctx)
 }

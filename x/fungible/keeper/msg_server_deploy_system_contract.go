@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	cosmoserror "cosmossdk.io/errors"
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -19,41 +19,39 @@ func (k msgServer) DeploySystemContracts(
 ) (*types.MsgDeploySystemContractsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserror.Wrap(
-			authoritytypes.ErrUnauthorized,
-			"System contract deployment can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// uniswap v2 factory
 	factory, err := k.DeployUniswapV2Factory(ctx)
 	if err != nil {
-		return nil, cosmoserror.Wrapf(err, "failed to deploy UniswapV2Factory")
+		return nil, cosmoserrors.Wrapf(err, "failed to deploy UniswapV2Factory")
 	}
 
 	// wzeta contract
 	wzeta, err := k.DeployWZETA(ctx)
 	if err != nil {
-		return nil, cosmoserror.Wrapf(err, "failed to DeployWZetaContract")
+		return nil, cosmoserrors.Wrapf(err, "failed to DeployWZetaContract")
 	}
 
 	// uniswap v2 router
 	router, err := k.DeployUniswapV2Router02(ctx, factory, wzeta)
 	if err != nil {
-		return nil, cosmoserror.Wrapf(err, "failed to deploy UniswapV2Router02")
+		return nil, cosmoserrors.Wrapf(err, "failed to deploy UniswapV2Router02")
 	}
 
 	// connector zevm
 	connector, err := k.DeployConnectorZEVM(ctx, wzeta)
 	if err != nil {
-		return nil, cosmoserror.Wrapf(err, "failed to deploy ConnectorZEVM")
+		return nil, cosmoserrors.Wrapf(err, "failed to deploy ConnectorZEVM")
 	}
 
 	// system contract
 	systemContract, err := k.DeploySystemContract(ctx, wzeta, factory, router)
 	if err != nil {
-		return nil, cosmoserror.Wrapf(err, "failed to deploy SystemContract")
+		return nil, cosmoserrors.Wrapf(err, "failed to deploy SystemContract")
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(
@@ -72,7 +70,7 @@ func (k msgServer) DeploySystemContracts(
 			"event", "EventSystemContractsDeployed",
 			"error", err.Error(),
 		)
-		return nil, cosmoserror.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
 
 	return &types.MsgDeploySystemContractsResponse{

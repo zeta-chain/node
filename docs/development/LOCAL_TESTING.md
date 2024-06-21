@@ -88,7 +88,7 @@ $ docker logs -f orchestrator
 
 To stop the tests,
 ```bash
-make stop-test
+make stop-localnet
 ```
 
 ### Run monitoring setup

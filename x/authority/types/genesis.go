@@ -3,8 +3,9 @@ package types
 // DefaultGenesis returns the default authority genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Policies:  DefaultPolicies(),
-		ChainInfo: DefaultChainInfo(),
+		Policies:          DefaultPolicies(),
+		ChainInfo:         DefaultChainInfo(),
+		AuthorizationList: DefaultAuthorizationsList(),
 	}
 }
 
