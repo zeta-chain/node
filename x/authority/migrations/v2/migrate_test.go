@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	v2 "github.com/zeta-chain/zetacore/x/authority/migrations/v2"
 	"github.com/zeta-chain/zetacore/x/authority/types"

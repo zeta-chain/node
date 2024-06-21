@@ -2,6 +2,7 @@ package v2
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
