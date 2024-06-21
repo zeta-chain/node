@@ -50,6 +50,7 @@
 * [2317](https://github.com/zeta-chain/node/pull/2317) - add ValidateOutbound method for cctx orchestrator
 * [2340](https://github.com/zeta-chain/node/pull/2340) - add ValidateInbound method for cctx orchestrator
 * [2344](https://github.com/zeta-chain/node/pull/2344) - group common data of EVM/Bitcoin signer and observer using base structs
+* [2357](https://github.com/zeta-chain/node/pull/2357) - integrate base Signer structure into EVM/Bitcoin Signer
 
 ### Tests
 

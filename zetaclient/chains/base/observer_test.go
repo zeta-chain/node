@@ -18,13 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
-// create a temporary directory for testing
-func createTempDir(t *testing.T) string {
-	tempPath, err := os.MkdirTemp("", "tempdir-")
-	require.NoError(t, err)
-	return tempPath
-}
-
 // createObserver creates a new observer for testing
 func createObserver(t *testing.T, dbPath string) *base.Observer {
 	// constructor parameters
@@ -62,7 +55,7 @@ func TestNewObserver(t *testing.T) {
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
 	headersCacheSize := base.DefaultHeadersCacheSize
-	dbPath := createTempDir(t)
+	dbPath := sample.CreateTempDir(t)
 
 	// test cases
 	tests := []struct {
@@ -159,7 +152,7 @@ func TestNewObserver(t *testing.T) {
 }
 
 func TestObserverGetterAndSetter(t *testing.T) {
-	dbPath := createTempDir(t)
+	dbPath := sample.CreateTempDir(t)
 
 	t.Run("should be able to update chain", func(t *testing.T) {
 		ob := createObserver(t, dbPath)
@@ -258,7 +251,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 }
 
 func TestOpenDB(t *testing.T) {
-	dbPath := createTempDir(t)
+	dbPath := sample.CreateTempDir(t)
 	ob := createObserver(t, dbPath)
 
 	t.Run("should be able to open db", func(t *testing.T) {
@@ -277,7 +270,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create db and write 100 as last block scanned
-		dbPath := createTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, dbPath)
 		ob.WriteLastBlockScannedToDB(100)
 
@@ -289,7 +282,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should use latest block if last block scanned not found", func(t *testing.T) {
 		// create empty db
-		dbPath := createTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, dbPath)
 
 		// read last block scanned
@@ -299,7 +292,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
 		// create db and write 100 as last block scanned
-		dbPath := createTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, dbPath)
 		ob.WriteLastBlockScannedToDB(100)
 
@@ -322,7 +315,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should return error on invalid env var", func(t *testing.T) {
 		// create db and write 100 as last block scanned
-		dbPath := createTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, dbPath)
 
 		// set invalid env var
@@ -338,7 +331,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 	t.Run("should be able to write and read last block scanned to db", func(t *testing.T) {
 		// create db and write 100 as last block scanned
-		dbPath := createTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, dbPath)
 		err := ob.WriteLastBlockScannedToDB(100)
 		require.NoError(t, err)
@@ -349,7 +342,7 @@ func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 	})
 	t.Run("should return error when last block scanned not found in db", func(t *testing.T) {
 		// create empty db
-		dbPath := createTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, dbPath)
 
 		lastScannedBlock, err := ob.ReadLastBlockScannedFromDB()
