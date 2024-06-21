@@ -257,11 +257,12 @@ then
   done
 
 
+#  Modiify this to use --modify flag for `import-data-upgrade` in the future once v18 is live.
   if [[ "$OPTION" == "import-data" || "$OPTION" == "import-data-upgrade" ]]; then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
-
+#  Update governance voting period to 100s , to ignore the voting period imported from mainnet.
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json

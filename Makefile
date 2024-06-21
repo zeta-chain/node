@@ -258,13 +258,10 @@ start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
 
-start-e2e-import-mainnet-test: zetanode
-	@echo "--> Starting e2e import-data test"
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
 
 start-e2e-import-mainnet-upgrade: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
-	cd contrib/localnet/ && ./scripts/import-data.sh && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
 
 stop-test:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
