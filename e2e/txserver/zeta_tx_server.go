@@ -428,7 +428,7 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 }
 
 func (zts ZetaTxServer) UpdateKeygen(height int64) error {
-	keygenHeight := height + 25
+	keygenHeight := height + 30
 	_, err := zts.BroadcastTx(zts.GetAccountName(0), observertypes.NewMsgUpdateKeygen(
 		zts.GetAccountAddress(0),
 		keygenHeight,
