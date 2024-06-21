@@ -244,6 +244,7 @@ zetanode-upgrade: zetanode
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
