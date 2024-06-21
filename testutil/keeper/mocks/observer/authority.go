@@ -14,19 +14,19 @@ type ObserverAuthorityKeeper struct {
 	mock.Mock
 }
 
-// IsAuthorized provides a mock function with given fields: ctx, address, policyType
-func (_m *ObserverAuthorityKeeper) IsAuthorized(ctx types.Context, address string, policyType authoritytypes.PolicyType) bool {
-	ret := _m.Called(ctx, address, policyType)
+// CheckAuthorization provides a mock function with given fields: ctx, msg
+func (_m *ObserverAuthorityKeeper) CheckAuthorization(ctx types.Context, msg types.Msg) error {
+	ret := _m.Called(ctx, msg)
 
 	if len(ret) == 0 {
-		panic("no return value specified for IsAuthorized")
+		panic("no return value specified for CheckAuthorization")
 	}
 
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string, authoritytypes.PolicyType) bool); ok {
-		r0 = rf(ctx, address, policyType)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, types.Msg) error); ok {
+		r0 = rf(ctx, msg)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Error(0)
 	}
 
 	return r0

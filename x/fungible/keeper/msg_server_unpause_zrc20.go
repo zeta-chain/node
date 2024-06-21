@@ -18,11 +18,9 @@ func (k msgServer) UnpauseZRC20(
 ) (*types.MsgUnpauseZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserrors.Wrap(
-			authoritytypes.ErrUnauthorized,
-			"UnPauseZRC20 can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// iterate all foreign coins and set unpaused status
@@ -36,7 +34,7 @@ func (k msgServer) UnpauseZRC20(
 		k.SetForeignCoins(ctx, fc)
 	}
 
-	err := ctx.EventManager().EmitTypedEvent(
+	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventZRC20Unpaused{
 			MsgTypeUrl:     sdk.MsgTypeURL(&types.MsgUnpauseZRC20{}),
 			Zrc20Addresses: msg.Zrc20Addresses,

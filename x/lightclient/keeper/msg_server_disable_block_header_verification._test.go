@@ -39,12 +39,14 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		})
 
 		// enable eth type chain
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgDisableHeaderVerification{
+		msg := types.MsgDisableHeaderVerification{
 			Creator:     admin,
 			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
+
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
 		require.False(t, bhv.IsChainEnabled(chains.Ethereum.ChainId))
@@ -75,11 +77,12 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 			},
 		})
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
-		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgDisableHeaderVerification{
+		msg := types.MsgDisableHeaderVerification{
 			Creator:     admin,
 			ChainIdList: []int64{chains.Ethereum.ChainId},
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
@@ -94,11 +97,12 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		authorityMock := keepertest.GetLightclientAuthorityMock(t, k)
 
 		// enable eth type chain
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgDisableHeaderVerification{
+		msg := types.MsgDisableHeaderVerification{
 			Creator:     admin,
 			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.DisableHeaderVerification(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)

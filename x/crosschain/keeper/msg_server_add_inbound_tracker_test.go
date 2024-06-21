@@ -30,15 +30,13 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, nonAdmin, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+
+		msg := types.MsgAddInboundTracker{
 			Creator:   nonAdmin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -46,7 +44,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.False(t, found)
@@ -58,14 +58,13 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			UseObserverMock:  true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
-
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
+
+		msg := types.MsgAddInboundTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID + 1,
 			TxHash:    txHash,
@@ -73,7 +72,8 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.False(t, found)
@@ -89,16 +89,15 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
-
 		txHash := "string"
 		chainID := getValidEthChainID()
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+
 		setSupportedChain(ctx, zk, chainID)
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -106,7 +105,10 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
+
 		require.NoError(t, err)
 		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.True(t, found)
@@ -122,15 +124,13 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
-
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -138,7 +138,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.True(t, found)
@@ -151,22 +153,20 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			UseObserverMock:    true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-
-		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
+		admin := sample.AccAddress()
+		txHash := "string"
+		chainID := getValidEthChainID()
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error"))
 
-		txHash := "string"
-		chainID := getValidEthChainID()
-
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -174,7 +174,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     &proofs.Proof{},
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrProofVerificationFail)
 	})
 
@@ -190,18 +192,16 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
+		txHash := "string"
+		chainID := getValidEthChainID()
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(sample.Bytes(), nil)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).Return(nil, false)
 
-		txHash := "string"
-		chainID := getValidEthChainID()
-
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -209,7 +209,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     &proofs.Proof{},
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrUnsupportedChain)
 	})
 
@@ -221,13 +223,15 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
+		admin := sample.AccAddress()
+		txHash := "string"
+		chainID := getValidEthChainID()
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(sample.Bytes(), nil)
@@ -235,11 +239,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
 		observerMock.On("GetTssAddress", mock.Anything, mock.Anything).Return(nil, errors.New("error"))
 
-		txHash := "string"
-		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -247,7 +249,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     &proofs.Proof{},
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, observertypes.ErrTssNotFound)
 	})
 
@@ -259,13 +263,15 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
+		admin := sample.AccAddress()
+		txHash := "string"
+		chainID := getValidEthChainID()
+
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
 			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
@@ -277,11 +283,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return([]byte("invalid"), nil)
 
-		txHash := "string"
-		chainID := getValidEthChainID()
 		setSupportedChain(ctx, zk, chainID)
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -289,7 +293,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     &proofs.Proof{},
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 	})
 
@@ -301,19 +307,17 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		admin := sample.AccAddress()
-
 		chainID := chains.Ethereum.ChainId
 		tssAddress := sample.EthAddress()
 		ethTx, ethTxBytes := sample.EthTx(t, chainID, tssAddress, 42)
+		admin := sample.AccAddress()
 		txHash := ethTx.Hash().Hex()
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, mock.Anything, authoritytypes.PolicyType_groupEmergency, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
 			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
@@ -323,7 +327,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ethTxBytes, nil)
 
-		_, err := msgServer.AddInboundTracker(ctx, &types.MsgAddInboundTracker{
+		msg := types.MsgAddInboundTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    txHash,
@@ -331,7 +335,9 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 			Proof:     &proofs.Proof{},
 			BlockHash: "",
 			TxIndex:   0,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.AddInboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		_, found := k.GetInboundTracker(ctx, chainID, txHash)
 		require.True(t, found)
