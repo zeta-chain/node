@@ -155,7 +155,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// wait for a specific height on ZetaChain
 	if waitForHeight != 0 {
-		utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger)
+		if err := utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger); err != nil {
+			panic(err)
+		}
 	}
 
 	// set account prefix to zeta

@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 	"time"
 
@@ -41,7 +40,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
-		fmt.Println("ENSURING TX", tx.Hash(), "MAYBE: ", failMessage)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		utils.RequireReceiptApproved(r, receipt, failMessage)
 	}

@@ -200,7 +200,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(ctx, e2eTest.ZEVMClient, tx, logger, e2eTest.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(e2eTest.Ctx, e2eTest.ZEVMClient, tx, logger, e2eTest.ReceiptTimeout)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level

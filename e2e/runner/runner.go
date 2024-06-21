@@ -24,12 +24,12 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/zetacore/e2e/utils"
 
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -146,7 +146,6 @@ func NewE2ERunner(
 ) *E2ERunner {
 	r := &E2ERunner{
 		Name:      name,
-		Ctx:       ctx,
 		CtxCancel: ctxCancel,
 
 		DeployerAddress:    deployerAddress,
@@ -167,9 +166,13 @@ func NewE2ERunner(
 
 		Logger: logger,
 	}
+
+	r.Ctx = utils.WithTesting(ctx, r)
+
 	for _, opt := range opts {
 		opt(r)
 	}
+
 	return r
 }
 
@@ -304,6 +307,7 @@ func (r *E2ERunner) Errorf(format string, args ...any) {
 // FailNow implemented to mimic the behavior of testing.T.FailNow
 func (r *E2ERunner) FailNow() {
 	r.Logger.Error("Test failed")
+	r.CtxCancel()
 	os.Exit(1)
 }
 
