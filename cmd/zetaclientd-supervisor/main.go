@@ -23,6 +23,7 @@ func main() {
 		fmt.Println("failed to load config: ", err)
 		os.Exit(1)
 	}
+	fmt.Println("Starting zetaclientd-supervisor")
 
 	// log outputs must be serialized since we are writing log messages in this process and
 	// also directly from the zetaclient process
@@ -37,8 +38,7 @@ func main() {
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// these signals will result in the supervisor process only restarting zetaclientd
-	restartChan := make(chan os.Signal, 1)
-	signal.Notify(restartChan, syscall.SIGHUP)
+	//restartChan := make(chan os.Signal, 1)
 
 	hotkeyPassword, tssPassword, err := promptPasswords()
 	if err != nil {
@@ -53,6 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 	supervisor.Start(ctx)
+	signal.Notify(supervisor.restartChan, syscall.SIGHUP)
 
 	shouldRestart := true
 	for shouldRestart {
@@ -82,7 +83,7 @@ func main() {
 				select {
 				case <-ctx.Done():
 					return nil
-				case sig := <-restartChan:
+				case sig := <-supervisor.restartChan:
 					logger.Info().Msgf("got signal %d, sending SIGINT to zetaclientd", sig)
 				case sig := <-shutdownChan:
 					logger.Info().Msgf("got signal %d, shutting down", sig)

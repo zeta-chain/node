@@ -83,7 +83,7 @@ build-testnet-ubuntu: go.sum
 		docker rm temp-container
 
 install: go.sum
-		@echo "--> Installing zetacored & zetaclientd"
+		@echo "--> Installing zetacored ,zetaclientd and zetaclientd-supervisor"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd-supervisor

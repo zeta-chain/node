@@ -9,8 +9,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
-
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
@@ -19,6 +17,8 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -34,6 +34,7 @@ const (
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
 	flagSkipSetup         = "skip-setup"
+	flagSkipMigrationTest = "skip-migration-test"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 )
@@ -64,6 +65,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
+	cmd.Flags().Bool(flagSkipMigrationTest, false, "set to true to skip migration tests")
 
 	return cmd
 }
@@ -111,6 +113,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 	skipSetup, err := cmd.Flags().GetBool(flagSkipSetup)
+	if err != nil {
+		panic(err)
+	}
+	skipMigrationTest, err := cmd.Flags().GetBool(flagSkipMigrationTest)
 	if err != nil {
 		panic(err)
 	}
@@ -189,7 +195,21 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
 	if !skipSetup {
-		waitKeygenHeight(ctx, deployerRunner.CctxClient, logger)
+		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10)
+	}
+
+	// if skipMigrationTest is set to true , there is no need to update the keygen height to generate a new tss
+	if !skipMigrationTest {
+		response, err := deployerRunner.CctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		if err != nil {
+			logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			panic(err)
+		}
+		err = zetaTxServer.UpdateKeygen(response.Height)
+		if err != nil {
+			panic(err)
+		}
+		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
 	}
 
 	// query and set the TSS
@@ -371,6 +391,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
+	logger.Print("🏁 starting migration tests")
+	eg.Go(migrationTestRoutine(conf, deployerRunner, verbose, ""))
+	if err := eg.Wait(); err != nil {
+		logger.Print("❌ %v", err)
+		logger.Print("❌ migration tests failed")
+		os.Exit(1)
+	}
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {
@@ -389,10 +416,24 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 func waitKeygenHeight(
 	ctx context.Context,
 	cctxClient crosschaintypes.QueryClient,
+	observerClient observertypes.QueryClient,
 	logger *runner.Logger,
+	bufferBlocks int64,
 ) {
 	// wait for keygen to be completed
-	keygenHeight := int64(35)
+	resp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
+	if err != nil {
+		logger.Error("observerClient.Keygen error: %s", err)
+		return
+	}
+	if resp.Keygen == nil {
+		logger.Error("observerClient.Keygen keygen is nil")
+		return
+	}
+	if resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen {
+		return
+	}
+	keygenHeight := resp.Keygen.BlockNumber
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(2 * time.Second)
@@ -401,7 +442,7 @@ func waitKeygenHeight(
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			continue
 		}
-		if response.Height >= keygenHeight {
+		if response.Height >= keygenHeight+bufferBlocks {
 			break
 		}
 		logger.Info("Last ZetaHeight: %d", response.Height)

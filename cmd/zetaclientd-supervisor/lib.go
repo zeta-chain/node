@@ -12,12 +12,14 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/rs/zerolog"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -66,6 +68,7 @@ type zetaclientdSupervisor struct {
 	upgradesDir        string
 	upgradePlanName    string
 	enableAutoDownload bool
+	restartChan        chan os.Signal
 }
 
 func newZetaclientdSupervisor(
@@ -81,19 +84,21 @@ func newZetaclientdSupervisor(
 	if err != nil {
 		return nil, fmt.Errorf("grpc dial: %w", err)
 	}
-
+	restartChan := make(chan os.Signal, 1)
 	return &zetaclientdSupervisor{
 		zetacoredConn:      conn,
 		logger:             logger,
 		reloadSignals:      make(chan bool, 1),
 		upgradesDir:        defaultUpgradesDir,
 		enableAutoDownload: enableAutoDownload,
+		restartChan:        restartChan,
 	}, nil
 }
 
 func (s *zetaclientdSupervisor) Start(ctx context.Context) {
 	go s.watchForVersionChanges(ctx)
 	go s.handleCoreUpgradePlan(ctx)
+	go s.handleNewKeygen(ctx)
 }
 
 func (s *zetaclientdSupervisor) WaitForReloadSignal(ctx context.Context) {
@@ -169,6 +174,37 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 	}
 }
 
+func (s *zetaclientdSupervisor) handleNewKeygen(ctx context.Context) {
+	client := observertypes.NewQueryClient(s.zetacoredConn)
+	prevKeygenBlock := int64(0)
+	for {
+		select {
+		case <-time.After(time.Second):
+		case <-ctx.Done():
+			return
+		}
+		resp, err := client.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("unable to get keygen")
+			continue
+		}
+		if resp.Keygen == nil {
+			s.logger.Warn().Err(err).Msg("keygen is nil")
+			continue
+		}
+
+		if resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen {
+			continue
+		}
+		keygenBlock := resp.Keygen.BlockNumber
+		if prevKeygenBlock == keygenBlock {
+			continue
+		}
+		prevKeygenBlock = keygenBlock
+		s.logger.Warn().Msgf("got new keygen at block %d", keygenBlock)
+		s.restartChan <- syscall.SIGHUP
+	}
+}
 func (s *zetaclientdSupervisor) handleCoreUpgradePlan(ctx context.Context) {
 	client := upgradetypes.NewQueryClient(s.zetacoredConn)
 
