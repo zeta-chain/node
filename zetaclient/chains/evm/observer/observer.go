@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/big"
 	"strings"
-	"sync"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -51,9 +50,6 @@ type Observer struct {
 
 	// outboundConfirmedTransactions is the map to index confirmed transactions by hash
 	outboundConfirmedTransactions map[string]*ethtypes.Transaction
-
-	// Mu protects the maps and chain params from concurrent access
-	Mu *sync.Mutex
 }
 
 // NewObserver returns a new EVM chain observer
@@ -92,7 +88,6 @@ func NewObserver(
 		outboundPendingTransactions:   make(map[string]*ethtypes.Transaction),
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
-		Mu:                            &sync.Mutex{},
 	}
 
 	// open database and load data
@@ -117,16 +112,16 @@ func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 // SetChainParams sets the chain params for the observer
 // Note: chain params is accessed concurrently
 func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	ob.WithChainParams(params)
 }
 
 // GetChainParams returns the chain params for the observer
 // Note: chain params is accessed concurrently
 func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.ChainParams()
 }
 
@@ -230,22 +225,22 @@ func (ob *Observer) WatchRPCStatus() {
 
 // SetPendingTx sets the pending transaction in memory
 func (ob *Observer) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	ob.outboundPendingTransactions[ob.GetTxID(nonce)] = transaction
 }
 
 // GetPendingTx gets the pending transaction from memory
 func (ob *Observer) GetPendingTx(nonce uint64) *ethtypes.Transaction {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.outboundPendingTransactions[ob.GetTxID(nonce)]
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
 func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	delete(ob.outboundPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
 	ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] = receipt
 	ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] = transaction
@@ -253,8 +248,8 @@ func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, trans
 
 // GetTxNReceipt gets the receipt and transaction from memory
 func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	receipt := ob.outboundConfirmedReceipts[ob.GetTxID(nonce)]
 	transaction := ob.outboundConfirmedTransactions[ob.GetTxID(nonce)]
 	return receipt, transaction
@@ -262,8 +257,8 @@ func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tr
 
 // IsTxConfirmed returns true if there is a confirmed tx for 'nonce'
 func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] != nil &&
 		ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }

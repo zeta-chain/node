@@ -3,7 +3,6 @@ package observer_test
 import (
 	"fmt"
 	"os"
-	"sync"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -298,7 +297,7 @@ func Test_BlockCache(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := &observer.Observer{Mu: &sync.Mutex{}}
+	ob := &observer.Observer{}
 	ob.WithBlockCache(blockCache)
 
 	// delete non-existing block should not panic
@@ -337,7 +336,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := &observer.Observer{Mu: &sync.Mutex{}}
+	ob := &observer.Observer{}
 
 	// save block to cache
 	blockCache.Add(blockNumber, block)

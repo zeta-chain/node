@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -104,9 +103,6 @@ type Observer struct {
 
 	// logger contains the loggers used by the bitcoin observer
 	logger Logger
-
-	// Mu protects the maps, utxos and chain params from concurrent access
-	Mu *sync.Mutex
 }
 
 // NewObserver returns a new Bitcoin chain observer
@@ -157,7 +153,6 @@ func NewObserver(
 			ObserverLogger: *baseObserver.Logger(),
 			UTXOs:          baseObserver.Logger().Chain.With().Str("module", "utxos").Logger(),
 		},
-		Mu: &sync.Mutex{},
 	}
 
 	// load btc chain observer DB
@@ -182,16 +177,16 @@ func (ob *Observer) WithBtcClient(client interfaces.BTCRPCClient) {
 // SetChainParams sets the chain params for the observer
 // Note: chain params is accessed concurrently
 func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	ob.WithChainParams(params)
 }
 
 // GetChainParams returns the chain params for the observer
 // Note: chain params is accessed concurrently
 func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.ChainParams()
 }
 
@@ -283,8 +278,8 @@ func (ob *Observer) WatchRPCStatus() {
 // GetPendingNonce returns the artificial pending nonce
 // Note: pending nonce is accessed concurrently
 func (ob *Observer) GetPendingNonce() uint64 {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.pendingNonce
 }
 
@@ -508,19 +503,19 @@ func (ob *Observer) FetchUTXOs() error {
 		utxosFiltered = append(utxosFiltered, utxo)
 	}
 
-	ob.Mu.Lock()
+	ob.Mu().Lock()
 	ob.TelemetryServer().SetNumberOfUTXOs(len(utxosFiltered))
 	ob.utxos = utxosFiltered
-	ob.Mu.Unlock()
+	ob.Mu().Unlock()
 	return nil
 }
 
 // SaveBroadcastedTx saves successfully broadcasted transaction
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outboundID := ob.GetTxID(nonce)
-	ob.Mu.Lock()
+	ob.Mu().Lock()
 	ob.broadcastedTx[outboundID] = txHash
-	ob.Mu.Unlock()
+	ob.Mu().Unlock()
 
 	broadcastEntry := clienttypes.ToOutboundHashSQLType(txHash, outboundID)
 	if err := ob.DB().Save(&broadcastEntry).Error; err != nil {

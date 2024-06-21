@@ -120,10 +120,10 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	outboundID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsOutboundProcessed %s", outboundID)
 
-	ob.Mu.Lock()
+	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
 	res, included := ob.includedTxResults[outboundID]
-	ob.Mu.Unlock()
+	ob.Mu().Unlock()
 
 	if !included {
 		if !broadcasted {
@@ -223,16 +223,16 @@ func (ob *Observer) SelectUTXOs(
 	idx := -1
 	if nonce == 0 {
 		// for nonce = 0; make exception; no need to include nonce-mark utxo
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
+		ob.Mu().Lock()
+		defer ob.Mu().Unlock()
 	} else {
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
 		preTxid, err := ob.getOutboundIDByNonce(nonce-1, test)
 		if err != nil {
 			return nil, 0, 0, 0, err
 		}
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
+		ob.Mu().Lock()
+		defer ob.Mu().Unlock()
 		idx, err = ob.findNonceMarkUTXO(nonce-1, preTxid)
 		if err != nil {
 			return nil, 0, 0, 0, err
@@ -307,9 +307,9 @@ func (ob *Observer) refreshPendingNonce() {
 	}
 
 	// increase pending nonce if lagged behind
-	ob.Mu.Lock()
+	ob.Mu().Lock()
 	pendingNonce := ob.pendingNonce
-	ob.Mu.Unlock()
+	ob.Mu().Unlock()
 
 	// #nosec G701 always non-negative
 	nonceLow := uint64(p.NonceLow)
@@ -321,8 +321,8 @@ func (ob *Observer) refreshPendingNonce() {
 		}
 
 		// set 'NonceLow' as the new pending nonce
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
+		ob.Mu().Lock()
+		defer ob.Mu().Unlock()
 		ob.pendingNonce = nonceLow
 		ob.logger.Chain.Info().
 			Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
@@ -418,8 +418,8 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	txHash := getTxResult.TxID
 	outboundID := ob.GetTxID(nonce)
 
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	res, found := ob.includedTxResults[outboundID]
 
 	if !found { // not found.
@@ -444,15 +444,15 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 
 // getIncludedTx gets the receipt and transaction from memory
 func (ob *Observer) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.includedTxResults[ob.GetTxID(nonce)]
 }
 
 // removeIncludedTx removes included tx from memory
 func (ob *Observer) removeIncludedTx(nonce uint64) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	txResult, found := ob.includedTxResults[ob.GetTxID(nonce)]
 	if found {
 		delete(ob.includedTxHashes, txResult.TxID)

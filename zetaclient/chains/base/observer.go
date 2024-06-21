@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"sync/atomic"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -76,6 +77,10 @@ type Observer struct {
 	// logger contains the loggers used by observer
 	logger ObserverLogger
 
+	// mu protects fields from concurrent access
+	// Note: base observer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
+	mu *sync.Mutex
+
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
 }
@@ -101,6 +106,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		ts:               ts,
+		mu:               &sync.Mutex{},
 		stop:             make(chan struct{}),
 	}
 
@@ -270,6 +276,11 @@ func (ob *Observer) WithLogger(logger Logger) *Observer {
 		Compliance: logger.Compliance,
 	}
 	return ob
+}
+
+// Mu returns the mutex for the observer.
+func (ob *Observer) Mu() *sync.Mutex {
+	return ob.mu
 }
 
 // StopChannel returns the stop channel for the observer.

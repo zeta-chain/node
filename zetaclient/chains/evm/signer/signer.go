@@ -532,7 +532,8 @@ func (signer *Signer) BroadcastOutbound(
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetacoreClient interfaces.ZetacoreClient,
-	txData *OutboundData) {
+	txData *OutboundData,
+) {
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 	if tx == nil {
