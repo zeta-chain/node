@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -17,9 +18,7 @@ import (
 func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	// Get the initial balance of the deployer
 	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.Logger.Info("Sending a deposit that should revert without a liquidity pool makes the cctx aborted")
 
@@ -27,46 +26,34 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 
 	// send the deposit
 	inboundHash, err := sendInvalidERC20Deposit(r, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// There is no liquidity pool, therefore the cctx should abort
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Aborted)
+	require.False(r, cctx.CctxStatus.IsAbortRefunded, "expected cctx status to be not refunded")
+
 	r.Logger.CCTX(*cctx, "deposit")
-	if cctx.CctxStatus.Status != types.CctxStatus_Aborted {
-		panic(fmt.Sprintf("expected cctx status to be Aborted; got %s", cctx.CctxStatus.Status))
-	}
-
-	if cctx.CctxStatus.IsAbortRefunded != false {
-		panic(fmt.Sprintf("expected cctx status to be not refunded; got %t", cctx.CctxStatus.IsAbortRefunded))
-	}
-
 	r.Logger.Info("Refunding the cctx via admin")
-	msg := types.NewMsgRefundAbortedCCTX(
-		r.ZetaTxServer.GetAccountAddress(0),
-		cctx.Index,
-		r.DeployerAddress.String())
+
+	msg := types.NewMsgRefundAbortedCCTX(r.ZetaTxServer.GetAccountAddress(0), cctx.Index, r.DeployerAddress.String())
+
 	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
 	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	expectedBalance := initialBal.Add(initialBal, amount)
-	if newBalance.Cmp(expectedBalance) != 0 {
-		panic(
-			fmt.Sprintf(
-				"expected balance to be %s after refund; got %s",
-				expectedBalance.String(),
-				newBalance.String(),
-			),
-		)
-	}
+	require.Equal(
+		r,
+		0,
+		newBalance.Cmp(expectedBalance),
+		"expected balance to be %s after refund; got %s",
+		expectedBalance.String(),
+		newBalance.String(),
+	)
 	r.Logger.Info("CCTX has been aborted on ZetaChain")
 
 	// test refund when there is a liquidity pool
@@ -74,67 +61,54 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("Creating the liquidity pool USTD/ZETA")
 	err = createZetaERC20LiquidityPool(r)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("Liquidity pool created")
 
 	erc20Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// send the deposit
 	amount = big.NewInt(1e7)
 	inboundHash, err = sendInvalidERC20Deposit(r, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	erc20BalanceAfterSend := big.NewInt(0).Sub(erc20Balance, amount)
 
 	// there is a liquidity pool, therefore the cctx should revert
-	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
-
 	// the revert tx creation will fail because the sender, used as the recipient, is not defined in the cctx
-	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
-		panic(fmt.Sprintf(
-			"expected cctx status to be PendingRevert; got %s, aborted message: %s",
-			cctx.CctxStatus.Status,
-			cctx.CctxStatus.StatusMessage,
-		))
-	}
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
 
 	// get revert tx
 	revertTxHash := cctx.GetCurrentOutboundParam().Hash
 	receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(revertTxHash))
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status == 0 {
-		panic("expected the revert tx receipt to have status 1; got 0")
-	}
+	require.NoError(r, err)
+	utils.RequireReceiptApproved(r, receipt)
 
 	// check that the erc20 in the reverted cctx was refunded on EVM
 	erc20BalanceAfterRefund, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	// the new balance must be higher than the previous one because of the revert refund
-	if erc20BalanceAfterSend.Cmp(erc20BalanceAfterRefund) != -1 {
-		panic(fmt.Sprintf(
-			"expected balance to be higher after refund than after send %s < %s",
-			erc20BalanceAfterSend.String(),
-			erc20BalanceAfterRefund.String(),
-		))
-	}
+	require.Equal(
+		r,
+		-1,
+		erc20BalanceAfterSend.Cmp(erc20BalanceAfterRefund),
+		"expected balance to be higher after refund than after send %s < %s",
+		erc20BalanceAfterSend.String(),
+		erc20BalanceAfterRefund.String(),
+	)
+
 	// it must also be lower than the previous balance + the amount because of the gas fee for the revert tx
-	if erc20BalanceAfterRefund.Cmp(erc20Balance) != -1 {
-		panic(fmt.Sprintf(
-			"expected balance to be lower after refund than before send %s < %s",
-			erc20BalanceAfterRefund.String(),
-			erc20Balance.String()),
-		)
-	}
+	require.Equal(
+		r,
+		-1,
+		erc20BalanceAfterRefund.Cmp(erc20Balance),
+		"expected balance to be lower after refund than before send %s < %s",
+		erc20BalanceAfterRefund.String(),
+		erc20Balance.String(),
+	)
 
 	r.Logger.Info("ERC20 CCTX successfully reverted")
 	r.Logger.Info("\tbalance before refund: %s", erc20Balance.String())

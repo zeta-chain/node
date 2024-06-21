@@ -1,10 +1,10 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -13,14 +13,10 @@ import (
 )
 
 func TestMessagePassingEVMtoZEVMRevertFail(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestMessagePassingEVMtoZEVMRevertFail requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid amount specified for TestMessagePassingEVMtoZEVMRevertFail.")
-	}
+	require.True(r, ok, "Invalid amount specified for TestMessagePassingEVMtoZEVMRevertFail.")
 
 	// Deploying a test contract not containing a logic for reverting the cctx
 	testDappNoRevertEVMAddr, tx, testDappNoRevertEVM, err := testdappnorevert.DeployTestDAppNoRevert(
@@ -29,87 +25,66 @@ func TestMessagePassingEVMtoZEVMRevertFail(r *runner.E2ERunner, args []string) {
 		r.ConnectorEthAddr,
 		r.ZetaEthAddr,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("TestDAppNoRevertEVM deployed at: %s", testDappNoRevertEVMAddr.Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireReceiptApproved(r, receipt)
+
 	r.Logger.EVMReceipt(*receipt, "deploy TestDAppNoRevert")
-	if receipt.Status == 0 {
-		panic("deploy TestDAppNoRevert failed")
-	}
 
 	// Set destination details
 	zEVMChainID, err := r.ZEVMClient.ChainID(r.Ctx)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	destinationAddress := r.ZevmTestDAppAddr
 
 	// Contract call originates from EVM chain
 	tx, err = r.ZetaEth.Approve(r.EVMAuth, testDappNoRevertEVMAddr, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	utils.RequireReceiptApproved(r, receipt)
+
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
 	// Get ZETA balance before test
 	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, testDappNoRevertEVMAddr)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// Send message with doRevert
 	tx, err = testDappNoRevertEVM.SendHelloWorld(r.EVMAuth, destinationAddress, zEVMChainID, amount, true)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("TestDAppNoRevert.SendHello tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// New inbound message picked up by zeta-clients and voted on by observers to initiate a contract call on zEVM which would revert the transaction
-	// A revert transaction is created and gets fialized on the original sender chain.
+	// A revert transaction is created and gets finalized on the original sender chain.
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
-		panic("expected cctx to be reverted")
-	}
+	utils.RequireCCTXStatus(r, cctx, cctxtypes.CctxStatus_Aborted)
 
 	// Check ZETA balance on ZEVM TestDApp and check new balance is previous balance
 	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.ZevmTestDAppAddr)
-	if err != nil {
-		panic(err)
-	}
-	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
-		panic(fmt.Sprintf(
-			"expected new balance to be %s, got %s",
-			previousBalanceZEVM.String(),
-			newBalanceZEVM.String()),
-		)
-	}
+	require.NoError(r, err)
+	require.Equal(
+		r,
+		0,
+		newBalanceZEVM.Cmp(previousBalanceZEVM),
+		"expected new balance to be %s, got %s",
+		previousBalanceZEVM.String(),
+		newBalanceZEVM.String(),
+	)
 
 	// Check ZETA balance on EVM TestDApp and check new balance is previous balance
 	newBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, testDappNoRevertEVMAddr)
-	if err != nil {
-		panic(err)
-	}
-	if newBalanceEVM.Cmp(previousBalanceEVM) != 0 {
-		panic(fmt.Sprintf(
-			"expected new balance to be %s, got %s",
-			previousBalanceEVM.String(),
-			newBalanceEVM.String()),
-		)
-	}
+	require.NoError(r, err)
+	require.Equal(r, 0, newBalanceEVM.Cmp(previousBalanceEVM))
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -16,26 +17,18 @@ import (
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
 func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
-	if len(args) != 2 {
-		panic(
-			"TestStressEtherWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.",
-		)
-	}
+	require.Len(r, args, 2)
 
 	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid withdrawal amount specified for TestStressEtherWithdraw.")
-	}
+	require.True(r, ok, "Invalid withdrawal amount specified for TestStressEtherWithdraw.")
 
 	numWithdraws, err := strconv.Atoi(args[1])
-	if err != nil || numWithdraws < 1 {
-		panic("Invalid number of withdrawals specified for TestStressEtherWithdraw.")
-	}
+	require.NoError(r, err)
+	require.GreaterOrEqual(r, numWithdraws, 1)
 
 	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, big.NewInt(1e18))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.WaitForTxReceiptOnZEVM(tx)
 
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
@@ -46,15 +39,13 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i
+
 		tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(r, err)
+
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-		if receipt.Status == 0 {
-			//r.Logger.Info("index %d: withdraw evm tx failed", index)
-			panic(fmt.Sprintf("index %d: withdraw evm tx %s failed", i, tx.Hash().Hex()))
-		}
+		utils.RequireReceiptApproved(r, receipt)
+
 		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
@@ -62,10 +53,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 		})
 	}
 
-	// wait for all the withdraws to complete
-	if err := eg.Wait(); err != nil {
-		panic(err)
-	}
+	require.NoError(r, eg.Wait())
 
 	r.Logger.Print("all withdraws completed")
 }

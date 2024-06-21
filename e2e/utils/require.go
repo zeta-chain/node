@@ -5,6 +5,7 @@ import (
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -25,6 +26,12 @@ func RequireCCTXStatus(
 func RequireReceiptApproved(t require.TestingT, receipt *ethtypes.Receipt, msgAndArgs ...any) {
 	msg := "receipt status is not successful"
 	require.Equal(t, ethtypes.ReceiptStatusSuccessful, receipt.Status, msg+errSuffix(msgAndArgs...))
+}
+
+// RequireReceiptFailed checks if the receipt status is failed
+func RequireReceiptFailed(t require.TestingT, receipt *ethtypes.Receipt, msgAndArgs ...any) {
+	msg := "receipt status is not successful"
+	require.Equal(t, ethtypes.ReceiptStatusFailed, receipt.Status, msg+errSuffix(msgAndArgs...))
 }
 
 func errSuffix(msgAndArgs ...any) string {

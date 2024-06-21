@@ -1,8 +1,7 @@
 package e2etests
 
 import (
-	"fmt"
-	"strconv"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -10,14 +9,9 @@ import (
 )
 
 func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestBitcoinDeposit requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
-	depositAmount, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		panic("Invalid deposit amount specified for TestBitcoinDeposit.")
-	}
+	depositAmount := parseFloat(r, args[0])
 
 	r.SetBtcAddress(r.Name, false)
 
@@ -26,11 +20,5 @@ func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf(
-			"expected mined status; got %s, message: %s",
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage),
-		)
-	}
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 }

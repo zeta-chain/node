@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -21,28 +22,20 @@ var deployMap = map[string]deployFunc{
 
 // TestDeployContract deploys the specified contract
 func TestDeployContract(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
+
 	availableContractNames := make([]string, 0, len(deployMap))
 	for contractName := range deployMap {
 		availableContractNames = append(availableContractNames, contractName)
 	}
 	availableContractNamesMessage := fmt.Sprintf("Available contract names: %v", availableContractNames)
-
-	if len(args) != 1 {
-		panic(
-			"TestDeployContract requires exactly one argument for the contract name. " + availableContractNamesMessage,
-		)
-	}
 	contractName := args[0]
 
 	deployFunc, ok := deployMap[contractName]
-	if !ok {
-		panic(fmt.Sprintf("Unknown contract name: %s, %s", contractName, availableContractNamesMessage))
-	}
+	require.True(r, ok, "Unknown contract name: %s, %s", contractName, availableContractNamesMessage)
 
 	addr, err := deployFunc(r)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.Logger.Print("%s deployed at %s", contractName, addr.Hex())
 }

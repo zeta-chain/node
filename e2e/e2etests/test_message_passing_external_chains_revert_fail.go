@@ -4,6 +4,8 @@ import (
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -15,32 +17,26 @@ import (
 // TODO: Use two external EVM chains for these tests
 // https://github.com/zeta-chain/node/issues/2185
 func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestMessagePassingRevertFail requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid amount specified for TestMessagePassingRevertFail.")
-	}
+	require.True(r, ok, "Invalid amount specified for TestMessagePassingRevertFail.")
 
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	auth := r.EVMAuth
 	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	utils.RequireReceiptApproved(r, receipt)
+
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	r.Logger.Info("Calling ConnectorEth.Send")
+
 	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
 		DestinationAddress:  r.DeployerAddress.Bytes(),
@@ -51,14 +47,13 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 		ZetaValueAndGas: amount,
 		ZetaParams:      nil,
 	})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	utils.RequireReceiptApproved(r, receipt)
+
 	r.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	r.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -74,14 +69,9 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	// expect revert tx to fail as well
-	if receipt.Status != 0 {
-		panic("expected revert tx to fail")
-	}
-	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
-		panic("expected cctx to be aborted")
-	}
+	require.Equal(r, ethtypes.ReceiptStatusFailed, receipt.Status)
+	utils.RequireCCTXStatus(r, cctx, cctxtypes.CctxStatus_Aborted)
 }
