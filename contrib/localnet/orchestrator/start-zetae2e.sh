@@ -173,7 +173,7 @@ else
 
   echo "running e2e tests..."
 
-  zetae2e $ZETAE2E_CMD --skip-setup --config deployed.yml --skip-migration-test
+  zetae2e $ZETAE2E_CMD --skip-setup --config deployed.yml --light
   ZETAE2E_EXIT_CODE=$?
 
   # if e2e passed, exit with 0, otherwise exit with 1

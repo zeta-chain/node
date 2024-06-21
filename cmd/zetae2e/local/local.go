@@ -378,9 +378,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	logger.Print("🏁 starting migration tests")
+	fmt.Println("SkipMigration", skipMigrationTest)
+
 	//if skipMigrationTest is set to true , there is no need to update the keygen height to generate a new tss
+	migrationCtx, cancel := context.WithCancel(context.Background())
+	deployerRunner.CtxCancel = cancel
 	if !skipMigrationTest {
-		response, err := deployerRunner.CctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		response, err := deployerRunner.CctxClient.LastZetaHeight(migrationCtx, &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			panic(err)
@@ -394,6 +398,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	eg.Go(migrationTestRoutine(conf, deployerRunner, verbose, ""))
 	if err := eg.Wait(); err != nil {
+		deployerRunner.CtxCancel()
 		logger.Print("❌ %v", err)
 		logger.Print("❌ migration tests failed")
 		os.Exit(1)
