@@ -92,43 +92,86 @@ func Test_ModifyObserverState(t *testing.T) {
 }
 
 func Test_ImportDataIntoFile(t *testing.T) {
-	setConfig(t)
-	cdc := keepertest.NewCodec()
-	genDoc := sample.GenDoc(t)
-	importGenDoc := ImportGenDoc(t, cdc, 100)
+	t.Run("successfully import data into file and modify data", func(t *testing.T) {
+		setConfig(t)
+		cdc := keepertest.NewCodec()
+		genDoc := sample.GenDoc(t)
+		importGenDoc := ImportGenDoc(t, cdc, 100)
 
-	err := zetacored.ImportDataIntoFile(genDoc, importGenDoc, cdc)
-	require.NoError(t, err)
+		err := zetacored.ImportDataIntoFile(genDoc, importGenDoc, cdc, true)
+		require.NoError(t, err)
 
-	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
-	require.NoError(t, err)
+		appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
+		require.NoError(t, err)
 
-	// Crosschain module is in Modify list
-	crosschainStateAfterImport := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
-	require.Len(t, crosschainStateAfterImport.CrossChainTxs, zetacored.MaxItemsForList)
-	require.Len(t, crosschainStateAfterImport.InboundHashToCctxList, zetacored.MaxItemsForList)
-	require.Len(t, crosschainStateAfterImport.FinalizedInbounds, zetacored.MaxItemsForList)
+		// Crosschain module is in Modify list
+		crosschainStateAfterImport := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
+		require.Len(t, crosschainStateAfterImport.CrossChainTxs, zetacored.MaxItemsForList)
+		require.Len(t, crosschainStateAfterImport.InboundHashToCctxList, zetacored.MaxItemsForList)
+		require.Len(t, crosschainStateAfterImport.FinalizedInbounds, zetacored.MaxItemsForList)
 
-	// Bank module is in Skip list
-	var bankStateAfterImport banktypes.GenesisState
-	if appState[banktypes.ModuleName] != nil {
-		err := cdc.UnmarshalJSON(appState[banktypes.ModuleName], &bankStateAfterImport)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+		// Bank module is in Skip list
+		var bankStateAfterImport banktypes.GenesisState
+		if appState[banktypes.ModuleName] != nil {
+			err := cdc.UnmarshalJSON(appState[banktypes.ModuleName], &bankStateAfterImport)
+			if err != nil {
+				panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+			}
 		}
-	}
-	// 4 balances were present in the original genesis state
-	require.Len(t, bankStateAfterImport.Balances, 4)
+		// 4 balances were present in the original genesis state
+		require.Len(t, bankStateAfterImport.Balances, 4)
 
-	// Emissions module is in Copy list
-	var emissionStateAfterImport emissionstypes.GenesisState
-	if appState[emissionstypes.ModuleName] != nil {
-		err := cdc.UnmarshalJSON(appState[emissionstypes.ModuleName], &emissionStateAfterImport)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+		// Emissions module is in Copy list
+		var emissionStateAfterImport emissionstypes.GenesisState
+		if appState[emissionstypes.ModuleName] != nil {
+			err := cdc.UnmarshalJSON(appState[emissionstypes.ModuleName], &emissionStateAfterImport)
+			if err != nil {
+				panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+			}
 		}
-	}
-	require.Len(t, emissionStateAfterImport.WithdrawableEmissions, 100)
+		require.Len(t, emissionStateAfterImport.WithdrawableEmissions, 100)
+	})
+
+	t.Run("successfully import data into file without modifying data", func(t *testing.T) {
+		setConfig(t)
+		cdc := keepertest.NewCodec()
+		genDoc := sample.GenDoc(t)
+		importGenDoc := ImportGenDoc(t, cdc, 8)
+
+		err := zetacored.ImportDataIntoFile(genDoc, importGenDoc, cdc, false)
+		require.NoError(t, err)
+
+		appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
+		require.NoError(t, err)
+
+		// Crosschain module is in Modify list
+		crosschainStateAfterImport := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
+		require.Len(t, crosschainStateAfterImport.CrossChainTxs, 0)
+		require.Len(t, crosschainStateAfterImport.InboundHashToCctxList, 0)
+		require.Len(t, crosschainStateAfterImport.FinalizedInbounds, 0)
+
+		// Bank module is in Skip list
+		var bankStateAfterImport banktypes.GenesisState
+		if appState[banktypes.ModuleName] != nil {
+			err := cdc.UnmarshalJSON(appState[banktypes.ModuleName], &bankStateAfterImport)
+			if err != nil {
+				panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+			}
+		}
+		// 4 balances were present in the original genesis state
+		require.Len(t, bankStateAfterImport.Balances, 4)
+
+		// Emissions module is in Copy list
+		var emissionStateAfterImport emissionstypes.GenesisState
+		if appState[emissionstypes.ModuleName] != nil {
+			err := cdc.UnmarshalJSON(appState[emissionstypes.ModuleName], &emissionStateAfterImport)
+			if err != nil {
+				panic(fmt.Sprintf("Failed to get genesis state from app state: %s", err.Error()))
+			}
+		}
+		require.Len(t, emissionStateAfterImport.WithdrawableEmissions, 8)
+
+	})
 }
 
 func Test_GetGenDoc(t *testing.T) {
