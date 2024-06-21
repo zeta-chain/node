@@ -132,6 +132,17 @@ func TestNewObserver(t *testing.T) {
 	}
 }
 
+func TestStop(t *testing.T) {
+	t.Run("should be able to stop observer", func(t *testing.T) {
+		// create observer and initialize db
+		ob := createObserver(t)
+		ob.OpenDB(sample.CreateTempDir(t), "")
+
+		// stop observer
+		ob.Stop()
+	})
+}
+
 func TestObserverGetterAndSetter(t *testing.T) {
 	t.Run("should be able to update chain", func(t *testing.T) {
 		ob := createObserver(t)
