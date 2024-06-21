@@ -198,20 +198,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10)
 	}
 
-	// if skipMigrationTest is set to true , there is no need to update the keygen height to generate a new tss
-	if !skipMigrationTest {
-		response, err := deployerRunner.CctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
-		if err != nil {
-			logger.Error("cctxClient.LastZetaHeight error: %s", err)
-			panic(err)
-		}
-		err = zetaTxServer.UpdateKeygen(response.Height)
-		if err != nil {
-			panic(err)
-		}
-		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
-	}
-
 	// query and set the TSS
 	if err := deployerRunner.SetTSSAddresses(); err != nil {
 		panic(err)
@@ -392,6 +378,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	logger.Print("🏁 starting migration tests")
+	//if skipMigrationTest is set to true , there is no need to update the keygen height to generate a new tss
+	if !skipMigrationTest {
+		response, err := deployerRunner.CctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		if err != nil {
+			logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			panic(err)
+		}
+		err = zetaTxServer.UpdateKeygen(response.Height)
+		if err != nil {
+			panic(err)
+		}
+		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+	}
+
 	eg.Go(migrationTestRoutine(conf, deployerRunner, verbose, ""))
 	if err := eg.Wait(); err != nil {
 		logger.Print("❌ %v", err)
