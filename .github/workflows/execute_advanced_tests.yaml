@@ -50,8 +50,7 @@ jobs:
       - name: Full Log Dump On Failure
         if: failure()
         run: |
-          cd contrib/localnet
-          docker compose logs
+          make stop-localnet
 
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'
@@ -82,8 +81,7 @@ jobs:
       - name: Full Log Dump On Failure
         if: failure()
         run: |
-          cd contrib/localnet
-          docker compose logs
+          make stop-localnet
 
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'
@@ -114,8 +112,7 @@ jobs:
       - name: Full Log Dump On Failure
         if: failure()
         run: |
-          cd contrib/localnet
-          docker compose logs
+          make stop-localnet
 
   e2e-performance-test:
     if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
@@ -137,5 +134,4 @@ jobs:
       - name: Full Log Dump On Failure
         if: failure()
         run: |
-          cd contrib/localnet
-          docker compose logs
+          make stop-localnet
