@@ -300,7 +300,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	}
 }
 
-func TestKeeper_SaveInbound(t *testing.T) {
+func TestKeeper_SaveObservedInboundInformation(t *testing.T) {
 	t.Run("should save the cctx", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
@@ -309,7 +309,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		senderChain := getValidEthChain()
 		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
 		eventIndex := sample.Uint64InRange(1, 100)
-		k.SaveInbound(ctx, cctx, eventIndex)
+		k.SaveObservedInboundInformation(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
 		require.True(
 			t,
@@ -340,7 +340,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		eventIndex := sample.Uint64InRange(1, 100)
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
-		k.SaveInbound(ctx, cctx, eventIndex)
+		k.SaveObservedInboundInformation(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
 		require.True(
 			t,
