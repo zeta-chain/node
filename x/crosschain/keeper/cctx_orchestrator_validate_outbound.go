@@ -189,7 +189,7 @@ func (k Keeper) validateFailedOutbound(
 		if err != nil {
 			return err
 		}
-		err = k.UpdateNonce(ctx, cctx.InboundParams.SenderChainId, cctx)
+		err = k.SetObserverOutboundInfo(ctx, cctx.InboundParams.SenderChainId, cctx)
 		if err != nil {
 			return err
 		}

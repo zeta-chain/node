@@ -22,11 +22,9 @@ func (k msgServer) UpdateSystemContract(
 	msg *types.MsgUpdateSystemContract,
 ) (*types.MsgUpdateSystemContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, cosmoserrors.Wrap(
-			authoritytypes.ErrUnauthorized,
-			"Deploy can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 	newSystemContractAddr := ethcommon.HexToAddress(msg.NewSystemContractAddress)
 	if newSystemContractAddr == (ethcommon.Address{}) {

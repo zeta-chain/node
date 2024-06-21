@@ -161,13 +161,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// set account prefix to zeta
 	setCosmosConfig()
 
-	// wait for Genesis
-	// if setup is skip, we assume that the genesis is already created
-	if !skipSetup {
-		logger.Print("⏳ wait 70s for genesis")
-		time.Sleep(70 * time.Second)
-	}
-
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.FungibleAdminName},
@@ -289,6 +282,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 		bitcoinTests := []string{
+			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
@@ -297,6 +292,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		bitcoinAdvancedTests := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
 			e2etests.TestBitcoinWithdrawLegacyName,
+			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
@@ -396,7 +392,7 @@ func waitKeygenHeight(
 	logger *runner.Logger,
 ) {
 	// wait for keygen to be completed
-	keygenHeight := int64(60)
+	keygenHeight := int64(35)
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(2 * time.Second)

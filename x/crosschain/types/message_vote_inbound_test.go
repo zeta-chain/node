@@ -158,87 +158,87 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	require.NotEmpty(t, hash, "hash should not be empty")
 
 	// creator not used
-	msg2 := msg
-	msg2.Creator = sample.AccAddress()
-	hash2 := msg2.Digest()
+	msg = msg
+	msg.Creator = sample.AccAddress()
+	hash2 := msg.Digest()
 	require.Equal(t, hash, hash2, "creator should not change hash")
 
 	// in block height not used
-	msg2 = msg
-	msg2.InboundBlockHeight = 43
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.InboundBlockHeight = 43
+	hash2 = msg.Digest()
 	require.Equal(t, hash, hash2, "in block height should not change hash")
 
 	// sender used
-	msg2 = msg
-	msg2.Sender = sample.AccAddress()
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.Sender = sample.AccAddress()
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "sender should change hash")
 
 	// sender chain ID used
-	msg2 = msg
-	msg2.SenderChainId = 43
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.SenderChainId = 43
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "sender chain ID should change hash")
 
 	// tx origin used
-	msg2 = msg
-	msg2.TxOrigin = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.TxOrigin = sample.StringRandom(r, 32)
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "tx origin should change hash")
 
 	// receiver used
-	msg2 = msg
-	msg2.Receiver = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.Receiver = sample.StringRandom(r, 32)
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "receiver should change hash")
 
 	// receiver chain ID used
-	msg2 = msg
-	msg2.ReceiverChain = 43
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.ReceiverChain = 43
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "receiver chain ID should change hash")
 
 	// amount used
-	msg2 = msg
-	msg2.Amount = math.NewUint(43)
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.Amount = math.NewUint(43)
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "amount should change hash")
 
 	// message used
-	msg2 = msg
-	msg2.Message = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.Message = sample.StringRandom(r, 32)
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "message should change hash")
 
 	// in tx hash used
-	msg2 = msg
-	msg2.InboundHash = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.InboundHash = sample.StringRandom(r, 32)
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "in tx hash should change hash")
 
 	// gas limit used
-	msg2 = msg
-	msg2.GasLimit = 43
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.GasLimit = 43
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "gas limit should change hash")
 
 	// coin type used
-	msg2 = msg
-	msg2.CoinType = coin.CoinType_ERC20
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.CoinType = coin.CoinType_ERC20
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 
 	// asset used
-	msg2 = msg
-	msg2.Asset = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.Asset = sample.StringRandom(r, 32)
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "asset should change hash")
 
 	// event index used
-	msg2 = msg
-	msg2.EventIndex = 43
-	hash2 = msg2.Digest()
+	msg = msg
+	msg.EventIndex = 43
+	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "event index should change hash")
 }
 

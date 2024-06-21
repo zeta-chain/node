@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/pkg/errors"
 )
 
 // AccountBalances is a struct that contains the balances of the accounts used in the E2E test
@@ -100,20 +101,29 @@ func (runner *E2ERunner) GetBitcoinBalance() (string, error) {
 		return "", fmt.Errorf("failed to decode BTC address: %w", err)
 	}
 
-	unspentList, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
+	total, err := runner.GetBitcoinBalanceByAddress(address)
 	if err != nil {
-		return "", fmt.Errorf("failed to list unspent: %w", err)
+		return "", err
 	}
 
-	// calculate total amount
-	var totalAmount btcutil.Amount
+	return total.String(), nil
+}
+
+// GetBitcoinBalanceByAddress get btc balance by address.
+func (runner *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil.Amount, error) {
+	unspentList, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to list unspent")
+	}
+
+	var total btcutil.Amount
 	for _, unspent := range unspentList {
 		if unspent.Spendable {
-			totalAmount += btcutil.Amount(unspent.Amount * 1e8)
+			total += btcutil.Amount(unspent.Amount * 1e8)
 		}
 	}
 
-	return totalAmount.String(), nil
+	return total, nil
 }
 
 // PrintAccountBalances shows the account balances of the accounts used in the E2E test

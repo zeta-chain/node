@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -18,10 +19,9 @@ func (k msgServer) UpdateGasPriceIncreaseFlags(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgUpdateGasPriceIncreaseFlagsResponse{}, authoritytypes.ErrUnauthorized.Wrap(
-			"UpdateGasPriceIncreaseFlags can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 	// check if the value exists,
 	// if not, set the default value for the GasPriceIncreaseFlags only
@@ -33,7 +33,7 @@ func (k msgServer) UpdateGasPriceIncreaseFlags(
 		flags.IsOutboundEnabled = false
 	}
 
-	err := msg.GasPriceIncreaseFlags.Validate()
+	err = msg.GasPriceIncreaseFlags.Validate()
 	if err != nil {
 		return &types.MsgUpdateGasPriceIncreaseFlagsResponse{}, err
 	}

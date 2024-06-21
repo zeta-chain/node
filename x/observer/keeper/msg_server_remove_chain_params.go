@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -17,10 +18,10 @@ func (k msgServer) RemoveChainParams(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgRemoveChainParamsResponse{}, authoritytypes.ErrUnauthorized
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
-
 	// find current core params list or initialize a new one
 	chainParamsList, found := k.GetChainParamsList(ctx)
 	if !found {
