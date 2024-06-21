@@ -288,8 +288,12 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 
 	if chains.IsBitcoinChain(chainID) {
 		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
-			return errorsmod.Wrapf(types.ErrInvalidWithdrawalAmount, "withdraw amount %s is less than minimum amount %d",
-				event.Value.String(), constant.BTCWithdrawalDustAmount)
+			return errorsmod.Wrapf(
+				types.ErrInvalidWithdrawalAmount,
+				"withdraw amount %s is less than minimum amount %d",
+				event.Value.String(),
+				constant.BTCWithdrawalDustAmount,
+			)
 		}
 		addr, err := chains.DecodeBtcAddress(string(event.To), chainID)
 		if err != nil {
