@@ -30172,6 +30172,7 @@ paths:
         - Query
   /zeta-chain/observer/get_all_tss_fund_migrators:
     get:
+      summary: Queries all TssFundMigratorInfo
       operationId: Query_TssFundsMigratorInfoAll
       responses:
         "200":

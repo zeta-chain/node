@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -20,6 +21,10 @@ func (k Keeper) TssFundsMigratorInfo(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if chains.GetChainFromChainID(req.ChainId) == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid chain id")
+	}
 
 	fm, found := k.GetFundMigrator(ctx, req.ChainId)
 	if !found {

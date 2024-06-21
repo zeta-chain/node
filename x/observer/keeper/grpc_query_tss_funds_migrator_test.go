@@ -18,7 +18,18 @@ func TestKeeper_TssFundsMigratorInfo(t *testing.T) {
 		wctx := sdk.WrapSDKContext(ctx)
 
 		res, err := k.TssFundsMigratorInfo(wctx, nil)
-		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid request")
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if chain id is invalid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.TssFundsMigratorInfo(wctx, &types.QueryTssFundsMigratorInfoRequest{
+			ChainId: 0,
+		})
+		require.ErrorContains(t, err, "invalid chain id")
 		require.Nil(t, res)
 	})
 
@@ -26,8 +37,10 @@ func TestKeeper_TssFundsMigratorInfo(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 
-		res, err := k.TssFundsMigratorInfo(wctx, &types.QueryTssFundsMigratorInfoRequest{})
-		require.Error(t, err)
+		res, err := k.TssFundsMigratorInfo(wctx, &types.QueryTssFundsMigratorInfoRequest{
+			ChainId: chains.Ethereum.ChainId,
+		})
+		require.ErrorContains(t, err, "tss fund migrator not found")
 		require.Nil(t, res)
 	})
 
@@ -56,7 +69,7 @@ func TestKeeper_TssFundsMigratorInfoAll(t *testing.T) {
 		wctx := sdk.WrapSDKContext(ctx)
 
 		res, err := k.TssFundsMigratorInfoAll(wctx, nil)
-		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid request")
 		require.Nil(t, res)
 	})
 

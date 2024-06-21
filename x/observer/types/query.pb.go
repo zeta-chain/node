@@ -2499,6 +2499,7 @@ type QueryClient interface {
 	ChainNoncesAll(ctx context.Context, in *QueryAllChainNoncesRequest, opts ...grpc.CallOption) (*QueryAllChainNoncesResponse, error)
 	// Queries the TssFundMigratorInfo for a specific chain
 	TssFundsMigratorInfo(ctx context.Context, in *QueryTssFundsMigratorInfoRequest, opts ...grpc.CallOption) (*QueryTssFundsMigratorInfoResponse, error)
+	// Queries all TssFundMigratorInfo
 	TssFundsMigratorInfoAll(ctx context.Context, in *QueryTssFundsMigratorInfoAllRequest, opts ...grpc.CallOption) (*QueryTssFundsMigratorInfoAllResponse, error)
 }
 
@@ -2768,6 +2769,7 @@ type QueryServer interface {
 	ChainNoncesAll(context.Context, *QueryAllChainNoncesRequest) (*QueryAllChainNoncesResponse, error)
 	// Queries the TssFundMigratorInfo for a specific chain
 	TssFundsMigratorInfo(context.Context, *QueryTssFundsMigratorInfoRequest) (*QueryTssFundsMigratorInfoResponse, error)
+	// Queries all TssFundMigratorInfo
 	TssFundsMigratorInfoAll(context.Context, *QueryTssFundsMigratorInfoAllRequest) (*QueryTssFundsMigratorInfoAllResponse, error)
 }
 
