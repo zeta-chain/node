@@ -122,29 +122,29 @@ func NewSigner(
 
 // SetZetaConnectorAddress sets the zeta connector address
 func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	signer.zetaConnectorAddress = addr
 }
 
 // SetERC20CustodyAddress sets the erc20 custody address
 func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	signer.er20CustodyAddress = addr
 }
 
 // GetZetaConnectorAddress returns the zeta connector address
 func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	return signer.zetaConnectorAddress
 }
 
 // GetERC20CustodyAddress returns the erc20 custody address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	return signer.er20CustodyAddress
 }
 
@@ -542,8 +542,6 @@ func (signer *Signer) BroadcastOutbound(
 	// broadcast transaction
 	if tx != nil {
 		outboundHash := tx.Hash().Hex()
-		logger.Info().Msgf("BroadcastOutbound: broadcasting tx %s on chain %d nonce %d signer %s",
-			outboundHash, toChain.ChainId, tx.Nonce(), myID)
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := 1000 * time.Millisecond
@@ -551,8 +549,10 @@ func (signer *Signer) BroadcastOutbound(
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				log.Warn().Err(err).Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d",
-					outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, i)
+				log.Warn().
+					Err(err).
+					Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d signer %s",
+						outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, i, myID)
 				retry, report := zetacore.HandleBroadcastError(
 					err,
 					strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10),
@@ -568,8 +568,8 @@ func (signer *Signer) BroadcastOutbound(
 				backOff *= 2
 				continue
 			}
-			logger.Info().Msgf("BroadcastOutbound: broadcasted tx %s on chain %d nonce %d",
-				outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce)
+			logger.Info().Msgf("BroadcastOutbound: broadcasted tx %s on chain %d nonce %d signer %s",
+				outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, myID)
 			signer.reportToOutboundTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 			break // successful broadcast; no need to retry
 		}
@@ -694,8 +694,8 @@ func (signer *Signer) reportToOutboundTracker(
 	logger zerolog.Logger,
 ) {
 	// skip if already being reported
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	if _, found := signer.outboundHashBeingReported[outboundHash]; found {
 		logger.Info().
 			Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
@@ -706,9 +706,9 @@ func (signer *Signer) reportToOutboundTracker(
 	// report to outbound tracker with goroutine
 	go func() {
 		defer func() {
-			signer.mu.Lock()
+			signer.Mu().Lock()
 			delete(signer.outboundHashBeingReported, outboundHash)
-			signer.mu.Unlock()
+			signer.Mu().Unlock()
 		}()
 
 		// try monitoring tx inclusion status for 10 minutes

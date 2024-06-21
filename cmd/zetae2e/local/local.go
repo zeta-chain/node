@@ -161,13 +161,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// set account prefix to zeta
 	setCosmosConfig()
 
-	// wait for Genesis
-	// if setup is skip, we assume that the genesis is already created
-	if !skipSetup {
-		logger.Print("⏳ wait 70s for genesis")
-		time.Sleep(70 * time.Second)
-	}
-
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.FungibleAdminName},
@@ -399,7 +392,7 @@ func waitKeygenHeight(
 	logger *runner.Logger,
 ) {
 	// wait for keygen to be completed
-	keygenHeight := int64(60)
+	keygenHeight := int64(35)
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(2 * time.Second)

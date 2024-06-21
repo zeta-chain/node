@@ -18,17 +18,18 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
-
 		admin := sample.AccAddress()
+
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: "",
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.Error(t, err)
 	})
 
@@ -39,14 +40,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: "",
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.Error(t, err)
 	})
 
@@ -56,12 +57,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
+
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
@@ -80,10 +80,13 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
 			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
 		)
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.NoError(t, err)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		require.True(t, found)
@@ -98,12 +101,12 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
@@ -121,10 +124,13 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
 			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
 		)
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.ErrorContains(t, err, "tss pubkey has not been generated")
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
@@ -143,11 +149,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
+		tssOld := sample.Tss()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		tssOld := sample.Tss()
+
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
@@ -165,10 +171,13 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
 			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
 		)
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssOld.TssPubkey,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.ErrorContains(t, err, "no new tss address has been generated")
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
@@ -187,12 +196,10 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
 
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
@@ -209,12 +216,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		cctx := sample.CrossChainTx(t, index)
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 		k.SetCrossChainTx(ctx, *cctx)
-
 		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), 1)
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.ErrorContains(t, err, "cannot update tss address not enough migrations have been created and completed")
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
@@ -230,12 +239,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
 
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
@@ -257,10 +265,13 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
 			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
 		)
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.ErrorContains(t, err, "cannot update tss address while there are pending migrations")
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
@@ -276,12 +287,10 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		})
 
 		admin := sample.AccAddress()
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
-		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		msgServer := keeper.NewMsgServerImpl(*k)
 
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
@@ -300,10 +309,13 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
 			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
 		)
-		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+
+		msg := crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := msgServer.UpdateTssAddress(ctx, &msg)
 		require.ErrorContains(t, err, "migration cross chain tx not found")
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)

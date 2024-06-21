@@ -20,11 +20,9 @@ func (k msgServer) UpdateZRC20WithdrawFee(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check signer permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserrors.Wrap(
-			authoritytypes.ErrUnauthorized,
-			"deploy can only be executed by the correct policy account",
-		)
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// check the zrc20 exists

@@ -29,6 +29,12 @@ while [ ! -f ~/.ssh/authorized_keys ]; do
     sleep 1
 done
 
+# need to wait for zetacore0 to be up
+while ! curl -s -o /dev/null zetacore0:26657/status ; do
+    echo "Waiting for zetacore0 rpc"
+    sleep 10
+done
+
 echo "waiting for geth RPC to start..."
 sleep 2
 

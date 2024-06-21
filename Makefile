@@ -255,6 +255,11 @@ start-localnet-skip-build:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d
 
 stop-localnet:
+start-e2e-import-mainnet-test: zetanode
+	@echo "--> Starting e2e import-data test"
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-data.yml up -d
+
+stop-test:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
 
 ###############################################################################

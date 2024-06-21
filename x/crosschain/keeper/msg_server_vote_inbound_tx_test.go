@@ -140,7 +140,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		//Perform the SAME event. Except, this time, we resubmit the event.
-		msg2 := &types.MsgVoteInbound{
+		msg = &types.MsgVoteInbound{
 			Creator:            validatorAddr,
 			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
 			SenderChainId:      1337,
@@ -159,11 +159,11 @@ func TestKeeper_VoteInbound(t *testing.T) {
 
 		_, err = msgServer.VoteInbound(
 			ctx,
-			msg2,
+			msg,
 		)
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
-		_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
+		_, found = zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
 		require.False(t, found)
 	})
 
@@ -300,7 +300,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	}
 }
 
-func TestKeeper_SaveInbound(t *testing.T) {
+func TestKeeper_SaveObservedInboundInformation(t *testing.T) {
 	t.Run("should save the cctx", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
@@ -309,7 +309,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		senderChain := getValidEthChain()
 		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
 		eventIndex := sample.Uint64InRange(1, 100)
-		k.SaveInbound(ctx, cctx, eventIndex)
+		k.SaveObservedInboundInformation(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
 		require.True(
 			t,
@@ -340,7 +340,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 		eventIndex := sample.Uint64InRange(1, 100)
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
-		k.SaveInbound(ctx, cctx, eventIndex)
+		k.SaveObservedInboundInformation(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
 		require.True(
 			t,

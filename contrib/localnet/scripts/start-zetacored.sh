@@ -4,6 +4,8 @@
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
 # The number of nodes is passed as an first argument to the script
+# The second argument is optional and can have the following value:
+#  - import-data: import data into the genesis file
 
 /usr/sbin/sshd
 
@@ -71,6 +73,7 @@ then
   exit 1
 fi
 NUMOFNODES=$1
+OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"
@@ -189,7 +192,7 @@ then
 
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
-  zetacored add-observer-list --keygen-block 55
+  zetacored add-observer-list --keygen-block 25
 
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
@@ -253,6 +256,11 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
+
+  if [[ "$OPTION" == "import-data" || "$OPTION" == "import-data-upgrade" ]]; then
+    echo "Importing data"
+    zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
+  fi
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs

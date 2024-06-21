@@ -27,20 +27,20 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		// set admin
 		admin := sample.AccAddress()
+		chainParams1 := sample.ChainParams(chain1)
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 
 		// check list initially empty
 		_, found := k.GetChainParamsList(ctx)
 		require.False(t, found)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		// a new chain params can be added
-		chainParams1 := sample.ChainParams(chain1)
-		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
+		msg := types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams1,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has one chain params
@@ -48,15 +48,15 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.True(t, found)
 		require.Len(t, chainParamsList.ChainParams, 1)
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		chainParams2 := sample.ChainParams(chain2)
 
 		// a new chian params can be added
-		chainParams2 := sample.ChainParams(chain2)
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
+		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams2,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has two chain params
@@ -65,15 +65,15 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Len(t, chainParamsList.ChainParams, 2)
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
-
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		chainParams3 := sample.ChainParams(chain3)
 
 		// a new chain params can be added
-		chainParams3 := sample.ChainParams(chain3)
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
+		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams3,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has three chain params
@@ -84,14 +84,14 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
 		require.Equal(t, chainParams3, chainParamsList.ChainParams[2])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-
 		// chain params can be updated
 		chainParams2.ConfirmationCount = chainParams2.ConfirmationCount + 1
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
+		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams2,
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check list has three chain params
@@ -108,15 +108,16 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
-
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
-		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
+		msg := types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: sample.ChainParams(chains.ExternalChainList()[0].ChainId),
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)
+
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 }

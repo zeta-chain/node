@@ -1,6 +1,8 @@
 package base
 
 import (
+	"sync"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -24,6 +26,10 @@ type Signer struct {
 
 	// logger contains the loggers used by signer
 	logger Logger
+
+	// mu protects fields from concurrent access
+	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
+	mu *sync.Mutex
 }
 
 // NewSigner creates a new base signer
@@ -43,6 +49,7 @@ func NewSigner(
 			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
 			Compliance: logger.Compliance,
 		},
+		mu: &sync.Mutex{},
 	}
 }
 
@@ -93,4 +100,9 @@ func (s *Signer) WithTelemetryServer(ts *metrics.TelemetryServer) *Signer {
 // Logger returns the logger for the signer
 func (s *Signer) Logger() *Logger {
 	return &s.logger
+}
+
+// Mu returns the mutex for the signer
+func (s *Signer) Mu() *sync.Mutex {
+	return s.mu
 }
