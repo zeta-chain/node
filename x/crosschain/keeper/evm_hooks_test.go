@@ -830,7 +830,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		}
 
 		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
+		require.ErrorContains(t, err, "invalid address")
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 0)
 	})
