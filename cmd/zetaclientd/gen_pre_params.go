@@ -18,7 +18,7 @@ var GenPrePramsCmd = &cobra.Command{
 	Use:   "gen-pre-params <path>",
 	Short: "Generate pre parameters for TSS",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		startTime := time.Now()
 		preParams, err := keygen.GeneratePreParams(time.Second * 300)
 		if err != nil {

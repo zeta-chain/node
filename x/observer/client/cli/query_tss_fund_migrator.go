@@ -20,12 +20,12 @@ func CmdGetTssFundsMigrator() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			chainId, err := strconv.ParseInt(args[0], 10, 64)
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 			params := &types.QueryTssFundsMigratorInfoRequest{
-				ChainId: chainId,
+				ChainId: chainID,
 			}
 
 			res, err := queryClient.TssFundsMigratorInfo(context.Background(), params)
