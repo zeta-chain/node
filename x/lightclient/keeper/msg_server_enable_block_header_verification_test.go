@@ -39,11 +39,12 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		})
 
 		// enable both eth and btc type chain together
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
+		msg := types.MsgEnableHeaderVerification{
 			Creator:     admin,
 			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
@@ -62,11 +63,12 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 		authorityMock := keepertest.GetLightclientAuthorityMock(t, k)
 
 		// enable both eth and btc type chain together
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
-		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
+		msg := types.MsgEnableHeaderVerification{
 			Creator:     admin,
 			ChainIdList: []int64{chains.Ethereum.ChainId, chains.BitcoinMainnet.ChainId},
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 		bhv, found := k.GetBlockHeaderVerification(ctx)
 		require.True(t, found)
@@ -97,11 +99,12 @@ func TestMsgServer_EnableVerificationFlags(t *testing.T) {
 			},
 		})
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
-		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &types.MsgEnableHeaderVerification{
+		msg := types.MsgEnableHeaderVerification{
 			Creator:     admin,
 			ChainIdList: []int64{chains.Ethereum.ChainId},
-		})
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		_, err := srv.EnableHeaderVerification(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 }

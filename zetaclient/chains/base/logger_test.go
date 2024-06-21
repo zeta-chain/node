@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
@@ -23,7 +24,7 @@ func TestInitLogger(t *testing.T) {
 				LogFormat: "json",
 				LogLevel:  1, // zerolog.InfoLevel,
 				ComplianceConfig: config.ComplianceConfig{
-					LogPath: createTempDir(t),
+					LogPath: sample.CreateTempDir(t),
 				},
 			},
 			fail: false,
@@ -34,7 +35,7 @@ func TestInitLogger(t *testing.T) {
 				LogFormat: "text",
 				LogLevel:  2, // zerolog.WarnLevel,
 				ComplianceConfig: config.ComplianceConfig{
-					LogPath: createTempDir(t),
+					LogPath: sample.CreateTempDir(t),
 				},
 			},
 			fail: false,
@@ -45,7 +46,7 @@ func TestInitLogger(t *testing.T) {
 				LogFormat: "unknown",
 				LogLevel:  3, // zerolog.ErrorLevel,
 				ComplianceConfig: config.ComplianceConfig{
-					LogPath: createTempDir(t),
+					LogPath: sample.CreateTempDir(t),
 				},
 			},
 			fail: false,
@@ -57,7 +58,7 @@ func TestInitLogger(t *testing.T) {
 				LogLevel:   4, // zerolog.DebugLevel,
 				LogSampler: true,
 				ComplianceConfig: config.ComplianceConfig{
-					LogPath: createTempDir(t),
+					LogPath: sample.CreateTempDir(t),
 				},
 			},
 		},

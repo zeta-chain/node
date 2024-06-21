@@ -174,16 +174,8 @@ func CrosschainKeeperWithMocks(
 		lightclientKeeper,
 	)
 
-	cctxGateways := map[chains.CCTXGateway]keeper.CCTXGateway{
-		chains.CCTXGateway_observers: keeper.NewCCTXGatewayObservers(*k),
-		chains.CCTXGateway_zevm:      keeper.NewCCTXGatewayZEVM(*k),
-	}
-
-	k.SetCCTXGateways(cctxGateways)
-
 	// initialize ibccrosschain keeper and set it to the crosschain keeper
 	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
-
 	var ibcCrosschainKeeperTmp types.IBCCrosschainKeeper = initIBCCrosschainKeeper(
 		cdc,
 		db,

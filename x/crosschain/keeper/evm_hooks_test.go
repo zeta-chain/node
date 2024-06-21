@@ -15,6 +15,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -164,14 +165,21 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("unable to validate a event with an invalid amount", func(t *testing.T) {
+	t.Run("unable to validate a btc withdrawal event with an invalid amount", func(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		btcMainNetWithdrawalEvent.Value = big.NewInt(0)
+
+		// 1000 satoshis is the minimum amount that can be withdrawn
+		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount)
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid amount")
+		require.NoError(t, err)
+
+		// 999 satoshis cannot be withdrawn
+		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount - 1)
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		require.ErrorContains(t, err, "less than minimum amount")
 	})
 
 	t.Run("unable to validate a event with an invalid chain ID", func(t *testing.T) {
@@ -211,9 +219,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
@@ -237,9 +244,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
@@ -262,9 +268,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "cannot find foreign coin with emittingContract address")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
@@ -283,9 +288,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "chain not supported")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
@@ -305,10 +309,10 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
+
 		ctx = ctx.WithChainID("test_21-1")
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "failed to convert chainID: chain 21 not found")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
@@ -329,9 +333,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.To = ethcommon.Address{}.Bytes()
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "cannot encode address")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
@@ -354,13 +357,13 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
+
 		fc, _ := zk.FungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
 
 		fungibleMock.On("GetForeignCoins", mock.Anything, mock.Anything).Return(fc, true)
 		fungibleMock.On("QueryGasLimit", mock.Anything, mock.Anything).
 			Return(big.NewInt(0), fmt.Errorf("error querying gas limit"))
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "error querying gas limit")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
@@ -381,9 +384,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "gasprice not found")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
@@ -408,10 +410,9 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		event.Raw.Address = zrc20
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
-		require.ErrorContains(t, err, "ProcessWithdrawalEvent: update nonce failed")
+		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
+		require.ErrorContains(t, err, "nonce mismatch")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
 }
@@ -489,9 +490,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.NoError(t, err)
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 1)
@@ -526,9 +526,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "ProcessZetaSentEvent: failed to burn coins from fungible")
 	})
 
@@ -557,8 +556,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
-		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+
+		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "chain not supported")
 	})
 
@@ -589,9 +588,9 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
+
 		ctx = ctx.WithChainID("test-21-1")
-		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
+		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex())
 		require.ErrorContains(t, err, "ProcessZetaSentEvent: failed to convert chainID")
 	})
 
@@ -619,10 +618,9 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
 
-		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
-		require.ErrorContains(t, err, "ProcessWithdrawalEvent: pay gas failed")
+		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex())
+		require.ErrorContains(t, err, "gas coin contract invalid address")
 	})
 
 	t.Run("unable to process ZetaSentEvent if process cctx fails", func(t *testing.T) {
@@ -658,9 +656,9 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
 		txOrigin := sample.EthAddress()
-		tss := sample.Tss()
-		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex(), tss)
-		require.ErrorContains(t, err, "ProcessWithdrawalEvent: update nonce failed")
+
+		err = k.ProcessZetaSentEvent(ctx, event, emittingContract, txOrigin.Hex())
+		require.ErrorContains(t, err, "nonce mismatch")
 	})
 }
 
@@ -832,7 +830,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		}
 
 		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
+		require.ErrorContains(t, err, "invalid address")
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 0)
 	})

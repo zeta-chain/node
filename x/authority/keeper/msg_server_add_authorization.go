@@ -17,11 +17,10 @@ func (k msgServer) AddAuthorization(
 ) (*types.MsgAddAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.IsAuthorized(ctx, msg.Creator, types.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(
-			types.ErrUnauthorized,
-			"AddAuthorization can only be executed by the admin policy account",
-		)
+	// check if the caller is authorized to add an authorization
+	err := k.CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrUnauthorized, err.Error())
 	}
 
 	authorizationList, found := k.GetAuthorizationList(ctx)
@@ -31,7 +30,7 @@ func (k msgServer) AddAuthorization(
 	authorizationList.SetAuthorization(types.Authorization{MsgUrl: msg.MsgUrl, AuthorizedPolicy: msg.AuthorizedPolicy})
 
 	// validate the authorization list after adding the authorization as a precautionary measure.
-	err := authorizationList.Validate()
+	err = authorizationList.Validate()
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "authorization list is invalid")
 	}

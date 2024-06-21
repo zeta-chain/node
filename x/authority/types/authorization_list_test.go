@@ -422,6 +422,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
 			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),
+			sdk.MsgTypeURL(&types.MsgUpdateChainInfo{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {

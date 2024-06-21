@@ -167,7 +167,10 @@ type TSSSigner interface {
 	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
 	// TODO: check if optionalPubkey is needed
 	// https://github.com/zeta-chain/node/issues/2085
-	Sign(data []byte, height uint64, nonce uint64, chain *chains.Chain, optionalPubkey string) ([65]byte, error)
+	Sign(data []byte, height uint64, nonce uint64, chainID int64, optionalPubkey string) ([65]byte, error)
+
+	// SignBatch signs the data in batch
+	SignBatch(digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
 
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
