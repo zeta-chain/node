@@ -72,7 +72,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
 	coreCTX := context.NewZetacoreContext(cfg)
-	dbpath := testutils.CreateTempDir(t)
+	dbpath := sample.CreateTempDir(t)
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 

@@ -2,10 +2,12 @@ package observer_test
 
 import (
 	"fmt"
+	"math/big"
 	"os"
 	"testing"
 
 	"cosmossdk.io/math"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
@@ -133,7 +135,7 @@ func Test_NewObserver(t *testing.T) {
 			chainParams: params,
 			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      testutils.CreateTempDir(t),
+			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        false,
@@ -162,7 +164,7 @@ func Test_NewObserver(t *testing.T) {
 			chainParams: params,
 			evmClient:   mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      testutils.CreateTempDir(t),
+			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        true,
@@ -206,7 +208,7 @@ func Test_LoadDB(t *testing.T) {
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
-	dbpath := testutils.CreateTempDir(t)
+	dbpath := sample.CreateTempDir(t)
 	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, dbpath, 1, params)
 
 	t.Run("should load db successfully", func(t *testing.T) {
@@ -254,7 +256,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 
 	// create observer using mock evm client
 	evmClient := mocks.NewMockEvmClient().WithBlockNumber(100)
-	dbpath := testutils.CreateTempDir(t)
+	dbpath := sample.CreateTempDir(t)
 	ob := MockEVMObserver(t, chain, evmClient, nil, nil, nil, dbpath, 1, params)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
@@ -278,7 +280,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer on separate path, as we need to reset last block scanned
-		otherPath := testutils.CreateTempDir(t)
+		otherPath := sample.CreateTempDir(t)
 		obOther := MockEVMObserver(t, chain, evmClient, nil, nil, nil, otherPath, 1, params)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC
@@ -294,30 +296,110 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 }
 
 func Test_BlockCache(t *testing.T) {
-	// create client
-	blockCache, err := lru.New(1000)
-	require.NoError(t, err)
-	ob := &observer.Observer{}
-	ob.WithBlockCache(blockCache)
+	t.Run("should get block from cache", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		blockCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithBlockCache(blockCache)
 
-	// delete non-existing block should not panic
-	blockNumber := uint64(10388180)
-	ob.RemoveCachedBlock(blockNumber)
+		// create mock evm client
+		JSONRPC := mocks.NewMockJSONRPCClient()
+		ob.WithEvmJSONRPC(JSONRPC)
 
-	// add a block
-	block := &ethrpc.Block{
-		// #nosec G701 always in range
-		Number: int(blockNumber),
-	}
-	blockCache.Add(blockNumber, block)
-	ob.WithBlockCache(blockCache)
+		// feed block to JSON rpc client
+		block := &ethrpc.Block{Number: 100}
+		JSONRPC.WithBlock(block)
 
-	// block should be in cache
-	_, err = ob.GetBlockByNumberCached(blockNumber)
-	require.NoError(t, err)
+		// get block header from observer, fallback to JSON RPC
+		result, err := ob.GetBlockByNumberCached(uint64(100))
+		require.NoError(t, err)
+		require.EqualValues(t, block, result)
 
-	// delete the block should not panic
-	ob.RemoveCachedBlock(blockNumber)
+		// get block header from cache
+		result, err = ob.GetBlockByNumberCached(uint64(100))
+		require.NoError(t, err)
+		require.EqualValues(t, block, result)
+	})
+	t.Run("should fail if stored type is not block", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		blockCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithBlockCache(blockCache)
+
+		// add a string to cache
+		blockNumber := uint64(100)
+		blockCache.Add(blockNumber, "a string value")
+
+		// get result header from cache
+		result, err := ob.GetBlockByNumberCached(blockNumber)
+		require.ErrorContains(t, err, "cached value is not of type *ethrpc.Block")
+		require.Nil(t, result)
+	})
+	t.Run("should be able to remove block from cache", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		blockCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithBlockCache(blockCache)
+
+		// delete non-existing block should not panic
+		blockNumber := uint64(123)
+		ob.RemoveCachedBlock(blockNumber)
+
+		// add a block
+		block := &ethrpc.Block{Number: 123}
+		blockCache.Add(blockNumber, block)
+		ob.WithBlockCache(blockCache)
+
+		// block should be in cache
+		result, err := ob.GetBlockByNumberCached(blockNumber)
+		require.NoError(t, err)
+		require.EqualValues(t, block, result)
+
+		// delete the block should not panic
+		ob.RemoveCachedBlock(blockNumber)
+	})
+}
+
+func Test_HeaderCache(t *testing.T) {
+	t.Run("should get block header from cache", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		headerCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithHeaderCache(headerCache)
+
+		// create mock evm client
+		evmClient := mocks.NewMockEvmClient()
+		ob.WithEvmClient(evmClient)
+
+		// feed block header to evm client
+		header := &ethtypes.Header{Number: big.NewInt(100)}
+		evmClient.WithHeader(header)
+
+		// get block header from observer
+		resHeader, err := ob.GetBlockHeaderCached(uint64(100))
+		require.NoError(t, err)
+		require.EqualValues(t, header, resHeader)
+	})
+	t.Run("should fail if stored type is not block header", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		headerCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithHeaderCache(headerCache)
+
+		// add a string to cache
+		blockNumber := uint64(100)
+		headerCache.Add(blockNumber, "a string value")
+
+		// get block header from cache
+		header, err := ob.GetBlockHeaderCached(blockNumber)
+		require.ErrorContains(t, err, "cached value is not of type *ethtypes.Header")
+		require.Nil(t, header)
+	})
 }
 
 func Test_CheckTxInclusion(t *testing.T) {

@@ -367,8 +367,11 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 }
 
 func (ob *Observer) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
-	if header, ok := ob.HeaderCache().Get(blockNumber); ok {
-		return header.(*ethtypes.Header), nil
+	if result, ok := ob.HeaderCache().Get(blockNumber); ok {
+		if header, ok := result.(*ethtypes.Header); ok {
+			return header, nil
+		}
+		return nil, errors.New("cached value is not of type *ethtypes.Header")
 	}
 	header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
 	if err != nil {
@@ -381,8 +384,11 @@ func (ob *Observer) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, 
 // GetBlockByNumberCached get block by number from cache
 // returns block, ethrpc.Block, isFallback, isSkip, error
 func (ob *Observer) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, error) {
-	if block, ok := ob.BlockCache().Get(blockNumber); ok {
-		return block.(*ethrpc.Block), nil
+	if result, ok := ob.BlockCache().Get(blockNumber); ok {
+		if block, ok := result.(*ethrpc.Block); ok {
+			return block, nil
+		}
+		return nil, errors.New("cached value is not of type *ethrpc.Block")
 	}
 	if blockNumber > math.MaxInt32 {
 		return nil, fmt.Errorf("block number %d is too large", blockNumber)

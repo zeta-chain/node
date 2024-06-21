@@ -529,8 +529,12 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 // GetBlockByNumberCached gets cached block (and header) by block number
 func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
 	if result, ok := ob.BlockCache().Get(blockNumber); ok {
-		return result.(*BTCBlockNHeader), nil
+		if block, ok := result.(*BTCBlockNHeader); ok {
+			return block, nil
+		}
+		return nil, errors.New("cached value is not of type *BTCBlockNHeader")
 	}
+
 	// Get the block hash
 	hash, err := ob.btcClient.GetBlockHash(blockNumber)
 	if err != nil {

@@ -16,7 +16,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
@@ -212,7 +211,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 	t.Run("should be able to get database", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		ob.OpenDB(dbPath, "")
 
@@ -242,7 +241,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 }
 
 func TestOpenCloseDB(t *testing.T) {
-	dbPath := testutils.CreateTempDir(t)
+	dbPath := sample.CreateTempDir(t)
 	ob := createObserver(t)
 
 	t.Run("should be able to open/close db", func(t *testing.T) {
@@ -275,7 +274,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -290,7 +289,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("latest block scanned should be 0 if not found in db", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -302,7 +301,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -320,7 +319,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("last block scanned should remain 0 if env var is set to latest", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -338,7 +337,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should return error on invalid env var", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -355,7 +354,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 func TestSaveLastBlockScanned(t *testing.T) {
 	t.Run("should be able to save last block scanned", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -377,7 +376,7 @@ func TestSaveLastBlockScanned(t *testing.T) {
 func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 	t.Run("should be able to write and read last block scanned to db", func(t *testing.T) {
 		// create observer and open db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)
@@ -392,7 +391,7 @@ func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 	})
 	t.Run("should return error when last block scanned not found in db", func(t *testing.T) {
 		// create empty db
-		dbPath := testutils.CreateTempDir(t)
+		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t)
 		err := ob.OpenDB(dbPath, "")
 		require.NoError(t, err)

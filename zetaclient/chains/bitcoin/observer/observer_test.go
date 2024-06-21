@@ -8,18 +8,20 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/wire"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -127,7 +129,7 @@ func Test_NewObserver(t *testing.T) {
 			coreContext: nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      testutils.CreateTempDir(t),
+			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        false,
@@ -140,7 +142,7 @@ func Test_NewObserver(t *testing.T) {
 			coreContext: nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      testutils.CreateTempDir(t),
+			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        true,
@@ -190,6 +192,56 @@ func Test_NewObserver(t *testing.T) {
 	}
 }
 
+func Test_BlockCache(t *testing.T) {
+	t.Run("should add and get block from cache", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		blockCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithBlockCache(blockCache)
+
+		// create mock btc client
+		btcClient := mocks.NewMockBTCRPCClient()
+		ob.WithBtcClient(btcClient)
+
+		// feed block hash, header and block to btc client
+		hash := sample.BtcHash()
+		header := &wire.BlockHeader{Version: 1}
+		block := &btcjson.GetBlockVerboseTxResult{Version: 1}
+		btcClient.WithBlockHash(&hash)
+		btcClient.WithBlockHeader(header)
+		btcClient.WithBlockVerboseTx(block)
+
+		// get block and header from observer, fallback to btc client
+		result, err := ob.GetBlockByNumberCached(100)
+		require.NoError(t, err)
+		require.EqualValues(t, header, result.Header)
+		require.EqualValues(t, block, result.Block)
+
+		// get block header from cache
+		result, err = ob.GetBlockByNumberCached(100)
+		require.NoError(t, err)
+		require.EqualValues(t, header, result.Header)
+		require.EqualValues(t, block, result.Block)
+	})
+	t.Run("should fail if stored type is not BlockNHeader", func(t *testing.T) {
+		// create observer
+		ob := &observer.Observer{}
+		blockCache, err := lru.New(100)
+		require.NoError(t, err)
+		ob.WithBlockCache(blockCache)
+
+		// add a string to cache
+		blockNumber := int64(100)
+		blockCache.Add(blockNumber, "a string value")
+
+		// get result from cache
+		result, err := ob.GetBlockByNumberCached(blockNumber)
+		require.ErrorContains(t, err, "cached value is not of type *BTCBlockNHeader")
+		require.Nil(t, result)
+	})
+}
+
 func Test_LoadDB(t *testing.T) {
 	// use Bitcoin mainnet chain for testing
 	chain := chains.BitcoinMainnet
@@ -200,7 +252,7 @@ func Test_LoadDB(t *testing.T) {
 	tss := mocks.NewTSSMainnet()
 
 	// create observer
-	dbpath := testutils.CreateTempDir(t)
+	dbpath := sample.CreateTempDir(t)
 	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, dbpath, base.Logger{}, nil)
 	require.NoError(t, err)
 
@@ -237,7 +289,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 
 	// create observer using mock btc client
 	btcClient := mocks.NewMockBTCRPCClient().WithBlockCount(200)
-	dbpath := testutils.CreateTempDir(t)
+	dbpath := sample.CreateTempDir(t)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// create observer and write 199 as last block scanned
@@ -264,7 +316,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer on separate path, as we need to reset last block scanned
-		otherPath := testutils.CreateTempDir(t)
+		otherPath := sample.CreateTempDir(t)
 		obOther := MockBTCObserver(t, chain, params, btcClient, otherPath)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC

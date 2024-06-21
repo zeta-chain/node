@@ -141,7 +141,7 @@ func CreateChainObserverMap(
 		}
 
 		// create EVM chain observer
-		co, err := evmobserver.NewObserver(
+		observer, err := evmobserver.NewObserver(
 			evmConfig,
 			evmClient,
 			*chainParams,
@@ -156,7 +156,7 @@ func CreateChainObserverMap(
 			logger.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
 			continue
 		}
-		observerMap[evmConfig.Chain.ChainId] = co
+		observerMap[evmConfig.Chain.ChainId] = observer
 	}
 
 	// BTC observer
@@ -173,7 +173,7 @@ func CreateChainObserverMap(
 			logger.Std.Error().Err(err).Msgf("error creating rpc client for bitcoin chain %s", btcChain.String())
 		} else {
 			// create BTC chain observer
-			co, err := btcobserver.NewObserver(
+			observer, err := btcobserver.NewObserver(
 				btcChain,
 				btcClient,
 				*chainParams,
@@ -187,7 +187,7 @@ func CreateChainObserverMap(
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
 			} else {
-				observerMap[btcChain.ChainId] = co
+				observerMap[btcChain.ChainId] = observer
 			}
 		}
 	}
