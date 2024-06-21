@@ -226,7 +226,7 @@ func Test_IsPending(t *testing.T) {
 	}
 }
 
-func TestKeeper_UpdateNonce(t *testing.T) {
+func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 	t.Run("should error if supported chain is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,
@@ -236,7 +236,7 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 		// mock failed GetSupportedChainFromChainID
 		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
 
-		err := k.UpdateNonce(ctx, 5, nil)
+		err := k.SetObserverOutboundInfo(ctx, 5, nil)
 		require.Error(t, err)
 	})
 
@@ -262,7 +262,7 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
-		err := k.UpdateNonce(ctx, 5, &cctx)
+		err := k.SetObserverOutboundInfo(ctx, 5, &cctx)
 		require.Error(t, err)
 	})
 
@@ -291,7 +291,7 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
-		err := k.UpdateNonce(ctx, 5, &cctx)
+		err := k.SetObserverOutboundInfo(ctx, 5, &cctx)
 		require.Error(t, err)
 		require.Equal(t, uint64(100), cctx.GetCurrentOutboundParam().TssNonce)
 	})
@@ -324,7 +324,7 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
-		err := k.UpdateNonce(ctx, 5, &cctx)
+		err := k.SetObserverOutboundInfo(ctx, 5, &cctx)
 		require.Error(t, err)
 	})
 
@@ -358,7 +358,7 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
-		err := k.UpdateNonce(ctx, 5, &cctx)
+		err := k.SetObserverOutboundInfo(ctx, 5, &cctx)
 		require.Error(t, err)
 	})
 
@@ -395,7 +395,7 @@ func TestKeeper_UpdateNonce(t *testing.T) {
 				{Amount: sdkmath.NewUint(1)},
 			},
 		}
-		err := k.UpdateNonce(ctx, 5, &cctx)
+		err := k.SetObserverOutboundInfo(ctx, 5, &cctx)
 		require.NoError(t, err)
 	})
 }
