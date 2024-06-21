@@ -544,8 +544,10 @@ func (signer *Signer) BroadcastOutbound(
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				log.Warn().Err(err).Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d signer %s",
-					outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, i, myID)
+				log.Warn().
+					Err(err).
+					Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d signer %s",
+						outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, i, myID)
 				retry, report := zetacore.HandleBroadcastError(
 					err,
 					strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10),
