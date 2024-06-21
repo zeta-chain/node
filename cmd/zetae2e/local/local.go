@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
@@ -70,58 +71,21 @@ func NewLocalCmd() *cobra.Command {
 
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
-	waitForHeight, err := cmd.Flags().GetInt64(flagWaitForHeight)
-	if err != nil {
-		panic(err)
-	}
-	contractsDeployed, err := cmd.Flags().GetBool(flagContractsDeployed)
-	if err != nil {
-		panic(err)
-	}
-	verbose, err := cmd.Flags().GetBool(flagVerbose)
-	if err != nil {
-		panic(err)
-	}
-	configOut, err := cmd.Flags().GetString(flagConfigOut)
-	if err != nil {
-		panic(err)
-	}
-	testAdmin, err := cmd.Flags().GetBool(flagTestAdmin)
-	if err != nil {
-		panic(err)
-	}
-	testPerformance, err := cmd.Flags().GetBool(flagTestPerformance)
-	if err != nil {
-		panic(err)
-	}
-	testCustom, err := cmd.Flags().GetBool(flagTestCustom)
-	if err != nil {
-		panic(err)
-	}
-	skipRegular, err := cmd.Flags().GetBool(flagSkipRegular)
-	if err != nil {
-		panic(err)
-	}
-	light, err := cmd.Flags().GetBool(flagLight)
-	if err != nil {
-		panic(err)
-	}
-	setupOnly, err := cmd.Flags().GetBool(flagSetupOnly)
-	if err != nil {
-		panic(err)
-	}
-	skipSetup, err := cmd.Flags().GetBool(flagSkipSetup)
-	if err != nil {
-		panic(err)
-	}
-	skipBitcoinSetup, err := cmd.Flags().GetBool(flagSkipBitcoinSetup)
-	if err != nil {
-		panic(err)
-	}
-	skipHeaderProof, err := cmd.Flags().GetBool(flagSkipHeaderProof)
-	if err != nil {
-		panic(err)
-	}
+	var (
+		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose           = must(cmd.Flags().GetBool(flagVerbose))
+		configOut         = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
+		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
+		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
+		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
+		light             = must(cmd.Flags().GetBool(flagLight))
+		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
@@ -145,19 +109,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}()
 
 	// initialize tests config
-	conf, err := GetConfig(cmd)
-	if err != nil {
-		panic(err)
-	}
+	conf := must(GetConfig(cmd))
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// wait for a specific height on ZetaChain
 	if waitForHeight != 0 {
-		if err := utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger); err != nil {
-			panic(err)
-		}
+		ensure(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
 
 	// set account prefix to zeta
@@ -170,18 +129,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		time.Sleep(70 * time.Second)
 	}
 
-	zetaTxServer, err := txserver.NewZetaTxServer(
+	zetaTxServer := must(txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.FungibleAdminName},
 		[]string{UserFungibleAdminPrivateKey},
 		conf.ZetaChainID,
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to initialize ZetaChain tx server: %w", err))
-	}
+	))
 
 	// initialize deployer runner with config
-	deployerRunner, err := zetae2econfig.RunnerFromConfig(
+	deployerRunner := must(zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
@@ -190,10 +146,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		DeployerPrivateKey,
 		logger,
 		runner.WithZetaTxServer(zetaTxServer),
-	)
-	if err != nil {
-		panic(err)
-	}
+	))
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -203,15 +156,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// query and set the TSS
 	if err := deployerRunner.SetTSSAddresses(); err != nil {
-		panic(err)
+		exit(err)
 	}
 
 	if !skipHeaderProof {
-		if err := deployerRunner.EnableHeaderVerification([]int64{
+		ensure(deployerRunner.EnableHeaderVerification([]int64{
 			chains.GoerliLocalnet.ChainId,
-			chains.BitcoinRegtest.ChainId}); err != nil {
-			panic(err)
-		}
+			chains.BitcoinRegtest.ChainId,
+		}))
 	}
 
 	// setting up the networks
@@ -221,30 +173,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
-
-		// NOTE: this method return an error so we handle it and panic if it occurs unlike other method that panics directly
-		// TODO: all methods should return errors instead of panicking and this current function should also return an error
-		// https://github.com/zeta-chain/node/issues/1500
-		if err := deployerRunner.FundEmissionsPool(); err != nil {
-			panic(err)
-		}
+		ensure(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(10000)
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
+
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
-		configOut, err := filepath.Abs(configOut)
-		if err != nil {
-			panic(err)
-		}
 
 		// write config into stdout
-		if err := config.WriteConfig(configOut, newConfig); err != nil {
-			panic(err)
-		}
+		configOut := must(filepath.Abs(configOut))
+		ensure(config.WriteConfig(configOut, newConfig))
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
@@ -414,5 +356,28 @@ func waitKeygenHeight(
 			break
 		}
 		logger.Info("Last ZetaHeight: %d", response.Height)
+	}
+}
+
+func must[T any](v T, err error) T {
+	if err != nil {
+		exit(err)
+	}
+
+	return v
+}
+
+func exit(err error) {
+	fmt.Printf("Unable to continue execution: %s. Stacktrace: \n", err)
+	for _, line := range assert.CallerInfo() {
+		fmt.Println(" ", line)
+	}
+
+	os.Exit(1)
+}
+
+func ensure(err error) {
+	if err != nil {
+		exit(err)
 	}
 }
