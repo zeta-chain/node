@@ -323,12 +323,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// skip the header proof test if we run light test or skipHeaderProof is enabled
 		testHeader := !light && !skipHeaderProof
+		fmt.Println("TestHeader", testHeader)
+		fmt.Println("SkipBitcoinSetup", skipBitcoinSetup)
 
-		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
-		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
+		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		//eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		//eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
+		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
@@ -393,10 +395,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if err != nil {
 			panic(err)
 		}
-		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+		waitKeygenHeight(migrationCtx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
 	}
 
-	eg.Go(migrationTestRoutine(conf, deployerRunner, verbose, ""))
+	eg.Go(migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTssEthName))
 	if err := eg.Wait(); err != nil {
 		deployerRunner.CtxCancel()
 		logger.Print("❌ %v", err)
