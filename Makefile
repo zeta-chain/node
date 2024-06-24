@@ -240,7 +240,7 @@ start-stress-test: zetanode
 #TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v16' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 
