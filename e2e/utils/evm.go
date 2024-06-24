@@ -11,6 +11,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -34,24 +35,23 @@ func CheckNonce(
 }
 
 // MustWaitForTxReceipt waits until a broadcasted tx to be mined and return its receipt
-// timeout and panic after 30s.
 func MustWaitForTxReceipt(
 	ctx context.Context,
 	client *ethclient.Client,
 	tx *ethtypes.Transaction,
 	logger infoLogger,
-	receiptTimeout time.Duration,
+	timeout time.Duration,
 ) *ethtypes.Receipt {
-	timeout := DefaultReceiptTimeout
-	if receiptTimeout != 0 {
-		timeout = receiptTimeout
+	if timeout == 0 {
+		timeout = DefaultReceiptTimeout
 	}
+
+	t := TestingFromContext(ctx)
 
 	start := time.Now()
 	for i := 0; ; i++ {
-		if time.Since(start) > timeout {
-			panic("waiting tx receipt timeout")
-		}
+		require.False(t, time.Since(start) > timeout, "waiting tx receipt timeout")
+
 		receipt, err := client.TransactionReceipt(ctx, tx.Hash())
 		if err != nil {
 			if !errors.Is(err, ethereum.NotFound) && i%10 == 0 {

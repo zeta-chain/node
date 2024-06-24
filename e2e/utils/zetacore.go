@@ -2,11 +2,10 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,14 +25,14 @@ const (
 func WaitCctxMinedByInboundHash(
 	ctx context.Context,
 	inboundHash string,
-	cctxClient crosschaintypes.QueryClient,
+	client crosschaintypes.QueryClient,
 	logger infoLogger,
-	cctxTimeout time.Duration,
+	timeout time.Duration,
 ) *crosschaintypes.CrossChainTx {
-	cctxs := WaitCctxsMinedByInboundHash(ctx, inboundHash, cctxClient, 1, logger, cctxTimeout)
-	if len(cctxs) == 0 {
-		panic(fmt.Sprintf("cctx not found, inboundHash: %s", inboundHash))
-	}
+	t := TestingFromContext(ctx)
+	cctxs := WaitCctxsMinedByInboundHash(ctx, inboundHash, client, 1, logger, timeout)
+	require.NotEmpty(t, cctxs, "cctx not found, inboundHash: %s", inboundHash)
+
 	return cctxs[len(cctxs)-1]
 }
 
@@ -41,41 +40,35 @@ func WaitCctxMinedByInboundHash(
 func WaitCctxsMinedByInboundHash(
 	ctx context.Context,
 	inboundHash string,
-	cctxClient crosschaintypes.QueryClient,
+	client crosschaintypes.QueryClient,
 	cctxsCount int,
 	logger infoLogger,
-	cctxTimeout time.Duration,
+	timeout time.Duration,
 ) []*crosschaintypes.CrossChainTx {
-	startTime := time.Now()
-
-	timeout := DefaultCctxTimeout
-	if cctxTimeout != 0 {
-		timeout = cctxTimeout
+	if timeout == 0 {
+		timeout = DefaultCctxTimeout
 	}
+
+	t := TestingFromContext(ctx)
+
+	startTime := time.Now()
+	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
 
 	// fetch cctxs by inboundHash
 	for i := 0; ; i++ {
 		// declare cctxs here so we can print the last fetched one if we reach timeout
 		var cctxs []*crosschaintypes.CrossChainTx
 
-		if time.Since(startTime) > timeout {
-			cctxMessage := ""
-			if len(cctxs) > 0 {
-				cctxMessage = fmt.Sprintf(", last cctx: %v", cctxs[0].String())
-			}
+		timedOut := time.Since(startTime) > timeout
+		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 
-			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inboundHash: %s%s", inboundHash, cctxMessage))
-		}
 		time.Sleep(1 * time.Second)
 
 		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
 		// for the update tests
 		// TODO: replace with InboundHashToCctxData once removed
 		// https://github.com/zeta-chain/node/issues/2200
-		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInboundHashToCctxDataRequest{
-			InboundHash: inboundHash,
-		})
-
+		res, err := client.InTxHashToCctxData(ctx, in)
 		if err != nil {
 			// prevent spamming logs
 			if i%10 == 0 {
@@ -126,30 +119,27 @@ func WaitCctxsMinedByInboundHash(
 func WaitCCTXMinedByIndex(
 	ctx context.Context,
 	cctxIndex string,
-	cctxClient crosschaintypes.QueryClient,
+	client crosschaintypes.QueryClient,
 	logger infoLogger,
-	cctxTimeout time.Duration,
+	timeout time.Duration,
 ) *crosschaintypes.CrossChainTx {
-	startTime := time.Now()
-
-	timeout := DefaultCctxTimeout
-	if cctxTimeout != 0 {
-		timeout = cctxTimeout
+	if timeout == 0 {
+		timeout = DefaultCctxTimeout
 	}
 
+	t := TestingFromContext(ctx)
+	startTime := time.Now()
+	in := &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex}
+
 	for i := 0; ; i++ {
-		if time.Since(startTime) > timeout {
-			panic(fmt.Sprintf(
-				"waiting cctx timeout, cctx not mined, cctx: %s",
-				cctxIndex,
-			))
+		require.False(t, time.Since(startTime) > timeout, "waiting cctx timeout, cctx not mined, cctx: %s", cctxIndex)
+
+		if i > 0 {
+			time.Sleep(1 * time.Second)
 		}
-		time.Sleep(1 * time.Second)
 
 		// fetch cctx by index
-		res, err := cctxClient.Cctx(ctx, &crosschaintypes.QueryGetCctxRequest{
-			Index: cctxIndex,
-		})
+		res, err := client.Cctx(ctx, in)
 		if err != nil {
 			// prevent spamming logs
 			if i%10 == 0 {
@@ -157,6 +147,7 @@ func WaitCCTXMinedByIndex(
 			}
 			continue
 		}
+
 		cctx := res.CrossChainTx
 		if !IsTerminalStatus(cctx.CctxStatus.Status) {
 			// prevent spamming logs
@@ -259,26 +250,32 @@ func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
 // WaitForBlockHeight waits until the block height reaches the given height
 func WaitForBlockHeight(
 	ctx context.Context,
-	height int64,
+	desiredHeight int64,
 	rpcURL string,
 	logger infoLogger,
-) {
+) error {
 	// initialize rpc and check status
 	rpc, err := rpchttp.New(rpcURL, "/websocket")
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "unable to create rpc client")
 	}
-	status := &coretypes.ResultStatus{}
-	for i := 0; status.SyncInfo.LatestBlockHeight < height; i++ {
-		status, err = rpc.Status(ctx)
+
+	var currentHeight int64
+	for i := 0; currentHeight < desiredHeight; i++ {
+		s, err := rpc.Status(ctx)
 		if err != nil {
-			panic(err)
+			return errors.Wrap(err, "unable to get status")
 		}
+
+		currentHeight = s.SyncInfo.LatestBlockHeight
+
 		time.Sleep(1 * time.Second)
 
 		// prevent spamming logs
 		if i%10 == 0 {
-			logger.Info("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+			logger.Info("waiting for block: %d, current height: %d\n", desiredHeight, currentHeight)
 		}
 	}
+
+	return nil
 }
