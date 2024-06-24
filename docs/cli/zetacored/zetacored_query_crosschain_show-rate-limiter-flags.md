@@ -1,9 +1,9 @@
-# query crosschain show_rate_limiter_flags
+# query crosschain show-rate-limiter-flags
 
 shows the rate limiter flags
 
 ```
-zetacored query crosschain show_rate_limiter_flags [flags]
+zetacored query crosschain show-rate-limiter-flags [flags]
 ```
 
 ### Options
@@ -12,7 +12,7 @@ zetacored query crosschain show_rate_limiter_flags [flags]
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for show_rate_limiter_flags
+  -h, --help               help for show-rate-limiter-flags
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
