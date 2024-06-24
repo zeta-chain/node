@@ -36,7 +36,7 @@ func (ob *Observer) WatchOutbound() {
 	defer ticker.Stop()
 
 	chainID := ob.Chain().ChainId
-	ob.logger.Outbound.Info().Msgf("WatchInbound started for chain %d", chainID)
+	ob.logger.Outbound.Info().Msgf("WatchOutbound started for chain %d", chainID)
 	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
 
 	for {
