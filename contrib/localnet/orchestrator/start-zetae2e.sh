@@ -5,9 +5,6 @@
 # A second optional argument can be passed and can have the following value:
 # upgrade: run the local e2e once, then restart zetaclientd at upgrade height and run the local e2e again
 
-ZETAE2E_CMD=$1
-OPTION=$2
-
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -78,15 +75,15 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 
 ### Run zetae2e command depending on the option passed
 
-if [ "$OPTION" == "upgrade" ]; then
+if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
 
-  # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
-  UPGRADE_HEIGHT=${3:-225}
+  # set upgrade height to 225 by default
+  UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml --skip-header-proof
+    zetae2e local $E2E_ARGS --setup-only --config-out deployed.yml --skip-header-proof
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -100,7 +97,7 @@ if [ "$OPTION" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
@@ -142,9 +139,9 @@ if [ "$OPTION" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e $ZETAE2E_CMD --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
   else
-    zetae2e $ZETAE2E_CMD --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
   fi
 
   ZETAE2E_EXIT_CODE=$?
@@ -162,7 +159,7 @@ else
   echo "running e2e setup..."
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e $ZETAE2E_CMD --setup-only --config-out deployed.yml
+    zetae2e local $E2E_ARGS --setup-only --config-out deployed.yml
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -171,9 +168,13 @@ else
     echo "skipping e2e setup because it has already been completed"
   fi
 
+  if [ "$LOCALNET_MODE" == "setup-only" ]; then
+    exit 0
+  fi
+
   echo "running e2e tests..."
 
-  zetae2e $ZETAE2E_CMD --skip-setup --config deployed.yml
+  zetae2e local $E2E_ARGS --skip-setup --config deployed.yml
   ZETAE2E_EXIT_CODE=$?
 
   # if e2e passed, exit with 0, otherwise exit with 1
