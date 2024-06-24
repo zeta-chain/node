@@ -104,6 +104,12 @@ jobs:
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
                     
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            # Skip this workflow file
+            if [ "$file" == ".github/workflows/sast-linters.yml" ]; then
+              echo "Skipping nosec check for $file"
+              continue
+            fi
+
             if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec; then
               echo "nosec detected in $file"
               nosec_list+=("$file,")
@@ -117,6 +123,7 @@ jobs:
           nosec_list_string="${nosec_list_string%,}"
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
+
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
