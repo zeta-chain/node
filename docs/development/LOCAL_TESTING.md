@@ -144,7 +144,7 @@ docker exec -it zetacore0 sh
 Performing a query:
 
 ```bash
-zetacored q bank balances zeta1amcsn7ja3608dj74xt93pcu5guffsyu2xfdcyp
+zetacored q bank balances zeta1338n99nkny4yyyklj0l4adwn8hqhdevknnvdle
 ```
 
 Sending a transaction:
