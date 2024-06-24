@@ -113,11 +113,10 @@ jobs:
 
       - name: Run golangci-lint
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.59
           skip-cache: true
-          args: --out-format=json
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}

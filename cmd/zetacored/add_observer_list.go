@@ -104,7 +104,6 @@ func AddObserverListCmd() *cobra.Command {
 			ObserverBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, observerTokens))
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
-
 				if isValidatorOnly(info.IsObserver) {
 					balances = append(balances, banktypes.Balance{
 						Address: info.ObserverAddress,
@@ -403,7 +402,6 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	})
 
 	return grants
-
 }
 
 func AddGenesisAccount(

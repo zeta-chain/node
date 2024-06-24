@@ -119,7 +119,6 @@ func GetHashListSegment(
 	endBlock uint64,
 	tssAddress string,
 	cfg *config.Config) ([]Deposit, error) {
-
 	deposits := make([]Deposit, 0)
 	connectorAddress := common.HexToAddress(cfg.ConnectorAddress)
 	connectorContract, err := zetaconnector.NewZetaConnectorNonEth(connectorAddress, client)

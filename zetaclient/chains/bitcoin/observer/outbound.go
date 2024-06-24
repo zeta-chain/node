@@ -328,7 +328,6 @@ func (ob *Observer) refreshPendingNonce() {
 }
 
 func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error) {
-
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
 	// 2. The ones had been finalized in zetacore based on majority vote.
