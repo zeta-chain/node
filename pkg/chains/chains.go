@@ -272,7 +272,7 @@ func BtcNonceMarkOffset() int64 {
 
 // DefaultChainsList returns a list of default chains
 func DefaultChainsList() []*Chain {
-	return chainListPointers([]Chain{
+	return ChainListPointers([]Chain{
 		BitcoinMainnet,
 		BscMainnet,
 		Ethereum,
@@ -372,6 +372,14 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 }
 
+// CombineDefaultChainsList combines the default chains list with a list of chains
+// duplicated chain ID are overwritten by the second list
+func CombineDefaultChainsList(chains []Chain) []*Chain {
+	chainsPtr := ChainListPointers(chains)
+
+	return CombineChainList(DefaultChainsList(), chainsPtr)
+}
+
 // CombineChainList combines a list of chains with a list of chains
 // duplicated chain ID are overwritten by the second list
 func CombineChainList(chains1 []*Chain, chains2 []*Chain) []*Chain {
@@ -397,10 +405,10 @@ func CombineChainList(chains1 []*Chain, chains2 []*Chain) []*Chain {
 	return combined
 }
 
+// ChainListPointers returns a list of chain pointers
 // TODO : https://github.com/zeta-chain/node/issues/2080
 // remove the usage of this function
-// chainListPointers returns a list of chain pointers
-func chainListPointers(chains []Chain) []*Chain {
+func ChainListPointers(chains []Chain) []*Chain {
 	var c []*Chain
 	for i := 0; i < len(chains); i++ {
 		c = append(c, &chains[i])

@@ -231,6 +231,52 @@ func TestZetaChainFromChainID(t *testing.T) {
 	}
 }
 
+func TestCombineDefaultChainsList(t *testing.T) {
+	// prepare array containing pre-defined chains
+	// chain IDs are 11000 - 11009 to not conflict with the default chains
+	var chainList = make([]chains.Chain, 0, 10)
+	for i := int64(11000); i < 10; i++ {
+		chainList = append(chainList, *sample.Chain(i))
+	}
+
+	bitcoinMainnetChainID := chains.BitcoinMainnet.ChainId
+	require.Equal(
+		t,
+		bitcoinMainnetChainID,
+		chains.DefaultChainsList()[0].ChainId,
+		"Bitcoin mainnet be the first in the default chain list for TestCombineDefaultChainsList tests",
+	)
+	alternativeBitcoinMainnet := sample.Chain(bitcoinMainnetChainID)
+
+	tests := []struct {
+		name     string
+		list     []chains.Chain
+		expected []*chains.Chain
+	}{
+		{
+			name:     "empty list",
+			list:     []chains.Chain{},
+			expected: chains.DefaultChainsList(),
+		},
+		{
+			name:     "no duplicates",
+			list:     chainList,
+			expected: append(chains.DefaultChainsList(), chains.ChainListPointers(chainList)...),
+		},
+		{
+			name:     "duplicates",
+			list:     []chains.Chain{*alternativeBitcoinMainnet},
+			expected: append(chains.DefaultChainsList()[1:], alternativeBitcoinMainnet),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.ElementsMatch(t, tt.expected, chains.CombineDefaultChainsList(tt.list))
+		})
+	}
+}
+
 func TestCombineChainList(t *testing.T) {
 	// prepare array containing pre-defined chains
 	var chainList = make([]*chains.Chain, 0, 10)
@@ -298,5 +344,19 @@ func TestCombineChainList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require.ElementsMatch(t, tt.expected, chains.CombineChainList(tt.list1, tt.list2))
 		})
+	}
+}
+
+func TestChainListPointers(t *testing.T) {
+	var chainList = make([]chains.Chain, 0, 10)
+	for i := int64(0); i < 10; i++ {
+		chainList = append(chainList, *sample.Chain(i))
+	}
+
+	chainListPtr := chains.ChainListPointers(chainList)
+
+	require.Len(t, chainListPtr, len(chainList))
+	for i, chain := range chainListPtr {
+		require.EqualValues(t, chainList[i], *chain)
 	}
 }

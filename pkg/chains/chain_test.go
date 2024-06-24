@@ -1,12 +1,9 @@
 package chains
 
 import (
-	"encoding/hex"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
@@ -211,67 +208,6 @@ func TestChain_EncodeAddress(t *testing.T) {
 	}
 }
 
-func TestChain_DecodeAddress(t *testing.T) {
-	tests := []struct {
-		name    string
-		chain   Chain
-		b       string
-		want    []byte
-		wantErr bool
-	}{
-		{
-			name: "should decode on btc chain",
-			chain: Chain{
-				ChainName: ChainName_btc_testnet,
-				ChainId:   18332,
-			},
-			want:    []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
-			b:       "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
-			wantErr: false,
-		},
-		{
-			name: "should decode on evm chain",
-			chain: Chain{
-				ChainName: ChainName_goerli_testnet,
-				ChainId:   5,
-			},
-			want:    ethcommon.HexToAddress("0x321").Bytes(),
-			b:       "0x321",
-			wantErr: false,
-		},
-		{
-			name: "should error if chain not supported",
-			chain: Chain{
-				ChainName: 999,
-				ChainId:   999,
-			},
-			want:    ethcommon.Hex2Bytes("0x321"),
-			b:       "",
-			wantErr: true,
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			s, err := tc.chain.DecodeAddress(tc.b)
-			if tc.wantErr {
-				require.Error(t, err)
-				return
-			}
-			require.Equal(t, tc.want, s)
-		})
-	}
-}
-
-func TestChain_InChainList(t *testing.T) {
-	require.True(t, ZetaChainMainnet.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaChainDevnet.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaChainPrivnet.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaChainTestnet.InChainList(ChainListByNetwork(Network_zeta)))
-	require.False(t, Ethereum.InChainList(ChainListByNetwork(Network_zeta)))
-}
-
 func TestIsZetaChain(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -408,66 +344,6 @@ func TestChain_IsZetaChain(t *testing.T) {
 func TestChain_IsEmpty(t *testing.T) {
 	require.True(t, Chain{}.IsEmpty())
 	require.False(t, ZetaChainMainnet.IsEmpty())
-}
-
-func TestChain_WitnessProgram(t *testing.T) {
-	// Ordinarily the private key would come from whatever storage mechanism
-	// is being used, but for this example just hard code it.
-	privKeyBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2" +
-		"d4f8720ee63e502ee2869afab7de234b80c")
-	require.NoError(t, err)
-
-	t.Run("should return btc address", func(t *testing.T) {
-		_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
-		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
-		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
-		require.NoError(t, err)
-
-		chain := BitcoinTestnet
-		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
-		require.NoError(t, err)
-	})
-
-	t.Run("should fail for wrong chain id", func(t *testing.T) {
-		_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
-		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
-		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
-		require.NoError(t, err)
-
-		chain := Goerli
-		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
-		require.Error(t, err)
-	})
-
-	t.Run("should fail for wrong witness program", func(t *testing.T) {
-		_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
-		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
-		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
-		require.NoError(t, err)
-
-		chain := BitcoinTestnet
-		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram()[0:19])
-		require.Error(t, err)
-	})
-}
-
-func TestChains_Has(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaChainTestnet}
-	require.True(t, chains.Has(ZetaChainMainnet))
-	require.False(t, chains.Has(Ethereum))
-}
-
-func TestChains_Distinct(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaChainMainnet, ZetaChainTestnet}
-	distinctChains := chains.Distinct()
-	require.Len(t, distinctChains, 2)
-}
-
-func TestChains_Strings(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaChainTestnet}
-	strings := chains.Strings()
-	expected := []string{chains[0].String(), chains[1].String()}
-	require.Equal(t, expected, strings)
 }
 
 func TestGetChainFromChainID(t *testing.T) {

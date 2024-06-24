@@ -5,14 +5,8 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
-
-type SigninAlgo string
-
-// Chains represent a slice of Chain
-type Chains []Chain
 
 // Validate checks whether the chain is valid
 // The function check the chain ID is positive and all enum fields have a defined value
@@ -42,11 +36,6 @@ func (chain Chain) Validate() error {
 	}
 
 	return nil
-}
-
-// IsEqual compare two chain to see whether they represent the same chain
-func (chain Chain) IsEqual(c Chain) bool {
-	return chain.ChainId == c.ChainId
 }
 
 // IsZetaChain returns true if the chain is a ZetaChain chain
@@ -85,23 +74,6 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		return addrStr, nil
 	}
 	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
-}
-
-func (chain Chain) BTCAddressFromWitnessProgram(witnessProgram []byte) (string, error) {
-	chainParams, err := GetBTCChainParams(chain.ChainId)
-	if err != nil {
-		return "", err
-	}
-	address, err := btcutil.NewAddressWitnessPubKeyHash(witnessProgram, chainParams)
-	if err != nil {
-		return "", err
-	}
-	return address.EncodeAddress(), nil
-}
-
-// DecodeAddress decode the address string to bytes
-func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
-	return DecodeAddressFromChainID(chain.ChainId, addr)
 }
 
 // DecodeAddressFromChainID decode the address string to bytes
@@ -149,35 +121,7 @@ func (chain Chain) IsEmpty() bool {
 	return strings.TrimSpace(chain.String()) == ""
 }
 
-// Has check whether chain c is in the list
-func (chains Chains) Has(c Chain) bool {
-	for _, ch := range chains {
-		if ch.IsEqual(c) {
-			return true
-		}
-	}
-	return false
-}
-
-// Distinct return a distinct set of chains, no duplicates
-func (chains Chains) Distinct() Chains {
-	var newChains Chains
-	for _, chain := range chains {
-		if !newChains.Has(chain) {
-			newChains = append(newChains, chain)
-		}
-	}
-	return newChains
-}
-
-func (chains Chains) Strings() []string {
-	str := make([]string, len(chains))
-	for i, c := range chains {
-		str[i] = c.String()
-	}
-	return str
-}
-
+// GetChainFromChainID returns the chain from the chain ID
 func GetChainFromChainID(chainID int64) *Chain {
 	chains := DefaultChainsList()
 	for _, chain := range chains {
@@ -188,6 +132,7 @@ func GetChainFromChainID(chainID int64) *Chain {
 	return nil
 }
 
+// GetBTCChainParams returns the bitcoin chain config params from the chain ID
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
 	case 18444:
@@ -201,6 +146,7 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	}
 }
 
+// GetBTCChainIDFromChainParams returns the bitcoin chain ID from the chain config params
 func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	switch params.Name {
 	case chaincfg.RegressionNetParams.Name:
@@ -212,11 +158,6 @@ func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	default:
 		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}
-}
-
-// InChainList checks whether the chain is in the chain list
-func (chain Chain) InChainList(chainList []*Chain) bool {
-	return ChainIDInChainList(chain.ChainId, chainList)
 }
 
 // ChainIDInChainList checks whether the chainID is in the chain list
