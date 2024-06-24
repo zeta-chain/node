@@ -2126,9 +2126,9 @@ var (
 
 	pattern_Query_ChainNoncesAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "chainNonces"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TssFundsMigratorInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "get_tss_fund_migrator"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TssFundsMigratorInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "getTssFundsMigrator"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TssFundsMigratorInfoAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "get_all_tss_fund_migrators"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TssFundsMigratorInfoAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "getAllTssFundsMigrators"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

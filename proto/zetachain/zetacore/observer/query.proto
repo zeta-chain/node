@@ -154,14 +154,14 @@ service Query {
   // Queries the TssFundMigratorInfo for a specific chain
   rpc TssFundsMigratorInfo(QueryTssFundsMigratorInfoRequest)
       returns (QueryTssFundsMigratorInfoResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_tss_fund_migrator";
+    option (google.api.http).get = "/zeta-chain/observer/getTssFundsMigrator";
   }
 
   // Queries all TssFundMigratorInfo
   rpc TssFundsMigratorInfoAll(QueryTssFundsMigratorInfoAllRequest)
       returns (QueryTssFundsMigratorInfoAllResponse) {
     option (google.api.http).get =
-        "/zeta-chain/observer/get_all_tss_fund_migrators";
+        "/zeta-chain/observer/getAllTssFundsMigrators";
   }
 }
 
