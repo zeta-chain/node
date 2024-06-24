@@ -109,8 +109,9 @@ jobs:
               echo "Skipping nosec check for $file"
               continue
             fi
-
-            if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec; then
+            
+            # Only consider additions of "nosec", marked by '+'
+            if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q '^+.*nosec'; then
               echo "nosec detected in $file"
               nosec_list+=("$file,")
               nosec_detected=1
@@ -156,6 +157,3 @@ jobs:
         run: |
           DIFF=$(git diff ${{ github.event.pull_request.base.sha }})
           echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "nosec without specified rule found!" && exit 1 || exit 0
-
-
-          
