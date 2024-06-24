@@ -41,7 +41,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	outboundReceiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
 	// TODO (https://github.com/zeta-chain/node/issues/1010): workaround for this bug
 	noEthereumTxEvent := false
-	if chains.IsZetaChain(config.CCTX.InboundParams.SenderChainId) {
+	if chains.IsZetaChain(config.CCTX.InboundParams.SenderChainId, c.crosschainKeeper.GetAuthorityKeeper().GetChainList(ctx)) {
 		noEthereumTxEvent = true
 	}
 

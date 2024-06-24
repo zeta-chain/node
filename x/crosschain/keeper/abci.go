@@ -45,12 +45,14 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(
 		return 0, gasPriceIncreaseFlags
 	}
 
+	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+
 	cctxCount := 0
 
 IterateChains:
 	for _, chain := range chains {
 		// support only external evm chains
-		if zetachains.IsEVMChain(chain.ChainId) && !zetachains.IsZetaChain(chain.ChainId) {
+		if zetachains.IsEVMChain(chain.ChainId, additionalChains) && !zetachains.IsZetaChain(chain.ChainId, additionalChains) {
 			res, err := k.ListPendingCctx(sdk.UnwrapSDKContext(ctx), &types.QueryListPendingCctxRequest{
 				ChainId: chain.ChainId,
 				Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
