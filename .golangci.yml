@@ -18,6 +18,9 @@ linters:
     - bodyclose
     - unconvert
     - unused
+    - gci
+    - gofmt
+    - whitespace
 linters-settings:
   gocyclo:
     min-complexity: 11
@@ -29,6 +32,15 @@ linters-settings:
     check-generated: false
   exhaustivestruct:
     check-generated: false
+  gci:
+    # Gci controls Go package import order and makes it always deterministic
+    # https://golangci-lint.run/usage/linters/#gci
+    sections:
+      - standard
+      - default
+      - prefix(github.com/zeta-chain/zetacore)
+    skip-generated: true
+
 issues:
   exclude:
     - composite
