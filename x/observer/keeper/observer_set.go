@@ -34,7 +34,6 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 		}
 	}
 	return false
-
 }
 
 func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) {

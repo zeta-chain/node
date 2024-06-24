@@ -51,9 +51,7 @@ func (k Keeper) GetAllNonceToCctx(ctx sdk.Context) (list []types.NonceToCctx) {
 		if err == nil {
 			list = append(list, val)
 		}
-
 	}
 
 	return
-
 }

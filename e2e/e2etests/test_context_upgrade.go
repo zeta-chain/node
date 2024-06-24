@@ -71,7 +71,6 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 			if eventIter.Event.ChainID.Cmp(chainID) != 0 {
 				panic("chainID mismatch")
 			}
-
 		}
 		if found {
 			break
@@ -82,5 +81,4 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 	if !found {
 		panic("event not found")
 	}
-
 }

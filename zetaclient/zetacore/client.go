@@ -57,7 +57,6 @@ func NewClient(
 	hsmMode bool,
 	telemetry *metrics.TelemetryServer,
 ) (*Client, error) {
-
 	// main module logger
 	logger := log.With().Str("module", "ZetacoreClient").Logger()
 	cfg := config.ClientConfiguration{

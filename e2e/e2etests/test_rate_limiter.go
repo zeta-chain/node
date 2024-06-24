@@ -107,7 +107,6 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 	// Perform RateLimiterWithdrawNumber withdraws to log time for completion
 	txs := make([]*ethtypes.Transaction, rateLimiterWithdrawNumber)
 	for i := 0; i < rateLimiterWithdrawNumber; i++ {
-
 		// create a new withdraw depending on the type
 		switch withdrawType {
 		case withdrawTypeZETA:

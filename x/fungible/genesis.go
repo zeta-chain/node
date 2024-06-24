@@ -18,7 +18,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.SystemContract != nil {
 		k.SetSystemContract(ctx, *genState.SystemContract)
 	}
-
 }
 
 // ExportGenesis returns the fungible module's exported genesis.

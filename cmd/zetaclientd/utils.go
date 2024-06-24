@@ -140,7 +140,6 @@ func CreateChainObserverMap(
 		co, err := btcobserver.NewObserver(appContext, btcChain, zetacoreClient, tss, dbpath, logger, btcConfig, ts)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
-
 		} else {
 			observerMap[btcChain.ChainId] = co
 		}

@@ -28,7 +28,6 @@ func SetupZetaGenesisState(
 	observerList []string,
 	setupChainNonces bool,
 ) {
-
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
 	require.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))

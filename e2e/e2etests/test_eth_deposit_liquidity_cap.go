@@ -69,7 +69,6 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	}
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-
 		panic(fmt.Sprintf(
 			"expected cctx status to be Success; got %s; message: %s; supply: %s; liquidity cap: %s, amountLessThanCap: %s, amountMoreThanCap: %s",
 			cctx.CctxStatus.Status,
@@ -88,7 +87,6 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	if bal.Cmp(expectedBalance) != 0 {
-
 		panic(fmt.Sprintf("expected balance to be %s; got %s", expectedBalance.String(), bal.String()))
 	}
 	r.Logger.Info("Deposit succeeded")

@@ -202,7 +202,6 @@ func (runner *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtyp
 		runner.Logger.EVMReceipt(*receipt, "send")
 		if receipt.Status == 0 {
 			panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
-
 		}
 
 		runner.Logger.Info("  Logs:")

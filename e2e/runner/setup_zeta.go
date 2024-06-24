@@ -197,7 +197,6 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	}
 	runner.ContextAppAddr = contextAppAddr
 	runner.ContextApp = contextApp
-
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain

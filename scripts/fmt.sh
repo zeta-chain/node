@@ -23,4 +23,4 @@ golines -w --max-len=120 --ignore-generated --ignored-dirs=".git" --base-formatt
 echo "Formatting code..."
 golangci-lint run --enable-only 'gci' --enable-only 'gofmt' --enable-only 'whitespace' --fix
 
-echo "fmt completed"
+echo "Code is formatted"
