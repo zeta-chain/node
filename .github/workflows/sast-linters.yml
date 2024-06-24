@@ -105,7 +105,7 @@ jobs:
                     
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             # Skip this workflow file
-            if [ "$file" == ".github/workflows/sast-linters.yml" ]; then
+            if [ "$file" == ".github/workflows/sast-linters.yml" ] || [ "$file" == "changelog.md" ]; then
               echo "Skipping nosec check for $file"
               continue
             fi
