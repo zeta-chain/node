@@ -38,6 +38,14 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
+const (
+	// broadcastBackoff is the initial backoff duration for retrying broadcast
+	broadcastBackoff = 1000 * time.Millisecond
+
+	// broadcastRetries is the maximum number of retries for broadcasting a transaction
+	broadcastRetries = 5
+)
+
 var (
 	_ interfaces.ChainSigner = &Signer{}
 
@@ -545,8 +553,8 @@ func (signer *Signer) BroadcastOutbound(
 		outboundHash := tx.Hash().Hex()
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
-		backOff := 1000 * time.Millisecond
-		for i := 0; i < 5; i++ {
+		backOff := broadcastBackoff
+		for i := 0; i < broadcastRetries; i++ {
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
