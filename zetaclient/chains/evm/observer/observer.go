@@ -327,7 +327,6 @@ func (ob *Observer) WatchGasPrice() {
 }
 
 func (ob *Observer) PostGasPrice() error {
-
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
 	if err != nil {

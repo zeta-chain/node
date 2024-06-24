@@ -252,9 +252,7 @@ func main() {
 		fmt.Printf("    receipt block number: %d\n", receipt.BlockNumber)
 		fmt.Printf("    receipt transaction index: %d\n", receipt.TransactionIndex)
 		fmt.Printf("    receipt contract address: %s\n", receipt.ContractAddress.Hex())
-
 	}
-
 }
 
 type EthClient struct {

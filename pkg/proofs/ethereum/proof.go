@@ -75,7 +75,6 @@ func (m *Proof) Delete(key []byte) error {
 func (m *Proof) Has(key []byte) (bool, error) {
 	for i := 0; i < len(m.Keys); i++ {
 		if bytes.Equal(m.Keys[i], key) {
-
 			return true, nil
 		}
 	}

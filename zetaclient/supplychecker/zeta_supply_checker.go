@@ -113,7 +113,6 @@ func (zs *ZetaSupplyChecker) Stop() {
 }
 
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
-
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
 		externalEvmChainParams, ok := zs.coreContext.GetEVMChainParams(chain.ChainId)

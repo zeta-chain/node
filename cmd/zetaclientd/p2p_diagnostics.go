@@ -32,7 +32,6 @@ func RunDiagnostics(
 	hotkeyPk cryptotypes.PrivKey,
 	cfg config.Config,
 ) error {
-
 	startLogger.Warn().Msg("P2P Diagnostic mode enabled")
 	startLogger.Warn().Msgf("seed peer: %s", peers)
 	priKey := secp256k1.PrivKey(hotkeyPk.Bytes()[:32])
@@ -46,7 +45,6 @@ func RunDiagnostics(
 	var s *metrics.TelemetryServer
 	if len(peers) == 0 {
 		startLogger.Warn().Msg("No seed peer specified; assuming I'm the host")
-
 	}
 	p2pPriKey, err := crypto.UnmarshalSecp256k1PrivateKey(priKey[:])
 	if err != nil {
