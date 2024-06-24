@@ -25,6 +25,8 @@ TEST_BUILD_FLAGS := -tags pebbledb,ledger
 HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
 export DOCKER_BUILDKIT := 1
+
+# parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export LOCALNET_MODE
 export E2E_ARGS := $(E2E_ARGS)
