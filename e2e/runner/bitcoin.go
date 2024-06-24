@@ -40,6 +40,17 @@ func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 		return nil, err
 	}
 
+	// filter big-enough UTXOs for test if running on Regtest
+	if runner.IsLocalBitcoin() {
+		utxosFiltered := []btcjson.ListUnspentResult{}
+		for _, utxo := range utxos {
+			if utxo.Amount >= 1.0 {
+				utxosFiltered = append(utxosFiltered, utxo)
+			}
+		}
+		return utxosFiltered, nil
+	}
+
 	return utxos, nil
 }
 
