@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -23,12 +22,14 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/constant"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	authzclient "github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 type Multiaddr = core.Multiaddr
@@ -57,18 +58,11 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	//Load Config file given path
+	// Load Config file from given path
 	cfg, err := config.Load(rootArgs.zetaCoreHome)
 	if err != nil {
 		return err
 	}
-	logger, err := base.InitLogger(cfg)
-	if err != nil {
-		log.Error().Err(err).Msg("InitLogger failed")
-		return err
-	}
-
-	//Wait until zetacore has started
 	if len(cfg.Peer) != 0 {
 		err := validatePeer(cfg.Peer)
 		if err != nil {
@@ -77,6 +71,15 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	// Load compliance config
+	compliance.LoadComplianceConfig(cfg)
+
+	// Initialize base logger
+	logger, err := base.InitLogger(cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("InitLogger failed")
+		return err
+	}
 	masterLogger := logger.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 
@@ -84,7 +87,9 @@ func start(_ *cobra.Command, _ []string) error {
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("Zetacore is ready, trying to connect to %s", cfg.Peer)
 
+	// Start telemetry server
 	telemetryServer := metrics.NewTelemetryServer()
+	telemetryServer.SetIPAddress(cfg.PublicIP)
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {
@@ -93,11 +98,21 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
-	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
-	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetacoreClient(cfg, telemetryServer, hotkeyPass)
+	// Start metrics server
+	m, err := metrics.NewMetrics()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
+		log.Error().Err(err).Msg("NewMetrics")
+		return err
+	}
+	m.Start()
+	metrics.Info.WithLabelValues(constant.Version).Set(1)
+	metrics.LastStartTime.SetToCurrentTime()
+
+	// Create zetacore client to communicate with zetacore.
+	// Zetacore accumulates votes, and provides a centralized source of truth for all clients
+	zetacoreClient, err := zetacore.CreateClient(cfg, telemetryServer, hotkeyPass)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("Create zetacore client error")
 		return err
 	}
 
@@ -133,17 +148,18 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
-	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
-	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
+	// Set up authz signer to sign all authz messages. All votes broadcast to zetacore are wrapped in authz exec.
+	// This is to ensure that the user does not need to keep their operator key online, and can use a cold key to sign votes
+	granter := zetacoreClient.GetKeys().GetOperatorAddress().String()
+	grantee, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("error getting signer address")
 		return err
 	}
-	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
-	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
+	authzclient.SetupAuthZSignerList(granter, grantee)
+	startLogger.Info().Msgf("Authz signer is ready")
 
-	// Initialize core parameters from zetacore
+	// Initialize app context and zetacore context
 	appContext := context.NewAppContext(context.NewZetacoreContext(cfg), cfg)
 	err = zetacoreClient.UpdateZetacoreContext(appContext.ZetacoreContext(), true, startLogger)
 	if err != nil {
@@ -151,8 +167,6 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
-
-	go zetacoreClient.ZetacoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -184,23 +198,12 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	m, err := metrics.NewMetrics()
-	if err != nil {
-		log.Error().Err(err).Msg("NewMetrics")
-		return err
-	}
-	m.Start()
-
-	metrics.Info.WithLabelValues(constant.Version).Set(1)
-	metrics.LastStartTime.SetToCurrentTime()
-
-	var tssHistoricalList []observerTypes.TSS
-	tssHistoricalList, err = zetacoreClient.GetTssHistory()
+	// Generate a new TSS key if there is a planned keygen ceremony
+	tssHistoricalList, err := zetacoreClient.GetTssHistory()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")
 	}
 
-	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(
 		appContext,
 		masterLogger,
@@ -220,18 +223,6 @@ func start(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
 		}
-	}
-
-	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
-	// For existing keygen, this should directly proceed to the next step
-	ticker := time.NewTicker(time.Second * 1)
-	for range ticker.C {
-		keyGen := appContext.ZetacoreContext().GetKeygen()
-		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
-			continue
-		}
-		break
 	}
 
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
@@ -268,7 +259,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(appContext, tss, logger, telemetryServer)
+	signerMap, err := orchestrator.CreateSignerMap(appContext, tss, logger, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -282,7 +273,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, logger, telemetryServer)
+	observerMap, err := orchestrator.CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, logger, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateChainObserverMap")
 		return err

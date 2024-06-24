@@ -15,10 +15,12 @@ import (
 	context "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
+// getTestCoreContext creates a test zetacore context with provided chain params and flags
 func getTestCoreContext(
 	evmChain chains.Chain,
 	evmChainParams *observertypes.ChainParams,
-	ccFlags observertypes.CrosschainFlags,
+	btcChainParams *observertypes.ChainParams,
+	ccFlags *observertypes.CrosschainFlags,
 	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
 ) *context.ZetacoreContext {
 	// create config
@@ -26,19 +28,30 @@ func getTestCoreContext(
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain: evmChain,
 	}
+	if btcChainParams != nil {
+		cfg.BitcoinConfig = config.BTCConfig{
+			RPCUsername: "test",
+		}
+	}
+
 	// create zetacore context
 	coreContext := context.NewZetacoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+
+	// create crosschain flags if not provided
+	if ccFlags == nil {
+		ccFlags = sample.CrosschainFlags()
+	}
 
 	// feed chain params
 	coreContext.Update(
 		&observertypes.Keygen{},
 		[]chains.Chain{evmChain},
 		evmChainParamsMap,
-		nil,
+		btcChainParams,
 		"",
-		ccFlags,
+		*ccFlags,
 		headerSupportedChains,
 		true,
 		zerolog.Logger{},
@@ -344,7 +357,7 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 	}
 
 	t.Run("should return true if chain is supported and outbound flag is enabled", func(t *testing.T) {
-		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags, verificationFlags)
+		coreCTX := getTestCoreContext(evmChain, chainParams, nil, &ccFlags, verificationFlags)
 		require.True(t, context.IsOutboundObservationEnabled(coreCTX, *chainParams))
 	})
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
@@ -352,13 +365,13 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 			ChainId:     evmChain.ChainId,
 			IsSupported: false,
 		}
-		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
+		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, nil, &ccFlags, verificationFlags)
 		require.False(t, context.IsOutboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
 	})
 	t.Run("should return false if outbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsOutboundEnabled = false
-		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled, verificationFlags)
+		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, nil, &flagsDisabled, verificationFlags)
 		require.False(t, context.IsOutboundObservationEnabled(coreCTXDisabled, *chainParams))
 	})
 }
@@ -374,7 +387,7 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 	}
 
 	t.Run("should return true if chain is supported and inbound flag is enabled", func(t *testing.T) {
-		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags, verificationFlags)
+		coreCTX := getTestCoreContext(evmChain, chainParams, nil, &ccFlags, verificationFlags)
 		require.True(t, context.IsInboundObservationEnabled(coreCTX, *chainParams))
 	})
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
@@ -382,13 +395,13 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 			ChainId:     evmChain.ChainId,
 			IsSupported: false,
 		}
-		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
+		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, nil, &ccFlags, verificationFlags)
 		require.False(t, context.IsInboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
 	})
 	t.Run("should return false if inbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsInboundEnabled = false
-		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled, verificationFlags)
+		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, nil, &flagsDisabled, verificationFlags)
 		require.False(t, context.IsInboundObservationEnabled(coreCTXDisabled, *chainParams))
 	})
 }

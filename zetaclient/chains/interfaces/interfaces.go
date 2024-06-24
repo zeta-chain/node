@@ -23,6 +23,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
@@ -64,6 +65,7 @@ type ChainSigner interface {
 
 // ZetacoreClient is the client interface to interact with zetacore
 type ZetacoreClient interface {
+	ZetacoreContextUpdater(appContext *clientcontext.AppContext)
 	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,

@@ -1,18 +1,39 @@
 package compliance
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog"
 
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
+// restrictedAddressBook is a map of restricted addresses
+var restrictedAddressBook = map[string]bool{}
+
+// LoadComplianceConfig loads compliance config from zetaclient config
+func LoadComplianceConfig(cfg config.Config) {
+	restrictedAddressBook = cfg.GetRestrictedAddressBook()
+}
+
+// ContainRestrictedAddress returns true if any one of the addresses is restricted
+// Note: the addrs can contains both ETH and BTC addresses
+func ContainRestrictedAddress(addrs ...string) bool {
+	for _, addr := range addrs {
+		if addr != "" && restrictedAddressBook[strings.ToLower(addr)] {
+			return true
+		}
+	}
+	return false
+}
+
 // IsCctxRestricted returns true if the cctx involves restricted addresses
 func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
 	sender := cctx.InboundParams.Sender
 	receiver := cctx.GetCurrentOutboundParam().Receiver
 
-	return config.ContainRestrictedAddress(sender, receiver)
+	return ContainRestrictedAddress(sender, receiver)
 }
 
 // PrintComplianceLog prints compliance log with fields [chain, cctx/inbound, chain, sender, receiver, token]

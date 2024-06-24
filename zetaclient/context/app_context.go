@@ -41,3 +41,15 @@ func (a AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, bool
 
 	return btcChain, btcConfig, true
 }
+
+// GetBTCChainID returns btc chain id if enabled or regnet chain id by default
+// Bitcoin chain ID is currently needed by TSS to calculate the correct Bitcoin address
+// TODO: we might have multiple BTC chains in the future: https://github.com/zeta-chain/node/issues/1397
+func (a AppContext) GetBTCChainID() int64 {
+	bitcoinChainID := chains.BitcoinRegtest.ChainId
+	btcChain, _, enabled := a.GetBTCChainAndConfig()
+	if enabled {
+		bitcoinChainID = btcChain.ChainId
+	}
+	return bitcoinChainID
+}

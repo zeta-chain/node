@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -266,21 +267,21 @@ func Test_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		sender := event.ZetaTxSenderAddress.Hex()
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
 		receiver := clienttypes.BytesToEthHex(event.DestinationAddress)
 		cfg.ComplianceConfig.RestrictedAddresses = []string{receiver}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if txOrigin is restricted", func(t *testing.T) {
 		txOrigin := event.SourceTxOriginAddress.Hex()
 		cfg.ComplianceConfig.RestrictedAddresses = []string{txOrigin}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
 		require.Nil(t, msg)
 	})
@@ -313,14 +314,14 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender.Hex()}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
 		receiver := clienttypes.BytesToEthHex(event.Recipient)
 		cfg.ComplianceConfig.RestrictedAddresses = []string{receiver}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})
@@ -370,7 +371,7 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{tx.From}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
 			tx,
 			ethcommon.HexToAddress(tx.From),
@@ -384,7 +385,7 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 		message := hex.EncodeToString(ethcommon.HexToAddress(testutils.OtherAddress1).Bytes())
 		txCopy.Input = message // use other address as receiver
 		cfg.ComplianceConfig.RestrictedAddresses = []string{testutils.OtherAddress1}
-		config.LoadComplianceConfig(cfg)
+		compliance.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
 			txCopy,
 			ethcommon.HexToAddress(txCopy.From),

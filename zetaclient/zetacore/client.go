@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/simapp/params"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -19,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -46,6 +48,39 @@ type Client struct {
 	// unit testing
 	enableMockSDKClient bool
 	mockSDKClient       rpcclient.Client
+}
+
+// CreateClient is a helper function to create a new instance of Client
+func CreateClient(
+	cfg config.Config,
+	telemetry *metrics.TelemetryServer,
+	hotkeyPassword string,
+) (*Client, error) {
+	hotKey := cfg.AuthzHotkey
+	if cfg.HsmMode {
+		hotKey = cfg.HsmHotKey
+	}
+
+	chainIP := cfg.ZetaCoreURL
+
+	kb, _, err := keys.GetKeyringKeybase(cfg, hotkeyPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	granterAddreess, err := sdk.AccAddressFromBech32(cfg.AuthzGranter)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := keys.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, hotkeyPassword)
+
+	client, err := NewClient(keys, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, telemetry)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 // NewClient create a new instance of Client

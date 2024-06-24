@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -366,7 +365,7 @@ func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) 
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		receiver = parsedAddress.Hex()
 	}
-	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
+	if compliance.ContainRestrictedAddress(inTx.FromAddress, receiver) {
 		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true

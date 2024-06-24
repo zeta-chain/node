@@ -16,6 +16,7 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	chaininterfaces "github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
@@ -49,6 +50,9 @@ func NewMockZetacoreClient() *MockZetacoreClient {
 		zetaChain:    chains.ZetaChainMainnet,
 		pendingCctxs: map[int64][]*crosschaintypes.CrossChainTx{},
 	}
+}
+
+func (m *MockZetacoreClient) ZetacoreContextUpdater(_ *clientcontext.AppContext) {
 }
 
 func (m *MockZetacoreClient) PostVoteInbound(_, _ uint64, _ *crosschaintypes.MsgVoteInbound) (string, string, error) {

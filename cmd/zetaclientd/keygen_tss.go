@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
+// GenerateTss waits for the keygen block height to arrive and generates a new TSS
 func GenerateTss(
 	appContext *context.AppContext,
 	logger zerolog.Logger,
@@ -31,18 +32,11 @@ func GenerateTss(
 	ts *metrics.TelemetryServer,
 	tssHistoricalList []observertypes.TSS,
 	tssPassword string,
-	hotkeyPassword string) (*mc.TSS, error) {
+	hotkeyPassword string,
+) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 
-	// Bitcoin chain ID is currently used for using the correct signature format
-	// TODO: remove this once we have a better way to determine the signature format
-	// https://github.com/zeta-chain/node/issues/1397
-	bitcoinChainID := chains.BitcoinRegtest.ChainId
-	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
-	if btcEnabled {
-		bitcoinChainID = btcChain.ChainId
-	}
-
+	bitcoinChainID := appContext.GetBTCChainID()
 	tss, err := mc.NewTSS(
 		appContext,
 		peers,
@@ -74,7 +68,11 @@ func GenerateTss(
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		keyGen := appContext.ZetacoreContext().GetKeygen()
+		keyGen, err := client.GetKeyGen()
+		if err != nil {
+			keygenLogger.Error().Err(err).Msg("GetKeyGen error")
+			continue
+		}
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
@@ -107,7 +105,7 @@ func GenerateTss(
 				}
 				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
 				triedKeygenAtBlock = true
-				err = keygenTss(keyGen, tss, keygenLogger)
+				err = keygenTss(*keyGen, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
 					tssFailedVoteHash, err := client.SetTSS("", keyGen.BlockNumber, chains.ReceiveStatus_failed)

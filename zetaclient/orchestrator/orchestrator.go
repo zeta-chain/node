@@ -95,6 +95,8 @@ func NewOrchestrator(
 }
 
 func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) error {
+	go oc.zetacoreClient.ZetacoreContextUpdater(appContext)
+
 	signerAddress, err := oc.zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
 		return fmt.Errorf("failed to get signer address: %w", err)

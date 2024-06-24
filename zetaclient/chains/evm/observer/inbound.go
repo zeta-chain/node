@@ -587,7 +587,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
-	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
+	if compliance.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
 		compliance.PrintComplianceLog(
 			ob.logger.Inbound,
 			ob.logger.Compliance,
@@ -643,7 +643,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 
 	// compliance check
 	sender := event.ZetaTxSenderAddress.Hex()
-	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
+	if compliance.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
 		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender, destAddr, "Zeta")
 		return nil
@@ -699,7 +699,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
-	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
+	if compliance.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
 		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.chain.ChainId, tx.Hash, sender.Hex(), sender.Hex(), "Gas")
 		return nil
