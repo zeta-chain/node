@@ -156,7 +156,6 @@ func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 // GetAllAccountAddress returns all account addresses
 func (zts ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
-
 }
 
 // GetAccountMnemonic returns the account name from the given index

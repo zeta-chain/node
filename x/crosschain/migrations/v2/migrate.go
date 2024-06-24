@@ -19,7 +19,6 @@ func MigrateStore(
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
-
 	// Using New Types from observer module as the structure is the same
 	var nodeAccounts []observerTypes.NodeAccount
 	var crosschainFlags observerTypes.CrosschainFlags

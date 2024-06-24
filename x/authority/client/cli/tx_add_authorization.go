@@ -57,5 +57,4 @@ func GetPolicyType(policyTypeString string) (types.PolicyType, error) {
 	default:
 		return types.PolicyType_groupEmpty, fmt.Errorf("invalid policy type value: %d", policyType)
 	}
-
 }

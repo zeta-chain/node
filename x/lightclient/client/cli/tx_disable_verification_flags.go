@@ -24,7 +24,6 @@ func CmdDisableVerificationFlags() *cobra.Command {
 				`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

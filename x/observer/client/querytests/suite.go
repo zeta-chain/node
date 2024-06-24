@@ -51,7 +51,6 @@ func (s *CliTestSuite) SetupSuite() {
 	s.network = net
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
 }
 
 func (s *CliTestSuite) TearDownSuite() {

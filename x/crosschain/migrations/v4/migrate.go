@@ -130,7 +130,6 @@ func MoveNonceToObserverModule(
 	for _, n := range nonceToCcTx {
 		observerKeeper.SetNonceToCctx(ctx, n)
 	}
-
 }
 
 func MoveTssToObserverModule(ctx sdk.Context,

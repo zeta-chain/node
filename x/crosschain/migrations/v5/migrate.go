@@ -94,7 +94,6 @@ func SetZetaAccounting(
 	abortedAmountZeta := sdkmath.ZeroUint()
 	for _, cctx := range ccctxList {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-
 			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
@@ -124,7 +123,6 @@ func SetZetaAccounting(
 					abortedValue := GetAbortedAmount(cctx)
 					abortedAmountZeta = abortedAmountZeta.Add(abortedValue)
 					cctx.CctxStatus.IsAbortRefunded = false
-
 				}
 			case coin.CoinType_Gas:
 				{
@@ -134,7 +132,6 @@ func SetZetaAccounting(
 			}
 			crosschainKeeper.SetCrossChainTx(ctx, cctx)
 		}
-
 	}
 	crosschainKeeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: abortedAmountZeta})
 

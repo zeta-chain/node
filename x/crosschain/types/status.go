@@ -31,7 +31,6 @@ func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 		return
 	}
 	m.Status = newStatus
-
 } //nolint:typecheck
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {

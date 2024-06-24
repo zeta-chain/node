@@ -22,7 +22,6 @@ func (k msgServer) RefundAbortedCCTX(
 	goCtx context.Context,
 	msg *types.MsgRefundAbortedCCTX,
 ) (*types.MsgRefundAbortedCCTXResponse, error) {
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
@@ -99,5 +98,4 @@ func GetRefundAddress(refundAddress string) (ethcommon.Address, error) {
 		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
 	}
 	return ethRefundAddress, nil
-
 }

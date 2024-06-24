@@ -14,7 +14,6 @@ func CmdGetEmmisonsFactors() *cobra.Command {
 		Short: "Query GetEmmisonsFactors",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
