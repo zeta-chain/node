@@ -1,11 +1,11 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -13,24 +13,17 @@ import (
 )
 
 func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
-	if len(args) != 2 {
-		panic("TestMultipleERC20Deposit requires exactly two arguments: the deposit amount and the number of deposits.")
-	}
+	require.Len(r, args, 2)
 
 	depositAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid deposit amount specified for TestMultipleERC20Deposit.")
-	}
+	require.True(r, ok)
 
 	numberOfDeposits, ok := big.NewInt(0).SetString(args[1], 10)
-	if !ok || numberOfDeposits.Int64() < 1 {
-		panic("Invalid number of deposits specified for TestMultipleERC20Deposit.")
-	}
+	require.True(r, ok)
+	require.NotZero(r, numberOfDeposits.Int64())
 
 	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	txhash := multipleDeposits(r, depositAmount, numberOfDeposits)
 	cctxs := utils.WaitCctxsMinedByInboundHash(
@@ -41,51 +34,39 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 		r.Logger,
 		r.CctxTimeout,
 	)
-	if len(cctxs) != 3 {
-		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
-	}
+	require.Len(r, cctxs, 3)
 
 	// check new balance is increased by amount * count
 	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	diff := big.NewInt(0).Sub(bal, initialBal)
 	total := depositAmount.Mul(depositAmount, numberOfDeposits)
-	if diff.Cmp(total) != 0 {
-		panic(fmt.Sprintf("balance difference is not correct: %d", diff.Int64()))
-	}
+
+	require.Equal(r, 0, diff.Cmp(total), "balance difference is not correct")
 }
 
 func multipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Hash {
 	// deploy depositor
 	depositorAddr, _, depositor, err := testcontract.DeployDepositor(r.EVMAuth, r.EVMClient, r.ERC20CustodyAddr)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	fullAmount := big.NewInt(0).Mul(amount, count)
 
 	// approve
 	tx, err := r.ERC20.Approve(r.EVMAuth, depositorAddr, fullAmount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("approve failed")
-	}
+	utils.RequireTxSuccessful(r, receipt)
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
 	tx, err = depositor.RunDeposits(r.EVMAuth, r.DeployerAddress.Bytes(), r.ERC20Addr, amount, []byte{}, count)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("deposits failed")
-	}
+	utils.RequireTxSuccessful(r, receipt)
+
 	r.Logger.Info("Deposits receipt tx hash: %s", tx.Hash().Hex())
 
 	for _, log := range receipt.Logs {

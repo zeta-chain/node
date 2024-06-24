@@ -1,11 +1,9 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
-	"strconv"
 
-	"github.com/btcsuite/btcutil"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -13,20 +11,10 @@ import (
 )
 
 func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestBitcoinWithdrawRestricted requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
-	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		panic("Invalid withdrawal amount specified for TestBitcoinWithdrawRestricted.")
-	}
-
-	withdrawalAmountSat, err := btcutil.NewAmount(withdrawalAmount)
-	if err != nil {
-		panic(err)
-	}
-	amount := big.NewInt(int64(withdrawalAmountSat))
+	withdrawalAmount := parseFloat(r, args[0])
+	amount := btcAmountFromFloat64(r, withdrawalAmount)
 
 	r.SetBtcAddress(r.Name, false)
 
@@ -39,13 +27,9 @@ func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 		testutils.RestrictedBtcAddressTest,
 		chains.BitcoinRegtest.ChainId,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// the cctx should be cancelled
 	rawTx := withdrawBTCZRC20(r, addressRestricted, amount)
-	if len(rawTx.Vout) != 2 {
-		panic(fmt.Errorf("BTC cancelled outtx rawTx.Vout should have 2 outputs"))
-	}
+	require.Len(r, rawTx.Vout, 2, "BTC cancelled outtx rawTx.Vout should have 2 outputs")
 }
