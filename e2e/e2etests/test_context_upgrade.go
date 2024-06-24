@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -13,30 +14,24 @@ import (
 
 // TestContextUpgrade tests sending ETH on ZetaChain and check context data
 func TestContextUpgrade(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestContextUpgrade requires exactly one argument for the value.")
-	}
+	require.Len(r, args, 1)
 
 	// parse the value from the provided arguments
 	value, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid value specified for TestContextUpgrade.")
-	}
+	require.True(r, ok, "Invalid value specified for TestContextUpgrade.")
 
 	data := make([]byte, 0, 32)
 	data = append(data, r.ContextAppAddr.Bytes()...)
 	data = append(data, []byte("filler")...) // just to make sure that this is a contract call;
 
 	signedTx, err := r.SendEther(r.TSSAddress, value, data)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.Logger.Info("EVM tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	utils.RequireTxSuccessful(r, receipt)
+
 	r.Logger.Info("EVM tx receipt: %d", receipt.Status)
 	r.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	r.Logger.Info("  to: %s", signedTx.To().String())
@@ -60,18 +55,13 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 			r.Logger.Info("  sender: %s", eventIter.Event.Sender.Hex())
 			r.Logger.Info("  chainid: %d", eventIter.Event.ChainID)
 			r.Logger.Info("  msgsender: %s", eventIter.Event.MsgSender.Hex())
-			found = true
-			if bytes.Compare(eventIter.Event.Origin, r.DeployerAddress.Bytes()) != 0 {
-				panic("origin mismatch")
-			}
-			chainID, err := r.EVMClient.ChainID(r.Ctx)
-			if err != nil {
-				panic(err)
-			}
-			if eventIter.Event.ChainID.Cmp(chainID) != 0 {
-				panic("chainID mismatch")
-			}
 
+			found = true
+			require.Equal(r, 0, bytes.Compare(eventIter.Event.Origin, r.DeployerAddress.Bytes()), "origin mismatch")
+
+			chainID, err := r.EVMClient.ChainID(r.Ctx)
+			require.NoError(r, err)
+			require.Equal(r, 0, eventIter.Event.ChainID.Cmp(chainID), "chainID mismatch")
 		}
 		if found {
 			break
@@ -79,8 +69,5 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 		time.Sleep(2 * time.Second)
 	}
 
-	if !found {
-		panic("event not found")
-	}
-
+	require.True(r, found, "event not found")
 }

@@ -13,6 +13,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
@@ -28,6 +29,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -144,7 +146,6 @@ func NewE2ERunner(
 ) *E2ERunner {
 	r := &E2ERunner{
 		Name:      name,
-		Ctx:       ctx,
 		CtxCancel: ctxCancel,
 
 		DeployerAddress:    deployerAddress,
@@ -165,91 +166,95 @@ func NewE2ERunner(
 
 		Logger: logger,
 	}
+
+	r.Ctx = utils.WithTesting(ctx, r)
+
 	for _, opt := range opts {
 		opt(r)
 	}
+
 	return r
 }
 
 // CopyAddressesFrom copies addresses from another E2ETestRunner that initialized the contracts
-func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
+func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	// copy TSS address
-	runner.TSSAddress = other.TSSAddress
-	runner.BTCTSSAddress = other.BTCTSSAddress
+	r.TSSAddress = other.TSSAddress
+	r.BTCTSSAddress = other.BTCTSSAddress
 
 	// copy addresses
-	runner.ZetaEthAddr = other.ZetaEthAddr
-	runner.ConnectorEthAddr = other.ConnectorEthAddr
-	runner.ERC20CustodyAddr = other.ERC20CustodyAddr
-	runner.ERC20Addr = other.ERC20Addr
-	runner.ERC20ZRC20Addr = other.ERC20ZRC20Addr
-	runner.ETHZRC20Addr = other.ETHZRC20Addr
-	runner.BTCZRC20Addr = other.BTCZRC20Addr
-	runner.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
-	runner.UniswapV2RouterAddr = other.UniswapV2RouterAddr
-	runner.ConnectorZEVMAddr = other.ConnectorZEVMAddr
-	runner.WZetaAddr = other.WZetaAddr
-	runner.EvmTestDAppAddr = other.EvmTestDAppAddr
-	runner.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
-	runner.ContextAppAddr = other.ContextAppAddr
-	runner.SystemContractAddr = other.SystemContractAddr
-	runner.ZevmTestDAppAddr = other.ZevmTestDAppAddr
+	r.ZetaEthAddr = other.ZetaEthAddr
+	r.ConnectorEthAddr = other.ConnectorEthAddr
+	r.ERC20CustodyAddr = other.ERC20CustodyAddr
+	r.ERC20Addr = other.ERC20Addr
+	r.ERC20ZRC20Addr = other.ERC20ZRC20Addr
+	r.ETHZRC20Addr = other.ETHZRC20Addr
+	r.BTCZRC20Addr = other.BTCZRC20Addr
+	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
+	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
+	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
+	r.WZetaAddr = other.WZetaAddr
+	r.EvmTestDAppAddr = other.EvmTestDAppAddr
+	r.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
+	r.ContextAppAddr = other.ContextAppAddr
+	r.SystemContractAddr = other.SystemContractAddr
+	r.ZevmTestDAppAddr = other.ZevmTestDAppAddr
 
 	// create instances of contracts
-	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.EVMClient)
+	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(runner.ConnectorEthAddr, runner.EVMClient)
+	r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20Custody, err = erc20custody.NewERC20Custody(runner.ERC20CustodyAddr, runner.EVMClient)
+	r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20, err = erc20.NewERC20(runner.ERC20Addr, runner.EVMClient)
+	r.ERC20, err = erc20.NewERC20(r.ERC20Addr, r.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZEVMClient)
+	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ETHZRC20, err = zrc20.NewZRC20(runner.ETHZRC20Addr, runner.ZEVMClient)
+	r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.BTCZRC20, err = zrc20.NewZRC20(runner.BTCZRC20Addr, runner.ZEVMClient)
+	r.BTCZRC20, err = zrc20.NewZRC20(r.BTCZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZEVMClient)
+	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZEVMClient)
+	r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZEVMClient)
+	r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZEVMClient)
+	r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
 
-	runner.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(runner.ZEVMSwapAppAddr, runner.ZEVMClient)
+	r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ContextApp, err = contextapp.NewContextApp(runner.ContextAppAddr, runner.ZEVMClient)
+	r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.SystemContract, err = systemcontract.NewSystemContract(runner.SystemContractAddr, runner.ZEVMClient)
+	r.SystemContract, err = systemcontract.NewSystemContract(r.SystemContractAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -257,50 +262,55 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 }
 
 // Lock locks the mutex
-func (runner *E2ERunner) Lock() {
-	runner.mutex.Lock()
+func (r *E2ERunner) Lock() {
+	r.mutex.Lock()
 }
 
 // Unlock unlocks the mutex
-func (runner *E2ERunner) Unlock() {
-	runner.mutex.Unlock()
+func (r *E2ERunner) Unlock() {
+	r.mutex.Unlock()
 }
 
 // PrintContractAddresses prints the addresses of the contracts
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
-func (runner *E2ERunner) PrintContractAddresses() {
+func (r *E2ERunner) PrintContractAddresses() {
 	// zevm contracts
-	runner.Logger.Print(" --- 📜zEVM contracts ---")
-	runner.Logger.Print("SystemContract: %s", runner.SystemContractAddr.Hex())
-	runner.Logger.Print("ETHZRC20:       %s", runner.ETHZRC20Addr.Hex())
-	runner.Logger.Print("ERC20ZRC20:     %s", runner.ERC20ZRC20Addr.Hex())
-	runner.Logger.Print("BTCZRC20:       %s", runner.BTCZRC20Addr.Hex())
-	runner.Logger.Print("UniswapFactory: %s", runner.UniswapV2FactoryAddr.Hex())
-	runner.Logger.Print("UniswapRouter:  %s", runner.UniswapV2RouterAddr.Hex())
-	runner.Logger.Print("ConnectorZEVM:  %s", runner.ConnectorZEVMAddr.Hex())
-	runner.Logger.Print("WZeta:          %s", runner.WZetaAddr.Hex())
+	r.Logger.Print(" --- 📜zEVM contracts ---")
+	r.Logger.Print("SystemContract: %s", r.SystemContractAddr.Hex())
+	r.Logger.Print("ETHZRC20:       %s", r.ETHZRC20Addr.Hex())
+	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
+	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
+	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
+	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
+	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())
+	r.Logger.Print("WZeta:          %s", r.WZetaAddr.Hex())
 
-	runner.Logger.Print("ZEVMSwapApp:    %s", runner.ZEVMSwapAppAddr.Hex())
-	runner.Logger.Print("ContextApp:     %s", runner.ContextAppAddr.Hex())
-	runner.Logger.Print("TestDappZEVM:       %s", runner.ZevmTestDAppAddr.Hex())
+	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
+	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
+	r.Logger.Print("TestDappZEVM:       %s", r.ZevmTestDAppAddr.Hex())
 
 	// evm contracts
-	runner.Logger.Print(" --- 📜EVM contracts ---")
-	runner.Logger.Print("ZetaEth:        %s", runner.ZetaEthAddr.Hex())
-	runner.Logger.Print("ConnectorEth:   %s", runner.ConnectorEthAddr.Hex())
-	runner.Logger.Print("ERC20Custody:   %s", runner.ERC20CustodyAddr.Hex())
-	runner.Logger.Print("ERC20:      %s", runner.ERC20Addr.Hex())
-	runner.Logger.Print("TestDappEVM:       %s", runner.EvmTestDAppAddr.Hex())
+	r.Logger.Print(" --- 📜EVM contracts ---")
+	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
+	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
+	r.Logger.Print("ERC20:      %s", r.ERC20Addr.Hex())
+	r.Logger.Print("TestDappEVM:       %s", r.EvmTestDAppAddr.Hex())
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf
-func (runner *E2ERunner) Errorf(format string, args ...any) {
-	runner.Logger.Error(format, args...)
+func (r *E2ERunner) Errorf(format string, args ...any) {
+	r.Logger.Error(format, args...)
 }
 
 // FailNow implemented to mimic the behavior of testing.T.FailNow
-func (runner *E2ERunner) FailNow() {
-	runner.Logger.Error("Test failed")
+func (r *E2ERunner) FailNow() {
+	r.Logger.Error("Test failed")
+	r.CtxCancel()
 	os.Exit(1)
+}
+
+func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {
+	utils.RequireTxSuccessful(r, receipt, msgAndArgs...)
 }

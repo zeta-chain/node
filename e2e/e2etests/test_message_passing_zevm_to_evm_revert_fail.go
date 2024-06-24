@@ -1,10 +1,10 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -13,14 +13,10 @@ import (
 )
 
 func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestMessagePassingZEVMtoEVMRevertFail requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid amount specified for TestMessagePassingZEVMtoEVMRevertFail.")
-	}
+	require.True(r, ok, "Invalid amount specified for TestMessagePassingZEVMtoEVMRevertFail.")
 
 	// Deploying a test contract not containing a logic for reverting the cctx
 	testDappNoRevertAddr, tx, testDappNoRevert, err := testdappnorevert.DeployTestDAppNoRevert(
@@ -29,83 +25,64 @@ func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 		r.ConnectorZEVMAddr,
 		r.WZetaAddr,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("TestDAppNoRevert deployed at: %s", testDappNoRevertAddr.Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "deploy TestDAppNoRevert")
-	if receipt.Status == 0 {
-		panic("deploy TestDAppNoRevert failed")
-	}
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Set destination details
 	EVMChainID, err := r.EVMClient.ChainID(r.Ctx)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	destinationAddress := r.EvmTestDAppAddr
 
 	// Contract call originates from ZEVM chain
 	r.ZEVMAuth.Value = amount
 	tx, err = r.WZeta.Deposit(r.ZEVMAuth)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.ZEVMAuth.Value = big.NewInt(0)
 	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta deposit")
-	if receipt.Status == 0 {
-		panic("deposit failed")
-	}
+	utils.RequireTxSuccessful(r, receipt)
 
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, testDappNoRevertAddr, amount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("wzeta approve tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
-	if receipt.Status == 0 {
-		panic(fmt.Sprintf("approve failed, logs: %+v", receipt.Logs))
-	}
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Get previous balances to check funds are not minted anywhere when aborted
 	previousBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, testDappNoRevertAddr)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// Send message with doRevert
 	tx, err = testDappNoRevert.SendHelloWorld(r.ZEVMAuth, destinationAddress, EVMChainID, amount, true)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	r.Logger.Info("TestDAppNoRevert.SendHello tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
-	}
+	utils.RequireTxSuccessful(r, receipt)
 
 	// The revert tx will fail, the cctx state should be aborted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
-		panic("expected cctx to be reverted")
-	}
+	utils.RequireCCTXStatus(r, cctx, cctxtypes.CctxStatus_Aborted)
 
 	// Check the funds are not minted to the contract as the cctx has been aborted
 	newBalanceZEVM, err := r.WZeta.BalanceOf(&bind.CallOpts{}, testDappNoRevertAddr)
-	if err != nil {
-		panic(err)
-	}
-	if newBalanceZEVM.Cmp(previousBalanceZEVM) != 0 {
-		panic(
-			fmt.Sprintf("expected new balance to be %s, got %s", previousBalanceZEVM.String(), newBalanceZEVM.String()),
-		)
-	}
+	require.NoError(r, err)
+	require.Equal(r,
+		0,
+		newBalanceZEVM.Cmp(previousBalanceZEVM),
+		"expected new balance to be %s, got %s",
+		previousBalanceZEVM.String(),
+		newBalanceZEVM.String(),
+	)
 }

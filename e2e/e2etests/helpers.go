@@ -8,7 +8,6 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -26,7 +25,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	requireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
@@ -37,7 +36,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	requireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// mine 10 blocks to confirm the withdrawal tx
 	_, err = r.GenerateToAddressIfLocalBitcoin(10, to)
@@ -45,7 +44,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	requireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// get bitcoin tx according to the outTxHash in cctx
 	outTxHash := cctx.GetCurrentOutboundParam().Hash
@@ -133,15 +132,4 @@ func parseBitcoinWithdrawArgs(r *runner.E2ERunner, args []string, defaultReceive
 	amount := btcAmountFromFloat64(r, withdrawalAmount)
 
 	return receiver, amount
-}
-
-// Testify aliases ==========================================>
-
-func requireReceiptApproved(t require.TestingT, receipt *ethtypes.Receipt) {
-	require.Equal(t, ethtypes.ReceiptStatusSuccessful, receipt.Status, "receipt status is not successful")
-}
-
-func requireCCTXStatus(t require.TestingT, cctx *crosschaintypes.CrossChainTx, expected crosschaintypes.CctxStatus) {
-	require.NotNil(t, cctx.CctxStatus)
-	require.Equal(t, expected, cctx.CctxStatus.Status, "cctx status is not %q", expected.String())
 }
