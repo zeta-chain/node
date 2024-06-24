@@ -8,7 +8,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/testutil"
 	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
@@ -18,6 +17,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/testutil"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 

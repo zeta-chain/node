@@ -17,7 +17,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/testutil"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/app"
@@ -25,6 +24,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/testutil"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
