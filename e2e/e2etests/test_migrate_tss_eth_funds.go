@@ -16,7 +16,7 @@ func TestMigrateTssEth(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Pause inbound and outbound processing")
 	msg := observertypes.NewMsgDisableCCTX(
 		r.ZetaTxServer.GetAccountAddress(0),
-		true,
+		false,
 		true)
 	_, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
@@ -45,5 +45,13 @@ func TestMigrateTssEth(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
+
+	// Fetch migrator cctx
+	migrator, err := r.ObserverClient.TssFundsMigratorInfo(r.Ctx, &observertypes.QueryTssFundsMigratorInfoRequest{ChainId: evmChainID.Int64()})
+	if err != nil {
+		return
+	}
+
+	r.Logger.Print("Migrator CCTX: ", migrator.TssFundsMigrator.MigrationCctxIndex)
 
 }

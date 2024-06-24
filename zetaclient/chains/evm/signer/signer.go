@@ -665,6 +665,34 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string)
 }
 
 func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Transaction, error) {
+	fmt.Println("SignMigrateTssFundsCmd")
+	fmt.Printf("signer pubkey: %+v\n", signer.TSS().Pubkey())
+	fmt.Printf("signer evm address: %+v\n", signer.TSS().EVMAddress())
+	fmt.Printf("txData To: %+v\n", txData.to)
+	fmt.Printf("txData Amount: %+v\n", txData.amount)
+	fmt.Printf("txData GasLimit: %+v\n", txData.gasLimit)
+	fmt.Printf("txData GasPrice: %+v\n", txData.gasPrice)
+	fmt.Printf("txData Nonce: %+v\n", txData.nonce)
+	fmt.Printf("txData Height: %+v\n", txData.height)
+
+	//zetaclient 0
+	//2024-06-24 11:02:40 SignMigrateTssFundsCmd
+	//2024-06-24 11:02:40 txData To: 0x526AC9d6913A79E8B8A2E0883967Cb393971B4aD
+	//2024-06-24 11:02:40 txData Amount: +100999923013800000
+	//2024-06-24 11:02:40 txData GasLimit: 100000
+	//2024-06-24 11:02:40 txData GasPrice: +769862
+	//2024-06-24 11:02:40 txData Nonce: 0
+	//2024-06-24 11:02:40 txData Height: 94
+
+	// zetaclient 1
+	//2024-06-24 11:02:13 SignMigrateTssFundsCmd
+	//2024-06-24 11:02:13 txData To: 0x526AC9d6913A79E8B8A2E0883967Cb393971B4aD
+	//2024-06-24 11:02:13 txData Amount: +100999923013800000
+	//2024-06-24 11:02:13 txData GasLimit: 100000
+	//2024-06-24 11:02:13 txData GasPrice: +769862
+	//2024-06-24 11:02:13 txData Nonce: 0
+	//2024-06-24 11:02:13 txData Height: 85
+
 	tx, _, _, err := signer.Sign(
 		nil,
 		txData.to,
