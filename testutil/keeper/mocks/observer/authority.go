@@ -3,8 +3,10 @@
 package mocks
 
 import (
-	mock "github.com/stretchr/testify/mock"
+	chains "github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
+	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,6 +29,26 @@ func (_m *ObserverAuthorityKeeper) CheckAuthorization(ctx types.Context, msg typ
 		r0 = rf(ctx, msg)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetChainList provides a mock function with given fields: ctx
+func (_m *ObserverAuthorityKeeper) GetChainList(ctx types.Context) []chains.Chain {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetChainList")
+	}
+
+	var r0 []chains.Chain
+	if rf, ok := ret.Get(0).(func(types.Context) []chains.Chain); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]chains.Chain)
+		}
 	}
 
 	return r0

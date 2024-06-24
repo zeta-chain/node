@@ -31,3 +31,19 @@ func TestKeeper_SetChainInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, newChainInfo, got)
 }
+
+func TestKeeper_GetChainList(t *testing.T) {
+	k, ctx := keepertest.AuthorityKeeper(t)
+
+	// Empty list
+	list := k.GetChainList(ctx)
+	require.Empty(t, list)
+
+	// Set chain info
+	chainInfo := sample.ChainInfo(42)
+	k.SetChainInfo(ctx, chainInfo)
+
+	// Check list
+	list = k.GetChainList(ctx)
+	require.Equal(t, chainInfo.Chains, list)
+}

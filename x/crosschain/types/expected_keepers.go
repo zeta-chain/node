@@ -209,6 +209,7 @@ type FungibleKeeper interface {
 
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
+	GetChainList(ctx sdk.Context) (list []chains.Chain)
 }
 
 type LightclientKeeper interface {

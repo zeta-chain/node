@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -33,6 +34,7 @@ type StakingHooks interface {
 
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
+	GetChainList(ctx sdk.Context) (list []chains.Chain)
 
 	// SetPolicies is solely used for the migration of policies from observer to authority
 	SetPolicies(ctx sdk.Context, policies authoritytypes.Policies)
