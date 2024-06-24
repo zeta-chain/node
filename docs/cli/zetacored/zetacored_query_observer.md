@@ -36,6 +36,7 @@ zetacored query observer [flags]
 * [zetacored query observer list-node-account](zetacored_query_observer_list-node-account.md)	 - list all NodeAccount
 * [zetacored query observer list-observer-set](zetacored_query_observer_list-observer-set.md)	 - Query observer set
 * [zetacored query observer list-pending-nonces](zetacored_query_observer_list-pending-nonces.md)	 - shows a chainNonces
+* [zetacored query observer list-tss-funds-migrator](zetacored_query_observer_list-tss-funds-migrator.md)	 - list all tss funds migrators
 * [zetacored query observer list-tss-history](zetacored_query_observer_list-tss-history.md)	 - show historical list of TSS
 * [zetacored query observer show-ballot](zetacored_query_observer_show-ballot.md)	 - Query BallotByIdentifier
 * [zetacored query observer show-blame](zetacored_query_observer_show-blame.md)	 - Query BlameByIdentifier
@@ -46,4 +47,5 @@ zetacored query observer [flags]
 * [zetacored query observer show-node-account](zetacored_query_observer_show-node-account.md)	 - shows a NodeAccount
 * [zetacored query observer show-observer-count](zetacored_query_observer_show-observer-count.md)	 - Query show-observer-count
 * [zetacored query observer show-tss](zetacored_query_observer_show-tss.md)	 - shows a TSS
+* [zetacored query observer show-tss-funds-migrator](zetacored_query_observer_show-tss-funds-migrator.md)	 - show the tss funds migrator for a chain
 

@@ -5,10 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,39 +46,54 @@ var (
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
-	client      interfaces.EVMRPCClient
-	chain       *chains.Chain
-	tssSigner   interfaces.TSSSigner
-	ethSigner   ethtypes.Signer
-	logger      base.Logger
-	ts          *metrics.TelemetryServer
-	coreContext *clientcontext.ZetacoreContext
+	// base.Signer implements the base chain signer
+	base.Signer
 
-	// mu protects below fields from concurrent access
-	mu                        *sync.Mutex
-	zetaConnectorABI          abi.ABI
-	erc20CustodyABI           abi.ABI
-	zetaConnectorAddress      ethcommon.Address
-	er20CustodyAddress        ethcommon.Address
+	// client is the EVM RPC client to interact with the EVM chain
+	client interfaces.EVMRPCClient
+
+	// ethSigner encapsulates EVM transaction signature handling
+	ethSigner ethtypes.Signer
+
+	// zetaConnectorABI is the ABI of the ZetaConnector contract
+	zetaConnectorABI abi.ABI
+
+	// erc20CustodyABI is the ABI of the ERC20Custody contract
+	erc20CustodyABI abi.ABI
+
+	// zetaConnectorAddress is the address of the ZetaConnector contract
+	zetaConnectorAddress ethcommon.Address
+
+	// er20CustodyAddress is the address of the ERC20Custody contract
+	er20CustodyAddress ethcommon.Address
+
+	// outboundHashBeingReported is a map of outboundHash being reported
 	outboundHashBeingReported map[string]bool
 }
 
+// NewSigner creates a new EVM signer
 func NewSigner(
 	chain chains.Chain,
+	zetacoreContext *clientcontext.ZetacoreContext,
+	tss interfaces.TSSSigner,
+	ts *metrics.TelemetryServer,
+	logger base.Logger,
 	endpoint string,
-	tssSigner interfaces.TSSSigner,
 	zetaConnectorABI string,
 	erc20CustodyABI string,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
-	coreContext *clientcontext.ZetacoreContext,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
+	// create base signer
+	baseSigner := base.NewSigner(chain, zetacoreContext, tss, ts, logger)
+
+	// create EVM client
 	client, ethSigner, err := getEVMRPC(endpoint)
 	if err != nil {
 		return nil, err
 	}
+
+	// prepare ABIs
 	connectorABI, err := abi.JSON(strings.NewReader(zetaConnectorABI))
 	if err != nil {
 		return nil, err
@@ -91,50 +104,42 @@ func NewSigner(
 	}
 
 	return &Signer{
-		client:               client,
-		chain:                &chain,
-		tssSigner:            tssSigner,
-		ethSigner:            ethSigner,
-		zetaConnectorABI:     connectorABI,
-		erc20CustodyABI:      custodyABI,
-		zetaConnectorAddress: zetaConnectorAddress,
-		er20CustodyAddress:   erc20CustodyAddress,
-		coreContext:          coreContext,
-		logger: base.Logger{
-			Std:        logger.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
-			Compliance: logger.Compliance,
-		},
-		ts:                        ts,
-		mu:                        &sync.Mutex{},
+		Signer:                    *baseSigner,
+		client:                    client,
+		ethSigner:                 ethSigner,
+		zetaConnectorABI:          connectorABI,
+		erc20CustodyABI:           custodyABI,
+		zetaConnectorAddress:      zetaConnectorAddress,
+		er20CustodyAddress:        erc20CustodyAddress,
 		outboundHashBeingReported: make(map[string]bool),
 	}, nil
 }
 
 // SetZetaConnectorAddress sets the zeta connector address
 func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	signer.zetaConnectorAddress = addr
 }
 
 // SetERC20CustodyAddress sets the erc20 custody address
 func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	signer.er20CustodyAddress = addr
 }
 
 // GetZetaConnectorAddress returns the zeta connector address
 func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	return signer.zetaConnectorAddress
 }
 
 // GetERC20CustodyAddress returns the erc20 custody address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	return signer.er20CustodyAddress
 }
 
@@ -149,15 +154,14 @@ func (signer *Signer) Sign(
 	nonce uint64,
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
-	log.Debug().Msgf("TSS SIGNER: %s", signer.tssSigner.Pubkey())
+	log.Debug().Msgf("Sign: TSS signer: %s", signer.TSS().Pubkey())
 
 	// TODO: use EIP-1559 transaction type
 	// https://github.com/zeta-chain/node/issues/1952
 	tx := ethtypes.NewTransaction(nonce, to, amount, gasLimit, gasPrice, data)
-
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
-	sig, err := signer.tssSigner.Sign(hashBytes, height, nonce, signer.chain, "")
+	sig, err := signer.TSS().Sign(hashBytes, height, nonce, signer.Chain().ChainId, "")
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -165,11 +169,11 @@ func (signer *Signer) Sign(
 	log.Debug().Msgf("Sign: Signature: %s", hex.EncodeToString(sig[:]))
 	pubk, err := crypto.SigToPub(hashBytes, sig[:])
 	if err != nil {
-		signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
+		signer.Logger().Std.Error().Err(err).Msgf("SigToPub error")
 	}
 
 	addr := crypto.PubkeyToAddress(*pubk)
-	signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signer.Logger().Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
@@ -269,7 +273,7 @@ func (signer *Signer) SignRevertTx(txData *OutboundData) (*ethtypes.Transaction,
 func (signer *Signer) SignCancelTx(txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
 		nil,
-		signer.tssSigner.EVMAddress(),
+		signer.TSS().EVMAddress(),
 		zeroValue, // zero out the amount to cancel the tx
 		evm.EthTransferGasLimit,
 		txData.gasPrice,
@@ -326,7 +330,7 @@ func (signer *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
-	logger := signer.logger.Std.With().
+	logger := signer.Logger().Std.With().
 		Str("outboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()
@@ -363,16 +367,16 @@ func (signer *Signer) TryProcessOutbound(
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 
 	// Get cross-chain flags
-	crossChainflags := signer.coreContext.GetCrossChainFlags()
+	crossChainflags := signer.ZetacoreContext().GetCrossChainFlags()
 	// https://github.com/zeta-chain/node/issues/2050
 	var tx *ethtypes.Transaction
 	// compliance check goes first
 	if compliance.IsCctxRestricted(cctx) {
 		compliance.PrintComplianceLog(
 			logger,
-			signer.logger.Compliance,
+			signer.Logger().Compliance,
 			true,
-			signer.chain.ChainId,
+			signer.Chain().ChainId,
 			cctx.Index,
 			cctx.InboundParams.Sender,
 			txData.to.Hex(),
@@ -529,22 +533,21 @@ func (signer *Signer) BroadcastOutbound(
 	if tx == nil {
 		logger.Warn().Msgf("BroadcastOutbound: no tx to broadcast %s", cctx.Index)
 	}
-	// Try to broadcast transaction
+
+	// broadcast transaction
 	if tx != nil {
 		outboundHash := tx.Hash().Hex()
-		logger.Info().
-			Msgf("on chain %s nonce %d, outboundHash %s signer %s", signer.chain, cctx.GetCurrentOutboundParam().TssNonce, outboundHash, myID)
-		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
+
+		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := 1000 * time.Millisecond
-		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 		for i := 0; i < 5; i++ {
-			logger.Info().
-				Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, toChain, cctx.GetCurrentOutboundParam().TssNonce, i)
-			// #nosec G404 randomness is not a security issue here
-			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) // FIXME: use backoff
+			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				log.Warn().Err(err).Msgf("Outbound Broadcast error")
+				log.Warn().
+					Err(err).
+					Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d signer %s",
+						outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, i, myID)
 				retry, report := zetacore.HandleBroadcastError(
 					err,
 					strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10),
@@ -560,8 +563,8 @@ func (signer *Signer) BroadcastOutbound(
 				backOff *= 2
 				continue
 			}
-			logger.Info().
-				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", cctx.GetCurrentOutboundParam().TssNonce, toChain, outboundHash)
+			logger.Info().Msgf("BroadcastOutbound: broadcasted tx %s on chain %d nonce %d signer %s",
+				outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, myID)
 			signer.reportToOutboundTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 			break // successful broadcast; no need to retry
 		}
@@ -686,8 +689,8 @@ func (signer *Signer) reportToOutboundTracker(
 	logger zerolog.Logger,
 ) {
 	// skip if already being reported
-	signer.mu.Lock()
-	defer signer.mu.Unlock()
+	signer.Mu().Lock()
+	defer signer.Mu().Unlock()
 	if _, found := signer.outboundHashBeingReported[outboundHash]; found {
 		logger.Info().
 			Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
@@ -698,9 +701,9 @@ func (signer *Signer) reportToOutboundTracker(
 	// report to outbound tracker with goroutine
 	go func() {
 		defer func() {
-			signer.mu.Lock()
+			signer.Mu().Lock()
 			delete(signer.outboundHashBeingReported, outboundHash)
-			signer.mu.Unlock()
+			signer.Mu().Unlock()
 		}()
 
 		// try monitoring tx inclusion status for 10 minutes

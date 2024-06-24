@@ -30170,6 +30170,21 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/observer/get_all_tss_fund_migrators:
+    get:
+      summary: Queries all TssFundMigratorInfo
+      operationId: Query_TssFundsMigratorInfoAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/get_chain_params:
     get:
       summary: Queries a list of GetChainParams items.
@@ -30248,6 +30263,27 @@ paths:
         - name: bitcoin_chain_id
           in: path
           required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/observer/get_tss_fund_migrator:
+    get:
+      summary: Queries the TssFundMigratorInfo for a specific chain
+      operationId: Query_TssFundsMigratorInfo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
           type: string
           format: int64
       tags:
@@ -58111,6 +58147,19 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chainsChain'
+  observerQueryTssFundsMigratorInfoAllResponse:
+    type: object
+    properties:
+      tss_funds_migrators:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerTssFundMigratorInfo'
+  observerQueryTssFundsMigratorInfoResponse:
+    type: object
+    properties:
+      tss_funds_migrator:
+        $ref: '#/definitions/observerTssFundMigratorInfo'
   observerQueryTssHistoryResponse:
     type: object
     properties:
@@ -58140,6 +58189,14 @@ definitions:
       keyGenZetaHeight:
         type: string
         format: int64
+  observerTssFundMigratorInfo:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      migration_cctx_index:
+        type: string
   observerVoteType:
     type: string
     enum:

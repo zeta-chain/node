@@ -43,20 +43,19 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 	mpiAddress := ConnectorAddress
 	erc20CustodyAddress := ERC20CustodyAddress
 	logger := base.Logger{}
-	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 
 	return NewSigner(
 		chains.BscMainnet,
-		mocks.EVMRPCEnabled,
+		context.NewZetacoreContext(cfg),
 		tss,
+		nil,
+		logger,
+		mocks.EVMRPCEnabled,
 		config.GetConnectorABI(),
 		config.GetERC20CustodyABI(),
 		mpiAddress,
-		erc20CustodyAddress,
-		context.NewZetacoreContext(cfg),
-		logger,
-		ts)
+		erc20CustodyAddress)
 }
 
 // getNewEvmChainObserver creates a new EVM chain observer for testing
@@ -256,7 +255,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 
 		// Verify tx body basics
 		// Note: Cancel tx sends 0 gas token to TSS self address
-		verifyTxBodyBasics(t, tx, evmSigner.tssSigner.EVMAddress(), txData.nonce, big.NewInt(0))
+		verifyTxBodyBasics(t, tx, evmSigner.TSS().EVMAddress(), txData.nonce, big.NewInt(0))
 	})
 	t.Run("SignCancelTx - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail

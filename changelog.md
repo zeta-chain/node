@@ -28,6 +28,7 @@
 * [2319](https://github.com/zeta-chain/node/pull/2319) - use `CheckAuthorization` function in all messages
 * [2325](https://github.com/zeta-chain/node/pull/2325) - revert telemetry server changes
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
+* [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
 
 ### Refactor
 
@@ -50,6 +51,7 @@
 * [2317](https://github.com/zeta-chain/node/pull/2317) - add ValidateOutbound method for cctx orchestrator
 * [2340](https://github.com/zeta-chain/node/pull/2340) - add ValidateInbound method for cctx orchestrator
 * [2344](https://github.com/zeta-chain/node/pull/2344) - group common data of EVM/Bitcoin signer and observer using base structs
+* [2357](https://github.com/zeta-chain/node/pull/2357) - integrate base Signer structure into EVM/Bitcoin Signer
 
 ### Tests
 
@@ -65,6 +67,7 @@
 * [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
 * [2360](https://github.com/zeta-chain/node/pull/2360) - add stateful e2e tests.
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
+* [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
 
 ### Fixes
 
@@ -75,6 +78,7 @@
 * [2243](https://github.com/zeta-chain/node/pull/2243) - fix incorrect bitcoin outbound height in the CCTX outbound parameter
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
 * [2327](https://github.com/zeta-chain/node/pull/2327) - partially cherry picked the fix to Bitcoin outbound dust amount
+* [2362](https://github.com/zeta-chain/node/pull/2362) - set 1000 satoshis as minimum BTC amount that can be withdrawn from zEVM
 
 ### CI
 

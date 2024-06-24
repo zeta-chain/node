@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,7 +12,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/onrik/ethrpc"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -61,7 +59,6 @@ func DebugCmd() *cobra.Command {
 			}
 			inboundHash := args[0]
 			var ballotIdentifier string
-			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
 			// create a new zetacore client
 			client, err := zetacore.NewClient(
@@ -93,7 +90,6 @@ func DebugCmd() *cobra.Command {
 					Mu: &sync.Mutex{},
 				}
 				evmObserver.WithZetacoreClient(client)
-				evmObserver.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
 				coinType := coin.CoinType_Cmd
@@ -172,7 +168,6 @@ func DebugCmd() *cobra.Command {
 					Mu: &sync.Mutex{},
 				}
 				btcObserver.WithZetacoreClient(client)
-				btcObserver.WithLogger(chainLogger)
 				btcObserver.WithChain(*chains.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
