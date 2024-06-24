@@ -45,7 +45,6 @@ func (k Keeper) GetHistoricalTssByFinalizedHeight(ctx sdk.Context, finalizedZeta
 		return types.TSS{}, false
 	}
 	return tss, true
-
 }
 
 // GetTSS returns the current tss information

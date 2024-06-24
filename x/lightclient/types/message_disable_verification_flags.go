@@ -19,7 +19,6 @@ func NewMsgDisableHeaderVerification(creator string, chainIDs []int64) *MsgDisab
 		Creator:     creator,
 		ChainIdList: chainIDs,
 	}
-
 }
 
 func (msg *MsgDisableHeaderVerification) Route() string {

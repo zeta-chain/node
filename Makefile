@@ -145,14 +145,8 @@ gosec:
 ###                           		Formatting			                    ###
 ###############################################################################
 
-fmt-import:
-	@bash ./scripts/fmt-imports.sh
-@PHONY: fmt-import
-
-fmt-golines:
-	@echo "--> Formatting Go lines"
-	@bash ./scripts/fmt-golines.sh
-.PHONY: fmt-golines
+fmt:
+	@bash ./scripts/fmt.sh
 
 ###############################################################################
 ###                           Generation commands  		                    ###
@@ -199,7 +193,7 @@ mocks:
 .PHONY: mocks
 
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-import fmt-golines
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 .PHONY: generate
 
 ###############################################################################

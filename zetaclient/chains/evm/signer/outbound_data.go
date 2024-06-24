@@ -71,7 +71,6 @@ func (txData *OutboundData) SetupGas(
 	client interfaces.EVMRPCClient,
 	chain *chains.Chain,
 ) error {
-
 	txData.gasLimit = cctx.GetCurrentOutboundParam().GasLimit
 	if txData.gasLimit < MinGasLimit {
 		txData.gasLimit = MinGasLimit

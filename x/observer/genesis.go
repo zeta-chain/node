@@ -130,7 +130,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.NonceToCctx {
 		k.SetNonceToCctx(ctx, elem)
 	}
-
 }
 
 // ExportGenesis returns the observer module's exported genesis.

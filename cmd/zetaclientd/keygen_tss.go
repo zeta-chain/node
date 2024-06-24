@@ -203,7 +203,6 @@ func SetTSSPubKey(tss *mc.TSS, logger zerolog.Logger) error {
 	}
 	logger.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 	return nil
-
 }
 func TestTSS(tss *mc.TSS, logger zerolog.Logger) error {
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()

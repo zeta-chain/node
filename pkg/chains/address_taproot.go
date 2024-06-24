@@ -29,7 +29,6 @@ var _ btcutil.Address = &AddressTaproot{}
 // NewAddressTaproot returns a new AddressTaproot.
 func NewAddressTaproot(witnessProg []byte,
 	net *chaincfg.Params) (*AddressTaproot, error) {
-
 	return newAddressTaproot(net.Bech32HRPSegwit, witnessProg)
 }
 

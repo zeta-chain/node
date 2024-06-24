@@ -187,7 +187,6 @@ func DebugCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-
 			}
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 

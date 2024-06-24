@@ -126,5 +126,4 @@ func (r *E2ERunner) PrintNetworkReport(nr NetworkReport) {
 	r.Logger.Print("Block Height:           %d", nr.Height)
 	r.Logger.Print("CCTX Processed:         %d", nr.CctxCount)
 	r.Logger.Print("Emissions Pool Balance: %sZETA", nr.EmissionsPoolBalance.Quo(sdkmath.NewIntFromUint64(1e18)))
-
 }

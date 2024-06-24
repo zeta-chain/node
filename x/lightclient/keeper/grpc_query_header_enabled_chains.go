@@ -51,5 +51,4 @@ func (k Keeper) HeaderEnabledChains(
 	}
 
 	return &types.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: val.GetHeaderEnabledChains()}, nil
-
 }

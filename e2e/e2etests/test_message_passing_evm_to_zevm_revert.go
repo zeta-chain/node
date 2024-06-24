@@ -105,5 +105,4 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 		previousBalanceAndAmountEVM.String(),
 		newBalanceEVM.String(),
 	)
-
 }
