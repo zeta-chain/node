@@ -16,6 +16,17 @@ jobs:
         run: | 
           make start-e2e-test
 
+      - name: "TEST:LOCAL:NET:ALIVE"
+        run: | 
+          curl -X POST http://localhost:9545/ \
+               -H "Content-Type: application/json" \
+               -d '{
+                     "id": 1,
+                     "jsonrpc": "2.0",
+                     "method": "web3_clientVersion",
+                     "params": []
+                   }'
+
       - name: "EXECUTE:LOADTESTS"
         uses: artilleryio/action-cli@v1
         with:
