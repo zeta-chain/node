@@ -24,10 +24,9 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
-
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 func SetupHandlers(app *App) {
