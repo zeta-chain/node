@@ -35,7 +35,7 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 
 	// Wait for the contract to be deployed
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Get the code hash of the new contract
 	codeHashRes, err := r.FungibleClient.CodeHash(r.Ctx, &fungibletypes.QueryCodeHashRequest{

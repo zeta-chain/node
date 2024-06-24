@@ -157,7 +157,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 		r.Logger,
 		r.ReceiptTimeout,
 	)
-	r.requireReceiptApproved(receipt, "ZEVMSwapApp deployment failed")
+	r.requireTxSuccessful(receipt, "ZEVMSwapApp deployment failed")
 
 	r.ZEVMSwapAppAddr = zevmSwapAppAddr
 	r.ZEVMSwapApp = zevmSwapApp
@@ -169,7 +169,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 		r.Logger,
 		r.ReceiptTimeout,
 	)
-	r.requireReceiptApproved(receipt, "ContextApp deployment failed")
+	r.requireTxSuccessful(receipt, "ContextApp deployment failed")
 
 	r.ContextAppAddr = contextAppAddr
 	r.ContextApp = contextApp

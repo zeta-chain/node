@@ -19,7 +19,7 @@ func (r *E2ERunner) WaitForTxReceiptOnZEVM(tx *ethtypes.Transaction) {
 	defer r.Unlock()
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt)
+	r.requireTxSuccessful(receipt)
 }
 
 // WaitForMinedCCTX waits for a cctx to be mined from a tx
@@ -78,7 +78,7 @@ func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "approve")
-	r.requireReceiptApproved(receipt, "approve tx failed")
+	r.requireTxSuccessful(receipt, "approve tx failed")
 
 	// query the chain ID using zevm client
 	zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
@@ -100,7 +100,7 @@ func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "send")
-	r.requireReceiptApproved(receipt, "send tx failed")
+	r.requireTxSuccessful(receipt, "send tx failed")
 
 	r.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -129,7 +129,7 @@ func (r *E2ERunner) DepositAndApproveWZeta(amount *big.Int) {
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta deposit")
-	r.requireReceiptApproved(receipt, "deposit failed")
+	r.requireTxSuccessful(receipt, "deposit failed")
 
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, r.ConnectorZEVMAddr, amount)
 	require.NoError(r, err)
@@ -138,7 +138,7 @@ func (r *E2ERunner) DepositAndApproveWZeta(amount *big.Int) {
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
-	r.requireReceiptApproved(receipt, "approve failed, logs: %+v", receipt.Logs)
+	r.requireTxSuccessful(receipt, "approve failed, logs: %+v", receipt.Logs)
 }
 
 // WithdrawZeta withdraws ZETA from ZetaChain to the ZETA smart contract on EVM
@@ -162,7 +162,7 @@ func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Tr
 	if waitReceipt {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		r.Logger.EVMReceipt(*receipt, "send")
-		r.requireReceiptApproved(receipt, "send failed, logs: %+v", receipt.Logs)
+		r.requireTxSuccessful(receipt, "send failed, logs: %+v", receipt.Logs)
 
 		r.Logger.Info("  Logs:")
 		for _, log := range receipt.Logs {
@@ -188,7 +188,7 @@ func (r *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt, "withdraw failed")
+	r.requireTxSuccessful(receipt, "withdraw failed")
 
 	r.Logger.EVMReceipt(*receipt, "withdraw")
 	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")

@@ -32,7 +32,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
@@ -63,7 +63,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	// On finalization the Tss address calls the onRevert function which in turn calls the onZetaRevert function on the sender contract
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	require.NoError(r, err)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	receivedHelloWorldEvent := false
 	for _, log := range receipt.Logs {

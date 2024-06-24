@@ -34,7 +34,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta deposit")
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, r.ZevmTestDAppAddr, amount)
 	require.NoError(r, err)
@@ -42,7 +42,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	testDAppZEVM, err := testdapp.NewTestDApp(r.ZevmTestDAppAddr, r.ZEVMClient)
 	require.NoError(r, err)
@@ -60,7 +60,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Transaction is picked up by the zetanode evm hooks and a new contract call is initiated on the EVM chain
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -69,7 +69,7 @@ func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	// On finalization the Tss calls the onReceive function which in turn calls the onZetaMessage function on the destination contract.
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	require.NoError(r, err)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	testDAppEVM, err := testdapp.NewTestDApp(r.EvmTestDAppAddr, r.EVMClient)
 	require.NoError(r, err)

@@ -28,7 +28,7 @@ func withdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
@@ -40,5 +40,5 @@ func withdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptFailed(r, receipt)
+	utils.RequiredTxFailed(r, receipt)
 }

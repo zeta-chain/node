@@ -24,13 +24,13 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, vaultAddr, big.NewInt(1e18))
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Pause ETH ZRC20
 	r.Logger.Info("Pausing ETH")
@@ -58,13 +58,13 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptFailed(r, receipt)
+	utils.RequiredTxFailed(r, receipt)
 
 	tx, err = r.ETHZRC20.Burn(r.ZEVMAuth, big.NewInt(1e5))
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptFailed(r, receipt)
+	utils.RequiredTxFailed(r, receipt)
 
 	// Operation on a contract that interact with ETH ZRC20 should fail
 	r.Logger.Info("Vault contract can no longer interact with ETH ZRC20: %s", r.ETHZRC20Addr.Hex())
@@ -72,7 +72,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptFailed(r, receipt)
+	utils.RequiredTxFailed(r, receipt)
 
 	r.Logger.Info("Operations all failed")
 
@@ -83,20 +83,20 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	tx, err = vaultContract.Deposit(r.ZEVMAuth, r.ERC20ZRC20Addr, big.NewInt(1e3))
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Check deposit revert when paused
 	signedTx, err := r.SendEther(r.TSSAddress, big.NewInt(1e17), nil)
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
@@ -130,20 +130,20 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	tx, err = r.ETHZRC20.Burn(r.ZEVMAuth, big.NewInt(1e5))
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Can deposit tokens into the vault again
 	tx, err = vaultContract.Deposit(r.ZEVMAuth, r.ETHZRC20Addr, big.NewInt(1e5))
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("Operations all succeeded")
 }

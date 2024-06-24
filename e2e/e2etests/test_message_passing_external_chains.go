@@ -33,7 +33,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	r.Logger.Info("Calling ConnectorEth.Send")
@@ -50,7 +50,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	r.Logger.Info("  Logs:")
@@ -72,7 +72,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
 	require.NoError(r, err)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	for _, log := range receipt.Logs {
 		event, err := r.ConnectorEth.ParseZetaReceived(*log)

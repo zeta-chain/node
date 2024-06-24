@@ -31,7 +31,7 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMTransaction(*tx, "approve")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.EVMReceipt(*receipt, "approve")
 

@@ -311,6 +311,6 @@ func (r *E2ERunner) FailNow() {
 	os.Exit(1)
 }
 
-func (r *E2ERunner) requireReceiptApproved(receipt *ethtypes.Receipt, msgAndArgs ...any) {
-	utils.RequireReceiptApproved(r, receipt, msgAndArgs...)
+func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {
+	utils.RequireTxSuccessful(r, receipt, msgAndArgs...)
 }

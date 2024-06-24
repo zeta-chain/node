@@ -42,7 +42,7 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("ERC20 ZRC20 approve receipt: status %d", receipt.Status)
 
@@ -51,7 +51,7 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
@@ -72,7 +72,7 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	cctxs := utils.WaitCctxsMinedByInboundHash(
 		r.Ctx,

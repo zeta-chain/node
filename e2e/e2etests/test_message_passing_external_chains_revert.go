@@ -33,7 +33,7 @@ func TestMessagePassingRevertSuccessExternalChains(r *runner.E2ERunner, args []s
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
 	r.Logger.Info("Calling TestDApp.SendHello on contract address %s", r.EvmTestDAppAddr.Hex())

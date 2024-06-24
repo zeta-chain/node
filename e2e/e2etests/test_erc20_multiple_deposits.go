@@ -57,7 +57,7 @@ func multipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	tx, err := r.ERC20.Approve(r.EVMAuth, depositorAddr, fullAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
@@ -65,7 +65,7 @@ func multipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("Deposits receipt tx hash: %s", tx.Hash().Hex())
 

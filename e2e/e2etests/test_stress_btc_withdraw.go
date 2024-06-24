@@ -43,7 +43,7 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 		require.NoError(r, err)
 
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-		utils.RequireReceiptApproved(r, receipt)
+		utils.RequireTxSuccessful(r, receipt)
 		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error { return monitorBTCWithdraw(r, tx, i, time.Now()) })

@@ -123,7 +123,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	txWithdraw, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), big.NewInt(10000000000000000))
 	if err == nil {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txWithdraw, r.Logger, r.ReceiptTimeout)
-		utils.RequireReceiptFailed(r, receipt)
+		utils.RequiredTxFailed(r, receipt)
 	}
 
 	// test cross-chain functionalities on the new network

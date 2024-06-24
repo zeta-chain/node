@@ -41,7 +41,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-		utils.RequireReceiptApproved(r, receipt, failMessage)
+		utils.RequireTxSuccessful(r, receipt, failMessage)
 	}
 
 	ensureTxReceipt(txERC20ZRC20Approve, "ZRC20 ERC20 approve failed")

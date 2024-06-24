@@ -135,7 +135,7 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-		r.requireReceiptApproved(receipt, failMessage)
+		r.requireTxSuccessful(receipt, failMessage)
 	}
 
 	// check contract deployment receipt

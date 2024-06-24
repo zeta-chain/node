@@ -64,7 +64,7 @@ func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	require.Equal(r, r.DeployerAddress, *tx.To(), "expected tx to %s; got %s", r.DeployerAddress.Hex(), tx.To().Hex())
 

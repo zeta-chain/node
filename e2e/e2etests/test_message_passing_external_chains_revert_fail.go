@@ -32,7 +32,7 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	r.Logger.Info("Calling ConnectorEth.Send")
@@ -52,7 +52,7 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	r.Logger.Info("  Logs:")

@@ -26,7 +26,7 @@ func (r *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 	defer r.Unlock()
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt)
+	r.requireTxSuccessful(receipt)
 }
 
 // MintERC20OnEvm mints ERC20 on EVM
@@ -41,7 +41,7 @@ func (r *E2ERunner) MintERC20OnEvm(amountERC20 int64) {
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt)
+	r.requireTxSuccessful(receipt)
 
 	r.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 }
@@ -75,7 +75,7 @@ func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amoun
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt)
+	r.requireTxSuccessful(receipt)
 
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
@@ -83,7 +83,7 @@ func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amoun
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt)
+	r.requireTxSuccessful(receipt)
 
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
@@ -93,7 +93,7 @@ func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amoun
 	r.Logger.Info("TX: %v", tx)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt)
+	r.requireTxSuccessful(receipt)
 
 	r.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
@@ -126,7 +126,7 @@ func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) eth
 	r.Logger.EVMTransaction(*signedTx, "send to TSS")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	r.requireReceiptApproved(receipt, "deposit failed")
+	r.requireTxSuccessful(receipt, "deposit failed")
 
 	r.Logger.EVMReceipt(*receipt, "send to TSS")
 

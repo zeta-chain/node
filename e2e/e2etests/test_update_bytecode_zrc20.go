@@ -22,7 +22,7 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Deploy the TestZRC20 contract
 	r.Logger.Info("Deploying contract with new bytecode")
@@ -37,7 +37,7 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 
 	// Wait for the contract to be deployed
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Get the code hash of the new contract
 	codeHashRes, err := r.FungibleClient.CodeHash(r.Ctx, &fungibletypes.QueryCodeHashRequest{
@@ -112,7 +112,7 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	newField, err := testZRC20Contract.NewField(&bind.CallOpts{})
 	require.NoError(r, err)
@@ -123,7 +123,7 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	newField, err = newZRC20Contract.NewField(&bind.CallOpts{})
 	require.NoError(r, err)
@@ -139,7 +139,7 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	newBalance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, approved)
 	require.NoError(r, err)

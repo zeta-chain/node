@@ -25,5 +25,5 @@ func TestDonationEther(r *runner.E2ERunner, args []string) {
 	// check contract deployment receipt
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, txDonation, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "donation")
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 }

@@ -30,7 +30,7 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("EVM tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.Info("EVM tx receipt: %d", receipt.Status)
 	r.Logger.Info("  tx hash: %s", receipt.TxHash.String())

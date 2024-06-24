@@ -26,7 +26,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "Deposit")
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	tx, err = r.WZeta.Approve(r.ZEVMAuth, r.ConnectorZEVMAddr, big.NewInt(1e18))
 	require.NoError(r, err)
@@ -34,7 +34,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("wzeta.approve tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.EVMReceipt(*receipt, "Approve")
 
@@ -52,7 +52,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("send tx hash: %s", tx.Hash().Hex())
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptFailed(r, receipt)
+	utils.RequiredTxFailed(r, receipt)
 
 	r.Logger.EVMReceipt(*receipt, "send")
 }

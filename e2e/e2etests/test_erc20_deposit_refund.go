@@ -84,7 +84,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	revertTxHash := cctx.GetCurrentOutboundParam().Hash
 	receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(revertTxHash))
 	require.NoError(r, err)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	// check that the erc20 in the reverted cctx was refunded on EVM
 	erc20BalanceAfterRefund, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)

@@ -33,7 +33,7 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMTransaction(*tx, "approve")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.EVMReceipt(*receipt, "approve")
 
@@ -45,7 +45,7 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMTransaction(*tx, "withdraw to restricted address")
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireReceiptApproved(r, receipt)
+	utils.RequireTxSuccessful(r, receipt)
 
 	r.Logger.EVMReceipt(*receipt, "withdraw")
 	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")
