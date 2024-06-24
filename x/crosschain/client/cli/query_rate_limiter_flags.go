@@ -12,7 +12,7 @@ import (
 
 func CmdShowUpdateRateLimiterFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show_rate_limiter_flags",
+		Use:   "show-rate-limiter-flags",
 		Short: "shows the rate limiter flags",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
