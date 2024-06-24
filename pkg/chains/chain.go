@@ -51,14 +51,14 @@ func (chain Chain) IsExternalChain() bool {
 // EncodeAddress bytes representations of address
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
-func (chain Chain) EncodeAddress(b []byte) (string, error) {
-	if IsEVMChain(chain.ChainId) {
+func (chain Chain) EncodeAddress(b []byte, additionalChainInfo []Chain) (string, error) {
+	if IsEVMChain(chain.ChainId, additionalChainInfo) {
 		addr := ethcommon.BytesToAddress(b)
 		if addr == (ethcommon.Address{}) {
 			return "", fmt.Errorf("invalid EVM address")
 		}
 		return addr.Hex(), nil
-	} else if IsBitcoinChain(chain.ChainId) {
+	} else if IsBitcoinChain(chain.ChainId, additionalChainInfo) {
 		addrStr := string(b)
 		chainParams, err := GetBTCChainParams(chain.ChainId)
 		if err != nil {
@@ -77,43 +77,43 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 }
 
 // DecodeAddressFromChainID decode the address string to bytes
-func DecodeAddressFromChainID(chainID int64, addr string) ([]byte, error) {
-	if IsEVMChain(chainID) {
+func DecodeAddressFromChainID(chainID int64, addr string, additionalChainInfo []Chain) ([]byte, error) {
+	if IsEVMChain(chainID, additionalChainInfo) {
 		return ethcommon.HexToAddress(addr).Bytes(), nil
-	} else if IsBitcoinChain(chainID) {
+	} else if IsBitcoinChain(chainID, additionalChainInfo) {
 		return []byte(addr), nil
 	}
 	return nil, fmt.Errorf("chain (%d) not supported", chainID)
 }
 
 // IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality
-func IsEVMChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_ethereum))
+func IsEVMChain(chainID int64, additionalChainInfo []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_ethereum, additionalChainInfo))
 }
 
 // IsBitcoinChain returns true if the chain is a Bitcoin-based chain or uses the bitcoin consensus mechanism for block finality
-func IsBitcoinChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin))
+func IsBitcoinChain(chainID int64, additionalChainInfo []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin, additionalChainInfo))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain
-func IsEthereumChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByNetwork(Network_eth))
+func IsEthereumChain(chainID int64, additionalChainInfo []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_eth, additionalChainInfo))
 }
 
 // IsZetaChain returns true if the chain is a Zeta chain
-func IsZetaChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListByNetwork(Network_zeta))
+func IsZetaChain(chainID int64, additionalChainInfo []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_zeta, additionalChainInfo))
 }
 
 // IsHeaderSupportedChain returns true if the chain's consensus supports block header-based verification
-func IsHeaderSupportedChain(chainID int64) bool {
-	return ChainIDInChainList(chainID, ChainListForHeaderSupport())
+func IsHeaderSupportedChain(chainID int64, additionalChainInfo []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListForHeaderSupport(additionalChainInfo))
 }
 
 // SupportMerkleProof returns true if the chain supports block header-based verification
-func (chain Chain) SupportMerkleProof() bool {
-	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
+func (chain Chain) SupportMerkleProof(additionalChainInfo []Chain) bool {
+	return IsEVMChain(chain.ChainId, additionalChainInfo) || IsBitcoinChain(chain.ChainId, additionalChainInfo)
 }
 
 // IsEmpty is to determinate whether the chain is empty
@@ -122,8 +122,8 @@ func (chain Chain) IsEmpty() bool {
 }
 
 // GetChainFromChainID returns the chain from the chain ID
-func GetChainFromChainID(chainID int64) *Chain {
-	chains := DefaultChainsList()
+func GetChainFromChainID(chainID int64, additionalChainInfo []Chain) *Chain {
+	chains := CombineDefaultChainsList(additionalChainInfo)
 	for _, chain := range chains {
 		if chainID == chain.ChainId {
 			return chain

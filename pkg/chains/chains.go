@@ -297,9 +297,9 @@ func DefaultChainsList() []*Chain {
 }
 
 // ChainListByNetworkType returns a list of chains by network type
-func ChainListByNetworkType(networkType NetworkType) []*Chain {
+func ChainListByNetworkType(networkType NetworkType, additionalChainInfo []Chain) []*Chain {
 	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+	for _, chain := range CombineDefaultChainsList(additionalChainInfo) {
 		if chain.NetworkType == networkType {
 			chainList = append(chainList, chain)
 		}
@@ -308,9 +308,9 @@ func ChainListByNetworkType(networkType NetworkType) []*Chain {
 }
 
 // ChainListByNetwork returns a list of chains by network
-func ChainListByNetwork(network Network) []*Chain {
+func ChainListByNetwork(network Network, additionalChainInfo []Chain) []*Chain {
 	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+	for _, chain := range CombineDefaultChainsList(additionalChainInfo) {
 		if chain.Network == network {
 			chainList = append(chainList, chain)
 		}
@@ -319,9 +319,9 @@ func ChainListByNetwork(network Network) []*Chain {
 }
 
 // ExternalChainList returns a list chains that are not Zeta
-func ExternalChainList() []*Chain {
+func ExternalChainList(additionalChainInfo []Chain) []*Chain {
 	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+	for _, chain := range CombineDefaultChainsList(additionalChainInfo) {
 		if chain.IsExternal {
 			chainList = append(chainList, chain)
 		}
@@ -330,9 +330,9 @@ func ExternalChainList() []*Chain {
 }
 
 // ChainListByConsensus returns a list of chains by consensus
-func ChainListByConsensus(consensus Consensus) []*Chain {
+func ChainListByConsensus(consensus Consensus, additionalChainInfo []Chain) []*Chain {
 	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+	for _, chain := range CombineDefaultChainsList(additionalChainInfo) {
 		if chain.Consensus == consensus {
 			chainList = append(chainList, chain)
 		}
@@ -341,9 +341,9 @@ func ChainListByConsensus(consensus Consensus) []*Chain {
 }
 
 // ChainListForHeaderSupport returns a list of chains that support headers
-func ChainListForHeaderSupport() []*Chain {
+func ChainListForHeaderSupport(additionalChainInfo []Chain) []*Chain {
 	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+	for _, chain := range CombineDefaultChainsList(additionalChainInfo) {
 		if chain.Consensus == Consensus_ethereum || chain.Consensus == Consensus_bitcoin {
 			chainList = append(chainList, chain)
 		}

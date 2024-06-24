@@ -1,12 +1,12 @@
 package chains_test
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"testing"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func TestChain_Validate(t *testing.T) {
@@ -199,7 +199,7 @@ func TestChain_EncodeAddress(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			s, err := tc.chain.EncodeAddress(tc.b)
+			s, err := tc.chain.EncodeAddress(tc.b, []chains.Chain{})
 			if tc.wantErr {
 				require.Error(t, err)
 				return
@@ -224,7 +224,7 @@ func TestIsZetaChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, chains.IsZetaChain(tt.chainID))
+			require.Equal(t, tt.want, chains.IsZetaChain(tt.chainID, []chains.Chain{}))
 		})
 	}
 }
@@ -244,7 +244,7 @@ func TestIsEVMChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, IsEVMChain(tt.chainID))
+			require.Equal(t, tt.want, chains.IsEVMChain(tt.chainID, []chains.Chain{}))
 		})
 	}
 }
@@ -267,7 +267,7 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, chains.IsHeaderSupportedChain(tt.chainID))
+			require.Equal(t, tt.want, chains.IsHeaderSupportedChain(tt.chainID, []chains.Chain{}))
 		})
 	}
 }
@@ -287,7 +287,7 @@ func TestSupportMerkleProof(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, tt.chain.SupportMerkleProof())
+			require.Equal(t, tt.want, tt.chain.SupportMerkleProof([]chains.Chain{}))
 		})
 	}
 }
@@ -307,7 +307,7 @@ func TestIsBitcoinChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, chains.IsBitcoinChain(tt.chainID))
+			require.Equal(t, tt.want, chains.IsBitcoinChain(tt.chainID, []chains.Chain{}))
 		})
 	}
 }
@@ -327,7 +327,7 @@ func TestIsEthereumChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, chains.IsEthereumChain(tt.chainID))
+			require.Equal(t, tt.want, chains.IsEthereumChain(tt.chainID, []chains.Chain{}))
 		})
 	}
 }
@@ -348,9 +348,9 @@ func TestChain_IsEmpty(t *testing.T) {
 }
 
 func TestGetChainFromChainID(t *testing.T) {
-	chain := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId)
+	chain := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId, []chains.Chain{})
 	require.Equal(t, chains.ZetaChainMainnet, *chain)
-	require.Nil(t, chains.GetChainFromChainID(9999))
+	require.Nil(t, chains.GetChainFromChainID(9999, []chains.Chain{}))
 }
 
 func TestGetBTCChainParams(t *testing.T) {
@@ -380,6 +380,6 @@ func TestGetBTCChainIDFromChainParams(t *testing.T) {
 }
 
 func TestChainIDInChainList(t *testing.T) {
-	require.True(t, chains.ChainIDInChainList(chains.ZetaChainMainnet.ChainId, chains.ChainListByNetwork(chains.Network_zeta)))
-	require.False(t, chains.ChainIDInChainList(chains.Ethereum.ChainId, chains.ChainListByNetwork(chains.Network_zeta)))
+	require.True(t, chains.ChainIDInChainList(chains.ZetaChainMainnet.ChainId, chains.ChainListByNetwork(chains.Network_zeta, []chains.Chain{})))
+	require.False(t, chains.ChainIDInChainList(chains.Ethereum.ChainId, chains.ChainListByNetwork(chains.Network_zeta, []chains.Chain{})))
 }

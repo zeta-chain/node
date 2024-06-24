@@ -1,10 +1,11 @@
 package chains_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"testing"
 )
 
 func TestChainListByNetworkType(t *testing.T) {
@@ -54,7 +55,7 @@ func TestChainListByNetworkType(t *testing.T) {
 
 	for _, lt := range listTests {
 		t.Run(lt.name, func(t *testing.T) {
-			require.ElementsMatch(t, lt.expected, chains.ChainListByNetworkType(lt.networkType))
+			require.ElementsMatch(t, lt.expected, chains.ChainListByNetworkType(lt.networkType, []chains.Chain{}))
 		})
 	}
 }
@@ -104,72 +105,55 @@ func TestChainListByNetwork(t *testing.T) {
 
 	for _, lt := range listTests {
 		t.Run(lt.name, func(t *testing.T) {
-			require.ElementsMatch(t, lt.expected, chains.ChainListByNetwork(lt.network))
+			require.ElementsMatch(t, lt.expected, chains.ChainListByNetwork(lt.network, []chains.Chain{}))
 		})
 	}
 }
-func TestChainListFunctions(t *testing.T) {
-	listTests := []struct {
-		name     string
-		function func() []*chains.Chain
-		expected []*chains.Chain
-	}{
-		{
-			"DefaultChainsList",
-			chains.DefaultChainsList,
-			[]*chains.Chain{
-				&chains.BitcoinMainnet,
-				&chains.BscMainnet,
-				&chains.Ethereum,
-				&chains.BitcoinTestnet,
-				&chains.Mumbai,
-				&chains.Amoy,
-				&chains.BscTestnet,
-				&chains.Goerli,
-				&chains.Sepolia,
-				&chains.BitcoinRegtest,
-				&chains.GoerliLocalnet,
-				&chains.ZetaChainMainnet,
-				&chains.ZetaChainTestnet,
-				&chains.ZetaChainDevnet,
-				&chains.ZetaChainPrivnet,
-				&chains.Polygon,
-				&chains.OptimismMainnet,
-				&chains.OptimismSepolia,
-				&chains.BaseMainnet,
-				&chains.BaseSepolia,
-			},
-		},
-		{
-			"ExternalChainList",
-			chains.ExternalChainList,
-			[]*chains.Chain{
-				&chains.BitcoinMainnet,
-				&chains.BscMainnet,
-				&chains.Ethereum,
-				&chains.BitcoinTestnet,
-				&chains.Mumbai,
-				&chains.Amoy,
-				&chains.BscTestnet,
-				&chains.Goerli,
-				&chains.Sepolia,
-				&chains.BitcoinRegtest,
-				&chains.GoerliLocalnet,
-				&chains.Polygon,
-				&chains.OptimismMainnet,
-				&chains.OptimismSepolia,
-				&chains.BaseMainnet,
-				&chains.BaseSepolia,
-			},
-		},
-	}
 
-	for _, lt := range listTests {
-		t.Run(lt.name, func(t *testing.T) {
-			chains := lt.function()
-			require.ElementsMatch(t, lt.expected, chains)
-		})
-	}
+func TestDefaultChainList(t *testing.T) {
+	require.ElementsMatch(t, []*chains.Chain{
+		&chains.BitcoinMainnet,
+		&chains.BscMainnet,
+		&chains.Ethereum,
+		&chains.BitcoinTestnet,
+		&chains.Mumbai,
+		&chains.Amoy,
+		&chains.BscTestnet,
+		&chains.Goerli,
+		&chains.Sepolia,
+		&chains.BitcoinRegtest,
+		&chains.GoerliLocalnet,
+		&chains.ZetaChainMainnet,
+		&chains.ZetaChainTestnet,
+		&chains.ZetaChainDevnet,
+		&chains.ZetaChainPrivnet,
+		&chains.Polygon,
+		&chains.OptimismMainnet,
+		&chains.OptimismSepolia,
+		&chains.BaseMainnet,
+		&chains.BaseSepolia,
+	}, chains.DefaultChainsList())
+}
+
+func TestExternalChainList(t *testing.T) {
+	require.ElementsMatch(t, []*chains.Chain{
+		&chains.BitcoinMainnet,
+		&chains.BscMainnet,
+		&chains.Ethereum,
+		&chains.BitcoinTestnet,
+		&chains.Mumbai,
+		&chains.Amoy,
+		&chains.BscTestnet,
+		&chains.Goerli,
+		&chains.Sepolia,
+		&chains.BitcoinRegtest,
+		&chains.GoerliLocalnet,
+		&chains.Polygon,
+		&chains.OptimismMainnet,
+		&chains.OptimismSepolia,
+		&chains.BaseMainnet,
+		&chains.BaseSepolia,
+	}, chains.ExternalChainList([]chains.Chain{}))
 }
 
 func TestZetaChainFromChainID(t *testing.T) {
