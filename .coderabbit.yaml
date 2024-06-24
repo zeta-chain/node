@@ -1,0 +1,20 @@
+reviews:
+  path_filters:
+    - "**/*.pb.go"
+    - "**/*.pb.gw.go"
+  path_instructions:
+    - path: '**/*.go'
+      instructions: >-
+        Review the Go code, point out issues relative to principles of clean
+        code, expressiveness, and performance.
+    - path: '**/*.proto'
+      instructions: >-
+        Review the Protobuf definitions, point out issues relative to
+        compatibility, and expressiveness.
+    - path: '**/*.sh'
+      instructions: >-
+          Review the shell scripts, point out issues relative to security,
+          performance, and maintainability.
+  auto_review:
+    base_branches:
+      - develop

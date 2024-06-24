@@ -218,7 +218,7 @@ func (tss *TSS) Sign(
 	digest []byte,
 	height uint64,
 	nonce uint64,
-	chain *chains.Chain,
+	chainID int64,
 	optionalPubKey string,
 ) ([65]byte, error) {
 	H := digest
@@ -250,8 +250,8 @@ func (tss *TSS) Sign(
 		// post blame data if enabled
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := hex.EncodeToString(digest)
-			index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
-			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			index := observertypes.GetBlameIndex(chainID, nonce, digest, height)
+			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chainID, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [65]byte{}, err
@@ -304,7 +304,7 @@ func (tss *TSS) Sign(
 
 // SignBatch is hash of some data
 // digest should be batch of hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *chains.Chain) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -326,8 +326,8 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 		// post blame data if enabled
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := combineDigests(digestBase64)
-			index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
-			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			index := observertypes.GetBlameIndex(chainID, nonce, hex.EncodeToString(digest), height)
+			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chainID, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [][65]byte{}, err

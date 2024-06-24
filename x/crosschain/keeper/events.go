@@ -53,7 +53,6 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	if err != nil {
 		ctx.Logger().Error("Error emitting ZetaWithdrawCreated :", err)
 	}
-
 }
 
 func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {
@@ -67,7 +66,6 @@ func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string
 	if err != nil {
 		ctx.Logger().Error("Error emitting MsgVoteOutbound :", err)
 	}
-
 }
 
 func EmitOutboundFailure(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {

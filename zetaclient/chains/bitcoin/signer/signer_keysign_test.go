@@ -15,7 +15,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -147,7 +146,7 @@ func getTSSTX(
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(witnessHash, 10, 10, &chains.Chain{}, "")
+	sig65B, err := tss.Sign(witnessHash, 10, 10, 0, "")
 	R := big.NewInt(0).SetBytes(sig65B[:32])
 	S := big.NewInt(0).SetBytes(sig65B[32:64])
 	sig := btcec.Signature{

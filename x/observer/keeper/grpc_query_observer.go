@@ -46,5 +46,4 @@ func (k Keeper) ObserverSet(
 	return &types.QueryObserverSetResponse{
 		Observers: observerSet.ObserverList,
 	}, nil
-
 }

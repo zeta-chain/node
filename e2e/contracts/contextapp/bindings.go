@@ -28,8 +28,7 @@ var (
 )
 
 func init() {
-	err := json.Unmarshal(ContextAppJSON, &ContextAppContract)
-	if err != nil {
+	if err := json.Unmarshal(ContextAppJSON, &ContextAppContract); err != nil {
 		panic(err)
 	}
 
