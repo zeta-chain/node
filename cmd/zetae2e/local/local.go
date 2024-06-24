@@ -2,14 +2,13 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/zetacore/testutil"
 	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
@@ -42,6 +41,8 @@ const (
 var (
 	TestTimeout = 15 * time.Minute
 )
+
+var noError = testutil.NoError
 
 // NewLocalCmd returns the local command
 // which runs the E2E tests locally on the machine with localnet for each blockchain
@@ -109,28 +110,30 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}()
 
 	// initialize tests config
-	conf := must(GetConfig(cmd))
+	conf, err := GetConfig(cmd)
+	noError(err)
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// wait for a specific height on ZetaChain
 	if waitForHeight != 0 {
-		ensure(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
+		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
 
 	// set account prefix to zeta
 	setCosmosConfig()
 
-	zetaTxServer := must(txserver.NewZetaTxServer(
+	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.FungibleAdminName},
 		[]string{UserFungibleAdminPrivateKey},
 		conf.ZetaChainID,
-	))
+	)
+	noError(err)
 
 	// initialize deployer runner with config
-	deployerRunner := must(zetae2econfig.RunnerFromConfig(
+	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
@@ -139,7 +142,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		DeployerPrivateKey,
 		logger,
 		runner.WithZetaTxServer(zetaTxServer),
-	))
+	)
+	noError(err)
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -148,12 +152,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// query and set the TSS
-	if err := deployerRunner.SetTSSAddresses(); err != nil {
-		exit(err)
-	}
+	noError(deployerRunner.SetTSSAddresses())
 
 	if !skipHeaderProof {
-		ensure(deployerRunner.EnableHeaderVerification([]int64{
+		noError(deployerRunner.EnableHeaderVerification([]int64{
 			chains.GoerliLocalnet.ChainId,
 			chains.BitcoinRegtest.ChainId,
 		}))
@@ -166,7 +168,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
-		ensure(deployerRunner.FundEmissionsPool())
+		noError(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(10000)
 
@@ -178,8 +180,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
 
 		// write config into stdout
-		configOut := must(filepath.Abs(configOut))
-		ensure(config.WriteConfig(configOut, newConfig))
+		configOut, err := filepath.Abs(configOut)
+		noError(err)
+
+		noError(config.WriteConfig(configOut, newConfig))
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
@@ -353,24 +357,5 @@ func waitKeygenHeight(
 }
 
 func must[T any](v T, err error) T {
-	if err != nil {
-		exit(err)
-	}
-
-	return v
-}
-
-func exit(err error) {
-	fmt.Printf("Unable to continue execution: %s. Stacktrace: \n", err)
-	for _, line := range assert.CallerInfo() {
-		fmt.Println(" ", line)
-	}
-
-	os.Exit(1)
-}
-
-func ensure(err error) {
-	if err != nil {
-		exit(err)
-	}
+	return testutil.Must(v, err)
 }

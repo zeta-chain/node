@@ -16,8 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/zetacore/testutil"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/app"
@@ -47,6 +47,8 @@ type stressArguments struct {
 }
 
 var stressTestArgs = stressArguments{}
+
+var noError = testutil.NoError
 
 func NewStressTestCmd() *cobra.Command {
 	var StressCmd = &cobra.Command{
@@ -140,7 +142,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	))
 
 	// setup TSS addresses
-	ensure(e2eTest.SetTSSAddresses())
+	noError(e2eTest.SetTSSAddresses())
 	e2eTest.SetupEVM(stressTestArgs.contractsDeployed, true)
 
 	// If stress test is running on local docker environment
@@ -158,7 +160,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 		e2eTest.ETHZRC20 = must(zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZEVMClient))
 	default:
-		exit(errors.New("invalid network argument: " + stressTestArgs.network))
+		noError(errors.New("invalid network argument: " + stressTestArgs.network))
 	}
 
 	// Check zrc20 balance of Deployer address
@@ -316,24 +318,5 @@ func getChainID(client *ethclient.Client) (*big.Int, error) {
 }
 
 func must[T any](v T, err error) T {
-	if err != nil {
-		exit(err)
-	}
-
-	return v
-}
-
-func exit(err error) {
-	fmt.Printf("Unable to continue execution: %s. Stacktrace: \n", err)
-	for _, line := range assert.CallerInfo() {
-		fmt.Println(" ", line)
-	}
-
-	os.Exit(1)
-}
-
-func ensure(err error) {
-	if err != nil {
-		exit(err)
-	}
+	return testutil.Must(v, err)
 }
