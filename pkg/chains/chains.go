@@ -372,6 +372,31 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 }
 
+// CombineChainList combines a list of chains with a list of chains
+// duplicated chain ID are overwritten by the second list
+func CombineChainList(chains1 []*Chain, chains2 []*Chain) []*Chain {
+	combined := make([]*Chain, 0)
+	combined = append(combined, chains1...)
+
+	// map chain ID in chains1 to index in the list
+	chainIDIndexMap := make(map[int64]int)
+	for i, chain := range combined {
+		chainIDIndexMap[chain.ChainId] = i
+	}
+
+	// add chains2 to combined
+	// if chain ID already exists in chains1, overwrite it
+	for _, chain := range chains2 {
+		if index, ok := chainIDIndexMap[chain.ChainId]; ok {
+			combined[index] = chain
+		} else {
+			combined = append(combined, chain)
+		}
+	}
+
+	return combined
+}
+
 // TODO : https://github.com/zeta-chain/node/issues/2080
 // remove the usage of this function
 // chainListPointers returns a list of chain pointers
