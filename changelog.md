@@ -66,7 +66,9 @@
 * [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
 * [2360](https://github.com/zeta-chain/node/pull/2360) - add stateful e2e tests.
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
+* [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
+
 
 ### Fixes
 

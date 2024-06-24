@@ -3,11 +3,11 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
-	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -17,21 +17,10 @@ import (
 
 // TestStressBTCWithdraw tests the stressing withdraw of btc
 func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
-	if len(args) != 2 {
-		panic(
-			"TestStressBTCWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.",
-		)
-	}
+	require.Len(r, args, 2)
 
-	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		panic("Invalid withdrawal amount specified for TestStressBTCWithdraw.")
-	}
-
-	numWithdraws, err := strconv.Atoi(args[1])
-	if err != nil || numWithdraws < 1 {
-		panic("Invalid number of withdrawals specified for TestStressBTCWithdraw.")
-	}
+	withdrawalAmount := parseFloat(r, args[0])
+	numWithdraws := parseInt(r, args[1])
 
 	r.SetBtcAddress(r.Name, false)
 
@@ -41,9 +30,7 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	var eg errgroup.Group
 
 	satAmount, err := btcutil.NewAmount(withdrawalAmount)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
@@ -53,25 +40,16 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 			[]byte(r.BTCDeployerAddress.EncodeAddress()),
 			big.NewInt(int64(satAmount)),
 		)
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(r, err)
+
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-		if receipt.Status == 0 {
-			//r.Logger.Info("index %d: withdraw evm tx failed", index)
-			panic(fmt.Sprintf("index %d: withdraw btc tx %s failed", i, tx.Hash().Hex()))
-		}
+		utils.RequireTxSuccessful(r, receipt)
 		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
-		eg.Go(func() error {
-			return monitorBTCWithdraw(r, tx, i, time.Now())
-		})
+		eg.Go(func() error { return monitorBTCWithdraw(r, tx, i, time.Now()) })
 	}
 
-	// wait for all the withdraws to complete
-	if err := eg.Wait(); err != nil {
-		panic(err)
-	}
+	require.NoError(r, eg.Wait())
 
 	r.Logger.Print("all withdraws completed")
 }
