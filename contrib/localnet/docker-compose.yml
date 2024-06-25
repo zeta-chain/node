@@ -18,6 +18,9 @@ services:
     image: zetanode:latest
     container_name: rosetta
     hostname: rosetta
+    depends_on:
+      zetacore0:
+        condition: service_healthy
     ports:
       - "8080:8080"
     networks:

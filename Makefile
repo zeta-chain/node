@@ -206,7 +206,7 @@ generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 
 
 ###############################################################################
-###                         localnet                          				###
+###                         Localnet                          				###
 ###############################################################################
 start-localnet: zetanode start-localnet-skip-build
 
@@ -250,12 +250,17 @@ start-e2e-performance-test: zetanode
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
-	export ZETACORED_START_PERIOD=30m && \
+	export ZETACORED_START_PERIOD=15m && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
 
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stress.yml up -d
+
+###############################################################################
+###                         Upgrade Tests              						###
+###############################################################################
+
 
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
@@ -275,14 +280,13 @@ start-upgrade-test-light: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-e2e-import-mainnet-upgrade: zetanode-upgrade
+start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
-	export ZETACORED_START_PERIOD=30m && \
+	export ZETACORED_START_PERIOD=15m && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
-#&& ./scripts/import-data.sh mainnet
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
 ###############################################################################
 ###                              Monitoring                                 ###
 ###############################################################################

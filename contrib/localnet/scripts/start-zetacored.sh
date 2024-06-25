@@ -248,6 +248,7 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
 
+#  TODO : USE --modify flag to modify the genesis file when v18 is released
   if [[ -n "$ZETACORED_IMPORT_GENESIS_DATA" ]]; then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
