@@ -3,6 +3,7 @@ package zetacore
 import (
 	"context"
 	"fmt"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"sort"
 	"time"
 
@@ -465,6 +466,15 @@ func (c *Client) GetSupportedChains() ([]*chains.Chain, error) {
 		return nil, err
 	}
 	return resp.GetChains(), nil
+}
+
+func (c *Client) GetAdditionalChains() ([]chains.Chain, error) {
+	client := authoritytypes.NewQueryClient(c.grpcConn)
+	resp, err := client.ChainInfo(context.Background(), &authoritytypes.QueryGetChainInfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetChainInfo().Chains, nil
 }
 
 func (c *Client) GetPendingNonces() (*observertypes.QueryAllPendingNoncesResponse, error) {

@@ -52,6 +52,7 @@ func getAppContext(
 		nil,
 		"",
 		*sample.CrosschainFlags(),
+		[]chains.Chain{},
 		sample.HeaderSupportedChains(),
 		true,
 		zerolog.Logger{},

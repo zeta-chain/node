@@ -23,6 +23,10 @@ type ZetacoreContext struct {
 	currentTssPubkey   string
 	crosschainFlags    observertypes.CrosschainFlags
 
+	// additionalChains is a list of additional static chain information to use when searching from chain IDs
+	// it is stored in the protocol to dynamically support new chains without doing an upgrade
+	additionalChain []chains.Chain
+
 	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
 	// All chains in this list will have Enabled flag set to true
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
@@ -129,7 +133,7 @@ func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 		return chains.Chain{}, nil, false
 	}
 
-	chain := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId)
+	chain := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId, c.additionalChain)
 	if chain == nil {
 		return chains.Chain{}, nil, false
 	}
@@ -137,10 +141,18 @@ func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 	return *chain, c.bitcoinChainParams, true
 }
 
+// GetCrossChainFlags returns cross chain flags
 func (c *ZetacoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	return c.crosschainFlags
+}
+
+// GetAdditionalChains returns additional chains
+func (c *ZetacoreContext) GetAdditionalChains() []chains.Chain {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	return c.additionalChain
 }
 
 // GetAllHeaderEnabledChains returns all verification flags
@@ -171,6 +183,7 @@ func (c *ZetacoreContext) Update(
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
+	additionalChains []chains.Chain,
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
 	init bool,
 	logger zerolog.Logger,
@@ -214,6 +227,7 @@ func (c *ZetacoreContext) Update(
 
 	c.chainsEnabled = newChains
 	c.crosschainFlags = crosschainFlags
+	c.additionalChain = additionalChains
 	c.blockHeaderEnabledChains = blockHeaderEnabledChains
 
 	// update chain params for bitcoin if it has config in file

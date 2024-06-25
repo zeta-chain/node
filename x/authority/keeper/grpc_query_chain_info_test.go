@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,8 +22,11 @@ func TestKeeper_ChainInfo(t *testing.T) {
 	t.Run("chain info not found", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
-		_, err := k.ChainInfo(ctx, &types.QueryGetChainInfoRequest{})
-		require.ErrorContains(t, err, "chain info not found")
+		chainInfo, err := k.ChainInfo(ctx, &types.QueryGetChainInfoRequest{})
+		require.NoError(t, err)
+		require.Equal(t, chainInfo, types.ChainInfo{
+			Chains: []chains.Chain{},
+		})
 	})
 
 	t.Run("can retrieve chain info", func(t *testing.T) {

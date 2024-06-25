@@ -213,6 +213,11 @@ func (c *Client) UpdateZetacoreContext(
 		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 
+	additionalChains, err := c.GetAdditionalChains()
+	if err != nil {
+		return fmt.Errorf("failed to additional chains: %w", err)
+	}
+
 	chainParams, err := c.GetChainParams()
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
@@ -228,9 +233,9 @@ func (c *Client) UpdateZetacoreContext(
 			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
-		if chains.IsBitcoinChain(chainParam.ChainId) {
+		if chains.IsBitcoinChain(chainParam.ChainId, additionalChains) {
 			newBTCParams = chainParam
-		} else if chains.IsEVMChain(chainParam.ChainId) {
+		} else if chains.IsEVMChain(chainParam.ChainId, additionalChains) {
 			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}
@@ -275,6 +280,7 @@ func (c *Client) UpdateZetacoreContext(
 		newBTCParams,
 		tssPubKey,
 		crosschainFlags,
+		additionalChains,
 		blockHeaderEnabledChains,
 		init,
 		c.logger,

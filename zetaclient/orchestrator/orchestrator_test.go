@@ -80,6 +80,7 @@ func CreateCoreContext(
 		btcChainParams,
 		"",
 		*ccFlags,
+		[]chains.Chain{},
 		verificationFlags,
 		true,
 		zerolog.Logger{},
