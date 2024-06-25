@@ -242,7 +242,11 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 }
 
 // getEVMClient get evm client from rpc and private key
-func getEVMClient(ctx context.Context, rpc string, account config.Account) (*ethclient.Client, *bind.TransactOpts, error) {
+func getEVMClient(
+	ctx context.Context,
+	rpc string,
+	account config.Account,
+) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
 		return nil, nil, err

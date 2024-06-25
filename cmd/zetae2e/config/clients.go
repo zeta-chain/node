@@ -90,7 +90,11 @@ func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
 }
 
 // getEVMClient get evm client
-func getEVMClient(ctx context.Context, rpc string, account config.Account) (*ethclient.Client, *bind.TransactOpts, error) {
+func getEVMClient(
+	ctx context.Context,
+	rpc string,
+	account config.Account,
+) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial evm client: %w", err)
