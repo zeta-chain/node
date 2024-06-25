@@ -286,7 +286,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 ###############################################################################
 ###                              Monitoring                                 ###
 ###############################################################################
