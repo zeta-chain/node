@@ -384,7 +384,7 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			log.Warn().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)
+			log.Error().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)
 		}
 		return nil, nil, false
 	}
@@ -394,10 +394,15 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	}
 
 	// check confirmations
-	if !ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()) {
+	lastHeight, err := ob.evmClient.BlockNumber(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msgf("confirmTxByHash: error getting block number for chain %d", ob.chain.ChainId)
+		return nil, nil, false
+	}
+	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
 		log.Debug().
 			Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
-				txHash, nonce, receipt.BlockNumber, ob.GetLastBlockHeight())
+				txHash, nonce, receipt.BlockNumber, lastHeight)
 		return nil, nil, false
 	}
 
