@@ -147,7 +147,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		)
 	}
 
-	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
+	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to convert chainID: %s", err.Error())
 	}
@@ -231,7 +231,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		return types.ErrUnableToSendCoinType
 	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
-	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
+	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}

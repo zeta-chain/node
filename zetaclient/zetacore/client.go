@@ -82,7 +82,7 @@ func NewClient(
 		seqMap[keyType] = 0
 	}
 
-	zetaChain, err := chains.ZetaChainFromChainID(chainID)
+	zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid chain id %s, %w", chainID, err)
 	}
@@ -110,7 +110,7 @@ func (c *Client) UpdateChainID(chainID string) error {
 	if c.chainID != chainID {
 		c.chainID = chainID
 
-		zetaChain, err := chains.ZetaChainFromChainID(chainID)
+		zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 		if err != nil {
 			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
 		}

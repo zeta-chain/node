@@ -77,6 +77,8 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 }
 
 // DecodeAddressFromChainID decode the address string to bytes
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Chain) ([]byte, error) {
 	if IsEVMChain(chainID, additionalChains) {
 		return ethcommon.HexToAddress(addr).Bytes(), nil
@@ -87,26 +89,36 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 }
 
 // IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsEVMChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_ethereum, additionalChains))
 }
 
 // IsBitcoinChain returns true if the chain is a Bitcoin-based chain or uses the bitcoin consensus mechanism for block finality
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsEthereumChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_eth, additionalChains))
 }
 
 // IsZetaChain returns true if the chain is a Zeta chain
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsZetaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_zeta, additionalChains))
 }
 
 // IsHeaderSupportedChain returns true if the chain's consensus supports block header-based verification
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsHeaderSupportedChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListForHeaderSupport(additionalChains))
 }
@@ -122,6 +134,8 @@ func (chain Chain) IsEmpty() bool {
 }
 
 // GetChainFromChainID returns the chain from the chain ID
+// additionalChains is a list of additional chains to search from
+// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func GetChainFromChainID(chainID int64, additionalChains []Chain) *Chain {
 	chains := CombineDefaultChainsList(additionalChains)
 	for _, chain := range chains {

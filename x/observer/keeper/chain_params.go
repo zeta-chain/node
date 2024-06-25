@@ -51,7 +51,7 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *ch
 
 	for _, cp := range cpl.ChainParams {
 		if cp.ChainId == chainID && cp.IsSupported {
-			return chains.GetChainFromChainID(chainID)
+			return chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetChainList(ctx))
 		}
 	}
 	return nil
@@ -67,7 +67,7 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) []*chains.Chain {
 	var c []*chains.Chain
 	for _, cp := range cpl.ChainParams {
 		if cp.IsSupported {
-			c = append(c, chains.GetChainFromChainID(cp.ChainId))
+			c = append(c, chains.GetChainFromChainID(cp.ChainId, k.GetAuthorityKeeper().GetChainList(ctx)))
 		}
 	}
 	return c

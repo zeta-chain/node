@@ -27,7 +27,7 @@ func (k msgServer) ResetChainNonces(
 		return nil, types.ErrTssNotFound
 	}
 
-	chain := chains.GetChainFromChainID(msg.ChainId)
+	chain := chains.GetChainFromChainID(msg.ChainId, k.GetAuthorityKeeper().GetChainList(ctx))
 	if chain == nil {
 		return nil, types.ErrSupportedChains
 	}

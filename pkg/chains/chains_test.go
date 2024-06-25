@@ -156,7 +156,7 @@ func TestExternalChainList(t *testing.T) {
 	}, chains.ExternalChainList([]chains.Chain{}))
 }
 
-func TestZetaChainFromChainID(t *testing.T) {
+func TestZetaChainFromCosmosChainID(t *testing.T) {
 	tests := []struct {
 		name     string
 		chainID  string
@@ -203,9 +203,63 @@ func TestZetaChainFromChainID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			result, err := chains.ZetaChainFromCosmosChainID(tt.chainID)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Equal(t, chains.Chain{}, result)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestZetaChainFromChainID(t *testing.T) {
+	tests := []struct {
+		name     string
+		chainID  int64
+		expected chains.Chain
+		wantErr  bool
+	}{
+		{
+			name:     "ZetaChainMainnet",
+			chainID:  7000,
+			expected: chains.ZetaChainMainnet,
+			wantErr:  false,
+		},
+		{
+			name:     "ZetaChainTestnet",
+			chainID:  7001,
+			expected: chains.ZetaChainTestnet,
+			wantErr:  false,
+		},
+		{
+			name:     "ZetaChainDevnet",
+			chainID:  70000,
+			expected: chains.ZetaChainDevnet,
+			wantErr:  false,
+		},
+		{
+			name:     "ZetaChainPrivnet",
+			chainID:  101,
+			expected: chains.ZetaChainPrivnet,
+			wantErr:  false,
+		},
+		{
+			name:     "unknown chain",
+			chainID:  1234,
+			expected: chains.Chain{},
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			result, err := chains.ZetaChainFromChainID(tt.chainID)
 			if tt.wantErr {
 				require.Error(t, err)
+				require.ErrorIs(t, err, chains.ErrNotZetaChain)
 				require.Equal(t, chains.Chain{}, result)
 			} else {
 				require.NoError(t, err)

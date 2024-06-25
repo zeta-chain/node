@@ -265,6 +265,9 @@ var (
 	}
 )
 
+// ErrNotZetaChain is the error for chain not being a ZetaChain chain
+var ErrNotZetaChain = fmt.Errorf("chain is not a ZetaChain chain")
+
 // BtcNonceMarkOffset is the offset satoshi amount to calculate the nonce mark output
 func BtcNonceMarkOffset() int64 {
 	return 2000
@@ -351,14 +354,19 @@ func ChainListForHeaderSupport(additionalChains []Chain) []*Chain {
 	return chainList
 }
 
-// ZetaChainFromChainID returns a ZetaChain chain object  from a Cosmos chain ID
-func ZetaChainFromChainID(chainID string) (Chain, error) {
+// ZetaChainFromCosmosChainID returns a ZetaChain chain object from a Cosmos chain ID
+func ZetaChainFromCosmosChainID(chainID string) (Chain, error) {
 	ethChainID, err := CosmosToEthChainID(chainID)
 	if err != nil {
 		return Chain{}, err
 	}
 
-	switch ethChainID {
+	return ZetaChainFromChainID(ethChainID)
+}
+
+// ZetaChainFromChainID returns a ZetaChain chain object from a chain ID
+func ZetaChainFromChainID(chainID int64) (Chain, error) {
+	switch chainID {
 	case ZetaChainPrivnet.ChainId:
 		return ZetaChainPrivnet, nil
 	case ZetaChainMainnet.ChainId:
@@ -368,7 +376,7 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	case ZetaChainDevnet.ChainId:
 		return ZetaChainDevnet, nil
 	default:
-		return Chain{}, fmt.Errorf("chain %d not found", ethChainID)
+		return Chain{}, ErrNotZetaChain
 	}
 }
 
