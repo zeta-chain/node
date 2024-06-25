@@ -83,7 +83,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e local $E2E_ARGS --setup-only --config-out deployed.yml --skip-header-proof
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -159,7 +159,7 @@ else
   echo "running e2e setup..."
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e local $E2E_ARGS --setup-only --config-out deployed.yml
+    zetae2e local $E2E_ARGS --config config.yml --setup-only --config-out deployed.yml
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
