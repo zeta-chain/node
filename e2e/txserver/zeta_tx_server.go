@@ -118,7 +118,7 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		txFactory:    txf,
 		name:         names,
 		address:      addresses,
-		blockTimeout: 1 * time.Minute,
+		blockTimeout: 2 * time.Minute,
 	}, nil
 }
 
@@ -199,7 +199,6 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 	if err != nil {
 		return nil, err
 	}
-
 	return broadcastWithBlockTimeout(zts, txBytes)
 }
 
@@ -266,14 +265,10 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 		return err
 	}
 
-	broadcastTx, err := zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
+	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
 		addr.String(),
 		chainIDList,
 	))
-	if err != nil {
-		fmt.Println("Error enabling header verification :", broadcastTx.TxHash)
-	}
-
 	return err
 }
 

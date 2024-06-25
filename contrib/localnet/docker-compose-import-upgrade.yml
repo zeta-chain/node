@@ -1,5 +1,4 @@
 version: "3"
-
 # This docker-compose redefine the services:
 # - ZetaChain with 2 nodes (zetacore0, zetacore1) using the upgrade option for cosmovisor
 # - ZetaChain observer set with 2 clients (zetaclient0, zetaclient1) using the background option
@@ -8,25 +7,17 @@ version: "3"
 services:
   zetacore0:
     image: zetanode:old
-    entrypoint: ["/root/start-zetacored.sh", "2","import-data"]
     volumes:
       - ~/genesis_export/:/root/genesis_data
 
   zetacore1:
     image: zetanode:old
-    entrypoint: ["/root/start-zetacored.sh", "2","import-data"]
 
   zetaclient0:
-    entrypoint: ["/root/start-zetaclientd.sh"]
     image: zetanode:old
 
   zetaclient1:
-    entrypoint: ["/root/start-zetaclientd.sh"]
     image: zetanode:old
-
-  orchestrator:
-    entrypoint: ["/work/start-zetae2e.sh", "local", "upgrade"]
-    image: orchestrator
 
   upgrade-host:
     image: zetanode:latest
@@ -44,12 +35,14 @@ services:
     image: zetanode:old
     container_name: upgrade-orchestrator
     hostname: upgrade-orchestrator
-    entrypoint: ["/root/start-upgrade-orchestrator.sh", "225"]
+    entrypoint: ["/root/start-upgrade-orchestrator.sh"]
     networks:
       mynetwork:
         ipv4_address: 172.20.0.251
     depends_on:
       - zetacore0
       - upgrade-host
+    environment:
+      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT}
     volumes:
       - ssh:/root/.ssh

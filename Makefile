@@ -247,6 +247,12 @@ start-e2e-performance-test: zetanode
 	export E2E_ARGS="--test-performance" && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
 
+start-e2e-import-mainnet-test: zetanode
+	@echo "--> Starting e2e import-data test"
+	export ZETACORED_IMPORT_GENESIS_DATA=true && \
+	export ZETACORED_START_PERIOD=30m && \
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
+
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stress.yml up -d
@@ -269,18 +275,13 @@ start-upgrade-test-light: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-
-start-e2e-import-mainnet-test: zetanode
-	@echo "--> Starting e2e import-data test"
-	export ZETACORED_IMPORT_GENESIS_DATA=true && \
-	export ZETACORED_START_PERIOD=30m && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
-
 start-e2e-import-mainnet-upgrade: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
+	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=30m && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	export UPGRADE_HEIGHT=225 && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-import-upgrade.yml up -d
 #&& ./scripts/import-data.sh mainnet
 ###############################################################################
 ###                              Monitoring                                 ###
