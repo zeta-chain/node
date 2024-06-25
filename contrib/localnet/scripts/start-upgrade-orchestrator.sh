@@ -1,7 +1,5 @@
 #!/bin/bash
 
-UPGRADE_HEIGHT=$1
-
 CHAINID="athens_101-1"
 UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 

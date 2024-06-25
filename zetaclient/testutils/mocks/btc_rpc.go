@@ -17,7 +17,9 @@ var _ interfaces.BTCRPCClient = &MockBTCRPCClient{}
 
 // MockBTCRPCClient is a mock implementation of the BTCRPCClient interface
 type MockBTCRPCClient struct {
-	Txs []*btcutil.Tx
+	err        error
+	blockCount int64
+	Txs        []*btcutil.Tx
 }
 
 // NewMockBTCRPCClient creates a new mock BTC RPC client
@@ -28,6 +30,10 @@ func NewMockBTCRPCClient() *MockBTCRPCClient {
 
 // Reset clears the mock data
 func (c *MockBTCRPCClient) Reset() *MockBTCRPCClient {
+	if c.err != nil {
+		return nil
+	}
+
 	c.Txs = []*btcutil.Tx{}
 	return c
 }
@@ -95,7 +101,10 @@ func (c *MockBTCRPCClient) GetRawTransactionVerbose(_ *chainhash.Hash) (*btcjson
 }
 
 func (c *MockBTCRPCClient) GetBlockCount() (int64, error) {
-	return 0, errors.New("not implemented")
+	if c.err != nil {
+		return 0, c.err
+	}
+	return c.blockCount, nil
 }
 
 func (c *MockBTCRPCClient) GetBlockHash(_ int64) (*chainhash.Hash, error) {
@@ -117,6 +126,16 @@ func (c *MockBTCRPCClient) GetBlockHeader(_ *chainhash.Hash) (*wire.BlockHeader,
 // ----------------------------------------------------------------------------
 // Feed data to the mock BTC RPC client for testing
 // ----------------------------------------------------------------------------
+
+func (c *MockBTCRPCClient) WithError(err error) *MockBTCRPCClient {
+	c.err = err
+	return c
+}
+
+func (c *MockBTCRPCClient) WithBlockCount(blkCnt int64) *MockBTCRPCClient {
+	c.blockCount = blkCnt
+	return c
+}
 
 func (c *MockBTCRPCClient) WithRawTransaction(tx *btcutil.Tx) *MockBTCRPCClient {
 	c.Txs = append(c.Txs, tx)

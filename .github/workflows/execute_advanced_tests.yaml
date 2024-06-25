@@ -39,7 +39,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Start Test
         run: make start-e2e-admin-test
@@ -50,6 +50,11 @@ jobs:
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
+        
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          make stop-localnet
 
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'
@@ -77,6 +82,11 @@ jobs:
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
 
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          make stop-localnet
+
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'
         uses: 8398a7/action-slack@v3
@@ -103,14 +113,10 @@ jobs:
           docker logs -f "${container_id}" &
           exit $(docker wait "${container_id}")
 
-      - name: Notify Slack on Failure
-        if: failure() && github.event_name == 'schedule'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          make stop-localnet
 
   e2e-performance-test:
     if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
@@ -158,8 +164,7 @@ jobs:
       - name: Full Log Dump On Failure
         if: failure()
         run: |
-          cd contrib/localnet
-          docker compose logs
+          make stop-localnet
 
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'schedule'

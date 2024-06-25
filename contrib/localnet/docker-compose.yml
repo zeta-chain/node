@@ -1,5 +1,3 @@
-version: "3"
-
 # This docker-compose file configures the localnet environment
 # it contains the following services:
 # - ZetaChain with 2 nodes (zetacore0, zetacore1)
@@ -46,17 +44,20 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: ${ZETACORED_START_PERIOD}
       start_interval: 1s
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/start-zetacored.sh", "2"]
+    entrypoint: ["/root/start-zetacored.sh"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - ZETACORED_REPLICAS=2
+      - ZETACORED_IMPORT_GENESIS_DATA=${ZETACORED_IMPORT_GENESIS_DATA}
     volumes:
       - ssh:/root/.ssh
+      - ~/.zetacored/genesis_data:/root/genesis_data
 
   zetacore1:
     image: zetanode:latest
@@ -65,10 +66,11 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/start-zetacored.sh", "2"]
+    entrypoint: ["/root/start-zetacored.sh"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - ZETACORED_REPLICAS=2
     volumes:
       - ssh:/root/.ssh
 
@@ -146,6 +148,10 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.2
     entrypoint: ["/work/start-zetae2e.sh", "local"]
+    environment:
+      - LOCALNET_MODE=${LOCALNET_MODE}
+      - E2E_ARGS=${E2E_ARGS}
+      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT}
     volumes:
       - ssh:/root/.ssh
 volumes:

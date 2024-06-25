@@ -24,6 +24,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 )
@@ -66,6 +67,7 @@ func SetupHandlers(app *App) {
 		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		emissionstypes.ModuleName,
+		authoritytypes.ModuleName,
 	}
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{

@@ -129,7 +129,6 @@ func ImportDataIntoFile(
 	cdc codec.Codec,
 	modifyEnabled bool,
 ) error {
-
 	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
 	if err != nil {
 		return err

@@ -156,7 +156,6 @@ func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 // GetAllAccountAddress returns all account addresses
 func (zts ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
-
 }
 
 // GetAccountMnemonic returns the account name from the given index
@@ -267,10 +266,13 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 		return err
 	}
 
-	_, err = zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
+	tx, err := zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
 		addr.String(),
 		chainIDList,
 	))
+	if err != nil {
+		fmt.Println("Error enabling header verification :", tx.TxHash)
+	}
 
 	return err
 }
