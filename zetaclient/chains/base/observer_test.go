@@ -7,6 +7,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -266,7 +267,7 @@ func TestOpenCloseDB(t *testing.T) {
 	})
 	t.Run("should use memory db if specified", func(t *testing.T) {
 		// open db with memory
-		err := ob.OpenDB(base.TempSQLiteDBPath, "")
+		err := ob.OpenDB(testutils.SQLiteMemory, "")
 		require.NoError(t, err)
 
 		// close db

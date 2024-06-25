@@ -13,16 +13,13 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
-const (
-	memDBPath = base.TempSQLiteDBPath
-)
+const memDBPath = testutils.SQLiteMemory
 
 // getContractsByChainID is a helper func to get contracts and addresses by chainID
 func getContractsByChainID(

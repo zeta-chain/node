@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -35,7 +36,7 @@ var (
 func setupDBTxResults(t *testing.T) (*gorm.DB, map[string]btcjson.GetTransactionResult) {
 	submittedTx := map[string]btcjson.GetTransactionResult{}
 
-	db, err := gorm.Open(sqlite.Open(base.TempSQLiteDBPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(testutils.SQLiteMemory), &gorm.Config{})
 	require.NoError(t, err)
 
 	err = db.AutoMigrate(&clienttypes.TransactionResultSQLType{})

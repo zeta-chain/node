@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -33,9 +34,6 @@ const (
 	// DefaultHeaderCacheSize is the default number of headers that the observer will keep in cache for performance (without RPC calls)
 	// Cached headers can be used to get header information
 	DefaultHeaderCacheSize = 1000
-
-	// TempSQLiteDBPath is the temporary in-memory SQLite database used for testing
-	TempSQLiteDBPath = "file::memory:?cache=shared"
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -307,8 +305,8 @@ func (ob *Observer) OpenDB(dbPath string, dbName string) error {
 	path := fmt.Sprintf("%s/%s", dbPath, dbName)
 
 	// use memory db if specified
-	if dbPath == TempSQLiteDBPath {
-		path = TempSQLiteDBPath
+	if strings.Contains(dbPath, ":memory:") {
+		path = dbPath
 	}
 
 	// open db
