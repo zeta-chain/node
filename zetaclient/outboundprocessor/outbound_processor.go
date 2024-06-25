@@ -13,8 +13,9 @@ type Processor struct {
 	outboundEndTime    map[string]time.Time
 	outboundActive     map[string]struct{}
 	mu                 sync.Mutex
-	Logger             zerolog.Logger
 	numActiveProcessor int64
+
+	Logger zerolog.Logger
 }
 
 func NewProcessor(logger zerolog.Logger) *Processor {
@@ -23,8 +24,8 @@ func NewProcessor(logger zerolog.Logger) *Processor {
 		outboundEndTime:    make(map[string]time.Time),
 		outboundActive:     make(map[string]struct{}),
 		mu:                 sync.Mutex{},
-		Logger:             logger.With().Str("module", "OutboundProcessor").Logger(),
 		numActiveProcessor: 0,
+		Logger:             logger.With().Str("module", "outboundProcessor").Logger(),
 	}
 }
 
