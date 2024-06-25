@@ -266,12 +266,12 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 		return err
 	}
 
-	tx, err := zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
+	broadcastTx, err := zts.BroadcastTx(account, lightclienttypes.NewMsgEnableHeaderVerification(
 		addr.String(),
 		chainIDList,
 	))
 	if err != nil {
-		fmt.Println("Error enabling header verification :", tx.TxHash)
+		fmt.Println("Error enabling header verification :", broadcastTx.TxHash)
 	}
 
 	return err

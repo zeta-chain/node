@@ -273,15 +273,15 @@ start-upgrade-test-light: zetanode-upgrade
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
-	export ZETACORED_START_PERIOD=10m && \
+	export ZETACORED_START_PERIOD=30m && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
 
 start-e2e-import-mainnet-upgrade: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
-	export ZETACORED_START_PERIOD=10m && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
-
+	export ZETACORED_START_PERIOD=30m && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+#&& ./scripts/import-data.sh mainnet
 ###############################################################################
 ###                              Monitoring                                 ###
 ###############################################################################
