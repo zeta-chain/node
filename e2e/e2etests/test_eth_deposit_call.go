@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -33,7 +32,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	gasPrice, err := evmClient.SuggestGasPrice(r.Ctx)
 	require.NoError(r, err)
 
-	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.EVMAddress())
 	require.NoError(r, err)
 
 	data := append(exampleAddr.Bytes(), []byte("hello sailors")...)
@@ -41,7 +40,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	chainID, err := evmClient.NetworkID(r.Ctx)
 	require.NoError(r, err)
 
-	deployerPrivkey, err := crypto.HexToECDSA(r.DeployerPrivateKey)
+	deployerPrivkey, err := r.Account.PrivateKey()
 	require.NoError(r, err)
 
 	signedTx, err := ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
@@ -80,7 +79,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	gasPrice, err = evmClient.SuggestGasPrice(r.Ctx)
 	require.NoError(r, err)
 
-	nonce, err = evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err = evmClient.PendingNonceAt(r.Ctx, r.EVMAddress())
 	require.NoError(r, err)
 
 	data = append(reverterAddr.Bytes(), []byte("hello sailors")...)

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -75,20 +74,13 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// get EVM address from config
-	evmAddr := conf.Accounts.EVMAddress
-	if !ethcommon.IsHexAddress(evmAddr) {
-		return errors.New("invalid EVM address")
-	}
-
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"e2e",
 		cancel,
 		conf,
-		ethcommon.HexToAddress(evmAddr),
-		conf.Accounts.EVMPrivKey,
+		conf.Accounts.Deployer,
 		logger,
 	)
 	if err != nil {

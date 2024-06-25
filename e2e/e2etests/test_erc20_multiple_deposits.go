@@ -22,7 +22,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 	require.True(r, ok)
 	require.NotZero(r, numberOfDeposits.Int64())
 
-	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	txhash := multipleDeposits(r, depositAmount, numberOfDeposits)
@@ -37,7 +37,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, cctxs, 3)
 
 	// check new balance is increased by amount * count
-	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	diff := big.NewInt(0).Sub(bal, initialBal)
@@ -61,7 +61,7 @@ func multipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
-	tx, err = depositor.RunDeposits(r.EVMAuth, r.DeployerAddress.Bytes(), r.ERC20Addr, amount, []byte{}, count)
+	tx, err = depositor.RunDeposits(r.EVMAuth, r.EVMAddress().Bytes(), r.ERC20Addr, amount, []byte{}, count)
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)

@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -54,21 +52,13 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// get EVM address from config
-	evmAddr := conf.Accounts.EVMAddress
-	if !ethcommon.IsHexAddress(evmAddr) {
-		cancel()
-		return errors.New("invalid EVM address")
-	}
-
 	// initialize deployer runner with config
 	r, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"e2e",
 		cancel,
 		conf,
-		ethcommon.HexToAddress(evmAddr),
-		conf.Accounts.EVMPrivKey,
+		conf.Accounts.Deployer,
 		logger,
 	)
 	if err != nil {

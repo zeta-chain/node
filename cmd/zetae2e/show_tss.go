@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -42,21 +40,13 @@ func runShowTSS(_ *cobra.Command, args []string) error {
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// get EVM address from config
-	evmAddr := conf.Accounts.EVMAddress
-	if !ethcommon.IsHexAddress(evmAddr) {
-		cancel()
-		return errors.New("invalid EVM address")
-	}
-
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"tss",
 		cancel,
 		conf,
-		ethcommon.HexToAddress(evmAddr),
-		conf.Accounts.EVMPrivKey,
+		conf.Accounts.Deployer,
 		logger,
 	)
 	if err != nil {

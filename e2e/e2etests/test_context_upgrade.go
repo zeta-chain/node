@@ -57,7 +57,7 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 			r.Logger.Info("  msgsender: %s", eventIter.Event.MsgSender.Hex())
 
 			found = true
-			require.Equal(r, 0, bytes.Compare(eventIter.Event.Origin, r.DeployerAddress.Bytes()), "origin mismatch")
+			require.Equal(r, 0, bytes.Compare(eventIter.Event.Origin, r.EVMAddress().Bytes()), "origin mismatch")
 
 			chainID, err := r.EVMClient.ChainID(r.Ctx)
 			require.NoError(r, err)

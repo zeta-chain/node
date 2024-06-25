@@ -12,7 +12,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -38,12 +37,10 @@ var (
 )
 
 type stressArguments struct {
-	deployerAddress    string
-	deployerPrivateKey string
-	network            string
-	txnInterval        int64
-	contractsDeployed  bool
-	config             string
+	network           string
+	txnInterval       int64
+	contractsDeployed bool
+	config            string
 }
 
 var stressTestArgs = stressArguments{}
@@ -57,10 +54,6 @@ func NewStressTestCmd() *cobra.Command {
 		Run:   StressTest,
 	}
 
-	StressCmd.Flags().
-		StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
-	StressCmd.Flags().
-		StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "LOCAL", "--network TESTNET")
 	StressCmd.Flags().
 		Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
@@ -68,8 +61,6 @@ func NewStressTestCmd() *cobra.Command {
 		BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
 	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the E2E test")
 	StressCmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
-
-	local.DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
 
 	return StressCmd
 }
@@ -93,11 +84,13 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	// initialize E2E tests config
 	conf := must(local.GetConfig(cmd))
 
+	deployerAccount := conf.Accounts.Deployer
+
 	// Initialize clients ----------------------------------------------------------------
 	evmClient := must(ethclient.Dial(conf.RPCs.EVM))
-	bal := must(evmClient.BalanceAt(context.TODO(), local.DeployerAddress, nil))
+	bal := must(evmClient.BalanceAt(context.TODO(), deployerAccount.EVMAddress(), nil))
 
-	fmt.Printf("Deployer address: %s, balance: %d Wei\n", local.DeployerAddress.Hex(), bal)
+	fmt.Printf("Deployer address: %s, balance: %d Wei\n", deployerAccount.EVMAddress().Hex(), bal)
 
 	grpcConn := must(grpc.Dial(conf.RPCs.ZetaCoreGRPC, grpc.WithInsecure()))
 
@@ -136,8 +129,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		"deployer",
 		cancel,
 		conf,
-		local.DeployerAddress,
-		local.DeployerPrivateKey,
+		conf.Accounts.Deployer,
 		logger,
 	))
 
@@ -164,7 +156,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Check zrc20 balance of Deployer address
-	ethZRC20Balance := must(e2eTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress))
+	ethZRC20Balance := must(e2eTest.ETHZRC20.BalanceOf(nil, deployerAccount.EVMAddress()))
 	fmt.Printf("eth zrc20 balance: %s Wei \n", ethZRC20Balance.String())
 
 	//Pre-approve ETH withdraw on ZEVM
@@ -179,7 +171,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	blockNum := must(e2eTest.ZEVMClient.BlockNumber(ctx))
 
 	// #nosec G701 e2eTest - always in range
-	nonce := must(e2eTest.ZEVMClient.NonceAt(ctx, local.DeployerAddress, big.NewInt(int64(blockNum))))
+	nonce := must(e2eTest.ZEVMClient.NonceAt(ctx, deployerAccount.EVMAddress(), big.NewInt(int64(blockNum))))
 
 	// #nosec G701 e2e - always in range
 	zevmNonce = big.NewInt(int64(nonce))
@@ -309,7 +301,7 @@ func WithdrawETHZRC20(r *runner.E2ERunner) {
 	ethZRC20 := r.ETHZRC20
 	r.ZEVMAuth.Nonce = zevmNonce
 
-	must(ethZRC20.Withdraw(r.ZEVMAuth, local.DeployerAddress.Bytes(), big.NewInt(100)))
+	must(ethZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), big.NewInt(100)))
 }
 
 // Get ETH based chain ID

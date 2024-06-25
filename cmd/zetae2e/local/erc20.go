@@ -19,13 +19,13 @@ func erc20TestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
+		account := conf.AdditionalAccounts.UserERC20
 		// initialize runner for erc20 test
 		erc20Runner, err := initTestRunner(
 			"erc20",
 			conf,
 			deployerRunner,
-			UserERC20Address,
-			UserERC20PrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgGreen, "erc20"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
@@ -37,7 +37,7 @@ func erc20TestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(UserERC20Address, 10)
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10)
 		erc20Runner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain

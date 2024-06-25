@@ -19,13 +19,13 @@ func miscTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
+		account := conf.AdditionalAccounts.UserMisc
 		// initialize runner for misc test
 		miscRunner, err := initTestRunner(
 			"misc",
 			conf,
 			deployerRunner,
-			UserMiscAddress,
-			UserMiscPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgCyan, "misc"),
 		)
 		if err != nil {
@@ -36,7 +36,7 @@ func miscTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserMiscAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
 		miscRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain

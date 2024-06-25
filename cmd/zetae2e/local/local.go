@@ -127,7 +127,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.FungibleAdminName},
-		[]string{UserFungibleAdminPrivateKey},
+		[]string{conf.AdditionalAccounts.UserFungibleAdmin.RawPrivateKey.String()},
 		conf.ZetaChainID,
 	)
 	noError(err)
@@ -138,8 +138,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		"deployer",
 		cancel,
 		conf,
-		DeployerAddress,
-		DeployerPrivateKey,
+		conf.Accounts.Deployer,
 		logger,
 		runner.WithZetaTxServer(zetaTxServer),
 	)
