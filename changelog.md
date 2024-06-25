@@ -28,6 +28,7 @@
 * [2319](https://github.com/zeta-chain/node/pull/2319) - use `CheckAuthorization` function in all messages
 * [2325](https://github.com/zeta-chain/node/pull/2325) - revert telemetry server changes
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
+* [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 
 ### Refactor
 
@@ -51,6 +52,7 @@
 * [2340](https://github.com/zeta-chain/node/pull/2340) - add ValidateInbound method for cctx orchestrator
 * [2344](https://github.com/zeta-chain/node/pull/2344) - group common data of EVM/Bitcoin signer and observer using base structs
 * [2357](https://github.com/zeta-chain/node/pull/2357) - integrate base Signer structure into EVM/Bitcoin Signer
+* [2359](https://github.com/zeta-chain/node/pull/2359) - integrate base Observer structure into EVM/Bitcoin Observer
 * [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
 
 ### Tests
@@ -92,6 +94,7 @@
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
+* [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
 
 ## v17.0.0
 
