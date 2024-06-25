@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	_ "embed"
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
@@ -121,25 +124,31 @@ func main() {
 		spew.Dump(tx)
 	}
 
+	pk := os.Getenv("SOLANA_WALLET_PK")
+	if pk == "" {
+		log.Fatal("SOLANA_WALLET_PK must be set (base58 encoded private key)")
+	}
+
+	privkey, err := solana.PrivateKeyFromBase58(pk)
+	if err != nil {
+		log.Fatalf("Error getting private key: %v", err)
+	}
+	fmt.Println("account public key:", privkey.PublicKey())
+
+	ethPk := os.Getenv("ETH_WALLET_PK")
+	if ethPk == "" {
+		log.Fatal("ETH_WALLET_PK must be set (hex encoded private key)")
+	}
+	privkeyBytes, err := hex.DecodeString(ethPk)
+	if err != nil {
+		log.Fatalf("Error decoding hex private key: %v", err)
+	}
+	ethPrivkey, err := crypto.ToECDSA(privkeyBytes)
+	if err != nil {
+		log.Fatalf("Error converting to ECDSA: %v", err)
+	}
+
 	{
-		//system.NewTransferInstruction()
-		//// build a deposit transaction
-		//solana.NewTransaction(
-		//	solana.Instruction{
-		//
-		//	}
-		//	)
-		pk := os.Getenv("SOLANA_WALLET_PK")
-		if pk == "" {
-			log.Fatal("SOLANA_WALLET_PK must be set (base58 encoded private key)")
-		}
-
-		privkey, err := solana.PrivateKeyFromBase58(pk)
-		if err != nil {
-			log.Fatalf("Error getting private key: %v", err)
-		}
-
-		fmt.Println("account public key:", privkey.PublicKey())
 		bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
 		if err != nil {
 			log.Fatalf("Error getting balance: %v", err)
@@ -232,6 +241,119 @@ func main() {
 		//	panic(err)
 		//}
 		//spew.Dump(sig)
+	}
+
+	{
+		fmt.Printf("Build and broadcast a withdraw tx\n")
+		type WithdrawInstructionParams struct {
+			Discriminator [8]byte
+			Amount        uint64
+			Signature     [64]byte
+			RecoveryID    uint8
+			MessageHash   [32]byte
+			Nonce         uint64
+		}
+		// fetch PDA account
+		programId := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
+		seed := []byte("meta")
+		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("computed pda: %s, bump %d\n", pdaComputed, bump)
+		type PdaInfo struct {
+			Discriminator [8]byte
+			Nonce         uint64
+			TssAddress    [20]byte
+			Authority     [32]byte
+		}
+		pdaInfo, err := client.GetAccountInfo(context.TODO(), pdaComputed)
+		if err != nil {
+			panic(err)
+		}
+		var pda PdaInfo
+		borsh.Deserialize(&pda, pdaInfo.Bytes())
+
+		//spew.Dump(pda)
+		// building the transaction
+		recent, err := client.GetRecentBlockhash(context.TODO(), rpc.CommitmentFinalized)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("recent blockhash:", recent.Value.Blockhash)
+		var inst solana.GenericInstruction
+
+		pdaBalance, err := client.GetBalance(context.TODO(), pdaComputed, rpc.CommitmentFinalized)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("PDA balance in SOL %f\n", float64(pdaBalance.Value)/1e9)
+		var message []byte
+
+		amount := uint64(2_337_000)
+		to := privkey.PublicKey()
+		bytes := make([]byte, 8)
+		nonce := pda.Nonce
+		binary.BigEndian.PutUint64(bytes, nonce)
+		message = append(message, bytes...)
+		binary.BigEndian.PutUint64(bytes, amount)
+		message = append(message, bytes...)
+		message = append(message, to.Bytes()...)
+		messageHash := crypto.Keccak256Hash(message)
+		// this sig will be 65 bytes; R || S || V, where V is 0 or 1
+		signature, err := crypto.Sign(messageHash.Bytes(), ethPrivkey)
+		if err != nil {
+			panic(err)
+		}
+		var sig [64]byte
+		copy(sig[:], signature[:64])
+		inst.DataBytes, err = borsh.Serialize(WithdrawInstructionParams{
+			Discriminator: [8]byte{183, 18, 70, 156, 148, 109, 161, 34},
+			Amount:        amount,
+			Signature:     sig,
+			RecoveryID:    signature[64],
+			MessageHash:   messageHash,
+			Nonce:         nonce,
+		})
+
+		var accountSlice []*solana.AccountMeta
+		accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+		accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
+		accountSlice = append(accountSlice, solana.Meta(to).WRITE())
+		accountSlice = append(accountSlice, solana.Meta(programId))
+		inst.ProgID = programId
+		inst.AccountValues = accountSlice
+		tx, err := solana.NewTransaction(
+			[]solana.Instruction{&inst},
+			recent.Value.Blockhash,
+			solana.TransactionPayer(privkey.PublicKey()),
+		)
+		if err != nil {
+			panic(err)
+		}
+		_, err = tx.Sign(
+			func(key solana.PublicKey) *solana.PrivateKey {
+				if privkey.PublicKey().Equals(key) {
+					return &privkey
+				}
+				return nil
+			},
+		)
+		if err != nil {
+			panic(fmt.Errorf("unable to sign transaction: %w", err))
+		}
+
+		spew.Dump(tx)
+		txsig, err := client.SendTransactionWithOpts(
+			context.TODO(),
+			tx,
+			rpc.TransactionOpts{},
+		)
+		//broadcast success! see
+		if err != nil {
+			panic(err)
+		}
+		spew.Dump(txsig)
 
 	}
 
