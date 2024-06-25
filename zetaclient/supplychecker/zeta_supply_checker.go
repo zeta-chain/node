@@ -43,6 +43,8 @@ func NewZetaSupplyChecker(
 		return ZetaSupplyChecker{}, err
 	}
 
+	coreContext := appContext.ZetacoreContext()
+
 	zetaSupplyChecker := ZetaSupplyChecker{
 		stop:      make(chan struct{}),
 		ticker:    dynamicTicker,
@@ -50,7 +52,7 @@ func NewZetaSupplyChecker(
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
-		coreContext: appContext.ZetacoreContext(),
+		coreContext: coreContext,
 		zetaClient:  zetaClient,
 	}
 
@@ -65,12 +67,14 @@ func NewZetaSupplyChecker(
 		zetaSupplyChecker.evmClient[evmConfig.Chain.ChainId] = client
 	}
 
+	additionalChains := coreContext.GetAdditionalChains()
+
 	for chainID := range zetaSupplyChecker.evmClient {
-		chain := chains.GetChainFromChainID(chainID)
-		if chain.IsExternalChain() && chains.IsEVMChain(chain.ChainId) && !chains.IsEthereumChain(chain.ChainId) {
+		chain := chains.GetChainFromChainID(chainID, additionalChains)
+		if chain.IsExternalChain() && chain.Consensus == chains.Consensus_ethereum && chain.Network != chains.Network_eth {
 			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
 		}
-		if chains.IsEthereumChain(chain.ChainId) {
+		if chain.Network == chains.Network_eth {
 			zetaSupplyChecker.ethereumChain = *chain
 		}
 	}

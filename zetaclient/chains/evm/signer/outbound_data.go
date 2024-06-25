@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -89,7 +90,7 @@ func (txData *OutboundData) SetupGas(
 	// we should possibly remove it completely and return an error if no GasPrice is provided because it means no fee is processed on ZetaChain
 	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutboundParam().GasPrice, 10)
 	if !ok {
-		if chains.IsEthereumChain(chain.ChainId) {
+		if chain.Network == chains.Network_eth {
 			suggested, err := client.SuggestGasPrice(context.Background())
 			if err != nil {
 				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain))
@@ -111,6 +112,7 @@ func (txData *OutboundData) SetupGas(
 //     cctx will be skipped and false otherwise.
 //  3. error
 func NewOutboundData(
+	coreContext *clientcontext.ZetacoreContext,
 	cctx *types.CrossChainTx,
 	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
@@ -132,7 +134,7 @@ func NewOutboundData(
 		return nil, true, nil
 	}
 
-	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
+	toChain := chains.GetChainFromChainID(txData.toChainID.Int64(), coreContext.GetAdditionalChains())
 	if toChain == nil {
 		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}

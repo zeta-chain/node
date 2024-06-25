@@ -354,7 +354,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutboundData(cctx, evmObserver, signer.client, logger, height)
+	txData, skipTx, err := NewOutboundData(signer.ZetacoreContext(), cctx, evmObserver, signer.client, logger, height)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -363,8 +363,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// Get destination chain for logging
-	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
+	toChain := chains.GetChainFromChainID(txData.toChainID.Int64(), signer.ZetacoreContext().GetAdditionalChains())
 
 	// Get cross-chain flags
 	crossChainflags := signer.ZetacoreContext().GetCrossChainFlags()
@@ -529,7 +528,7 @@ func (signer *Signer) BroadcastOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	txData *OutboundData) {
 	// Get destination chain for logging
-	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
+	toChain := chains.GetChainFromChainID(txData.toChainID.Int64(), signer.ZetacoreContext().GetAdditionalChains())
 	if tx == nil {
 		logger.Warn().Msgf("BroadcastOutbound: no tx to broadcast %s", cctx.Index)
 	}

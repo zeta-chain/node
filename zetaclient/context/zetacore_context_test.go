@@ -39,6 +39,7 @@ func getTestCoreContext(
 		nil,
 		"",
 		ccFlags,
+		[]chains.Chain{},
 		headerSupportedChains,
 		true,
 		zerolog.Logger{},
