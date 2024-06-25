@@ -339,8 +339,7 @@ jobs:
       - name: Stop Private Network
         if: ${{ always() && github.event.inputs.skip_checks != 'true' }}
         run: |
-          cd contrib/localnet/
-          docker compose down
+          make stop-localnet
 
       - name: Clean Up Workspace
         if: always()

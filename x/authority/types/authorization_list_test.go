@@ -210,6 +210,11 @@ func TestAuthorizationList_Validate(t *testing.T) {
 		expectedError  error
 	}{
 		{
+			name:           "validate default authorizations list",
+			authorizations: types.DefaultAuthorizationsList(),
+			expectedError:  nil,
+		},
+		{
 			name: "validate successfully",
 			authorizations: types.AuthorizationList{Authorizations: []types.Authorization{
 				{
