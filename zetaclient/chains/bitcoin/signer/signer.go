@@ -48,8 +48,7 @@ var _ interfaces.ChainSigner = &Signer{}
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
-	// base.Signer implements the base chain signer
-	base.Signer
+	*base.Signer
 
 	// client is the RPC client to interact with the Bitcoin chain
 	client interfaces.BTCRPCClient
@@ -81,7 +80,7 @@ func NewSigner(
 	}
 
 	return &Signer{
-		Signer: *baseSigner,
+		Signer: baseSigner,
 		client: client,
 	}, nil
 }
