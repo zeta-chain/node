@@ -24,7 +24,7 @@ type InitiateOutboundConfig struct {
 // which handles the state changes and error handling.
 func (k Keeper) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig) (types.CctxStatus, error) {
 	receiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
-	chainInfo := chains.GetChainFromChainID(receiverChainID)
+	chainInfo := chains.GetChainFromChainID(receiverChainID, k.GetAuthorityKeeper().GetChainList(ctx))
 	if chainInfo == nil {
 		return config.CCTX.CctxStatus.Status, cosmoserrors.Wrap(
 			types.ErrInitiatitingOutbound,

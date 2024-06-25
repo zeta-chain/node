@@ -267,29 +267,12 @@ func (k Keeper) ProcessZetaSentEvent(
 	return nil
 }
 
-// ParseZRC20WithdrawalEvent tries extracting ZRC20Withdrawal event from the input logs using the zrc20 contract;
-// It only returns a not-nil event if the event has been correctly validated as a valid withdrawal event
-func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
-	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
-	if err != nil {
-		return nil, err
-	}
-	if len(log.Topics) == 0 {
-		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid log - no topics")
-	}
-	event, err := zrc20ZEVM.ParseWithdrawal(log)
-	if err != nil {
-		return nil, err
-	}
-	return event, nil
-}
-
 // ValidateZrc20WithdrawEvent checks if the ZRC20Withdrawal event is valid
 // It verifies event information for BTC chains and returns an error if the event is invalid
-func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) error {
+func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
-	if chains.IsBitcoinChain(chainID) {
+	if chains.IsBitcoinChain(chainID, k.GetAuthorityKeeper().GetChainList(ctx)) {
 		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
@@ -307,6 +290,23 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 		}
 	}
 	return nil
+}
+
+// ParseZRC20WithdrawalEvent tries extracting ZRC20Withdrawal event from the input logs using the zrc20 contract;
+// It only returns a not-nil event if the event has been correctly validated as a valid withdrawal event
+func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
+	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
+	if err != nil {
+		return nil, err
+	}
+	if len(log.Topics) == 0 {
+		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid log - no topics")
+	}
+	event, err := zrc20ZEVM.ParseWithdrawal(log)
+	if err != nil {
+		return nil, err
+	}
+	return event, nil
 }
 
 // ParseZetaSentEvent tries extracting ZetaSent event from connectorZEVM contract;

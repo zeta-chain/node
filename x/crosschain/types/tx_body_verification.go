@@ -22,7 +22,9 @@ func VerifyInboundBody(
 	tss observertypes.QueryGetTssAddressResponse,
 ) error {
 	// verify message against transaction body
-	if chains.IsEVMChain(msg.ChainId) {
+	// NOTE: since this functionality is disabled on live network we don't provide on-chain additional chains for simplicity
+	// TODO: use authorityKeeper.GetChainInfo to provide additional chains
+	if chains.IsEVMChain(msg.ChainId, []chains.Chain{}) {
 		return verifyInboundBodyEVM(msg, txBytes, chainParams, tss)
 	}
 
@@ -79,9 +81,11 @@ func verifyInboundBodyEVM(
 // VerifyOutboundBody verifies the tx body for an outbound
 func VerifyOutboundBody(msg MsgAddOutboundTracker, txBytes []byte, tss observertypes.QueryGetTssAddressResponse) error {
 	// verify message against transaction body
-	if chains.IsEVMChain(msg.ChainId) {
+	// NOTE: since this functionality is disabled on live network we don't provide on-chain additional chains for simplicity
+	// TODO: use authorityKeeper.GetChainInfo to provide additional chains
+	if chains.IsEVMChain(msg.ChainId, []chains.Chain{}) {
 		return verifyOutboundBodyEVM(msg, txBytes, tss.Eth)
-	} else if chains.IsBitcoinChain(msg.ChainId) {
+	} else if chains.IsBitcoinChain(msg.ChainId, []chains.Chain{}) {
 		return verifyOutboundBodyBTC(msg, txBytes, tss.Btc)
 	}
 	return fmt.Errorf("cannot verify outbound body for chain %d", msg.ChainId)
@@ -122,9 +126,6 @@ func verifyOutboundBodyEVM(msg MsgAddOutboundTracker, txBytes []byte, tssEth str
 // TODO: Implement tests for the function
 // https://github.com/zeta-chain/node/issues/1994
 func verifyOutboundBodyBTC(msg MsgAddOutboundTracker, txBytes []byte, tssBtc string) error {
-	if !chains.IsBitcoinChain(msg.ChainId) {
-		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
-	}
 	tx, err := btcutil.NewTxFromBytes(txBytes)
 	if err != nil {
 		return err

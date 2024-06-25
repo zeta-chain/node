@@ -143,9 +143,14 @@ func (k Keeper) MigrateTSSFundsForChain(
 			EffectiveGasPrice:      sdkmath.Int{},
 			EffectiveGasLimit:      0,
 			TssPubkey:              currentTss.TssPubkey,
-		}}}
+		}},
+	}
+
+	// retrieve from authority keeper additional chains
+	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+
 	// Set the sender and receiver addresses for EVM chain
-	if chains.IsEVMChain(chainID) {
+	if chains.IsEVMChain(chainID, additionalChains) {
 		ethAddressOld, err := zetacrypto.GetTssAddrEVM(currentTss.TssPubkey)
 		if err != nil {
 			return err
@@ -179,7 +184,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 		cctx.GetCurrentOutboundParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
-	if chains.IsBitcoinChain(chainID) {
+	if chains.IsBitcoinChain(chainID, additionalChains) {
 		bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
 		if err != nil {
 			return err
