@@ -27,6 +27,17 @@ Now we have built all the docker images, we can run the e2e test with make comma
 make start-e2e-test
 ```
 
+This uses `docker compose` to start the localnet and run standard e2e tests inside the orchestrator container. There are several parameters that the `Makefile` can provide to `docker compose` via environment variables:
+
+- `LOCALNET_MODE`
+	- `setup-only`: only setup the localnet, do not run the e2e tests
+	- `upgrade`: run the upgrade tests
+	- unset: run the e2e tests
+- `E2E_ARGS`: arguments to provide to the `zetae2e local` command
+- `UPGRADE_HEIGHT`: block height to upgrade at when `LOCALNET_MODE=upgrade`
+- `ZETACORED_IMPORT_GENESIS_DATA`: path to genesis data to import before starting zetacored
+- `ZETACORED_START_PERIOD`: duration to tolerate `zetacored` health check failures during startup
+
 #### Run admin functions e2e tests
 
 We define e2e tests allowing to test admin functionalities (emergency network pause for example).
@@ -42,13 +53,7 @@ make start-e2e-admin-test
 Upgrade tests run the E2E tests with an older version, upgrade the nodes to the new version, and run the E2E tests again.
 This allows testing the upgrade process with a populated state.
 
-Before running the upgrade tests, the versions must be specified in `Dockefile-upgrade`:
-
-```dockerfile
-ARG OLD_VERSION=v{old_major_version}.{old_minor_version}.{old_patch_version}
-ENV NEW_VERSION=v{new_major_version}
-```
-The new version must match the version specified in `app/setup_handlers.go`
+Before running the upgrade tests, the old version must be specified the Makefile.
 
 NOTE: We only specify the major version for `NEW_VERSION` since we use major version only for chain upgrade. Semver is needed for `OLD_VERSION` because we use this value to fetch the release tag from the GitHub repository.
 
