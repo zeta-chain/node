@@ -71,7 +71,8 @@ func NewZetaSupplyChecker(
 
 	for chainID := range zetaSupplyChecker.evmClient {
 		chain := chains.GetChainFromChainID(chainID, additionalChains)
-		if chain.IsExternalChain() && chain.Consensus == chains.Consensus_ethereum && chain.Network != chains.Network_eth {
+		if chain.IsExternalChain() && chain.Consensus == chains.Consensus_ethereum &&
+			chain.Network != chains.Network_eth {
 			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
 		}
 		if chain.Network == chains.Network_eth {

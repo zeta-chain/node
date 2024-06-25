@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -17,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
 const (

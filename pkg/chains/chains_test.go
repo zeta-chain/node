@@ -69,7 +69,12 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Zeta",
 			chains.Network_zeta,
-			[]*chains.Chain{&chains.ZetaChainMainnet, &chains.ZetaChainDevnet, &chains.ZetaChainPrivnet, &chains.ZetaChainTestnet},
+			[]*chains.Chain{
+				&chains.ZetaChainMainnet,
+				&chains.ZetaChainDevnet,
+				&chains.ZetaChainPrivnet,
+				&chains.ZetaChainTestnet,
+			},
 		},
 		{
 			"Btc",

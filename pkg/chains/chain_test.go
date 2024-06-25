@@ -380,6 +380,18 @@ func TestGetBTCChainIDFromChainParams(t *testing.T) {
 }
 
 func TestChainIDInChainList(t *testing.T) {
-	require.True(t, chains.ChainIDInChainList(chains.ZetaChainMainnet.ChainId, chains.ChainListByNetwork(chains.Network_zeta, []chains.Chain{})))
-	require.False(t, chains.ChainIDInChainList(chains.Ethereum.ChainId, chains.ChainListByNetwork(chains.Network_zeta, []chains.Chain{})))
+	require.True(
+		t,
+		chains.ChainIDInChainList(
+			chains.ZetaChainMainnet.ChainId,
+			chains.ChainListByNetwork(chains.Network_zeta, []chains.Chain{}),
+		),
+	)
+	require.False(
+		t,
+		chains.ChainIDInChainList(
+			chains.Ethereum.ChainId,
+			chains.ChainListByNetwork(chains.Network_zeta, []chains.Chain{}),
+		),
+	)
 }

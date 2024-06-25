@@ -3,7 +3,6 @@ package zetacore
 import (
 	"context"
 	"fmt"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"sort"
 	"time"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
