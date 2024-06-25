@@ -638,9 +638,6 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
 
-	fmt.Println("checking pubkey:", tssPubkey)
-	fmt.Println("signing pubkey:", sigPublicKey)
-
 	return bytes.Equal(pubkey.Bytes(), compressedPubkey)
 }
 

@@ -46,6 +46,15 @@ func TestMigrateTssEth(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
+	//msg2 := observertypes.NewMsgEnableCCTX(
+	//	r.ZetaTxServer.GetAccountAddress(0),
+	//	true,
+	//	true)
+	//_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg2)
+	//if err != nil {
+	//	panic(err)
+	//}
+
 	// Fetch migrator cctx
 	migrator, err := r.ObserverClient.TssFundsMigratorInfo(r.Ctx, &observertypes.QueryTssFundsMigratorInfoRequest{ChainId: evmChainID.Int64()})
 	if err != nil {
