@@ -23,8 +23,12 @@ func (k Keeper) VerifyProof(
 		return nil, err
 	}
 
+	// additionalChains is a list of additional chains to search from
+	// it is used in the protocol to dynamically support new chains without doing an upgrade
+	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+
 	// get block header from the store
-	hashBytes, err := chains.StringToHash(chainID, blockHash)
+	hashBytes, err := chains.StringToHash(chainID, blockHash, additionalChains)
 	if err != nil {
 		return nil, cosmoserror.Wrapf(
 			types.ErrInvalidBlockHash,

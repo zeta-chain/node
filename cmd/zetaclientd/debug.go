@@ -52,11 +52,13 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			coreContext := clientcontext.NewZetacoreContext(cfg)
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
+
 			inboundHash := args[0]
 			var ballotIdentifier string
 
@@ -71,21 +73,24 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			chainParams, err := client.GetChainParams()
 			if err != nil {
 				return err
 			}
+
 			tssEthAddress, err := client.GetEthTssAddress()
 			if err != nil {
 				return err
 			}
-			chain := chains.GetChainFromChainID(chainID)
+
+			chain := chains.GetChainFromChainID(chainID, coreContext.GetAdditionalChains())
 			if chain == nil {
 				return fmt.Errorf("invalid chain id")
 			}
 
 			// get ballot identifier according to the chain type
-			if chains.IsEVMChain(chain.ChainId) {
+			if chain.Consensus == chains.Consensus_ethereum {
 				evmObserver := evmobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
@@ -93,8 +98,8 @@ func DebugCmd() *cobra.Command {
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
 				coinType := coin.CoinType_Cmd
-				for chain, evmConfig := range cfg.GetAllEVMConfigs() {
-					if chainID == chain {
+				for configChainID, evmConfig := range cfg.GetAllEVMConfigs() {
+					if chainID == configChainID {
 						ethRPC = ethrpc.NewEthRPC(evmConfig.Endpoint)
 						client, err = ethclient.Dial(evmConfig.Endpoint)
 						if err != nil {
@@ -102,7 +107,7 @@ func DebugCmd() *cobra.Command {
 						}
 						evmObserver.WithEvmClient(client)
 						evmObserver.WithEvmJSONRPC(ethRPC)
-						evmObserver.WithChain(*chains.GetChainFromChainID(chainID))
+						evmObserver.WithChain(*chain)
 					}
 				}
 				hash := ethcommon.HexToHash(inboundHash)
@@ -163,12 +168,12 @@ func DebugCmd() *cobra.Command {
 					fmt.Println("CoinType not detected")
 				}
 				fmt.Println("CoinType : ", coinType)
-			} else if chains.IsBitcoinChain(chain.ChainId) {
+			} else if chain.Consensus == chains.Consensus_bitcoin {
 				btcObserver := btcobserver.Observer{
 					Mu: &sync.Mutex{},
 				}
 				btcObserver.WithZetacoreClient(client)
-				btcObserver.WithChain(*chains.GetChainFromChainID(chainID))
+				btcObserver.WithChain(*chain)
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
 					User:         cfg.BitcoinConfig.RPCUsername,
