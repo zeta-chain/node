@@ -38,40 +38,44 @@ sleep 2
 ### Create the accounts and fund them with Ether on local Ethereum network
 
 # unlock the deployer account
-echo "funding deployer address 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.accounts.deployer.evm_address' config.yml)
+echo "funding deployer address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock erc20 tester accounts
-echo "funding deployer address 0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6 with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_erc20.evm_address' config.yml)
+echo "funding erc20 address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock zeta tester accounts
-echo "funding deployer address 0x5cC2fBb200A929B372e3016F1925DcF988E081fd with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_zeta_test.evm_address' config.yml)
+echo "funding zeta tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock zevm message passing tester accounts
-echo "funding deployer address 0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_zevm_mp_test.evm_address' config.yml)
+echo "funding zevm mp tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock bitcoin tester accounts
-echo "funding deployer address 0x283d810090EdF4043E75247eAeBcE848806237fD with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x283d810090EdF4043E75247eAeBcE848806237fD", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_bitcoin.evm_address' config.yml)
+echo "funding bitcoin tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock ethers tester accounts
-echo "funding deployer address 0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_ether.evm_address' config.yml)
+echo "funding ether tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock miscellaneous tests accounts
-echo "funding deployer address 0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_misc.evm_address' config.yml)
+echo "funding misc tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 # unlock admin erc20 tests accounts
-echo "funding deployer address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", value: web3.toWei(10000,"ether")})' attach http://eth:8545
-
-# unlock the TSS account
-echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 10000 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(10000,"ether")})' attach http://eth:8545
+address=$(yq -r '.additional_accounts.user_admin.evm_address' config.yml)
+echo "funding admin tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
 ### Run zetae2e command depending on the option passed
 
