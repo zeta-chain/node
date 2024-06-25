@@ -35,12 +35,15 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 
 	proven := false
 
+	// additional on-chain static chain information
+	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+
 	txBytes, err := req.Proof.Verify(res.Header, int(req.TxIndex))
 	if err != nil && !proofs.IsErrorInvalidProof(err) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if err == nil {
-		if chains.IsEVMChain(req.ChainId) {
+		if chains.IsEVMChain(req.ChainId, additionalChains) {
 			var txx ethtypes.Transaction
 			err = txx.UnmarshalBinary(txBytes)
 			if err != nil {
@@ -53,7 +56,7 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 				)
 			}
 			proven = true
-		} else if chains.IsBitcoinChain(req.ChainId) {
+		} else if chains.IsBitcoinChain(req.ChainId, additionalChains) {
 			tx, err := btcutil.NewTxFromBytes(txBytes)
 			if err != nil {
 				return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal btc transaction: %s", err))
