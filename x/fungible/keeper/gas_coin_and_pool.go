@@ -28,7 +28,10 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	decimals uint8,
 	gasLimit *big.Int,
 ) (ethcommon.Address, error) {
-	chain := chains.GetChainFromChainID(chainID)
+	// additional on-chain static chain information
+	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+
+	chain := chains.GetChainFromChainID(chainID, additionalChains)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
@@ -45,7 +48,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	// default values
 	if transferGasLimit == nil {
 		transferGasLimit = big.NewInt(21_000)
-		if chains.IsBitcoinChain(chain.ChainId) {
+		if chains.IsBitcoinChain(chain.ChainId, additionalChains) {
 			transferGasLimit = big.NewInt(100) // 100B for a typical tx
 		}
 	}
