@@ -12,7 +12,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -315,6 +314,6 @@ func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ..
 }
 
 // EVMAddress is shorthand to get the EVM address of the account
-func (r *E2ERunner) EVMAddress() common.Address {
+func (r *E2ERunner) EVMAddress() ethcommon.Address {
 	return r.Account.EVMAddress()
 }
