@@ -25,8 +25,9 @@ This is an example of config for interaction with Athens3:
 ```go
 zeta_chain_id: "athens_7001-1"
 accounts:
-  evm_address: "<your evm address>"
-  evm_priv_key: "<your evm private key>"
+  deployer
+    evm_address: "<your evm address>"
+    private_key: "<your evm private key>"
 rpcs:
   zevm: "<zevm (ZetaChain) url>, generally using port 8545"
   evm: "<evm url>, generally using port 8545"
@@ -102,8 +103,9 @@ Testing a gas token requires the following values to be defined in the config:
 ```go
 zeta_chain_id
 accounts:
-  evm_address
-  evm_priv_key
+  deployer:
+    evm_address
+    private_key
 rpcs:
   zevm
   evm
