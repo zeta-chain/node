@@ -574,6 +574,7 @@ func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 }
 
 // TestKeysign tests the keysign
+// it is called when a new TSS is generated to ensure the network works as expected
 // TODO(revamp): move to a test package
 func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	log.Info().Msg("trying keysign...")
