@@ -272,7 +272,7 @@ func (k Keeper) ProcessZetaSentEvent(
 func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
-	if chains.IsBitcoinChain(chainID, k.GetAuthorityKeeper().GetChainList(ctx)) {
+	if chains.IsBitcoinChain(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,

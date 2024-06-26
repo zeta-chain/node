@@ -45,7 +45,7 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(
 		return 0, gasPriceIncreaseFlags
 	}
 
-	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 
 	cctxCount := 0
 

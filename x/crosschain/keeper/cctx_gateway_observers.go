@@ -43,7 +43,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	noEthereumTxEvent := false
 	if chains.IsZetaChain(
 		config.CCTX.InboundParams.SenderChainId,
-		c.crosschainKeeper.GetAuthorityKeeper().GetChainList(ctx),
+		c.crosschainKeeper.GetAuthorityKeeper().GetAdditionalChainList(ctx),
 	) {
 		noEthereumTxEvent = true
 	}

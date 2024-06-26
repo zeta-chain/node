@@ -78,7 +78,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			to = parsedAddress
 		}
 
-		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender, k.GetAuthorityKeeper().GetChainList(ctx))
+		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 		if err != nil {
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
 		}

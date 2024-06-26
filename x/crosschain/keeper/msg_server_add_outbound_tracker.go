@@ -138,7 +138,7 @@ func verifyProofAndOutboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddO
 
 	// get tss address
 	var bitcoinChainID int64
-	if chains.IsBitcoinChain(msg.ChainId, k.GetAuthorityKeeper().GetChainList(ctx)) {
+	if chains.IsBitcoinChain(msg.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		bitcoinChainID = msg.ChainId
 	}
 

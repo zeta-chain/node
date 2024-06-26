@@ -80,14 +80,14 @@ func MockCheckAuthorization(m *mock.Mock, msg sdk.Msg, authorizationResult error
 	m.On("CheckAuthorization", mock.Anything, msg).Return(authorizationResult).Once()
 }
 
-// MockGetChainList mocks the GetChainList method of the authority keeper.
+// MockGetChainList mocks the GetAdditionalChainList method of the authority keeper.
 func MockGetChainList(m *mock.Mock, chainList []chains.Chain) {
-	m.On("GetChainList", mock.Anything).Return(chainList).Once()
+	m.On("GetAdditionalChainList", mock.Anything).Return(chainList).Once()
 }
 
-// MockGetChainListEmpty mocks the GetChainList method of the authority keeper.
+// MockGetChainListEmpty mocks the GetAdditionalChainList method of the authority keeper.
 func MockGetChainListEmpty(m *mock.Mock) {
-	m.On("GetChainList", mock.Anything).Return([]chains.Chain{})
+	m.On("GetAdditionalChainList", mock.Anything).Return([]chains.Chain{})
 }
 
 func SetAdminPolicies(ctx sdk.Context, ak *keeper.Keeper) string {

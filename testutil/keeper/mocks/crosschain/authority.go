@@ -32,12 +32,12 @@ func (_m *CrosschainAuthorityKeeper) CheckAuthorization(ctx types.Context, msg t
 	return r0
 }
 
-// GetChainList provides a mock function with given fields: ctx
-func (_m *CrosschainAuthorityKeeper) GetChainList(ctx types.Context) []chains.Chain {
+// GetAdditionalChainList provides a mock function with given fields: ctx
+func (_m *CrosschainAuthorityKeeper) GetAdditionalChainList(ctx types.Context) []chains.Chain {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetChainList")
+		panic("no return value specified for GetAdditionalChainList")
 	}
 
 	var r0 []chains.Chain

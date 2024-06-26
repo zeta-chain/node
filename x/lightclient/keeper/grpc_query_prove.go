@@ -26,7 +26,7 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 
 	// additionalChains is a list of additional chains to search from
 	// it is used in the protocol to dynamically support new chains without doing an upgrade
-	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 
 	blockHash, err := chains.StringToHash(req.ChainId, req.BlockHash, additionalChains)
 	if err != nil {

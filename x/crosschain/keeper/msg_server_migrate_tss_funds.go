@@ -147,7 +147,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 	}
 
 	// retrieve from authority keeper additional chains
-	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 
 	// Set the sender and receiver addresses for EVM chain
 	if chains.IsEVMChain(chainID, additionalChains) {

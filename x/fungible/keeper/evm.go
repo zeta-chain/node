@@ -110,7 +110,7 @@ func (k Keeper) DeployZRC20Contract(
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) {
-	chain := chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetChainList(ctx))
+	chain := chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	if chain == nil {
 		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
 	}

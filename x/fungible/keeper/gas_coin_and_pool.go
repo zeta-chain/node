@@ -29,7 +29,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	gasLimit *big.Int,
 ) (ethcommon.Address, error) {
 	// additional on-chain static chain information
-	additionalChains := k.GetAuthorityKeeper().GetChainList(ctx)
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 
 	chain := chains.GetChainFromChainID(chainID, additionalChains)
 	if chain == nil {

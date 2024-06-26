@@ -64,7 +64,7 @@ func (k Keeper) RateLimiterInput(
 	// if a cctx is an outgoing cctx that orginates from ZetaChain
 	// reverted incoming cctx has an external `SenderChainId` and should not be counted
 	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
-		return chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetChainList(ctx))
+		return chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	}
 
 	// it is a past cctx if its nonce < `nonceLow`,
@@ -272,7 +272,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	// if a cctx is outgoing from ZetaChain
 	// reverted incoming cctx has an external `SenderChainId` and should not be counted
 	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
-		return chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetChainList(ctx))
+		return chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	}
 
 	// query pending nonces for each foreign chain and get the lowest height of the pending cctxs

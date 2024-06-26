@@ -36,7 +36,7 @@ func TestKeeper_GetChainList(t *testing.T) {
 	k, ctx := keepertest.AuthorityKeeper(t)
 
 	// Empty list
-	list := k.GetChainList(ctx)
+	list := k.GetAdditionalChainList(ctx)
 	require.Empty(t, list)
 
 	// Set chain info
@@ -44,6 +44,6 @@ func TestKeeper_GetChainList(t *testing.T) {
 	k.SetChainInfo(ctx, chainInfo)
 
 	// Check list
-	list = k.GetChainList(ctx)
+	list = k.GetAdditionalChainList(ctx)
 	require.Equal(t, chainInfo.Chains, list)
 }
