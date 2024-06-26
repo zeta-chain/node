@@ -496,6 +496,7 @@ jobs:
         with:
           files: |
             ${{ steps.attestation.outputs.bundle-path }}
+          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Clean Up Workspace
         if: always()
