@@ -104,8 +104,7 @@ func GenerateTss(
 					keygenLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
 					continue
 				}
-
-				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
+				// If TSS is successful , broadcast the vote to zetacore and also set the Pubkey
 				tssSuccessVoteHash, err := zetaCoreClient.SetTSS(
 					newPubkey,
 					keyGen.BlockNumber,
