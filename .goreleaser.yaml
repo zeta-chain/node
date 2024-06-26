@@ -72,7 +72,7 @@ builds:
       # - darwin
       # - windows
     goarch:
-      # - arm64
+      - arm64
       - amd64
     ignore:
       - goos: windows
