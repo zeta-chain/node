@@ -491,7 +491,7 @@ jobs:
             dist/zetaclientd_**/*
             dist/checksums.txt
 
-      - name: Release
+      - name: Upload Attestation Bundle
         env: 
           GH_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
         shell: bash 
