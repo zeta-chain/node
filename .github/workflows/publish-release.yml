@@ -367,6 +367,8 @@ jobs:
         shell: bash
         run: |
           make start-e2e-admin-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -377,7 +379,7 @@ jobs:
   e2e-upgrade-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: buildjet-16vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
@@ -388,7 +390,33 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         shell: bash
         run: |
-          make start-upgrade-test
+          make start-upgrade-import-mainnet-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
+
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
+  e2e-stateful-data-test:
+    needs:
+      - check_branch
+    runs-on: buildjet-16vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute stateful-data-test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          make start-e2e-import-mainnet-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -407,6 +435,7 @@ jobs:
       - smoke-test
       - build-test
       - e2e-admin-tests
+      - e2e-stateful-data-test
       - e2e-upgrade-test
       - check_branch
     runs-on: ubuntu-22.04
