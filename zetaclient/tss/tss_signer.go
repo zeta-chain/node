@@ -669,7 +669,7 @@ func combineDigests(digestList []string) []byte {
 }
 
 // wasNodePartOfTss checks if the node was part of the TSS
-// it checks whether a pubkey is part of the list used to generate the TSS , Every TSS generated on the network has its own list of associated public keys 
+// it checks whether a pubkey is part of the list used to generate the TSS , Every TSS generated on the network has its own list of associated public keys
 func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	for _, grantee := range granteeList {
 		if granteePubKey32 == grantee {

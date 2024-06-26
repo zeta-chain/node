@@ -97,7 +97,6 @@ type ZetacoreClient interface {
 	GetKeys() keyinterfaces.ObserverKeys
 	GetKeyGen() (*observertypes.Keygen, error)
 	GetBlockHeight() (int64, error)
-	GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error)
 	ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	ListPendingCctxWithinRatelimit() ([]*crosschaintypes.CrossChainTx, uint64, int64, string, bool, error)
 	GetRateLimiterInput(window int64) (crosschaintypes.QueryRateLimiterInputResponse, error)
