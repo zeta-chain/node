@@ -98,6 +98,10 @@
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
 * [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
 
+### Documentation
+
+* [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
+
 ## v17.0.0
 
 ### Fixes

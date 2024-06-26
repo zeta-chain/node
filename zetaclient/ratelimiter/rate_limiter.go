@@ -1,3 +1,4 @@
+// Package ratelimiter provides functionalities for rate limiting the cross-chain transactions
 package ratelimiter
 
 import (

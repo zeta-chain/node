@@ -1,3 +1,4 @@
+// Package observer implements the Bitcoin chain observer
 package observer
 
 import (
@@ -54,6 +55,7 @@ type Logger struct {
 }
 
 // BTCInboundEvent represents an incoming transaction event
+// TODO(revamp): Move to inbound
 type BTCInboundEvent struct {
 	// FromAddress is the first input address
 	FromAddress string
@@ -69,7 +71,7 @@ type BTCInboundEvent struct {
 	TxHash      string
 }
 
-// BTCOutboundEvent contains bitcoin block and the header
+// BTCBlockNHeader contains bitcoin block and the header
 type BTCBlockNHeader struct {
 	Header *wire.BlockHeader
 	Block  *btcjson.GetBlockVerboseTxResult
@@ -190,7 +192,7 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 	return ob.ChainParams()
 }
 
-// Start starts the Go routine to observe the Bitcoin chain
+// Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start() {
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
@@ -214,6 +216,8 @@ func (ob *Observer) Start() {
 }
 
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
+// TODO(revamp): move ticker related functions to a specific file
+// TODO(revamp): move inner logic in a separate function
 func (ob *Observer) WatchRPCStatus() {
 	ob.logger.Chain.Info().Msgf("RPCStatus is starting")
 	ticker := time.NewTicker(60 * time.Second)
@@ -297,6 +301,8 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
+// TODO(revamp): move ticker related functions to a specific file
+// TODO(revamp): move inner logic in a separate function
 func (ob *Observer) WatchGasPrice() {
 	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
@@ -333,6 +339,7 @@ func (ob *Observer) WatchGasPrice() {
 }
 
 // PostGasPrice posts gas price to zetacore
+// TODO(revamp): move to gas price file
 func (ob *Observer) PostGasPrice() error {
 	// hardcode gas price here since this RPC is not available on regtest
 	if chains.IsBitcoinRegnet(ob.Chain().ChainId) {
@@ -379,6 +386,7 @@ func (ob *Observer) PostGasPrice() error {
 }
 
 // GetSenderAddressByVin get the sender address from the previous transaction
+// TODO(revamp): move in upper package to separate file (e.g., rpc.go)
 func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
 	// query previous raw transaction by txid
 	// GetTransaction requires reconfiguring the bitcoin node (txindex=1), so we use GetRawTransaction instead
@@ -421,6 +429,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 }
 
 // WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
+// TODO(revamp): move ticker related functions to a specific file
 func (ob *Observer) WatchUTXOs() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
@@ -448,6 +457,7 @@ func (ob *Observer) WatchUTXOs() {
 }
 
 // FetchUTXOs fetches TSS-owned UTXOs from the Bitcoin node
+// TODO(revamp): move to UTXO file
 func (ob *Observer) FetchUTXOs() error {
 	defer func() {
 		if err := recover(); err != nil {
@@ -511,6 +521,7 @@ func (ob *Observer) FetchUTXOs() error {
 }
 
 // SaveBroadcastedTx saves successfully broadcasted transaction
+// TODO(revamp): move to db file
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outboundID := ob.GetTxID(nonce)
 	ob.Mu().Lock()
@@ -641,6 +652,7 @@ func (ob *Observer) isTssTransaction(txid string) bool {
 }
 
 // postBlockHeader posts block header to zetacore
+// TODO(revamp): move to block header file
 func (ob *Observer) postBlockHeader(tip int64) error {
 	ob.logger.Inbound.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
