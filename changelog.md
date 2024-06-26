@@ -29,6 +29,7 @@
 * [2325](https://github.com/zeta-chain/node/pull/2325) - revert telemetry server changes
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
+* [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
 
 ### Refactor
 
