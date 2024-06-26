@@ -1,6 +1,7 @@
 package chains_test
 
 import (
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"testing"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -228,6 +229,49 @@ func TestIsZetaChain(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, chains.IsZetaChain(tt.chainID, []chains.Chain{}))
 		})
+	}
+}
+
+func TestDecodeAddressFromChainID(t *testing.T) {
+	ethAddr := sample.EthAddress()
+
+	tests := []struct {
+		name    string
+		chainID int64
+		addr    string
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name:    "Ethereum",
+			chainID: chains.Ethereum.ChainId,
+			addr:    ethAddr.Hex(),
+			want:    ethAddr.Bytes(),
+		},
+		{
+			name:    "Bitcoin",
+			chainID: chains.BitcoinMainnet.ChainId,
+			addr:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
+			want:    []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+		},
+		{
+			name:    "Non-supported chain",
+			chainID: 9999,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := chains.DecodeAddressFromChainID(tt.chainID, tt.addr, []chains.Chain{})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+
 	}
 }
 
