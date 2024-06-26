@@ -397,10 +397,10 @@ jobs:
           echo "continue"
 
   publish-release:
-    permissions:
-      id-token: write
-      contents: write
-      attestations: write
+    # permissions:
+    #   id-token: write
+    #   contents: write
+    #   attestations: write
     if: ${{ github.event.inputs.skip_release == 'false' }}
     needs:
       - gosec
