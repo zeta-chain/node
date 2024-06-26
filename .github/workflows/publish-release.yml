@@ -483,12 +483,19 @@ jobs:
           make release
 
       - name: Artifact Attestations
+        id: attestation
         uses: actions/attest-build-provenance@v1
         with:
           subject-path: |
             dist/zetacored_**/*
             dist/zetaclientd_**/*
             dist/checksums.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: attestations.jsonl
+          path: ${{ steps.attestation.outputs.bundle-path }}
+          
 
       - name: Clean Up Workspace
         if: always()
