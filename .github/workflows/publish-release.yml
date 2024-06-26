@@ -485,7 +485,7 @@ jobs:
             dist/zetacored_**/*
             dist/zetaclientd_**/*
             checksums.txt
-        push-to-registry : true
+          push-to-registry : true
 
       - name: Clean Up Workspace
         if: always()
