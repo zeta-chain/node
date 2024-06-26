@@ -42,6 +42,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			1000000,
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		res, err := msgServer.DeployFungibleCoinZRC20(ctx, msg)
 		require.NoError(t, err)
 		gasAddress := res.Address
@@ -174,6 +175,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			1000000,
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
@@ -203,6 +205,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			1000000,
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, deployMsg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		// Attempt to deploy the same gas token twice should result in error
 		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)

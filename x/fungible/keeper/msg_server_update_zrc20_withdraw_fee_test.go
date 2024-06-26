@@ -49,6 +49,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.NoError(t, err)
 
@@ -68,6 +69,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.Uint{},
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
@@ -85,6 +87,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(44),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		require.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)

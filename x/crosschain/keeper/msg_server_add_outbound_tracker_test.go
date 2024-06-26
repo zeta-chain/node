@@ -359,6 +359,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			Nonce:     42,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
@@ -418,6 +419,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			Nonce:     42,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.NoError(t, err)
 		tracker, found := k.GetOutboundTracker(ctx, chainID, 42)
@@ -500,6 +502,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			Nonce:     42,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, observertypes.ErrTssNotFound)
 	})
@@ -541,6 +544,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 			Nonce:     42,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.AddOutboundTracker(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 	})

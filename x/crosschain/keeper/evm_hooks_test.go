@@ -317,7 +317,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		ctx = ctx.WithChainID("test_21-1")
 
 		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
-		require.ErrorContains(t, err, "failed to convert chainID: chain 21 not found")
+		require.ErrorContains(t, err, "failed to convert chainID")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
 

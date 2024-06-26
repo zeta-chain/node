@@ -108,6 +108,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 			Amount:  amount,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -141,6 +142,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 			Amount:  amount,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -376,6 +378,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			Amount:  amount,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -406,6 +409,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			Amount:  amount,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.ErrorContains(t, err, crosschaintypes.ErrCannotMigrateTssFunds.Error())
 		hash := crypto.Keccak256Hash([]byte(indexString))
@@ -507,6 +511,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			Amount:  amount,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
 		require.ErrorContains(t, err, "cannot migrate funds while there are pending migrations")

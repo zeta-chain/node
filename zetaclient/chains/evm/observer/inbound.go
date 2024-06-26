@@ -639,7 +639,10 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 ) *types.MsgVoteInbound {
-	destChain := chains.GetChainFromChainID(event.DestinationChainId.Int64(), ob.ZetacoreContext().GetAdditionalChains())
+	destChain := chains.GetChainFromChainID(
+		event.DestinationChainId.Int64(),
+		ob.ZetacoreContext().GetAdditionalChains(),
+	)
 	if destChain == nil {
 		ob.Logger().Inbound.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
 		return nil

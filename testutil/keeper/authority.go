@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
 	"github.com/zeta-chain/zetacore/x/authority/types"
@@ -77,6 +78,16 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 // MockCheckAuthorization mocks the CheckAuthorization method of the authority keeper.
 func MockCheckAuthorization(m *mock.Mock, msg sdk.Msg, authorizationResult error) {
 	m.On("CheckAuthorization", mock.Anything, msg).Return(authorizationResult).Once()
+}
+
+// MockGetChainList mocks the GetChainList method of the authority keeper.
+func MockGetChainList(m *mock.Mock, chainList []chains.Chain) {
+	m.On("GetChainList", mock.Anything).Return(chainList).Once()
+}
+
+// MockGetChainListEmpty mocks the GetChainList method of the authority keeper.
+func MockGetChainListEmpty(m *mock.Mock) {
+	m.On("GetChainList", mock.Anything).Return([]chains.Chain{})
 }
 
 func SetAdminPolicies(ctx sdk.Context, ak *keeper.Keeper) string {

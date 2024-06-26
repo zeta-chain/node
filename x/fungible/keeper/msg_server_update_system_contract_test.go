@@ -77,6 +77,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// can update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
@@ -245,6 +246,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// can't update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
@@ -255,6 +257,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// can't update the system contract
 		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
@@ -265,6 +268,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// can't update the system contract
 		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})

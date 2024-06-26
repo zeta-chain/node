@@ -102,6 +102,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			codeHash,
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateContractBytecode(ctx, msg)
 		require.NoError(t, err)
 
@@ -147,6 +148,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			codeHash,
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateContractBytecode(ctx, msg)
 		require.NoError(t, err)
 		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)

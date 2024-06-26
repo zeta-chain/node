@@ -22,10 +22,12 @@ func TestKeeper_ChainInfo(t *testing.T) {
 	t.Run("chain info not found", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
-		chainInfo, err := k.ChainInfo(ctx, &types.QueryGetChainInfoRequest{})
+		res, err := k.ChainInfo(ctx, &types.QueryGetChainInfoRequest{})
 		require.NoError(t, err)
-		require.Equal(t, chainInfo, types.ChainInfo{
-			Chains: []chains.Chain{},
+		require.Equal(t, res, &types.QueryGetChainInfoResponse{
+			ChainInfo: types.ChainInfo{
+				Chains: []chains.Chain{},
+			},
 		})
 	})
 

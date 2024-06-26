@@ -36,6 +36,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		msg := types.NewMsgRemoveForeignCoin(admin, zrc20.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.NoError(t, err)
 		_, found = k.GetForeignCoins(ctx, zrc20.Hex())
@@ -59,6 +60,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		msg := types.NewMsgRemoveForeignCoin(admin, zrc20.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
