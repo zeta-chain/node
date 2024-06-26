@@ -397,26 +397,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		waitKeygenHeight(migrationCtx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
 	}
-	for i := 0; i < 200; i++ {
-		time.Sleep(1 * time.Second)
-		fmt.Println("Sleeping", i)
-	}
-
-	//	LpgsDGmou3bsbFW1kCbJb7HBIRCcSMb6umvE= SRQDxQS6tG2r67esHnANaLCd6Ua/3UHwTcxoQxMBBkY= AA==}]
-	//2024-06-24 20:51:53 2024-06-25T00:51:53Z INF pubkey PubKeySecp256k1{0381FB59734C90F5690F863C075A1226C147DF4CB14E020714DFAB06CA7C9FB0D8} recovered pubkey 0381fb59734c90f5690f863c075a1226c147df4cb14e020714dfab06ca7c9fb0d8
-	//2024-06-24 20:51:53 2024-06-25T00:51:53Z INF pubkey PubKeySecp256k1{0381FB59734C90F5690F863C075A1226C147DF4CB14E020714DFAB06CA7C9FB0D8} recovered pubkey 0381fb59734c90f5690f863c075a1226c147df4cb14e020714dfab06ca7c9fb0d8
-	//2024-06-24 20:52:00 2024-06-25T00:52:00Z INF Current TSS address
-	//2024-06-24 20:52:00  ETH : 0xf264Ae9433E0CbC44f74E5c7A4816a6333821289
-	//2024-06-24 20:52:00  BTC : bcrt1qeqqpjc4h89de7qh94y0mvqu23kv7tglmpxgpvx
-	//2024-06-24 20:52:00  PubKey : zetapub1addwnpepqwqlkktnfjg026g0sc7qwksjymq50h6vk98qypc5m74sdjnun7cdsj2nnvq  module=startup
-
-	//	1E587152} recovered pubkey 034acf1f2ad3ae3efba52dd793d8c8eb1cd5d26ac46defbf6cd03d012f1e587152
-	//2024-06-24 20:54:01 2024-06-25T00:54:01Z INF pubkey PubKeySecp256k1{034ACF1F2AD3AE3EFBA52DD793D8C8EB1CD5D26AC46DEFBF6CD03D012F1E587152} recovered pubkey 034acf1f2ad3ae3efba52dd793d8c8eb1cd5d26ac46defbf6cd03d012f1e587152
-	//2024-06-24 20:54:09 2024-06-25T00:54:09Z INF Current TSS address
-	//2024-06-24 20:54:09  ETH : 0xf264Ae9433E0CbC44f74E5c7A4816a6333821289
-	//2024-06-24 20:54:09  BTC : bcrt1qeqqpjc4h89de7qh94y0mvqu23kv7tglmpxgpvx
-	//2024-06-24 20:54:09  PubKey : zetapub1addwnpepqwqlkktnfjg026g0sc7qwksjymq50h6vk98qypc5m74sdjnun7cdsj2nnvq
-
+	//for i := 0; i < 200; i++ {
+	//	time.Sleep(1 * time.Second)
+	//	fmt.Println("Sleeping", i)
+	//}
+	//
 	//zetaTests := []string{
 	//	e2etests.TestZetaWithdrawName,
 	//	e2etests.TestMessagePassingExternalChainsName,

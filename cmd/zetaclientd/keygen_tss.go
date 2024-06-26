@@ -12,6 +12,7 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"
+	"github.com/zeta-chain/go-tss/tss"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -205,11 +206,11 @@ func SetTSSPubKey(tss *mc.TSS, logger zerolog.Logger) error {
 	return nil
 
 }
-func TestTSS(tss *mc.TSS, logger zerolog.Logger) error {
+func TestTSS(pubkey string, tssServer *tss.TssServer, logger zerolog.Logger) error {
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()
 	keygenLogger.Info().Msgf("KeyGen success ! Doing a Key-sign test")
 	// KeySign can fail even if TSS keygen is successful, just logging the error here to break out of outer loop and report TSS
-	err := mc.TestKeysign(tss.CurrentPubkey, tss.Server)
+	err := mc.TestKeysign(pubkey, tssServer)
 	if err != nil {
 		return err
 	}

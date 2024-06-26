@@ -245,6 +245,48 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
+
+	fmt.Println("----------------------------------------------")
+	fmt.Println("TSS address: ", tss.EVMAddress().String())
+	fmt.Println("TSS pubkey: ", tss.CurrentPubkey)
+	for st, key := range tss.Keys {
+		fmt.Println("TSS key string: ", st)
+		fmt.Println("TSS key: ", key.AddressInHex)
+	}
+	for _, signer := range tss.Signers {
+		fmt.Println("TSS signer: ", signer)
+	}
+	fmt.Println("----------------------------------------------")
+
+	//2024-06-26 09:13:47 ----------------------------------------------
+	//2024-06-26 09:13:47 TSS address:  0x03B8867E2cFD6E2A69c6607fa74ef59833EaD789
+	//2024-06-26 09:13:47 TSS pubkey:  zetapub1addwnpepq277ss2v74dclwjlgkmv99l9y33jncftgnwtwgvke66vqecskrh524maw7w
+	//2024-06-26 09:13:47 TSS key string:  zetapub1addwnpepq277ss2v74dclwjlgkmv99l9y33jncftgnwtwgvke66vqecskrh524maw7w
+	//2024-06-26 09:13:47 TSS key:  0x03B8867E2cFD6E2A69c6607fa74ef59833EaD789
+	//2024-06-26 09:13:47 TSS signer:  zetapub1addwnpepq20mt6y8f3l0c9sessc4hf7qzfltkxwdhpnq94qjtrxaxsquez7tq9sw6rf
+	//2024-06-26 09:13:47 TSS signer:  zetapub1addwnpepqft6p8yxct7kndtf7kvzy7wpfcak4g7xm9tr6vcrj33xmlf5nz2n5k69az3
+	//2024-06-26 09:13:47 ----------------------------------------------
+
+	//2024-06-26 09:15:57 ----------------------------------------------
+	//2024-06-26 09:15:57 TSS address:  0x03B8867E2cFD6E2A69c6607fa74ef59833EaD789
+	//2024-06-26 09:15:57 TSS pubkey:  zetapub1addwnpepq277ss2v74dclwjlgkmv99l9y33jncftgnwtwgvke66vqecskrh524maw7w
+	//2024-06-26 09:15:57 TSS key string:  zetapub1addwnpepq277ss2v74dclwjlgkmv99l9y33jncftgnwtwgvke66vqecskrh524maw7w
+	//2024-06-26 09:15:57 TSS key:  0x03B8867E2cFD6E2A69c6607fa74ef59833EaD789
+	//2024-06-26 09:15:57 TSS key string:  zetapub1addwnpepq04ul6w94vqqu3hqe5vwm5d49khm53tzxueu6x6w074xpkmpusmv7tllezk
+	//2024-06-26 09:15:57 TSS key:  0x96D0c9642733419757c2b1aA7Cc9d24CAAcbCDd0
+	//2024-06-26 09:15:57 TSS signer:  zetapub1addwnpepq20mt6y8f3l0c9sessc4hf7qzfltkxwdhpnq94qjtrxaxsquez7tq9sw6rf
+	//2024-06-26 09:15:57 TSS signer:  zetapub1addwnpepqft6p8yxct7kndtf7kvzy7wpfcak4g7xm9tr6vcrj33xmlf5nz2n5k69az3
+	//2024-06-26 09:15:57 ----------------------------------------------
+
+	//2024-06-26 09:17:31 ----------------------------------------------
+	//2024-06-26 09:17:31 TSS address:  0x03B8867E2cFD6E2A69c6607fa74ef59833EaD789
+	//2024-06-26 09:17:31 TSS pubkey:  zetapub1addwnpepq277ss2v74dclwjlgkmv99l9y33jncftgnwtwgvke66vqecskrh524maw7w
+	//2024-06-26 09:17:31 TSS key string:  zetapub1addwnpepq04ul6w94vqqu3hqe5vwm5d49khm53tzxueu6x6w074xpkmpusmv7tllezk
+	//2024-06-26 09:17:31 TSS key:  0x96D0c9642733419757c2b1aA7Cc9d24CAAcbCDd0
+	//2024-06-26 09:17:31 TSS key string:  zetapub1addwnpepq277ss2v74dclwjlgkmv99l9y33jncftgnwtwgvke66vqecskrh524maw7w
+	//2024-06-26 09:17:31 TSS key:  0x03B8867E2cFD6E2A69c6607fa74ef59833EaD789
+	//2024-06-26 09:17:31 ----------------------------------------------
+
 	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
 	}

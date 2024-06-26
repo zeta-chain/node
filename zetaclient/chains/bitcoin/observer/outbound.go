@@ -45,6 +45,7 @@ func (ob *Observer) WatchOutbound() {
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
+			fmt.Printf("WatchOutbound: Query trackers for chain %d\n", ob.chain.ChainId)
 			trackers, err := ob.zetacoreClient.GetAllOutboundTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				ob.logger.Outbound.Error().
@@ -52,8 +53,10 @@ func (ob *Observer) WatchOutbound() {
 					Msgf("WatchOutbound: error GetAllOutboundTrackerByChain for chain %d", ob.chain.ChainId)
 				continue
 			}
+			fmt.Println("WatchOutbound: trackers", len(trackers))
 			for _, tracker := range trackers {
 				// get original cctx parameters
+				fmt.Println("WatchOutbound: iterating tracker :", tracker.Nonce)
 				outboundID := ob.GetTxID(tracker.Nonce)
 				cctx, err := ob.zetacoreClient.GetCctxByNonce(ob.chain.ChainId, tracker.Nonce)
 				if err != nil {
