@@ -20,6 +20,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/constant"
@@ -201,7 +203,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(
+	err = GenerateTss(
 		appContext,
 		masterLogger,
 		zetacoreClient,
@@ -215,12 +217,12 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if cfg.TestTssKeysign {
-		err = TestTSS(tss, masterLogger)
-		if err != nil {
-			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
-		}
-	}
+	//if cfg.TestTssKeysign {
+	//	err = TestTSS(tss, masterLogger)
+	//	if err != nil {
+	//		startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
+	//	}
+	//}
 
 	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
 	// For existing keygen, this should directly proceed to the next step
@@ -233,6 +235,27 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 		break
 	}
+
+	bitcoinChainID := chains.BitcoinRegtest.ChainId
+	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
+	if btcEnabled {
+		bitcoinChainID = btcChain.ChainId
+	}
+	tss, err := mc.NewTSS(
+		appContext,
+		peers,
+		priKey,
+		preParams,
+		zetacoreClient,
+		tssHistoricalList,
+		bitcoinChainID,
+		tssKeyPass,
+		hotkeyPass,
+		true,
+	)
+
+	keyGen := appContext.ZetacoreContext().GetKeygen()
+	tss.Signers = keyGen.GranteePubkeys
 
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
