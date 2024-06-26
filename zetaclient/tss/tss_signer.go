@@ -477,7 +477,7 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
-// VerifyKeysharesForPubkeys verifies the keyshares for the pubkeys
+// VerifyKeysharesForPubkeys verifies the keyshares present on the node. It checks whether the node has TSS key shares for the TSS ceremonies it was part of.
 func (tss *TSS) VerifyKeysharesForPubkeys(tssList []observertypes.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
 		if wasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
@@ -489,7 +489,7 @@ func (tss *TSS) VerifyKeysharesForPubkeys(tssList []observertypes.TSS, granteePu
 	return nil
 }
 
-// LoadTssFilesFromDirectory loads the TSS files from the directory
+// LoadTssFilesFromDirectory loads the TSS files at the directory specified by the `tssPath`
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
 	if err != nil {
@@ -668,6 +668,7 @@ func combineDigests(digestList []string) []byte {
 }
 
 // wasNodePartOfTss checks if the node was part of the TSS
+// it checks whether a pubkey is part of the list used to generate the TSS , Every TSS generated on the network has its own list of associated public keys 
 func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	for _, grantee := range granteeList {
 		if granteePubKey32 == grantee {

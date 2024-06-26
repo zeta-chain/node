@@ -68,7 +68,7 @@ func (c *Client) GetChainParamsForChainID(externalChainID int64) (*observertypes
 	return resp.ChainParams, nil
 }
 
-// GetChainParams returns the chain params
+// GetChainParams returns all the chain params
 func (c *Client) GetChainParams() ([]*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	var err error
@@ -270,7 +270,7 @@ func (c *Client) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	return nil, err
 }
 
-// GetBlockHeight returns the block height
+// GetBlockHeight returns the zetachain block height
 func (c *Client) GetBlockHeight() (int64, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
@@ -456,7 +456,7 @@ func (c *Client) GetAllOutboundTrackerByChain(
 	return resp.OutboundTracker, nil
 }
 
-// GetPendingNoncesByChain returns the pending nonces for a chain
+// GetPendingNoncesByChain returns the pending nonces for a chain and current tss address
 func (c *Client) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.PendingNoncesByChain(
@@ -521,7 +521,7 @@ func (c *Client) Prove(
 	return resp.Valid, nil
 }
 
-// HasVoted returns whether a voter has voted
+// HasVoted returns whether an observer has voted
 func (c *Client) HasVoted(ballotIndex string, voterAddress string) (bool, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.HasVoted(context.Background(), &observertypes.QueryHasVotedRequest{
