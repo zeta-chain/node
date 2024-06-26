@@ -17,10 +17,6 @@ func TestOutboundParams_Validate(t *testing.T) {
 	require.ErrorContains(t, outTxParams.Validate(), "receiver cannot be empty")
 
 	outTxParams = sample.OutboundParamsValidChainID(r)
-	outTxParams.ReceiverChainId = 1000
-	require.ErrorContains(t, outTxParams.Validate(), "invalid receiver chain id 1000")
-
-	outTxParams = sample.OutboundParamsValidChainID(r)
 	outTxParams.Amount = sdkmath.Uint{}
 	require.ErrorContains(t, outTxParams.Validate(), "amount cannot be nil")
 

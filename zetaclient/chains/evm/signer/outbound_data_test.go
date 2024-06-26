@@ -75,7 +75,14 @@ func TestSigner_NewOutboundData(t *testing.T) {
 
 	t.Run("NewOutboundData success", func(t *testing.T) {
 		cctx := getCCTX(t)
-		_, skip, err := NewOutboundData(evmSigner.ZetacoreContext(), cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(
+			evmSigner.ZetacoreContext(),
+			cctx,
+			mockObserver,
+			evmSigner.EvmClient(),
+			zerolog.Logger{},
+			123,
+		)
 		require.False(t, skip)
 		require.NoError(t, err)
 	})
@@ -83,7 +90,14 @@ func TestSigner_NewOutboundData(t *testing.T) {
 	t.Run("NewOutboundData skip", func(t *testing.T) {
 		cctx := getCCTX(t)
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
-		_, skip, err := NewOutboundData(evmSigner.ZetacoreContext(), cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(
+			evmSigner.ZetacoreContext(),
+			cctx,
+			mockObserver,
+			evmSigner.EvmClient(),
+			zerolog.Logger{},
+			123,
+		)
 		require.NoError(t, err)
 		require.True(t, skip)
 	})
@@ -91,7 +105,14 @@ func TestSigner_NewOutboundData(t *testing.T) {
 	t.Run("NewOutboundData unknown chain", func(t *testing.T) {
 		cctx := getInvalidCCTX(t)
 		require.NoError(t, err)
-		_, skip, err := NewOutboundData(evmSigner.ZetacoreContext(), cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(
+			evmSigner.ZetacoreContext(),
+			cctx,
+			mockObserver,
+			evmSigner.EvmClient(),
+			zerolog.Logger{},
+			123,
+		)
 		require.ErrorContains(t, err, "unknown chain")
 		require.True(t, skip)
 	})
@@ -100,7 +121,14 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		cctx := getCCTX(t)
 		require.NoError(t, err)
 		cctx.GetCurrentOutboundParam().GasPrice = "invalidGasPrice"
-		_, skip, err := NewOutboundData(evmSigner.ZetacoreContext(), cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(
+			evmSigner.ZetacoreContext(),
+			cctx,
+			mockObserver,
+			evmSigner.EvmClient(),
+			zerolog.Logger{},
+			123,
+		)
 		require.True(t, skip)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})

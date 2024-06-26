@@ -30,6 +30,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		queryZRC20SystemContract := func(contract common.Address) string {
 			abi, err := zrc20.ZRC20MetaData.GetAbi()
@@ -77,7 +78,6 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// can update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
@@ -211,6 +211,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		chains := chains.DefaultChainsList()
 		require.True(t, len(chains) > 1)
@@ -246,7 +247,6 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// can't update the system contract
 		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 

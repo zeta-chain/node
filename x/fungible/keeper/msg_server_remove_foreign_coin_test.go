@@ -25,6 +25,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		chainID := getValidChainID(t)
 
@@ -36,7 +37,6 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		msg := types.NewMsgRemoveForeignCoin(admin, zrc20.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
-		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.NoError(t, err)
 		_, found = k.GetForeignCoins(ctx, zrc20.Hex())
@@ -54,13 +54,13 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", "foo")
 
 		msg := types.NewMsgRemoveForeignCoin(admin, zrc20.Hex())
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
-		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)

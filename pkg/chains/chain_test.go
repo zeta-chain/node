@@ -149,6 +149,7 @@ func TestChain_EncodeAddress(t *testing.T) {
 			chain: chains.Chain{
 				ChainName: chains.ChainName_btc_testnet,
 				ChainId:   18332,
+				Consensus: chains.Consensus_bitcoin,
 			},
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "",
@@ -159,6 +160,7 @@ func TestChain_EncodeAddress(t *testing.T) {
 			chain: chains.Chain{
 				ChainName: chains.ChainName_btc_mainnet,
 				ChainId:   8332,
+				Consensus: chains.Consensus_bitcoin,
 			},
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
