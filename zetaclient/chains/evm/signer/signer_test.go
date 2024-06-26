@@ -180,7 +180,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -199,7 +199,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 
 		// Call SignOutbound
 		tx, err := evmSigner.SignOutbound(txData)
-		require.ErrorContains(t, err, "sign onReceive error")
+		require.ErrorContains(t, err, "unable to sign onReceive")
 		require.Nil(t, tx)
 	})
 }
@@ -214,7 +214,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -237,7 +237,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 
 		// Call SignRevertTx
 		tx, err := evmSigner.SignRevertTx(txData)
-		require.ErrorContains(t, err, "sign onRevert error")
+		require.ErrorContains(t, err, "unable to sign onRevert")
 		require.Nil(t, tx)
 	})
 }
@@ -252,7 +252,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -275,7 +275,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 
 		// Call SignCancelTx
 		tx, err := evmSigner.SignCancelTx(txData)
-		require.ErrorContains(t, err, "SignCancelTx error")
+		require.ErrorContains(t, err, "unable to sign cancellation tx")
 		require.Nil(t, tx)
 	})
 }
@@ -290,7 +290,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -312,7 +312,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 
 		// Call SignWithdrawTx
 		tx, err := evmSigner.SignWithdrawTx(txData)
-		require.ErrorContains(t, err, "SignWithdrawTx error")
+		require.ErrorContains(t, err, "unable to sign withdraw tx")
 		require.Nil(t, tx)
 	})
 }
@@ -326,7 +326,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -371,7 +371,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -395,7 +395,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 
 		// Call SignERC20WithdrawTx
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
-		require.ErrorContains(t, err, "sign withdraw error")
+		require.ErrorContains(t, err, "unable to sign withdraw")
 		require.Nil(t, tx)
 	})
 }
@@ -409,7 +409,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -459,7 +459,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -502,7 +502,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -526,7 +526,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 
 		// Call SignMigrateTssFundsCmd
 		tx, err := evmSigner.SignMigrateTssFundsCmd(txData)
-		require.ErrorContains(t, err, "SignMigrateTssFundsCmd error")
+		require.ErrorContains(t, err, "unable to sign migrate tss funds")
 		require.Nil(t, tx)
 	})
 }
