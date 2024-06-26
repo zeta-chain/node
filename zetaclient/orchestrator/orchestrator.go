@@ -3,6 +3,10 @@ package orchestrator
 import (
 	"fmt"
 	"math"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -39,6 +43,9 @@ type Log struct {
 
 // Orchestrator wraps the zetacore client, chain observers and signers. This is the high level object used for CCTX scheduling
 type Orchestrator struct {
+	// appContext contains the config and zetacore context
+	appContext *context.AppContext
+
 	// zetacore client
 	zetacoreClient interfaces.ZetacoreClient
 
@@ -52,14 +59,23 @@ type Orchestrator struct {
 	// last operator balance
 	lastOperatorBalance sdkmath.Int
 
-	// misc
+	// logger contains the loggers used by the orchestrator
 	logger Log
-	stop   chan struct{}
-	ts     *metrics.TelemetryServer
+
+	// ts is the telemetry server for metrics
+	ts *metrics.TelemetryServer
+
+	// mu protects fields from concurrent access
+	mu sync.Mutex
+
+	// stop channel and flag to avoid closing twice
+	stop    chan struct{}
+	stopped bool
 }
 
 // NewOrchestrator creates a new orchestrator
 func NewOrchestrator(
+	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	signerMap map[int64]interfaces.ChainSigner,
 	observerMap map[int64]interfaces.ChainObserver,
@@ -67,13 +83,16 @@ func NewOrchestrator(
 	ts *metrics.TelemetryServer,
 ) *Orchestrator {
 	oc := Orchestrator{
-		ts:   ts,
-		stop: make(chan struct{}),
+		appContext: appContext,
+		ts:         ts,
+		mu:         sync.Mutex{},
+		stop:       make(chan struct{}),
+		stopped:    false,
 	}
 
 	// create loggers
 	oc.logger = Log{
-		Std: logger.With().Str("module", "Orchestrator").Logger(),
+		Std: logger.With().Str("module", "orchestrator").Logger(),
 	}
 	oc.logger.Sampled = oc.logger.Std.Sample(&zerolog.BasicSampler{N: loggerSamplingRate})
 
@@ -85,6 +104,7 @@ func NewOrchestrator(
 	// create outbound processor
 	oc.outboundProc = outboundprocessor.NewProcessor(logger)
 
+	// initialize hot key balance
 	balance, err := zetacoreClient.GetZetaHotKeyBalance()
 	if err != nil {
 		oc.logger.Std.Error().Err(err).Msg("error getting last balance of the hot key")
@@ -94,31 +114,48 @@ func NewOrchestrator(
 	return &oc
 }
 
-func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) error {
-	go oc.zetacoreClient.ZetacoreContextUpdater(appContext)
+// Start all orchestrator routines
+func (oc *Orchestrator) Start() {
+	// watch for upgrade plan in zetacore
+	go oc.WatchUpgradePlan()
 
-	signerAddress, err := oc.zetacoreClient.GetKeys().GetAddress()
-	if err != nil {
-		return fmt.Errorf("failed to get signer address: %w", err)
-	}
-	oc.logger.Std.Info().Msgf("Starting orchestrator for signer: %s", signerAddress)
+	// watch for zetaclient app context (config file and chain params) updates
+	go oc.UpdateAppContext()
 
-	// start cctx scheduler
-	go oc.StartCctxScheduler(appContext)
+	// schedule pending cctxs across all enabled chains
+	go oc.SchedulePendingCctxs()
+}
 
-	// watch for upgrade plan from zetacore
-	go func() {
-		// wait for upgrade plan signal to arrive
-		oc.zetacoreClient.Pause()
+// AwaitStopSignals waits for stop signals
+func (oc *Orchestrator) AwaitStopSignals() {
+	oc.logger.Std.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 
-		// now stop orchestrator and all observers
+	// subscribe to stop signals
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-ch
+
+	oc.logger.Std.Info().Msgf("stop signal received: %s", sig)
+}
+
+// Stop notifies all zetaclient goroutines to stop
+func (oc *Orchestrator) Stop() {
+	oc.mu.Lock()
+	defer oc.mu.Unlock()
+
+	// stop orchestrator only once.
+	// both WatchUpgradePlan and system signals can trigger Stop()
+	if !oc.stopped {
+		// notify app context updater and CCTX scheduler to stop
 		close(oc.stop)
+
+		// notify all chain observers to stop
 		for _, c := range oc.observerMap {
 			c.Stop()
 		}
-	}()
-
-	return nil
+		// set stopped flag
+		oc.stopped = true
+	}
 }
 
 // GetUpdatedSigner returns signer with updated chain parameters
@@ -232,8 +269,8 @@ func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(
 	return output.CctxsMap, nil
 }
 
-// StartCctxScheduler schedules keysigns for cctxs on each ZetaChain block (the ticker)
-func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
+// SchedulePendingCctxs schedules keysigns for pending cctxs across all chains
+func (oc *Orchestrator) SchedulePendingCctxs() {
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
 	for {
@@ -276,7 +313,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// get supported external chains
-					coreContext := appContext.ZetacoreContext()
+					coreContext := oc.appContext.ZetacoreContext()
 					externalChains := coreContext.GetEnabledExternalChains()
 
 					// query pending cctxs across all external chains within rate limit

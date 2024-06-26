@@ -141,6 +141,9 @@ func TestStop(t *testing.T) {
 
 		// stop observer
 		ob.Stop()
+
+		// db should be removed
+		require.Nil(t, ob.DB())
 	})
 }
 

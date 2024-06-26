@@ -3,9 +3,6 @@ package evm
 import "time"
 
 const (
-	// ZetaBlockTime is the block time of the Zeta network
-	ZetaBlockTime = 6500 * time.Millisecond
-
 	// OutboundInclusionTimeout is the timeout for waiting for an outbound to be included in a block
 	OutboundInclusionTimeout = 20 * time.Minute
 

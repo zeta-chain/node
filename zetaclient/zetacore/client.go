@@ -318,6 +318,96 @@ func (c *Client) UpdateZetacoreContext(
 	return nil
 }
 
+// GetLatestZetacoreContext queries zetacore to build the latest zetacore context
+func (c *Client) GetLatestZetacoreContext() (*context.ZetacoreContext, error) {
+	// get latest supported chains
+	supportedChains, err := c.GetSupportedChains()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetSupportedChains failed")
+	}
+	supportedChainsMap := make(map[int64]chains.Chain)
+	for _, chain := range supportedChains {
+		supportedChainsMap[chain.ChainId] = *chain
+	}
+
+	// get latest chain parameters
+	chainParams, err := c.GetChainParams()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetChainParams failed")
+	}
+
+	chainsEnabled := make([]chains.Chain, 0)
+	chainParamMap := make(map[int64]*observertypes.ChainParams)
+
+	newEVMParams := make(map[int64]*observertypes.ChainParams)
+	var newBTCParams *observertypes.ChainParams
+
+	for _, chainParam := range chainParams {
+		// skip unsupported chain
+		if !chainParam.IsSupported {
+			continue
+		}
+
+		// chain should exist in chain list
+		chain, found := supportedChainsMap[chainParam.ChainId]
+		if !found {
+			continue
+		}
+
+		// skip ZetaChain
+		if !chain.IsExternalChain() {
+			continue
+		}
+
+		// add chain param to map
+		chainParamMap[chainParam.ChainId] = chainParam
+
+		// keep this chain
+		chainsEnabled = append(chainsEnabled, chain)
+		if chains.IsBitcoinChain(chainParam.ChainId) {
+			newBTCParams = chainParam
+		} else if chains.IsEVMChain(chainParam.ChainId) {
+			newEVMParams[chainParam.ChainId] = chainParam
+		}
+	}
+
+	// get latest keygen
+	keyGen, err := c.GetKeyGen()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetKeyGen failed")
+	}
+
+	// get latest TSS public key
+	tss, err := c.GetCurrentTss()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetCurrentTss failed")
+	}
+	tssPubKey := tss.GetTssPubkey()
+
+	// get latest crosschain flags
+	crosschainFlags, err := c.GetCrosschainFlags()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetCrosschainFlags failed")
+	}
+
+	// get latest block header enabled chains
+	blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetBlockHeaderEnabledChains failed")
+	}
+
+	return context.CreateZetacoreContext(
+		keyGen,
+		chainsEnabled,
+		chainParamMap,
+		newEVMParams,
+		newBTCParams,
+		tssPubKey,
+		crosschainFlags,
+		blockHeaderEnabledChains,
+	), nil
+}
+
 func (c *Client) Pause() {
 	<-c.pause
 }

@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -20,7 +19,6 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientauthz "github.com/zeta-chain/zetacore/zetaclient/authz"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
 // GetInboundVoteMessage returns a new MsgVoteInbound
@@ -163,26 +161,6 @@ func (c *Client) SetTSS(tssPubkey string, keyGenZetaHeight int64, status chains.
 	}
 
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
-}
-
-// ZetacoreContextUpdater is a polling goroutine that checks and updates zetacore context at every height
-func (c *Client) ZetacoreContextUpdater(appContext *appcontext.AppContext) {
-	c.logger.Info().Msg("ZetacoreContextUpdater started")
-	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
-	sampledLogger := c.logger.Sample(&zerolog.BasicSampler{N: 10})
-	for {
-		select {
-		case <-ticker.C:
-			c.logger.Debug().Msg("Running Updater")
-			err := c.UpdateZetacoreContext(appContext.ZetacoreContext(), false, sampledLogger)
-			if err != nil {
-				c.logger.Err(err).Msg("ZetacoreContextUpdater failed to update config")
-			}
-		case <-c.stop:
-			c.logger.Info().Msg("ZetacoreContextUpdater stopped")
-			return
-		}
-	}
 }
 
 func (c *Client) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {

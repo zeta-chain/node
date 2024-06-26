@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -26,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -82,10 +79,11 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	masterLogger := logger.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
+	startLogger.Info().Msgf("zetaclient config file: \n%s", maskCfg(cfg))
 
 	// Wait until zetacore is up
 	waitForZetaCore(cfg, startLogger)
-	startLogger.Info().Msgf("Zetacore is ready, trying to connect to %s", cfg.Peer)
+	startLogger.Info().Msgf("zetacore is ready, trying to connect to %s", cfg.Peer)
 
 	// Start telemetry server
 	telemetryServer := metrics.NewTelemetryServer()
@@ -157,16 +155,14 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	authzclient.SetupAuthZSignerList(granter, grantee)
-	startLogger.Info().Msgf("Authz signer is ready")
+	startLogger.Info().Msgf("Authz is ready for granter %s grantee %s", granter, grantee)
 
 	// Initialize app context and zetacore context
-	appContext := context.NewAppContext(context.NewZetacoreContext(cfg), cfg)
-	err = zetacoreClient.UpdateZetacoreContext(appContext.ZetacoreContext(), true, startLogger)
+	appContext, err := orchestrator.CreateAppContext(cfg, zetacoreClient, startLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("Error getting core parameters")
+		startLogger.Error().Err(err).Msg("error creating app context")
 		return err
 	}
-	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -241,8 +237,8 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().
 		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.ZetacoreContext().GetEnabledChains()) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+	if len(appContext.ZetacoreContext().GetEnabledExternalChains()) == 0 {
+		startLogger.Error().Msgf("No external chains enabled in the zetacore %s ", cfg.String())
 	}
 
 	observerList, err := zetacoreClient.GetObserverList()
@@ -289,14 +285,6 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	orchestrator := orchestrator.NewOrchestrator(zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
-	err = orchestrator.MonitorCore(appContext)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("Orchestrator failed to start")
-		return err
-	}
-
 	// start zeta supply checker
 	// TODO: enable
 	// https://github.com/zeta-chain/node/issues/1354
@@ -311,17 +299,15 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-ch
-	startLogger.Info().Msgf("stop signal received: %s", sig)
+	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
+	orch := orchestrator.NewOrchestrator(appContext, zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
+	orch.Start()
 
-	// stop chain observers
-	for _, observer := range observerMap {
-		observer.Stop()
-	}
-	zetacoreClient.Stop()
+	// Watch for stop signal
+	orch.AwaitStopSignals()
+
+	// Stop orchestrator
+	orch.Stop()
 
 	return nil
 }

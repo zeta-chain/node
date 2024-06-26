@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -65,7 +66,13 @@ type ChainSigner interface {
 
 // ZetacoreClient is the client interface to interact with zetacore
 type ZetacoreClient interface {
-	ZetacoreContextUpdater(appContext *clientcontext.AppContext)
+	GetLatestZetacoreContext() (*clientcontext.ZetacoreContext, error)
+	UpdateZetacoreContext(coreContext *clientcontext.ZetacoreContext, init bool, sampledLogger zerolog.Logger) error
+	GetUpgradePlan() (*upgradetypes.Plan, error)
+	GetChainParams() ([]*observertypes.ChainParams, error)
+	GetSupportedChains() ([]*chains.Chain, error)
+	GetCurrentTss() (observertypes.TSS, error)
+	GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error)
 	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)
 	PostVoteOutbound(
 		sendHash string,

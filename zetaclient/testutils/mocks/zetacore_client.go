@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"cosmossdk.io/math"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
 
@@ -52,7 +53,53 @@ func NewMockZetacoreClient() *MockZetacoreClient {
 	}
 }
 
-func (m *MockZetacoreClient) ZetacoreContextUpdater(_ *clientcontext.AppContext) {
+func (m *MockZetacoreClient) GetLatestZetacoreContext() (*clientcontext.ZetacoreContext, error) {
+	if m.paused {
+		return nil, errors.New(ErrMsgPaused)
+	}
+	return nil, nil
+}
+
+func (m *MockZetacoreClient) UpdateZetacoreContext(_ *clientcontext.ZetacoreContext, _ bool, _ zerolog.Logger) error {
+	if m.paused {
+		return errors.New(ErrMsgPaused)
+	}
+	return nil
+}
+
+func (m *MockZetacoreClient) GetUpgradePlan() (*upgradetypes.Plan, error) {
+	if m.paused {
+		return nil, errors.New(ErrMsgPaused)
+	}
+	return nil, nil
+}
+
+func (m *MockZetacoreClient) GetChainParams() ([]*observerTypes.ChainParams, error) {
+	if m.paused {
+		return nil, errors.New(ErrMsgPaused)
+	}
+	return nil, nil
+}
+
+func (m *MockZetacoreClient) GetSupportedChains() ([]*chains.Chain, error) {
+	if m.paused {
+		return nil, errors.New(ErrMsgPaused)
+	}
+	return nil, nil
+}
+
+func (m *MockZetacoreClient) GetCurrentTss() (observerTypes.TSS, error) {
+	if m.paused {
+		return observerTypes.TSS{}, errors.New(ErrMsgPaused)
+	}
+	return observerTypes.TSS{}, nil
+}
+
+func (m *MockZetacoreClient) GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error) {
+	if m.paused {
+		return nil, errors.New(ErrMsgPaused)
+	}
+	return nil, nil
 }
 
 func (m *MockZetacoreClient) PostVoteInbound(_, _ uint64, _ *crosschaintypes.MsgVoteInbound) (string, string, error) {

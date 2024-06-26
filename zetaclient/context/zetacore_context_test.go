@@ -70,9 +70,6 @@ func TestNewZetaCoreContext(t *testing.T) {
 		keyGen := zetaContext.GetKeygen()
 		require.Equal(t, observertypes.Keygen{}, keyGen)
 
-		// assert enabled chains
-		require.Empty(t, len(zetaContext.GetEnabledChains()))
-
 		// assert external chains
 		require.Empty(t, len(zetaContext.GetEnabledExternalChains()))
 
@@ -212,9 +209,6 @@ func TestUpdateZetacoreContext(t *testing.T) {
 		keyGen := zetaContext.GetKeygen()
 		require.Equal(t, keyGenToUpdate, keyGen)
 
-		// assert enabled chains updated
-		require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
-
 		// assert enabled external chains
 		require.Equal(t, enabledChainsToUpdate[0:2], zetaContext.GetEnabledExternalChains())
 
@@ -272,12 +266,14 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			}
 			enabledChainsToUpdate := []chains.Chain{
 				{
-					ChainName: 1,
-					ChainId:   1,
+					ChainName:  1,
+					ChainId:    1,
+					IsExternal: true,
 				},
 				{
-					ChainName: 2,
-					ChainId:   2,
+					ChainName:  2,
+					ChainId:    2,
+					IsExternal: true,
 				},
 			}
 			evmChainParamsToUpdate := map[int64]*observertypes.ChainParams{
@@ -314,7 +310,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			require.Equal(t, keyGenToUpdate, keyGen)
 
 			// assert enabled chains updated
-			require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
+			require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledExternalChains())
 
 			// assert current tss pubkey updated
 			require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())

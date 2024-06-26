@@ -29,6 +29,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -793,7 +794,7 @@ func (signer *Signer) reportToOutboundTracker(
 					break
 				}
 				// retry otherwise
-				time.Sleep(evm.ZetaBlockTime * 3)
+				time.Sleep(common.ZetaBlockTime * 3)
 			}
 		}
 	}()

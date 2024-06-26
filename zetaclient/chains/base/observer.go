@@ -138,6 +138,7 @@ func (ob *Observer) Stop() {
 		if err != nil {
 			ob.Logger().Chain.Error().Err(err).Msgf("CloseDB failed for chain %d", ob.Chain().ChainId)
 		}
+		ob.db = nil
 	}
 	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
 }

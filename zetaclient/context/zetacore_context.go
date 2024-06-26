@@ -15,9 +15,10 @@ import (
 // ZetacoreContext contains zetacore context params
 // these are initialized and updated at runtime at every height
 type ZetacoreContext struct {
-	coreContextLock    *sync.RWMutex
+	mu                 *sync.RWMutex
 	keygen             observertypes.Keygen
 	chainsEnabled      []chains.Chain
+	chainParamMap      map[int64]*observertypes.ChainParams
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
 	currentTssPubkey   string
@@ -32,8 +33,10 @@ type ZetacoreContext struct {
 // it is initializing chain params from provided config
 func NewZetacoreContext(cfg config.Config) *ZetacoreContext {
 	evmChainParams := make(map[int64]*observertypes.ChainParams)
+	chainParamsMap := make(map[int64]*observertypes.ChainParams)
 	for _, e := range cfg.EVMChainConfigs {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
+		chainParamsMap[e.Chain.ChainId] = &observertypes.ChainParams{}
 	}
 
 	var bitcoinChainParams *observertypes.ChainParams
@@ -43,7 +46,7 @@ func NewZetacoreContext(cfg config.Config) *ZetacoreContext {
 	}
 
 	return &ZetacoreContext{
-		coreContextLock:          new(sync.RWMutex),
+		mu:                       new(sync.RWMutex),
 		chainsEnabled:            []chains.Chain{},
 		evmChainParams:           evmChainParams,
 		bitcoinChainParams:       bitcoinChainParams,
@@ -52,9 +55,33 @@ func NewZetacoreContext(cfg config.Config) *ZetacoreContext {
 	}
 }
 
+// CreateZetacoreContext creates and returns new ZetacoreContext
+func CreateZetacoreContext(
+	keygen *observertypes.Keygen,
+	chainsEnabled []chains.Chain,
+	chainParamMap map[int64]*observertypes.ChainParams,
+	evmChainParams map[int64]*observertypes.ChainParams,
+	bitcoinChainParams *observertypes.ChainParams,
+	tssPubKey string,
+	crosschainFlags observertypes.CrosschainFlags,
+	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
+) *ZetacoreContext {
+	return &ZetacoreContext{
+		mu:                       new(sync.RWMutex),
+		keygen:                   *keygen,
+		chainsEnabled:            chainsEnabled,
+		chainParamMap:            chainParamMap,
+		evmChainParams:           evmChainParams,
+		bitcoinChainParams:       bitcoinChainParams,
+		currentTssPubkey:         tssPubKey,
+		crosschainFlags:          crosschainFlags,
+		blockHeaderEnabledChains: blockHeaderEnabledChains,
+	}
+}
+
 func (c *ZetacoreContext) GetKeygen() observertypes.Keygen {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	var copiedPubkeys []string
 	if c.keygen.GranteePubkeys != nil {
@@ -70,25 +97,15 @@ func (c *ZetacoreContext) GetKeygen() observertypes.Keygen {
 }
 
 func (c *ZetacoreContext) GetCurrentTssPubkey() string {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.currentTssPubkey
 }
 
-// GetEnabledChains returns all enabled chains including zetachain
-func (c *ZetacoreContext) GetEnabledChains() []chains.Chain {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
-
-	copiedChains := make([]chains.Chain, len(c.chainsEnabled))
-	copy(copiedChains, c.chainsEnabled)
-	return copiedChains
-}
-
-// GetEnabledExternalChains returns all enabled external chains
+// GetEnabledExternalChains returns all enabled external chains (excluding zetachain)
 func (c *ZetacoreContext) GetEnabledExternalChains() []chains.Chain {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	externalChains := make([]chains.Chain, 0)
 	for _, chain := range c.chainsEnabled {
@@ -100,16 +117,16 @@ func (c *ZetacoreContext) GetEnabledExternalChains() []chains.Chain {
 }
 
 func (c *ZetacoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	evmChainParams, found := c.evmChainParams[chainID]
 	return evmChainParams, found
 }
 
 func (c *ZetacoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	// deep copy evm chain params
 	copied := make(map[int64]*observertypes.ChainParams, len(c.evmChainParams))
@@ -122,8 +139,8 @@ func (c *ZetacoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainP
 
 // GetBTCChainParams returns (chain, chain params, found) for bitcoin chain
 func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	if c.bitcoinChainParams == nil { // bitcoin is not enabled
 		return chains.Chain{}, nil, false
@@ -138,22 +155,22 @@ func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 }
 
 func (c *ZetacoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.crosschainFlags
 }
 
 // GetAllHeaderEnabledChains returns all verification flags
 func (c *ZetacoreContext) GetAllHeaderEnabledChains() []lightclienttypes.HeaderSupportedChain {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.blockHeaderEnabledChains
 }
 
 // GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
 func (c *ZetacoreContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
-	c.coreContextLock.RLock()
-	defer c.coreContextLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	for _, flags := range c.blockHeaderEnabledChains {
 		if flags.ChainId == chainID {
 			return flags, true
@@ -175,8 +192,8 @@ func (c *ZetacoreContext) Update(
 	init bool,
 	logger zerolog.Logger,
 ) {
-	c.coreContextLock.Lock()
-	defer c.coreContextLock.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	// Ignore whatever order zetacore organizes chain list in state
 	sort.SliceStable(newChains, func(i, j int) bool {
