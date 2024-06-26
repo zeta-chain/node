@@ -490,7 +490,6 @@ jobs:
             dist/zetaclientd_**/*
             dist/checksums.txt
 
-
       - name: Clean Up Workspace
         if: always()
         shell: bash
