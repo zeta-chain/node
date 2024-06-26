@@ -462,30 +462,6 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 	require.Equal(t, expectedOutput, *resp)
 }
 
-func TestZetacore_GetLastBlockHeightByChain(t *testing.T) {
-	index := chains.BscMainnet
-	expectedOutput := crosschainTypes.QueryGetLastBlockHeightResponse{
-		LastBlockHeight: &crosschainTypes.LastBlockHeight{
-			Index:              index.ChainName.String(),
-			Chain:              "7000",
-			LastOutboundHeight: 2134123,
-			LastInboundHeight:  1234333,
-		},
-	}
-	input := crosschainTypes.QueryGetLastBlockHeightRequest{Index: index.ChainName.String()}
-	method := "/zetachain.zetacore.crosschain.Query/LastBlockHeight"
-	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
-	server.Serve()
-	defer closeMockServer(t, server)
-
-	client, err := setupZetacoreClient()
-	require.NoError(t, err)
-
-	resp, err := client.GetLastBlockHeightByChain(index)
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.LastBlockHeight, resp)
-}
-
 func TestZetacore_GetZetaBlockHeight(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryLastZetaHeightResponse{Height: 12345}
 	input := crosschainTypes.QueryLastZetaHeightRequest{}

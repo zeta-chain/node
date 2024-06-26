@@ -16,6 +16,7 @@ import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
+import "zetachain/zetacore/observer/tss_funds_migrator.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -150,6 +151,30 @@ service Query {
       returns (QueryAllChainNoncesResponse) {
     option (google.api.http).get = "/zeta-chain/observer/chainNonces";
   }
+  // Queries the TssFundMigratorInfo for a specific chain
+  rpc TssFundsMigratorInfo(QueryTssFundsMigratorInfoRequest)
+      returns (QueryTssFundsMigratorInfoResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/getTssFundsMigrator";
+  }
+
+  // Queries all TssFundMigratorInfo
+  rpc TssFundsMigratorInfoAll(QueryTssFundsMigratorInfoAllRequest)
+      returns (QueryTssFundsMigratorInfoAllResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/getAllTssFundsMigrators";
+  }
+}
+
+message QueryTssFundsMigratorInfoAllRequest {}
+
+message QueryTssFundsMigratorInfoAllResponse {
+  repeated TssFundMigratorInfo tss_funds_migrators = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+message QueryTssFundsMigratorInfoRequest { int64 chain_id = 1; }
+message QueryTssFundsMigratorInfoResponse {
+  TssFundMigratorInfo tss_funds_migrator = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryGetChainNoncesRequest { string index = 1; }

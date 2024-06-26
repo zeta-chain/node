@@ -50,7 +50,7 @@ func BroadcastToZetaCore(
 	return client.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
 }
 
-// Broadcast Broadcasts tx to metachain. Returns txHash and error
+// Broadcast Broadcasts tx to ZetaChain. Returns txHash and error
 func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
 	c.broadcastLock.Lock()
 	defer c.broadcastLock.Unlock()
@@ -204,6 +204,7 @@ func (c *Client) GetContext() (client.Context, error) {
 	return ctx, nil
 }
 
+// SignTx signs a tx with the given name
 func (c *Client) SignTx(
 	txf clienttx.Factory,
 	name string,

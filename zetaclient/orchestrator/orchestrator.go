@@ -1,3 +1,4 @@
+// Package orchestrator provides the orchestrator for orchestrating cross-chain transactions
 package orchestrator
 
 import (
@@ -32,6 +33,8 @@ const (
 	loggerSamplingRate = 10
 )
 
+// Log is a struct that contains the logger
+// TODO(revamp): rename to logger
 type Log struct {
 	Std     zerolog.Logger
 	Sampled zerolog.Logger
@@ -42,8 +45,10 @@ type Orchestrator struct {
 	// zetacore client
 	zetacoreClient interfaces.ZetacoreClient
 
-	// chain signers and observers
-	signerMap   map[int64]interfaces.ChainSigner
+	// signerMap contains the chain signers indexed by chainID
+	signerMap map[int64]interfaces.ChainSigner
+
+	// observerMap contains the chain observers indexed by chainID
 	observerMap map[int64]interfaces.ChainObserver
 
 	// outbound processor
@@ -94,6 +99,7 @@ func NewOrchestrator(
 	return &oc
 }
 
+// MonitorCore starts the orchestrator for CCTXs
 func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) error {
 	signerAddress, err := oc.zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
@@ -231,6 +237,7 @@ func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(
 }
 
 // StartCctxScheduler schedules keysigns for cctxs on each ZetaChain block (the ticker)
+// TODO(revamp): make this function simpler
 func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64

@@ -176,10 +176,12 @@ func (t *TelemetryServer) Stop() error {
 	return err
 }
 
+// pingHandler returns a 200 OK response
 func (t *TelemetryServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// p2pHandler returns the p2p id
 func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
@@ -187,6 +189,7 @@ func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintf(w, "%s", t.p2pid)
 }
 
+// ipHandler returns the ip address
 func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
@@ -248,6 +251,7 @@ func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Reque
 	fmt.Fprintf(w, "%v", t.HotKeyBurnRate.GetBurnRate())
 }
 
+// logMiddleware logs the incoming HTTP request
 func logMiddleware() mux.MiddlewareFunc {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
