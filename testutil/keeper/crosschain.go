@@ -293,7 +293,6 @@ func MockGetRevertGasLimitForERC20(
 		}, true).Once()
 	m.On("QueryGasLimit", mock.Anything, mock.Anything).
 		Return(big.NewInt(returnVal), nil).Once()
-
 }
 
 func MockPayGasAndUpdateCCTX(

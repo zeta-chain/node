@@ -67,14 +67,6 @@ add_v17_message_authorizations() {
     ' $json_file > temp.json && mv temp.json $json_file
 }
 
-if [ $# -lt 1 ]
-then
-  echo "Usage: genesis.sh <num of nodes> [option]"
-  exit 1
-fi
-NUMOFNODES=$1
-OPTION=$2
-
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
@@ -96,7 +88,7 @@ export UNSAFE_SKIP_BACKUP=true
 # generate node list
 START=1
 # shellcheck disable=SC2100
-END=$((NUMOFNODES - 1))
+END=$((ZETACORED_REPLICAS - 1))
 NODELIST=()
 for i in $(eval echo "{$START..$END}")
 do
@@ -257,7 +249,7 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
 
-  if [[ "$OPTION" == "import-data" || "$OPTION" == "import-data-upgrade" ]]; then
+  if [[ -n "$ZETACORED_IMPORT_GENESIS_DATA" ]]; then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi

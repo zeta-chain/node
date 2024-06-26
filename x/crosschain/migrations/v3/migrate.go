@@ -19,7 +19,6 @@ func MigrateStore(
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
-
 	// Fetch existing TSS
 	existingTss := observertypes.TSS{}
 	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.TSSKey))

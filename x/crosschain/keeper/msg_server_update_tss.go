@@ -60,7 +60,6 @@ func (k msgServer) UpdateTssAddress(
 				migratorTx.CctxStatus.Status.String(),
 			)
 		}
-
 	}
 
 	k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, tss)

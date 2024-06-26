@@ -19,7 +19,6 @@ func CmdVoteTSS() *cobra.Command {
 		Short: "Vote for a new TSS creation",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			argsPubkey, err := cast.ToStringE(args[0])
 			if err != nil {
 				return err

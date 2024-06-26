@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -37,14 +36,19 @@ const (
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
+
+	// broadcastBackoff is the initial backoff duration for retrying broadcast
+	broadcastBackoff = 1000 * time.Millisecond
+
+	// broadcastRetries is the maximum number of retries for broadcasting a transaction
+	broadcastRetries = 5
 )
 
 var _ interfaces.ChainSigner = &Signer{}
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
-	// base.Signer implements the base chain signer
-	base.Signer
+	*base.Signer
 
 	// client is the RPC client to interact with the Bitcoin chain
 	client interfaces.BTCRPCClient
@@ -76,7 +80,7 @@ func NewSigner(
 	}
 
 	return &Signer{
-		Signer: *baseSigner,
+		Signer: baseSigner,
 		client: client,
 	}, nil
 }
@@ -422,17 +426,17 @@ func (signer *Signer) TryProcessOutbound(
 		outboundHash := tx.TxHash().String()
 		logger.Info().
 			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, signerAddress)
-		// TODO: pick a few broadcasters.
-		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
-		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
-		for i := 0; i < 5; i++ {
-			// #nosec G404 randomness is not a security issue here
-			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+
+		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
+		backOff := broadcastBackoff
+		for i := 0; i < broadcastRetries; i++ {
+			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
 				logger.Warn().
 					Err(err).
 					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
+				backOff *= 2
 				continue
 			}
 			logger.Info().

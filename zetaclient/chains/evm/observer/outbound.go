@@ -29,33 +29,33 @@ import (
 
 // GetTxID returns a unique id for outbound tx
 func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.Tss.EVMAddress().String()
-	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+	tssAddr := ob.TSS().EVMAddress().String()
+	return fmt.Sprintf("%d-%s-%d", ob.Chain().ChainId, tssAddr, nonce)
 }
 
 // WatchOutbound watches evm chain for outgoing txs status
 func (ob *Observer) WatchOutbound() {
 	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchOutbound_%d", ob.chain.ChainId),
+		fmt.Sprintf("EVM_WatchOutbound_%d", ob.Chain().ChainId),
 		ob.GetChainParams().OutboundTicker,
 	)
 	if err != nil {
-		ob.logger.Outbound.Error().Err(err).Msg("error creating ticker")
+		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
 		return
 	}
 
-	ob.logger.Outbound.Info().Msgf("WatchOutbound started for chain %d", ob.chain.ChainId)
-	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
+	ob.Logger().Outbound.Info().Msgf("WatchOutbound started for chain %d", ob.Chain().ChainId)
+	sampledLogger := ob.Logger().Outbound.Sample(&zerolog.BasicSampler{N: 10})
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+			if !clientcontext.IsOutboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
 				sampledLogger.Info().
-					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.chain.ChainId)
+					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
 			}
-			trackers, err := ob.zetacoreClient.GetAllOutboundTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
+			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ob.Chain().ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
@@ -72,23 +72,23 @@ func (ob *Observer) WatchOutbound() {
 						txCount++
 						outboundReceipt = receipt
 						outbound = tx
-						ob.logger.Outbound.Info().
-							Msgf("WatchOutbound: confirmed outbound %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
+						ob.Logger().Outbound.Info().
+							Msgf("WatchOutbound: confirmed outbound %s for chain %d nonce %d", txHash.TxHash, ob.Chain().ChainId, nonceInt)
 						if txCount > 1 {
-							ob.logger.Outbound.Error().Msgf(
-								"WatchOutbound: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outboundReceipt, outbound)
+							ob.Logger().Outbound.Error().Msgf(
+								"WatchOutbound: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.Chain().ChainId, nonceInt, outboundReceipt, outbound)
 						}
 					}
 				}
 				if txCount == 1 { // should be only one txHash confirmed for each nonce.
 					ob.SetTxNReceipt(nonceInt, outboundReceipt, outbound)
 				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
-					ob.logger.Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
+					ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, ob.Chain().ChainId, nonceInt)
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.logger.Outbound)
-		case <-ob.stop:
-			ob.logger.Outbound.Info().Msg("WatchOutbound: stopped")
+			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
+		case <-ob.StopChannel():
+			ob.Logger().Outbound.Info().Msg("WatchOutbound: stopped")
 			return
 		}
 	}
@@ -105,8 +105,8 @@ func (ob *Observer) PostVoteOutbound(
 	cointype coin.CoinType,
 	logger zerolog.Logger,
 ) {
-	chainID := ob.chain.ChainId
-	zetaTxHash, ballot, err := ob.zetacoreClient.PostVoteOutbound(
+	chainID := ob.Chain().ChainId
+	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(
 		cctxIndex,
 		receipt.TxHash.Hex(),
 		receipt.BlockNumber.Uint64(),
@@ -115,7 +115,7 @@ func (ob *Observer) PostVoteOutbound(
 		transaction.Gas(),
 		receiveValue,
 		receiveStatus,
-		ob.chain,
+		ob.Chain(),
 		nonce,
 		cointype,
 	)
@@ -137,17 +137,17 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		return false, false, nil
 	}
 	receipt, transaction := ob.GetTxNReceipt(nonce)
-	sendID := fmt.Sprintf("%d-%d", ob.chain.ChainId, nonce)
+	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
 
 	// get connector and erce20Custody contracts
 	connectorAddr, connector, err := ob.GetConnectorContract()
 	if err != nil {
-		return false, false, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.chain.ChainId)
+		return false, false, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
 	}
 	custodyAddr, custody, err := ob.GetERC20CustodyContract()
 	if err != nil {
-		return false, false, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.chain.ChainId)
+		return false, false, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.Chain().ChainId)
 	}
 
 	// define a few common variables
@@ -181,7 +181,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	if err != nil {
 		logger.Error().
 			Err(err).
-			Msgf("IsOutboundProcessed: error parsing outbound event for chain %d txhash %s", ob.chain.ChainId, receipt.TxHash)
+			Msgf("IsOutboundProcessed: error parsing outbound event for chain %d txhash %s", ob.Chain().ChainId, receipt.TxHash)
 		return false, false, err
 	}
 
@@ -346,7 +346,7 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	if err != nil {
 		log.Error().
 			Err(err).
-			Msgf("confirmTxByHash: error getting transaction for outbound %s chain %d", txHash, ob.chain.ChainId)
+			Msgf("confirmTxByHash: error getting transaction for outbound %s chain %d", txHash, ob.Chain().ChainId)
 		return nil, nil, false
 	}
 	if transaction == nil { // should not happen
@@ -355,17 +355,17 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	}
 
 	// check tx sender and nonce
-	signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
+	signer := ethtypes.NewLondonSigner(big.NewInt(ob.Chain().ChainId))
 	from, err := signer.Sender(transaction)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Msgf("confirmTxByHash: local recovery of sender address failed for outbound %s chain %d", transaction.Hash().Hex(), ob.chain.ChainId)
+			Msgf("confirmTxByHash: local recovery of sender address failed for outbound %s chain %d", transaction.Hash().Hex(), ob.Chain().ChainId)
 		return nil, nil, false
 	}
-	if from != ob.Tss.EVMAddress() { // must be TSS address
+	if from != ob.TSS().EVMAddress() { // must be TSS address
 		log.Error().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not TSS address %s",
-			from.Hex(), transaction.Hash().Hex(), ob.chain.ChainId, ob.Tss.EVMAddress().Hex())
+			from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
 		return nil, nil, false
 	}
 	if transaction.Nonce() != nonce { // must match cctx nonce
@@ -394,10 +394,10 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	}
 
 	// check confirmations
-	if !ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()) {
+	if !ob.HasEnoughConfirmations(receipt, ob.LastBlock()) {
 		log.Debug().
 			Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
-				txHash, nonce, receipt.BlockNumber, ob.GetLastBlockHeight())
+				txHash, nonce, receipt.BlockNumber, ob.LastBlock())
 		return nil, nil, false
 	}
 

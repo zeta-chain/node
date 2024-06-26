@@ -71,8 +71,4 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		logger.Std.Info().Msg("print standard log")
 		logger.Compliance.Info().Msg("print compliance log")
 	})
-	t.Run("should be able to get mutex", func(t *testing.T) {
-		signer := createSigner(t)
-		require.NotNil(t, signer.Mu())
-	})
 }
