@@ -390,7 +390,7 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         shell: bash
         run: |
-          make start-e2e-import-mainnet-upgrade
+          make start-upgrade-import-mainnet-test
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
