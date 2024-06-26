@@ -492,11 +492,10 @@ jobs:
             dist/checksums.txt
 
       - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ steps.attestation.outputs.bundle-path }}
-          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+        shell: bash 
+        run: | 
+          gh release upload ${{ env.GITHUB_TAG_MAJOR_VERSION }} ${{ steps.attestation.outputs.bundle-path }}
+
 
       - name: Clean Up Workspace
         if: always()
