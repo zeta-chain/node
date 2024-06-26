@@ -397,10 +397,6 @@ jobs:
           echo "continue"
 
   publish-release:
-    # permissions:
-    #   id-token: write
-    #   contents: write
-    #   attestations: write
     if: ${{ github.event.inputs.skip_release == 'false' }}
     needs:
       - gosec
@@ -482,13 +478,14 @@ jobs:
           touch .release-env
           make release
 
-      
-      - uses: actions/attest-build-provenance@v1
+      - name: Artifact Attestations
+        uses: actions/attest-build-provenance@v1
         with:
           subject-path: |
             dist/zetacored_**/*
             dist/zetaclientd_**/*
             checksums.txt
+        push-to-registry : true
 
       - name: Clean Up Workspace
         if: always()

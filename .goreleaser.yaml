@@ -40,10 +40,10 @@ builds:
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - linux
-      - darwin
-      - windows
+      # - darwin
+      # - windows
     goarch:
-      - arm64
+      # - arm64
       - amd64
     ignore:
       - goos: windows
@@ -73,7 +73,7 @@ builds:
       # - darwin
       # - windows
     goarch:
-      - arm64
+      # - arm64
       - amd64
     ignore:
       - goos: windows
