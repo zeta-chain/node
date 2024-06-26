@@ -22,25 +22,16 @@ func TestMsgRemoveChainParams_ValidateBasic(t *testing.T) {
 			name: "valid message",
 			msg: types.NewMsgRemoveChainParams(
 				sample.AccAddress(),
-				chains.ExternalChainList()[0].ChainId,
+				chains.ExternalChainList([]chains.Chain{})[0].ChainId,
 			),
 		},
 		{
 			name: "invalid address",
 			msg: types.NewMsgRemoveChainParams(
 				"invalid_address",
-				chains.ExternalChainList()[0].ChainId,
+				chains.ExternalChainList([]chains.Chain{})[0].ChainId,
 			),
 			err: sdkerrors.ErrInvalidAddress,
-		},
-
-		{
-			name: "invalid chain ID",
-			msg: types.NewMsgRemoveChainParams(
-				sample.AccAddress(),
-				999,
-			),
-			err: sdkerrors.ErrInvalidChainID,
 		},
 	}
 	for _, tt := range tests {

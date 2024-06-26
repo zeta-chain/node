@@ -48,5 +48,9 @@ func (msg *MsgDisableHeaderVerification) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "chain id list cannot be empty")
 	}
 
+	if len(msg.ChainIdList) > 200 {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "chain id list too long")
+	}
+
 	return nil
 }

@@ -78,12 +78,14 @@ func TestKeeper_GetSupportedChains(t *testing.T) {
 	t.Run("return list containing supported chains", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		require.Greater(t, len(chains.ExternalChainList()), 5)
-		supported1 := chains.ExternalChainList()[0]
-		supported2 := chains.ExternalChainList()[1]
-		unsupported := chains.ExternalChainList()[2]
-		supported3 := chains.ExternalChainList()[3]
-		supported4 := chains.ExternalChainList()[4]
+		chainList := chains.ExternalChainList([]chains.Chain{})
+
+		require.Greater(t, len(chainList), 5)
+		supported1 := chainList[0]
+		supported2 := chainList[1]
+		unsupported := chainList[2]
+		supported3 := chainList[3]
+		supported4 := chainList[4]
 
 		var chainParamsList []*types.ChainParams
 		chainParamsList = append(chainParamsList, sample.ChainParamsSupported(supported1.ChainId))

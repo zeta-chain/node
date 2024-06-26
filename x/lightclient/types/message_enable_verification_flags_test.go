@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,26 +42,11 @@ func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "chain id list is too long",
 			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: make([]int64, 200),
+				ChainIdList: make([]int64, 201),
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(t, err, "chain id list cannot be greater than supported chains")
-			},
-		},
-		{
-			name: "invalid chain id",
-			msg: types.MsgEnableHeaderVerification{
-				Creator:     sample.AccAddress(),
-				ChainIdList: []int64{chains.ZetaChainPrivnet.ChainId},
-			},
-			err: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(
-					t,
-					err,
-					fmt.Sprintf("invalid chain id header not supported (%d)", chains.ZetaChainPrivnet.ChainId),
-				)
+				require.ErrorContains(t, err, "chain id list too long")
 			},
 		},
 		{

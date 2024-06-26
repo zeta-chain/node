@@ -24,9 +24,11 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		// mock the authority keeper for authorization
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 
-		chain1 := chains.ExternalChainList()[0].ChainId
-		chain2 := chains.ExternalChainList()[1].ChainId
-		chain3 := chains.ExternalChainList()[2].ChainId
+		chainList := chains.ExternalChainList([]chains.Chain{})
+
+		chain1 := chainList[0].ChainId
+		chain2 := chainList[1].ChainId
+		chain3 := chainList[2].ChainId
 
 		// set admin
 		admin := sample.AccAddress()
@@ -96,7 +98,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 
 		msg := types.MsgRemoveChainParams{
 			Creator: admin,
-			ChainId: chains.ExternalChainList()[0].ChainId,
+			ChainId: chains.ExternalChainList([]chains.Chain{})[0].ChainId,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg)
@@ -117,9 +119,11 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		_, found := k.GetChainParamsList(ctx)
 		require.False(t, found)
 
+		chainList := chains.ExternalChainList([]chains.Chain{})
+
 		msg := types.MsgRemoveChainParams{
 			Creator: admin,
-			ChainId: chains.ExternalChainList()[0].ChainId,
+			ChainId: chainList[0].ChainId,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg)
@@ -128,16 +132,16 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		// add chain params
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
-				sample.ChainParams(chains.ExternalChainList()[0].ChainId),
-				sample.ChainParams(chains.ExternalChainList()[1].ChainId),
-				sample.ChainParams(chains.ExternalChainList()[2].ChainId),
+				sample.ChainParams(chainList[0].ChainId),
+				sample.ChainParams(chainList[1].ChainId),
+				sample.ChainParams(chainList[2].ChainId),
 			},
 		})
 
 		// not found if chain ID not in list
 		msg = types.MsgRemoveChainParams{
 			Creator: admin,
-			ChainId: chains.ExternalChainList()[3].ChainId,
+			ChainId: chainList[3].ChainId,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &msg)

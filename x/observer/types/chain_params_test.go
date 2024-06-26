@@ -99,13 +99,6 @@ func (s *UpdateChainParamsSuite) TestCommonParams() {
 	s.Validate(s.btcParams)
 }
 
-func (s *UpdateChainParamsSuite) TestBTCParams() {
-	copy := *s.btcParams
-	copy.WatchUtxoTicker = 0
-	err := types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
-}
-
 func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
 	copy := *s.evmParams
 	copy.ZetaTokenContractAddress = "0x123"
