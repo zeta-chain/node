@@ -97,10 +97,11 @@ func GetPath(inputPath string) string {
 				return ""
 			}
 			path[0] = home
+			return filepath.Join(path...)
 		}
 	}
 
-	return filepath.Join(path...)
+	return inputPath
 }
 
 // ContainRestrictedAddress returns true if any one of the addresses is restricted

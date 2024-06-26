@@ -3,17 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/onrik/ethrpc"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -61,7 +58,6 @@ func DebugCmd() *cobra.Command {
 			}
 			inboundHash := args[0]
 			var ballotIdentifier string
-			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
 			// create a new zetacore client
 			client, err := zetacore.NewClient(
@@ -89,11 +85,8 @@ func DebugCmd() *cobra.Command {
 
 			// get ballot identifier according to the chain type
 			if chains.IsEVMChain(chain.ChainId) {
-				evmObserver := evmobserver.Observer{
-					Mu: &sync.Mutex{},
-				}
+				evmObserver := evmobserver.Observer{}
 				evmObserver.WithZetacoreClient(client)
-				evmObserver.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
 				coinType := coin.CoinType_Cmd
@@ -168,11 +161,8 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if chains.IsBitcoinChain(chain.ChainId) {
-				btcObserver := btcobserver.Observer{
-					Mu: &sync.Mutex{},
-				}
+				btcObserver := btcobserver.Observer{}
 				btcObserver.WithZetacoreClient(client)
-				btcObserver.WithLogger(chainLogger)
 				btcObserver.WithChain(*chains.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
@@ -192,7 +182,6 @@ func DebugCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-
 			}
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 

@@ -24,17 +24,3 @@ func (k Keeper) GetPolicies(ctx sdk.Context) (val types.Policies, found bool) {
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
-
-// IsAuthorized checks if the address is authorized for the given policy type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, policyType types.PolicyType) bool {
-	policies, found := k.GetPolicies(ctx)
-	if !found {
-		return false
-	}
-	for _, policy := range policies.Items {
-		if policy.Address == address && policy.PolicyType == policyType {
-			return true
-		}
-	}
-	return false
-}

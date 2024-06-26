@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	context "github.com/zeta-chain/zetacore/zetaclient/context"
 )
@@ -179,7 +179,6 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			ChainId: 3,
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
-		loggers := clientcommon.DefaultLoggers()
 		crosschainFlags := sample.CrosschainFlags()
 		verificationFlags := sample.HeaderSupportedChains()
 
@@ -193,7 +192,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			*crosschainFlags,
 			verificationFlags,
 			false,
-			loggers.Std,
+			log.Logger,
 		)
 
 		// assert keygen updated
@@ -285,7 +284,6 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			crosschainFlags := sample.CrosschainFlags()
 			verificationFlags := sample.HeaderSupportedChains()
 			require.NotNil(t, crosschainFlags)
-			loggers := clientcommon.DefaultLoggers()
 			zetaContext.Update(
 				&keyGenToUpdate,
 				enabledChainsToUpdate,
@@ -295,7 +293,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 				*crosschainFlags,
 				verificationFlags,
 				false,
-				loggers.Std,
+				log.Logger,
 			)
 
 			// assert keygen updated

@@ -23,9 +23,9 @@ import (
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
-// GetInBoundVoteMessage returns a new MsgVoteInbound
+// GetInboundVoteMessage returns a new MsgVoteInbound
 // TODO(revamp): move to a different file
-func GetInBoundVoteMessage(
+func GetInboundVoteMessage(
 	sender string,
 	senderChain int64,
 	txOrigin string,

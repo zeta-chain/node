@@ -174,16 +174,8 @@ func CrosschainKeeperWithMocks(
 		lightclientKeeper,
 	)
 
-	cctxGateways := map[chains.CCTXGateway]keeper.CCTXGateway{
-		chains.CCTXGateway_observers: keeper.NewCCTXGatewayObservers(*k),
-		chains.CCTXGateway_zevm:      keeper.NewCCTXGatewayZEVM(*k),
-	}
-
-	k.SetCCTXGateways(cctxGateways)
-
 	// initialize ibccrosschain keeper and set it to the crosschain keeper
 	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
-
 	var ibcCrosschainKeeperTmp types.IBCCrosschainKeeper = initIBCCrosschainKeeper(
 		cdc,
 		db,
@@ -270,9 +262,23 @@ func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainm
 }
 
 func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
-	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-		Return(senderChain).Once()
+	if senderChain != nil {
+		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain).Once()
+	} else {
+		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
+			Return(&chains.Chain{}).Once()
+	}
+}
 
+func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
+	if senderChain != nil {
+		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(nil).Once()
+	} else {
+		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
+			Return(nil).Once()
+	}
 }
 
 func MockGetRevertGasLimitForERC20(
@@ -287,7 +293,6 @@ func MockGetRevertGasLimitForERC20(
 		}, true).Once()
 	m.On("QueryGasLimit", mock.Anything, mock.Anything).
 		Return(big.NewInt(returnVal), nil).Once()
-
 }
 
 func MockPayGasAndUpdateCCTX(
@@ -329,7 +334,6 @@ func MockPayGasAndUpdateCCTX(
 		Once()
 	m.On("CallZRC20Burn", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).Once()
-
 }
 
 func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) (nonce uint64) {
@@ -392,11 +396,11 @@ func MockVoteOnOutboundFailedBallot(
 		Once()
 }
 
-func MockGetOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
+func MockGetOutbound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 }
 
-func MockSaveOutBound(
+func MockSaveOutbound(
 	m *crosschainmocks.CrosschainObserverKeeper,
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
@@ -408,7 +412,7 @@ func MockSaveOutBound(
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
-func MockSaveOutBoundNewRevertCreated(
+func MockSaveOutboundNewRevertCreated(
 	m *crosschainmocks.CrosschainObserverKeeper,
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,

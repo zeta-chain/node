@@ -48,16 +48,18 @@ const (
 	TestERC20DepositName              = "erc20_deposit"
 	TestMultipleERC20DepositName      = "erc20_multiple_deposit"
 	TestMultipleERC20WithdrawsName    = "erc20_multiple_withdraw"
-	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 	TestERC20DepositRestrictedName    = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
 	TestBitcoinDepositName                = "bitcoin_deposit"
+	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
 	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
 	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
 	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
 	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
@@ -308,18 +310,18 @@ var AllE2ETests = []runner.E2ETest{
 		TestMultipleERC20Withdraws,
 	),
 	runner.NewE2ETest(
-		TestERC20DepositAndCallRefundName,
-		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
-		[]runner.ArgDefinition{},
-		TestERC20DepositAndCallRefund,
-	),
-	runner.NewE2ETest(
 		TestERC20DepositRestrictedName,
 		"deposit ERC20 into ZEVM restricted address",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000"},
 		},
 		TestERC20DepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallRefundName,
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{},
+		TestERC20DepositAndCallRefund,
 	),
 	/*
 	 Bitcoin tests
@@ -331,6 +333,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositRefundName,
+		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinDepositRefund,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
@@ -358,6 +367,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawLegacy,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawMultipleName,
+		"withdraw BTC from ZEVM multiple times",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "0.01"},
+			{Description: "times", DefaultValue: "2"},
+		},
+		WithdrawBitcoinMultipleTimes,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawP2WSHName,

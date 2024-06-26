@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -44,9 +45,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// create runner for the new EVM and set it up
 	newRunner, err := configureEVM2(r)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	newRunner.SetupEVM(false, false)
 
 	// mint some ERC20
@@ -59,21 +59,16 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
 	adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
 		adminAddr,
 		chainParams,
 	))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// setup the gas token
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		adminAddr,
 		"",
@@ -84,26 +79,19 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		coin.CoinType_Gas,
 		100000,
 	))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// set the gas token in the runner
 	ethZRC20Addr, err := newRunner.SystemContract.GasCoinZRC20ByChainId(
 		&bind.CallOpts{},
 		big.NewInt(chainParams.ChainId),
 	)
-	if err != nil {
-		panic(err)
-	}
-	if (ethZRC20Addr == ethcommon.Address{}) {
-		panic("eth zrc20 not found")
-	}
+	require.NoError(r, err)
+	require.NotEqual(r, ethcommon.Address{}, ethZRC20Addr)
+
 	newRunner.ETHZRC20Addr = ethZRC20Addr
 	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, newRunner.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	newRunner.ETHZRC20 = ethZRC20
 
 	// set the chain nonces for the new chain
@@ -113,9 +101,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		0,
 		0,
 	))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// deactivate the previous chain
 	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
@@ -124,15 +110,11 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		adminAddr,
 		chainParams,
 	))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// restart ZetaClient to pick up the new chain
 	r.Logger.Print("🔄 restarting ZetaClient to pick up the new chain")
-	if err := restartZetaClient(); err != nil {
-		panic(err)
-	}
+	require.NoError(r, restartZetaClient())
 
 	// wait 10 set for the chain to start
 	time.Sleep(10 * time.Second)
@@ -141,18 +123,14 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	txWithdraw, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), big.NewInt(10000000000000000))
 	if err == nil {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txWithdraw, r.Logger, r.ReceiptTimeout)
-		if receipt.Status == 1 {
-			panic("withdraw should have failed on the previous chain")
-		}
+		utils.RequiredTxFailed(r, receipt)
 	}
 
 	// test cross-chain functionalities on the new network
 	// we use a Go routine to manually mine blocks because Anvil network only mine blocks on tx by default
 	// we need automatic block mining to get the necessary confirmations for the cross-chain functionalities
 	stopMining, err := newRunner.AnvilMineBlocks(EVM2RPCURL, 3)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// deposit Ethers and ERC20 on ZetaChain
 	etherAmount := big.NewInt(1e18)
@@ -166,14 +144,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	tx := newRunner.WithdrawZeta(amount, true)
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Errorf(
-			"expected cctx status to be %s; got %s, message %s",
-			crosschaintypes.CctxStatus_OutboundMined,
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage,
-		))
-	}
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
 
@@ -193,32 +164,24 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		18,
 		100000,
 	))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// retrieve zrc20 and cctx from event
 	whitelistCCTXIndex, err := txserver.FetchAttributeFromTxResponse(res, "whitelist_cctx_index")
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	erc20zrc20Addr, err := txserver.FetchAttributeFromTxResponse(res, "zrc20_address")
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// wait for the whitelist cctx to be mined
 	newRunner.WaitForMinedCCTXFromIndex(whitelistCCTXIndex)
 
 	// set erc20 zrc20 contract address
-	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
-		panic(fmt.Errorf("invalid contract address: %s", erc20zrc20Addr))
-	}
+	require.True(r, ethcommon.IsHexAddress(erc20zrc20Addr), "invalid contract address: %s", erc20zrc20Addr)
+
 	erc20ZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(erc20zrc20Addr), newRunner.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	newRunner.ERC20ZRC20 = erc20ZRC20
 
 	// deposit ERC20 on ZetaChain
@@ -238,11 +201,9 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.CtxCancel,
 		r.DeployerAddress,
 		r.DeployerPrivateKey,
-		r.FungibleAdminMnemonic,
 		r.EVMClient,
 		r.ZEVMClient,
 		r.CctxClient,
-		r.ZetaTxServer,
 		r.FungibleClient,
 		r.AuthClient,
 		r.BankClient,
@@ -252,6 +213,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.ZEVMAuth,
 		r.BtcRPCClient,
 		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
+		runner.WithZetaTxServer(r.ZetaTxServer),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM

@@ -308,7 +308,6 @@ func GetValidZrc20WithdrawToETH(t *testing.T) (receipt ethtypes.Receipt) {
 	err := json.Unmarshal([]byte(block), &receipt)
 	require.NoError(t, err)
 	return
-
 }
 
 // receiver is bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu

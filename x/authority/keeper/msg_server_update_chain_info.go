@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
-	cosmoserror "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/x/authority/types"
@@ -21,10 +20,10 @@ func (k msgServer) UpdateChainInfo(
 	// This message is only allowed to be called by group admin
 	// Group admin because this functionality would rarely be called
 	// and overwriting false chain info can have undesired effects
-	if !k.IsAuthorized(ctx, msg.Creator, types.PolicyType_groupAdmin) {
-		return nil, cosmoserror.Wrap(types.ErrUnauthorized, fmt.Sprintf("creator %s", msg.Creator))
+	err := k.CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(types.ErrUnauthorized, err.Error())
 	}
-
 	// set chain info
 	k.SetChainInfo(ctx, msg.ChainInfo)
 

@@ -35,7 +35,7 @@ func (k msgServer) VoteBlockHeader(
 	}
 
 	// add vote to ballot
-	ballot, isNew, err := k.FindBallot(ctx, msg.Digest(), chain, types.ObservationType_InBoundTx)
+	ballot, isNew, err := k.FindBallot(ctx, msg.Digest(), chain, types.ObservationType_InboundTx)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(err, "failed to find ballot")
 	}

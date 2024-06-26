@@ -38,5 +38,7 @@ var (
 	UserAdminAddress    = ethcommon.HexToAddress("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 	UserAdminPrivateKey = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // #nosec G101 - used for testing
 
-	FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
+	// FungibleAdminAddress is the address of the account for testing the fungible admin functions
+	UserFungibleAdminAddress    = ethcommon.HexToAddress("0x8305C114Ea73cAc4A88f39A173803F94741b9055")
+	UserFungibleAdminPrivateKey = "d88d09a7d6849c15a36eb6931f9dd616091a63e9849a2cc86f309ba11fb8fec5" // #nosec G101 - used for testing
 )

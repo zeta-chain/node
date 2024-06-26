@@ -34,7 +34,7 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			senderChainID,
-			types.ObservationType_InBoundTx.String()),
+			types.ObservationType_InboundTx.String()),
 		)
 	}
 
@@ -49,7 +49,7 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			receiverChainID,
-			types.ObservationType_InBoundTx.String()),
+			types.ObservationType_InboundTx.String()),
 		)
 	}
 
@@ -65,7 +65,7 @@ func (k Keeper) VoteOnInboundBallot(
 	}
 
 	// checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InBoundTx)
+	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InboundTx)
 	if err != nil {
 		return false, false, err
 	}

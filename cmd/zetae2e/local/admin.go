@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -20,17 +19,6 @@ func adminTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("admin panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
 		// initialize runner for erc20 advanced test
 		adminRunner, err := initTestRunner(
 			"admin",
@@ -39,6 +27,7 @@ func adminTestRoutine(
 			UserAdminAddress,
 			UserAdminPrivateKey,
 			runner.NewLogger(verbose, color.FgHiGreen, "admin"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err

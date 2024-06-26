@@ -141,8 +141,8 @@ func (m CrossChainTx) SetPendingOutbound(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_PendingOutbound, message)
 }
 
-// SetOutBoundMined sets the CCTX status to OutboundMined with the given error message.
-func (m CrossChainTx) SetOutBoundMined(message string) {
+// SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
+func (m CrossChainTx) SetOutboundMined(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_OutboundMined, message)
 }
 
@@ -168,7 +168,7 @@ func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
 
-// NewCCTX creates a new CCTX.From a MsgVoteInbound message and a TSS pubkey.
+// NewCCTX creates a new CCTX from a MsgVoteInbound message and a TSS pubkey.
 // It also validates the created cctx
 func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainTx, error) {
 	index := msg.Digest()
@@ -189,7 +189,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		CoinType:               msg.CoinType,
 	}
 
-	outBoundParams := &OutboundParams{
+	outboundParams := &OutboundParams{
 		Receiver:               msg.Receiver,
 		ReceiverChainId:        msg.ReceiverChain,
 		Hash:                   "",
@@ -215,7 +215,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		RelayedMessage: msg.Message,
 		CctxStatus:     status,
 		InboundParams:  inboundParams,
-		OutboundParams: []*OutboundParams{outBoundParams},
+		OutboundParams: []*OutboundParams{outboundParams},
 	}
 
 	// TODO: remove this validate call

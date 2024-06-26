@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -16,22 +15,20 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
-	"github.com/zeta-chain/zetacore/zetaclient/tss"
 )
 
 const (
@@ -40,38 +37,36 @@ const (
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
+
+	// broadcastBackoff is the initial backoff duration for retrying broadcast
+	broadcastBackoff = 1000 * time.Millisecond
+
+	// broadcastRetries is the maximum number of retries for broadcasting a transaction
+	broadcastRetries = 5
 )
 
 var _ interfaces.ChainSigner = &Signer{}
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
-	// tssSigner is the TSS signer object used to sign transactions
-	tssSigner interfaces.TSSSigner
+	*base.Signer
 
-	// rpcClient is the RPC client used to broadcast transactions on the external network
-	rpcClient interfaces.BTCRPCClient
-
-	// logger is the logger used by the signer
-	logger zerolog.Logger
-
-	// loggerCompliance is the logger used for compliance logging
-	loggerCompliance zerolog.Logger
-
-	// ts is the telemetry server used to record metrics
-	ts *metrics.TelemetryServer
-
-	// coreContext contains context data of ZetaChain
-	coreContext *context.ZetacoreContext
+	// client is the RPC client to interact with the Bitcoin chain
+	client interfaces.BTCRPCClient
 }
 
-// NewSigner creates a new BTC signer
+// NewSigner creates a new Bitcoin signer
 func NewSigner(
-	cfg config.BTCConfig,
-	tssSigner interfaces.TSSSigner,
-	loggers clientcommon.ClientLogger,
+	chain chains.Chain,
+	zetacoreContext *context.ZetacoreContext,
+	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
-	coreContext *context.ZetacoreContext) (*Signer, error) {
+	logger base.Logger,
+	cfg config.BTCConfig) (*Signer, error) {
+	// create base signer
+	baseSigner := base.NewSigner(chain, zetacoreContext, tss, ts, logger)
+
+	// create the bitcoin rpc client using the provided config
 	connCfg := &rpcclient.ConnConfig{
 		Host:         cfg.RPCHost,
 		User:         cfg.RPCUsername,
@@ -86,12 +81,8 @@ func NewSigner(
 	}
 
 	return &Signer{
-		tssSigner:        tssSigner,
-		rpcClient:        client,
-		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
-		loggerCompliance: loggers.Compliance,
-		ts:               ts,
-		coreContext:      coreContext,
+		Signer: baseSigner,
+		client: client,
 	}, nil
 }
 
@@ -143,12 +134,12 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	if remainingSats < 0 {
 		return fmt.Errorf("remainder value is negative: %d", remainingSats)
 	} else if remainingSats == nonceMark {
-		signer.logger.Info().Msgf("adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
+		signer.Logger().Std.Info().Msgf("adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
 		remainingSats--
 	}
 
 	// 1st output: the nonce-mark btc to TSS self
-	tssAddrP2WPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
+	tssAddrP2WPKH := signer.TSS().BTCAddressWitnessPubkeyHash()
 	payToSelfScript, err := bitcoin.PayToAddrScript(tssAddrP2WPKH)
 	if err != nil {
 		return err
@@ -194,9 +185,12 @@ func (signer *Signer) SignWithdrawTx(
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
-	err := observer.FetchUTXOS()
+	err := observer.FetchUTXOs()
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOS error: nonce %d chain %d", nonce, chain.ChainId)
+		signer.Logger().
+			Std.Error().
+			Err(err).
+			Msgf("SignWithdrawTx: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
 	}
 
 	// select N UTXOs to cover the total expense
@@ -230,16 +224,16 @@ func (signer *Signer) SignWithdrawTx(
 		return nil, err
 	}
 	if sizeLimit < bitcoin.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
-		signer.logger.Info().
+		signer.Logger().Std.Info().
 			Msgf("sizeLimit %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
 	if txSize < bitcoin.OutboundBytesMin { // outbound shouldn't be blocked a low sizeLimit
-		signer.logger.Warn().
+		signer.Logger().Std.Warn().
 			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, bitcoin.OutboundBytesMin)
 		txSize = bitcoin.OutboundBytesMin
 	}
 	if txSize > bitcoin.OutboundBytesMax { // in case of accident
-		signer.logger.Warn().
+		signer.Logger().Std.Warn().
 			Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, bitcoin.OutboundBytesMax)
 		txSize = bitcoin.OutboundBytesMax
 	}
@@ -247,8 +241,10 @@ func (signer *Signer) SignWithdrawTx(
 	// fee calculation
 	// #nosec G701 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
-	signer.logger.Info().Msgf("bitcoin outbound nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
-		nonce, gasPrice.String(), txSize, fees.String(), consolidatedUtxo, consolidatedValue)
+	signer.Logger().
+		Std.Info().
+		Msgf("bitcoin outbound nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
+			nonce, gasPrice.String(), txSize, fees.String(), consolidatedUtxo, consolidatedValue)
 
 	// add tx outputs
 	err = signer.AddWithdrawTxOutputs(tx, to, total, amount, nonceMark, fees, cancelTx)
@@ -274,11 +270,7 @@ func (signer *Signer) SignWithdrawTx(
 		}
 	}
 
-	tssSigner, ok := signer.tssSigner.(*tss.TSS)
-	if !ok {
-		return nil, fmt.Errorf("tssSigner is not a TSS")
-	}
-	sig65Bs, err := tssSigner.SignBatch(witnessHashes, height, nonce, &chain)
+	sig65Bs, err := signer.TSS().SignBatch(witnessHashes, height, nonce, chain.ChainId)
 	if err != nil {
 		return nil, fmt.Errorf("SignBatch error: %v", err)
 	}
@@ -292,7 +284,7 @@ func (signer *Signer) SignWithdrawTx(
 			S: S,
 		}
 
-		pkCompressed := signer.tssSigner.PubKeyCompressedBytes()
+		pkCompressed := signer.TSS().PubKeyCompressedBytes()
 		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
@@ -313,12 +305,12 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	str := hex.EncodeToString(outBuff.Bytes())
 	fmt.Printf("BTCSigner: Transaction Data: %s\n", str)
 
-	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
+	hash, err := signer.client.SendRawTransaction(signedTx, true)
 	if err != nil {
 		return err
 	}
 
-	signer.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
+	signer.Logger().Std.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
 	return nil
 }
 
@@ -335,11 +327,11 @@ func (signer *Signer) TryProcessOutbound(
 	defer func() {
 		outboundProcessor.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
-			signer.logger.Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
+			signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
 		}
 	}()
 
-	logger := signer.logger.With().
+	logger := signer.Logger().Std.With().
 		Str("OutboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()
@@ -358,7 +350,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Msgf("chain observer is not a bitcoin observer")
 		return
 	}
-	flags := signer.coreContext.GetCrossChainFlags()
+	flags := signer.ZetacoreContext().GetCrossChainFlags()
 	if !flags.IsOutboundEnabled {
 		logger.Info().Msgf("outbound is disabled")
 		return
@@ -392,7 +384,7 @@ func (signer *Signer) TryProcessOutbound(
 	amount := float64(params.Amount.Uint64()) / 1e8
 
 	// Add 1 satoshi/byte to gasPrice to avoid minRelayTxFee issue
-	networkInfo, err := signer.rpcClient.GetNetworkInfo()
+	networkInfo, err := signer.client.GetNetworkInfo()
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
 		return
@@ -403,7 +395,7 @@ func (signer *Signer) TryProcessOutbound(
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
 	if cancelTx {
-		compliance.PrintComplianceLog(logger, signer.loggerCompliance,
+		compliance.PrintComplianceLog(logger, signer.Logger().Compliance,
 			true, chain.ChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
@@ -433,23 +425,23 @@ func (signer *Signer) TryProcessOutbound(
 	if err != nil {
 		logger.Warn().
 			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutBoundTx.String())
+			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
 		logger.Info().
 			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, signerAddress)
-		// TODO: pick a few broadcasters.
-		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
-		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
-		for i := 0; i < 5; i++ {
-			// #nosec G404 randomness is not a security issue here
-			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+
+		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
+		backOff := broadcastBackoff
+		for i := 0; i < broadcastRetries; i++ {
+			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
 				logger.Warn().
 					Err(err).
 					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
+				backOff *= 2
 				continue
 			}
 			logger.Info().

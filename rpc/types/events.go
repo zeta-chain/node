@@ -169,7 +169,8 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	}
 
 	// some old versions miss some events, fill it with tx result
-	if len(p.Txs) == 1 {
+	// txs with type CosmosEVMTxType will always emit GasUsed in events so no need to override for those
+	if len(p.Txs) == 1 && p.Txs[0].Type != CosmosEVMTxType {
 		// #nosec G701 always positive
 		p.Txs[0].GasUsed = uint64(result.GasUsed)
 	}
@@ -240,6 +241,9 @@ func ParseTxIndexerResult(
 				Type:      parsedTx.Type,
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
+				GasUsed:   parsedTx.GasUsed,
+				Data:      parsedTx.Data,
+				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
 	return &ethermint.TxResult{

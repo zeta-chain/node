@@ -1,16 +1,20 @@
 package main
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	btcrpc "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	btcsigner "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -54,13 +58,14 @@ func CreateZetacoreClient(
 	return client, nil
 }
 
+// CreateSignerMap creates a map of ChainSigners for all chains in the config
 func CreateSignerMap(
 	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
-	coreContext := appContext.ZetacoreContext()
+	zetacoreContext := appContext.ZetacoreContext()
 	signerMap := make(map[int64]interfaces.ChainSigner)
 
 	// EVM signers
@@ -68,26 +73,26 @@ func CreateSignerMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		evmChainParams, found := coreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
+		evmChainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
-			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
 		signer, err := evmsigner.NewSigner(
 			evmConfig.Chain,
-			evmConfig.Endpoint,
+			zetacoreContext,
 			tss,
+			ts,
+			logger,
+			evmConfig.Endpoint,
 			config.GetConnectorABI(),
 			config.GetERC20CustodyABI(),
 			mpiAddress,
-			erc20CustodyAddress,
-			coreContext,
-			loggers,
-			ts)
+			erc20CustodyAddress)
 		if err != nil {
-			loggers.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
 			continue
 		}
 		signerMap[evmConfig.Chain.ChainId] = signer
@@ -95,9 +100,9 @@ func CreateSignerMap(
 	// BTC signer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		signer, err := btcsigner.NewSigner(btcConfig, tss, loggers, ts, coreContext)
+		signer, err := btcsigner.NewSigner(btcChain, zetacoreContext, tss, ts, logger, btcConfig)
 		if err != nil {
-			loggers.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
+			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
 			signerMap[btcChain.ChainId] = signer
 		}
@@ -112,36 +117,78 @@ func CreateChainObserverMap(
 	zetacoreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	loggers clientcommon.ClientLogger,
+	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainObserver, error) {
+	zetacoreContext := appContext.ZetacoreContext()
 	observerMap := make(map[int64]interfaces.ChainObserver)
 	// EVM observers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		_, found := appContext.ZetacoreContext().GetEVMChainParams(evmConfig.Chain.ChainId)
+		chainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
-			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		co, err := evmobserver.NewObserver(appContext, zetacoreClient, tss, dbpath, loggers, evmConfig, ts)
+
+		// create EVM client
+		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
 		if err != nil {
-			loggers.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Err(err).Msgf("error dailing endpoint %s", evmConfig.Endpoint)
 			continue
 		}
-		observerMap[evmConfig.Chain.ChainId] = co
+
+		// create EVM chain observer
+		observer, err := evmobserver.NewObserver(
+			evmConfig,
+			evmClient,
+			*chainParams,
+			zetacoreContext,
+			zetacoreClient,
+			tss,
+			dbpath,
+			logger,
+			ts,
+		)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
+			continue
+		}
+		observerMap[evmConfig.Chain.ChainId] = observer
 	}
+
 	// BTC observer
+	_, chainParams, found := zetacoreContext.GetBTCChainParams()
+	if !found {
+		return nil, fmt.Errorf("bitcoin chains params not found")
+	}
+
+	// create BTC chain observer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		co, err := btcobserver.NewObserver(appContext, btcChain, zetacoreClient, tss, dbpath, loggers, btcConfig, ts)
+		btcClient, err := btcrpc.NewRPCClient(btcConfig)
 		if err != nil {
-			loggers.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
-
+			logger.Std.Error().Err(err).Msgf("error creating rpc client for bitcoin chain %s", btcChain.String())
 		} else {
-			observerMap[btcChain.ChainId] = co
+			// create BTC chain observer
+			observer, err := btcobserver.NewObserver(
+				btcChain,
+				btcClient,
+				*chainParams,
+				zetacoreContext,
+				zetacoreClient,
+				tss,
+				dbpath,
+				logger,
+				ts,
+			)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
+			} else {
+				observerMap[btcChain.ChainId] = observer
+			}
 		}
 	}
 

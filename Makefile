@@ -26,6 +26,14 @@ HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
 export DOCKER_BUILDKIT := 1
 
+# parameters for localnet docker compose files
+# set defaults to empty to prevent docker warning
+export LOCALNET_MODE
+export E2E_ARGS := $(E2E_ARGS)
+export UPGRADE_HEIGHT
+export ZETACORED_IMPORT_GENESIS_DATA
+export ZETACORED_START_PERIOD := 30s
+
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
 clean-binaries:
@@ -145,14 +153,8 @@ gosec:
 ###                           		Formatting			                    ###
 ###############################################################################
 
-fmt-import:
-	@bash ./scripts/fmt-imports.sh
-@PHONY: fmt-import
-
-fmt-golines:
-	@echo "--> Formatting Go lines"
-	@bash ./scripts/fmt-golines.sh
-.PHONY: fmt-golines
+fmt:
+	@bash ./scripts/fmt.sh
 
 ###############################################################################
 ###                           Generation commands  		                    ###
@@ -199,7 +201,7 @@ mocks:
 .PHONY: mocks
 
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt-import fmt-golines
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 .PHONY: generate
 
 ###############################################################################
@@ -223,36 +225,51 @@ start-e2e-test: zetanode
 
 start-e2e-admin-test: zetanode
 	@echo "--> Starting e2e admin test"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-admin.yml up -d
+	export E2E_ARGS="--skip-regular --test-admin" && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-additionalevm.yml up -d
 
 start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-performance.yml up -d
+	export E2E_ARGS="--test-performance" && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
 
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stress.yml up -d
 
 #TODO: replace OLD_VERSION with v16 tag once its available
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v16' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode-upgrade
 
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml -f docker-compose-upgrade-light.yml up -d
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-localnet: zetanode
+start-localnet: zetanode start-localnet-skip-build
+
+start-localnet-skip-build:
 	@echo "--> Starting localnet"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d
+	export LOCALNET_MODE=setup-only && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
 
-stop-test:
+start-e2e-import-mainnet-test: zetanode
+	@echo "--> Starting e2e import-data test"
+	export ZETACORED_IMPORT_GENESIS_DATA=true && \
+	export ZETACORED_START_PERIOD=10m && \
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
+
+stop-localnet:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
 
 ###############################################################################

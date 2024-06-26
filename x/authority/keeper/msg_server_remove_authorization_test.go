@@ -13,6 +13,10 @@ import (
 )
 
 func TestMsgServer_RemoveAuthorization(t *testing.T) {
+	var removeAuthorization = types.Authorization{
+		MsgUrl:           "/zetachain.zetacore.authority.MsgRemoveAuthorization",
+		AuthorizedPolicy: types.PolicyType_groupAdmin,
+	}
 	t.Run("successfully remove operational policy authorization", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		admin := keepertest.SetAdminPolicies(ctx, k)
@@ -135,7 +139,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		}
 
 		_, err := msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
-		require.ErrorIs(t, err, types.ErrAuthorizationListNotFound)
+		require.ErrorContains(t, err, types.ErrAuthorizationListNotFound.Error())
 	})
 
 	t.Run("unable to remove authorization if authorization does not exist", func(t *testing.T) {
@@ -162,7 +166,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
 
 		_, err = msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
-		require.ErrorIs(t, err, types.ErrAuthorizationNotFound)
+		require.ErrorContains(t, err, types.ErrAuthorizationNotFound.Error())
 
 		authorizationListNew, found := k.GetAuthorizationList(ctx)
 		require.True(t, found)
@@ -185,6 +189,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 				MsgUrl:           "ABC",
 				AuthorizedPolicy: types.PolicyType_groupOperational,
 			},
+			removeAuthorization,
 		}}
 		k.SetAuthorizationList(ctx, authorizationList)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -195,7 +200,7 @@ func TestMsgServer_RemoveAuthorization(t *testing.T) {
 		}
 
 		_, err := msgServer.RemoveAuthorization(sdk.WrapSDKContext(ctx), msg)
-		require.ErrorIs(t, err, types.ErrInvalidAuthorizationList)
+		require.ErrorContains(t, err, types.ErrInvalidAuthorizationList.Error())
 
 		authorizationListNew, found := k.GetAuthorizationList(ctx)
 		require.True(t, found)

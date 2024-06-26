@@ -48,7 +48,6 @@ func NewKeeper(
 		lightclientKeeper: lightclientKeeper,
 		authority:         authority,
 	}
-
 }
 
 func (k Keeper) GetSlashingKeeper() types.SlashingKeeper {

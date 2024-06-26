@@ -4,6 +4,8 @@
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
 # The number of nodes is passed as an first argument to the script
+# The second argument is optional and can have the following value:
+#  - import-data: import data into the genesis file
 
 /usr/sbin/sshd
 
@@ -65,13 +67,6 @@ add_v17_message_authorizations() {
     ' $json_file > temp.json && mv temp.json $json_file
 }
 
-if [ $# -lt 1 ]
-then
-  echo "Usage: genesis.sh <num of nodes> [option]"
-  exit 1
-fi
-NUMOFNODES=$1
-
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
@@ -93,7 +88,7 @@ export UNSAFE_SKIP_BACKUP=true
 # generate node list
 START=1
 # shellcheck disable=SC2100
-END=$((NUMOFNODES - 1))
+END=$((ZETACORED_REPLICAS - 1))
 NODELIST=()
 for i in $(eval echo "{$START..$END}")
 do
@@ -189,7 +184,7 @@ then
 
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
-  zetacored add-observer-list --keygen-block 55
+  zetacored add-observer-list --keygen-block 25
 
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
@@ -219,11 +214,11 @@ then
   fi
 
 # set admin account
-  zetacored add-genesis-account zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk 100000000000000000000000000azeta
+  zetacored add-genesis-account zeta1svzuz982w09vf2y08xsh8qplj36phyz466krj3 100000000000000000000000000azeta
   zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][2]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][0]["address"]="zeta1svzuz982w09vf2y08xsh8qplj36phyz466krj3"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][1]["address"]="zeta1svzuz982w09vf2y08xsh8qplj36phyz466krj3"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["authority"]["policies"]["items"][2]["address"]="zeta1svzuz982w09vf2y08xsh8qplj36phyz466krj3"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
 # give balance to runner accounts to deploy contracts directly on zEVM
 # deployer
@@ -253,6 +248,11 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
+
+  if [[ -n "$ZETACORED_IMPORT_GENESIS_DATA" ]]; then
+    echo "Importing data"
+    zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
+  fi
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs

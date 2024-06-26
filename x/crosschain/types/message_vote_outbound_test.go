@@ -109,75 +109,75 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 	require.NotEmpty(t, hash, "hash should not be empty")
 
 	// creator not used
-	msg2 := msg
-	msg2.Creator = sample.AccAddress()
-	hash2 := msg2.Digest()
+	msgNew := msg
+	msgNew.Creator = sample.AccAddress()
+	hash2 := msgNew.Digest()
 	require.Equal(t, hash, hash2, "creator should not change hash")
 
 	// status not used
-	msg2 = msg
-	msg2.Status = chains.ReceiveStatus_failed
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.Status = chains.ReceiveStatus_failed
+	hash2 = msgNew.Digest()
 	require.Equal(t, hash, hash2, "status should not change hash")
 
 	// cctx hash used
-	msg2 = msg
-	msg2.CctxHash = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.CctxHash = sample.StringRandom(r, 32)
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "cctx hash should change hash")
 
 	// observed outbound tx hash used
-	msg2 = msg
-	msg2.ObservedOutboundHash = sample.StringRandom(r, 32)
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.ObservedOutboundHash = sample.StringRandom(r, 32)
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx hash should change hash")
 
 	// observed outbound tx block height used
-	msg2 = msg
-	msg2.ObservedOutboundBlockHeight = 43
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.ObservedOutboundBlockHeight = 43
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx block height should change hash")
 
 	// observed outbound tx gas used used
-	msg2 = msg
-	msg2.ObservedOutboundGasUsed = 43
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.ObservedOutboundGasUsed = 43
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx gas used should change hash")
 
 	// observed outbound tx effective gas price used
-	msg2 = msg
-	msg2.ObservedOutboundEffectiveGasPrice = math.NewInt(43)
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.ObservedOutboundEffectiveGasPrice = math.NewInt(43)
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas price should change hash")
 
 	// observed outbound tx effective gas limit used
-	msg2 = msg
-	msg2.ObservedOutboundEffectiveGasLimit = 43
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.ObservedOutboundEffectiveGasLimit = 43
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas limit should change hash")
 
 	// zeta minted used
-	msg2 = msg
-	msg2.ValueReceived = math.NewUint(43)
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.ValueReceived = math.NewUint(43)
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "zeta minted should change hash")
 
 	// out tx chain used
-	msg2 = msg
-	msg2.OutboundChain = 43
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.OutboundChain = 43
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "out tx chain should change hash")
 
 	// out tx tss nonce used
-	msg2 = msg
-	msg2.OutboundTssNonce = 43
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.OutboundTssNonce = 43
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "out tx tss nonce should change hash")
 
 	// coin type used
-	msg2 = msg
-	msg2.CoinType = coin.CoinType_ERC20
-	hash2 = msg2.Digest()
+	msgNew = msg
+	msgNew.CoinType = coin.CoinType_ERC20
+	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 }
 

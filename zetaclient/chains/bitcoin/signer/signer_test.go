@@ -18,11 +18,9 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
@@ -48,13 +46,14 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
-	cfg := config.NewConfig()
 	s.btcSigner, err = NewSigner(
-		config.BTCConfig{},
+		chains.Chain{},
+		nil,
 		tss,
-		clientcommon.DefaultLoggers(),
-		&metrics.TelemetryServer{},
-		context.NewZetacoreContext(cfg))
+		nil,
+		base.DefaultLogger(),
+		config.BTCConfig{},
+	)
 	c.Assert(err, IsNil)
 }
 
@@ -231,16 +230,17 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
 	signer, err := NewSigner(
-		config.BTCConfig{},
-		mocks.NewTSSMainnet(),
-		clientcommon.DefaultLoggers(),
-		&metrics.TelemetryServer{},
+		chains.Chain{},
 		nil,
+		mocks.NewTSSMainnet(),
+		nil,
+		base.DefaultLogger(),
+		config.BTCConfig{},
 	)
 	require.NoError(t, err)
 
 	// tss address and script
-	tssAddr := signer.tssSigner.BTCAddressWitnessPubkeyHash()
+	tssAddr := signer.TSS().BTCAddressWitnessPubkeyHash()
 	tssScript, err := bitcoin.PayToAddrScript(tssAddr)
 	require.NoError(t, err)
 	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())
@@ -392,13 +392,13 @@ func TestNewBTCSigner(t *testing.T) {
 	tss := &mocks.TSS{
 		PrivKey: privateKey,
 	}
-	cfg := config.NewConfig()
 	btcSigner, err := NewSigner(
-		config.BTCConfig{},
+		chains.Chain{},
+		nil,
 		tss,
-		clientcommon.DefaultLoggers(),
-		&metrics.TelemetryServer{},
-		context.NewZetacoreContext(cfg))
+		nil,
+		base.DefaultLogger(),
+		config.BTCConfig{})
 	require.NoError(t, err)
 	require.NotNil(t, btcSigner)
 }

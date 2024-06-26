@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -12,11 +14,9 @@ import (
 
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 const flagVerbose = "verbose"
@@ -37,17 +37,13 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 	}
 
 	cmd.Flags().StringVarP(&configFile, flagConfig, "c", "", "path to the configuration file")
-	err := cmd.MarkFlagRequired(flagConfig)
-	if err != nil {
-		panic(err)
+	if err := cmd.MarkFlagRequired(flagConfig); err != nil {
+		fmt.Println("Error marking flag as required")
+		os.Exit(1)
 	}
 
 	// Retain the verbose flag
-	cmd.Flags().Bool(
-		flagVerbose,
-		false,
-		"set to true to enable verbose logging",
-	)
+	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
 	return cmd
 }
@@ -77,11 +73,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// get EVM address from config
 	evmAddr := conf.Accounts.EVMAddress
 	if !ethcommon.IsHexAddress(evmAddr) {
-		cancel()
 		return errors.New("invalid EVM address")
 	}
 
@@ -93,12 +89,9 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf,
 		ethcommon.HexToAddress(evmAddr),
 		conf.Accounts.EVMPrivKey,
-		utils.FungibleAdminName,     // placeholder value, not used
-		local.FungibleAdminMnemonic, // placeholder value, not used
 		logger,
 	)
 	if err != nil {
-		cancel()
 		return err
 	}
 
@@ -116,31 +109,26 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 	balancesBefore, err := testRunner.GetAccountBalances(true)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	// parse test names and arguments from cmd args and run them
 	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	testsToRun, err := testRunner.GetE2ETestsToRunByConfig(e2etests.AllE2ETests, userTestsConfigs)
 	if err != nil {
-		cancel()
 		return err
 	}
 	reports, err := testRunner.RunE2ETestsIntoReport(testsToRun)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	balancesAfter, err := testRunner.GetAccountBalances(true)
 	if err != nil {
-		cancel()
 		return err
 	}
 
