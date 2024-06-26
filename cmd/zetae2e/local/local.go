@@ -138,7 +138,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		"deployer",
 		cancel,
 		conf,
-		conf.Accounts.Deployer,
+		conf.DefaultAccount,
 		logger,
 		runner.WithZetaTxServer(zetaTxServer),
 	)

@@ -1,9 +1,8 @@
 zeta_chain_id: "athens_7001-1"
-accounts:
-  deployer:
-    bech32_address: zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd
-    evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"
-    private_key: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+default_account:
+  bech32_address: zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd
+  evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"
+  private_key: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 rpcs:
   zevm: "http://0.0.0.0:9545"
   evm: "http://0.0.0.0:8545"

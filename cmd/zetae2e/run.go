@@ -80,7 +80,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		"e2e",
 		cancel,
 		conf,
-		conf.Accounts.Deployer,
+		conf.DefaultAccount,
 		logger,
 	)
 	if err != nil {

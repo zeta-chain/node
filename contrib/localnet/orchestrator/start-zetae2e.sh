@@ -37,8 +37,8 @@ sleep 2
 
 ### Create the accounts and fund them with Ether on local Ethereum network
 
-# unlock the deployer account
-address=$(yq -r '.accounts.deployer.evm_address' config.yml)
+# unlock the default account account
+address=$(yq -r '.default_account.evm_address' config.yml)
 echo "funding deployer address ${address} with 10000 Ether"
 geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 

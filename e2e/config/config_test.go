@@ -29,11 +29,9 @@ func TestConfigAdditionalAccountsSliceSynced(t *testing.T) {
 
 func TestConfigInvalidAccount(t *testing.T) {
 	conf := Config{
-		Accounts: Accounts{
-			Deployer: Account{
-				RawEVMAddress: "asdf",
-				RawPrivateKey: "asdf",
-			},
+		DefaultAccount: Account{
+			RawEVMAddress: "asdf",
+			RawPrivateKey: "asdf",
 		},
 	}
 	err := conf.Validate()

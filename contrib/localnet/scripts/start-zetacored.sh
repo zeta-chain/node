@@ -222,8 +222,8 @@ then
   cat $HOME/.zetacored/config/genesis.json | jq --arg address "$address" '.app_state["authority"]["policies"]["items"][2]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
 # give balance to runner accounts to deploy contracts directly on zEVM
-# deployer
-  address=$(yq -r '.accounts.deployer.bech32_address' /root/config.yml)
+# default account
+  address=$(yq -r '.default_account.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # erc20 tester
   address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)

@@ -33,8 +33,8 @@ func TestReadConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			conf, err := config.ReadConfig(tt.filePath)
 			require.NoError(t, err)
-			require.NotEmpty(t, conf.Accounts.Deployer.RawEVMAddress)
-			require.NotEmpty(t, conf.Accounts.Deployer.RawPrivateKey)
+			require.NotEmpty(t, conf.DefaultAccount.RawEVMAddress)
+			require.NotEmpty(t, conf.DefaultAccount.RawPrivateKey)
 		})
 	}
 }

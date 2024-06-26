@@ -84,7 +84,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	// initialize E2E tests config
 	conf := must(local.GetConfig(cmd))
 
-	deployerAccount := conf.Accounts.Deployer
+	deployerAccount := conf.DefaultAccount
 
 	// Initialize clients ----------------------------------------------------------------
 	evmClient := must(ethclient.Dial(conf.RPCs.EVM))
@@ -129,7 +129,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		"deployer",
 		cancel,
 		conf,
-		conf.Accounts.Deployer,
+		conf.DefaultAccount,
 		logger,
 	))
 

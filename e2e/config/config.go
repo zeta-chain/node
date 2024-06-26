@@ -39,7 +39,8 @@ func (s DoubleQuotedString) AsEVMAddress() (ethcommon.Address, error) {
 
 // Config contains the configuration for the e2e test
 type Config struct {
-	Accounts           Accounts           `yaml:"accounts"`
+	// Default account to use when running tests and running setup
+	DefaultAccount     Account            `yaml:"default_account"`
 	AdditionalAccounts AdditionalAccounts `yaml:"additional_accounts"`
 	RPCs               RPCs               `yaml:"rpcs"`
 	Contracts          Contracts          `yaml:"contracts"`
@@ -51,11 +52,6 @@ type Account struct {
 	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
 	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
 	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
-}
-
-// Accounts are the required accounts to run any e2e test
-type Accounts struct {
-	Deployer Account `yaml:"deployer"`
 }
 
 // AdditionalAccounts are extra accounts required to run specific tests
@@ -207,7 +203,7 @@ func (c Config) Validate() error {
 		return errors.New("invalid bitcoin params")
 	}
 
-	err := c.Accounts.Deployer.Validate()
+	err := c.DefaultAccount.Validate()
 	if err != nil {
 		return fmt.Errorf("validating deployer account: %w", err)
 	}
@@ -228,7 +224,7 @@ func (c Config) Validate() error {
 // GenerateKeys generates new key pairs for all accounts
 func (c *Config) GenerateKeys() error {
 	var err error
-	c.Accounts.Deployer, err = generateAccount()
+	c.DefaultAccount, err = generateAccount()
 	if err != nil {
 		return err
 	}

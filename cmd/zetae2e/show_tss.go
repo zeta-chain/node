@@ -46,7 +46,7 @@ func runShowTSS(_ *cobra.Command, args []string) error {
 		"tss",
 		cancel,
 		conf,
-		conf.Accounts.Deployer,
+		conf.DefaultAccount,
 		logger,
 	)
 	if err != nil {
