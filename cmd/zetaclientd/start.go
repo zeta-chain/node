@@ -77,7 +77,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	masterLogger := logger.Std
+	masterLogger := logger.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 
 	// Wait until zetacore is up

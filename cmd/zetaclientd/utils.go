@@ -75,7 +75,7 @@ func CreateSignerMap(
 		}
 		evmChainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
-			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
+			logger.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
@@ -92,7 +92,7 @@ func CreateSignerMap(
 			mpiAddress,
 			erc20CustodyAddress)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			logger.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
 			continue
 		}
 		signerMap[evmConfig.Chain.ChainId] = signer
@@ -102,7 +102,7 @@ func CreateSignerMap(
 	if enabled {
 		signer, err := btcsigner.NewSigner(btcChain, zetacoreContext, tss, ts, logger, btcConfig)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
+			logger.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
 			signerMap[btcChain.ChainId] = signer
 		}
@@ -129,14 +129,14 @@ func CreateChainObserverMap(
 		}
 		chainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
-			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
+			logger.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
 
 		// create EVM client
 		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error dailing endpoint %s", evmConfig.Endpoint)
+			logger.Error().Err(err).Msgf("error dailing endpoint %s", evmConfig.Endpoint)
 			continue
 		}
 
@@ -153,7 +153,7 @@ func CreateChainObserverMap(
 			ts,
 		)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
+			logger.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
 			continue
 		}
 		observerMap[evmConfig.Chain.ChainId] = observer
@@ -170,7 +170,7 @@ func CreateChainObserverMap(
 	if enabled {
 		btcClient, err := btcrpc.NewRPCClient(btcConfig)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error creating rpc client for bitcoin chain %s", btcChain.String())
+			logger.Error().Err(err).Msgf("error creating rpc client for bitcoin chain %s", btcChain.String())
 		} else {
 			// create BTC chain observer
 			observer, err := btcobserver.NewObserver(
@@ -185,7 +185,7 @@ func CreateChainObserverMap(
 				ts,
 			)
 			if err != nil {
-				logger.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
+				logger.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
 			} else {
 				observerMap[btcChain.ChainId] = observer
 			}

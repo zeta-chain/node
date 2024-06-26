@@ -68,7 +68,7 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		logger := ob.Logger()
 
 		// should be able to print log
-		logger.Std.Info().Msg("print standard log")
+		logger.Info().Msg("print standard log")
 		logger.Compliance.Info().Msg("print compliance log")
 	})
 }

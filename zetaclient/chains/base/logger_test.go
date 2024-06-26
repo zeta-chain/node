@@ -91,7 +91,7 @@ func TestInitLogger(t *testing.T) {
 			require.NoError(t, err)
 
 			// should be able to print log
-			logger.Std.Info().Msg("print standard log")
+			logger.Info().Msg("print standard log")
 			logger.Compliance.Info().Msg("print compliance log")
 		})
 	}

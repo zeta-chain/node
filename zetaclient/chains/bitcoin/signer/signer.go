@@ -133,7 +133,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	if remainingSats < 0 {
 		return fmt.Errorf("remainder value is negative: %d", remainingSats)
 	} else if remainingSats == nonceMark {
-		signer.Logger().Std.Info().Msgf("adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
+		signer.Logger().Info().Msgf("adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
 		remainingSats--
 	}
 
@@ -186,7 +186,7 @@ func (signer *Signer) SignWithdrawTx(
 	err := observer.FetchUTXOs()
 	if err != nil {
 		signer.Logger().
-			Std.Error().
+			Error().
 			Err(err).
 			Msgf("SignWithdrawTx: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
 	}
@@ -222,16 +222,16 @@ func (signer *Signer) SignWithdrawTx(
 		return nil, err
 	}
 	if sizeLimit < bitcoin.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
-		signer.Logger().Std.Info().
+		signer.Logger().Info().
 			Msgf("sizeLimit %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
 	if txSize < bitcoin.OutboundBytesMin { // outbound shouldn't be blocked a low sizeLimit
-		signer.Logger().Std.Warn().
+		signer.Logger().Warn().
 			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, bitcoin.OutboundBytesMin)
 		txSize = bitcoin.OutboundBytesMin
 	}
 	if txSize > bitcoin.OutboundBytesMax { // in case of accident
-		signer.Logger().Std.Warn().
+		signer.Logger().Warn().
 			Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, bitcoin.OutboundBytesMax)
 		txSize = bitcoin.OutboundBytesMax
 	}
@@ -239,8 +239,7 @@ func (signer *Signer) SignWithdrawTx(
 	// fee calculation
 	// #nosec G701 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
-	signer.Logger().
-		Std.Info().
+	signer.Logger().Info().
 		Msgf("bitcoin outbound nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
 			nonce, gasPrice.String(), txSize, fees.String(), consolidatedUtxo, consolidatedValue)
 
@@ -307,7 +306,7 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 		return err
 	}
 
-	signer.Logger().Std.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
+	signer.Logger().Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
 	return nil
 }
 
@@ -322,11 +321,11 @@ func (signer *Signer) TryProcessOutbound(
 	defer func() {
 		outboundProcessor.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
-			signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
+			signer.Logger().Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
 		}
 	}()
 
-	logger := signer.Logger().Std.With().
+	logger := signer.Logger().With().
 		Str("OutboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()

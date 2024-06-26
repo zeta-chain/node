@@ -17,14 +17,14 @@ const (
 
 // Logger contains the base loggers
 type Logger struct {
-	Std        zerolog.Logger
+	zerolog.Logger
 	Compliance zerolog.Logger
 }
 
 // DefaultLoggers creates default base loggers for tests
 func DefaultLogger() Logger {
 	return Logger{
-		Std:        log.Logger,
+		Logger:     log.Logger,
 		Compliance: log.Logger,
 	}
 }
@@ -58,9 +58,12 @@ func InitLogger(cfg config.Config) (Logger, error) {
 		return DefaultLogger(), err
 	}
 
+	var (
+		std        zerolog.Logger
+		compliance zerolog.Logger
+	)
+
 	// create loggers based on configured level and format
-	var std zerolog.Logger
-	var compliance zerolog.Logger
 	switch cfg.LogFormat {
 	case "json":
 		std = zerolog.New(os.Stdout).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
@@ -80,12 +83,8 @@ func InitLogger(cfg config.Config) (Logger, error) {
 	if cfg.LogSampler {
 		std = std.Sample(&zerolog.BasicSampler{N: 5})
 	}
-	log.Logger = std // set global logger
 
-	return Logger{
-		Std:        std,
-		Compliance: compliance,
-	}, nil
+	return Logger{Logger: std, Compliance: compliance}, nil
 }
 
 // openComplianceLogFile opens the compliance log file

@@ -266,7 +266,7 @@ func (ob *Observer) Logger() *ObserverLogger {
 
 // WithLogger attaches a new logger to the observer.
 func (ob *Observer) WithLogger(logger Logger) *Observer {
-	chainLogger := logger.Std.With().Int64("chain", ob.chain.ChainId).Logger()
+	chainLogger := logger.With().Int64("chain", ob.chain.ChainId).Logger()
 	ob.logger = ObserverLogger{
 		Chain:      chainLogger,
 		Inbound:    chainLogger.With().Str("module", "inbound").Logger(),

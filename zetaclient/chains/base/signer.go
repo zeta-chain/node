@@ -46,7 +46,7 @@ func NewSigner(
 		tss:             tss,
 		ts:              ts,
 		logger: Logger{
-			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
+			Logger:     logger.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
 			Compliance: logger.Compliance,
 		},
 	}
