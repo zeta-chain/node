@@ -23,6 +23,7 @@ func ValidateCCTXIndex(index string) error {
 // NOTE: since these checks are currently not used, we don't provide additional chains for simplicity
 // TODO: use authorityKeeper.GetChainInfo to provide additional chains
 // https://github.com/zeta-chain/node/issues/2234
+// https://github.com/zeta-chain/node/issues/2385
 // NOTE: We should eventually not using these hard-coded checks at all since it might make the protocol too rigid
 // Example: hash algorithm is changed for a chain: this required a upgrade on the protocol
 func ValidateHashForChain(hash string, chainID int64) error {
@@ -50,6 +51,7 @@ func ValidateHashForChain(hash string, chainID int64) error {
 // NOTE: since these checks are currently not used, we don't provide additional chains for simplicity
 // TODO: use authorityKeeper.GetChainInfo to provide additional chains
 // https://github.com/zeta-chain/node/issues/2234
+// https://github.com/zeta-chain/node/issues/2385
 // NOTE: We should eventually not using these hard-coded checks at all for same reasons as above
 func ValidateAddressForChain(address string, chainID int64) error {
 	// we do not validate the address for zeta chain as the address field can be btc or eth address

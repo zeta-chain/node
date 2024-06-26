@@ -24,6 +24,7 @@ func VerifyInboundBody(
 	// verify message against transaction body
 	// NOTE: since this functionality is disabled on live network we don't provide on-chain additional chains for simplicity
 	// TODO: use authorityKeeper.GetChainInfo to provide additional chains
+	// https://github.com/zeta-chain/node/issues/2385
 	if chains.IsEVMChain(msg.ChainId, []chains.Chain{}) {
 		return verifyInboundBodyEVM(msg, txBytes, chainParams, tss)
 	}
@@ -83,6 +84,7 @@ func VerifyOutboundBody(msg MsgAddOutboundTracker, txBytes []byte, tss observert
 	// verify message against transaction body
 	// NOTE: since this functionality is disabled on live network we don't provide on-chain additional chains for simplicity
 	// TODO: use authorityKeeper.GetChainInfo to provide additional chains
+	// https://github.com/zeta-chain/node/issues/2385
 	if chains.IsEVMChain(msg.ChainId, []chains.Chain{}) {
 		return verifyOutboundBodyEVM(msg, txBytes, tss.Eth)
 	} else if chains.IsBitcoinChain(msg.ChainId, []chains.Chain{}) {
