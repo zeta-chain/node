@@ -1,4 +1,5 @@
 // Package authz provides a signer object for transactions using grants
+// grants are used to allow a hotkey to sign transactions on behalf of the observers
 package authz
 
 import (

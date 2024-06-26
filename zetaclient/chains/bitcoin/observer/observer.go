@@ -53,7 +53,6 @@ const (
 var _ interfaces.ChainObserver = &Observer{}
 
 // Logger contains list of loggers used by Bitcoin chain observer
-// TODO(revamp): Merge this logger with the one in evm
 // https://github.com/zeta-chain/node/issues/2022
 type Logger struct {
 	// Chain is the parent logger for the chain

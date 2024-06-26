@@ -332,8 +332,8 @@ func (ob *Observer) refreshPendingNonce() {
 	}
 }
 
-// getOutboundIDByNonce gets the outbound ID from the nonce of the outbound transaction.
-// test is true for unit test only.
+// getOutboundIDByNonce gets the outbound ID from the nonce of the outbound transaction
+// test is true for unit test only
 func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error) {
 
 	// There are 2 types of txids an observer can trust

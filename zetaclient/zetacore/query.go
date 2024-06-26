@@ -270,19 +270,6 @@ func (c *Client) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	return nil, err
 }
 
-// GetLastBlockHeightByChain returns the last block height by chain
-func (c *Client) GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
-	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.LastBlockHeight(
-		context.Background(),
-		&crosschaintypes.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return resp.LastBlockHeight, nil
-}
-
 // GetBlockHeight returns the block height
 func (c *Client) GetBlockHeight() (int64, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)

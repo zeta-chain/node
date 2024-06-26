@@ -558,7 +558,7 @@ func (ob *Observer) PostGasPrice() error {
 }
 
 // TransactionByHash query transaction by hash via JSON-RPC
-// TODO(revamp): move to a tx file
+// TODO(revamp): update this method as a pure RPC method that takes two parameters (jsonRPC, and txHash) and move to upper package to file rpc.go
 func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
 	tx, err := ob.evmJSONRPC.EthGetTransactionByHash(txHash)
 	if err != nil {

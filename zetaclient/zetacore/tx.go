@@ -71,6 +71,7 @@ func GasPriceMultiplier(chainID int64) (float64, error) {
 }
 
 // WrapMessageWithAuthz wraps a message with an authz message
+// used since a hotkey is used to broadcast the transactions, instead of the operator
 func (c *Client) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
 
