@@ -399,7 +399,7 @@ jobs:
   publish-release:
     permissions:
       id-token: write
-      contents: read
+      contents: write
       attestations: write
     if: ${{ github.event.inputs.skip_release == 'false' }}
     needs:
