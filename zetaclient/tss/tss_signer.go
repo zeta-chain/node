@@ -84,7 +84,7 @@ type TSS struct {
 	BitcoinChainID int64
 }
 
-// NewTSS creates a new TSS instance
+// NewTSS creates a new TSS instance with the given parameter
 func NewTSS(
 	appContext *appcontext.AppContext,
 	peer p2p.AddrList,
@@ -95,9 +95,11 @@ func NewTSS(
 	bitcoinChainID int64,
 	tssPassword string,
 	hotkeyPassword string,
+	enableMonitor bool,
+
 ) (*TSS, error) {
 	logger := log.With().Str("module", "tss_signer").Logger()
-	server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword)
+	server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword, enableMonitor)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -127,17 +129,6 @@ func NewTSS(
 		client.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
 
-	keygenRes, err := newTss.ZetacoreClient.GetKeyGen()
-	if err != nil {
-		return nil, err
-	}
-
-	// Initialize metrics
-	for _, key := range keygenRes.GranteePubkeys {
-		metrics.TssNodeBlamePerPubKey.WithLabelValues(key).Inc()
-	}
-	metrics.NumActiveMsgSigns.Set(0)
-
 	return &newTss, nil
 }
 
@@ -147,6 +138,7 @@ func SetupTSSServer(
 	preParams *keygen.LocalPreParams,
 	cfg config.Config,
 	tssPassword string,
+	enableMonitor bool,
 ) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
@@ -175,7 +167,7 @@ func SetupTSSServer(
 		"MetaMetaOpenTheDoor",
 		tsspath,
 		thorcommon.TssConfig{
-			EnableMonitor:   true,
+			EnableMonitor:   enableMonitor,
 			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
 			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
 			PartyTimeout:    30 * time.Second,
@@ -558,7 +550,7 @@ func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
-func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
+func TestKeysign(tssPubkey string, tssServer tss.TssServer) error {
 	log.Info().Msg("trying keysign...")
 	data := []byte("hello meta")
 	H := crypto.Keccak256Hash(data)
