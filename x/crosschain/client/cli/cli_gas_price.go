@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -99,7 +100,13 @@ func CmdVoteGasPrice() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgVoteGasPrice(clientCtx.GetFromAddress().String(), argsChain, argsPrice, argsSupply, argsBlockNumber)
+			msg := types.NewMsgVoteGasPrice(
+				clientCtx.GetFromAddress().String(),
+				argsChain,
+				argsPrice,
+				argsSupply,
+				argsBlockNumber,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

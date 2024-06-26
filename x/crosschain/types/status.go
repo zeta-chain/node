@@ -10,6 +10,7 @@ func (m *Status) AbortRefunded(timeStamp int64) {
 	m.LastUpdateTimestamp = timeStamp
 }
 
+// ChangeStatus changes the status of the cross chain transaction
 // empty msg does not overwrite old status message
 func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	if len(msg) > 0 {
@@ -20,12 +21,16 @@ func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 		}
 	}
 	if !m.ValidateTransition(newStatus) {
-		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
+		m.StatusMessage = fmt.Sprintf(
+			"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+			m.Status.String(),
+			newStatus.String(),
+			msg,
+		)
 		m.Status = CctxStatus_Aborted
 		return
 	}
 	m.Status = newStatus
-
 } //nolint:typecheck
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {

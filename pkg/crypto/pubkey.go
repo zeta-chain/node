@@ -8,11 +8,9 @@ import (
 	"strings"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"

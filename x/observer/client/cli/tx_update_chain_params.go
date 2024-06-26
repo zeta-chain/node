@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -18,7 +19,6 @@ func CmdUpdateChainParams() *cobra.Command {
 		Short: "Broadcast message updateChainParams",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			argChainParams := args[0]
 
 			clientCtx, err := client.GetClientTxContext(cmd)

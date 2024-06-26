@@ -8,6 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -52,13 +53,13 @@ func (tr TestReports) String(prefix string) (string, error) {
 }
 
 // PrintTestReports prints the test reports
-func (runner *E2ERunner) PrintTestReports(tr TestReports) {
-	runner.Logger.Print(" ---📈 E2E Test Report ---")
+func (r *E2ERunner) PrintTestReports(tr TestReports) {
+	r.Logger.Print(" ---📈 E2E Test Report ---")
 	table, err := tr.String("")
 	if err != nil {
-		runner.Logger.Print("Error rendering test report: %s", err)
+		r.Logger.Print("Error rendering test report: %s", err)
 	}
-	runner.Logger.PrintNoPrefix(table)
+	r.Logger.PrintNoPrefix(table)
 }
 
 // NetworkReport is a struct that contains the report for the network used after running e2e tests
@@ -86,9 +87,9 @@ func (nr NetworkReport) Validate() error {
 }
 
 // GenerateNetworkReport generates a report for the network used after running e2e tests
-func (runner *E2ERunner) GenerateNetworkReport() (NetworkReport, error) {
+func (r *E2ERunner) GenerateNetworkReport() (NetworkReport, error) {
 	// get the emissions pool balance
-	balanceRes, err := runner.BankClient.Balance(runner.Ctx, &banktypes.QueryBalanceRequest{
+	balanceRes, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
 		Address: txserver.EmissionsPoolAddress,
 		Denom:   config.BaseDenom,
 	})
@@ -100,13 +101,13 @@ func (runner *E2ERunner) GenerateNetworkReport() (NetworkReport, error) {
 	// fetch the height and number of cctxs, this gives a better idea on the activity of the network
 
 	// get the block height
-	blockRes, err := runner.ZEVMClient.BlockNumber(runner.Ctx)
+	blockRes, err := r.ZEVMClient.BlockNumber(r.Ctx)
 	if err != nil {
 		return NetworkReport{}, err
 	}
 
 	// get the number of cctxs
-	cctxsRes, err := runner.CctxClient.CctxAll(runner.Ctx, &crosschaintypes.QueryAllCctxRequest{})
+	cctxsRes, err := r.CctxClient.CctxAll(r.Ctx, &crosschaintypes.QueryAllCctxRequest{})
 	if err != nil {
 		return NetworkReport{}, err
 	}
@@ -120,10 +121,9 @@ func (runner *E2ERunner) GenerateNetworkReport() (NetworkReport, error) {
 }
 
 // PrintNetworkReport prints the network report
-func (runner *E2ERunner) PrintNetworkReport(nr NetworkReport) {
-	runner.Logger.Print(" ---📈 Network Report ---")
-	runner.Logger.Print("Block Height:           %d", nr.Height)
-	runner.Logger.Print("CCTX Processed:         %d", nr.CctxCount)
-	runner.Logger.Print("Emissions Pool Balance: %sZETA", nr.EmissionsPoolBalance.Quo(sdkmath.NewIntFromUint64(1e18)))
-
+func (r *E2ERunner) PrintNetworkReport(nr NetworkReport) {
+	r.Logger.Print(" ---📈 Network Report ---")
+	r.Logger.Print("Block Height:           %d", nr.Height)
+	r.Logger.Print("CCTX Processed:         %d", nr.CctxCount)
+	r.Logger.Print("Emissions Pool Balance: %sZETA", nr.EmissionsPoolBalance.Quo(sdkmath.NewIntFromUint64(1e18)))
 }

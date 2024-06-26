@@ -7,10 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestLastBlockHeightQuerySingle(t *testing.T) {
@@ -60,8 +61,8 @@ func TestLastBlockHeightLimits(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 		k.SetLastBlockHeight(ctx, types.LastBlockHeight{
-			Index:          "index",
-			LastSendHeight: math.MaxInt64,
+			Index:              "index",
+			LastOutboundHeight: math.MaxInt64,
 		})
 
 		res, err := k.LastBlockHeight(wctx, &types.QueryGetLastBlockHeightRequest{
@@ -75,9 +76,9 @@ func TestLastBlockHeightLimits(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
 		k.SetLastBlockHeight(ctx, types.LastBlockHeight{
-			Index:             "index",
-			LastSendHeight:    10,
-			LastReceiveHeight: math.MaxInt64,
+			Index:              "index",
+			LastOutboundHeight: 10,
+			LastInboundHeight:  math.MaxInt64,
 		})
 
 		res, err := k.LastBlockHeight(wctx, &types.QueryGetLastBlockHeightRequest{

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -19,7 +20,7 @@ func (k Keeper) VoteOnInboundBallot(
 	coinType coin.CoinType,
 	voter string,
 	ballotIndex string,
-	inTxHash string,
+	inboundHash string,
 ) (bool, bool, error) {
 	if !k.IsInboundEnabled(ctx) {
 		return false, false, types.ErrInboundDisabled
@@ -33,7 +34,7 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			senderChainID,
-			types.ObservationType_InBoundTx.String()),
+			types.ObservationType_InboundTx.String()),
 		)
 	}
 
@@ -48,7 +49,7 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			receiverChainID,
-			types.ObservationType_InBoundTx.String()),
+			types.ObservationType_InboundTx.String()),
 		)
 	}
 
@@ -64,12 +65,12 @@ func (k Keeper) VoteOnInboundBallot(
 	}
 
 	// checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InBoundTx)
+	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InboundTx)
 	if err != nil {
 		return false, false, err
 	}
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, inTxHash, senderChain.String())
+		EmitEventBallotCreated(ctx, ballot, inboundHash, senderChain.String())
 	}
 
 	// adds a vote and sets the ballot

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -42,7 +43,7 @@ func SetZetaAccounting(
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	prefixedStore := prefix.NewStore(ctx.KVStore(crossChainStoreKey), p)
 	abortedAmountZeta := sdkmath.ZeroUint()
 	iterator := sdk.KVStorePrefixIterator(prefixedStore, []byte{})
@@ -55,8 +56,8 @@ func SetZetaAccounting(
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.CrossChainTx
 		cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.InboundTxParams.CoinType == coin.CoinType_Zeta {
-			abortedAmountZeta = abortedAmountZeta.Add(val.GetCurrentOutTxParam().Amount)
+		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.InboundParams.CoinType == coin.CoinType_Zeta {
+			abortedAmountZeta = abortedAmountZeta.Add(val.GetCurrentOutboundParam().Amount)
 		}
 	}
 	b := cdc.MustMarshal(&types.ZetaAccounting{
@@ -129,7 +130,6 @@ func MoveNonceToObserverModule(
 	for _, n := range nonceToCcTx {
 		observerKeeper.SetNonceToCctx(ctx, n)
 	}
-
 }
 
 func MoveTssToObserverModule(ctx sdk.Context,
@@ -172,17 +172,17 @@ func MoveTssToObserverModule(ctx sdk.Context,
 	}
 }
 
-// SetBitcoinFinalizedInbound sets the finalized inbound for bitcoin chains to prevent new ballots from being created with same intxhash
+// SetBitcoinFinalizedInbound sets the finalized inbound for bitcoin chains to prevent new ballots from being created with same inboundhash
 func SetBitcoinFinalizedInbound(ctx sdk.Context, crosschainKeeper crosschainKeeper) {
 	for _, cctx := range crosschainKeeper.GetAllCrossChainTx(ctx) {
-		if cctx.InboundTxParams != nil {
+		if cctx.InboundParams != nil {
 			// check if bitcoin inbound
-			if chains.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) {
+			if chains.IsBitcoinChain(cctx.InboundParams.SenderChainId) {
 				// add finalized inbound
 				crosschainKeeper.AddFinalizedInbound(
 					ctx,
-					cctx.InboundTxParams.InboundTxObservedHash,
-					cctx.InboundTxParams.SenderChainId,
+					cctx.InboundParams.ObservedHash,
+					cctx.InboundParams.SenderChainId,
 					0,
 				)
 			}

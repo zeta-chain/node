@@ -5,6 +5,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -12,12 +13,16 @@ import (
 // UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
 //
 // Authorized: admin policy group 2.
-func (k msgServer) UpdateZRC20LiquidityCap(goCtx context.Context, msg *types.MsgUpdateZRC20LiquidityCap) (*types.MsgUpdateZRC20LiquidityCapResponse, error) {
+func (k msgServer) UpdateZRC20LiquidityCap(
+	goCtx context.Context,
+	msg *types.MsgUpdateZRC20LiquidityCap,
+) (*types.MsgUpdateZRC20LiquidityCapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "update can only be executed by group 2 policy group")
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// fetch the foreign coin

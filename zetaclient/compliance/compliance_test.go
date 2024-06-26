@@ -5,6 +5,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -12,7 +13,7 @@ import (
 
 func TestCctxRestricted(t *testing.T) {
 	// load archived cctx
-	chain := chains.EthChain
+	chain := chains.Ethereum
 	cctx := testutils.LoadCctxByNonce(t, chain.ChainId, 6270)
 
 	// create config
@@ -21,12 +22,12 @@ func TestCctxRestricted(t *testing.T) {
 	}
 
 	t.Run("should return true if sender is restricted", func(t *testing.T) {
-		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundTxParams.Sender}
+		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}
 		config.LoadComplianceConfig(cfg)
 		require.True(t, IsCctxRestricted(cctx))
 	})
 	t.Run("should return true if receiver is restricted", func(t *testing.T) {
-		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.GetCurrentOutTxParam().Receiver}
+		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.GetCurrentOutboundParam().Receiver}
 		config.LoadComplianceConfig(cfg)
 		require.True(t, IsCctxRestricted(cctx))
 	})
@@ -39,13 +40,13 @@ func TestCctxRestricted(t *testing.T) {
 	t.Run("should be able to restrict coinbase address", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{ethcommon.Address{}.String()}
 		config.LoadComplianceConfig(cfg)
-		cctx.InboundTxParams.Sender = ethcommon.Address{}.String()
+		cctx.InboundParams.Sender = ethcommon.Address{}.String()
 		require.True(t, IsCctxRestricted(cctx))
 	})
 	t.Run("should ignore empty address", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{""}
 		config.LoadComplianceConfig(cfg)
-		cctx.InboundTxParams.Sender = ""
+		cctx.InboundParams.Sender = ""
 		require.False(t, IsCctxRestricted(cctx))
 	})
 }

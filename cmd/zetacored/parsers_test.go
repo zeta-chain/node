@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-
-	"github.com/cometbft/cometbft/crypto"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/app"
-
-	//"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {
@@ -21,27 +19,38 @@ func TestParsefileToObserverMapper(t *testing.T) {
 		require.NoError(t, err)
 	}(t, file)
 	app.SetConfig()
-	createObserverList(file)
+
+	observerAddress := sample.AccAddress()
+	commonGrantAddress := sample.AccAddress()
+	validatorAddress := sample.AccAddress()
+
+	createObserverList(file, observerAddress, commonGrantAddress, validatorAddress)
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	require.NoError(t, err)
 	for _, obs := range obsListReadFromFile {
-		require.Equal(t, obs.ZetaClientGranteeAddress, sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String())
+		require.Equal(
+			t,
+			obs.ObserverAddress,
+			observerAddress,
+		)
+		require.Equal(
+			t,
+			obs.ZetaClientGranteeAddress,
+			commonGrantAddress,
+		)
 	}
 }
 
-func createObserverList(fp string) {
+func createObserverList(fp string, observerAddress, commonGrantAddress, validatorAddress string) {
 	var listReader []ObserverInfoReader
-	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
-	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
-	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))
 	info := ObserverInfoReader{
-		ObserverAddress:           observerAddress.String(),
-		ZetaClientGranteeAddress:  commonGrantAddress.String(),
-		StakingGranteeAddress:     commonGrantAddress.String(),
+		ObserverAddress:           observerAddress,
+		ZetaClientGranteeAddress:  commonGrantAddress,
+		StakingGranteeAddress:     commonGrantAddress,
 		StakingMaxTokens:          "100000000",
-		StakingValidatorAllowList: []string{validatorAddress.String()},
+		StakingValidatorAllowList: []string{validatorAddress},
 		SpendMaxTokens:            "100000000",
-		GovGranteeAddress:         commonGrantAddress.String(),
+		GovGranteeAddress:         commonGrantAddress,
 		ZetaClientGranteePubKey:   "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0",
 	}
 	listReader = append(listReader, info)

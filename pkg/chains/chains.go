@@ -2,24 +2,12 @@ package chains
 
 import "fmt"
 
-/*
-		Chain represents a blockchain network with its unique chain ID
-		ChainName is the name of the chain
-		ChainId is the unique identifier of the chain
-		Network is the network type of the chain , this can be ZETA, ETH, BSC, BTC, POLYGON
-		NetworkType is the network type of the chain, this can be MAINNET, TESTNET, DEVNET, PRIVNET
-		Vm is the virtual machine type of the chain to support smart contracts, this can be EVM, NO_VM
-		Consensus is the consensus algorithm used by the chain, this can be Tendermint, Ethereum, Bitcoin
-		IsExternal is a boolean value to determine if the chain is external to Zeta
-		IsHeaderSupported is a boolean value to determine if the chain supports headers
-
-       Note ChainName is normally NetworkName + NetworkType,but in some cases the value of NetworkName + NetworkType is not unique.This is true for chains which have been deprecated or have been renamed.
-       Such as GoerliChain and MumbaiChain which have been replaced by SepoliaChain and AmoyChain respectively.
-*/
-
 var (
+	/**
+	* Mainnet chains
+	 */
 
-	// Mainnet chains
+	// ZetaChainMainnet is the mainnet chain for Zeta
 	ZetaChainMainnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
 		ChainId:     7000,
@@ -28,8 +16,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
+		CctxGateway: CCTXGateway_zevm,
 	}
-	EthChain = Chain{
+
+	// Ethereum is Ethereum mainnet
+	Ethereum = Chain{
 		ChainName:   ChainName_eth_mainnet,
 		ChainId:     1,
 		Network:     Network_eth,
@@ -37,8 +28,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	BscMainnetChain = Chain{
+
+	// BscMainnet is Binance Smart Chain mainnet
+	BscMainnet = Chain{
 		ChainName:   ChainName_bsc_mainnet,
 		ChainId:     56,
 		Network:     Network_bsc,
@@ -46,8 +40,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	BtcMainnetChain = Chain{
+
+	// BitcoinMainnet is Bitcoin mainnet
+	BitcoinMainnet = Chain{
 		ChainName:   ChainName_btc_mainnet,
 		ChainId:     8332,
 		Network:     Network_btc,
@@ -55,8 +52,11 @@ var (
 		Vm:          Vm_no_vm,
 		Consensus:   Consensus_bitcoin,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	PolygonChain = Chain{
+
+	// Polygon is Polygon mainnet
+	Polygon = Chain{
 		ChainName:   ChainName_polygon_mainnet,
 		ChainId:     137,
 		Network:     Network_polygon,
@@ -64,9 +64,39 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	// Testnet chains
-	ZetaTestnetChain = Chain{
+
+	// OptimismMainnet is Optimism mainnet
+	OptimismMainnet = Chain{
+		ChainName:   ChainName_optimism_mainnet,
+		ChainId:     10,
+		Network:     Network_optimism,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_op_stack,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
+	// BaseMainnet is Base mainnet
+	BaseMainnet = Chain{
+		ChainName:   ChainName_base_mainnet,
+		ChainId:     8453,
+		Network:     Network_base,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_op_stack,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
+	/**
+	* Testnet chains
+	 */
+
+	// ZetaChainTestnet is the testnet chain for Zeta
+	ZetaChainTestnet = Chain{
 		ChainName:   ChainName_zeta_testnet,
 		ChainId:     7001,
 		Network:     Network_zeta,
@@ -74,8 +104,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
+		CctxGateway: CCTXGateway_zevm,
 	}
-	SepoliaChain = Chain{
+
+	// Sepolia is Ethereum sepolia testnet
+	Sepolia = Chain{
 		ChainName:   ChainName_sepolia_testnet,
 		ChainId:     11155111,
 		Network:     Network_eth,
@@ -83,8 +116,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	BscTestnetChain = Chain{
+
+	// BscTestnet is Binance Smart Chain testnet
+	BscTestnet = Chain{
 		ChainName:   ChainName_bsc_testnet,
 		ChainId:     97,
 		Network:     Network_bsc,
@@ -92,8 +128,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	BtcTestNetChain = Chain{
+
+	// BitcoinTestnet is Bitcoin testnet3
+	BitcoinTestnet = Chain{
 		ChainName:   ChainName_btc_testnet,
 		ChainId:     18332,
 		Network:     Network_btc,
@@ -101,9 +140,11 @@ var (
 		Vm:          Vm_no_vm,
 		Consensus:   Consensus_bitcoin,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
 
-	AmoyChain = Chain{
+	// Amoy is Polygon amoy testnet
+	Amoy = Chain{
 		ChainName:   ChainName_amoy_testnet,
 		ChainId:     80002,
 		Network:     Network_polygon,
@@ -111,9 +152,40 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	// Devnet chains
-	ZetaMocknetChain = Chain{
+
+	// OptimismSepolia is Optimism sepolia testnet
+	OptimismSepolia = Chain{
+		ChainName:   ChainName_optimism_sepolia,
+		ChainId:     11155420,
+		Network:     Network_optimism,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_op_stack,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
+	// BaseSepolia is Base sepolia testnet
+	BaseSepolia = Chain{
+		ChainName:   ChainName_base_sepolia,
+		ChainId:     84532,
+		Network:     Network_base,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_op_stack,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
+	/**
+	* Devnet chains
+	 */
+
+	// ZetaChainDevnet is the devnet chain for Zeta
+	// used as live testing environment
+	ZetaChainDevnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
 		ChainId:     70000,
 		Network:     Network_zeta,
@@ -121,9 +193,15 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
+		CctxGateway: CCTXGateway_zevm,
 	}
-	// Privnet chains
-	ZetaPrivnetChain = Chain{
+
+	/**
+	* Privnet chains
+	 */
+
+	// ZetaChainPrivnet is the privnet chain for Zeta (localnet)
+	ZetaChainPrivnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
 		ChainId:     101,
 		Network:     Network_zeta,
@@ -131,9 +209,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
+		CctxGateway: CCTXGateway_zevm,
 	}
 
-	BtcRegtestChain = Chain{
+	// BitcoinRegtest is Bitcoin regtest (localnet)
+	BitcoinRegtest = Chain{
 		ChainName:   ChainName_btc_regtest,
 		ChainId:     18444,
 		Network:     Network_btc,
@@ -141,9 +221,11 @@ var (
 		Vm:          Vm_no_vm,
 		Consensus:   Consensus_bitcoin,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
 
-	GoerliLocalnetChain = Chain{
+	// GoerliLocalnet is Ethereum local goerli (localnet)
+	GoerliLocalnet = Chain{
 		ChainName:   ChainName_goerli_localnet,
 		ChainId:     1337,
 		Network:     Network_eth,
@@ -151,10 +233,15 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
 
-	// Deprecated testnet chains
-	GoerliChain = Chain{
+	/**
+	* Deprecated chains
+	 */
+
+	// Goerli is Ethereum goerli testnet (deprecated for sepolia)
+	Goerli = Chain{
 		ChainName:   ChainName_goerli_testnet,
 		ChainId:     5,
 		Network:     Network_eth,
@@ -162,8 +249,11 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
-	MumbaiChain = Chain{
+
+	// Mumbai is Polygon mumbai testnet (deprecated for amoy)
+	Mumbai = Chain{
 		ChainName:   ChainName_mumbai_testnet,
 		ChainId:     80001,
 		Network:     Network_polygon,
@@ -171,32 +261,38 @@ var (
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
 	}
 )
 
-func BtcDustOffset() int64 {
+// BtcNonceMarkOffset is the offset satoshi amount to calculate the nonce mark output
+func BtcNonceMarkOffset() int64 {
 	return 2000
 }
 
 // DefaultChainsList returns a list of default chains
 func DefaultChainsList() []*Chain {
 	return chainListPointers([]Chain{
-		BtcMainnetChain,
-		BscMainnetChain,
-		EthChain,
-		BtcTestNetChain,
-		MumbaiChain,
-		AmoyChain,
-		BscTestnetChain,
-		GoerliChain,
-		SepoliaChain,
-		BtcRegtestChain,
-		GoerliLocalnetChain,
+		BitcoinMainnet,
+		BscMainnet,
+		Ethereum,
+		BitcoinTestnet,
+		Mumbai,
+		Amoy,
+		BscTestnet,
+		Goerli,
+		Sepolia,
+		BitcoinRegtest,
+		GoerliLocalnet,
 		ZetaChainMainnet,
-		ZetaTestnetChain,
-		ZetaMocknetChain,
-		ZetaPrivnetChain,
-		PolygonChain,
+		ZetaChainTestnet,
+		ZetaChainDevnet,
+		ZetaChainPrivnet,
+		Polygon,
+		OptimismMainnet,
+		OptimismSepolia,
+		BaseMainnet,
+		BaseSepolia,
 	})
 }
 
@@ -263,14 +359,14 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	}
 
 	switch ethChainID {
-	case ZetaPrivnetChain.ChainId:
-		return ZetaPrivnetChain, nil
+	case ZetaChainPrivnet.ChainId:
+		return ZetaChainPrivnet, nil
 	case ZetaChainMainnet.ChainId:
 		return ZetaChainMainnet, nil
-	case ZetaTestnetChain.ChainId:
-		return ZetaTestnetChain, nil
-	case ZetaMocknetChain.ChainId:
-		return ZetaMocknetChain, nil
+	case ZetaChainTestnet.ChainId:
+		return ZetaChainTestnet, nil
+	case ZetaChainDevnet.ChainId:
+		return ZetaChainDevnet, nil
 	default:
 		return Chain{}, fmt.Errorf("chain %d not found", ethChainID)
 	}

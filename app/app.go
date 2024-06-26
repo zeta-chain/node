@@ -7,10 +7,6 @@ import (
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
-
 	appparams "cosmossdk.io/simapp/params"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -19,6 +15,7 @@ import (
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -47,6 +44,8 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -100,41 +99,35 @@ import (
 	"github.com/evmos/ethermint/x/feemarket"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
 
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/docs/openapi"
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
-
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
-	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
-	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-
 	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
 	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	observermodule "github.com/zeta-chain/zetacore/x/observer"
-	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
 	"github.com/zeta-chain/zetacore/x/ibccrosschain"
 	ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
+	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+	observermodule "github.com/zeta-chain/zetacore/x/observer"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const Name = "zetacore"
@@ -323,7 +316,6 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-
 	appCodec := encodingConfig.Codec
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -386,7 +378,7 @@ func New(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
-	customProposalHandler := NewCustomProposalHandler(bApp.Mempool(), bApp)
+	customProposalHandler := zetamempool.NewCustomProposalHandler(bApp.Mempool(), bApp)
 	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
 	// add capability keeper and ScopeToModule for ibc module
@@ -526,7 +518,11 @@ func New(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ObserverKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(
+			app.DistrKeeper.Hooks(),
+			app.SlashingKeeper.Hooks(),
+			app.ObserverKeeper.Hooks(),
+		),
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
@@ -624,7 +620,7 @@ func New(
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
 		group.Config{
-			MaxExecutionPeriod: 2 * time.Hour, // Two hours.
+			MaxExecutionPeriod: 48 * time.Hour,
 			MaxMetadataLen:     255,
 		},
 	)
@@ -685,10 +681,36 @@ func New(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
-		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		gov.NewAppModule(
+			appCodec,
+			&app.GovKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.GetSubspace(govtypes.ModuleName),
+		),
+		slashing.NewAppModule(
+			appCodec,
+			app.SlashingKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.StakingKeeper,
+			app.GetSubspace(slashingtypes.ModuleName),
+		),
+		distr.NewAppModule(
+			appCodec,
+			app.DistrKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.StakingKeeper,
+			app.GetSubspace(distrtypes.ModuleName),
+		),
+		staking.NewAppModule(
+			appCodec,
+			app.StakingKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.GetSubspace(stakingtypes.ModuleName),
+		),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
@@ -803,7 +825,9 @@ func New(
 		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  maxGasWanted,
 		DisabledAuthzMsgs: []string{
-			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
+			sdk.MsgTypeURL(
+				&evmtypes.MsgEthereumTx{},
+			), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
 			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
@@ -850,6 +874,7 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -979,7 +1004,11 @@ func GetMaccPerms() map[string][]string {
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
+func initParamsKeeper(
+	appCodec codec.BinaryCodec,
+	legacyAmino *codec.LegacyAmino,
+	key, tkey storetypes.StoreKey,
+) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)

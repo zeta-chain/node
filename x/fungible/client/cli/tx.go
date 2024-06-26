@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -25,7 +26,8 @@ func GetTxCmd() *cobra.Command {
 		CmdUpdateZRC20LiquidityCap(),
 		CmdUpdateContractBytecode(),
 		CmdUpdateSystemContract(),
-		CmdUpdateZRC20PausedStatus(),
+		CmdPauseZRC20(),
+		CmdUnpauseZRC20(),
 		CmdUpdateZRC20WithdrawFee(),
 	)
 

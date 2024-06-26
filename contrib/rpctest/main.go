@@ -139,7 +139,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(zevmAuth, zevmClient, zevmAuth.From, big.NewInt(2_100_000_000))
+	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(
+		zevmAuth,
+		zevmClient,
+		zevmAuth.From,
+		big.NewInt(2_100_000_000),
+	)
 	_, _ = zetaContractAddress, zetaContract
 	if err != nil {
 		panic(err)
@@ -194,7 +199,12 @@ func main() {
 		}
 		for approveIter.Next() {
 			event := approveIter.Event
-			fmt.Printf("Approval event: owner %s, spender %s, amount %s\n", event.Owner.Hex(), event.Spender.Hex(), event.Value.String())
+			fmt.Printf(
+				"Approval event: owner %s, spender %s, amount %s\n",
+				event.Owner.Hex(),
+				event.Spender.Hex(),
+				event.Value.String(),
+			)
 			fmt.Printf("  raw log txhash: %s\n", event.Raw.TxHash.Hex())
 			fmt.Printf("  tx hash: %s\n", tx.Hash().Hex())
 			if event.Raw.TxHash != tx.Hash() {
@@ -242,9 +252,7 @@ func main() {
 		fmt.Printf("    receipt block number: %d\n", receipt.BlockNumber)
 		fmt.Printf("    receipt transaction index: %d\n", receipt.TransactionIndex)
 		fmt.Printf("    receipt contract address: %s\n", receipt.ContractAddress.Hex())
-
 	}
-
 }
 
 type EthClient struct {

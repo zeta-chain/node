@@ -3,29 +3,27 @@ package supplychecker
 import (
 	"fmt"
 
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
-
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 // ZetaSupplyChecker is a utility to check the total supply of Zeta tokens
 type ZetaSupplyChecker struct {
-	coreContext      *corecontext.ZetaCoreContext
+	coreContext      *context.ZetacoreContext
 	evmClient        map[int64]*ethclient.Client
-	zetaClient       *zetabridge.ZetaCoreBridge
+	zetaClient       *zetacore.Client
 	ticker           *clienttypes.DynamicTicker
 	stop             chan struct{}
 	logger           zerolog.Logger
@@ -36,8 +34,8 @@ type ZetaSupplyChecker struct {
 
 // NewZetaSupplyChecker creates a new ZetaSupplyChecker
 func NewZetaSupplyChecker(
-	appContext *appcontext.AppContext,
-	zetaClient *zetabridge.ZetaCoreBridge,
+	appContext *context.AppContext,
+	zetaClient *zetacore.Client,
 	logger zerolog.Logger,
 ) (ZetaSupplyChecker, error) {
 	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)
@@ -52,7 +50,7 @@ func NewZetaSupplyChecker(
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
-		coreContext: appContext.ZetaCoreContext(),
+		coreContext: appContext.ZetacoreContext(),
 		zetaClient:  zetaClient,
 	}
 
@@ -88,7 +86,8 @@ func NewZetaSupplyChecker(
 	}
 	zetaSupplyChecker.genesisSupply = balances.Add(tokensMintedAtBeginBlock)
 
-	logger.Info().Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
+	logger.Info().
+		Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
 
 	return zetaSupplyChecker, nil
 }
@@ -114,7 +113,6 @@ func (zs *ZetaSupplyChecker) Stop() {
 }
 
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
-
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
 		externalEvmChainParams, ok := zs.coreContext.GetEVMChainParams(chain.ChainId)
@@ -124,7 +122,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 		zetaTokenAddressString := externalEvmChainParams.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
-		zetatokenNonEth, err := evm.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
+		zetatokenNonEth, err := observer.FetchZetaTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {
 			return err
 		}
@@ -150,7 +148,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 	ethConnectorAddressString := evmChainParams.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
-	ethConnectorContract, err := evm.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
+	ethConnectorContract, err := observer.FetchConnectorContractEth(
+		ethConnectorAddress,
+		zs.evmClient[zs.ethereumChain.ChainId],
+	)
 	if err != nil {
 		return err
 	}
@@ -165,7 +166,10 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return fmt.Errorf("error parsing eth locked amount")
 	}
 
-	zetaInTransit := zs.GetAmountOfZetaInTransit()
+	zetaInTransit, err := zs.GetAmountOfZetaInTransit()
+	if err != nil {
+		return err
+	}
 	zetaTokenSupplyOnNode, err := zs.zetaClient.GetZetaTokenSupplyOnNode()
 	if err != nil {
 		return err
@@ -176,7 +180,15 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return err
 	}
 
-	ValidateZetaSupply(zs.logger, abortedAmount, zetaInTransit, zs.genesisSupply, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
+	ValidateZetaSupply(
+		zs.logger,
+		abortedAmount,
+		zetaInTransit,
+		zs.genesisSupply,
+		externalChainTotalSupply,
+		zetaTokenSupplyOnNode,
+		ethLockedAmountInt,
+	)
 
 	return nil
 }
@@ -193,21 +205,21 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
-func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
+func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
 	cctxs := zs.GetPendingCCTXInTransit(chainsToCheck)
 	amount := sdkmath.ZeroUint()
 
 	for _, cctx := range cctxs {
-		amount = amount.Add(cctx.GetCurrentOutTxParam().Amount)
+		amount = amount.Add(cctx.GetCurrentOutboundParam().Amount)
 	}
 	amountInt, ok := sdkmath.NewIntFromString(amount.String())
 	if !ok {
-		panic("error parsing amount")
+		return sdkmath.ZeroInt(), fmt.Errorf("error parsing amount %s", amount.String())
 	}
 
-	return amountInt
+	return amountInt, nil
 }
 
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {
@@ -219,12 +231,12 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Ch
 		}
 		nonceToCctxMap := make(map[uint64]*types.CrossChainTx)
 		for _, c := range cctx {
-			if c.InboundTxParams.CoinType == coin.CoinType_Zeta {
-				nonceToCctxMap[c.GetCurrentOutTxParam().OutboundTxTssNonce] = c
+			if c.InboundParams.CoinType == coin.CoinType_Zeta {
+				nonceToCctxMap[c.GetCurrentOutboundParam().TssNonce] = c
 			}
 		}
 
-		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Ascending)
+		trackers, err := zs.zetaClient.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Ascending)
 		if err != nil {
 			continue
 		}

@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { PendingNonces } from "./pending_nonces_pb.js";
@@ -17,6 +18,97 @@ import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { Blame } from "./blame_pb.js";
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllRequest
+ */
+export declare class QueryTssFundsMigratorInfoAllRequest extends Message<QueryTssFundsMigratorInfoAllRequest> {
+  constructor(data?: PartialMessage<QueryTssFundsMigratorInfoAllRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssFundsMigratorInfoAllRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoAllRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoAllRequest;
+
+  static equals(a: QueryTssFundsMigratorInfoAllRequest | PlainMessage<QueryTssFundsMigratorInfoAllRequest> | undefined, b: QueryTssFundsMigratorInfoAllRequest | PlainMessage<QueryTssFundsMigratorInfoAllRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllResponse
+ */
+export declare class QueryTssFundsMigratorInfoAllResponse extends Message<QueryTssFundsMigratorInfoAllResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.TssFundMigratorInfo tss_funds_migrators = 1;
+   */
+  tssFundsMigrators: TssFundMigratorInfo[];
+
+  constructor(data?: PartialMessage<QueryTssFundsMigratorInfoAllResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssFundsMigratorInfoAllResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoAllResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoAllResponse;
+
+  static equals(a: QueryTssFundsMigratorInfoAllResponse | PlainMessage<QueryTssFundsMigratorInfoAllResponse> | undefined, b: QueryTssFundsMigratorInfoAllResponse | PlainMessage<QueryTssFundsMigratorInfoAllResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryTssFundsMigratorInfoRequest
+ */
+export declare class QueryTssFundsMigratorInfoRequest extends Message<QueryTssFundsMigratorInfoRequest> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<QueryTssFundsMigratorInfoRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryTssFundsMigratorInfoRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssFundsMigratorInfoRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoRequest;
+
+  static equals(a: QueryTssFundsMigratorInfoRequest | PlainMessage<QueryTssFundsMigratorInfoRequest> | undefined, b: QueryTssFundsMigratorInfoRequest | PlainMessage<QueryTssFundsMigratorInfoRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryTssFundsMigratorInfoResponse
+ */
+export declare class QueryTssFundsMigratorInfoResponse extends Message<QueryTssFundsMigratorInfoResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.TssFundMigratorInfo tss_funds_migrator = 1;
+   */
+  tssFundsMigrator?: TssFundMigratorInfo;
+
+  constructor(data?: PartialMessage<QueryTssFundsMigratorInfoResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryTssFundsMigratorInfoResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssFundsMigratorInfoResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssFundsMigratorInfoResponse;
+
+  static equals(a: QueryTssFundsMigratorInfoResponse | PlainMessage<QueryTssFundsMigratorInfoResponse> | undefined, b: QueryTssFundsMigratorInfoResponse | PlainMessage<QueryTssFundsMigratorInfoResponse> | undefined): boolean;
+}
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryGetChainNoncesRequest

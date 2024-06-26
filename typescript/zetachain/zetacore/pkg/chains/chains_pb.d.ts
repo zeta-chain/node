@@ -7,11 +7,15 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
+ * ReceiveStatus represents the status of an outbound
+ * TODO: Rename and move
+ * https://github.com/zeta-chain/node/issues/2257
+ *
  * @generated from enum zetachain.zetacore.pkg.chains.ReceiveStatus
  */
 export declare enum ReceiveStatus {
   /**
-   * some observer sees inbound tx
+   * Created is used for inbounds
    *
    * @generated from enum value: created = 0;
    */
@@ -75,16 +79,6 @@ export declare enum ChainName {
   mumbai_testnet = 7,
 
   /**
-   * @generated from enum value: ganache_testnet = 8;
-   */
-  ganache_testnet = 8,
-
-  /**
-   * @generated from enum value: baobab_testnet = 9;
-   */
-  baobab_testnet = 9,
-
-  /**
    * @generated from enum value: bsc_testnet = 10;
    */
   bsc_testnet = 10,
@@ -118,10 +112,32 @@ export declare enum ChainName {
    * @generated from enum value: amoy_testnet = 16;
    */
   amoy_testnet = 16,
+
+  /**
+   * @generated from enum value: optimism_mainnet = 17;
+   */
+  optimism_mainnet = 17,
+
+  /**
+   * @generated from enum value: optimism_sepolia = 18;
+   */
+  optimism_sepolia = 18,
+
+  /**
+   * @generated from enum value: base_mainnet = 19;
+   */
+  base_mainnet = 19,
+
+  /**
+   * @generated from enum value: base_sepolia = 20;
+   */
+  base_sepolia = 20,
 }
 
 /**
- * Network represents the network type of the chain
+ * Network represents the network of the chain
+ * there is a single instance of the network on mainnet
+ * then the network can have eventual testnets or devnets
  *
  * @generated from enum zetachain.zetacore.pkg.chains.Network
  */
@@ -150,10 +166,21 @@ export declare enum Network {
    * @generated from enum value: bsc = 4;
    */
   bsc = 4,
+
+  /**
+   * @generated from enum value: optimism = 5;
+   */
+  optimism = 5,
+
+  /**
+   * @generated from enum value: base = 6;
+   */
+  base = 6,
 }
 
 /**
  * NetworkType represents the network type of the chain
+ * Mainnet, Testnet, Privnet, Devnet
  *
  * @generated from enum zetachain.zetacore.pkg.chains.NetworkType
  */
@@ -199,6 +226,8 @@ export declare enum Vm {
 
 /**
  * Consensus represents the consensus algorithm used by the chain
+ * this can represent the consensus of a L1
+ * this can also represent the solution of a L2
  *
  * @generated from enum zetachain.zetacore.pkg.chains.Consensus
  */
@@ -217,46 +246,98 @@ export declare enum Consensus {
    * @generated from enum value: bitcoin = 2;
    */
   bitcoin = 2,
+
+  /**
+   * @generated from enum value: op_stack = 3;
+   */
+  op_stack = 3,
 }
 
 /**
+ * CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
+ *
+ * @generated from enum zetachain.zetacore.pkg.chains.CCTXGateway
+ */
+export declare enum CCTXGateway {
+  /**
+   * zevm is the internal CCTX gateway to process outbound on the ZEVM and read
+   * inbound events from the ZEVM only used for ZetaChain chains
+   *
+   * @generated from enum value: zevm = 0;
+   */
+  zevm = 0,
+
+  /**
+   * observers is the CCTX gateway for chains relying on the observer set to
+   * observe inbounds and TSS for outbounds
+   *
+   * @generated from enum value: observers = 1;
+   */
+  observers = 1,
+}
+
+/**
+ * Chain represents static data about a blockchain network
+ * it is identified by a unique chain ID
+ *
  * @generated from message zetachain.zetacore.pkg.chains.Chain
  */
 export declare class Chain extends Message<Chain> {
   /**
-   * @generated from field: zetachain.zetacore.pkg.chains.ChainName chain_name = 1;
-   */
-  chainName: ChainName;
-
-  /**
+   * ChainId is the unique identifier of the chain
+   *
    * @generated from field: int64 chain_id = 2;
    */
   chainId: bigint;
 
   /**
+   * ChainName is the name of the chain
+   *
+   * @generated from field: zetachain.zetacore.pkg.chains.ChainName chain_name = 1;
+   */
+  chainName: ChainName;
+
+  /**
+   * Network is the network of the chain
+   *
    * @generated from field: zetachain.zetacore.pkg.chains.Network network = 3;
    */
   network: Network;
 
   /**
+   * NetworkType is the network type of the chain: mainnet, testnet, etc..
+   *
    * @generated from field: zetachain.zetacore.pkg.chains.NetworkType network_type = 4;
    */
   networkType: NetworkType;
 
   /**
+   * Vm is the virtual machine used in the chain
+   *
    * @generated from field: zetachain.zetacore.pkg.chains.Vm vm = 5;
    */
   vm: Vm;
 
   /**
+   * Consensus is the underlying consensus algorithm used by the chain
+   *
    * @generated from field: zetachain.zetacore.pkg.chains.Consensus consensus = 6;
    */
   consensus: Consensus;
 
   /**
+   * IsExternal describe if the chain is ZetaChain or external
+   *
    * @generated from field: bool is_external = 7;
    */
   isExternal: boolean;
+
+  /**
+   * CCTXGateway is the gateway used to handle CCTX outbounds
+   *
+   * @generated from field: zetachain.zetacore.pkg.chains.CCTXGateway cctx_gateway = 8;
+   */
+  cctxGateway: CCTXGateway;
 
   constructor(data?: PartialMessage<Chain>);
 

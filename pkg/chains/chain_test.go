@@ -11,6 +11,133 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestChain_Validate(t *testing.T) {
+	tests := []struct {
+		name   string
+		chain  Chain
+		errStr string
+	}{
+		{
+			name: "should pass if chain is valid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+		},
+		{
+			name: "should error if chain ID is zero",
+			chain: Chain{
+				ChainId:     0,
+				ChainName:   ChainName_empty,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "chain ID must be positive",
+		},
+		{
+			name: "should error if chain ID is negative",
+			chain: Chain{
+				ChainId:     0,
+				ChainName:   ChainName_empty,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "chain ID must be positive",
+		},
+		{
+			name: "should error if chain name invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_base_sepolia + 1,
+				Network:     Network_optimism,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid chain name",
+		},
+		{
+			name: "should error if network invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base + 1,
+				NetworkType: NetworkType_testnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid network",
+		},
+		{
+			name: "should error if network type invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base,
+				NetworkType: NetworkType_devnet + 1,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid network type",
+		},
+		{
+			name: "should error if vm invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base,
+				NetworkType: NetworkType_devnet,
+				Vm:          Vm_evm + 1,
+				Consensus:   Consensus_op_stack,
+				IsExternal:  true,
+			},
+			errStr: "invalid vm",
+		},
+		{
+			name: "should error if consensus invalid",
+			chain: Chain{
+				ChainId:     42,
+				ChainName:   ChainName_empty,
+				Network:     Network_base,
+				NetworkType: NetworkType_devnet,
+				Vm:          Vm_evm,
+				Consensus:   Consensus_op_stack + 1,
+				IsExternal:  true,
+			},
+			errStr: "invalid consensus",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.errStr != "" {
+				require.ErrorContains(t, tt.chain.Validate(), tt.errStr)
+			} else {
+				require.NoError(t, tt.chain.Validate())
+			}
+		})
+	}
+
+	t.Run("all default chains are valid", func(t *testing.T) {
+		for _, chain := range DefaultChainsList() {
+			require.NoError(t, chain.Validate())
+		}
+	})
+}
+
 func TestChain_EncodeAddress(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -139,10 +266,10 @@ func TestChain_DecodeAddress(t *testing.T) {
 
 func TestChain_InChainList(t *testing.T) {
 	require.True(t, ZetaChainMainnet.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaMocknetChain.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaPrivnetChain.InChainList(ChainListByNetwork(Network_zeta)))
-	require.True(t, ZetaTestnetChain.InChainList(ChainListByNetwork(Network_zeta)))
-	require.False(t, EthChain.InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaChainDevnet.InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaChainPrivnet.InChainList(ChainListByNetwork(Network_zeta)))
+	require.True(t, ZetaChainTestnet.InChainList(ChainListByNetwork(Network_zeta)))
+	require.False(t, Ethereum.InChainList(ChainListByNetwork(Network_zeta)))
 }
 
 func TestIsZetaChain(t *testing.T) {
@@ -152,10 +279,10 @@ func TestIsZetaChain(t *testing.T) {
 		want    bool
 	}{
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, true},
-		{"Zeta Testnet", ZetaTestnetChain.ChainId, true},
-		{"Zeta Mocknet", ZetaMocknetChain.ChainId, true},
-		{"Zeta Privnet", ZetaPrivnetChain.ChainId, true},
-		{"Non-Zeta", EthChain.ChainId, false},
+		{"Zeta Testnet", ZetaChainTestnet.ChainId, true},
+		{"Zeta Mocknet", ZetaChainDevnet.ChainId, true},
+		{"Zeta Privnet", ZetaChainPrivnet.ChainId, true},
+		{"Non-Zeta", Ethereum.ChainId, false},
 	}
 
 	for _, tt := range tests {
@@ -171,10 +298,10 @@ func TestIsEVMChain(t *testing.T) {
 		chainID int64
 		want    bool
 	}{
-		{"Ethereum Mainnet", EthChain.ChainId, true},
-		{"Goerli Testnet", GoerliChain.ChainId, true},
-		{"Sepolia Testnet", SepoliaChain.ChainId, true},
-		{"Non-EVM", BtcMainnetChain.ChainId, false},
+		{"Ethereum Mainnet", Ethereum.ChainId, true},
+		{"Goerli Testnet", Goerli.ChainId, true},
+		{"Sepolia Testnet", Sepolia.ChainId, true},
+		{"Non-EVM", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -191,13 +318,13 @@ func TestIsHeaderSupportedChain(t *testing.T) {
 		chainID int64
 		want    bool
 	}{
-		{"Ethereum Mainnet", EthChain.ChainId, true},
-		{"Goerli Testnet", GoerliChain.ChainId, true},
-		{"Goerli Localnet", GoerliLocalnetChain.ChainId, true},
-		{"Sepolia Testnet", SepoliaChain.ChainId, true},
-		{"BSC Testnet", BscTestnetChain.ChainId, true},
-		{"BSC Mainnet", BscMainnetChain.ChainId, true},
-		{"BTC", BtcMainnetChain.ChainId, true},
+		{"Ethereum Mainnet", Ethereum.ChainId, true},
+		{"Goerli Testnet", Goerli.ChainId, true},
+		{"Goerli Localnet", GoerliLocalnet.ChainId, true},
+		{"Sepolia Testnet", Sepolia.ChainId, true},
+		{"BSC Testnet", BscTestnet.ChainId, true},
+		{"BSC Mainnet", BscMainnet.ChainId, true},
+		{"BTC", BitcoinMainnet.ChainId, true},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -214,10 +341,10 @@ func TestSupportMerkleProof(t *testing.T) {
 		chain Chain
 		want  bool
 	}{
-		{"Ethereum Mainnet", EthChain, true},
-		{"BSC Testnet", BscTestnetChain, true},
-		{"BSC Mainnet", BscMainnetChain, true},
-		{"Non-EVM", BtcMainnetChain, true},
+		{"Ethereum Mainnet", Ethereum, true},
+		{"BSC Testnet", BscTestnet, true},
+		{"BSC Mainnet", BscMainnet, true},
+		{"Non-EVM", BitcoinMainnet, true},
 		{"Zeta Mainnet", ZetaChainMainnet, false},
 	}
 
@@ -234,10 +361,10 @@ func TestIsBitcoinChain(t *testing.T) {
 		chainID int64
 		want    bool
 	}{
-		{"Bitcoin Mainnet", BtcMainnetChain.ChainId, true},
-		{"Bitcoin Testnet", BtcTestNetChain.ChainId, true},
-		{"Bitcoin Regtest", BtcRegtestChain.ChainId, true},
-		{"Non-Bitcoin", EthChain.ChainId, false},
+		{"Bitcoin Mainnet", BitcoinMainnet.ChainId, true},
+		{"Bitcoin Testnet", BitcoinTestnet.ChainId, true},
+		{"Bitcoin Regtest", BitcoinRegtest.ChainId, true},
+		{"Non-Bitcoin", Ethereum.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -254,10 +381,10 @@ func TestIsEthereumChain(t *testing.T) {
 		chainID int64
 		want    bool
 	}{
-		{"Ethereum Mainnet", EthChain.ChainId, true},
-		{"Goerli Testnet", GoerliChain.ChainId, true},
-		{"Sepolia Testnet", SepoliaChain.ChainId, true},
-		{"Non-Ethereum", BtcMainnetChain.ChainId, false},
+		{"Ethereum Mainnet", Ethereum.ChainId, true},
+		{"Goerli Testnet", Goerli.ChainId, true},
+		{"Sepolia Testnet", Sepolia.ChainId, true},
+		{"Non-Ethereum", BitcoinMainnet.ChainId, false},
 		{"Zeta Mainnet", ZetaChainMainnet.ChainId, false},
 	}
 
@@ -270,12 +397,12 @@ func TestIsEthereumChain(t *testing.T) {
 
 func TestChain_IsExternalChain(t *testing.T) {
 	require.False(t, ZetaChainMainnet.IsExternalChain())
-	require.True(t, EthChain.IsExternalChain())
+	require.True(t, Ethereum.IsExternalChain())
 }
 
 func TestChain_IsZetaChain(t *testing.T) {
 	require.True(t, ZetaChainMainnet.IsZetaChain())
-	require.False(t, EthChain.IsZetaChain())
+	require.False(t, Ethereum.IsZetaChain())
 }
 
 func TestChain_IsEmpty(t *testing.T) {
@@ -296,7 +423,7 @@ func TestChain_WitnessProgram(t *testing.T) {
 		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 
-		chain := BtcTestNetChain
+		chain := BitcoinTestnet
 		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
 		require.NoError(t, err)
 	})
@@ -307,7 +434,7 @@ func TestChain_WitnessProgram(t *testing.T) {
 		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 
-		chain := GoerliChain
+		chain := Goerli
 		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
 		require.Error(t, err)
 	})
@@ -318,26 +445,26 @@ func TestChain_WitnessProgram(t *testing.T) {
 		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 
-		chain := BtcTestNetChain
+		chain := BitcoinTestnet
 		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram()[0:19])
 		require.Error(t, err)
 	})
 }
 
 func TestChains_Has(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaTestnetChain}
+	chains := Chains{ZetaChainMainnet, ZetaChainTestnet}
 	require.True(t, chains.Has(ZetaChainMainnet))
-	require.False(t, chains.Has(EthChain))
+	require.False(t, chains.Has(Ethereum))
 }
 
 func TestChains_Distinct(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaChainMainnet, ZetaTestnetChain}
+	chains := Chains{ZetaChainMainnet, ZetaChainMainnet, ZetaChainTestnet}
 	distinctChains := chains.Distinct()
 	require.Len(t, distinctChains, 2)
 }
 
 func TestChains_Strings(t *testing.T) {
-	chains := Chains{ZetaChainMainnet, ZetaTestnetChain}
+	chains := Chains{ZetaChainMainnet, ZetaChainTestnet}
 	strings := chains.Strings()
 	expected := []string{chains[0].String(), chains[1].String()}
 	require.Equal(t, expected, strings)
@@ -350,7 +477,7 @@ func TestGetChainFromChainID(t *testing.T) {
 }
 
 func TestGetBTCChainParams(t *testing.T) {
-	params, err := GetBTCChainParams(BtcMainnetChain.ChainId)
+	params, err := GetBTCChainParams(BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	require.Equal(t, &chaincfg.MainNetParams, params)
 
@@ -377,5 +504,5 @@ func TestGetBTCChainIDFromChainParams(t *testing.T) {
 
 func TestChainIDInChainList(t *testing.T) {
 	require.True(t, ChainIDInChainList(ZetaChainMainnet.ChainId, ChainListByNetwork(Network_zeta)))
-	require.False(t, ChainIDInChainList(EthChain.ChainId, ChainListByNetwork(Network_zeta)))
+	require.False(t, ChainIDInChainList(Ethereum.ChainId, ChainListByNetwork(Network_zeta)))
 }

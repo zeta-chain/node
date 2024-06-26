@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
 	"github.com/zeta-chain/zetacore/x/authority/types"
@@ -73,12 +74,12 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	return &k, ctx
 }
 
-// MockIsAuthorized mocks the IsAuthorized method of an authority keeper mock
-func MockIsAuthorized(m *mock.Mock, address string, policyType types.PolicyType, isAuthorized bool) {
-	m.On("IsAuthorized", mock.Anything, address, policyType).Return(isAuthorized).Once()
+// MockCheckAuthorization mocks the CheckAuthorization method of the authority keeper.
+func MockCheckAuthorization(m *mock.Mock, msg sdk.Msg, authorizationResult error) {
+	m.On("CheckAuthorization", mock.Anything, msg).Return(authorizationResult).Once()
 }
 
-func SetAdminPolices(ctx sdk.Context, ak *keeper.Keeper) string {
+func SetAdminPolicies(ctx sdk.Context, ak *keeper.Keeper) string {
 	admin := sample.AccAddress()
 	ak.SetPolicies(ctx, types.Policies{Items: []*types.Policy{
 		{

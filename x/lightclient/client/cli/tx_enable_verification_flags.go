@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
@@ -23,7 +24,6 @@ func CmdEnableVerificationFlags() *cobra.Command {
 				`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

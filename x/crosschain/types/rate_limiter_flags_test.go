@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -235,8 +236,8 @@ func TestBuildAssetRateMapFromList(t *testing.T) {
 
 func TestConvertCctxValue(t *testing.T) {
 	// chain IDs
-	ethChainID := chains.GoerliLocalnetChain.ChainId
-	btcChainID := chains.BtcRegtestChain.ChainId
+	ethChainID := chains.GoerliLocalnet.ChainId
+	btcChainID := chains.BitcoinRegtest.ChainId
 
 	// setup test asset rates
 	assetETH := sample.EthAddress().Hex()
@@ -374,9 +375,9 @@ func TestConvertCctxValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// create cctx with given input
 			cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", tt.chainID, 1))
-			cctx.InboundTxParams.CoinType = tt.coinType
-			cctx.InboundTxParams.Asset = tt.asset
-			cctx.GetCurrentOutTxParam().Amount = tt.amount
+			cctx.InboundParams.CoinType = tt.coinType
+			cctx.InboundParams.Asset = tt.asset
+			cctx.GetCurrentOutboundParam().Amount = tt.amount
 
 			// convert cctx value
 			value := types.ConvertCctxValueToAzeta(tt.chainID, cctx, tt.gasAssetRates, tt.erc20AssetRates)

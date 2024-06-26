@@ -15,6 +15,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	observermocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -65,7 +66,10 @@ func initObserverKeeper(
 }
 
 // ObserverKeeperWithMocks instantiates an observer keeper for testing purposes with the option to mock specific keepers
-func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
+func ObserverKeeperWithMocks(
+	t testing.TB,
+	mockOptions ObserverMockOptions,
+) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 

@@ -9,7 +9,10 @@ import (
 
 func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 	if m.HasVoted(address) {
-		return m, cosmoserrors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Ballot :%s | Already Voted", address, m.String()))
+		return m, cosmoserrors.Wrap(
+			ErrUnableToAddVote,
+			fmt.Sprintf(" Voter : %s | Ballot :%s | Already Voted", address, m.String()),
+		)
 	}
 	// `index` is the index of the `address` in the `VoterList`
 	// `index` is used to set the vote in the `Votes` array
@@ -59,7 +62,6 @@ func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 		if vote == VoteType_FailureObservation {
 			failure = failure.Add(sdk.OneDec())
 		}
-
 	}
 	if failure.IsPositive() {
 		if failure.Quo(total).GTE(m.BallotThreshold) {

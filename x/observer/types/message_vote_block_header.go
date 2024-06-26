@@ -2,10 +2,10 @@ package types
 
 import (
 	cosmoserrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 )
@@ -16,7 +16,13 @@ const (
 	TypeMsgVoteBlockHeader = "vote_block_header"
 )
 
-func NewMsgVoteBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header proofs.HeaderData) *MsgVoteBlockHeader {
+func NewMsgVoteBlockHeader(
+	creator string,
+	chainID int64,
+	blockHash []byte,
+	height int64,
+	header proofs.HeaderData,
+) *MsgVoteBlockHeader {
 	return &MsgVoteBlockHeader{
 		Creator:   creator,
 		ChainId:   chainID,

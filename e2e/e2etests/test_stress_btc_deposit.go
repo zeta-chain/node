@@ -2,31 +2,23 @@ package e2etests
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // TestStressBTCDeposit tests the stressing deposit of BTC
 func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
-	if len(args) != 2 {
-		panic("TestStressBTCDeposit requires exactly two arguments: the deposit amount and the number of deposits.")
-	}
+	require.Len(r, args, 2)
 
-	depositAmount, err := strconv.ParseFloat(args[1], 64)
-	if err != nil {
-		panic("Invalid deposit amount specified for TestStressBTCDeposit.")
-	}
-
-	numDeposits, err := strconv.Atoi(args[1])
-	if err != nil || numDeposits < 1 {
-		panic("Invalid number of deposits specified for TestStressBTCDeposit.")
-	}
+	depositAmount := parseFloat(r, args[0])
+	numDeposits := parseInt(r, args[1])
 
 	r.SetBtcAddress(r.Name, false)
 
@@ -41,22 +33,17 @@ func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 		txHash := r.DepositBTCWithAmount(depositAmount)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, txHash.String())
 
-		eg.Go(func() error {
-			return MonitorBTCDeposit(r, txHash, i, time.Now())
-		})
+		eg.Go(func() error { return monitorBTCDeposit(r, txHash, i, time.Now()) })
 	}
 
-	// wait for all the deposits to complete
-	if err := eg.Wait(); err != nil {
-		panic(err)
-	}
+	require.NoError(r, eg.Wait())
 
 	r.Logger.Print("all deposits completed")
 }
 
-// MonitorBTCDeposit monitors the deposit of BTC, returns once the deposit is complete
-func MonitorBTCDeposit(r *runner.E2ERunner, hash *chainhash.Hash, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.String(), r.CctxClient, r.Logger, r.ReceiptTimeout)
+// monitorBTCDeposit monitors the deposit of BTC, returns once the deposit is complete
+func monitorBTCDeposit(r *runner.E2ERunner, hash *chainhash.Hash, index int, startTime time.Time) error {
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.String(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: deposit cctx failed with status %s, message %s, cctx index %s",

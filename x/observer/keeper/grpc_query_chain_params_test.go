@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -38,7 +39,7 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 		list := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:               chains.ZetaPrivnetChain.ChainId,
+					ChainId:               chains.ZetaChainPrivnet.ChainId,
 					IsSupported:           false,
 					BallotThreshold:       sdk.ZeroDec(),
 					MinObserverDelegation: sdk.ZeroDec(),
@@ -48,7 +49,7 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 		k.SetChainParamsList(ctx, list)
 
 		res, err := k.GetChainParamsForChain(wctx, &types.QueryGetChainParamsForChainRequest{
-			ChainId: chains.ZetaPrivnetChain.ChainId,
+			ChainId: chains.ZetaChainPrivnet.ChainId,
 		})
 		require.NoError(t, err)
 		require.Equal(t, &types.QueryGetChainParamsForChainResponse{
@@ -83,7 +84,7 @@ func TestKeeper_GetChainParams(t *testing.T) {
 		list := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				{
-					ChainId:               chains.ZetaPrivnetChain.ChainId,
+					ChainId:               chains.ZetaChainPrivnet.ChainId,
 					IsSupported:           false,
 					BallotThreshold:       sdk.ZeroDec(),
 					MinObserverDelegation: sdk.ZeroDec(),

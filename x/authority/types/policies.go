@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,8 +43,8 @@ func (p Policies) Validate() error {
 			return fmt.Errorf("invalid address: %s", err)
 		}
 
-		if policy.PolicyType != PolicyType_groupEmergency && policy.PolicyType != PolicyType_groupAdmin && policy.PolicyType != PolicyType_groupOperational {
-			return fmt.Errorf("invalid policy type: %s", policy.PolicyType)
+		if err := policy.PolicyType.Validate(); err != nil {
+			return err
 		}
 
 		if policyTypeMap[policy.PolicyType] {
@@ -53,4 +54,15 @@ func (p Policies) Validate() error {
 	}
 
 	return nil
+}
+
+// CheckSigner checks if the signer is authorized for the given policy type
+func (p Policies) CheckSigner(signer string, policyRequired PolicyType) error {
+	for _, policy := range p.Items {
+		if policy.Address == signer && policy.PolicyType == policyRequired {
+			return nil
+		}
+	}
+	return errors.Wrap(ErrSignerDoesntMatch, fmt.Sprintf("signer: %s, policy required for message: %s ",
+		signer, policyRequired.String()))
 }

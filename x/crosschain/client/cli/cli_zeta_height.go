@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -13,7 +14,6 @@ func CmdLastZetaHeight() *cobra.Command {
 		Short: "Query last Zeta Height",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

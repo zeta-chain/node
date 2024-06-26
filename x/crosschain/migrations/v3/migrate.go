@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -18,7 +19,6 @@ func MigrateStore(
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
-
 	// Fetch existing TSS
 	existingTss := observertypes.TSS{}
 	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.TSSKey))

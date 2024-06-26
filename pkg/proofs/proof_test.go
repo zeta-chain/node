@@ -1,25 +1,24 @@
 package proofs
 
 import (
-	"errors"
-	"testing"
-
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
-	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+	"testing"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
+	"github.com/zeta-chain/zetacore/testutil/testdata"
 )
 
 const (
@@ -52,7 +51,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validate block
-		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
+		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutboundID, b.TssAddress, b.Nonce)
 	}
 }
 
@@ -136,11 +135,26 @@ func BitcoinMerkleProofLiveTest(t *testing.T) {
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, "", "", 0)
 
-		fmt.Printf("Verification succeeded for block: %d hash: %s root: %s target: %064x transactions: %d\n", height, blockHash, header.MerkleRoot, target, len(blockVerbose.Tx))
+		fmt.Printf(
+			"Verification succeeded for block: %d hash: %s root: %s target: %064x transactions: %d\n",
+			height,
+			blockHash,
+			header.MerkleRoot,
+			target,
+			len(blockVerbose.Tx),
+		)
 	}
 }
 
-func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string, nonce uint64) {
+func validateBitcoinBlock(
+	t *testing.T,
+	_ *wire.BlockHeader,
+	headerBytes []byte,
+	blockVerbose *btcjson.GetBlockVerboseTxResult,
+	outboundID string,
+	tssAddress string,
+	nonce uint64,
+) {
 	// Deserialization should work for each transaction in the block
 	txns := []*btcutil.Tx{}
 	txBodies := [][]byte{}

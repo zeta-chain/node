@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -36,7 +37,6 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
-
 	err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
 	if err != nil {
 		return err
@@ -122,7 +122,11 @@ func (k Keeper) CheckAndCleanObserver(ctx sdk.Context, valAddress sdk.ValAddress
 // CheckAndCleanObserverDelegator first checks if the delegation is self delegation,
 // if it is, then it checks if the total delegation is sufficient after the delegation is removed,
 // if not it removes the observer from the set
-func (k Keeper) CheckAndCleanObserverDelegator(ctx sdk.Context, valAddress sdk.ValAddress, delAddress sdk.AccAddress) error {
+func (k Keeper) CheckAndCleanObserverDelegator(
+	ctx sdk.Context,
+	valAddress sdk.ValAddress,
+	delAddress sdk.AccAddress,
+) error {
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
 		return err

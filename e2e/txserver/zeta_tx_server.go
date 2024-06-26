@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -34,8 +33,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/evmos/ethermint/crypto/hd"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -62,43 +64,47 @@ type ZetaTxServer struct {
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
-func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string, chainID string) (ZetaTxServer, error) {
+func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chainID string) (*ZetaTxServer, error) {
 	ctx := context.Background()
 
 	if len(names) == 0 {
-		return ZetaTxServer{}, errors.New("no account provided")
+		return nil, errors.New("no account provided")
 	}
 
-	if len(names) != len(mnemonics) {
-		return ZetaTxServer{}, errors.New("invalid names and mnemonics")
+	if len(names) != len(privateKeys) {
+		return nil, errors.New("invalid names and privateKeys")
 	}
 
 	// initialize rpc and check status
 	rpc, err := rpchttp.New(rpcAddr, "/websocket")
 	if err != nil {
-		return ZetaTxServer{}, fmt.Errorf("failed to initialize rpc: %s", err.Error())
+		return nil, fmt.Errorf("failed to initialize rpc: %s", err.Error())
 	}
 	if _, err = rpc.Status(ctx); err != nil {
-		return ZetaTxServer{}, fmt.Errorf("failed to query rpc: %s", err.Error())
+		return nil, fmt.Errorf("failed to query rpc: %s", err.Error())
 	}
 
 	// initialize codec
 	cdc, reg := newCodec()
 
 	// initialize keyring
-	kr := keyring.NewInMemory(cdc)
+	kr := keyring.NewInMemory(cdc, hd.EthSecp256k1Option())
 
 	addresses := make([]string, 0, len(names))
 
 	// create accounts
 	for i := range names {
-		r, err := kr.NewAccount(names[i], mnemonics[i], "", sdktypes.FullFundraiserPath, hd.Secp256k1)
+		err = kr.ImportPrivKeyHex(names[i], privateKeys[i], string(hd.EthSecp256k1Type))
 		if err != nil {
-			return ZetaTxServer{}, fmt.Errorf("failed to create account: %s", err.Error())
+			return nil, fmt.Errorf("failed to create account: %w", err)
+		}
+		r, err := kr.Key(names[i])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get account key: %w", err)
 		}
 		accAddr, err := r.GetAddress()
 		if err != nil {
-			return ZetaTxServer{}, fmt.Errorf("failed to get account address: %s", err.Error())
+			return nil, fmt.Errorf("failed to get account address: %w", err)
 		}
 
 		addresses = append(addresses, accAddr.String())
@@ -107,11 +113,10 @@ func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string, chainID
 	clientCtx := newContext(rpc, cdc, reg, kr, chainID)
 	txf := newFactory(clientCtx)
 
-	return ZetaTxServer{
+	return &ZetaTxServer{
 		clientCtx:    clientCtx,
 		txFactory:    txf,
 		name:         names,
-		mnemonic:     mnemonics,
 		address:      addresses,
 		blockTimeout: 1 * time.Minute,
 	}, nil
@@ -151,7 +156,6 @@ func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 // GetAllAccountAddress returns all account addresses
 func (zts ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
-
 }
 
 // GetAccountMnemonic returns the account name from the given index
@@ -272,7 +276,9 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
 // returns the addresses of uniswap factory, router and erc20 zrc20
-func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string) (string, string, string, string, string, error) {
+func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
+	account, erc20Addr string,
+) (string, string, string, string, string, error) {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -291,7 +297,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 
 	systemContractAddress, err := FetchAttributeFromTxResponse(res, "system_contract")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch system contract address: %s; rawlog %s", err.Error(), res.RawLog)
+		return "", "", "", "", "", fmt.Errorf(
+			"failed to fetch system contract address: %s; rawlog %s",
+			err.Error(),
+			res.RawLog,
+		)
 	}
 
 	// get system contract
@@ -313,20 +323,28 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	// get zevm connector address
 	zevmConnectorAddr, err := FetchAttributeFromTxResponse(res, "connector_zevm")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch zevm connector address: %s, txResponse: %s", err.Error(), res.String())
+		return "", "", "", "", "", fmt.Errorf(
+			"failed to fetch zevm connector address: %s, txResponse: %s",
+			err.Error(),
+			res.String(),
+		)
 	}
 
 	// get wzeta address
 	wzetaAddr, err := FetchAttributeFromTxResponse(res, "wzeta")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch wzeta address: %s, txResponse: %s", err.Error(), res.String())
+		return "", "", "", "", "", fmt.Errorf(
+			"failed to fetch wzeta address: %s, txResponse: %s",
+			err.Error(),
+			res.String(),
+		)
 	}
 
 	// deploy eth zrc20
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.GoerliLocalnetChain.ChainId,
+		chains.GoerliLocalnet.ChainId,
 		18,
 		"ETH",
 		"gETH",
@@ -341,7 +359,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		chains.BtcRegtestChain.ChainId,
+		chains.BitcoinRegtest.ChainId,
 		8,
 		"BTC",
 		"tBTC",
@@ -356,7 +374,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		erc20Addr,
-		chains.GoerliLocalnetChain.ChainId,
+		chains.GoerliLocalnet.ChainId,
 		6,
 		"USDT",
 		"USDT",
@@ -410,7 +428,8 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 
 // newCodec returns the codec for msg server
 func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	encodingConfig := app.MakeEncodingConfig()
+	interfaceRegistry := encodingConfig.InterfaceRegistry
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	sdktypes.RegisterInterfaces(interfaceRegistry)

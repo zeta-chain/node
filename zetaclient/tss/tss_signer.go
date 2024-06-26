@@ -12,12 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-
 	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
@@ -31,8 +25,14 @@ import (
 	"github.com/zeta-chain/go-tss/keysign"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -76,7 +76,7 @@ type TSS struct {
 	CurrentPubkey   string
 	logger          zerolog.Logger
 	Signers         []string
-	CoreBridge      interfaces.ZetaCoreBridger
+	ZetacoreClient  interfaces.ZetacoreClient
 	KeysignsTracker *ConcurrentKeysignsTracker
 
 	// TODO: support multiple Bitcoin network, not just one network
@@ -90,7 +90,7 @@ func NewTSS(
 	peer p2p.AddrList,
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
-	bridge interfaces.ZetaCoreBridger,
+	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
 	bitcoinChainID int64,
 	tssPassword string,
@@ -105,9 +105,9 @@ func NewTSS(
 	newTss := TSS{
 		Server:          server,
 		Keys:            make(map[string]*Key),
-		CurrentPubkey:   appContext.ZetaCoreContext().GetCurrentTssPubkey(),
+		CurrentPubkey:   appContext.ZetacoreContext().GetCurrentTssPubkey(),
 		logger:          logger,
-		CoreBridge:      bridge,
+		ZetacoreClient:  client,
 		KeysignsTracker: NewKeysignsTracker(logger),
 		BitcoinChainID:  bitcoinChainID,
 	}
@@ -124,10 +124,10 @@ func NewTSS(
 
 	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
-		bridge.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
+		client.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
 
-	keygenRes, err := newTss.CoreBridge.GetKeyGen()
+	keygenRes, err := newTss.ZetacoreClient.GetKeyGen()
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,13 @@ func (tss *TSS) Pubkey() []byte {
 // Sign signs a digest
 // digest should be Hashes of some data
 // NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.Chain, optionalPubKey string) ([65]byte, error) {
+func (tss *TSS) Sign(
+	digest []byte,
+	height uint64,
+	nonce uint64,
+	chainID int64,
+	optionalPubKey string,
+) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
@@ -224,7 +230,13 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 	}
 
 	// #nosec G701 always in range
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
+	keysignReq := keysign.NewRequest(
+		tssPubkey,
+		[]string{base64.StdEncoding.EncodeToString(H)},
+		int64(height),
+		nil,
+		"0.14.0",
+	)
 	tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	tss.KeysignsTracker.EndMsgSign()
@@ -238,8 +250,8 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 		// post blame data if enabled
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := hex.EncodeToString(digest)
-			index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
-			zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			index := observertypes.GetBlameIndex(chainID, nonce, digest, height)
+			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chainID, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [65]byte{}, err
@@ -292,7 +304,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 
 // SignBatch is hash of some data
 // digest should be batch of hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *chains.Chain) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -314,8 +326,8 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 		// post blame data if enabled
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := combineDigests(digestBase64)
-			index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
-			zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			index := observertypes.GetBlameIndex(chainID, nonce, hex.EncodeToString(digest), height)
+			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chainID, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [][65]byte{}, err
@@ -334,7 +346,9 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	// 32B msg hash, 32B R, 32B S, 1B RC
 
 	if len(signatures) != len(digests) {
-		log.Warn().Err(err).Msgf("signature has length (%d) not equal to length of digests (%d)", len(signatures), len(digests))
+		log.Warn().
+			Err(err).
+			Msgf("signature has length (%d) not equal to length of digests (%d)", len(signatures), len(digests))
 		return [][65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
 
@@ -375,7 +389,8 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 				}
 				compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 				if !bytes.Equal(pubkey.Bytes(), compressedPubkey) {
-					log.Warn().Msgf("%d-th pubkey %s recovered pubkey %s", j, pubkey.String(), hex.EncodeToString(compressedPubkey))
+					log.Warn().
+						Msgf("%d-th pubkey %s recovered pubkey %s", j, pubkey.String(), hex.EncodeToString(compressedPubkey))
 					return [][65]byte{}, fmt.Errorf("signuature verification fail")
 				}
 			}
@@ -549,7 +564,13 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	H := crypto.Keccak256Hash(data)
 	log.Info().Msgf("hash of data (hello meta) is %s", H)
 
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, nil, "0.14.0")
+	keysignReq := keysign.NewRequest(
+		tssPubkey,
+		[]string{base64.StdEncoding.EncodeToString(H.Bytes())},
+		10,
+		nil,
+		"0.14.0",
+	)
 	ksRes, err := tssServer.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")

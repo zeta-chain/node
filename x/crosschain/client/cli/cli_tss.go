@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -18,7 +19,6 @@ func CmdUpdateTss() *cobra.Command {
 		Short: "Create a new TSSVoter",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			argsPubkey, err := cast.ToStringE(args[0])
 			if err != nil {
 				return err
@@ -44,7 +44,6 @@ func CmdMigrateTssFunds() *cobra.Command {
 		Short: "Migrate TSS funds to the latest TSS address",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			argsChainID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err

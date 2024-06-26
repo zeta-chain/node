@@ -6,8 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/zetacore/x/observer/types"
 	. "gopkg.in/check.v1"
+
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestChainParamsList_Validate(t *testing.T) {
@@ -29,7 +30,7 @@ func TestChainParamsList_Validate(t *testing.T) {
 		list.ChainParams = append(list.ChainParams, list.ChainParams[0])
 		err := list.Validate()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "duplicated chain id")
+		require.ErrorContains(t, err, "duplicated chain id")
 	})
 }
 
@@ -55,15 +56,15 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 	s.evmParams = &types.ChainParams{
 		ConfirmationCount:           1,
 		GasPriceTicker:              1,
-		InTxTicker:                  1,
-		OutTxTicker:                 1,
+		InboundTicker:               1,
+		OutboundTicker:              1,
 		WatchUtxoTicker:             0,
 		ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
 		ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		Erc20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
 		ChainId:                     5,
-		OutboundTxScheduleInterval:  1,
-		OutboundTxScheduleLookahead: 1,
+		OutboundScheduleInterval:    1,
+		OutboundScheduleLookahead:   1,
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -71,15 +72,15 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,
 		GasPriceTicker:              1,
-		InTxTicker:                  1,
-		OutTxTicker:                 1,
+		InboundTicker:               1,
+		OutboundTicker:              1,
 		WatchUtxoTicker:             1,
 		ZetaTokenContractAddress:    "",
 		ConnectorContractAddress:    "",
 		Erc20CustodyContractAddress: "",
 		ChainId:                     18332,
-		OutboundTxScheduleInterval:  1,
-		OutboundTxScheduleLookahead: 1,
+		OutboundScheduleInterval:    1,
+		OutboundScheduleLookahead:   1,
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -155,46 +156,46 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	require.NotNil(s.T(), err)
 
 	copy = *params
-	copy.InTxTicker = 0
+	copy.InboundTicker = 0
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.InTxTicker = 300
+	copy.InboundTicker = 300
 	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
-	copy.InTxTicker = 301
+	copy.InboundTicker = 301
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
-	copy.OutTxTicker = 0
+	copy.OutboundTicker = 0
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.OutTxTicker = 300
+	copy.OutboundTicker = 300
 	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
-	copy.OutTxTicker = 301
+	copy.OutboundTicker = 301
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
-	copy.OutboundTxScheduleInterval = 0
+	copy.OutboundScheduleInterval = 0
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.OutboundTxScheduleInterval = 100
+	copy.OutboundScheduleInterval = 100
 	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
-	copy.OutboundTxScheduleInterval = 101
+	copy.OutboundScheduleInterval = 101
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
-	copy.OutboundTxScheduleLookahead = 0
+	copy.OutboundScheduleLookahead = 0
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.OutboundTxScheduleLookahead = 500
+	copy.OutboundScheduleLookahead = 500
 	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
-	copy.OutboundTxScheduleLookahead = 501
+	copy.OutboundScheduleLookahead = 501
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 

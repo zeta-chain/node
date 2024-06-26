@@ -30,6 +30,182 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryAuthorizationListRequest is the request type for the
+// Query/AuthorizationList RPC method.
+type QueryAuthorizationListRequest struct {
+}
+
+func (m *QueryAuthorizationListRequest) Reset()         { *m = QueryAuthorizationListRequest{} }
+func (m *QueryAuthorizationListRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAuthorizationListRequest) ProtoMessage()    {}
+func (*QueryAuthorizationListRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fe6130bc825be8d, []int{0}
+}
+func (m *QueryAuthorizationListRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAuthorizationListRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAuthorizationListRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAuthorizationListRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAuthorizationListRequest.Merge(m, src)
+}
+func (m *QueryAuthorizationListRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAuthorizationListRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAuthorizationListRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAuthorizationListRequest proto.InternalMessageInfo
+
+// QueryAuthorizationListResponse is the response type for the
+// Query/AuthorizationList RPC
+type QueryAuthorizationListResponse struct {
+	AuthorizationList AuthorizationList `protobuf:"bytes,1,opt,name=authorization_list,json=authorizationList,proto3" json:"authorization_list"`
+}
+
+func (m *QueryAuthorizationListResponse) Reset()         { *m = QueryAuthorizationListResponse{} }
+func (m *QueryAuthorizationListResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAuthorizationListResponse) ProtoMessage()    {}
+func (*QueryAuthorizationListResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fe6130bc825be8d, []int{1}
+}
+func (m *QueryAuthorizationListResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAuthorizationListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAuthorizationListResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAuthorizationListResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAuthorizationListResponse.Merge(m, src)
+}
+func (m *QueryAuthorizationListResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAuthorizationListResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAuthorizationListResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAuthorizationListResponse proto.InternalMessageInfo
+
+func (m *QueryAuthorizationListResponse) GetAuthorizationList() AuthorizationList {
+	if m != nil {
+		return m.AuthorizationList
+	}
+	return AuthorizationList{}
+}
+
+// QueryAuthorizationRequest is the request type for the Query/Authorization RPC
+// method.
+type QueryAuthorizationRequest struct {
+	MsgUrl string `protobuf:"bytes,1,opt,name=msg_url,json=msgUrl,proto3" json:"msg_url,omitempty"`
+}
+
+func (m *QueryAuthorizationRequest) Reset()         { *m = QueryAuthorizationRequest{} }
+func (m *QueryAuthorizationRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAuthorizationRequest) ProtoMessage()    {}
+func (*QueryAuthorizationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fe6130bc825be8d, []int{2}
+}
+func (m *QueryAuthorizationRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAuthorizationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAuthorizationRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAuthorizationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAuthorizationRequest.Merge(m, src)
+}
+func (m *QueryAuthorizationRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAuthorizationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAuthorizationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAuthorizationRequest proto.InternalMessageInfo
+
+func (m *QueryAuthorizationRequest) GetMsgUrl() string {
+	if m != nil {
+		return m.MsgUrl
+	}
+	return ""
+}
+
+// QueryAuthorizationResponse is the response type for the Query/Authorization
+// RPC method.
+type QueryAuthorizationResponse struct {
+	Authorization Authorization `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization"`
+}
+
+func (m *QueryAuthorizationResponse) Reset()         { *m = QueryAuthorizationResponse{} }
+func (m *QueryAuthorizationResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAuthorizationResponse) ProtoMessage()    {}
+func (*QueryAuthorizationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fe6130bc825be8d, []int{3}
+}
+func (m *QueryAuthorizationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAuthorizationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAuthorizationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAuthorizationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAuthorizationResponse.Merge(m, src)
+}
+func (m *QueryAuthorizationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAuthorizationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAuthorizationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAuthorizationResponse proto.InternalMessageInfo
+
+func (m *QueryAuthorizationResponse) GetAuthorization() Authorization {
+	if m != nil {
+		return m.Authorization
+	}
+	return Authorization{}
+}
+
 // QueryGetPoliciesRequest is the request type for the Query/Policies RPC
 // method.
 type QueryGetPoliciesRequest struct {
@@ -39,7 +215,7 @@ func (m *QueryGetPoliciesRequest) Reset()         { *m = QueryGetPoliciesRequest
 func (m *QueryGetPoliciesRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetPoliciesRequest) ProtoMessage()    {}
 func (*QueryGetPoliciesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fe6130bc825be8d, []int{0}
+	return fileDescriptor_5fe6130bc825be8d, []int{4}
 }
 func (m *QueryGetPoliciesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -78,7 +254,7 @@ func (m *QueryGetPoliciesResponse) Reset()         { *m = QueryGetPoliciesRespon
 func (m *QueryGetPoliciesResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetPoliciesResponse) ProtoMessage()    {}
 func (*QueryGetPoliciesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fe6130bc825be8d, []int{1}
+	return fileDescriptor_5fe6130bc825be8d, []int{5}
 }
 func (m *QueryGetPoliciesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -114,9 +290,99 @@ func (m *QueryGetPoliciesResponse) GetPolicies() Policies {
 	return Policies{}
 }
 
+// QueryGetChainInfoRequest is the request type for the Query/ChainInfo RPC
+// method.
+type QueryGetChainInfoRequest struct {
+}
+
+func (m *QueryGetChainInfoRequest) Reset()         { *m = QueryGetChainInfoRequest{} }
+func (m *QueryGetChainInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetChainInfoRequest) ProtoMessage()    {}
+func (*QueryGetChainInfoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fe6130bc825be8d, []int{6}
+}
+func (m *QueryGetChainInfoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetChainInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetChainInfoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetChainInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetChainInfoRequest.Merge(m, src)
+}
+func (m *QueryGetChainInfoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetChainInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetChainInfoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetChainInfoRequest proto.InternalMessageInfo
+
+// QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
+// method.
+type QueryGetChainInfoResponse struct {
+	ChainInfo ChainInfo `protobuf:"bytes,1,opt,name=chain_info,json=chainInfo,proto3" json:"chain_info"`
+}
+
+func (m *QueryGetChainInfoResponse) Reset()         { *m = QueryGetChainInfoResponse{} }
+func (m *QueryGetChainInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetChainInfoResponse) ProtoMessage()    {}
+func (*QueryGetChainInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fe6130bc825be8d, []int{7}
+}
+func (m *QueryGetChainInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetChainInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetChainInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetChainInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetChainInfoResponse.Merge(m, src)
+}
+func (m *QueryGetChainInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetChainInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetChainInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetChainInfoResponse proto.InternalMessageInfo
+
+func (m *QueryGetChainInfoResponse) GetChainInfo() ChainInfo {
+	if m != nil {
+		return m.ChainInfo
+	}
+	return ChainInfo{}
+}
+
 func init() {
+	proto.RegisterType((*QueryAuthorizationListRequest)(nil), "zetachain.zetacore.authority.QueryAuthorizationListRequest")
+	proto.RegisterType((*QueryAuthorizationListResponse)(nil), "zetachain.zetacore.authority.QueryAuthorizationListResponse")
+	proto.RegisterType((*QueryAuthorizationRequest)(nil), "zetachain.zetacore.authority.QueryAuthorizationRequest")
+	proto.RegisterType((*QueryAuthorizationResponse)(nil), "zetachain.zetacore.authority.QueryAuthorizationResponse")
 	proto.RegisterType((*QueryGetPoliciesRequest)(nil), "zetachain.zetacore.authority.QueryGetPoliciesRequest")
 	proto.RegisterType((*QueryGetPoliciesResponse)(nil), "zetachain.zetacore.authority.QueryGetPoliciesResponse")
+	proto.RegisterType((*QueryGetChainInfoRequest)(nil), "zetachain.zetacore.authority.QueryGetChainInfoRequest")
+	proto.RegisterType((*QueryGetChainInfoResponse)(nil), "zetachain.zetacore.authority.QueryGetChainInfoResponse")
 }
 
 func init() {
@@ -124,28 +390,43 @@ func init() {
 }
 
 var fileDescriptor_5fe6130bc825be8d = []byte{
-	// 323 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xd2, 0xa8, 0x4a, 0x2d, 0x49,
-	0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x07, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0x13, 0x4b, 0x4b, 0x32,
-	0xf2, 0x8b, 0x32, 0x4b, 0x2a, 0xf5, 0x0b, 0x4b, 0x53, 0x8b, 0x2a, 0xf5, 0x0a, 0x8a, 0xf2, 0x4b,
-	0xf2, 0x85, 0x64, 0xe0, 0x2a, 0xf5, 0x60, 0x2a, 0xf5, 0xe0, 0x2a, 0xa5, 0xb4, 0xf1, 0x9a, 0x53,
-	0x90, 0x9f, 0x93, 0x99, 0x9c, 0x99, 0x5a, 0x0c, 0x31, 0x4a, 0x4a, 0x2b, 0x39, 0xbf, 0x38, 0x37,
-	0xbf, 0x58, 0x3f, 0x29, 0xb1, 0x38, 0x15, 0x62, 0x87, 0x7e, 0x99, 0x61, 0x52, 0x6a, 0x49, 0xa2,
-	0xa1, 0x7e, 0x41, 0x62, 0x7a, 0x66, 0x5e, 0x62, 0x49, 0x66, 0x7e, 0x1e, 0x54, 0xad, 0x48, 0x7a,
-	0x7e, 0x7a, 0x3e, 0x98, 0xa9, 0x0f, 0x62, 0x41, 0x45, 0x65, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52,
-	0xf5, 0x13, 0x0b, 0x32, 0xf5, 0x13, 0xf3, 0xf2, 0xf2, 0x4b, 0xc0, 0x5a, 0xa0, 0xe6, 0x2b, 0x49,
-	0x72, 0x89, 0x07, 0x82, 0x4c, 0x75, 0x4f, 0x2d, 0x09, 0x80, 0xda, 0x1c, 0x94, 0x5a, 0x58, 0x9a,
-	0x5a, 0x5c, 0xa2, 0x94, 0xc2, 0x25, 0x81, 0x29, 0x55, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0x2a, 0xe4,
-	0xc1, 0xc5, 0x01, 0x73, 0xa8, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0xb7, 0x91, 0x9a, 0x1e, 0x3e, 0x4f,
-	0xeb, 0xc1, 0x4c, 0x70, 0x62, 0x39, 0x71, 0x4f, 0x9e, 0x21, 0x08, 0xae, 0xdb, 0x68, 0x35, 0x23,
-	0x17, 0x2b, 0xd8, 0x1a, 0xa1, 0x85, 0x8c, 0x5c, 0x1c, 0x30, 0x65, 0x42, 0xa6, 0xf8, 0x8d, 0xc3,
-	0xe1, 0x66, 0x29, 0x33, 0x52, 0xb5, 0x41, 0xfc, 0xa3, 0xa4, 0xd6, 0x74, 0xf9, 0xc9, 0x64, 0x26,
-	0x05, 0x21, 0x39, 0x70, 0x94, 0xe8, 0x42, 0x62, 0x07, 0x33, 0x52, 0x9c, 0xbc, 0x4e, 0x3c, 0x92,
-	0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c,
-	0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0xca, 0x20, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f,
-	0x39, 0x3f, 0x17, 0xd9, 0x0c, 0x78, 0x0c, 0x57, 0x20, 0x19, 0x57, 0x52, 0x59, 0x90, 0x5a, 0x9c,
-	0xc4, 0x06, 0x8e, 0x01, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3c, 0xf1, 0xad, 0x7a, 0x58,
-	0x02, 0x00, 0x00,
+	// 573 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x4f, 0x6b, 0x13, 0x41,
+	0x18, 0xc6, 0x33, 0x62, 0x6b, 0x33, 0xd2, 0x43, 0x07, 0xa1, 0xed, 0x52, 0x37, 0x75, 0x91, 0xb4,
+	0x58, 0xb3, 0xd3, 0x56, 0x6b, 0x05, 0xbd, 0x58, 0x0f, 0xfe, 0xa1, 0x07, 0x0d, 0x88, 0xe0, 0x25,
+	0x4c, 0xd2, 0xe9, 0x66, 0x20, 0xd9, 0xd9, 0xee, 0xcc, 0x8a, 0xa9, 0x78, 0xf1, 0xe0, 0x59, 0xf0,
+	0x13, 0x78, 0xf0, 0x43, 0x08, 0x7e, 0x80, 0x9e, 0xa4, 0xe0, 0xc5, 0x93, 0x48, 0xe2, 0x07, 0x91,
+	0x4c, 0xde, 0xdd, 0x66, 0x9b, 0x64, 0xc9, 0xf6, 0x36, 0xcc, 0xbc, 0xcf, 0xf3, 0xfc, 0xe6, 0x65,
+	0xde, 0xc1, 0xeb, 0xc7, 0x5c, 0xb3, 0x46, 0x93, 0x09, 0x9f, 0x9a, 0x95, 0x0c, 0x39, 0x65, 0x91,
+	0x6e, 0xca, 0x50, 0xe8, 0x0e, 0x3d, 0x8a, 0x78, 0xd8, 0x71, 0x83, 0x50, 0x6a, 0x49, 0x56, 0x92,
+	0x4a, 0x37, 0xae, 0x74, 0x93, 0x4a, 0x6b, 0x23, 0xd3, 0x27, 0x90, 0x2d, 0xd1, 0x10, 0x5c, 0x0d,
+	0xac, 0xac, 0x4a, 0x66, 0xb1, 0x39, 0xa8, 0x09, 0xff, 0x50, 0x42, 0xf9, 0x66, 0x66, 0x39, 0xac,
+	0x8e, 0x99, 0x16, 0xd2, 0x07, 0xc5, 0xad, 0x86, 0x54, 0x6d, 0xa9, 0x68, 0x9d, 0x29, 0x3e, 0xb8,
+	0x04, 0x7d, 0xbb, 0x55, 0xe7, 0x9a, 0x6d, 0xd1, 0x80, 0x79, 0xc2, 0x1f, 0xae, 0xbd, 0xe6, 0x49,
+	0x4f, 0x9a, 0x25, 0xed, 0xaf, 0x60, 0x77, 0xc5, 0x93, 0xd2, 0x6b, 0x71, 0xca, 0x02, 0x41, 0x99,
+	0xef, 0x4b, 0x6d, 0x24, 0x70, 0x01, 0xa7, 0x84, 0xaf, 0xbf, 0xec, 0xbb, 0x3e, 0x1a, 0xce, 0xde,
+	0x17, 0x4a, 0x57, 0xf9, 0x51, 0xc4, 0x95, 0x76, 0x3e, 0x21, 0x6c, 0x4f, 0xaa, 0x50, 0x81, 0xf4,
+	0x15, 0x27, 0x07, 0x98, 0xa4, 0xd0, 0x6b, 0x2d, 0xa1, 0xf4, 0x12, 0x5a, 0x45, 0xeb, 0x57, 0xb7,
+	0xa9, 0x9b, 0xd5, 0x6c, 0x77, 0xc4, 0x74, 0xef, 0xf2, 0xc9, 0x9f, 0x52, 0xa1, 0xba, 0xc0, 0xce,
+	0x1f, 0x38, 0x77, 0xf1, 0xf2, 0x28, 0x07, 0x50, 0x92, 0x45, 0x7c, 0xa5, 0xad, 0xbc, 0x5a, 0x14,
+	0xb6, 0x4c, 0x6e, 0xb1, 0x3a, 0xdb, 0x56, 0xde, 0xab, 0xb0, 0xe5, 0x44, 0xd8, 0x1a, 0xa7, 0x02,
+	0xf2, 0xd7, 0x78, 0x3e, 0x15, 0x04, 0xd0, 0x1b, 0x39, 0xa0, 0x01, 0x38, 0xed, 0xe3, 0x2c, 0xe3,
+	0x45, 0x13, 0xfb, 0x84, 0xeb, 0x17, 0xf0, 0x62, 0xe2, 0x86, 0x1e, 0xe0, 0xa5, 0xd1, 0x23, 0xe0,
+	0x79, 0x8a, 0xe7, 0xe2, 0x07, 0x06, 0x28, 0xe5, 0x6c, 0x94, 0xd8, 0x01, 0x28, 0x12, 0xb5, 0x63,
+	0x9d, 0xa5, 0x3c, 0xee, 0x8b, 0x9f, 0xf9, 0x87, 0x32, 0x26, 0x10, 0xd0, 0xc9, 0xf4, 0x19, 0x20,
+	0xec, 0x63, 0x7c, 0xf6, 0x6c, 0x01, 0x62, 0x2d, 0x1b, 0x22, 0x31, 0x01, 0x8a, 0x62, 0x23, 0xde,
+	0xd8, 0xfe, 0x39, 0x83, 0x67, 0x4c, 0x16, 0xf9, 0x8a, 0xf0, 0x5c, 0x4c, 0x4b, 0x76, 0xb2, 0x0d,
+	0x27, 0xb4, 0xce, 0xba, 0x97, 0x57, 0x36, 0xb8, 0x93, 0x53, 0xfe, 0xf8, 0xeb, 0xdf, 0x97, 0x4b,
+	0xab, 0xc4, 0x36, 0x53, 0x57, 0x19, 0x0c, 0xe0, 0xe8, 0x4c, 0x93, 0x6f, 0x08, 0x17, 0x93, 0xcb,
+	0x90, 0x29, 0xd3, 0xce, 0xb7, 0xd7, 0xda, 0xcd, 0xad, 0x03, 0xcc, 0x35, 0x83, 0x79, 0x83, 0x94,
+	0xc6, 0x63, 0x26, 0x5d, 0x25, 0x3f, 0x10, 0x5e, 0x18, 0x99, 0x1c, 0xf2, 0x60, 0x8a, 0xdc, 0x49,
+	0x63, 0x6e, 0x3d, 0xbc, 0x98, 0x18, 0xc8, 0x6f, 0x1b, 0xf2, 0x32, 0xb9, 0x39, 0x9e, 0x3c, 0x35,
+	0x1b, 0x8a, 0x7c, 0x47, 0x78, 0x3e, 0xe5, 0x45, 0x76, 0xf3, 0xa6, 0xc7, 0xd8, 0xf7, 0xf3, 0x0b,
+	0x01, 0x79, 0xc7, 0x20, 0x53, 0x52, 0x99, 0x02, 0x99, 0xbe, 0x87, 0xcf, 0xe5, 0xc3, 0xde, 0xf3,
+	0x93, 0xae, 0x8d, 0x4e, 0xbb, 0x36, 0xfa, 0xdb, 0xb5, 0xd1, 0xe7, 0x9e, 0x5d, 0x38, 0xed, 0xd9,
+	0x85, 0xdf, 0x3d, 0xbb, 0xf0, 0x66, 0xd3, 0x13, 0xba, 0x19, 0xd5, 0xdd, 0x86, 0x6c, 0x0f, 0x5b,
+	0x26, 0xff, 0xfc, 0xbb, 0x21, 0x77, 0xdd, 0x09, 0xb8, 0xaa, 0xcf, 0x9a, 0x2f, 0xf8, 0xce, 0xff,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x4f, 0xcd, 0x31, 0xbd, 0xba, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -162,6 +443,10 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Queries Policies
 	Policies(ctx context.Context, in *QueryGetPoliciesRequest, opts ...grpc.CallOption) (*QueryGetPoliciesResponse, error)
+	// Queries ChainInfo
+	ChainInfo(ctx context.Context, in *QueryGetChainInfoRequest, opts ...grpc.CallOption) (*QueryGetChainInfoResponse, error)
+	AuthorizationList(ctx context.Context, in *QueryAuthorizationListRequest, opts ...grpc.CallOption) (*QueryAuthorizationListResponse, error)
+	Authorization(ctx context.Context, in *QueryAuthorizationRequest, opts ...grpc.CallOption) (*QueryAuthorizationResponse, error)
 }
 
 type queryClient struct {
@@ -181,10 +466,41 @@ func (c *queryClient) Policies(ctx context.Context, in *QueryGetPoliciesRequest,
 	return out, nil
 }
 
+func (c *queryClient) ChainInfo(ctx context.Context, in *QueryGetChainInfoRequest, opts ...grpc.CallOption) (*QueryGetChainInfoResponse, error) {
+	out := new(QueryGetChainInfoResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.authority.Query/ChainInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AuthorizationList(ctx context.Context, in *QueryAuthorizationListRequest, opts ...grpc.CallOption) (*QueryAuthorizationListResponse, error) {
+	out := new(QueryAuthorizationListResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.authority.Query/AuthorizationList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Authorization(ctx context.Context, in *QueryAuthorizationRequest, opts ...grpc.CallOption) (*QueryAuthorizationResponse, error) {
+	out := new(QueryAuthorizationResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.authority.Query/Authorization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Queries Policies
 	Policies(context.Context, *QueryGetPoliciesRequest) (*QueryGetPoliciesResponse, error)
+	// Queries ChainInfo
+	ChainInfo(context.Context, *QueryGetChainInfoRequest) (*QueryGetChainInfoResponse, error)
+	AuthorizationList(context.Context, *QueryAuthorizationListRequest) (*QueryAuthorizationListResponse, error)
+	Authorization(context.Context, *QueryAuthorizationRequest) (*QueryAuthorizationResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -193,6 +509,15 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Policies(ctx context.Context, req *QueryGetPoliciesRequest) (*QueryGetPoliciesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Policies not implemented")
+}
+func (*UnimplementedQueryServer) ChainInfo(ctx context.Context, req *QueryGetChainInfoRequest) (*QueryGetChainInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChainInfo not implemented")
+}
+func (*UnimplementedQueryServer) AuthorizationList(ctx context.Context, req *QueryAuthorizationListRequest) (*QueryAuthorizationListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthorizationList not implemented")
+}
+func (*UnimplementedQueryServer) Authorization(ctx context.Context, req *QueryAuthorizationRequest) (*QueryAuthorizationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authorization not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -217,6 +542,60 @@ func _Query_Policies_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ChainInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetChainInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ChainInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.authority.Query/ChainInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ChainInfo(ctx, req.(*QueryGetChainInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AuthorizationList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAuthorizationListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AuthorizationList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.authority.Query/AuthorizationList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AuthorizationList(ctx, req.(*QueryAuthorizationListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Authorization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAuthorizationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Authorization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.authority.Query/Authorization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Authorization(ctx, req.(*QueryAuthorizationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.authority.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -225,9 +604,140 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Policies",
 			Handler:    _Query_Policies_Handler,
 		},
+		{
+			MethodName: "ChainInfo",
+			Handler:    _Query_ChainInfo_Handler,
+		},
+		{
+			MethodName: "AuthorizationList",
+			Handler:    _Query_AuthorizationList_Handler,
+		},
+		{
+			MethodName: "Authorization",
+			Handler:    _Query_Authorization_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "zetachain/zetacore/authority/query.proto",
+}
+
+func (m *QueryAuthorizationListRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAuthorizationListRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAuthorizationListRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAuthorizationListResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAuthorizationListResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAuthorizationListResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.AuthorizationList.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAuthorizationRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAuthorizationRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAuthorizationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MsgUrl) > 0 {
+		i -= len(m.MsgUrl)
+		copy(dAtA[i:], m.MsgUrl)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.MsgUrl)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAuthorizationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAuthorizationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAuthorizationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Authorization.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *QueryGetPoliciesRequest) Marshal() (dAtA []byte, err error) {
@@ -286,6 +796,62 @@ func (m *QueryGetPoliciesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetChainInfoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetChainInfoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetChainInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetChainInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetChainInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetChainInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ChainInfo.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -297,6 +863,50 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryAuthorizationListRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAuthorizationListResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.AuthorizationList.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAuthorizationRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MsgUrl)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAuthorizationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Authorization.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func (m *QueryGetPoliciesRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -317,11 +927,329 @@ func (m *QueryGetPoliciesResponse) Size() (n int) {
 	return n
 }
 
+func (m *QueryGetChainInfoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetChainInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ChainInfo.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryAuthorizationListRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAuthorizationListRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAuthorizationListRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAuthorizationListResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAuthorizationListResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAuthorizationListResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthorizationList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AuthorizationList.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAuthorizationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAuthorizationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAuthorizationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAuthorizationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAuthorizationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAuthorizationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authorization", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Authorization.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *QueryGetPoliciesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -432,6 +1360,139 @@ func (m *QueryGetPoliciesResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Policies.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetChainInfoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetChainInfoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetChainInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetChainInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetChainInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetChainInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ChainInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

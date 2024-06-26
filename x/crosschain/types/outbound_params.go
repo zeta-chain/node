@@ -4,44 +4,49 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-func (m OutboundTxParams) GetGasPrice() (uint64, error) {
-	gasPrice, err := strconv.ParseUint(m.OutboundTxGasPrice, 10, 64)
+func (m OutboundParams) GetGasPriceUInt64() (uint64, error) {
+	gasPrice, err := strconv.ParseUint(m.GasPrice, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("unable to parse cctx gas price %s: %s", m.OutboundTxGasPrice, err.Error())
+		return 0, fmt.Errorf("unable to parse cctx gas price %s: %s", m.GasPrice, err.Error())
 	}
 
 	return gasPrice, nil
 }
 
-func (m OutboundTxParams) Validate() error {
+func (m OutboundParams) Validate() error {
 	if m.Receiver == "" {
 		return fmt.Errorf("receiver cannot be empty")
 	}
+
 	if chains.GetChainFromChainID(m.ReceiverChainId) == nil {
 		return fmt.Errorf("invalid receiver chain id %d", m.ReceiverChainId)
 	}
-	err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId)
-	if err != nil {
-		return err
-	}
+
 	if m.Amount.IsNil() {
 		return fmt.Errorf("amount cannot be nil")
 	}
-	if m.OutboundTxBallotIndex != "" {
-		err = ValidateZetaIndex(m.OutboundTxBallotIndex)
-		if err != nil {
-			return errors.Wrap(err, "invalid outbound tx ballot index")
-		}
-	}
-	if m.OutboundTxHash != "" {
-		err = ValidateHashForChain(m.OutboundTxHash, m.ReceiverChainId)
-		if err != nil {
-			return errors.Wrap(err, "invalid outbound tx hash")
-		}
-	}
+
+	// Disabled checks
+	// TODO: Improve the checks, move the validation call to a new place and reenable
+	// https://github.com/zeta-chain/node/issues/2234
+	// https://github.com/zeta-chain/node/issues/2235
+	//if err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId); err != nil {
+	//	return err
+	//}
+	//if m.BallotIndex != "" {
+	//
+	//	if err := ValidateCCTXIndex(m.BallotIndex); err != nil {
+	//		return errors.Wrap(err, "invalid outbound tx ballot index")
+	//	}
+	//}
+	//if m.Hash != "" {
+	//	if err := ValidateHashForChain(m.Hash, m.ReceiverChainId); err != nil {
+	//		return errors.Wrap(err, "invalid outbound tx hash")
+	//	}
+	//}
+
 	return nil
 }

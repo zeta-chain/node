@@ -2,10 +2,10 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -19,18 +19,6 @@ func erc20TestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("erc20 panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
 		// initialize runner for erc20 test
 		erc20Runner, err := initTestRunner(
 			"erc20",
@@ -39,6 +27,7 @@ func erc20TestRoutine(
 			UserERC20Address,
 			UserERC20PrivateKey,
 			runner.NewLogger(verbose, color.FgGreen, "erc20"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err

@@ -25,6 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
@@ -53,7 +54,10 @@ type EthereumAPI interface {
 	GetTransactionCount(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Uint64, error)
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
 	GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
-	GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
+	GetTransactionByBlockNumberAndIndex(
+		blockNum rpctypes.BlockNumber,
+		idx hexutil.Uint,
+	) (*rpctypes.RPCTransaction, error)
 	// eth_getBlockReceipts
 
 	// Writing Transactions
@@ -71,13 +75,21 @@ type EthereumAPI interface {
 	GetBalance(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Big, error)
 	GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
 	GetCode(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
-	GetProof(address common.Address, storageKeys []string, blockNrOrHash rpctypes.BlockNumberOrHash) (*rpctypes.AccountResult, error)
+	GetProof(
+		address common.Address,
+		storageKeys []string,
+		blockNrOrHash rpctypes.BlockNumberOrHash,
+	) (*rpctypes.AccountResult, error)
 
 	// EVM/Smart Contract Execution
 	//
 	// Allows developers to read data from the blockchain which includes executing
 	// smart contracts. However, no data is published to the Ethereum network.
-	Call(args evmtypes.TransactionArgs, blockNrOrHash rpctypes.BlockNumberOrHash, _ *rpctypes.StateOverride) (hexutil.Bytes, error)
+	Call(
+		args evmtypes.TransactionArgs,
+		blockNrOrHash rpctypes.BlockNumberOrHash,
+		_ *rpctypes.StateOverride,
+	) (hexutil.Bytes, error)
 
 	// Chain Information
 	//
@@ -85,7 +97,11 @@ type EthereumAPI interface {
 	ProtocolVersion() hexutil.Uint
 	GasPrice() (*hexutil.Big, error)
 	EstimateGas(args evmtypes.TransactionArgs, blockNrOptional *rpctypes.BlockNumber) (hexutil.Uint64, error)
-	FeeHistory(blockCount rpc.DecimalOrHex, lastBlock rpc.BlockNumber, rewardPercentiles []float64) (*rpctypes.FeeHistoryResult, error)
+	FeeHistory(
+		blockCount rpc.DecimalOrHex,
+		lastBlock rpc.BlockNumber,
+		rewardPercentiles []float64,
+	) (*rpctypes.FeeHistoryResult, error)
 	MaxPriorityFeePerGas() (*hexutil.Big, error)
 	ChainId() (*hexutil.Big, error)
 
@@ -106,7 +122,12 @@ type EthereumAPI interface {
 	Coinbase() (string, error)
 	GetTransactionLogs(txHash common.Hash) ([]*ethtypes.Log, error)
 	FillTransaction(args evmtypes.TransactionArgs) (*rpctypes.SignTransactionResult, error)
-	Resend(ctx context.Context, args evmtypes.TransactionArgs, gasPrice *hexutil.Big, gasLimit *hexutil.Uint64) (common.Hash, error)
+	Resend(
+		ctx context.Context,
+		args evmtypes.TransactionArgs,
+		gasPrice *hexutil.Big,
+		gasLimit *hexutil.Uint64,
+	) (common.Hash, error)
 	GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 	// eth_signTransaction (on Ethereum.org)
 	// eth_getCompilers (on Ethereum.org)
@@ -176,7 +197,10 @@ func (e *PublicAPI) GetTransactionByHash(hash common.Hash) (*rpctypes.RPCTransac
 }
 
 // GetTransactionCount returns the number of transactions at the given address up to the given block number.
-func (e *PublicAPI) GetTransactionCount(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Uint64, error) {
+func (e *PublicAPI) GetTransactionCount(
+	address common.Address,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+) (*hexutil.Uint64, error) {
 	e.logger.Debug("eth_getTransactionCount", "address", address.Hex(), "block number or hash", blockNrOrHash)
 	blockNum, err := e.backend.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
@@ -205,13 +229,19 @@ func (e *PublicAPI) GetBlockTransactionCountByNumber(blockNum rpctypes.BlockNumb
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction identified by hash and index.
-func (e *PublicAPI) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (e *PublicAPI) GetTransactionByBlockHashAndIndex(
+	hash common.Hash,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	e.logger.Debug("eth_getTransactionByBlockHashAndIndex", "hash", hash.Hex(), "index", idx)
 	return e.backend.GetTransactionByBlockHashAndIndex(hash, idx)
 }
 
 // GetTransactionByBlockNumberAndIndex returns the transaction identified by number and index.
-func (e *PublicAPI) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (e *PublicAPI) GetTransactionByBlockNumberAndIndex(
+	blockNum rpctypes.BlockNumber,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	e.logger.Debug("eth_getTransactionByBlockNumberAndIndex", "number", blockNum, "index", idx)
 	return e.backend.GetTransactionByBlockNumberAndIndex(blockNum, idx)
 }
@@ -243,7 +273,11 @@ func (e *PublicAPI) GetBalance(address common.Address, blockNrOrHash rpctypes.Bl
 }
 
 // GetStorageAt returns the contract storage at the given address, block number, and key.
-func (e *PublicAPI) GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
+func (e *PublicAPI) GetStorageAt(
+	address common.Address,
+	key string,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+) (hexutil.Bytes, error) {
 	e.logger.Debug("eth_getStorageAt", "address", address.Hex(), "key", key, "block number or hash", blockNrOrHash)
 	return e.backend.GetStorageAt(address, key, blockNrOrHash)
 }
@@ -308,7 +342,10 @@ func (e *PublicAPI) GasPrice() (*hexutil.Big, error) {
 }
 
 // EstimateGas returns an estimate of gas usage for the given smart contract call.
-func (e *PublicAPI) EstimateGas(args evmtypes.TransactionArgs, blockNrOptional *rpctypes.BlockNumber) (hexutil.Uint64, error) {
+func (e *PublicAPI) EstimateGas(
+	args evmtypes.TransactionArgs,
+	blockNrOptional *rpctypes.BlockNumber,
+) (hexutil.Uint64, error) {
 	e.logger.Debug("eth_estimateGas")
 	return e.backend.EstimateGas(args, blockNrOptional)
 }

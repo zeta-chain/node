@@ -5,7 +5,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, genesisAmounts, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmount sdkmath.Int) bool {
+func ValidateZetaSupply(
+	logger zerolog.Logger,
+	abortedTxAmounts, zetaInTransit, genesisAmounts, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmount sdkmath.Int,
+) bool {
 	lhs := ethLockedAmount.Sub(abortedTxAmounts)
 	rhs := zetaTokenSupplyOnNode.Add(zetaInTransit).Add(externalChainTotalSupply).Sub(genesisAmounts)
 

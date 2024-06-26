@@ -20,10 +20,10 @@ service Msg {
       returns (MsgUpdateContractBytecodeResponse);
   rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee)
       returns (MsgUpdateZRC20WithdrawFeeResponse);
-  rpc UpdateZRC20PausedStatus(MsgUpdateZRC20PausedStatus)
-      returns (MsgUpdateZRC20PausedStatusResponse);
   rpc UpdateZRC20LiquidityCap(MsgUpdateZRC20LiquidityCap)
       returns (MsgUpdateZRC20LiquidityCapResponse);
+  rpc PauseZRC20(MsgPauseZRC20) returns (MsgPauseZRC20Response);
+  rpc UnpauseZRC20(MsgUnpauseZRC20) returns (MsgUnpauseZRC20Response);
 }
 
 message MsgDeploySystemContracts { string creator = 1; }
@@ -86,19 +86,6 @@ message MsgUpdateContractBytecode {
 
 message MsgUpdateContractBytecodeResponse {}
 
-enum UpdatePausedStatusAction {
-  PAUSE = 0;
-  UNPAUSE = 1;
-}
-
-message MsgUpdateZRC20PausedStatus {
-  string creator = 1;
-  repeated string zrc20_addresses = 2;
-  UpdatePausedStatusAction action = 3;
-}
-
-message MsgUpdateZRC20PausedStatusResponse {}
-
 message MsgUpdateZRC20LiquidityCap {
   string creator = 1;
   string zrc20_address = 2;
@@ -109,3 +96,17 @@ message MsgUpdateZRC20LiquidityCap {
 }
 
 message MsgUpdateZRC20LiquidityCapResponse {}
+
+message MsgPauseZRC20 {
+  string creator = 1;
+  repeated string zrc20_addresses = 2;
+}
+
+message MsgPauseZRC20Response {}
+
+message MsgUnpauseZRC20 {
+  string creator = 1;
+  repeated string zrc20_addresses = 2;
+}
+
+message MsgUnpauseZRC20Response {}

@@ -8,10 +8,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // WithdrawType is the type of withdraw to perform in the test
@@ -54,47 +56,31 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	erc20Amount := big.NewInt(1e6)
 
 	// approve tokens for the tests
-	if err := approveTokens(r); err != nil {
-		panic(err)
-	}
+	require.NoError(r, approveTokens(r))
 
 	// add liquidity in the pool to prevent high slippage in WZETA/gas pair
-	if err := addZetaGasLiquidity(r); err != nil {
-		panic(err)
-	}
+	require.NoError(r, addZetaGasLiquidity(r))
 
 	// Set the rate limiter to 0.5ZETA per 10 blocks
 	// These rate limiter flags will only allow to process 1 withdraw per 10 blocks
 	r.Logger.Info("setting up rate limiter flags")
-	if err := setupRateLimiterFlags(r, rateLimiterFlags); err != nil {
-		panic(err)
-	}
+	require.NoError(r, setupRateLimiterFlags(r, rateLimiterFlags))
 
 	// Test with rate limiter
 	// TODO: define proper assertion to check the rate limiter is working
 	// https://github.com/zeta-chain/node/issues/2090
 	r.Logger.Print("rate limiter enabled")
-	if err := createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount); err != nil {
-		panic(err)
-	}
-	if err := createAndWaitWithdraws(r, withdrawTypeETH, ethAmount); err != nil {
-		panic(err)
-	}
-	if err := createAndWaitWithdraws(r, withdrawTypeERC20, erc20Amount); err != nil {
-		panic(err)
-	}
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount))
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, ethAmount))
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, erc20Amount))
 
 	// Disable rate limiter
 	r.Logger.Info("disabling rate limiter")
-	if err := setupRateLimiterFlags(r, crosschaintypes.RateLimiterFlags{Enabled: false}); err != nil {
-		panic(err)
-	}
+	require.NoError(r, setupRateLimiterFlags(r, crosschaintypes.RateLimiterFlags{Enabled: false}))
 
 	// Test without rate limiter again and try again ZETA withdraws
 	r.Logger.Print("rate limiter disabled")
-	if err := createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount); err != nil {
-		panic(err)
-	}
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount))
 }
 
 // createAndWaitWithdraws performs RateLimiterWithdrawNumber withdraws
@@ -106,7 +92,6 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 	// Perform RateLimiterWithdrawNumber withdraws to log time for completion
 	txs := make([]*ethtypes.Transaction, rateLimiterWithdrawNumber)
 	for i := 0; i < rateLimiterWithdrawNumber; i++ {
-
 		// create a new withdraw depending on the type
 		switch withdrawType {
 		case withdrawTypeZETA:
@@ -150,9 +135,15 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 // waitForWithdrawMined waits for a withdraw to be mined
 // we first wait to get the receipt
 // NOTE: this could be a more general function but we define it here for this test because we emit in the function logs specific to this test
-func waitForWithdrawMined(ctx context.Context, r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+func waitForWithdrawMined(
+	ctx context.Context,
+	r *runner.E2ERunner,
+	tx *ethtypes.Transaction,
+	index int,
+	startTime time.Time,
+) error {
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInTxHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

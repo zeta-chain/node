@@ -12,7 +12,8 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+
+	"github.com/zeta-chain/zetacore/testutil/testdata"
 )
 
 func TestBitcoinMerkleProof(t *testing.T) {

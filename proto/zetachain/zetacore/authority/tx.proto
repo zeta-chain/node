@@ -2,6 +2,8 @@ syntax = "proto3";
 package zetachain.zetacore.authority;
 
 import "zetachain/zetacore/authority/policies.proto";
+import "zetachain/zetacore/authority/chain_info.proto";
+import "zetachain/zetacore/authority/authorization.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
@@ -9,13 +11,50 @@ option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 // Msg defines the Msg service.
 service Msg {
   rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
+  rpc UpdateChainInfo(MsgUpdateChainInfo) returns (MsgUpdateChainInfoResponse);
+  rpc AddAuthorization(MsgAddAuthorization)
+      returns (MsgAddAuthorizationResponse);
+  rpc RemoveAuthorization(MsgRemoveAuthorization)
+      returns (MsgRemoveAuthorizationResponse);
 }
+
+// MsgAddAuthorization defines the MsgAddAuthorization service.
+// Adds an authorization to the chain. If the authorization already exists, it
+// will be updated.
+message MsgAddAuthorization {
+  string creator = 1;
+  string msg_url = 2;
+  PolicyType authorized_policy = 3;
+}
+
+// MsgAddAuthorizationResponse defines the MsgAddAuthorizationResponse service.
+message MsgAddAuthorizationResponse {}
+
+// MsgRemoveAuthorization defines the MsgRemoveAuthorization service.
+// Removes an authorization from the chain.
+message MsgRemoveAuthorization {
+  string creator = 1;
+  string msg_url = 2;
+}
+
+// MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
+// service.
+message MsgRemoveAuthorizationResponse {}
 
 // MsgUpdatePolicies defines the MsgUpdatePolicies service.
 message MsgUpdatePolicies {
-  string signer = 1;
+  string creator = 1;
   Policies policies = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
 message MsgUpdatePoliciesResponse {}
+
+// MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
+message MsgUpdateChainInfo {
+  string creator = 1;
+  ChainInfo chain_info = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
+message MsgUpdateChainInfoResponse {}

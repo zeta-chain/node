@@ -9,13 +9,14 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc"
+
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 func waitForZetaCore(config config.Config, logger zerolog.Logger) {
 	// wait until zetacore is up
-	logger.Debug().Msg("Waiting for ZetaCore to open 9090 port...")
+	logger.Debug().Msg("Waiting for zetacore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
 			fmt.Sprintf("%s:9090", config.ZetaCoreURL),

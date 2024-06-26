@@ -6,6 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -112,19 +113,60 @@ func Test_IsRateLimiterUsable(t *testing.T) {
 
 func Test_ApplyRateLimiter(t *testing.T) {
 	// define test chain ids
-	ethChainID := chains.EthChain.ChainId
-	btcChainID := chains.BtcMainnetChain.ChainId
+	ethChainID := chains.Ethereum.ChainId
+	btcChainID := chains.BitcoinMainnet.ChainId
+	zetaChainID := chains.ZetaChainMainnet.ChainId
 
 	// create 10 missed and 90 pending cctxs for eth chain, the coinType/amount does not matter for this test
 	// but we still use a proper cctx value (0.5 ZETA) to make the test more realistic
-	ethCctxsMissed := sample.CustomCctxsInBlockRange(t, 1, 10, ethChainID, coin.CoinType_Gas, "", uint64(2e14), crosschaintypes.CctxStatus_PendingOutbound)
-	ethCctxsPending := sample.CustomCctxsInBlockRange(t, 11, 100, ethChainID, coin.CoinType_Gas, "", uint64(2e14), crosschaintypes.CctxStatus_PendingOutbound)
+	ethCctxsMissed := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		10,
+		zetaChainID,
+		ethChainID,
+		coin.CoinType_Gas,
+		"",
+		uint64(2e14),
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
+	ethCctxsPending := sample.CustomCctxsInBlockRange(
+		t,
+		11,
+		100,
+		zetaChainID,
+		ethChainID,
+		coin.CoinType_Gas,
+		"",
+		uint64(2e14),
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
 	ethCctxsAll := append(append([]*crosschaintypes.CrossChainTx{}, ethCctxsMissed...), ethCctxsPending...)
 
 	// create 10 missed and 90 pending cctxs for btc chain, the coinType/amount does not matter for this test
 	// but we still use a proper cctx value (0.5 ZETA) to make the test more realistic
-	btcCctxsMissed := sample.CustomCctxsInBlockRange(t, 1, 10, btcChainID, coin.CoinType_Gas, "", 2000, crosschaintypes.CctxStatus_PendingOutbound)
-	btcCctxsPending := sample.CustomCctxsInBlockRange(t, 11, 100, btcChainID, coin.CoinType_Gas, "", 2000, crosschaintypes.CctxStatus_PendingOutbound)
+	btcCctxsMissed := sample.CustomCctxsInBlockRange(
+		t,
+		1,
+		10,
+		zetaChainID,
+		btcChainID,
+		coin.CoinType_Gas,
+		"",
+		2000,
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
+	btcCctxsPending := sample.CustomCctxsInBlockRange(
+		t,
+		11,
+		100,
+		zetaChainID,
+		btcChainID,
+		coin.CoinType_Gas,
+		"",
+		2000,
+		crosschaintypes.CctxStatus_PendingOutbound,
+	)
 	btcCctxsAll := append(append([]*crosschaintypes.CrossChainTx{}, btcCctxsMissed...), btcCctxsPending...)
 
 	// all missed cctxs and all pending cctxs across all chains
@@ -202,9 +244,11 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					ethChainID: ethCctxsMissed,
 					btcChainID: btcCctxsMissed,
 				},
-				CurrentWithdrawWindow: 100,                // height [1, 100]
-				CurrentWithdrawRate:   sdk.NewInt(101e16), // (11 + 90) / 100 = 1.01 ZETA/block (exceeds 0.99 ZETA/block)
-				RateLimitExceeded:     true,
+				CurrentWithdrawWindow: 100, // height [1, 100]
+				CurrentWithdrawRate: sdk.NewInt(
+					101e16,
+				), // (11 + 90) / 100 = 1.01 ZETA/block (exceeds 0.99 ZETA/block)
+				RateLimitExceeded: true,
 			},
 		},
 		{
@@ -224,9 +268,12 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					ethChainID: ethCctxsMissed,
 					btcChainID: btcCctxsMissed,
 				},
-				CurrentWithdrawWindow: 90,                                                       // [LowestPendingCctxHeight, Height] = [11, 100]
-				CurrentWithdrawRate:   sdk.NewInt(91).Mul(sdk.NewInt(1e18)).Quo(sdk.NewInt(90)), // 91 / 90 = 1.011111111111111111 ZETA/block
-				RateLimitExceeded:     true,
+				CurrentWithdrawWindow: 90, // [LowestPendingCctxHeight, Height] = [11, 100]
+				CurrentWithdrawRate: sdk.NewInt(91).
+					Mul(sdk.NewInt(1e18)).
+					Quo(sdk.NewInt(90)),
+				// 91 / 90 = 1.011111111111111111 ZETA/block
+				RateLimitExceeded: true,
 			},
 		},
 		{
@@ -246,9 +293,12 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					ethChainID: ethCctxsAll,
 					btcChainID: btcCctxsAll,
 				},
-				CurrentWithdrawWindow: 91,                                                       // [LowestPendingCctxHeight, Height] = [11, 101]
-				CurrentWithdrawRate:   sdk.NewInt(91).Mul(sdk.NewInt(1e18)).Quo(sdk.NewInt(91)), // 91 / 91 = 1.011 ZETA/block
-				RateLimitExceeded:     false,
+				CurrentWithdrawWindow: 91, // [LowestPendingCctxHeight, Height] = [11, 101]
+				CurrentWithdrawRate: sdk.NewInt(91).
+					Mul(sdk.NewInt(1e18)).
+					Quo(sdk.NewInt(91)),
+				// 91 / 91 = 1.011 ZETA/block
+				RateLimitExceeded: false,
 			},
 		},
 	}

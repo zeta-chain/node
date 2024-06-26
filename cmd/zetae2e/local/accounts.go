@@ -13,9 +13,13 @@ var (
 	UserERC20Address    = ethcommon.HexToAddress("0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6")
 	UserERC20PrivateKey = "fda3be1b1517bdf48615bdadacc1e6463d2865868dc8077d2cdcfa4709a16894" // #nosec G101 - used for testing
 
-	// UserZetaTestAddress is the address of the account for testing Zeta
+	// UserZetaTestAddress is the address of the account for testing Zeta transfers
 	UserZetaTestAddress    = ethcommon.HexToAddress("0x5cC2fBb200A929B372e3016F1925DcF988E081fd")
 	UserZetaTestPrivateKey = "729a6cdc5c925242e7df92fdeeb94dadbf2d0b9950d4db8f034ab27a3b114ba7" // #nosec G101 - used for testing
+
+	// UserZEVMMPTestAddress is the address of the account for testing ZEVM Message Passing
+	UserZEVMMPTestAddress    = ethcommon.HexToAddress("0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c")
+	UserZEVMMPTestPrivateKey = "105460aebf71b10bfdb710ef5aa6d2932ee6ff6fc317ac9c24e0979903b10a5d" // #nosec G101 - used for testing
 
 	// UserBitcoinAddress is the address of the account for testing Bitcoin
 	UserBitcoinAddress    = ethcommon.HexToAddress("0x283d810090EdF4043E75247eAeBcE848806237fD")
@@ -34,5 +38,7 @@ var (
 	UserAdminAddress    = ethcommon.HexToAddress("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 	UserAdminPrivateKey = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // #nosec G101 - used for testing
 
-	FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
+	// FungibleAdminAddress is the address of the account for testing the fungible admin functions
+	UserFungibleAdminAddress    = ethcommon.HexToAddress("0x8305C114Ea73cAc4A88f39A173803F94741b9055")
+	UserFungibleAdminPrivateKey = "d88d09a7d6849c15a36eb6931f9dd616091a63e9849a2cc86f309ba11fb8fec5" // #nosec G101 - used for testing
 )

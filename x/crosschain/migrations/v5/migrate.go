@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -77,10 +78,10 @@ type TestnetNonce struct {
 
 func CurrentTestnetChains() []TestnetNonce {
 	return []TestnetNonce{
-		{chain: chains.GoerliChain, nonceHigh: 226841, nonceLow: 226841},
-		{chain: chains.MumbaiChain, nonceHigh: 200599, nonceLow: 200599},
-		{chain: chains.BscTestnetChain, nonceHigh: 110454, nonceLow: 110454},
-		{chain: chains.BtcTestNetChain, nonceHigh: 4881, nonceLow: 4881},
+		{chain: chains.Goerli, nonceHigh: 226841, nonceLow: 226841},
+		{chain: chains.Mumbai, nonceHigh: 200599, nonceLow: 200599},
+		{chain: chains.BscTestnet, nonceHigh: 110454, nonceLow: 110454},
+		{chain: chains.BitcoinTestnet, nonceHigh: 4881, nonceLow: 4881},
 	}
 }
 
@@ -93,13 +94,16 @@ func SetZetaAccounting(
 	abortedAmountZeta := sdkmath.ZeroUint()
 	for _, cctx := range ccctxList {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-
-			switch cctx.InboundTxParams.CoinType {
+			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
-					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
+					receiverChain := observerKeeper.GetSupportedChainFromChainID(
+						ctx,
+						cctx.GetCurrentOutboundParam().ReceiverChainId,
+					)
 					if receiverChain == nil {
-						ctx.Logger().Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutTxParam().ReceiverChainId), cctx.Index)
+						ctx.Logger().
+							Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutboundParam().ReceiverChainId), cctx.Index)
 						continue
 					}
 					// There is a chance that this cctx has already been refunded, so we set the isRefunded flag to true.
@@ -119,7 +123,6 @@ func SetZetaAccounting(
 					abortedValue := GetAbortedAmount(cctx)
 					abortedAmountZeta = abortedAmountZeta.Add(abortedValue)
 					cctx.CctxStatus.IsAbortRefunded = false
-
 				}
 			case coin.CoinType_Gas:
 				{
@@ -129,18 +132,17 @@ func SetZetaAccounting(
 			}
 			crosschainKeeper.SetCrossChainTx(ctx, cctx)
 		}
-
 	}
 	crosschainKeeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: abortedAmountZeta})
 
 	return nil
 }
 func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
-	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
-		return cctx.GetCurrentOutTxParam().Amount
+	if cctx.OutboundParams != nil && !cctx.GetCurrentOutboundParam().Amount.IsZero() {
+		return cctx.GetCurrentOutboundParam().Amount
 	}
-	if cctx.InboundTxParams != nil {
-		return cctx.InboundTxParams.Amount
+	if cctx.InboundParams != nil {
+		return cctx.InboundParams.Amount
 	}
 
 	return sdkmath.ZeroUint()

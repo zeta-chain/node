@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -47,7 +48,6 @@ func CmdGetChainParams() *cobra.Command {
 		Short: "Query GetChainParams",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

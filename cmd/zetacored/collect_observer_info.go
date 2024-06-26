@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/app"
 )
 
 func CollectObserverInfoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-observer-info [folder]",
-		Short: "collect observer info from a folder , default path is ~/.zetacored/os_info/ \n",
+		Short: "collect observer info into the genesis from a folder , default path is ~/.zetacored/os_info/ \n",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			defaultHome := app.DefaultNodeHome

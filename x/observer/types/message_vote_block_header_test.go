@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
@@ -19,7 +20,7 @@ import (
 func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
 	keeper.SetConfig(false)
 	var header ethtypes.Header
-	file, err := os.Open("../../../pkg/testdata/eth_header_18495266.json")
+	file, err := os.Open("../../../testutil/testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)
@@ -62,7 +63,7 @@ func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
 			name: "bitcoin chain id",
 			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
-				chains.BtcMainnetChain.ChainId,
+				chains.BitcoinMainnet.ChainId,
 				[]byte{},
 				6,
 				proofs.HeaderData{},

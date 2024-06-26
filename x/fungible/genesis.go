@@ -2,6 +2,7 @@ package fungible
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -17,7 +18,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.SystemContract != nil {
 		k.SetSystemContract(ctx, *genState.SystemContract)
 	}
-
 }
 
 // ExportGenesis returns the fungible module's exported genesis.

@@ -1,10 +1,11 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/testconnectorzevm"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -17,17 +18,12 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	// Can withdraw 10ZETA
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
 	r.DepositAndApproveWZeta(amount)
+
 	tx := r.WithdrawZeta(amount, true)
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
 	r.Logger.CCTX(*cctx, "zeta withdraw")
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Errorf(
-			"expected cctx status to be %s; got %s, message %s",
-			crosschaintypes.CctxStatus_OutboundMined,
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage,
-		))
-	}
 
 	// Deploy the test contract
 	newTestConnectorAddr, tx, _, err := testconnectorzevm.DeployTestZetaConnectorZEVM(
@@ -35,23 +31,17 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 		r.ZEVMClient,
 		r.WZetaAddr,
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	// Wait for the contract to be deployed
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("contract deployment failed")
-	}
+	utils.RequireTxSuccessful(r, receipt)
 
 	// Get the code hash of the new contract
 	codeHashRes, err := r.FungibleClient.CodeHash(r.Ctx, &fungibletypes.QueryCodeHashRequest{
 		Address: newTestConnectorAddr.String(),
 	})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("New contract code hash: %s", codeHashRes.CodeHash)
 
 	r.Logger.Info("Updating the bytecode of the Connector")
@@ -61,37 +51,21 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 		codeHashRes.CodeHash,
 	)
 	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 	r.Logger.Info("Update connector bytecode tx hash: %s", res.TxHash)
 
 	r.Logger.Info("Can interact with the new code of the contract")
 	testConnectorContract, err := testconnectorzevm.NewTestZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
 
 	response, err := testConnectorContract.Foo(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-
-	if response != "foo" {
-		panic("unexpected response")
-	}
+	require.NoError(r, err)
+	require.Equal(r, "foo", response)
 
 	// Can continue to interact with the connector: withdraw 10ZETA
 	r.DepositAndApproveWZeta(amount)
 	tx = r.WithdrawZeta(amount, true)
-	cctx = utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Errorf(
-			"expected cctx status to be %s; got %s, message %s",
-			crosschaintypes.CctxStatus_OutboundMined,
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage,
-		))
-	}
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 }

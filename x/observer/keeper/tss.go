@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -44,7 +45,6 @@ func (k Keeper) GetHistoricalTssByFinalizedHeight(ctx sdk.Context, finalizedZeta
 		return types.TSS{}, false
 	}
 	return tss, true
-
 }
 
 // GetTSS returns the current tss information
@@ -79,7 +79,10 @@ func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 	return
 }
 
-func (k Keeper) GetAllTSSPaginated(ctx sdk.Context, pagination *query.PageRequest) (list []types.TSS, pageRes *query.PageResponse, err error) {
+func (k Keeper) GetAllTSSPaginated(
+	ctx sdk.Context,
+	pagination *query.PageRequest,
+) (list []types.TSS, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var tss types.TSS

@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -18,7 +19,6 @@ func MigrateStore(
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
-
 	// Using New Types from observer module as the structure is the same
 	var nodeAccounts []observerTypes.NodeAccount
 	var crosschainFlags observerTypes.CrosschainFlags

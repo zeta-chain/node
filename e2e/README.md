@@ -8,7 +8,7 @@ The E2E testing project is organized into several packages, each with a specific
 - `config`: Provides general configuration for E2E tests, including RPC addresses for connected networks, addresses of deployed smart contracts, and account details for test transactions.
 - `contracts`: Includes sample Solidity smart contracts used in testing scenarios.
 - `runner`: Responsible for executing E2E tests, handling interactions with various network clients.
-- `e2etests`: Houses a collection of E2E tests that can be run against the ZetaChain network.
+- `e2etests`: Houses a collection of E2E tests that can be run against the ZetaChain network. Each test is implemented as a separate Go file prefixed with `test_`.
 - `txserver`: A minimalistic client for interacting with the ZetaChain RPC interface.
 - `utils`: Offers utility functions to facilitate interactions with the different blockchain networks involved in testing.
 
@@ -28,8 +28,8 @@ A config YAML file can be provided to the E2E test tool via the `--config` flag.
 - `Zevm`: RPC endpoint for the ZetaChain EVM.
 - `EVM`: RPC endpoint for the Ethereum network.
 - `Bitcoin`: RPC endpoint for the Bitcoin network.
-- `ZetaCoreGRPC`: GRPC endpoint for ZetaCore.
-- `ZetaCoreRPC`: RPC endpoint for ZetaCore.
+- `ZetaCoreGRPC`: GRPC endpoint for zetacore.
+- `ZetaCoreRPC`: RPC endpoint for zetacore.
 
 ### Contracts Configuration:
 
@@ -56,3 +56,23 @@ zeta_chain_id: "zetachain-1"
 ```
 
 NOTE: config is in progress, contracts on the zEVM must be added
+
+## Debugging
+
+It's possible to debug a single test using Delve debugger.
+
+1. Make sure delve is installed. `go install github.com/go-delve/delve/cmd/dlv@latest`
+2. Configure your IDE to use Delve as the debugger. For Goland, you can do the following:
+    - Go to "Run" > "Edit Run Configurations"
+    - Hit "+" > "Go Remote". Keep port as default (`2345`). Toggle "On Disconnect" > "Stop Delve process"
+3. Make sure that localnet is running. For a quick start, you can use `make start-localnet-skip-build`.
+   Networks need some time to generate blocks.
+4. Run test as following: `./e2e/scripts/debug.sh my_test_name arg1 arg2 arg_n`.
+   Example: `./e2e/scripts/debug.sh bitcoin_withdraw_restricted 0.001`
+5. Place a breakpoint in the code.
+6. Go to the editor's debug panel and hit "Debug" button.
+
+You can also run an alias of `zetae2e run` like so:
+```shell
+  `./e2e/scripts/run.sh bitcoin_withdraw_restricted 0.001`
+```

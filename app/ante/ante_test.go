@@ -8,6 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -33,12 +34,13 @@ func (mah *MockAnteHandler) AnteHandle(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.C
 func TestIsSystemTx(t *testing.T) {
 	// system tx types:
 	//      *cctxtypes.MsgVoteGasPrice,
-	//		*cctxtypes.MsgVoteOnObservedInboundTx,
-	//		*cctxtypes.MsgVoteOnObservedOutboundTx,
-	//		*cctxtypes.MsgAddToOutTxTracker,
+	//		*cctxtypes.MsgVoteInbound,
+	//		*cctxtypes.MsgVoteOutbound,
+	//		*cctxtypes.MsgAddOutboundTracker,
+	//		*cctxtypes.MsgAddInboundTracker,
 	//		*observertypes.MsgVoteBlockHeader,
 	//		*observertypes.MsgVoteTSS,
-	//		*observertypes.MsgAddBlameVote:
+	//		*observertypes.MsgVoteBlame:
 	buildTxFromMsg := func(msg sdk.Msg) sdk.Tx {
 		txBuilder := app.MakeEncodingConfig().TxConfig.NewTxBuilder()
 		txBuilder.SetMsgs(msg)
@@ -114,8 +116,8 @@ func TestIsSystemTx(t *testing.T) {
 		},
 
 		{
-			"MsgVoteOnObservedInboundTx",
-			buildTxFromMsg(&crosschaintypes.MsgVoteOnObservedInboundTx{
+			"MsgVoteInbound",
+			buildTxFromMsg(&crosschaintypes.MsgVoteInbound{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -123,8 +125,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgVoteOnObservedInboundTx}",
-			buildAuthzTxFromMsg(&crosschaintypes.MsgVoteOnObservedInboundTx{
+			"MsgExec{MsgVoteInbound}",
+			buildAuthzTxFromMsg(&crosschaintypes.MsgVoteInbound{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -133,8 +135,8 @@ func TestIsSystemTx(t *testing.T) {
 		},
 
 		{
-			"MsgVoteOnObservedOutboundTx",
-			buildTxFromMsg(&crosschaintypes.MsgVoteOnObservedOutboundTx{
+			"MsgVoteOutbound",
+			buildTxFromMsg(&crosschaintypes.MsgVoteOutbound{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -142,8 +144,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgVoteOnObservedOutboundTx}",
-			buildAuthzTxFromMsg(&crosschaintypes.MsgVoteOnObservedOutboundTx{
+			"MsgExec{MsgVoteOutbound}",
+			buildAuthzTxFromMsg(&crosschaintypes.MsgVoteOutbound{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -151,8 +153,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgAddToOutTxTracker",
-			buildTxFromMsg(&crosschaintypes.MsgAddToOutTxTracker{
+			"MsgAddOutboundTracker",
+			buildTxFromMsg(&crosschaintypes.MsgAddOutboundTracker{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -160,8 +162,26 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgAddToOutTxTracker}",
-			buildAuthzTxFromMsg(&crosschaintypes.MsgAddToOutTxTracker{
+			"MsgExec{MsgAddOutboundTracker}",
+			buildAuthzTxFromMsg(&crosschaintypes.MsgAddOutboundTracker{
+				Creator: sample.AccAddress(),
+			}),
+			isAuthorized,
+
+			true,
+		},
+		{
+			"MsgAddInboundTracker",
+			buildTxFromMsg(&crosschaintypes.MsgAddInboundTracker{
+				Creator: sample.AccAddress(),
+			}),
+			isAuthorized,
+
+			true,
+		},
+		{
+			"MsgExec{MsgAddInboundTracker}",
+			buildAuthzTxFromMsg(&crosschaintypes.MsgAddInboundTracker{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -205,8 +225,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgAddBlameVote",
-			buildTxFromMsg(&observertypes.MsgAddBlameVote{
+			"MsgVoteBlame",
+			buildTxFromMsg(&observertypes.MsgVoteBlame{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -214,8 +234,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgAddBlameVote}",
-			buildAuthzTxFromMsg(&observertypes.MsgAddBlameVote{
+			"MsgExec{MsgVoteBlame}",
+			buildAuthzTxFromMsg(&observertypes.MsgVoteBlame{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,

@@ -4,6 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
@@ -11,7 +12,12 @@ const TypeMsgAddObserver = "add_observer"
 
 var _ sdk.Msg = &MsgAddObserver{}
 
-func NewMsgAddObserver(creator string, observerAdresss string, zetaclientGranteePubKey string, addNodeAccountOnly bool) *MsgAddObserver {
+func NewMsgAddObserver(
+	creator string,
+	observerAdresss string,
+	zetaclientGranteePubKey string,
+	addNodeAccountOnly bool,
+) *MsgAddObserver {
 	return &MsgAddObserver{
 		Creator:                 creator,
 		ObserverAddress:         observerAdresss,

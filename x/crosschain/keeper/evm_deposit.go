@@ -11,31 +11,34 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+const InCCTXIndexKey = "inCctxIndex"
+
 // HandleEVMDeposit handles a deposit from an inbound tx
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
 func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (bool, error) {
-	to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-	sender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+	to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	var ethTxHash ethcommon.Hash
-	inboundAmount := cctx.GetInboundTxParams().Amount.BigInt()
-	inboundSender := cctx.GetInboundTxParams().Sender
-	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
-	inboundCoinType := cctx.InboundTxParams.CoinType
+	inboundAmount := cctx.GetInboundParams().Amount.BigInt()
+	inboundSender := cctx.GetInboundParams().Sender
+	inboundSenderChainID := cctx.GetInboundParams().SenderChainId
+	inboundCoinType := cctx.InboundParams.CoinType
 
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 		ethTxHash = ethcommon.BytesToHash(hash)
-		cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		cctx.GetCurrentOutboundParam().Hash = ethTxHash.String()
 		// #nosec G701 always positive
-		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
+		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 
 	if inboundCoinType == coin.CoinType_Zeta {
@@ -51,7 +54,15 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
 		}
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
+		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(
+			ctx,
+			sender,
+			to,
+			inboundSenderChainID,
+			inboundAmount,
+			data,
+			indexBytes,
+		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
 		} else if err != nil {
@@ -80,7 +91,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			inboundSenderChainID,
 			data,
 			inboundCoinType,
-			cctx.InboundTxParams.Asset,
+			cctx.InboundParams.Asset,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
@@ -93,8 +104,8 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			if len(logs) > 0 {
-				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-				txOrigin := cctx.InboundTxParams.TxOrigin
+				ctx = ctx.WithValue(InCCTXIndexKey, cctx.Index)
+				txOrigin := cctx.InboundParams.TxOrigin
 				if txOrigin == "" {
 					txOrigin = inboundSender
 				}

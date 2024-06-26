@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,11 +15,19 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
+
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zetaerrors "github.com/zeta-chain/zetacore/zetaclient/errors"
+	"github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
 )
+
+var (
+	ErrBech32ifyPubKey = errors.New("Bech32ifyPubKey fail in main")
+	ErrNewPubKey       = errors.New("NewPubKey error from string")
+)
+
+var _ interfaces.ObserverKeys = &Keys{}
 
 // Keys manages all the keys used by zeta client
 type Keys struct {
@@ -29,7 +38,12 @@ type Keys struct {
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string, hotkeyPassword string) *Keys {
+func NewKeysWithKeybase(
+	kb ckeys.Keyring,
+	granterAddress sdk.AccAddress,
+	granteeName string,
+	hotkeyPassword string,
+) *Keys {
 	return &Keys{
 		signerName:      granteeName,
 		kb:              kb,
@@ -71,7 +85,8 @@ func GetKeyringKeybase(cfg config.Config, hotkeyPassword string) (ckeys.Keyring,
 	}()
 	os.Stdin = nil
 
-	logger.Debug().Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
+	logger.Debug().
+		Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
 	rc, err := kb.Key(granteeName)
 	if err != nil {
 		return nil, "", fmt.Errorf("key not in backend %s present with name (%s): %w", kb.Backend(), granteeName, err)
@@ -90,7 +105,7 @@ func (k *Keys) GetSignerInfo() *ckeys.Record {
 	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return info
 }
@@ -99,17 +114,18 @@ func (k *Keys) GetOperatorAddress() sdk.AccAddress {
 	return k.OperatorAddress
 }
 
-func (k *Keys) GetAddress() sdk.AccAddress {
+// GetAddress return the signer address
+func (k *Keys) GetAddress() (sdk.AccAddress, error) {
 	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	addr, err := info.GetAddress()
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return addr
+	return addr, nil
 }
 
 // GetPrivateKey return the private key
@@ -144,11 +160,11 @@ func (k *Keys) GetPubKeySet(password string) (zetacrypto.PubKeySet, error) {
 
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pK.PubKey())
 	if err != nil {
-		return pubkeySet, zetaerrors.ErrBech32ifyPubKey
+		return pubkeySet, ErrBech32ifyPubKey
 	}
 	pubkey, err := zetacrypto.NewPubKey(s)
 	if err != nil {
-		return pubkeySet, zetaerrors.ErrNewPubKey
+		return pubkeySet, ErrNewPubKey
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil

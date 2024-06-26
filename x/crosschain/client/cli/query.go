@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -20,21 +21,21 @@ func GetQueryCmd(_ string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdListOutTxTracker(),
-		CmdShowOutTxTracker(),
+		CmdListOutboundTracker(),
+		CmdShowOutboundTracker(),
 		CmdListGasPrice(),
 		CmdShowGasPrice(),
 
 		CmdListSend(),
 		CmdShowSend(),
 		CmdLastZetaHeight(),
-		CmdInTxHashToCctxData(),
-		CmdListInTxHashToCctx(),
-		CmdShowInTxHashToCctx(),
+		CmdInboundHashToCctxData(),
+		CmdListInboundHashToCctx(),
+		CmdShowInboundHashToCctx(),
 
 		CmdPendingCctx(),
-		CmdListInTxTrackerByChain(),
-		CmdListInTxTrackers(),
+		CmdListInboundTrackerByChain(),
+		CmdListInboundTrackers(),
 		CmdGetZetaAccounting(),
 		CmdListPendingCCTXWithinRateLimit(),
 

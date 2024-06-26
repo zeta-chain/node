@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -16,9 +17,11 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -61,7 +64,12 @@ func (k Keeper) PostTxProcessing(
 // - clear the logs
 // TODO: implement unit tests
 // https://github.com/zeta-chain/node/issues/1759
-func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessLogs(
+	ctx sdk.Context,
+	logs []*ethtypes.Log,
+	emittingContract ethcommon.Address,
+	txOrigin string,
+) error {
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
 		return fmt.Errorf("cannot find system contract")
@@ -70,6 +78,7 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	if connectorZEVMAddr == (ethcommon.Address{}) {
 		return fmt.Errorf("connectorZEVM address is empty")
 	}
+
 	for _, log := range logs {
 		eventZrc20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
 		eventZetaSent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
@@ -79,20 +88,9 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 		}
 		if eventZrc20Withdrawal != nil && eventZetaSent != nil {
 			// This log contains both events, this is not possible
-			ctx.Logger().Error(fmt.Sprintf("ProcessLogs: log contains both ZRC20Withdrawal and ZetaSent events, %s , %s", log.Topics, log.Data))
+			ctx.Logger().
+				Error(fmt.Sprintf("ProcessLogs: log contains both ZRC20Withdrawal and ZetaSent events, %s , %s", log.Topics, log.Data))
 			continue
-		}
-
-		// We have found either eventZrc20Withdrawal or eventZetaSent
-		// These cannot be processed without TSS keys, return an error if TSS is not found
-		tss, found := k.zetaObserverKeeper.GetTSS(ctx)
-		if !found {
-			return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "Cannot process logs without TSS keys")
-		}
-
-		// Do not process withdrawal events if inbound is disabled
-		if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-			return observertypes.ErrInboundDisabled
 		}
 
 		// if eventZrc20Withdrawal is not nil we will try to validate it and see if it can be processed
@@ -100,7 +98,8 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 			// Check if the contract is a registered ZRC20 contract. If its not a registered ZRC20 contract, we can discard this event as it is not relevant
 			coin, foundCoin := k.fungibleKeeper.GetForeignCoins(ctx, eventZrc20Withdrawal.Raw.Address.Hex())
 			if !foundCoin {
-				ctx.Logger().Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZrc20Withdrawal.Raw.Address.Hex()))
+				ctx.Logger().
+					Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZrc20Withdrawal.Raw.Address.Hex()))
 				continue
 			}
 
@@ -111,13 +110,13 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 			}
 			// If the event is valid, we will process it and create a new CCTX
 			// If the process fails, we will return an error and roll back the transaction
-			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZrc20Withdrawal, emittingContract, txOrigin, tss); err != nil {
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZrc20Withdrawal, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
 		// if eventZetaSent is not nil we will try to validate it and see if it can be processed
 		if eventZetaSent != nil {
-			if err := k.ProcessZetaSentEvent(ctx, eventZetaSent, emittingContract, txOrigin, tss); err != nil {
+			if err := k.ProcessZetaSentEvent(ctx, eventZetaSent, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
@@ -127,8 +126,12 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 
 // ProcessZRC20WithdrawalEvent creates a new CCTX to process the withdrawal event
 // error indicates system error and non-recoverable; should abort
-func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string, tss observertypes.TSS) error {
-
+func (k Keeper) ProcessZRC20WithdrawalEvent(
+	ctx sdk.Context,
+	event *zrc20.ZRC20Withdrawal,
+	emittingContract ethcommon.Address,
+	txOrigin string,
+) error {
 	ctx.Logger().Info(fmt.Sprintf("ZRC20 withdrawal to %s amount %d", hex.EncodeToString(event.To), event.Value))
 	foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
 	if !found {
@@ -136,7 +139,11 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	}
 	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
 	if receiverChain == nil {
-		return errorsmod.Wrapf(observertypes.ErrSupportedChains, "chain with chainID %d not supported", foreignCoin.ForeignChainId)
+		return errorsmod.Wrapf(
+			observertypes.ErrSupportedChains,
+			"chain with chainID %d not supported",
+			foreignCoin.ForeignChainId,
+		)
 	}
 	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
 	if err != nil {
@@ -153,7 +160,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	}
 
 	// gasLimit+uint64(event.Raw.Index) to generate different cctx for multiple events in the same tx.
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -170,25 +177,26 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		event.Raw.Index,
 	)
 
-	// Create a new cctx with status as pending Inbound, this is created directly from the event without waiting for any observer votes
-	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	cctx, err := k.ValidateInbound(ctx, msg, false)
 	if err != nil {
-		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to initialize cctx: %s", err.Error())
+		return err
 	}
-	cctx.SetPendingOutbound("ZRC20 withdrawal event setting to pending outbound directly")
-	// Get gas price and amount
-	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
-	if !found {
-		return fmt.Errorf("gasprice not found for %s", receiverChain)
-	}
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
 
-	EmitZRCWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, receiverChain)
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		return errors.New("cctx aborted")
+	}
+
+	EmitZRCWithdrawCreated(ctx, *cctx)
+
+	return nil
 }
 
-func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string, tss observertypes.TSS) error {
+func (k Keeper) ProcessZetaSentEvent(
+	ctx sdk.Context,
+	event *connectorzevm.ZetaConnectorZEVMZetaSent,
+	emittingContract ethcommon.Address,
+	txOrigin string,
+) error {
 	ctx.Logger().Info(fmt.Sprintf(
 		"Zeta withdrawal to %s amount %d to chain with chainId %d",
 		hex.EncodeToString(event.DestinationAddress),
@@ -227,7 +235,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := types.NewMsgVoteOnObservedInboundTx(
+	msg := types.NewMsgVoteInbound(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -243,40 +251,16 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		event.Raw.Index,
 	)
 
-	// create a new cctx with status as pending Inbound,
-	// this is created directly from the event without waiting for any observer votes
-	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
-		return fmt.Errorf("ProcessZetaSentEvent: failed to initialize cctx: %s", err.Error())
-	}
-	cctx.SetPendingOutbound("ZetaSent event setting to pending outbound directly")
-
-	if err := k.PayGasAndUpdateCctx(
-		ctx,
-		receiverChain.ChainId,
-		&cctx,
-		amount,
-		true,
-	); err != nil {
-		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
+		return err
 	}
 
-	EmitZetaWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, receiverChain)
-}
-
-func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *chains.Chain) error {
-	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
-	if ok {
-		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		return errors.New("cctx aborted")
 	}
 
-	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {
-		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
-	}
-
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
-	ctx.Logger().Debug("ProcessCCTX successful \n")
+	EmitZetaWithdrawCreated(ctx, *cctx)
 	return nil
 }
 
@@ -303,15 +287,20 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
 	if chains.IsBitcoinChain(chainID) {
-		if event.Value.Cmp(big.NewInt(0)) <= 0 {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid amount %s", event.Value.String())
+		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidWithdrawalAmount,
+				"withdraw amount %s is less than minimum amount %d",
+				event.Value.String(),
+				constant.BTCWithdrawalDustAmount,
+			)
 		}
 		addr, err := chains.DecodeBtcAddress(string(event.To), chainID)
 		if err != nil {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(event.To))
 		}
 		if !chains.IsBtcAddressSupported(addr) {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: unsupported address %s", string(event.To))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(event.To))
 		}
 	}
 	return nil
@@ -320,7 +309,10 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 // ParseZetaSentEvent tries extracting ZetaSent event from connectorZEVM contract;
 // returns error if the log entry is not a ZetaSent event, or is not emitted from connectorZEVM
 // It only returns a not-nil event if all the error checks pass
-func ParseZetaSentEvent(log ethtypes.Log, connectorZEVM ethcommon.Address) (*connectorzevm.ZetaConnectorZEVMZetaSent, error) {
+func ParseZetaSentEvent(
+	log ethtypes.Log,
+	connectorZEVM ethcommon.Address,
+) (*connectorzevm.ZetaConnectorZEVMZetaSent, error) {
 	zetaConnectorZEVM, err := connectorzevm.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
@@ -334,7 +326,11 @@ func ParseZetaSentEvent(log ethtypes.Log, connectorZEVM ethcommon.Address) (*con
 	}
 
 	if event.Raw.Address != connectorZEVM {
-		return nil, fmt.Errorf("ParseZetaSentEvent: event address %s does not match connectorZEVM %s", event.Raw.Address.Hex(), connectorZEVM.Hex())
+		return nil, fmt.Errorf(
+			"ParseZetaSentEvent: event address %s does not match connectorZEVM %s",
+			event.Raw.Address.Hex(),
+			connectorZEVM.Hex(),
+		)
 	}
 	return event, nil
 }

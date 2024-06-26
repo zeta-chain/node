@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -11,9 +12,8 @@ func TestDefaultDefaultCrosschainFlags(t *testing.T) {
 	defaultCrosschainFlags := types.DefaultCrosschainFlags()
 
 	require.Equal(t, &types.CrosschainFlags{
-		IsInboundEnabled:             true,
-		IsOutboundEnabled:            true,
-		GasPriceIncreaseFlags:        &types.DefaultGasPriceIncreaseFlags,
-		BlockHeaderVerificationFlags: &types.DefaultBlockHeaderVerificationFlags,
+		IsInboundEnabled:      true,
+		IsOutboundEnabled:     true,
+		GasPriceIncreaseFlags: &types.DefaultGasPriceIncreaseFlags,
 	}, defaultCrosschainFlags)
 }

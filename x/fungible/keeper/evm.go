@@ -22,10 +22,11 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-	zevmconnectercontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
@@ -42,7 +43,11 @@ var (
 )
 
 // DeployContract deploys a new contract in the ZEVM
-func (k Keeper) DeployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArguments ...interface{}) (common.Address, error) {
+func (k Keeper) DeployContract(
+	ctx sdk.Context,
+	metadata *bind.MetaData,
+	ctorArguments ...interface{},
+) (common.Address, error) {
 	contractABI, err := metadata.GetAbi()
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
@@ -52,7 +57,11 @@ func (k Keeper) DeployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArg
 		ctorArguments..., // feeToSetter
 	)
 	if err != nil {
-		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to abi.Pack ctor arguments: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIGet,
+			"failed to abi.Pack ctor arguments: %s",
+			err.Error(),
+		)
 	}
 
 	if len(metadata.Bin) <= 2 {
@@ -61,7 +70,12 @@ func (k Keeper) DeployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArg
 
 	bin, err := hex.DecodeString(metadata.Bin[2:])
 	if err != nil {
-		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", metadata.Bin[2:], err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIPack,
+			"error decoding %s hex bytecode string: %s",
+			metadata.Bin[2:],
+			err.Error(),
+		)
 	}
 
 	data := make([]byte, len(bin)+len(ctorArgs))
@@ -121,7 +135,12 @@ func (k Keeper) DeployZRC20Contract(
 		common.HexToAddress(system.SystemContract),
 	)
 	if err != nil {
-		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "failed to deploy ZRC20 contract: %s, %s", name, err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(
+			types.ErrABIPack,
+			"failed to deploy ZRC20 contract: %s, %s",
+			name,
+			err.Error(),
+		)
 	}
 	coin, _ := k.GetForeignCoins(ctx, contractAddr.Hex())
 	coin.CoinType = coinType
@@ -137,7 +156,12 @@ func (k Keeper) DeployZRC20Contract(
 	return contractAddr, nil
 }
 
-func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2factory common.Address, router02 common.Address) (common.Address, error) {
+func (k Keeper) DeploySystemContract(
+	ctx sdk.Context,
+	wzeta common.Address,
+	v2factory common.Address,
+	router02 common.Address,
+) (common.Address, error) {
 	system, _ := k.GetSystemContract(ctx)
 
 	contractAddr, err := k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, v2factory, router02)
@@ -164,7 +188,11 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	return contractAddr, nil
 }
 
-func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address, wzeta common.Address) (common.Address, error) {
+func (k Keeper) DeployUniswapV2Router02(
+	ctx sdk.Context,
+	factory common.Address,
+	wzeta common.Address,
+) (common.Address, error) {
 	contractAddr, err := k.DeployContract(ctx, uniswapv2router02.UniswapV2Router02MetaData, factory, wzeta)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(err, "UniswapV2Router02")
@@ -181,7 +209,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 }
 
 func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (common.Address, error) {
-	contractAddr, err := k.DeployContract(ctx, zevmconnectercontract.ZetaConnectorZEVMMetaData, wzeta)
+	contractAddr, err := k.DeployContract(ctx, zevmconnectorcontract.ZetaConnectorZEVMMetaData, wzeta)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(err, "ZetaConnectorZEVM")
 	}
@@ -324,7 +352,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	}
 	connectorAddress := common.HexToAddress(system.ConnectorZevm)
 
-	zevmConnecterAbi, err := zevmconnectercontract.ZetaConnectorZEVMMetaData.GetAbi()
+	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +364,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 
 	return k.CallEVM(
 		ctx,
-		*zevmConnecterAbi,
+		*zevmConnectorAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
 		zetaValue,
@@ -372,7 +400,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	}
 	connectorAddress := common.HexToAddress(system.ConnectorZevm)
 
-	zevmConnecterAbi, err := zevmconnectercontract.ZetaConnectorZEVMMetaData.GetAbi()
+	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +410,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	}
 	return k.CallEVM(
 		ctx,
-		*zevmConnecterAbi,
+		*zevmConnectorAbi,
 		types.ModuleAddressEVM,
 		connectorAddress,
 		remainingZetaValue,
@@ -631,7 +659,12 @@ func (k Keeper) CallEVM(
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMes := fmt.Sprintf("contract call failed: method '%s', contract '%s', args: %v", method, contract.Hex(), args)
+		errMes := fmt.Sprintf(
+			"contract call failed: method '%s', contract '%s', args: %v",
+			method,
+			contract.Hex(),
+			args,
+		)
 
 		// if it is a revert error then add the revert reason to the error message
 		revertErr, ok := err.(*evmtypes.RevertError)
@@ -646,6 +679,9 @@ func (k Keeper) CallEVM(
 // CallEVMWithData performs a smart contract method call using contract data
 // value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
 // to bisect the correct gas limit (this may sometimes result in insufficient gas limit; not sure why)
+//
+// noEthereumTxEvent flag is used to control if ethereum_tx events should be emitted
+// which will mean these txs are indexed and available in rpc methods
 //
 // returns (msg,err) the EVM execution result if there is any, even if error is non-nil due to contract reverts
 // Furthermore, err!=nil && msg!=nil && msg.Failed() means the contract call reverted; in which case
@@ -688,7 +724,6 @@ func (k Keeper) CallEVMWithData(
 	if gasLimit != nil {
 		gasCap = gasLimit.Uint64()
 	}
-
 	msg := ethtypes.NewMessage(
 		from,
 		contract,
@@ -756,6 +791,10 @@ func (k Keeper) CallEVMWithData(
 		}
 
 		if !noEthereumTxEvent {
+			// adding txData for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data())))
+			// adding nonce for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxNonce, fmt.Sprint(nonce)))
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					evmtypes.EventTypeEthereumTx,

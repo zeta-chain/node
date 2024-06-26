@@ -22,10 +22,10 @@ env:
 
 jobs:
   docker_build_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -57,7 +57,7 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2204-arm
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -67,7 +67,7 @@ jobs:
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.release.name }}" >> $GITHUB_ENV
 
       - name: Set Version for Hotfix Release from Input.
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
 

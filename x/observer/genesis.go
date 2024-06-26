@@ -2,6 +2,7 @@ package observer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -48,9 +49,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.CrosschainFlags != nil {
 		crosschainFlags.IsOutboundEnabled = genState.CrosschainFlags.IsOutboundEnabled
 		crosschainFlags.IsInboundEnabled = genState.CrosschainFlags.IsInboundEnabled
-		if genState.CrosschainFlags.BlockHeaderVerificationFlags != nil {
-			crosschainFlags.BlockHeaderVerificationFlags = genState.CrosschainFlags.BlockHeaderVerificationFlags
-		}
 		if genState.CrosschainFlags.GasPriceIncreaseFlags != nil {
 			crosschainFlags.GasPriceIncreaseFlags = genState.CrosschainFlags.GasPriceIncreaseFlags
 		}
@@ -69,7 +67,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		for _, ballot := range genState.Ballots {
 			if ballot != nil {
 				k.SetBallot(ctx, ballot)
-				ballotListForHeight[ballot.BallotCreationHeight] = append(ballotListForHeight[ballot.BallotCreationHeight], ballot.BallotIdentifier)
+				ballotListForHeight[ballot.BallotCreationHeight] = append(
+					ballotListForHeight[ballot.BallotCreationHeight],
+					ballot.BallotIdentifier,
+				)
 			}
 		}
 	}
@@ -129,7 +130,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.NonceToCctx {
 		k.SetNonceToCctx(ctx, elem)
 	}
-
 }
 
 // ExportGenesis returns the observer module's exported genesis.

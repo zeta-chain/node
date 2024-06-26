@@ -4,24 +4,27 @@ import (
 	"context"
 	"math"
 
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/zeta-chain/zetacore/pkg/crypto"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AddObserver adds an observer address to the observer set
-func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
+func (k msgServer) AddObserver(
+	goCtx context.Context,
+	msg *types.MsgAddObserver,
+) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgAddObserverResponse{}, authoritytypes.ErrUnauthorized
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
-
 	pubkey, err := crypto.NewPubKey(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
@@ -53,7 +56,13 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	observerSet, _ := k.GetObserverSet(ctx)
 
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
-	EmitEventAddObserver(ctx, observerSet.LenUint(), msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
+	EmitEventAddObserver(
+		ctx,
+		observerSet.LenUint(),
+		msg.ObserverAddress,
+		granteeAddress.String(),
+		msg.ZetaclientGranteePubkey,
+	)
 
 	return &types.MsgAddObserverResponse{}, nil
 }

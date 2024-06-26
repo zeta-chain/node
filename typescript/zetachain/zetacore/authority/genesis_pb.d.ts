@@ -6,6 +6,8 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies } from "./policies_pb.js";
+import type { AuthorizationList } from "./authorization_pb.js";
+import type { ChainInfo } from "./chain_info_pb.js";
 
 /**
  * GenesisState defines the authority module's genesis state.
@@ -17,6 +19,16 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: zetachain.zetacore.authority.Policies policies = 1;
    */
   policies?: Policies;
+
+  /**
+   * @generated from field: zetachain.zetacore.authority.AuthorizationList authorization_list = 2;
+   */
+  authorizationList?: AuthorizationList;
+
+  /**
+   * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 3;
+   */
+  chainInfo?: ChainInfo;
 
   constructor(data?: PartialMessage<GenesisState>);
 

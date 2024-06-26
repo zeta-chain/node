@@ -8,13 +8,17 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"golang.org/x/sync/errgroup"
+	"github.com/zeta-chain/zetacore/testutil"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const (
@@ -37,6 +41,8 @@ const (
 var (
 	TestTimeout = 15 * time.Minute
 )
+
+var noError = testutil.NoError
 
 // NewLocalCmd returns the local command
 // which runs the E2E tests locally on the machine with localnet for each blockchain
@@ -66,58 +72,21 @@ func NewLocalCmd() *cobra.Command {
 
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
-	waitForHeight, err := cmd.Flags().GetInt64(flagWaitForHeight)
-	if err != nil {
-		panic(err)
-	}
-	contractsDeployed, err := cmd.Flags().GetBool(flagContractsDeployed)
-	if err != nil {
-		panic(err)
-	}
-	verbose, err := cmd.Flags().GetBool(flagVerbose)
-	if err != nil {
-		panic(err)
-	}
-	configOut, err := cmd.Flags().GetString(flagConfigOut)
-	if err != nil {
-		panic(err)
-	}
-	testAdmin, err := cmd.Flags().GetBool(flagTestAdmin)
-	if err != nil {
-		panic(err)
-	}
-	testPerformance, err := cmd.Flags().GetBool(flagTestPerformance)
-	if err != nil {
-		panic(err)
-	}
-	testCustom, err := cmd.Flags().GetBool(flagTestCustom)
-	if err != nil {
-		panic(err)
-	}
-	skipRegular, err := cmd.Flags().GetBool(flagSkipRegular)
-	if err != nil {
-		panic(err)
-	}
-	light, err := cmd.Flags().GetBool(flagLight)
-	if err != nil {
-		panic(err)
-	}
-	setupOnly, err := cmd.Flags().GetBool(flagSetupOnly)
-	if err != nil {
-		panic(err)
-	}
-	skipSetup, err := cmd.Flags().GetBool(flagSkipSetup)
-	if err != nil {
-		panic(err)
-	}
-	skipBitcoinSetup, err := cmd.Flags().GetBool(flagSkipBitcoinSetup)
-	if err != nil {
-		panic(err)
-	}
-	skipHeaderProof, err := cmd.Flags().GetBool(flagSkipHeaderProof)
-	if err != nil {
-		panic(err)
-	}
+	var (
+		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose           = must(cmd.Flags().GetBool(flagVerbose))
+		configOut         = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
+		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
+		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
+		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
+		light             = must(cmd.Flags().GetBool(flagLight))
+		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
@@ -142,27 +111,26 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// initialize tests config
 	conf, err := GetConfig(cmd)
-	if err != nil {
-		panic(err)
-	}
+	noError(err)
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// wait for a specific height on ZetaChain
 	if waitForHeight != 0 {
-		utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger)
+		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
 
 	// set account prefix to zeta
 	setCosmosConfig()
 
-	// wait for Genesis
-	// if setup is skip, we assume that the genesis is already created
-	if !skipSetup {
-		logger.Print("⏳ wait 70s for genesis")
-		time.Sleep(70 * time.Second)
-	}
+	zetaTxServer, err := txserver.NewZetaTxServer(
+		conf.RPCs.ZetaCoreRPC,
+		[]string{utils.FungibleAdminName},
+		[]string{UserFungibleAdminPrivateKey},
+		conf.ZetaChainID,
+	)
+	noError(err)
 
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
@@ -172,13 +140,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf,
 		DeployerAddress,
 		DeployerPrivateKey,
-		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
 		logger,
+		runner.WithZetaTxServer(zetaTxServer),
 	)
-	if err != nil {
-		panic(err)
-	}
+	noError(err)
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -187,16 +152,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// query and set the TSS
-	if err := deployerRunner.SetTSSAddresses(); err != nil {
-		panic(err)
-	}
+	noError(deployerRunner.SetTSSAddresses())
 
 	if !skipHeaderProof {
-		if err := deployerRunner.EnableHeaderVerification([]int64{
-			chains.GoerliLocalnetChain.ChainId,
-			chains.BtcRegtestChain.ChainId}); err != nil {
-			panic(err)
-		}
+		noError(deployerRunner.EnableHeaderVerification([]int64{
+			chains.GoerliLocalnet.ChainId,
+			chains.BitcoinRegtest.ChainId,
+		}))
 	}
 
 	// setting up the networks
@@ -206,30 +168,22 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
-
-		// NOTE: this method return an error so we handle it and panic if it occurs unlike other method that panics directly
-		// TODO: all methods should return errors instead of panicking and this current function should also return an error
-		// https://github.com/zeta-chain/node/issues/1500
-		if err := deployerRunner.FundEmissionsPool(); err != nil {
-			panic(err)
-		}
+		noError(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(10000)
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
+
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
-		configOut, err := filepath.Abs(configOut)
-		if err != nil {
-			panic(err)
-		}
 
 		// write config into stdout
-		if err := config.WriteConfig(configOut, newConfig); err != nil {
-			panic(err)
-		}
+		configOut, err := filepath.Abs(configOut)
+		noError(err)
+
+		noError(config.WriteConfig(configOut, newConfig))
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
@@ -245,10 +199,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// run tests
 	var eg errgroup.Group
 	if !skipRegular {
-		// defines all tests, if light is enabled, only the most basic tests are run
+		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
 			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleWithdrawsName,
+			e2etests.TestMultipleERC20WithdrawsName,
 			e2etests.TestERC20DepositAndCallRefundName,
 			e2etests.TestZRC20SwapName,
 		}
@@ -257,20 +211,27 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaTests := []string{
 			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingRevertFailName,
-			e2etests.TestMessagePassingRevertSuccessName,
+			e2etests.TestMessagePassingExternalChainsName,
+			e2etests.TestMessagePassingRevertFailExternalChainsName,
+			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositNewAddressName,
+		}
+		zevmMPTests := []string{}
+		zevmMPAdvancedTests := []string{
 			e2etests.TestMessagePassingZEVMToEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
 			e2etests.TestMessagePassingZEVMtoEVMRevertName,
-			e2etests.TestZetaDepositName,
-			e2etests.TestZetaDepositNewAddressName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 		bitcoinTests := []string{
+			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
@@ -279,6 +240,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		bitcoinAdvancedTests := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
 			e2etests.TestBitcoinWithdrawLegacyName,
+			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
@@ -287,7 +249,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestEtherWithdrawName,
 			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
-			e2etests.TestDepositAndCallRefundName,
+			e2etests.TestEtherDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
@@ -296,6 +258,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
+			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
 			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
@@ -305,6 +268,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
@@ -331,8 +295,23 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 
+	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
+	txPriorityErrCh := make(chan error, 1)
+	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
+	go monitorTxPriorityInBlocks(ctx, conf, txPriorityErrCh)
+
 	if err := eg.Wait(); err != nil {
 		deployerRunner.CtxCancel()
+		monitorPriorityCancel()
+		logger.Print("❌ %v", err)
+		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
+		os.Exit(1)
+	}
+
+	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
+	logger.Print("⏳ e2e tests passed, checking tx priority")
+	monitorPriorityCancel()
+	if err := <-txPriorityErrCh; err != nil {
 		logger.Print("❌ %v", err)
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
@@ -352,4 +331,31 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	os.Exit(0)
+}
+
+// waitKeygenHeight waits for keygen height
+func waitKeygenHeight(
+	ctx context.Context,
+	cctxClient crosschaintypes.QueryClient,
+	logger *runner.Logger,
+) {
+	// wait for keygen to be completed
+	keygenHeight := int64(35)
+	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
+	for {
+		time.Sleep(2 * time.Second)
+		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		if err != nil {
+			logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			continue
+		}
+		if response.Height >= keygenHeight {
+			break
+		}
+		logger.Info("Last ZetaHeight: %d", response.Height)
+	}
+}
+
+func must[T any](v T, err error) T {
+	return testutil.Must(v, err)
 }

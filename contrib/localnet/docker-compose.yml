@@ -1,5 +1,3 @@
-version: "3"
-
 # This docker-compose file configures the localnet environment
 # it contains the following services:
 # - ZetaChain with 2 nodes (zetacore0, zetacore1)
@@ -40,15 +38,26 @@ services:
       - "26657:26657"
       - "6060:6060"
       - "9090:9090"
+    healthcheck:
+      # use the zevm endpoint for the healthcheck as it is the slowest to come up
+      test: ["CMD", "curl", "-f", "-X", "POST", "--data", '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}', "-H", "Content-Type: application/json", "http://localhost:8545"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: ${ZETACORED_START_PERIOD}
+      start_interval: 1s
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/start-zetacored.sh", "2"]
+    entrypoint: ["/root/start-zetacored.sh"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - ZETACORED_REPLICAS=2
+      - ZETACORED_IMPORT_GENESIS_DATA=${ZETACORED_IMPORT_GENESIS_DATA}
     volumes:
       - ssh:/root/.ssh
+      - ~/.zetacored/genesis_data:/root/genesis_data
 
   zetacore1:
     image: zetanode:latest
@@ -57,10 +66,11 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/start-zetacored.sh", "2"]
+    entrypoint: ["/root/start-zetacored.sh"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - ZETACORED_REPLICAS=2
     volumes:
       - ssh:/root/.ssh
 
@@ -78,6 +88,7 @@ services:
       - HOTKEY_PASSWORD=password # test purposes only
     volumes:
       - ssh:/root/.ssh
+      - preparams:/root/preparams
 
   zetaclient1:
     image: zetanode:latest
@@ -93,6 +104,7 @@ services:
       - HOTKEY_PASSWORD=password # test purposes only
     volumes:
       - ssh:/root/.ssh
+      - preparams:/root/preparams
 
   eth:
     image: ethereum/client-go:v1.10.26
@@ -127,14 +139,21 @@ services:
     tty: true
     container_name: orchestrator
     depends_on:
-      - zetacore0
-      - eth
+      zetacore0:
+        condition: service_healthy
+      eth:
+        condition: service_started
     hostname: orchestrator
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
     entrypoint: ["/work/start-zetae2e.sh", "local"]
+    environment:
+      - LOCALNET_MODE=${LOCALNET_MODE}
+      - E2E_ARGS=${E2E_ARGS}
+      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT}
     volumes:
       - ssh:/root/.ssh
 volumes:
   ssh:
+  preparams:

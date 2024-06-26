@@ -17,12 +17,12 @@ const (
 	KeyringBackendFile      KeyringBackend = "file"
 )
 
-// ClientConfiguration is a subset of zetaclient config that is used by zetabridge
+// ClientConfiguration is a subset of zetaclient config that is used by zetacore client
 type ClientConfiguration struct {
-	ChainHost       string `json:"chain_host" mapstructure:"chain_host"`
-	ChainRPC        string `json:"chain_rpc" mapstructure:"chain_rpc"`
+	ChainHost       string `json:"chain_host"        mapstructure:"chain_host"`
+	ChainRPC        string `json:"chain_rpc"         mapstructure:"chain_rpc"`
 	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
-	SignerName      string `json:"signer_name" mapstructure:"signer_name"`
+	SignerName      string `json:"signer_name"       mapstructure:"signer_name"`
 	SignerPasswd    string `json:"signer_passwd"`
 	HsmMode         bool   `json:"hsm_mode"`
 }

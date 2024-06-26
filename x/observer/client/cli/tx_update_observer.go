@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -18,7 +19,6 @@ func CmdUpdateObserver() *cobra.Command {
 		Short: "Broadcast message add-observer",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

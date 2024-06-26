@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
@@ -89,14 +90,14 @@ func ChainParams(chainID int64) *types.ChainParams {
 		ConfirmationCount: r.Uint64(),
 
 		GasPriceTicker:              Uint64InRange(1, 300),
-		InTxTicker:                  Uint64InRange(1, 300),
-		OutTxTicker:                 Uint64InRange(1, 300),
+		InboundTicker:               Uint64InRange(1, 300),
+		OutboundTicker:              Uint64InRange(1, 300),
 		WatchUtxoTicker:             Uint64InRange(1, 300),
 		ZetaTokenContractAddress:    EthAddress().String(),
 		ConnectorContractAddress:    EthAddress().String(),
 		Erc20CustodyContractAddress: EthAddress().String(),
-		OutboundTxScheduleInterval:  Int64InRange(1, 100),
-		OutboundTxScheduleLookahead: Int64InRange(1, 500),
+		OutboundScheduleInterval:    Int64InRange(1, 100),
+		OutboundScheduleLookahead:   Int64InRange(1, 500),
 		BallotThreshold:             fiftyPercent,
 		MinObserverDelegation:       sdk.NewDec(r.Int63()),
 		IsSupported:                 false,
@@ -217,26 +218,6 @@ func NonceToCctxList(t *testing.T, index string, count int) []types.NonceToCctx 
 	return list
 }
 
-func LegacyObserverMapper(t *testing.T, index string, observerList []string) *types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
-
-	return &types.ObserverMapper{
-		Index:         index,
-		ObserverChain: Chain(r.Int63()),
-		ObserverList:  observerList,
-	}
-}
-
-func LegacyObserverMapperList(t *testing.T, n int, index string) []*types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
-	observerList := []string{AccAddress(), AccAddress()}
-	observerMapperList := make([]*types.ObserverMapper, n)
-	for i := 0; i < n; i++ {
-		observerMapperList[i] = LegacyObserverMapper(t, fmt.Sprintf("%d-%s", r.Int63(), index), observerList)
-	}
-	return observerMapperList
-}
-
 func BallotList(n int, observerSet []string) []types.Ballot {
 	r := newRandFromSeed(int64(n))
 	ballotList := make([]types.Ballot, n)
@@ -248,7 +229,7 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 			BallotIdentifier:     identifier.Hex(),
 			VoterList:            observerSet,
 			Votes:                VotesSuccessOnly(len(observerSet)),
-			ObservationType:      types.ObservationType_InBoundTx,
+			ObservationType:      types.ObservationType_InboundTx,
 			BallotThreshold:      sdk.OneDec(),
 			BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
 			BallotCreationHeight: 0,
@@ -272,5 +253,14 @@ func NonceToCCTX(t *testing.T, seed string) types.NonceToCctx {
 		Nonce:     r.Int63(),
 		CctxIndex: StringRandom(r, 64),
 		Tss:       Tss().TssPubkey,
+	}
+}
+
+func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
+	return types.GasPriceIncreaseFlags{
+		EpochLength:             1,
+		RetryInterval:           1,
+		GasPriceIncreasePercent: 1,
+		MaxPendingCctxs:         100,
 	}
 }

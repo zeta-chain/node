@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
@@ -69,34 +69,58 @@ func ValidateChainParams(params *ChainParams) error {
 	if params.GasPriceTicker <= 0 || params.GasPriceTicker > 300 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker %d out of range", params.GasPriceTicker)
 	}
-	if params.InTxTicker <= 0 || params.InTxTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "InTxTicker %d out of range", params.InTxTicker)
+	if params.InboundTicker <= 0 || params.InboundTicker > 300 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "InboundTicker %d out of range", params.InboundTicker)
 	}
-	if params.OutTxTicker <= 0 || params.OutTxTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutTxTicker %d out of range", params.OutTxTicker)
+	if params.OutboundTicker <= 0 || params.OutboundTicker > 300 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTicker %d out of range", params.OutboundTicker)
 	}
-	if params.OutboundTxScheduleInterval == 0 || params.OutboundTxScheduleInterval > 100 { // 600 secs
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTxScheduleInterval %d out of range", params.OutboundTxScheduleInterval)
+	if params.OutboundScheduleInterval == 0 || params.OutboundScheduleInterval > 100 { // 600 secs
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"OutboundScheduleInterval %d out of range",
+			params.OutboundScheduleInterval,
+		)
 	}
-	if params.OutboundTxScheduleLookahead == 0 || params.OutboundTxScheduleLookahead > 500 { // 500 cctxs
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTxScheduleLookahead %d out of range", params.OutboundTxScheduleLookahead)
+	if params.OutboundScheduleLookahead == 0 || params.OutboundScheduleLookahead > 500 { // 500 cctxs
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"OutboundScheduleLookahead %d out of range",
+			params.OutboundScheduleLookahead,
+		)
 	}
 
 	// chain type specific checks
 	if chains.IsBitcoinChain(params.ChainId) {
 		if params.WatchUtxoTicker == 0 || params.WatchUtxoTicker > 300 {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "WatchUtxoTicker %d out of range", params.WatchUtxoTicker)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"WatchUtxoTicker %d out of range",
+				params.WatchUtxoTicker,
+			)
 		}
 	}
 	if chains.IsEVMChain(params.ChainId) {
 		if !validChainContractAddress(params.ZetaTokenContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ZetaTokenContractAddress %s", params.ZetaTokenContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid ZetaTokenContractAddress %s",
+				params.ZetaTokenContractAddress,
+			)
 		}
 		if !validChainContractAddress(params.ConnectorContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ConnectorContractAddress %s", params.ConnectorContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid ConnectorContractAddress %s",
+				params.ConnectorContractAddress,
+			)
 		}
 		if !validChainContractAddress(params.Erc20CustodyContractAddress) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid Erc20CustodyContractAddress %s", params.Erc20CustodyContractAddress)
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid Erc20CustodyContractAddress %s",
+				params.Erc20CustodyContractAddress,
+			)
 		}
 	}
 
@@ -140,17 +164,17 @@ func GetDefaultChainParams() ChainParamsList {
 
 func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.EthChain.ChainId,
+		ChainId:                     chains.Ethereum.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		InTxTicker:                  12,
-		OutTxTicker:                 15,
+		InboundTicker:               12,
+		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 60,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -158,17 +182,17 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscMainnetChain.ChainId,
+		ChainId:                     chains.BscMainnet.ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		InTxTicker:                  5,
-		OutTxTicker:                 15,
+		InboundTicker:               5,
+		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 60,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -176,17 +200,17 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcMainnetChain.ChainId,
+		ChainId:                     chains.BitcoinMainnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
 		WatchUtxoTicker:             30,
-		InTxTicker:                  120,
-		OutTxTicker:                 60,
+		InboundTicker:               120,
+		OutboundTicker:              60,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 60,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -194,18 +218,18 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:           chains.GoerliChain.ChainId,
+		ChainId:           chains.Goerli.ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		InTxTicker:                  12,
-		OutTxTicker:                 15,
+		InboundTicker:               12,
+		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 60,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -213,17 +237,17 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BscTestnetChain.ChainId,
+		ChainId:                     chains.BscTestnet.ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		InTxTicker:                  5,
-		OutTxTicker:                 15,
+		InboundTicker:               5,
+		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 60,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -231,17 +255,17 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.MumbaiChain.ChainId,
+		ChainId:                     chains.Mumbai.ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		InTxTicker:                  2,
-		OutTxTicker:                 15,
+		InboundTicker:               2,
+		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 60,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -249,17 +273,17 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcTestNetChain.ChainId,
+		ChainId:                     chains.BitcoinTestnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
 		WatchUtxoTicker:             30,
-		InTxTicker:                  120,
-		OutTxTicker:                 12,
+		InboundTicker:               120,
+		OutboundTicker:              12,
 		GasPriceTicker:              30,
-		OutboundTxScheduleInterval:  30,
-		OutboundTxScheduleLookahead: 100,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   100,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -267,17 +291,17 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.BtcRegtestChain.ChainId,
+		ChainId:                     chains.BitcoinRegtest.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
 		GasPriceTicker:              5,
 		WatchUtxoTicker:             1,
-		InTxTicker:                  1,
-		OutTxTicker:                 2,
-		OutboundTxScheduleInterval:  2,
-		OutboundTxScheduleLookahead: 5,
+		InboundTicker:               1,
+		OutboundTicker:              2,
+		OutboundScheduleInterval:    2,
+		OutboundScheduleLookahead:   5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -285,17 +309,17 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.GoerliLocalnetChain.ChainId,
+		ChainId:                     chains.GoerliLocalnet.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
 		Erc20CustodyContractAddress: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
-		InTxTicker:                  2,
-		OutTxTicker:                 1,
+		InboundTicker:               2,
+		OutboundTicker:              1,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              5,
-		OutboundTxScheduleInterval:  1,
-		OutboundTxScheduleLookahead: 50,
+		OutboundScheduleInterval:    1,
+		OutboundScheduleLookahead:   50,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -303,17 +327,17 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     chains.ZetaPrivnetChain.ChainId,
+		ChainId:                     chains.ZetaChainPrivnet.ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		InTxTicker:                  2,
-		OutTxTicker:                 2,
+		InboundTicker:               2,
+		OutboundTicker:              2,
 		WatchUtxoTicker:             0,
 		GasPriceTicker:              5,
-		OutboundTxScheduleInterval:  0,
-		OutboundTxScheduleLookahead: 0,
+		OutboundScheduleInterval:    0,
+		OutboundScheduleLookahead:   0,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
@@ -327,12 +351,12 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.ZetaTokenContractAddress == params2.ZetaTokenContractAddress &&
 		params1.ConnectorContractAddress == params2.ConnectorContractAddress &&
 		params1.Erc20CustodyContractAddress == params2.Erc20CustodyContractAddress &&
-		params1.InTxTicker == params2.InTxTicker &&
-		params1.OutTxTicker == params2.OutTxTicker &&
+		params1.InboundTicker == params2.InboundTicker &&
+		params1.OutboundTicker == params2.OutboundTicker &&
 		params1.WatchUtxoTicker == params2.WatchUtxoTicker &&
 		params1.GasPriceTicker == params2.GasPriceTicker &&
-		params1.OutboundTxScheduleInterval == params2.OutboundTxScheduleInterval &&
-		params1.OutboundTxScheduleLookahead == params2.OutboundTxScheduleLookahead &&
+		params1.OutboundScheduleInterval == params2.OutboundScheduleInterval &&
+		params1.OutboundScheduleLookahead == params2.OutboundScheduleLookahead &&
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported

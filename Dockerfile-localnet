@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7-labs
-FROM golang:1.20.14-bullseye AS base-build
+FROM golang:1.20.14-bookworm AS base-build
 
 ENV GOPATH /go
 ENV GOOS=linux
@@ -22,10 +22,10 @@ COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
 RUN --mount=type=cache,target="/root/.cache/go-build" make install
 RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
 
-FROM golang:1.20.14-bullseye AS cosmovisor-build
+FROM golang:1.20.14-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
-FROM debian:bullseye-slim AS base-runtime
+FROM golang:1.20.14-bookworm AS base-runtime
 
 RUN apt update && \
     apt install -yq jq curl tmux python3 openssh-server iputils-ping iproute2 && \
@@ -44,12 +44,11 @@ RUN mkdir -p /root/.zetacored/cosmovisor/genesis/bin && \
 ENV PATH /root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/current/:${PATH}
 
 COPY contrib/localnet/scripts /root
-COPY contrib/localnet/preparams /root/preparams
-COPY contrib/localnet/ssh_config /root/.ssh/config
+COPY contrib/localnet/ssh_config /etc/ssh/ssh_config.d/localnet.conf
 COPY contrib/localnet/zetacored /root/zetacored
-COPY contrib/localnet/tss /root/tss
 
-RUN chmod 755 /root/*.sh
+RUN chmod 755 /root/*.sh && \
+    chmod 644 /etc/ssh/ssh_config.d/localnet.conf
 
 WORKDIR /usr/local/bin
 EXPOSE 22

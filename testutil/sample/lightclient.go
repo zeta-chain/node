@@ -7,10 +7,11 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/pkg/testdata"
+	"github.com/zeta-chain/zetacore/testutil/testdata"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
 
@@ -48,7 +49,6 @@ func HeaderSupportedChains() []lightclienttypes.HeaderSupportedChain {
 
 func BlockHeaderVerification() lightclienttypes.BlockHeaderVerification {
 	return lightclienttypes.BlockHeaderVerification{HeaderSupportedChains: HeaderSupportedChains()}
-
 }
 
 // Proof generates a proof and block header
@@ -72,7 +72,7 @@ func Proof(t *testing.T) (*proofs.Proof, proofs.BlockHeader, string, int64, int6
 	proof, err := txsTree.GenerateProof(txIndex)
 	require.NoError(t, err)
 
-	chainID := chains.SepoliaChain.ChainId
+	chainID := chains.Sepolia.ChainId
 	ethProof := proofs.NewEthereumProof(proof)
 	ethHeader := proofs.NewEthereumHeader(b)
 	blockHeader := proofs.BlockHeader{

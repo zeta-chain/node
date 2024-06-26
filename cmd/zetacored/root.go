@@ -6,22 +6,19 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/snapshot"
-
 	appparams "cosmossdk.io/simapp/params"
+	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
-	"github.com/evmos/ethermint/crypto/hd"
-	"github.com/zeta-chain/zetacore/app"
-	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	zevmserver "github.com/zeta-chain/zetacore/server"
-	servercfg "github.com/zeta-chain/zetacore/server/config"
-
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,15 +28,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-	dbm "github.com/cometbft/cometbft-db"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
 	ethermintclient "github.com/evmos/ethermint/client"
+	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	zetamempool "github.com/zeta-chain/zetacore/app/mempool"
+
+	"github.com/zeta-chain/zetacore/app"
+	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
+	zevmserver "github.com/zeta-chain/zetacore/server"
+	servercfg "github.com/zeta-chain/zetacore/server/config"
 )
 
 const EnvPrefix = "zetacore"
@@ -128,11 +126,20 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		ethermintclient.ValidateChainID(
 			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(
+			banktypes.GenesisBalancesIterator{},
+			app.DefaultNodeHome,
+			genutiltypes.DefaultMessageValidator,
+		),
+		genutilcli.GenTxCmd(
+			app.ModuleBasics,
+			encodingConfig.TxConfig,
+			banktypes.GenesisBalancesIterator{},
+			app.DefaultNodeHome,
+		),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
-		AddObserverAccountsCmd(),
+		AddObserverListCmd(),
 		CmdParseGenesisFile(),
 		GetPubKeyCmd(),
 		CollectObserverInfoCmd(),
@@ -145,7 +152,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		snapshot.Cmd(ac.newApp),
 	)
 
-	zevmserver.AddCommands(rootCmd, zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome), ac.appExport, addModuleInitFlags)
+	zevmserver.AddCommands(
+		rootCmd,
+		zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome),
+		ac.appExport,
+		addModuleInitFlags,
+	)
 
 	// the ethermintserver one supercedes the sdk one
 	//server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)

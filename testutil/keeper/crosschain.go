@@ -13,6 +13,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/crosschain"
@@ -175,7 +176,6 @@ func CrosschainKeeperWithMocks(
 
 	// initialize ibccrosschain keeper and set it to the crosschain keeper
 	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
-
 	var ibcCrosschainKeeperTmp types.IBCCrosschainKeeper = initIBCCrosschainKeeper(
 		cdc,
 		db,
@@ -262,20 +262,47 @@ func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainm
 }
 
 func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
-	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-		Return(senderChain).Once()
-
+	if senderChain != nil {
+		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain).Once()
+	} else {
+		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
+			Return(&chains.Chain{}).Once()
+	}
 }
-func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, asset string, senderChain chains.Chain, returnVal int64) {
+
+func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
+	if senderChain != nil {
+		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(nil).Once()
+	} else {
+		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
+			Return(nil).Once()
+	}
+}
+
+func MockGetRevertGasLimitForERC20(
+	m *crosschainmocks.CrosschainFungibleKeeper,
+	asset string,
+	senderChain chains.Chain,
+	returnVal int64,
+) {
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 		Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 		}, true).Once()
 	m.On("QueryGasLimit", mock.Anything, mock.Anything).
 		Return(big.NewInt(returnVal), nil).Once()
-
 }
-func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain chains.Chain, asset string) {
+
+func MockPayGasAndUpdateCCTX(
+	m *crosschainmocks.CrosschainFungibleKeeper,
+	m2 *crosschainmocks.CrosschainObserverKeeper,
+	ctx sdk.Context,
+	k keeper.Keeper,
+	senderChain chains.Chain,
+	asset string,
+) {
 	m2.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(&senderChain).Twice()
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
@@ -303,10 +330,10 @@ func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *cr
 	m.On("CallZRC20Approve", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).Once()
 	m.On("CallUniswapV2RouterSwapExactTokensForTokens", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(1000)}, nil).Once()
+		Return([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(1000)}, nil).
+		Once()
 	m.On("CallZRC20Burn", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).Once()
-
 }
 
 func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) (nonce uint64) {
@@ -325,7 +352,13 @@ func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain ch
 	return
 }
 
-func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, receiver ethcommon.Address, amount *big.Int, senderChainID int64, errDeposit error) {
+func MockRevertForHandleEVMDeposit(
+	m *crosschainmocks.CrosschainFungibleKeeper,
+	receiver ethcommon.Address,
+	amount *big.Int,
+	senderChainID int64,
+	errDeposit error,
+) {
 	m.On(
 		"ZRC20DepositAndCallContract",
 		mock.Anything,
@@ -339,30 +372,54 @@ func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, 
 	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 }
 
-func MockVoteOnOutboundSuccessBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
-		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).Once()
+func MockVoteOnOutboundSuccessBallot(
+	m *crosschainmocks.CrosschainObserverKeeper,
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	senderChain chains.Chain,
+	observer string,
+) {
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).
+		Once()
 }
 
-func MockVoteOnOutboundFailedBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
-		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).Once()
+func MockVoteOnOutboundFailedBallot(
+	m *crosschainmocks.CrosschainObserverKeeper,
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	senderChain chains.Chain,
+	observer string,
+) {
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).
+		Once()
 }
 
-func MockGetOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
+func MockGetOutbound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 }
 
-func MockSaveOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, tss observertypes.TSS) {
+func MockSaveOutbound(
+	m *crosschainmocks.CrosschainObserverKeeper,
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	tss observertypes.TSS,
+) {
 	m.On("RemoveFromPendingNonces",
-		ctx, tss.TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, mock.Anything).
+		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Once()
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
-func MockSaveOutBoundNewRevertCreated(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, tss observertypes.TSS) {
+func MockSaveOutboundNewRevertCreated(
+	m *crosschainmocks.CrosschainObserverKeeper,
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	tss observertypes.TSS,
+) {
 	m.On("RemoveFromPendingNonces",
-		ctx, tss.TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, mock.Anything).
+		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Once()
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()
@@ -391,7 +448,9 @@ func MockCctxByNonce(
 	k.SetCrossChainTx(ctx, *cctx)
 
 	observerKeeper.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true).Once()
-	observerKeeper.On("GetNonceToCctx", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(observertypes.NonceToCctx{
-		CctxIndex: cctx.Index,
-	}, true).Once()
+	observerKeeper.On("GetNonceToCctx", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(observertypes.NonceToCctx{
+			CctxIndex: cctx.Index,
+		}, true).
+		Once()
 }

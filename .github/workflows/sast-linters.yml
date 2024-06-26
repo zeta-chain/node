@@ -15,17 +15,17 @@ concurrency:
 
 jobs:
   gosec:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -35,17 +35,17 @@ jobs:
           args: ./...
 
   gosec-cosmos:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -53,30 +53,29 @@ jobs:
         run: make lint-cosmos-gosec
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.59
           skip-cache: true
-          args: --out-format=json
 
   nosec_alert:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     env:
       GO111MODULE: on
@@ -105,7 +104,14 @@ jobs:
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
                     
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec; then
+            # Skip this workflow file
+            if [ "$file" == ".github/workflows/sast-linters.yml" ] || [ "$file" == "changelog.md" ]; then
+              echo "Skipping nosec check for $file"
+              continue
+            fi
+            
+            # Only consider additions of "nosec", marked by '+'
+            if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q '^+.*nosec'; then
               echo "nosec detected in $file"
               nosec_list+=("$file,")
               nosec_detected=1
@@ -118,6 +124,7 @@ jobs:
           nosec_list_string="${nosec_list_string%,}"
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
+
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
@@ -150,6 +157,3 @@ jobs:
         run: |
           DIFF=$(git diff ${{ github.event.pull_request.base.sha }})
           echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "nosec without specified rule found!" && exit 1 || exit 0
-
-
-          

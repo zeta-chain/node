@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
@@ -126,6 +127,137 @@ func TestPolicies_Validate(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestPolicies_CheckSigner(t *testing.T) {
+	signer := sample.AccAddress()
+	tt := []struct {
+		name           string
+		policies       types.Policies
+		signer         string
+		policyRequired types.PolicyType
+		expectedErr    error
+	}{
+		{
+			name: "successfully check signer for policyType groupEmergency",
+			policies: types.Policies{
+				Items: []*types.Policy{
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupEmergency,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupAdmin,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupOperational,
+					},
+				},
+			},
+			signer:         signer,
+			policyRequired: types.PolicyType_groupEmergency,
+			expectedErr:    nil,
+		},
+		{
+			name: "successfully check signer for policyType groupOperational",
+			policies: types.Policies{
+				Items: []*types.Policy{
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupEmergency,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupAdmin,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupOperational,
+					},
+				},
+			},
+			signer:         signer,
+			policyRequired: types.PolicyType_groupOperational,
+			expectedErr:    nil,
+		},
+		{
+			name: "successfully check signer for policyType groupAdmin",
+			policies: types.Policies{
+				Items: []*types.Policy{
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupEmergency,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupAdmin,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupOperational,
+					},
+				},
+			},
+			signer:         signer,
+			policyRequired: types.PolicyType_groupAdmin,
+			expectedErr:    nil,
+		},
+		{
+			name: "signer not found",
+			policies: types.Policies{
+				Items: []*types.Policy{
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupEmergency,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupAdmin,
+					},
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupOperational,
+					},
+				},
+			},
+			signer:         sample.AccAddress(),
+			policyRequired: types.PolicyType_groupEmergency,
+			expectedErr:    types.ErrSignerDoesntMatch,
+		},
+		{
+			name: "policy required not found",
+			policies: types.Policies{
+				Items: []*types.Policy{
+					{
+						Address:    signer,
+						PolicyType: types.PolicyType_groupAdmin,
+					},
+					{
+						Address:    sample.AccAddress(),
+						PolicyType: types.PolicyType_groupOperational,
+					},
+				},
+			},
+			signer:         signer,
+			policyRequired: types.PolicyType_groupEmergency,
+			expectedErr:    types.ErrSignerDoesntMatch,
+		},
+		{
+			name:           "empty policies",
+			policies:       types.Policies{},
+			signer:         signer,
+			policyRequired: types.PolicyType_groupEmergency,
+			expectedErr:    types.ErrSignerDoesntMatch,
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policies.CheckSigner(tc.signer, tc.policyRequired)
+			require.ErrorIs(t, err, tc.expectedErr)
 		})
 	}
 }

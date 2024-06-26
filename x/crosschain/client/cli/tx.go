@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -21,14 +20,14 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdAddToWatchList(),
+		CmdAddOutboundTracker(),
 		CmdVoteGasPrice(),
-		CmdCCTXOutboundVoter(),
-		CmdCCTXInboundVoter(),
-		CmdRemoveFromWatchList(),
+		CmdVoteInbound(),
+		CmdVoteOutbound(),
+		CmdRemoveOutboundTracker(),
 		CmdUpdateTss(),
 		CmdMigrateTssFunds(),
-		CmdAddToInTxTracker(),
+		CmdAddInboundTracker(),
 		CmdWhitelistERC20(),
 		CmdAbortStuckCCTX(),
 		CmdRefundAborted(),

@@ -21,22 +21,19 @@ import (
 	"math/big"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmtypes "github.com/cometbft/cometbft/types"
-
 	errorsmod "cosmossdk.io/errors"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 )
 
 // ExceedBlockGasLimitError defines the error message when tx execution exceeds the block gas limit.
@@ -170,10 +167,10 @@ func NewTransactionFromMsg(
 	chainID *big.Int,
 	txAdditional *TxResultAdditionalFields,
 ) (*RPCTransaction, error) {
-	tx := msg.AsTransaction()
-	if tx == nil {
+	if txAdditional != nil {
 		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txAdditional)
 	}
+	tx := msg.AsTransaction()
 	return NewRPCTransaction(tx, blockHash, blockNumber, index, baseFee, chainID)
 }
 
@@ -255,8 +252,8 @@ func NewRPCTransactionFromIncompleteMsg(
 		Gas:      hexutil.Uint64(txAdditional.GasUsed),
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),
-		Input:    []byte{},
-		Nonce:    0, // TODO: get nonce for "from" from ethermint
+		Input:    txAdditional.Data,
+		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from ethermint
 		To:       to,
 		Value:    (*hexutil.Big)(txAdditional.Value),
 		V:        nil,

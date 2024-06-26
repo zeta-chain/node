@@ -4,27 +4,26 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/testutil/sample"
 
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
 	tests := []struct {
-		name string
-		msg  *types.MsgUpdatePolicies
-		err  error
+		name        string
+		msg         *types.MsgUpdatePolicies
+		errContains string
 	}{
 		{
 			name: "valid message",
 			msg:  types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies()),
 		},
 		{
-			name: "invalid creator address",
-			msg:  types.NewMsgUpdatePolicies("invalid", sample.Policies()),
-			err:  sdkerrors.ErrInvalidAddress,
+			name:        "invalid creator address",
+			msg:         types.NewMsgUpdatePolicies("invalid", sample.Policies()),
+			errContains: "invalid creator address",
 		},
 		{
 			name: "invalid policies",
@@ -36,15 +35,15 @@ func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
 					},
 				},
 			}),
-			err: sdkerrors.ErrInvalidRequest,
+			errContains: "invalid policies",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.msg.ValidateBasic()
-			if tt.err != nil {
-				require.ErrorIs(t, err, tt.err)
+			if tt.errContains != "" {
+				require.ErrorContains(t, err, tt.errContains)
 			} else {
 				require.NoError(t, err)
 			}

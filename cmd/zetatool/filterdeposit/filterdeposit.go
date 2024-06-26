@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -27,7 +28,8 @@ func NewFilterDepositCmd() *cobra.Command {
 	cmd.AddCommand(NewEvmCmd())
 
 	// Required for TSS address query
-	cmd.PersistentFlags().String(BTCChainIDFlag, "8332", "chain id used on zetachain to identify bitcoin - default: 8332")
+	cmd.PersistentFlags().
+		String(BTCChainIDFlag, "8332", "chain id used on zetachain to identify bitcoin - default: 8332")
 
 	return cmd
 }
@@ -38,7 +40,7 @@ type Deposit struct {
 	Amount uint64
 }
 
-// CheckForCCTX is querying zeta core for a cctx associated with a confirmed transaction hash. If the cctx is not found,
+// CheckForCCTX is querying zetacore for a cctx associated with a confirmed transaction hash. If the cctx is not found,
 // then the transaction hash is added to the list of missed inbound transactions.
 func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 	var missedList []Deposit

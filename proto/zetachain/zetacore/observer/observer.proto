@@ -9,8 +9,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 enum ObservationType {
   option (gogoproto.goproto_enum_stringer) = true;
   EmptyObserverType = 0;
-  InBoundTx = 1;
-  OutBoundTx = 2;
+  InboundTx = 1;
+  OutboundTx = 2;
   TSSKeyGen = 3;
   TSSKeySign = 4;
 }
@@ -20,13 +20,6 @@ enum ObserverUpdateReason {
   Undefined = 0;
   Tombstoned = 1;
   AdminUpdate = 2;
-}
-
-// Deprecated: Use ObserverSet instead to get the list of observers
-message ObserverMapper {
-  string index = 1;
-  pkg.chains.Chain observer_chain = 2;
-  repeated string observer_list = 4;
 }
 
 message ObserverSet { repeated string observer_list = 1; }

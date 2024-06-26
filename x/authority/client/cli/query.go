@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -21,6 +22,9 @@ func GetQueryCmd(_ string) *cobra.Command {
 
 	cmd.AddCommand(
 		CmdShowPolicies(),
+		CmdShowChainInfo(),
+		CmdAuthorizationsList(),
+		CmdAuthorization(),
 	)
 
 	return cmd

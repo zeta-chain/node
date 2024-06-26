@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -12,12 +14,16 @@ import (
 // Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
 // connector and ERC20 custody contract addresses, etc.
 // Only the admin policy account is authorized to broadcast this message.
-func (k msgServer) UpdateChainParams(goCtx context.Context, msg *types.MsgUpdateChainParams) (*types.MsgUpdateChainParamsResponse, error) {
+func (k msgServer) UpdateChainParams(
+	goCtx context.Context,
+	msg *types.MsgUpdateChainParams,
+) (*types.MsgUpdateChainParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgUpdateChainParamsResponse{}, authoritytypes.ErrUnauthorized
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// find current chain params list or initialize a new one

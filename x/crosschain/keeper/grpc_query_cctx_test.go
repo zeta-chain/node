@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -31,7 +32,7 @@ func createCctxWithNonceRange(
 	for i := 0; i < lowPending; i++ {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, i))
 		cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
-		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundParams.SenderChainId = chainID
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId:   chainID,
@@ -43,7 +44,7 @@ func createCctxWithNonceRange(
 	for i := lowPending; i < highPending; i++ {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, i))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundParams.SenderChainId = chainID
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId:   chainID,

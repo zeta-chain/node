@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -29,12 +30,21 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		queryZRC20SystemContract := func(contract common.Address) string {
 			abi, err := zrc20.ZRC20MetaData.GetAbi()
 			require.NoError(t, err)
-			res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, keeper.BigIntZero, nil, false, false, "SYSTEM_CONTRACT_ADDRESS")
+			res, err := k.CallEVM(
+				ctx,
+				*abi,
+				types.ModuleAddressEVM,
+				contract,
+				keeper.BigIntZero,
+				nil,
+				false,
+				false,
+				"SYSTEM_CONTRACT_ADDRESS",
+			)
 			require.NoError(t, err)
 			unpacked, err := abi.Unpack("SYSTEM_CONTRACT_ADDRESS", res.Ret)
 			require.NoError(t, err)
@@ -65,7 +75,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
 		// can update the system contract
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
 		// can retrieve the system contract
@@ -109,10 +121,10 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		newSystemContract, err := k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
 		require.NoError(t, err)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		// can update the system contract
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
 		// can retrieve the system contract
@@ -124,10 +136,10 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		newSystemContract, err = k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
 		require.NoError(t, err)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		// can overwrite the previous system contract
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.NoError(t, err)
 
 		// can retrieve the system contract
@@ -146,7 +158,6 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
 		// deploy a new system contracts
 		wzeta, factory, router, _, oldSystemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -155,7 +166,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
 		// should not update the system contract if not admin
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
@@ -170,8 +183,6 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		// deploy a new system contracts
 		wzeta, factory, router, _, oldSystemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		newSystemContract, err := k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
@@ -179,7 +190,9 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
 		// should not update the system contract if invalid address
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, "invalid"))
+		msg := types.NewMsgUpdateSystemContract(admin, "invalid")
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
@@ -229,30 +242,30 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// fail on first evm call
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		// can't update the system contract
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg := types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		// fail on second evm call
 		mockEVMKeeper.MockEVMSuccessCallOnce()
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		// can't update the system contract
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		// fail on third evm call
 		mockEVMKeeper.MockEVMSuccessCallTimes(2)
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-
 		// can't update the system contract
-		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		msg = types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.UpdateSystemContract(ctx, msg)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 }

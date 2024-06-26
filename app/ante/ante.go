@@ -26,6 +26,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -169,12 +170,13 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 	}
 	switch innerMsg.(type) {
 	case *crosschaintypes.MsgVoteGasPrice,
-		*crosschaintypes.MsgVoteOnObservedInboundTx,
-		*crosschaintypes.MsgVoteOnObservedOutboundTx,
-		*crosschaintypes.MsgAddToOutTxTracker,
+		*crosschaintypes.MsgVoteOutbound,
+		*crosschaintypes.MsgVoteInbound,
+		*crosschaintypes.MsgAddOutboundTracker,
+		*crosschaintypes.MsgAddInboundTracker,
 		*observertypes.MsgVoteBlockHeader,
 		*observertypes.MsgVoteTSS,
-		*observertypes.MsgAddBlameVote:
+		*observertypes.MsgVoteBlame:
 		signers := innerMsg.GetSigners()
 		if len(signers) == 1 {
 			return isAuthorizedSigner(signers[0].String())

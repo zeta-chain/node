@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -21,7 +21,7 @@ func TestMsgServer_UpdatePolicies(t *testing.T) {
 		policies := sample.Policies()
 
 		_, err := msgServer.UpdatePolicies(sdk.WrapSDKContext(ctx), &types.MsgUpdatePolicies{
-			Signer:   sample.AccAddress(),
+			Creator:  sample.AccAddress(),
 			Policies: policies,
 		})
 		require.ErrorIs(t, err, govtypes.ErrInvalidSigner)
@@ -34,7 +34,7 @@ func TestMsgServer_UpdatePolicies(t *testing.T) {
 		policies := sample.Policies()
 
 		res, err := msgServer.UpdatePolicies(sdk.WrapSDKContext(ctx), &types.MsgUpdatePolicies{
-			Signer:   keepertest.AuthorityGovAddress.String(),
+			Creator:  keepertest.AuthorityGovAddress.String(),
 			Policies: policies,
 		})
 		require.NotNil(t, res)

@@ -4,6 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
@@ -18,7 +19,6 @@ func NewMsgDisableHeaderVerification(creator string, chainIDs []int64) *MsgDisab
 		Creator:     creator,
 		ChainIdList: chainIDs,
 	}
-
 }
 
 func (msg *MsgDisableHeaderVerification) Route() string {
@@ -55,7 +55,11 @@ func (msg *MsgDisableHeaderVerification) ValidateBasic() error {
 	}
 	for _, chainID := range msg.ChainIdList {
 		if !chains.ChainIDInChainList(chainID, chainListForHeaderSupport) {
-			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id header not supported (%d)", chainID)
+			return cosmoserrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"invalid chain id header not supported (%d)",
+				chainID,
+			)
 		}
 	}
 

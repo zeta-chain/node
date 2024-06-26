@@ -25,7 +25,7 @@ concurrency:
 jobs:
   check_branch:
     if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Branch
         run: |
@@ -34,19 +34,19 @@ jobs:
   gosec:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -65,19 +65,19 @@ jobs:
   gosec-cosmos:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -94,30 +94,29 @@ jobs:
   lint:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
       - name: Run golangci-lint
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.59
           skip-cache: true
-          args: --out-format=json
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -128,12 +127,12 @@ jobs:
   check-changelog:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
 
       - name: Checkout code
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -170,11 +169,11 @@ jobs:
   check-upgrade-handler-updated:
     needs:
       - check_branch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         with:
           fetch-depth: 0
@@ -202,14 +201,14 @@ jobs:
   build-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     concurrency:
       group: "build-test"
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set CPU Architecture
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -279,12 +278,12 @@ jobs:
   smoke-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set CPU Architecture
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -340,8 +339,7 @@ jobs:
       - name: Stop Private Network
         if: ${{ always() && github.event.inputs.skip_checks != 'true' }}
         run: |
-          cd contrib/localnet/
-          docker compose down
+          make stop-localnet
 
       - name: Clean Up Workspace
         if: always()
@@ -357,12 +355,12 @@ jobs:
   e2e-admin-tests:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Execute e2e-admin-tests
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -384,7 +382,7 @@ jobs:
     steps:
       - name: "Checkout Code"
         if: ${{ github.event.inputs.skip_checks != 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Execute upgrade-test
         if: ${{ github.event.inputs.skip_checks != 'true' }}
@@ -411,11 +409,11 @@ jobs:
       - e2e-admin-tests
       - e2e-upgrade-test
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     environment: release
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies

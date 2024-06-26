@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -23,9 +24,9 @@ func TestGenesis(t *testing.T) {
 				sample.BlockHeader(sample.Hash().Bytes()),
 			},
 			ChainStates: []types.ChainState{
-				sample.ChainState(chains.EthChain.ChainId),
-				sample.ChainState(chains.BtcMainnetChain.ChainId),
-				sample.ChainState(chains.BscMainnetChain.ChainId),
+				sample.ChainState(chains.Ethereum.ChainId),
+				sample.ChainState(chains.BitcoinMainnet.ChainId),
+				sample.ChainState(chains.BscMainnet.ChainId),
 			},
 		}
 
@@ -54,6 +55,10 @@ func TestGenesis(t *testing.T) {
 			ChainStates:             []types.ChainState(nil),
 		}
 		require.Equal(t, expected, *got)
-		require.Equal(t, expected.BlockHeaderVerification.HeaderSupportedChains, got.BlockHeaderVerification.HeaderSupportedChains)
+		require.Equal(
+			t,
+			expected.BlockHeaderVerification.HeaderSupportedChains,
+			got.BlockHeaderVerification.HeaderSupportedChains,
+		)
 	})
 }

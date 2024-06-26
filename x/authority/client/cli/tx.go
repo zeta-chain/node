@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -19,7 +20,10 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CmdUpdatePolices(),
+		CmdUpdatePolicies(),
+		CmdUpdateChainInfo(),
+		CmdAddAuthorization(),
+		CmdRemoveAuthorization(),
 	)
 
 	return cmd

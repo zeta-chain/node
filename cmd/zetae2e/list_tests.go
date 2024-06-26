@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )

@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -22,8 +24,9 @@ func (k msgServer) AbortStuckCCTX(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, authoritytypes.ErrUnauthorized
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// check if the cctx exists

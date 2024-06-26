@@ -3,31 +3,25 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
-	"strconv"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // TestStressEtherDeposit tests the stressing deposit of ether
 func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
-	if len(args) != 2 {
-		panic("TestStressEtherDeposit requires exactly two arguments: the deposit amount and the number of deposits.")
-	}
+	require.Len(r, args, 2)
 
 	depositAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid deposit amount specified for TestMultipleERC20Deposit.")
-	}
+	require.True(r, ok)
 
-	numDeposits, err := strconv.Atoi(args[1])
-	if err != nil || numDeposits < 1 {
-		panic("Invalid number of deposits specified for TestStressEtherDeposit.")
-	}
+	numDeposits := parseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 
@@ -40,22 +34,17 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 		hash := r.DepositEtherWithAmount(false, depositAmount)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
 
-		eg.Go(func() error {
-			return MonitorEtherDeposit(r, hash, i, time.Now())
-		})
+		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
 	}
 
-	// wait for all the deposits to complete
-	if err := eg.Wait(); err != nil {
-		panic(err)
-	}
+	require.NoError(r, eg.Wait())
 
 	r.Logger.Print("all deposits completed")
 }
 
-// MonitorEtherDeposit monitors the deposit of ether, returns once the deposit is complete
-func MonitorEtherDeposit(r *runner.E2ERunner, hash ethcommon.Hash, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
+// monitorEtherDeposit monitors the deposit of ether, returns once the deposit is complete
+func monitorEtherDeposit(r *runner.E2ERunner, hash ethcommon.Hash, index int, startTime time.Time) error {
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: deposit cctx failed with status %s, message %s, cctx index %s",

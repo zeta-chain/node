@@ -7,13 +7,14 @@ import (
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-// ValidateZetaIndex validates the zeta index
-func ValidateZetaIndex(index string) error {
-	if len(index) != ZetaIndexLength {
-		return errors.Wrap(ErrInvalidIndexValue, fmt.Sprintf("invalid index length %d", len(index)))
+// ValidateCCTXIndex validates the CCTX index
+func ValidateCCTXIndex(index string) error {
+	if len(index) != CCTXIndexLength {
+		return errors.Wrapf(ErrInvalidIndexValue, "invalid index length %d, expected: %d", len(index), CCTXIndexLength)
 	}
 	return nil
 }

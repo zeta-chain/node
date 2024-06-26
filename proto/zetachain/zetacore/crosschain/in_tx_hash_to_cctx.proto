@@ -1,9 +1,0 @@
-syntax = "proto3";
-package zetachain.zetacore.crosschain;
-
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
-
-message InTxHashToCctx {
-  string in_tx_hash = 1;
-  repeated string cctx_index = 2;
-}

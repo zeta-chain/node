@@ -53,30 +53,13 @@ message MsgRemoveChainParams {
 }
 ```
 
-## MsgAddBlameVote
+## MsgVoteBlame
 
 ```proto
-message MsgAddBlameVote {
+message MsgVoteBlame {
 	string creator = 1;
 	int64 chain_id = 2;
 	Blame blame_info = 3;
-}
-```
-
-## MsgUpdateCrosschainFlags
-
-UpdateCrosschainFlags updates the crosschain related flags.
-
-Aurthorized: admin policy group 1 (except enabling/disabled
-inbounds/outbounds and gas price increase), admin policy group 2 (all).
-
-```proto
-message MsgUpdateCrosschainFlags {
-	string creator = 1;
-	bool isInboundEnabled = 3;
-	bool isOutboundEnabled = 4;
-	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
-	BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
 }
 ```
 
@@ -140,6 +123,44 @@ message MsgVoteTSS {
 	string tss_pubkey = 2;
 	int64 keygen_zeta_height = 3;
 	pkg.chains.ReceiveStatus status = 4;
+}
+```
+
+## MsgEnableCCTX
+
+EnableCCTX enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
+The flags are enabled by the policy account with the groupOperational policy type.
+
+```proto
+message MsgEnableCCTX {
+	string creator = 1;
+	bool enableInbound = 2;
+	bool enableOutbound = 3;
+}
+```
+
+## MsgDisableCCTX
+
+DisableCCTX disables the IsInboundEnabled and IsOutboundEnabled flags. These flags control the creation of inbounds and outbounds.
+The flags are disabled by the policy account with the groupEmergency policy type.
+
+```proto
+message MsgDisableCCTX {
+	string creator = 1;
+	bool disableInbound = 2;
+	bool disableOutbound = 3;
+}
+```
+
+## MsgUpdateGasPriceIncreaseFlags
+
+UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
+The flags are updated by the policy account with the groupOperational policy type.
+
+```proto
+message MsgUpdateGasPriceIncreaseFlags {
+	string creator = 1;
+	GasPriceIncreaseFlags gasPriceIncreaseFlags = 2;
 }
 ```
 

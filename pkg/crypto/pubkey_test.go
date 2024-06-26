@@ -10,9 +10,9 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
@@ -132,21 +132,21 @@ func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 		c.Assert(err, IsNil)
 
 		c.Assert(os.Setenv("NET", "mainnet"), IsNil)
-		addrETH, err := pk.GetAddress(chains.GoerliChain)
+		addrETH, err := pk.GetAddress(chains.Goerli)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mainnet)
 
 		c.Assert(os.Setenv("NET", "testnet"), IsNil)
-		addrETH, err = pk.GetAddress(chains.GoerliChain)
+		addrETH, err = pk.GetAddress(chains.Goerli)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.testnet)
 
 		c.Assert(os.Setenv("NET", "mocknet"), IsNil)
-		addrETH, err = pk.GetAddress(chains.GoerliChain)
+		addrETH, err = pk.GetAddress(chains.Goerli)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mocknet)
 
-		addrETH, err = pk.GetAddress(chains.BtcRegtestChain)
+		addrETH, err = pk.GetAddress(chains.BitcoinRegtest)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH, Equals, chains.NoAddress)
 	}
@@ -207,15 +207,15 @@ func TestNewPubKey(t *testing.T) {
 	t.Run("should create new pub key from string", func(t *testing.T) {
 		_, pubKey, _ := testdata.KeyTestPubAddr()
 		spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		pk, err := NewPubKey(spk)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, PubKey(spk), pk)
 	})
 
 	t.Run("should return empty pub key from empty string", func(t *testing.T) {
 		pk, err := NewPubKey("")
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, EmptyPubKey, pk)
 	})
 
@@ -230,9 +230,9 @@ func TestGetAddressFromPubkeyString(t *testing.T) {
 	t.Run("should get address from pubkey string", func(t *testing.T) {
 		_, pubKey, _ := testdata.KeyTestPubAddr()
 		spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		_, err = GetAddressFromPubkeyString(spk)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("should get address from nonbech32 string", func(t *testing.T) {
@@ -349,7 +349,7 @@ func TestGetEVMAddress(t *testing.T) {
 	t.Run("should return empty if pubkey is empty", func(t *testing.T) {
 		pubKey := PubKey("")
 		e, err := pubKey.GetEVMAddress()
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, chains.NoAddress, e)
 	})
 
@@ -359,13 +359,13 @@ func TestGetEVMAddress(t *testing.T) {
 		pk, _ := NewPubKey(spk)
 
 		_, err := pk.GetEVMAddress()
-		require.Nil(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("should error if non bech32", func(t *testing.T) {
 		pk := PubKey("invalid")
 		e, err := pk.GetEVMAddress()
-		require.NotNil(t, err)
+		require.ErrorContains(t, err, "decoding bech32 failed")
 		require.Equal(t, chains.NoAddress, e)
 	})
 }

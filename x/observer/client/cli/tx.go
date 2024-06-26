@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -24,13 +23,15 @@ func GetTxCmd() *cobra.Command {
 		CmdAddObserver(),
 		CmdUpdateChainParams(),
 		CmdRemoveChainParams(),
-		CmdUpdateCrosschainFlags(),
 		CmdUpdateKeygen(),
-		CmdAddBlameVote(),
+		CmdVoteBlame(),
 		CmdUpdateObserver(),
 		CmdEncode(),
 		CmdResetChainNonces(),
 		CmdVoteTSS(),
+		CmdEnableCCTX(),
+		CmdDisableCCTX(),
+		CmdUpdateGasPriceIncreaseFlags(),
 	)
 
 	return cmd

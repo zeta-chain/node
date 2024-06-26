@@ -3,6 +3,7 @@ package ratelimiter
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -114,7 +115,7 @@ func ApplyRateLimiter(input *Input, window int64, rate sdkmath.Uint) *Output {
 	// addCctxsToMap adds the given cctxs to the cctx map
 	addCctxsToMap := func(cctxs []*crosschaintypes.CrossChainTx) {
 		for _, cctx := range cctxs {
-			chainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+			chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 			if _, found := cctxMap[chainID]; !found {
 				cctxMap[chainID] = make([]*crosschaintypes.CrossChainTx, 0)
 			}

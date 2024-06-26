@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -20,8 +21,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
-
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
@@ -37,7 +37,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -56,7 +56,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
@@ -81,7 +81,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
@@ -118,7 +118,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
@@ -164,7 +164,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)

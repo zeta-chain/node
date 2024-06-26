@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -71,7 +72,10 @@ func TestMigrateStore(t *testing.T) {
 		}
 		store = prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.NonceToCctxKeyPrefix))
 		for _, nonce := range nonceToCctxList {
-			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonce.Tss, nonce.ChainId, nonce.Nonce)), k.GetCodec().MustMarshal(&nonce))
+			store.Set(
+				types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonce.Tss, nonce.ChainId, nonce.Nonce)),
+				k.GetCodec().MustMarshal(&nonce),
+			)
 		}
 		err := v4.MigrateStore(ctx, k.GetObserverKeeper(), k)
 		require.NoError(t, err)
@@ -96,51 +100,51 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		// set some cctxs with Bitcoin and non-Bitcoin chains
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "0",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.GoerliChain.ChainId,
-				InboundTxObservedHash: "0xaaa",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.Goerli.ChainId,
+				ObservedHash:  "0xaaa",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "1",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcMainnetChain.ChainId,
-				InboundTxObservedHash: "0x111",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BitcoinMainnet.ChainId,
+				ObservedHash:  "0x111",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "2",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.EthChain.ChainId,
-				InboundTxObservedHash: "0xbbb",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.Ethereum.ChainId,
+				ObservedHash:  "0xbbb",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "3",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcTestNetChain.ChainId,
-				InboundTxObservedHash: "0x222",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BitcoinTestnet.ChainId,
+				ObservedHash:  "0x222",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "4",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcTestNetChain.ChainId,
-				InboundTxObservedHash: "0x333",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BitcoinTestnet.ChainId,
+				ObservedHash:  "0x333",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "5",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.MumbaiChain.ChainId,
-				InboundTxObservedHash: "0xccc",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.Mumbai.ChainId,
+				ObservedHash:  "0xccc",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "6",
-			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         chains.BtcRegtestChain.ChainId,
-				InboundTxObservedHash: "0x444",
+			InboundParams: &types.InboundParams{
+				SenderChainId: chains.BitcoinRegtest.ChainId,
+				ObservedHash:  "0x444",
 			},
 		})
 
@@ -148,13 +152,13 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		v4.SetBitcoinFinalizedInbound(ctx, k)
 
 		// check finalized inbound
-		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.GoerliChain.ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", chains.EthChain.ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.MumbaiChain.ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BtcMainnetChain.ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x222", chains.BtcTestNetChain.ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x333", chains.BtcTestNetChain.ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x444", chains.BtcRegtestChain.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", chains.Goerli.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", chains.Ethereum.ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", chains.Mumbai.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x111", chains.BitcoinMainnet.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x222", chains.BitcoinTestnet.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x333", chains.BitcoinTestnet.ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x444", chains.BitcoinRegtest.ChainId, 0))
 
 	})
 }
@@ -169,10 +173,10 @@ func SetRandomCctx(ctx sdk.Context, k keeper.Keeper) sdkmath.Uint {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index:      fmt.Sprintf("%d", i),
 			CctxStatus: &types.Status{Status: types.CctxStatus_Aborted},
-			InboundTxParams: &types.InboundTxParams{
+			InboundParams: &types.InboundParams{
 				CoinType: coin.CoinType_Zeta,
 			},
-			OutboundTxParams: []*types.OutboundTxParams{{
+			OutboundParams: []*types.OutboundParams{{
 				Amount:   amount,
 				CoinType: coin.CoinType_Zeta,
 			}},

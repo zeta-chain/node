@@ -2,10 +2,10 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -20,18 +20,6 @@ func ethereumTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("ethereum panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
 		// initialize runner for ether test
 		ethereumRunner, err := initTestRunner(
 			"ether",

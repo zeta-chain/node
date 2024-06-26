@@ -5,6 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -22,8 +23,8 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
+
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		chainID := getValidChainID(t)
 
@@ -33,7 +34,9 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		_, found := k.GetForeignCoins(ctx, zrc20.Hex())
 		require.True(t, found)
 
-		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, zrc20.Hex()))
+		msg := types.NewMsgRemoveForeignCoin(admin, zrc20.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.NoError(t, err)
 		_, found = k.GetForeignCoins(ctx, zrc20.Hex())
 		require.False(t, found)
@@ -50,12 +53,13 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", "foo")
 
-		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, zrc20.Hex()))
+		msg := types.NewMsgRemoveForeignCoin(admin, zrc20.Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
+		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
@@ -68,11 +72,11 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
-		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, sample.EthAddress().Hex()))
+		msg := types.NewMsgRemoveForeignCoin(admin, sample.EthAddress().Hex())
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.RemoveForeignCoin(ctx, msg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})

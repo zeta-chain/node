@@ -2,6 +2,7 @@ package crosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -10,19 +11,19 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
-	// Set all the outTxTracker
-	for _, elem := range genState.OutTxTrackerList {
-		k.SetOutTxTracker(ctx, elem)
+	// Set all the outbound tracker
+	for _, elem := range genState.OutboundTrackerList {
+		k.SetOutboundTracker(ctx, elem)
 	}
 
 	// Set all the inTxTracker
-	for _, elem := range genState.InTxTrackerList {
-		k.SetInTxTracker(ctx, elem)
+	for _, elem := range genState.InboundTrackerList {
+		k.SetInboundTracker(ctx, elem)
 	}
 
 	// Set all the inTxHashToCctx
-	for _, elem := range genState.InTxHashToCctxList {
-		k.SetInTxHashToCctx(ctx, elem)
+	for _, elem := range genState.InboundHashToCctxList {
+		k.SetInboundHashToCctx(ctx, elem)
 	}
 
 	// Set all the gasPrice
@@ -44,7 +45,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the cross-chain txs
 	for _, elem := range genState.CrossChainTxs {
 		if elem != nil {
-			k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
+			k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem)
 		}
 	}
 	for _, elem := range genState.FinalizedInbounds {
@@ -58,9 +59,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	var genesis types.GenesisState
 
-	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
-	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
-	genesis.InTxTrackerList = k.GetAllInTxTracker(ctx)
+	genesis.OutboundTrackerList = k.GetAllOutboundTracker(ctx)
+	genesis.InboundHashToCctxList = k.GetAllInboundHashToCctx(ctx)
+	genesis.InboundTrackerList = k.GetAllInboundTracker(ctx)
 
 	// Get all gas prices
 	gasPriceList := k.GetAllGasPrice(ctx)

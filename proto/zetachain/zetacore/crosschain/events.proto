@@ -11,8 +11,8 @@ message EventInboundFinalized {
   string sender = 3;
   string tx_orgin = 4;
   string asset = 5;
-  string in_tx_hash = 6;
-  string in_block_height = 7;
+  string inbound_hash = 6;
+  string inbound_block_height = 7;
   string receiver = 8;
   string receiver_chain = 9;
   string amount = 10;
@@ -27,7 +27,7 @@ message EventZrcWithdrawCreated {
   string cctx_index = 2;
   string sender = 3;
   string sender_chain = 4;
-  string in_tx_hash = 5;
+  string inbound_hash = 5;
   string receiver = 6;
   string receiver_chain = 7;
   string amount = 8;
@@ -38,7 +38,7 @@ message EventZetaWithdrawCreated {
   string msg_type_url = 1;
   string cctx_index = 2;
   string sender = 3;
-  string in_tx_hash = 4;
+  string inbound_hash = 4;
   string new_status = 5;
 }
 

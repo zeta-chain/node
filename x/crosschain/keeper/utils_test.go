@@ -5,18 +5,18 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -28,12 +28,12 @@ func getValidEthChainID() int64 {
 
 // getValidEthChain() get a valid eth chain
 func getValidEthChain() *chains.Chain {
-	goerli := chains.GoerliLocalnetChain
+	goerli := chains.GoerliLocalnet
 	return &goerli
 }
 
 func getValidBTCChain() *chains.Chain {
-	btcRegNet := chains.BtcRegtestChain
+	btcRegNet := chains.BitcoinRegtest
 	return &btcRegNet
 }
 
@@ -45,9 +45,9 @@ func getValidBtcChainID() int64 {
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
 	case 0:
-		return chains.GoerliLocalnetChain.ChainId
+		return chains.GoerliLocalnet.ChainId
 	case 1:
-		return chains.GoerliChain.ChainId
+		return chains.Goerli.ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}
