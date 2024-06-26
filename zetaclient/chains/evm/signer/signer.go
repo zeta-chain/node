@@ -37,6 +37,14 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
+const (
+	// broadcastBackoff is the initial backoff duration for retrying broadcast
+	broadcastBackoff = 1000 * time.Millisecond
+
+	// broadcastRetries is the maximum number of retries for broadcasting a transaction
+	broadcastRetries = 5
+)
+
 var (
 	_ interfaces.ChainSigner = &Signer{}
 
@@ -46,8 +54,7 @@ var (
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
-	// base.Signer implements the base chain signer
-	base.Signer
+	*base.Signer
 
 	// client is the EVM RPC client to interact with the EVM chain
 	client interfaces.EVMRPCClient
@@ -104,7 +111,7 @@ func NewSigner(
 	}
 
 	return &Signer{
-		Signer:                    *baseSigner,
+		Signer:                    baseSigner,
 		client:                    client,
 		ethSigner:                 ethSigner,
 		zetaConnectorABI:          connectorABI,
@@ -117,29 +124,29 @@ func NewSigner(
 
 // SetZetaConnectorAddress sets the zeta connector address
 func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
-	signer.Mu().Lock()
-	defer signer.Mu().Unlock()
+	signer.Lock()
+	defer signer.Unlock()
 	signer.zetaConnectorAddress = addr
 }
 
 // SetERC20CustodyAddress sets the erc20 custody address
 func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
-	signer.Mu().Lock()
-	defer signer.Mu().Unlock()
+	signer.Lock()
+	defer signer.Unlock()
 	signer.er20CustodyAddress = addr
 }
 
 // GetZetaConnectorAddress returns the zeta connector address
 func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	signer.Mu().Lock()
-	defer signer.Mu().Unlock()
+	signer.Lock()
+	defer signer.Unlock()
 	return signer.zetaConnectorAddress
 }
 
 // GetERC20CustodyAddress returns the erc20 custody address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	signer.Mu().Lock()
-	defer signer.Mu().Unlock()
+	signer.Lock()
+	defer signer.Unlock()
 	return signer.er20CustodyAddress
 }
 
@@ -526,7 +533,8 @@ func (signer *Signer) BroadcastOutbound(
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetacoreClient interfaces.ZetacoreClient,
-	txData *OutboundData) {
+	txData *OutboundData,
+) {
 	// Get destination chain for logging
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64(), signer.ZetacoreContext().GetAdditionalChains())
 	if tx == nil {
@@ -538,8 +546,8 @@ func (signer *Signer) BroadcastOutbound(
 		outboundHash := tx.Hash().Hex()
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
-		backOff := 1000 * time.Millisecond
-		for i := 0; i < 5; i++ {
+		backOff := broadcastBackoff
+		for i := 0; i < broadcastRetries; i++ {
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
@@ -688,8 +696,8 @@ func (signer *Signer) reportToOutboundTracker(
 	logger zerolog.Logger,
 ) {
 	// skip if already being reported
-	signer.Mu().Lock()
-	defer signer.Mu().Unlock()
+	signer.Lock()
+	defer signer.Unlock()
 	if _, found := signer.outboundHashBeingReported[outboundHash]; found {
 		logger.Info().
 			Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
@@ -700,9 +708,9 @@ func (signer *Signer) reportToOutboundTracker(
 	// report to outbound tracker with goroutine
 	go func() {
 		defer func() {
-			signer.Mu().Lock()
+			signer.Lock()
 			delete(signer.outboundHashBeingReported, outboundHash)
-			signer.Mu().Unlock()
+			signer.Unlock()
 		}()
 
 		// try monitoring tx inclusion status for 10 minutes

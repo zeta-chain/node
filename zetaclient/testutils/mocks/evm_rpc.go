@@ -33,6 +33,7 @@ var _ interfaces.EVMRPCClient = &MockEvmClient{}
 type MockEvmClient struct {
 	err         error
 	blockNumber uint64
+	header      *ethtypes.Header
 	Receipts    []*ethtypes.Receipt
 }
 
@@ -70,7 +71,7 @@ func (e *MockEvmClient) HeaderByNumber(_ context.Context, _ *big.Int) (*ethtypes
 	if e.err != nil {
 		return nil, e.err
 	}
-	return &ethtypes.Header{}, nil
+	return e.header, nil
 }
 
 func (e *MockEvmClient) PendingCodeAt(_ context.Context, _ ethcommon.Address) ([]byte, error) {
@@ -186,6 +187,11 @@ func (e *MockEvmClient) WithError(err error) *MockEvmClient {
 
 func (e *MockEvmClient) WithBlockNumber(blockNumber uint64) *MockEvmClient {
 	e.blockNumber = blockNumber
+	return e
+}
+
+func (e *MockEvmClient) WithHeader(header *ethtypes.Header) *MockEvmClient {
+	e.header = header
 	return e
 }
 

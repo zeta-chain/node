@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -89,11 +88,9 @@ func DebugCmd() *cobra.Command {
 				return fmt.Errorf("invalid chain id")
 			}
 
-			// get ballot identifier according to the chain type
+			// get ballot identifier according to the chain type\
 			if chain.Consensus == chains.Consensus_ethereum {
-				evmObserver := evmobserver.Observer{
-					Mu: &sync.Mutex{},
-				}
+				evmObserver := evmobserver.Observer{}
 				evmObserver.WithZetacoreClient(client)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
@@ -169,9 +166,7 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if chain.Consensus == chains.Consensus_bitcoin {
-				btcObserver := btcobserver.Observer{
-					Mu: &sync.Mutex{},
-				}
+				btcObserver := btcobserver.Observer{}
 				btcObserver.WithZetacoreClient(client)
 				btcObserver.WithChain(*chain)
 				connCfg := &rpcclient.ConnConfig{
