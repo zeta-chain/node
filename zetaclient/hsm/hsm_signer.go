@@ -1,3 +1,5 @@
+// Package hsm is used to interact with chains with a HSM
+// it is currently not used
 package hsm
 
 import (
@@ -158,6 +160,7 @@ func SignWithHSM(
 	return txBuilder.SetSignatures(prevSignatures...)
 }
 
+// GetPKCS11Config returns the PKCS11 configuration from the environment variables
 func GetPKCS11Config() (config *crypto11.Config, err error) {
 	config = &crypto11.Config{}
 	config.Path = os.Getenv(hsmPath)

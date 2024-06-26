@@ -29,6 +29,7 @@
 * [2325](https://github.com/zeta-chain/node/pull/2325) - revert telemetry server changes
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
+* [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
 
 ### Refactor
 
@@ -97,6 +98,10 @@
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
 * [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
+
+### Documentation
+
+* [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
 
 ## v17.0.0
 

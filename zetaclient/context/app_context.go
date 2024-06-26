@@ -1,3 +1,4 @@
+// Package context provides global app context for ZetaClient
 package context
 
 import (
@@ -22,10 +23,12 @@ func NewAppContext(
 	}
 }
 
+// Config returns the config of the app
 func (a AppContext) Config() config.Config {
 	return a.config
 }
 
+// ZetacoreContext returns the context for ZetaChain
 func (a AppContext) ZetacoreContext() *ZetacoreContext {
 	return a.coreContext
 }
