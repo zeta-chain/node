@@ -55,14 +55,11 @@ func (ob *Observer) WatchOutbound() {
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.chain.ChainId)
 				continue
 			}
-			fmt.Println("WatchOutboundEVM: started")
 			trackers, err := ob.zetacoreClient.GetAllOutboundTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
-			fmt.Println("WatchOutboundEVM: trackers", len(trackers))
 			for _, tracker := range trackers {
-				fmt.Println("WatchOutboundEVM: iterating tracker:", tracker)
 				nonceInt := tracker.Nonce
 				if ob.IsTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
 					continue
@@ -71,7 +68,6 @@ func (ob *Observer) WatchOutbound() {
 				var outboundReceipt *ethtypes.Receipt
 				var outbound *ethtypes.Transaction
 				for _, txHash := range tracker.HashList {
-					fmt.Println("WatchOutboundEVM: iterating txHash:", txHash.TxHash)
 					if receipt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
 						txCount++
 						outboundReceipt = receipt
@@ -83,7 +79,6 @@ func (ob *Observer) WatchOutbound() {
 								"WatchOutbound: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, outboundReceipt, outbound)
 						}
 					}
-					fmt.Println("WatchOutboundEVM: txCount", txCount)
 				}
 				if txCount == 1 { // should be only one txHash confirmed for each nonce.
 					ob.SetTxNReceipt(nonceInt, outboundReceipt, outbound)
@@ -382,7 +377,6 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	// save pending transaction
 	if isPending {
 		ob.SetPendingTx(nonce, transaction)
-		fmt.Printf("checkConfirmedTx: setting pending tx %d,%s \n", nonce, transaction.Hash().Hex())
 		return nil, nil, false
 	}
 
@@ -390,9 +384,8 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			log.Warn().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)
+			log.Error().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)
 		}
-		fmt.Println("checkConfirmedTx: TransactionReceipt error, txHash", txHash, "nonce", nonce, "err", err)
 		return nil, nil, false
 	}
 	if receipt == nil { // should not happen
@@ -401,11 +394,15 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	}
 
 	// check confirmations
-	if !ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()) {
+	lastHeight, err := ob.evmClient.BlockNumber(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msgf("confirmTxByHash: error getting block number for chain %d", ob.chain.ChainId)
+		return nil, nil, false
+	}
+	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
 		log.Debug().
 			Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
-				txHash, nonce, receipt.BlockNumber, ob.GetLastBlockHeight())
-		fmt.Println("checkConfirmedTx: not enough confirmations for txHash", txHash, "nonce", nonce)
+				txHash, nonce, receipt.BlockNumber, lastHeight)
 		return nil, nil, false
 	}
 
