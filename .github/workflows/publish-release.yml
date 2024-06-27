@@ -470,13 +470,13 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           body_path: ${{ github.workspace }}-CHANGELOG.txt
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Publish Release Files
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
         run: |
           touch .release-env
@@ -493,7 +493,7 @@ jobs:
 
       - name: Upload Attestation Bundle
         env: 
-          GH_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash 
         run: | 
           gh release upload ${{ env.GITHUB_TAG_MAJOR_VERSION }} ${{ steps.attestation.outputs.bundle-path }}
