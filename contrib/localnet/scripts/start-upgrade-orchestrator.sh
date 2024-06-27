@@ -63,7 +63,7 @@ cat > upgrade.json <<EOF
     }
   ],
   "metadata": "",
-  "deposit": "100000000azeta",
+  "deposit": "1000000000000000000000azeta",
   "title": "${UPGRADE_NAME}",
   "summary": "${UPGRADE_NAME}"
 }

@@ -68,6 +68,7 @@
 * [2329](https://github.com/zeta-chain/node/pull/2329) - fix TODOs in rpc unit tests
 * [2342](https://github.com/zeta-chain/node/pull/2342) - extend rpc unit tests with testing extension to include synthetic ethereum txs
 * [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
+* [2364](https://github.com/zeta-chain/node/pull/2364) - add stateful upgrade test
 * [2360](https://github.com/zeta-chain/node/pull/2360) - add stateful e2e tests.
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
 * [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
@@ -97,6 +98,10 @@
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
 * [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
+
+### Documentation
+
+* [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
 
 ## v17.0.0
 
