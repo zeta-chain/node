@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -334,7 +335,8 @@ func generateAccount() (Account, error) {
 		return Account{}, fmt.Errorf("generating private key: %w", err)
 	}
 	// encode private key and strip 0x prefix
-	encodedPrivateKey := hexutil.Encode(crypto.FromECDSA(privateKey))[2:]
+	encodedPrivateKey := hexutil.Encode(crypto.FromECDSA(privateKey))
+	encodedPrivateKey = strings.TrimPrefix(encodedPrivateKey, "0x")
 
 	evmAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
 	bech32Address, err := bech32.ConvertAndEncode("zeta", evmAddress.Bytes())
