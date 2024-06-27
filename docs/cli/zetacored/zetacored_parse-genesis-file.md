@@ -10,7 +10,7 @@ zetacored parse-genesis-file [import-genesis-file] [optional-genesis-file] [flag
 
 ```
   -h, --help     help for parse-genesis-file
-      --modify   Modify the genesis file before importing
+      --modify   modify the genesis file before importing
 ```
 
 ### Options inherited from parent commands

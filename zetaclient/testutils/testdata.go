@@ -48,6 +48,8 @@ func LoadObjectFromJSONFile(t *testing.T, obj interface{}, filename string) {
 	require.NoError(t, err)
 }
 
+// ComplianceConfigTest returns a test compliance config
+// TODO(revamp): move to sample package
 func ComplianceConfigTest() config.ComplianceConfig {
 	return config.ComplianceConfig{
 		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},

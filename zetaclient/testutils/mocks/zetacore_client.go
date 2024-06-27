@@ -145,13 +145,6 @@ func (m *MockZetacoreClient) GetBlockHeight() (int64, error) {
 	return 0, nil
 }
 
-func (m *MockZetacoreClient) GetLastBlockHeightByChain(_ chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
-	if m.paused {
-		return nil, errors.New(ErrMsgPaused)
-	}
-	return &crosschaintypes.LastBlockHeight{}, nil
-}
-
 func (m *MockZetacoreClient) GetRateLimiterInput(_ int64) (crosschaintypes.QueryRateLimiterInputResponse, error) {
 	if m.paused {
 		return crosschaintypes.QueryRateLimiterInputResponse{}, errors.New(ErrMsgPaused)
