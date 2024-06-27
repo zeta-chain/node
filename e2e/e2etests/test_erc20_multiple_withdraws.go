@@ -56,7 +56,7 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// check the balance
-	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.Logger.Info("balance of deployer on ERC20 ZRC20: %d", bal)
 
@@ -65,7 +65,7 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	// withdraw
 	tx, err = withdrawer.RunWithdraws(
 		r.ZEVMAuth,
-		r.DeployerAddress.Bytes(),
+		r.EVMAddress().Bytes(),
 		r.ERC20ZRC20Addr,
 		withdrawalAmount,
 		numberOfWithdrawals,

@@ -6,7 +6,6 @@
 # - Add SBOMs
 # - Add Docker Builds
 # - SLSA - https://github.com/goreleaser/goreleaser-example-slsa-provenance
-# - Add Code Signing
 
 env:
   - CGO_ENABLED=1

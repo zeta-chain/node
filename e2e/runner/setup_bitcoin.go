@@ -40,7 +40,7 @@ func (r *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
 
 // GetBtcAddress returns the BTC address of the deployer from its EVM private key
 func (r *E2ERunner) GetBtcAddress() (string, string, error) {
-	skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
+	skBytes, err := hex.DecodeString(r.Account.RawPrivateKey.String())
 	if err != nil {
 		return "", "", err
 	}
@@ -65,7 +65,7 @@ func (r *E2ERunner) GetBtcAddress() (string, string, error) {
 
 // SetBtcAddress imports the deployer's private key into the Bitcoin node
 func (r *E2ERunner) SetBtcAddress(name string, rescan bool) {
-	skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
+	skBytes, err := hex.DecodeString(r.Account.RawPrivateKey.String())
 	require.NoError(r, err)
 
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)

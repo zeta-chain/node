@@ -15,7 +15,7 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestZetaDeposit.")
 
-	hash := r.DepositZetaWithAmount(r.DeployerAddress, amount)
+	hash := r.DepositZetaWithAmount(r.EVMAddress(), amount)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

@@ -33,37 +33,37 @@ type AccountBalancesDiff struct {
 // GetAccountBalances returns the account balances of the accounts used in the E2E test
 func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
-	zetaZeta, err := r.ZEVMClient.BalanceAt(r.Ctx, r.DeployerAddress, nil)
+	zetaZeta, err := r.ZEVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaWZeta, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	zetaWZeta, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaEth, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	zetaEth, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaErc20, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	zetaErc20, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaBtc, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	zetaBtc, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		return AccountBalances{}, err
 	}
 
 	// evm
-	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.DeployerAddress, nil)
+	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	evmZeta, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	evmZeta, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	evmErc20, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	evmErc20, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -129,7 +129,7 @@ func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil
 // PrintAccountBalances shows the account balances of the accounts used in the E2E test
 // Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
 func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
-	r.Logger.Print(" ---💰 Account info %s ---", r.DeployerAddress.Hex())
+	r.Logger.Print(" ---💰 Account info %s ---", r.EVMAddress().Hex())
 
 	// zevm
 	r.Logger.Print("ZetaChain:")
