@@ -30,6 +30,7 @@
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
+* [2387](https://github.com/zeta-chain/node/pull/2387) - add support for EIP-1559 outbound transactions
 
 ### Refactor
 
