@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   check_branch:
-    # if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Branch
