@@ -316,7 +316,7 @@ func (s *Signer) SignRevertTx(txData *OutboundData) (*ethtypes.Transaction, erro
 
 // SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (s *Signer) SignCancelTx(txData *OutboundData) (*ethtypes.Transaction, error) {
-	// todo LIMIT=evm.EthTransferGasLimit
+	txData.gas.Limit = evm.EthTransferGasLimit
 
 	tx, _, _, err := s.Sign(
 		nil,
@@ -335,7 +335,7 @@ func (s *Signer) SignCancelTx(txData *OutboundData) (*ethtypes.Transaction, erro
 
 // SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
 func (s *Signer) SignWithdrawTx(txData *OutboundData) (*ethtypes.Transaction, error) {
-	// todo LIMIT=evm.EthTransferGasLimit
+	txData.gas.Limit = evm.EthTransferGasLimit
 
 	tx, _, _, err := s.Sign(
 		nil,
