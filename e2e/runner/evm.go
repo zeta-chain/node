@@ -7,7 +7,6 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/stretchr/testify/require"
 
@@ -66,7 +65,7 @@ func (r *E2ERunner) SendERC20OnEvm(address ethcommon.Address, amountERC20 int64)
 func (r *E2ERunner) DepositERC20() ethcommon.Hash {
 	r.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
-	return r.DepositERC20WithAmountAndMessage(r.DeployerAddress, big.NewInt(1e18), []byte{})
+	return r.DepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(1e18), []byte{})
 }
 
 func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
@@ -143,7 +142,7 @@ func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) eth
 func (r *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
 	evmClient := r.EVMClient
 
-	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.EVMAddress())
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +159,7 @@ func (r *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) 
 		return nil, err
 	}
 
-	deployerPrivkey, err := crypto.HexToECDSA(r.DeployerPrivateKey)
+	deployerPrivkey, err := r.Account.PrivateKey()
 	if err != nil {
 		return nil, err
 	}

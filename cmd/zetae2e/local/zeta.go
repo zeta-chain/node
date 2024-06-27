@@ -19,13 +19,13 @@ func zetaTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
+		account := conf.AdditionalAccounts.UserZetaTest
 		// initialize runner for zeta test
 		zetaRunner, err := initTestRunner(
 			"zeta",
 			conf,
 			deployerRunner,
-			UserZetaTestAddress,
-			UserZetaTestPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgBlue, "zeta"),
 		)
 		if err != nil {
@@ -36,7 +36,7 @@ func zetaTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserZetaTestAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
 		zetaRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain
