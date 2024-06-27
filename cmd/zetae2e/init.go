@@ -16,7 +16,7 @@ func NewInitCmd() *cobra.Command {
 	var InitCmd = &cobra.Command{
 		Use:   "init",
 		Short: "initialize config file for e2e tests",
-		Run:   initConfig,
+		RunE:  initConfig,
 	}
 
 	InitCmd.Flags().StringVar(&initConf.RPCs.EVM, "ethURL", "http://eth:8545", "--ethURL http://eth:8545")
@@ -33,9 +33,14 @@ func NewInitCmd() *cobra.Command {
 	return InitCmd
 }
 
-func initConfig(_ *cobra.Command, _ []string) {
-	err := config.WriteConfig(configFile, initConf)
+func initConfig(_ *cobra.Command, _ []string) error {
+	err := initConf.GenerateKeys()
 	if err != nil {
-		fmt.Printf("error writing config file: %s", err.Error())
+		return fmt.Errorf("generating keys: %w", err)
 	}
+	err = config.WriteConfig(configFile, initConf)
+	if err != nil {
+		return fmt.Errorf("writing config: %w", err)
+	}
+	return nil
 }

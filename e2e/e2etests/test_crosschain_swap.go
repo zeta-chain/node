@@ -58,7 +58,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		big.NewInt(1e8),
 		big.NewInt(1e8),
 		big.NewInt(1e5),
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	require.NoError(r, err)
@@ -80,7 +80,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("***** First test: ERC20 -> BTC")
 	// Should deposit ERC20 for swap, swap for BTC and withdraw BTC
-	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, big.NewInt(8e7), msg)
+	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(8e7), msg)
 	cctx1 := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// check the cctx status
@@ -110,7 +110,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
 
-	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.DeployerAddress.Bytes())
+	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.EVMAddress().Bytes())
 	require.NoError(r, err)
 
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
@@ -138,7 +138,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("******* Third test: BTC -> ETH with contract call reverted; should refund BTC")
 		// the following memo will result in a revert in the contract call as targetZRC20 is set to DeployerAddress
 		// which is apparently not a ZRC20 contract; the UNISWAP call will revert
-		memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.DeployerAddress, r.DeployerAddress.Bytes())
+		memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.EVMAddress(), r.EVMAddress().Bytes())
 		require.NoError(r, err)
 
 		memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)

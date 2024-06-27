@@ -21,6 +21,7 @@ type ZetaSupplyCheckLogs struct {
 	SupplyCheckSuccess       bool        `json:"supply_check_success"`
 }
 
+// LogOutput logs the output of the ZetaSupplyChecker
 func (z ZetaSupplyCheckLogs) LogOutput() {
 	output, err := bitcoin.PrettyPrintStruct(z)
 	if err != nil {

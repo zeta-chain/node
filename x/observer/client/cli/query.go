@@ -41,6 +41,8 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListChainNonces(),
 		CmdShowChainNonces(),
 		CmdListPendingNonces(),
+		CmdGetAllTssFundsMigrator(),
+		CmdGetTssFundsMigrator(),
 	)
 
 	return cmd

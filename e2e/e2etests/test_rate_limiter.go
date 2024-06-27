@@ -221,7 +221,7 @@ func addZetaGasLiquidity(r *runner.E2ERunner) error {
 		amount,
 		big.NewInt(1e18),
 		big.NewInt(1e18),
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	if err != nil {

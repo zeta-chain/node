@@ -27,6 +27,8 @@ func (ob *Observer) GetTxID(nonce uint64) string {
 }
 
 // WatchOutbound watches Bitcoin chain for outgoing txs status
+// TODO(revamp): move ticker functions to a specific file
+// TODO(revamp): move into a separate package
 func (ob *Observer) WatchOutbound() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.GetChainParams().OutboundTicker)
 	if err != nil {
@@ -111,6 +113,7 @@ func (ob *Observer) WatchOutbound() {
 }
 
 // IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
+// TODO(revamp): rename as it vote the outbound and doesn't only check if outbound is processed
 func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	params := *cctx.GetCurrentOutboundParam()
 	sendHash := cctx.Index
@@ -213,6 +216,8 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 //   - the total value of the selected UTXOs.
 //   - the number of consolidated UTXOs.
 //   - the total value of the consolidated UTXOs.
+//
+// TODO(revamp): move to utxo file
 func (ob *Observer) SelectUTXOs(
 	amount float64,
 	utxosToSpend uint16,
@@ -329,6 +334,8 @@ func (ob *Observer) refreshPendingNonce() {
 	}
 }
 
+// getOutboundIDByNonce gets the outbound ID from the nonce of the outbound transaction
+// test is true for unit test only
 func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error) {
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
@@ -363,6 +370,7 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 	return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 }
 
+// findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := chains.NonceMarkAmount(nonce)

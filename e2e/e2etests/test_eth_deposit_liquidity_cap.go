@@ -47,7 +47,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("CCTX has been reverted")
 
 	r.Logger.Info("Depositing less than liquidity cap should still succeed")
-	initialBal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	signedTx, err = r.SendEther(r.TSSAddress, amountLessThanCap, nil)
@@ -61,7 +61,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 
 	expectedBalance := big.NewInt(0).Add(initialBal, amountLessThanCap)
 
-	bal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, 0, bal.Cmp(expectedBalance))
 
@@ -79,7 +79,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 
 	r.Logger.Info("remove liquidity cap tx hash: %s", res.TxHash)
 
-	initialBal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	signedTx, err = r.SendEther(r.TSSAddress, amountMoreThanCap, nil)
@@ -91,7 +91,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	expectedBalance = big.NewInt(0).Add(initialBal, amountMoreThanCap)
 
-	bal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r,
 		0,

@@ -8,7 +8,7 @@ fi
 NETWORK=$1
 echo "NETWORK: ${NETWORK}"
 rm -rf ~/.zetacored/genesis_data
-mkdir ~/.zetacored/genesis_data
+mkdir -p ~/.zetacored/genesis_data
 echo "Download Latest State Export"
 LATEST_EXPORT_URL=$(curl https://snapshots.zetachain.com/latest-state-export | jq -r ."${NETWORK}")
 echo "LATEST EXPORT URL: ${LATEST_EXPORT_URL}"

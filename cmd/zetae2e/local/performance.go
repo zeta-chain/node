@@ -27,8 +27,7 @@ func ethereumDepositPerformanceRoutine(
 			"ether",
 			conf,
 			deployerRunner,
-			UserERC20Address,
-			UserERC20PrivateKey,
+			conf.AdditionalAccounts.UserERC20,
 			runner.NewLogger(verbose, color.FgHiMagenta, "perf_eth_deposit"),
 		)
 		if err != nil {
@@ -69,8 +68,7 @@ func ethereumWithdrawPerformanceRoutine(
 			"ether",
 			conf,
 			deployerRunner,
-			UserEtherAddress,
-			UserEtherPrivateKey,
+			conf.AdditionalAccounts.UserEther,
 			runner.NewLogger(verbose, color.FgHiBlue, "perf_eth_withdraw"),
 		)
 		if err != nil {

@@ -1,7 +1,7 @@
 zeta_chain_id: "athens_7001-1"
-accounts:
+default_account:
   evm_address: "<your evm address>"
-  evm_priv_key: "<your evm private key>"
+  private_key: "<your evm private key>"
 rpcs:
   zevm: "<zevm (ZetaChain) url>, generally using port 8545"
   evm: "<evm url>, generally using port 8545"
