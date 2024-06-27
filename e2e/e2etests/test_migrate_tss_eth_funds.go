@@ -3,6 +3,7 @@ package e2etests
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/common"
@@ -63,6 +64,8 @@ func TestMigrateTssEth(r *runner.E2ERunner, args []string) {
 			cctx.CctxStatus.StatusMessage),
 		)
 	}
+
+	// TODO Checks for these values
 	tssBalance, err = r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
 	if err != nil {
 		panic(err)
@@ -74,5 +77,38 @@ func TestMigrateTssEth(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Print(fmt.Sprintf("TSS Balance After New: %s", tssBalanceNew.String()))
+
+	allTss, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
+	if err != nil {
+		panic(err)
+	}
+
+	if len(allTss.TssList) != 2 {
+		panic(fmt.Sprintf("expected 2 tss addresses; got %d", len(allTss.TssList)))
+	}
+
+	msgUpdateTss := crosschaintypes.NewMsgUpdateTssAddress(
+		r.ZetaTxServer.GetAccountAddress(0),
+		allTss.TssList[0].TssPubkey,
+	)
+	tx, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgUpdateTss)
+	if err != nil {
+		panic(err)
+	}
+
+	r.Logger.Print(fmt.Sprintf("Update TSS tx: %s", tx.TxHash))
+
+	time.Sleep(8 * time.Second)
+
+	currentTss, err := r.ObserverClient.TSS(r.Ctx, &observertypes.QueryGetTSSRequest{})
+	if err != nil {
+		panic(err)
+	}
+
+	r.Logger.Print(fmt.Sprintf("Current TSS: %s", currentTss.TSS.TssPubkey))
+
+	//if currentTss.TSS.TssPubkey != allTss.TssList[1].TssPubkey {
+	//	panic(fmt.Sprintf("expected tss pubkey to be %s; got %s", allTss.TssList[1].TssPubkey, currentTss.TSS.TssPubkey))
+	//}
 
 }

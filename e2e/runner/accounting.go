@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type Amount struct {
@@ -31,18 +33,37 @@ func (runner *E2ERunner) CheckZRC20ReserveAndSupply() error {
 }
 
 func (runner *E2ERunner) checkEthTSSBalance() error {
-	tssBal, err := runner.EVMClient.BalanceAt(runner.Ctx, runner.TSSAddress, nil)
+
+	allTssAddress, err := runner.ObserverClient.TssHistory(runner.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
 	}
+
+	tssTotalBalance := big.NewInt(0)
+
+	for _, tssAddress := range allTssAddress.TssList {
+		evmAddress, err := runner.ObserverClient.GetTssAddressByFinalizedHeight(runner.Ctx, &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
+			FinalizedZetaHeight: tssAddress.FinalizedZetaHeight,
+		})
+		if err != nil {
+			continue
+		}
+
+		tssBal, err := runner.EVMClient.BalanceAt(runner.Ctx, common.HexToAddress(evmAddress.Eth), nil)
+		if err != nil {
+			continue
+		}
+		tssTotalBalance.Add(tssTotalBalance, tssBal)
+	}
+
 	zrc20Supply, err := runner.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
-	if tssBal.Cmp(zrc20Supply) < 0 {
-		return fmt.Errorf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply)
+	if tssTotalBalance.Cmp(zrc20Supply) < 0 {
+		return fmt.Errorf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssTotalBalance, zrc20Supply)
 	}
-	runner.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssBal, zrc20Supply)
+	runner.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssTotalBalance, zrc20Supply)
 	return nil
 }
 
