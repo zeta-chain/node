@@ -224,18 +224,6 @@ func start(_ *cobra.Command, _ []string) error {
 	//	}
 	//}
 
-	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
-	// For existing keygen, this should directly proceed to the next step
-	ticker := time.NewTicker(time.Second * 1)
-	for range ticker.C {
-		keyGen := appContext.ZetacoreContext().GetKeygen()
-		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
-			continue
-		}
-		break
-	}
-
 	bitcoinChainID := chains.BitcoinRegtest.ChainId
 	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
 	if btcEnabled {
@@ -256,6 +244,18 @@ func start(_ *cobra.Command, _ []string) error {
 
 	keyGen := appContext.ZetacoreContext().GetKeygen()
 	tss.Signers = keyGen.GranteePubkeys
+
+	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
+	// For existing keygen, this should directly proceed to the next step
+	ticker := time.NewTicker(time.Second * 1)
+	for range ticker.C {
+		keyGen := appContext.ZetacoreContext().GetKeygen()
+		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
+			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
+			continue
+		}
+		break
+	}
 
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
