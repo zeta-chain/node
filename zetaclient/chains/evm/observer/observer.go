@@ -50,6 +50,8 @@ type Observer struct {
 
 	// outboundConfirmedTransactions is the map to index confirmed transactions by hash
 	outboundConfirmedTransactions map[string]*ethtypes.Transaction
+
+	priorityGasFee *big.Int
 }
 
 // NewObserver returns a new EVM chain observer
@@ -327,13 +329,19 @@ func (ob *Observer) WatchGasPrice() {
 }
 
 func (ob *Observer) PostGasPrice() error {
+	// issue: https://github.com/zeta-chain/node/issues/1160
+	ctx := context.Background()
+
 	// GAS PRICE
-	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
+	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("Err SuggestGasPrice:")
 		return err
 	}
-	blockNum, err := ob.evmClient.BlockNumber(context.TODO())
+
+	ob.fetchPriorityGasFee(ctx)
+
+	blockNum, err := ob.evmClient.BlockNumber(ctx)
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
 		return err
@@ -350,6 +358,32 @@ func (ob *Observer) PostGasPrice() error {
 	_ = zetaHash
 
 	return nil
+}
+
+// fetchPriorityGasFee fetches priority gas fee based on RPC response (EIP-1559).
+func (ob *Observer) fetchPriorityGasFee(ctx context.Context) {
+	fee, err := ob.evmClient.SuggestGasTipCap(ctx)
+	if err != nil {
+		ob.Logger().GasPrice.
+			Debug().Err(err).
+			Msg("Unable to fetch priority gas fee. Signer will fallback to legacy gas logic")
+
+		fee = big.NewInt(0)
+	}
+
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
+	ob.priorityGasFee = fee
+}
+
+// GetPriorityGasFee a.k.a. tx.gasTipCap>
+func (ob *Observer) GetPriorityGasFee() *big.Int {
+	if ob.priorityGasFee == nil {
+		return big.NewInt(0)
+	}
+
+	return ob.priorityGasFee
 }
 
 // TransactionByHash query transaction by hash via JSON-RPC

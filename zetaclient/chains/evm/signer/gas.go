@@ -4,6 +4,9 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // Gas represents gas parameters for EVM transactions.
@@ -44,4 +47,41 @@ func (g Gas) validate() error {
 // Returns true if priority fee is <= 0.
 func (g Gas) isLegacy() bool {
 	return g.PriorityFeePerUnit.Sign() <= 1
+}
+
+func determineGas(cctx *types.CrossChainTx, priorityFee *big.Int, logger zerolog.Logger) (Gas, error) {
+	if priorityFee == nil {
+		return Gas{}, errors.New("priorityFee is nil")
+	}
+
+	var (
+		outboundParams = cctx.GetCurrentOutboundParam()
+		limit          = outboundParams.GasLimit
+	)
+
+	switch {
+	case limit < MinGasLimit:
+		limit = MinGasLimit
+		logger.Warn().
+			Uint64("cctx.initial_gas_limit", outboundParams.GasLimit).
+			Uint64("cctx.gas_limit", limit).
+			Msgf("Gas limit is too low. Setting to the minimum (%d)", MinGasLimit)
+	case limit > MaxGasLimit:
+		limit = MaxGasLimit
+		logger.Warn().
+			Uint64("cctx.initial_gas_limit", outboundParams.GasLimit).
+			Uint64("cctx.gas_limit", limit).
+			Msgf("Gas limit is too high; Setting to the maximum (%d)", MaxGasLimit)
+	}
+
+	maxFee, ok := new(big.Int).SetString(outboundParams.GasPrice, 10)
+	if !ok {
+		return Gas{}, errors.New("unable to parse gasPrice from " + outboundParams.GasPrice)
+	}
+
+	return Gas{
+		Limit:              limit,
+		MaxFeePerUnit:      maxFee,
+		PriorityFeePerUnit: priorityFee,
+	}, nil
 }

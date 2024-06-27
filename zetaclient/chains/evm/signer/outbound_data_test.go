@@ -13,7 +13,6 @@ import (
 )
 
 func TestNewOutboundData(t *testing.T) {
-	// Setup evm signer
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 

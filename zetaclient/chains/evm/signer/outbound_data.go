@@ -46,12 +46,9 @@ type OutboundData struct {
 	outboundParams *types.OutboundParams
 }
 
-// NewOutboundData populates transaction input fields parsed from the cctx and other parameters
-// returns
-//  1. New NewOutboundData Data struct or nil if an error occurred.
-//  2. bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
-//     cctx will be skipped and false otherwise.
-//  3. error
+// NewOutboundData populates tx input fields parsed from the cctx and other parameters
+// returns _, true, _ if the transaction doesn't qualify to be processed,
+// meaning that cctx should be skipped.
 func NewOutboundData(
 	cctx *types.CrossChainTx,
 	evmObserver *observer.Observer,
@@ -93,7 +90,7 @@ func NewOutboundData(
 	}
 
 	// Determine gas fees
-	gas, err := determineGas(cctx, logger)
+	gas, err := determineGas(cctx, evmObserver.GetPriorityGasFee(), logger)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "failed to determine gas fees")
 	}
@@ -196,57 +193,4 @@ func determineDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethc
 		Msgf("CCTX doesn't need to be processed")
 
 	return ethcommon.Address{}, nil, true
-}
-
-func determineGas(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
-	var (
-		outboundParams = cctx.GetCurrentOutboundParam()
-		limit          = outboundParams.GasLimit
-	)
-
-	switch {
-	case limit < MinGasLimit:
-		limit = MinGasLimit
-		logger.Warn().
-			Uint64("cctx.initial_gas_limit", outboundParams.GasLimit).
-			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too low. Setting to the minimum (%d)", MinGasLimit)
-	case limit > MaxGasLimit:
-		limit = MaxGasLimit
-		logger.Warn().
-			Uint64("cctx.initial_gas_limit", outboundParams.GasLimit).
-			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too high; Setting to the maximum (%d)", MaxGasLimit)
-	}
-
-	maxFee, ok := new(big.Int).SetString(outboundParams.GasPrice, 10)
-	if !ok {
-		return Gas{}, errors.New("unable to parse gasPrice from " + outboundParams.GasPrice)
-	}
-
-	// TODO RELY ONLY ON Gas{} data.
-	// use dynamic gas price for ethereum chains.
-	// The code below is a fix for https://github.com/zeta-chain/node/issues/1085
-	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no GasPrice
-	// we should possibly remove it completely and return an error if no GasPrice is provided because it means no fee is processed on ZetaChain
-	//specified, ok := new(big.Int).SetString(cctx.GetCurrentOutboundParam().GasPrice, 10)
-	//if !ok {
-	//	if chains.IsEthereumChain(chain.ChainId) {
-	//		suggested, err := client.SuggestGasPrice(context.Background())
-	//		if err != nil {
-	//			return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain))
-	//		}
-	//		txData.gasPrice = roundUpToNearestGwei(suggested)
-	//	} else {
-	//		return fmt.Errorf("cannot convert gas price  %s ", cctx.GetCurrentOutboundParam().GasPrice)
-	//	}
-	//} else {
-	//	txData.gasPrice = specified
-	//}
-
-	return Gas{
-		Limit:              limit,
-		MaxFeePerUnit:      maxFee,
-		PriorityFeePerUnit: big.NewInt(0), // todo!
-	}, nil
 }

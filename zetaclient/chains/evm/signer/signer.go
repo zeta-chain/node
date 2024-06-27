@@ -399,12 +399,13 @@ func (s *Signer) TryProcessOutbound(
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutboundData(cctx, evmObserver, height, logger)
-	if err != nil {
-		logger.Err(err).Msg("error setting up transaction input fields")
+	txData, shouldBeSkipped, err := NewOutboundData(cctx, evmObserver, height, logger)
+	switch {
+	case err != nil:
+		logger.Err(err).Msg("Error setting up transaction input fields")
 		return
-	}
-	if skipTx {
+	case shouldBeSkipped:
+		logger.Debug().Msg("Skipping outbound")
 		return
 	}
 
