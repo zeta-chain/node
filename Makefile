@@ -204,8 +204,22 @@ mocks:
 generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 .PHONY: generate
 
+
 ###############################################################################
-###                         E2E tests and localnet                          ###
+###                         Localnet                          				###
+###############################################################################
+start-localnet: zetanode start-localnet-skip-build
+
+start-localnet-skip-build:
+	@echo "--> Starting localnet"
+	export LOCALNET_MODE=setup-only && \
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
+
+stop-localnet:
+	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+###############################################################################
+###                         E2E tests               						###
 ###############################################################################
 
 zetanode:
@@ -233,11 +247,21 @@ start-e2e-performance-test: zetanode
 	export E2E_ARGS="--test-performance" && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
 
+start-e2e-import-mainnet-test: zetanode
+	@echo "--> Starting e2e import-data test"
+	export ZETACORED_IMPORT_GENESIS_DATA=true && \
+	export ZETACORED_START_PERIOD=15m && \
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
+
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stress.yml up -d
 
-#TODO: replace OLD_VERSION with v16 tag once its available
+###############################################################################
+###                         Upgrade Tests              						###
+###############################################################################
+
+
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
@@ -256,22 +280,13 @@ start-upgrade-test-light: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-localnet: zetanode start-localnet-skip-build
-
-start-localnet-skip-build:
-	@echo "--> Starting localnet"
-	export LOCALNET_MODE=setup-only && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
-
-start-e2e-import-mainnet-test: zetanode
-	@echo "--> Starting e2e import-data test"
+start-upgrade-import-mainnet-test: zetanode-upgrade
+	@echo "--> Starting import-data upgrade test"
+	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
-	export ZETACORED_START_PERIOD=10m && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
-
-stop-localnet:
-	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
-
+	export ZETACORED_START_PERIOD=15m && \
+	export UPGRADE_HEIGHT=225 && \
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 ###############################################################################
 ###                              Monitoring                                 ###
 ###############################################################################
