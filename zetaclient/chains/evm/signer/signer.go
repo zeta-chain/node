@@ -157,7 +157,7 @@ func (s *Signer) Sign(
 	data []byte,
 	to ethcommon.Address,
 	amount *big.Int,
-	gas gas,
+	gas Gas,
 	nonce uint64,
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
@@ -199,7 +199,7 @@ func newTx(
 	data []byte,
 	to ethcommon.Address,
 	amount *big.Int,
-	gas gas,
+	gas Gas,
 	nonce uint64,
 ) (*ethtypes.Transaction, error) {
 	if err := gas.validate(); err != nil {

@@ -33,7 +33,7 @@ type OutboundData struct {
 	asset  ethcommon.Address
 	amount *big.Int
 
-	gas    gas
+	gas    Gas
 	nonce  uint64
 	height uint64
 
@@ -198,7 +198,7 @@ func determineDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethc
 	return ethcommon.Address{}, nil, true
 }
 
-func determineGas(cctx *types.CrossChainTx, logger zerolog.Logger) (gas, error) {
+func determineGas(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 	var (
 		outboundParams = cctx.GetCurrentOutboundParam()
 		limit          = outboundParams.GasLimit
@@ -221,10 +221,10 @@ func determineGas(cctx *types.CrossChainTx, logger zerolog.Logger) (gas, error) 
 
 	maxFee, ok := new(big.Int).SetString(outboundParams.GasPrice, 10)
 	if !ok {
-		return gas{}, errors.New("unable to parse gasPrice from " + outboundParams.GasPrice)
+		return Gas{}, errors.New("unable to parse gasPrice from " + outboundParams.GasPrice)
 	}
 
-	// TODO RELY ONLY ON gas{} data.
+	// TODO RELY ONLY ON Gas{} data.
 	// use dynamic gas price for ethereum chains.
 	// The code below is a fix for https://github.com/zeta-chain/node/issues/1085
 	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no GasPrice
@@ -244,7 +244,7 @@ func determineGas(cctx *types.CrossChainTx, logger zerolog.Logger) (gas, error) 
 	//	txData.gasPrice = specified
 	//}
 
-	return gas{
+	return Gas{
 		Limit:              limit,
 		MaxFeePerUnit:      maxFee,
 		PriorityFeePerUnit: big.NewInt(0), // todo!
