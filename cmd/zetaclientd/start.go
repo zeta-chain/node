@@ -242,9 +242,6 @@ func start(_ *cobra.Command, _ []string) error {
 		true,
 	)
 
-	keyGen := appContext.ZetacoreContext().GetKeygen()
-	tss.Signers = keyGen.GranteePubkeys
-
 	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
@@ -256,6 +253,9 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 		break
 	}
+
+	keyGen := appContext.ZetacoreContext().GetKeygen()
+	tss.Signers = keyGen.GranteePubkeys
 
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
