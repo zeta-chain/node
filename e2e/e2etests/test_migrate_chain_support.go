@@ -9,12 +9,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 
+	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -38,7 +38,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
 	zetaAmount := big.NewInt(1e18)
 	zetaAmount = zetaAmount.Mul(zetaAmount, big.NewInt(20_000_000_000)) // 20B Zeta
-	r.DepositZetaWithAmount(r.DeployerAddress, zetaAmount)
+	r.DepositZetaWithAmount(r.EVMAddress(), zetaAmount)
 
 	// do an ethers withdraw on the previous chain (0.01eth) for some interaction
 	TestEtherWithdraw(r, []string{"10000000000000000"})
@@ -120,7 +120,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	time.Sleep(10 * time.Second)
 
 	// emitting a withdraw with the previous chain should fail
-	txWithdraw, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), big.NewInt(10000000000000000))
+	txWithdraw, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), big.NewInt(10000000000000000))
 	if err == nil {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txWithdraw, r.Logger, r.ReceiptTimeout)
 		utils.RequiredTxFailed(r, receipt)
@@ -199,8 +199,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.Ctx,
 		"admin-evm2",
 		r.CtxCancel,
-		r.DeployerAddress,
-		r.DeployerPrivateKey,
+		r.Account,
 		r.EVMClient,
 		r.ZEVMClient,
 		r.CctxClient,
@@ -217,7 +216,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM
-	ewvmClient, evmAuth, err := getEVMClient(newRunner.Ctx, EVM2RPCURL, r.DeployerPrivateKey)
+	ewvmClient, evmAuth, err := getEVMClient(newRunner.Ctx, EVM2RPCURL, r.Account)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +242,11 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 }
 
 // getEVMClient get evm client from rpc and private key
-func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
+func getEVMClient(
+	ctx context.Context,
+	rpc string,
+	account config.Account,
+) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
 		return nil, nil, err
@@ -253,7 +256,7 @@ func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, 
 	if err != nil {
 		return nil, nil, err
 	}
-	deployerPrivkey, err := crypto.HexToECDSA(privKey)
+	deployerPrivkey, err := account.PrivateKey()
 	if err != nil {
 		return nil, nil, err
 	}

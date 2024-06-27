@@ -1,0 +1,51 @@
+zeta_chain_id: "athens_101-1"
+default_account:
+  bech32_address: "zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd"
+  evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"
+  private_key: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+additional_accounts:
+  user_erc20:
+    bech32_address: "zeta1datate7xmwm4uk032f9rmcu0cwy7ch7kg6y6zv"
+    evm_address: "0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6"
+    private_key: "fda3be1b1517bdf48615bdadacc1e6463d2865868dc8077d2cdcfa4709a16894"
+  user_zeta_test:
+    bech32_address: "zeta1tnp0hvsq4y5mxuhrq9h3jfwulxywpq0ads0rer"
+    evm_address: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd"
+    private_key: "729a6cdc5c925242e7df92fdeeb94dadbf2d0b9950d4db8f034ab27a3b114ba7"
+  user_zevm_mp_test:
+    bech32_address: "zeta13t3zjxvwec7g38q8mdjga37rpes9zkfvv7tkn2"
+    evm_address: "0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c"
+    private_key: "105460aebf71b10bfdb710ef5aa6d2932ee6ff6fc317ac9c24e0979903b10a5d"
+  user_bitcoin:
+    bech32_address: "zeta19q7czqysah6qg0n4y3l2a08gfzqxydla492v80"
+    evm_address: "0x283d810090EdF4043E75247eAeBcE848806237fD"
+    private_key: "7bb523963ee2c78570fb6113d886a4184d42565e8847f1cb639f5f5e2ef5b37a"
+  user_ether:
+    bech32_address: "zeta134rakuus43xn63yucgxhn88ywj8ewcv6ezn2ga"
+    evm_address: "0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A"
+    private_key: "098e74a1c2261fa3c1b8cfca8ef2b4ff96c73ce36710d208d1f6535aef42545d"
+  user_misc:
+    bech32_address: "zeta1jqfx6qhyrj0t9ggvl3p64vaax3s9y0xldt020w"
+    evm_address: "0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf"
+    private_key: "853c0945b8035a501b1161df65a17a0a20fc848bda8975a8b4e9222cc6f84cd4"
+  user_admin:
+    bech32_address: "zeta17w0adeg64ky0daxwd2ugyuneellmjgnx4e483s"
+    evm_address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    private_key: "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  user_fungible_admin:
+    bech32_address: "zeta1svzuz982w09vf2y08xsh8qplj36phyz466krj3"
+    evm_address: "0x8305C114Ea73cAc4A88f39A173803F94741b9055"
+    private_key: "d88d09a7d6849c15a36eb6931f9dd616091a63e9849a2cc86f309ba11fb8fec5"
+rpcs:
+  zevm: "http://zetacore0:8545"
+  evm: "http://eth:8545"
+  bitcoin:
+    host: "bitcoin:18443"
+    user: "smoketest"
+    pass: "123"
+    http_post_mode: true
+    disable_tls: true
+    params: regnet
+  zetacore_grpc: "zetacore0:9090"
+  zetacore_rpc: "http://zetacore0:26657"
+# contracts will be populated on first run

@@ -141,7 +141,7 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 	)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, 1, balance.Sign(), "balance should be positive")
 
@@ -156,7 +156,7 @@ func (r *E2ERunner) SendToTSSFromDeployerToDeposit(amount float64, inputUTXOs []
 	*chainhash.Hash,
 	error,
 ) {
-	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, r.DeployerAddress.Bytes())
+	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, r.EVMAddress().Bytes())
 }
 
 func (r *E2ERunner) SendToTSSFromDeployerWithMemo(

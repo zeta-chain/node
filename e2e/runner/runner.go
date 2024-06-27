@@ -25,6 +25,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 
+	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
@@ -49,8 +50,7 @@ func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
 // It also provides some helper functions
 type E2ERunner struct {
 	// accounts
-	DeployerAddress    ethcommon.Address
-	DeployerPrivateKey string
+	Account            config.Account
 	TSSAddress         ethcommon.Address
 	BTCTSSAddress      btcutil.Address
 	BTCDeployerAddress *btcutil.AddressWitnessPubKeyHash
@@ -128,8 +128,7 @@ func NewE2ERunner(
 	ctx context.Context,
 	name string,
 	ctxCancel context.CancelFunc,
-	deployerAddress ethcommon.Address,
-	deployerPrivateKey string,
+	account config.Account,
 	evmClient *ethclient.Client,
 	zevmClient *ethclient.Client,
 	cctxClient crosschaintypes.QueryClient,
@@ -148,8 +147,7 @@ func NewE2ERunner(
 		Name:      name,
 		CtxCancel: ctxCancel,
 
-		DeployerAddress:    deployerAddress,
-		DeployerPrivateKey: deployerPrivateKey,
+		Account: account,
 
 		ZEVMClient:        zevmClient,
 		EVMClient:         evmClient,
@@ -313,4 +311,9 @@ func (r *E2ERunner) FailNow() {
 
 func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {
 	utils.RequireTxSuccessful(r, receipt, msgAndArgs...)
+}
+
+// EVMAddress is shorthand to get the EVM address of the account
+func (r *E2ERunner) EVMAddress() ethcommon.Address {
+	return r.Account.EVMAddress()
 }

@@ -39,7 +39,7 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 
 	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
-		DestinationAddress:  r.DeployerAddress.Bytes(),
+		DestinationAddress:  r.EVMAddress().Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message: []byte(
 			"revert",

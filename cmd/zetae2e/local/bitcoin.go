@@ -21,13 +21,13 @@ func bitcoinTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
+		account := conf.AdditionalAccounts.UserBitcoin
 		// initialize runner for bitcoin test
 		bitcoinRunner, err := initTestRunner(
 			"bitcoin",
 			conf,
 			deployerRunner,
-			UserBitcoinAddress,
-			UserBitcoinPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgYellow, "bitcoin"),
 		)
 		if err != nil {
@@ -38,7 +38,7 @@ func bitcoinTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(UserBitcoinAddress, 1000)
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
 		bitcoinRunner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain

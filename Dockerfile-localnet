@@ -28,7 +28,7 @@ RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 FROM golang:1.20.14-bookworm AS base-runtime
 
 RUN apt update && \
-    apt install -yq jq curl tmux python3 openssh-server iputils-ping iproute2 && \
+    apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ssh-keygen -A && \ 
@@ -46,6 +46,7 @@ ENV PATH /root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/cu
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/ssh_config /etc/ssh/ssh_config.d/localnet.conf
 COPY contrib/localnet/zetacored /root/zetacored
+COPY cmd/zetae2e/config/localnet.yml /root/config.yml
 
 RUN chmod 755 /root/*.sh && \
     chmod 644 /etc/ssh/ssh_config.d/localnet.conf
