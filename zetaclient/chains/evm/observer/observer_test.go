@@ -153,7 +153,7 @@ func Test_NewObserver(t *testing.T) {
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        true,
-			message:     "error creating db path",
+			message:     "unable to ensure dbPath",
 		},
 		{
 			name: "should fail if RPC call fails",

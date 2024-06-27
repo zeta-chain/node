@@ -290,27 +290,26 @@ func (ob *Observer) StopChannel() chan struct{} {
 
 // OpenDB open sql database in the given path.
 func (ob *Observer) OpenDB(dbPath string, dbName string) error {
-	// create db path if not exist
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		err := os.MkdirAll(dbPath, os.ModePerm)
-		if err != nil {
-			return errors.Wrapf(err, "error creating db path: %s", dbPath)
-		}
-	}
+	var dial gorm.Dialector
 
-	// use custom dbName or chain name if not provided
-	if dbName == "" {
-		dbName = ob.chain.ChainName.String()
-	}
-	path := fmt.Sprintf("%s/%s", dbPath, dbName)
-
-	// use memory db if specified
+	// SQLite in-mem db
 	if strings.Contains(dbPath, ":memory:") {
-		path = dbPath
+		dial = sqlite.Open(dbPath)
+	} else {
+		if err := ensureDirectory(dbPath); err != nil {
+			return errors.Wrapf(err, "unable to ensure dbPath %q", dbPath)
+		}
+
+		// use custom dbName or chain name if not provided
+		if dbName == "" {
+			dbName = ob.chain.ChainName.String()
+		}
+
+		dial = sqlite.Open(fmt.Sprintf("%s/%s", dbPath, dbName))
 	}
 
 	// open db
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	db, err := gorm.Open(dial, &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		return errors.Wrap(err, "error opening db")
 	}
@@ -320,9 +319,22 @@ func (ob *Observer) OpenDB(dbPath string, dbName string) error {
 	if err != nil {
 		return errors.Wrap(err, "error migrating db")
 	}
+
 	ob.db = db
 
 	return nil
+}
+
+func ensureDirectory(path string) error {
+	_, err := os.Stat(path)
+	switch {
+	case os.IsNotExist(err):
+		return os.MkdirAll(path, os.ModePerm)
+	case err != nil:
+		return err
+	default:
+		return nil
+	}
 }
 
 // CloseDB close the database.

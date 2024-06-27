@@ -276,7 +276,7 @@ func TestOpenCloseDB(t *testing.T) {
 	})
 	t.Run("should return error on invalid db path", func(t *testing.T) {
 		err := ob.OpenDB("/invalid/123db", "")
-		require.ErrorContains(t, err, "error creating db path")
+		require.ErrorContains(t, err, "unable to ensure dbPath")
 	})
 }
 
