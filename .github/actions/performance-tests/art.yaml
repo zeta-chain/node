@@ -24,11 +24,11 @@ scenarios:
   - name: web3_clientVersion
     flow:
       - post:
-          url: "/"
+          url: "/xxxx"
           json:
             id: 1
             jsonrpc: "2.0"
-            method: "web3_clientVersion"  # Deliberate typo to force failure
+            method: "web3_clientVersionxxx"  # Deliberate typo to force failure
             params: []
 
   - name: web3_sha3
