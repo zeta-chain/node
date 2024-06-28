@@ -10,8 +10,4 @@
 - [ ] Tested in development environment
 - [ ] Go unit tests
 - [ ] Go integration tests
-- [ ] Tested via GitHub Actions 
-
-# Checklist:
-
-- [ ] I have added unit tests that prove my fix feature works
+- [ ] Tested via GitHub Actions
