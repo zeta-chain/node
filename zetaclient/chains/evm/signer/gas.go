@@ -15,6 +15,8 @@ import (
 // https://eips.ethereum.org/EIPS/eip-1559
 // https://www.blocknative.com/blog/eip-1559-fees
 // https://github.com/bnb-chain/BEPs/blob/master/BEPs/BEP226.md (tl;dr: baseFee is always zero)
+//
+// However, this doesn't affect tx creation nor broadcasting
 type Gas struct {
 	Limit uint64
 
@@ -46,10 +48,11 @@ func (g Gas) validate() error {
 //
 // Returns true if priority fee is <= 0.
 func (g Gas) isLegacy() bool {
-	return g.PriorityFeePerUnit.Sign() <= 1
+	return g.PriorityFeePerUnit.Sign() < 1
 }
 
-func determineGas(cctx *types.CrossChainTx, priorityFee *big.Int, logger zerolog.Logger) (Gas, error) {
+// makeGasFromCCTX creates Gas struct based from CCTX and priorityFee.
+func makeGasFromCCTX(cctx *types.CrossChainTx, priorityFee *big.Int, logger zerolog.Logger) (Gas, error) {
 	if priorityFee == nil {
 		return Gas{}, errors.New("priorityFee is nil")
 	}
@@ -77,6 +80,11 @@ func determineGas(cctx *types.CrossChainTx, priorityFee *big.Int, logger zerolog
 	maxFee, ok := new(big.Int).SetString(outboundParams.GasPrice, 10)
 	if !ok {
 		return Gas{}, errors.New("unable to parse gasPrice from " + outboundParams.GasPrice)
+	}
+
+	// is maxFee < priorityFee
+	if maxFee.Cmp(priorityFee) == -1 {
+		return Gas{}, errors.Errorf("maxFee (%d) is less than priorityFee (%d)", maxFee.Int64(), priorityFee.Int64())
 	}
 
 	return Gas{

@@ -90,7 +90,7 @@ func NewOutboundData(
 	}
 
 	// Determine gas fees
-	gas, err := determineGas(cctx, evmObserver.GetPriorityGasFee(), logger)
+	gas, err := makeGasFromCCTX(cctx, evmObserver.GetPriorityGasFee(), logger)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "failed to determine gas fees")
 	}
