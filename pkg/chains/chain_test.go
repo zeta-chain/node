@@ -212,6 +212,46 @@ func TestChain_EncodeAddress(t *testing.T) {
 	}
 }
 
+func TestChain_IsEVMChain(t *testing.T) {
+	tests := []struct {
+		name  string
+		chain chains.Chain
+		want  bool
+	}{
+		{"Ethereum Mainnet", chains.Ethereum, true},
+		{"Goerli Testnet", chains.Goerli, true},
+		{"Sepolia Testnet", chains.Sepolia, true},
+		{"Non-EVM", chains.BitcoinMainnet, false},
+		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.chain.IsEVMChain())
+		})
+	}
+}
+
+func TestChain_IsBitcoinChain(t *testing.T) {
+	tests := []struct {
+		name  string
+		chain chains.Chain
+		want  bool
+	}{
+		{"Bitcoin Mainnet", chains.BitcoinMainnet, true},
+		{"Bitcoin Testnet", chains.BitcoinTestnet, true},
+		{"Bitcoin Regtest", chains.BitcoinRegtest, true},
+		{"Non-Bitcoin", chains.Ethereum, false},
+		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.chain.IsBitcoinChain())
+		})
+	}
+}
+
 func TestIsZetaChain(t *testing.T) {
 	tests := []struct {
 		name    string

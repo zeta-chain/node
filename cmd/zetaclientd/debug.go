@@ -89,7 +89,7 @@ func DebugCmd() *cobra.Command {
 			}
 
 			// get ballot identifier according to the chain type
-			if chain.Consensus == chains.Consensus_ethereum {
+			if chain.IsEVMChain() {
 				evmObserver := evmobserver.Observer{}
 				evmObserver.WithZetacoreClient(client)
 				var ethRPC *ethrpc.EthRPC
@@ -165,7 +165,7 @@ func DebugCmd() *cobra.Command {
 					fmt.Println("CoinType not detected")
 				}
 				fmt.Println("CoinType : ", coinType)
-			} else if chain.Consensus == chains.Consensus_bitcoin {
+			} else if chain.IsBitcoinChain() {
 				btcObserver := btcobserver.Observer{}
 				btcObserver.WithZetacoreClient(client)
 				btcObserver.WithChain(chain)

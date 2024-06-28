@@ -76,7 +76,7 @@ func NewZetaSupplyChecker(
 		if !found {
 			return zetaSupplyChecker, fmt.Errorf("chain not found for chain id %d", chainID)
 		}
-		if chain.IsExternalChain() && chain.Consensus == chains.Consensus_ethereum &&
+		if chain.IsExternalChain() && chain.IsEVMChain() &&
 			chain.Network != chains.Network_eth {
 			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, chain)
 		} else {

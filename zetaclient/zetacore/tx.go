@@ -62,9 +62,9 @@ func GetInboundVoteMessage(
 
 // GasPriceMultiplier returns the gas price multiplier for the given chain
 func GasPriceMultiplier(chain chains.Chain) (float64, error) {
-	if chain.Consensus == chains.Consensus_ethereum {
+	if chain.IsEVMChain() {
 		return clientcommon.EVMOutboundGasPriceMultiplier, nil
-	} else if chain.Consensus == chains.Consensus_bitcoin {
+	} else if chain.IsBitcoinChain() {
 		return clientcommon.BTCOutboundGasPriceMultiplier, nil
 	}
 	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chain.ChainId)

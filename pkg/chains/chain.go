@@ -76,16 +76,26 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
 
+func (chain Chain) IsEVMChain() bool {
+	return chain.Consensus == Consensus_ethereum
+}
+
+func (chain Chain) IsBitcoinChain() bool {
+	return chain.Consensus == Consensus_bitcoin
+}
+
 // DecodeAddressFromChainID decode the address string to bytes
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Chain) ([]byte, error) {
-	if IsEVMChain(chainID, additionalChains) {
+	switch {
+	case IsEVMChain(chainID, additionalChains):
 		return ethcommon.HexToAddress(addr).Bytes(), nil
-	} else if IsBitcoinChain(chainID, additionalChains) {
+	case IsBitcoinChain(chainID, additionalChains):
 		return []byte(addr), nil
+	default:
+		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
-	return nil, fmt.Errorf("chain (%d) not supported", chainID)
 }
 
 // IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality

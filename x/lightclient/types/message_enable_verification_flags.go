@@ -8,6 +8,10 @@ import (
 
 const (
 	TypeMsgEnableHeaderVerification = "enable_header_verification"
+
+	// MaxChainIDListLength is the maximum number of chain IDs that can be enabled for header verification
+	// this is a value chosen arbitrarily to prevent abuse
+	MaxChainIDListLength = 200
 )
 
 var _ sdk.Msg = &MsgEnableHeaderVerification{}
@@ -48,7 +52,7 @@ func (msg *MsgEnableHeaderVerification) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "chain id list cannot be empty")
 	}
 
-	if len(msg.ChainIdList) > 200 {
+	if len(msg.ChainIdList) > MaxChainIDListLength {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "chain id list too long")
 	}
 

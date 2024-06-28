@@ -42,7 +42,7 @@ func TestMsgEnableHeaderVerification_ValidateBasic(t *testing.T) {
 			name: "chain id list is too long",
 			msg: types.MsgEnableHeaderVerification{
 				Creator:     sample.AccAddress(),
-				ChainIdList: make([]int64, 201),
+				ChainIdList: make([]int64, types.MaxChainIDListLength+1),
 			},
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)

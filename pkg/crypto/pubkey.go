@@ -71,7 +71,7 @@ func (pubKey PubKey) String() string {
 
 // GetAddress will return an address for the given chain
 func (pubKey PubKey) GetAddress(chain chains.Chain) (chains.Address, error) {
-	if chain.Consensus == chains.Consensus_ethereum {
+	if chain.IsEVMChain() {
 		return pubKey.GetEVMAddress()
 	}
 	return chains.NoAddress, nil
