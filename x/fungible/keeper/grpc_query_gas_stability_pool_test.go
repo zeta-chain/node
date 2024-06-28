@@ -86,18 +86,6 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		require.Empty(t, res.Balances)
 	})
 
-	t.Run("should error if chain is nil", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetFungibleObserverMock(t, k)
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{})
-
-		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
-		require.Error(t, err)
-		require.Nil(t, res)
-	})
-
 	t.Run("should error if system contracts not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseObserverMock: true,

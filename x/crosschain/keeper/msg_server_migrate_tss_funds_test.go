@@ -99,7 +99,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
 		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 		require.True(t, found)
 		msg := crosschaintypes.MsgMigrateTssFunds{
@@ -132,7 +132,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
 		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 		require.True(t, found)
 
@@ -370,7 +370,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
 
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -401,7 +401,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
 
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -429,7 +429,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, true)
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, false, true)
 
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -456,7 +456,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
 		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  1,
 			NonceHigh: 10,
@@ -490,7 +490,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
 		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  1,
 			NonceHigh: 1,
@@ -537,7 +537,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 
 			msgServer := keeper.NewMsgServerImpl(*k)
 
-			indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, false)
+			indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, false, false)
 			currentTss, found := k.GetObserverKeeper().GetTSS(ctx)
 			require.True(t, found)
 			newTss := sample.Tss()

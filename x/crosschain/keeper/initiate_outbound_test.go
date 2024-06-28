@@ -100,7 +100,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
 			// mock unsuccessful GetSupportedChainFromChainID
-			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, &senderChain)
+			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, senderChain, "", amount)
@@ -136,7 +136,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
 		// Mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock unsuccessful GetRevertGasLimit for ERC20
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
@@ -177,13 +177,13 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 			// Mock successful GetSupportedChainFromChainID
-			keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+			keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// mock successful GetRevertGasLimit for ERC20
 			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 			// mock unsuccessful PayGasInERC20AndUpdateCctx
-			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, &senderChain)
+			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
@@ -222,13 +222,13 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 			// Mock successful GetSupportedChainFromChainID
-			keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+			keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// mock successful GetRevertGasLimit for ERC20
 			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 0)
 
 			// mock unsuccessful PayGasInERC20AndUpdateCctx
-			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, &senderChain)
+			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
 			cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
@@ -265,7 +265,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
 		// Mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock successful GetRevertGasLimit for ERC20
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
@@ -305,9 +305,6 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		// Setup expected calls
 		// mock unsuccessful HandleEVMDeposit which reverts , i.e returns err and isContractReverted = true
 		keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
-
-		// Mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 
 		// mock successful GetRevertGasLimit for ERC20
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
@@ -349,7 +346,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
 			// Mock successful GetSupportedChainFromChainID
-			keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+			keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// mock successful GetRevertGasLimit for ERC20
 			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
@@ -389,7 +386,16 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, receiverChain, "")
 
 		// mock successful UpdateNonce
-		updatedNonce := keepertest.MockUpdateNonce(observerMock, receiverChain)
+		nonce := uint64(1)
+		tss := sample.Tss()
+		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainName.String()).
+			Return(observertypes.ChainNonces{Nonce: nonce}, true)
+		observerMock.On("GetTSS", mock.Anything).
+			Return(tss, true)
+		observerMock.On("GetPendingNonces", mock.Anything, tss.TssPubkey, mock.Anything).
+			Return(observertypes.PendingNonces{NonceHigh: int64(nonce)}, true)
+		observerMock.On("SetChainNonces", mock.Anything, mock.Anything)
+		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything)
 
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, receiverChain, "", amount)
@@ -397,7 +403,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_PendingOutbound, newStatus)
-		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
+		require.Equal(t, nonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
 
 	t.Run("unable to process crosschain msg passing PayGasAndUpdateCctx fails", func(t *testing.T) {
@@ -413,7 +419,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		receiverChain := getValidEthChain()
 
 		// mock unsuccessful PayGasAndUpdateCctx
-		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, receiverChain)
 
 		// call InitiateOutbound
 		cctx := GetERC20Cctx(t, receiver, receiverChain, "", amount)

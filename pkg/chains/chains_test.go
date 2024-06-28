@@ -279,7 +279,7 @@ func TestCombineDefaultChainsList(t *testing.T) {
 	// chain IDs are 11000 - 11009 to not conflict with the default chains
 	var chainList = make([]chains.Chain, 0, 10)
 	for i := int64(11000); i < 10; i++ {
-		chainList = append(chainList, *sample.Chain(i))
+		chainList = append(chainList, sample.Chain(i))
 	}
 
 	bitcoinMainnetChainID := chains.BitcoinMainnet.ChainId
@@ -289,7 +289,7 @@ func TestCombineDefaultChainsList(t *testing.T) {
 		chains.DefaultChainsList()[0].ChainId,
 		"Bitcoin mainnet be the first in the default chain list for TestCombineDefaultChainsList tests",
 	)
-	alternativeBitcoinMainnet := *sample.Chain(bitcoinMainnetChainID)
+	alternativeBitcoinMainnet := sample.Chain(bitcoinMainnetChainID)
 
 	tests := []struct {
 		name     string
@@ -324,13 +324,13 @@ func TestCombineChainList(t *testing.T) {
 	// prepare array containing pre-defined chains
 	var chainList = make([]chains.Chain, 0, 10)
 	for i := int64(0); i < 10; i++ {
-		chainList = append(chainList, *sample.Chain(i))
+		chainList = append(chainList, sample.Chain(i))
 	}
 
 	// prepare second array for duplicated chain IDs
 	var duplicatedChainList = make([]chains.Chain, 0, 10)
 	for i := int64(0); i < 10; i++ {
-		duplicatedChainList = append(duplicatedChainList, *sample.Chain(i))
+		duplicatedChainList = append(duplicatedChainList, sample.Chain(i))
 	}
 
 	tests := []struct {

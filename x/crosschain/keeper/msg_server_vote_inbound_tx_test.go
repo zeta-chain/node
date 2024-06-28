@@ -315,7 +315,7 @@ func TestKeeper_SaveObservedInboundInformation(t *testing.T) {
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain()
-		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, "", amount)
 		eventIndex := sample.Uint64InRange(1, 100)
 		k.SaveObservedInboundInformation(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
@@ -337,7 +337,7 @@ func TestKeeper_SaveObservedInboundInformation(t *testing.T) {
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain()
-		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, "", amount)
 		hash := sample.Hash()
 		cctx.InboundParams.ObservedHash = hash.String()
 		k.SetInboundTracker(ctx, types.InboundTracker{

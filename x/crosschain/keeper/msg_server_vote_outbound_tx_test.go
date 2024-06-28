@@ -203,7 +203,6 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 		_ = keepertest.MockUpdateNonce(observerMock, senderChain)
 
 		//Successfully mock SaveOutbound
@@ -265,7 +264,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		//Successfully mock SaveOutBound
 		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss)
@@ -331,7 +330,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 			Return(fungibletypes.ForeignCoins{}, false)
 
 		// Successfully mock GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		//Successfully mock SaveFailedOutbound
 		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss)

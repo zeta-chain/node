@@ -332,9 +332,9 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				Return(authoritytypes.QueryGetChainInfoResponse{
 					ChainInfo: authoritytypes.ChainInfo{
 						Chains: []chains.Chain{
-							*sample.Chain(1000),
-							*sample.Chain(1001),
-							*sample.Chain(1002),
+							sample.Chain(1000),
+							sample.Chain(1001),
+							sample.Chain(1002),
 						},
 					},
 				})

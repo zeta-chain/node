@@ -21,7 +21,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, sample.Chain(5))
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
@@ -37,7 +37,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, nil)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, sample.Chain(5))
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -56,7 +56,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
@@ -81,7 +81,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
@@ -118,7 +118,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
@@ -164,7 +164,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
