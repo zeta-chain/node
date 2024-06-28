@@ -23,6 +23,7 @@ func RunnerFromConfig(
 ) (*runner.E2ERunner, error) {
 	// initialize clients
 	btcRPCClient,
+		solanaClient,
 		evmClient,
 		evmAuth,
 		cctxClient,
@@ -56,6 +57,8 @@ func RunnerFromConfig(
 		evmAuth,
 		zevmAuth,
 		btcRPCClient,
+		solanaClient,
+
 		logger,
 		opts...,
 	)
@@ -78,6 +81,8 @@ func RunnerFromConfig(
 
 // ExportContractsFromRunner export contracts from the runner to config using a source config
 func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.Config {
+	conf.Contracts.Solana.GatewayProgramID = r.GatewayProgram.String()
+
 	// copy contracts from deployer runner
 	conf.Contracts.EVM.ZetaEthAddress = r.ZetaEthAddr.Hex()
 	conf.Contracts.EVM.ConnectorEthAddr = r.ConnectorEthAddr.Hex()

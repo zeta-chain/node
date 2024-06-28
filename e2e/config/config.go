@@ -30,6 +30,7 @@ type RPCs struct {
 	Bitcoin      BitcoinRPC `yaml:"bitcoin"`
 	ZetaCoreGRPC string     `yaml:"zetacore_grpc"`
 	ZetaCoreRPC  string     `yaml:"zetacore_rpc"`
+	SolanaRPC    string     `yaml:"solana_rpc"`
 }
 
 // BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
@@ -44,8 +45,14 @@ type BitcoinRPC struct {
 
 // Contracts contains the addresses of predeployed contracts
 type Contracts struct {
-	EVM  EVM  `yaml:"evm"`
-	ZEVM ZEVM `yaml:"zevm"`
+	EVM    EVM    `yaml:"evm"`
+	ZEVM   ZEVM   `yaml:"zevm"`
+	Solana Solana `yaml:"solana"`
+}
+
+// Solana contains the addresses of predeployed contracts on the Solana chain
+type Solana struct {
+	GatewayProgramID string `yaml:"gateway_program_id"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -88,6 +95,7 @@ func DefaultConfig() Config {
 			},
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
+			SolanaRPC:    "http://solana:8899",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{

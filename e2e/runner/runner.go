@@ -14,6 +14,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
@@ -57,6 +59,7 @@ type E2ERunner struct {
 	ZEVMClient   *ethclient.Client
 	EVMClient    *ethclient.Client
 	BtcRPCClient *rpcclient.Client
+	SolanaClient *rpc.Client
 
 	// grpc clients
 	CctxClient        crosschaintypes.QueryClient
@@ -74,6 +77,9 @@ type E2ERunner struct {
 	// evm auth
 	EVMAuth  *bind.TransactOpts
 	ZEVMAuth *bind.TransactOpts
+
+	// programs on Solana
+	GatewayProgram solana.PublicKey
 
 	// contracts evm
 	ZetaEthAddr      ethcommon.Address
@@ -139,6 +145,7 @@ func NewE2ERunner(
 	evmAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
+	solanaClient *rpc.Client,
 	logger *Logger,
 	opts ...E2ERunnerOption,
 ) *E2ERunner {
@@ -162,6 +169,7 @@ func NewE2ERunner(
 		EVMAuth:      evmAuth,
 		ZEVMAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
+		SolanaClient: solanaClient,
 
 		Logger: logger,
 	}
@@ -194,6 +202,8 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	runner.ContextAppAddr = other.ContextAppAddr
 	runner.SystemContractAddr = other.SystemContractAddr
 	runner.ZevmTestDAppAddr = other.ZevmTestDAppAddr
+
+	runner.GatewayProgram = other.GatewayProgram
 
 	// create instances of contracts
 	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.EVMClient)
@@ -270,6 +280,8 @@ func (runner *E2ERunner) Unlock() {
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
 func (runner *E2ERunner) PrintContractAddresses() {
+	runner.Logger.Print(" --- 📜Solana addresses ---")
+	runner.Logger.Print("GatewayProgram: %s", runner.GatewayProgram.String())
 	// zevm contracts
 	runner.Logger.Print(" --- 📜zEVM contracts ---")
 	runner.Logger.Print("SystemContract: %s", runner.SystemContractAddr.Hex())

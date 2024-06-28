@@ -52,6 +52,12 @@ const (
 	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
+	 Solana tests
+	*/
+	TestSolanaIntializeGatewayName = "solana_initialize_gateway"
+	TestSolanaDepositName          = "solana_deposit"
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -323,6 +329,24 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestERC20DepositAndCallRefund,
 	),
+	/*
+	 Solana tests
+	*/
+	runner.NewE2ETest(
+		TestSolanaIntializeGatewayName,
+		"initialize Solana gateway",
+		[]runner.ArgDefinition{},
+		TestSolanaInitializeGateway,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositName,
+		"deposit Sol into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in SOL", DefaultValue: "0.1"},
+		},
+		TestSolanaDeposit,
+	),
+
 	/*
 	 Bitcoin tests
 	*/

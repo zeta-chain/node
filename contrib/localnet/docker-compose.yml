@@ -104,6 +104,18 @@ services:
       - ssh:/root/.ssh
       - preparams:/root/preparams
 
+  solana:
+    image: solana-local:latest
+    container_name: solana
+    hostname: solana
+    ports:
+      - "8899:8899"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.102
+    entrypoint: [ "/usr/bin/start-solana.sh" ]
+
+
   eth:
     image: ethereum/client-go:v1.10.26
     container_name: eth

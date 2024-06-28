@@ -149,6 +149,7 @@ func main() {
 	}
 
 	{
+		// build & bcast a Depsosit tx
 		bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
 		if err != nil {
 			log.Fatalf("Error getting balance: %v", err)

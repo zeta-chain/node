@@ -281,6 +281,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
+		solanaTests := []string{
+			e2etests.TestSolanaIntializeGatewayName,
+			e2etests.TestSolanaDepositName,
+		}
+
 		bitcoinTests := []string{
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositRefundName,
@@ -322,6 +327,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
+		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, solanaTests...))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
 	if testAdmin {

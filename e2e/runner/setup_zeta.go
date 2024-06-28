@@ -7,6 +7,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
@@ -64,6 +65,15 @@ func (runner *E2ERunner) SetTSSAddresses() error {
 	runner.BTCTSSAddress = btcTSSAddress
 
 	return nil
+}
+
+// SetSolanaContracts set Solana contracts
+func (runner *E2ERunner) SetSolanaContracts() {
+	runner.Logger.Print("⚙️ setting up Solana contracts")
+
+	// set Solana contracts
+	// TODO: remove this hardcoded stuff for localnet
+	runner.GatewayProgram = solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
 }
 
 // SetZEVMContracts set contracts for the ZEVM

@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/gagliardetto/solana-go/rpc"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
@@ -22,6 +23,7 @@ import (
 // getClientsFromConfig get clients from config
 func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey string) (
 	*rpcclient.Client,
+	*rpc.Client,
 	*ethclient.Client,
 	*bind.TransactOpts,
 	crosschaintypes.QueryClient,
@@ -34,25 +36,30 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	*bind.TransactOpts,
 	error,
 ) {
+	solanaClient := rpc.New(conf.RPCs.SolanaRPC)
+	if solanaClient == nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get solana client")
+	}
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
 	}
 	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
 	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, evmPrivKey)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
 	}
 	return btcRPCClient,
+		solanaClient,
 		evmClient,
 		evmAuth,
 		cctxClient,
