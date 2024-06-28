@@ -35,6 +35,8 @@ type MockEvmClient struct {
 	blockNumber uint64
 	header      *ethtypes.Header
 	Receipts    []*ethtypes.Receipt
+
+	gasTipCap *big.Int
 }
 
 func NewMockEvmClient() *MockEvmClient {
@@ -96,10 +98,18 @@ func (e *MockEvmClient) SuggestGasPrice(_ context.Context) (*big.Int, error) {
 }
 
 func (e *MockEvmClient) SuggestGasTipCap(_ context.Context) (*big.Int, error) {
-	if e.err != nil {
+	switch {
+	case e.err != nil:
 		return nil, e.err
+	case e.gasTipCap != nil:
+		return e.gasTipCap, nil
+	default:
+		return big.NewInt(0), nil
 	}
-	return big.NewInt(0), nil
+}
+
+func (e *MockEvmClient) SetSuggestGasTipCap(v *big.Int) {
+	e.gasTipCap = v
 }
 
 func (e *MockEvmClient) EstimateGas(_ context.Context, _ ethereum.CallMsg) (gas uint64, err error) {

@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -33,6 +34,51 @@ var (
 	ERC20CustodyAddress = sample.EthAddress()
 )
 
+type testSuite struct {
+	Observer  *observer.Observer
+	EVMClient *mocks.MockEvmClient
+	Logger    zerolog.Logger
+}
+
+// newTestSuite represents a simple test suite. Can be expanded in the future.
+func newTestSuite(t *testing.T, tss interfaces.TSSSigner) *testSuite {
+	// use default mock TSS if not provided
+	if tss == nil {
+		tss = mocks.NewTSSMainnet()
+	}
+
+	cfg := config.NewConfig()
+
+	// prepare mock arguments to create observer
+	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
+	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
+	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
+	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
+	coreCTX := context.NewZetacoreContext(cfg)
+	dbpath := sample.CreateTempDir(t)
+	logger := base.Logger{}
+	ts := &metrics.TelemetryServer{}
+
+	obs, err := observer.NewObserver(
+		evmcfg,
+		evmClient,
+		params,
+		coreCTX,
+		mocks.NewMockZetacoreClient(),
+		tss,
+		dbpath,
+		logger,
+		ts,
+	)
+	require.NoError(t, err)
+
+	return &testSuite{
+		Observer:  obs,
+		EVMClient: evmClient,
+		Logger:    zerolog.Nop(),
+	}
+}
+
 // getNewEvmSigner creates a new EVM chain signer for testing
 func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 	// use default mock TSS if not provided
@@ -55,38 +101,13 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 		config.GetConnectorABI(),
 		config.GetERC20CustodyABI(),
 		mpiAddress,
-		erc20CustodyAddress)
+		erc20CustodyAddress,
+	)
 }
 
 // getNewEvmChainObserver creates a new EVM chain observer for testing
 func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.Observer, error) {
-	// use default mock TSS if not provided
-	if tss == nil {
-		tss = mocks.NewTSSMainnet()
-	}
-	cfg := config.NewConfig()
-
-	// prepare mock arguments to create observer
-	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
-	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
-	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
-	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
-	coreCTX := context.NewZetacoreContext(cfg)
-	dbpath := sample.CreateTempDir(t)
-	logger := base.Logger{}
-	ts := &metrics.TelemetryServer{}
-
-	return observer.NewObserver(
-		evmcfg,
-		evmClient,
-		params,
-		coreCTX,
-		mocks.NewMockZetacoreClient(),
-		tss,
-		dbpath,
-		logger,
-		ts,
-	)
+	return newTestSuite(t, tss).Observer, nil
 }
 
 func getNewOutboundProcessor() *outboundprocessor.Processor {
@@ -192,7 +213,11 @@ func TestSigner_SignOutbound(t *testing.T) {
 		// Verify Signature
 		tss := mocks.NewTSSMainnet()
 		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// check that by default tx type is legacy tx
+		assert.Equal(t, ethtypes.LegacyTxType, int(tx.Type()))
 	})
+
 	t.Run("SignOutbound - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
 		tss.Pause()
@@ -201,6 +226,39 @@ func TestSigner_SignOutbound(t *testing.T) {
 		tx, err := evmSigner.SignOutbound(txData)
 		require.ErrorContains(t, err, "unable to sign onReceive")
 		require.Nil(t, tx)
+	})
+
+	t.Run("SignOutbound - should successfully sign Dynamic Fee tx", func(t *testing.T) {
+		const gwei = 1_000_000_000
+
+		// ARRANGE
+		ts := newTestSuite(t, tss)
+
+		// Given RPC NODE
+		// That is able to get gas price and priority fee
+		priorityFee := big.NewInt(1 * gwei)
+		ts.EVMClient.SetSuggestGasTipCap(priorityFee)
+		require.NoError(t, ts.Observer.PostGasPrice())
+
+		// Given CCTX from zetacore
+		cctx := getCCTX(t)
+
+		// Given OutboundData for signing a tx
+		txData, _, err := NewOutboundData(cctx, ts.Observer, 123, ts.Logger)
+		require.NoError(t, err)
+
+		// ACT
+		tx, err := evmSigner.SignOutbound(txData)
+		require.NoError(t, err)
+
+		// ASSERT
+		verifyTxSignature(t, tx, mocks.NewTSSMainnet().Pubkey(), evmSigner.EvmSigner())
+
+		// check that by default tx type is a dynamic fee tx
+		assert.Equal(t, ethtypes.DynamicFeeTxType, int(tx.Type()))
+
+		// and priority fee is the same
+		assert.Equal(t, priorityFee.Int64(), tx.GasTipCap().Int64())
 	})
 }
 
