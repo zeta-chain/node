@@ -39,7 +39,16 @@ jobs:
       - name: "EXECUTE:PERFORMANCE:TESTS"
         run: | 
           artillery run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
+          # Check Artillery exit status
           if [ $? -ne 0 ]; then
+            echo "Artillery command failed to execute."
+            exit 1
+          fi
+          
+          # Parse the results.json file to check for failures
+          failures=$(jq '.errors.ECONNREFUSED' ./report.json)
+          
+          if [ "$failures" -gt 0 ]; then
             echo "Performance Testing had Failed Tests."
             exit 1
           else

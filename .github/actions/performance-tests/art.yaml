@@ -24,7 +24,7 @@ scenarios:
   - name: web3_clientVersion
     flow:
       - post:
-          url: "/sdfas"
+          url: "/xxxxx"
           json:
             id: 1
             jsonrpc: "2.0"
