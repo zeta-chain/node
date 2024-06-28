@@ -45,22 +45,12 @@ jobs:
             exit 1
           fi
           
-          cat report.json
+          # Parse the results.json file to check for failed vusers and http response codes
+          failed_vusers=$(jq '.aggregate.counters["vusers.failed"] // 0' ./report.json)
+          http_codes_200=$(jq '.aggregate.counters["http.codes.200"] // 0' ./report.json)
+          http_responses=$(jq '.aggregate.counters["http.responses"] // 0' ./report.json)
           
-          # Parse the results.json file to check for failures
-          failures=$(jq '.errors.ECONNREFUSED // 0' ./report.json)
-          
-          if [ "$failures" -gt 0 ]; then
-            echo "Performance Testing had Failed Tests."
-            exit 1
-          else
-            echo "EVM Performance Testing Successful"
-          fi
-
-          # Parse the results.json file to check for failed vusers
-          failed_vusers=$(jq '.vusers.failed // 0' ./report.json)
-          
-          if [ "$failed_vusers" -gt 0 ]; then
+          if [ "$failed_vusers" -gt 1 ] || [ "$http_codes_200" -ne "$http_responses" ]; then
             echo "Performance Testing had Failed Tests."
             exit 1
           else
