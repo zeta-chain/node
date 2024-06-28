@@ -185,7 +185,7 @@ func (c *Client) ZetacoreContextUpdater(appContext *appcontext.AppContext) {
 		select {
 		case <-ticker.C:
 			c.logger.Debug().Msg("Running Updater")
-			err := c.UpdateZetacoreContext(appContext.ZetacoreContext(), false, sampledLogger)
+			err := c.UpdateZetacoreContext(appContext, false, sampledLogger)
 			if err != nil {
 				c.logger.Err(err).Msg("ZetacoreContextUpdater failed to update config")
 			}

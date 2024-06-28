@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -25,7 +26,7 @@ func createObserver(t *testing.T) *base.Observer {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
-	zetacoreContext := context.NewZetacoreContext(config.NewConfig())
+	zetacoreContext := context.New(config.NewConfig(), zerolog.Nop())
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
 
@@ -51,7 +52,7 @@ func TestNewObserver(t *testing.T) {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
-	zetacoreContext := context.NewZetacoreContext(config.NewConfig())
+	appContext := context.New(config.NewConfig(), zerolog.Nop())
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
@@ -62,7 +63,7 @@ func TestNewObserver(t *testing.T) {
 		name            string
 		chain           chains.Chain
 		chainParams     observertypes.ChainParams
-		zetacoreContext *context.ZetacoreContext
+		appContext      *context.AppContext
 		zetacoreClient  interfaces.ZetacoreClient
 		tss             interfaces.TSSSigner
 		blockCacheSize  int
@@ -74,7 +75,7 @@ func TestNewObserver(t *testing.T) {
 			name:            "should be able to create new observer",
 			chain:           chain,
 			chainParams:     chainParams,
-			zetacoreContext: zetacoreContext,
+			appContext:      appContext,
 			zetacoreClient:  zetacoreClient,
 			tss:             tss,
 			blockCacheSize:  blockCacheSize,
@@ -85,7 +86,7 @@ func TestNewObserver(t *testing.T) {
 			name:            "should return error on invalid block cache size",
 			chain:           chain,
 			chainParams:     chainParams,
-			zetacoreContext: zetacoreContext,
+			appContext:      appContext,
 			zetacoreClient:  zetacoreClient,
 			tss:             tss,
 			blockCacheSize:  0,
@@ -97,7 +98,7 @@ func TestNewObserver(t *testing.T) {
 			name:            "should return error on invalid header cache size",
 			chain:           chain,
 			chainParams:     chainParams,
-			zetacoreContext: zetacoreContext,
+			appContext:      appContext,
 			zetacoreClient:  zetacoreClient,
 			tss:             tss,
 			blockCacheSize:  blockCacheSize,
@@ -113,7 +114,7 @@ func TestNewObserver(t *testing.T) {
 			ob, err := base.NewObserver(
 				tt.chain,
 				tt.chainParams,
-				tt.zetacoreContext,
+				tt.appContext,
 				tt.zetacoreClient,
 				tt.tss,
 				tt.blockCacheSize,
@@ -160,14 +161,6 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		newChainParams := *sample.ChainParams(chains.BscMainnet.ChainId)
 		ob = ob.WithChainParams(newChainParams)
 		require.True(t, observertypes.ChainParamsEqual(newChainParams, ob.ChainParams()))
-	})
-	t.Run("should be able to update zetacore context", func(t *testing.T) {
-		ob := createObserver(t)
-
-		// update zetacore context
-		newZetacoreContext := context.NewZetacoreContext(config.NewConfig())
-		ob = ob.WithZetacoreContext(newZetacoreContext)
-		require.Equal(t, newZetacoreContext, ob.ZetacoreContext())
 	})
 	t.Run("should be able to update zetacore client", func(t *testing.T) {
 		ob := createObserver(t)

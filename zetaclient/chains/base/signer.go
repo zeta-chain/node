@@ -15,8 +15,7 @@ type Signer struct {
 	// chain contains static information about the external chain
 	chain chains.Chain
 
-	// zetacoreContext is the Zetacore client to interact with ZetaChain
-	zetacoreContext *context.ZetacoreContext
+	appContext *context.AppContext
 
 	// tss is the TSS signer
 	tss interfaces.TSSSigner
@@ -35,16 +34,16 @@ type Signer struct {
 // NewSigner creates a new base signer
 func NewSigner(
 	chain chains.Chain,
-	zetacoreContext *context.ZetacoreContext,
+	zetacoreContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger Logger,
 ) *Signer {
 	return &Signer{
-		chain:           chain,
-		zetacoreContext: zetacoreContext,
-		tss:             tss,
-		ts:              ts,
+		chain:      chain,
+		appContext: zetacoreContext,
+		tss:        tss,
+		ts:         ts,
 		logger: Logger{
 			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
 			Compliance: logger.Compliance,
@@ -63,15 +62,9 @@ func (s *Signer) WithChain(chain chains.Chain) *Signer {
 	return s
 }
 
-// ZetacoreContext returns the zetacore context for the signer
-func (s *Signer) ZetacoreContext() *context.ZetacoreContext {
-	return s.zetacoreContext
-}
-
-// WithZetacoreContext attaches a new zetacore context to the signer
-func (s *Signer) WithZetacoreContext(context *context.ZetacoreContext) *Signer {
-	s.zetacoreContext = context
-	return s
+// AppContext returns the zetacore context for the signer
+func (s *Signer) AppContext() *context.AppContext {
+	return s.appContext
 }
 
 // Tss returns the tss signer for the signer
