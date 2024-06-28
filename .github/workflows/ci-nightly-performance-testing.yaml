@@ -17,9 +17,9 @@ jobs:
         with:
           node-version: 16
 
-      - name: "START:LOCAL:NET"
+      - name: "START:LOCAL:NET:WITH:STATE"
         run: | 
-          make start-e2e-test
+          make start-e2e-import-mainnet-test
 
       - name: "INSTALL:ARTILLERY"
         run: | 
