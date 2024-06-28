@@ -26,7 +26,7 @@ scenarios:
   - name: web3_clientVersion
     flow:
       - post:
-          url: "/"
+          url: "/getit"
           json:
             id: 1
             jsonrpc: "2.0"
