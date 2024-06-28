@@ -71,6 +71,7 @@ type LastBlockSQLType struct {
 
 // Type translation functions:
 
+// ToReceiptDBType : Converts an Ethereum receipt to a ReceiptDB type
 func ToReceiptDBType(receipt *ethtypes.Receipt) (ReceiptDB, error) {
 	logs, err := json.Marshal(receipt.Logs)
 	if err != nil {
@@ -92,6 +93,7 @@ func ToReceiptDBType(receipt *ethtypes.Receipt) (ReceiptDB, error) {
 	}, nil
 }
 
+// FromReceiptDBType : Converts a ReceiptDB type to an Ethereum receipt
 func FromReceiptDBType(receipt ReceiptDB) (*ethtypes.Receipt, error) {
 	res := &ethtypes.Receipt{
 		Type:              receipt.Type,
@@ -111,6 +113,7 @@ func FromReceiptDBType(receipt ReceiptDB) (*ethtypes.Receipt, error) {
 	return res, err
 }
 
+// ToReceiptSQLType : Converts an Ethereum receipt to a ReceiptSQLType
 func ToReceiptSQLType(receipt *ethtypes.Receipt, index string) (*ReceiptSQLType, error) {
 	r, err := ToReceiptDBType(receipt)
 	if err != nil {
@@ -122,6 +125,7 @@ func ToReceiptSQLType(receipt *ethtypes.Receipt, index string) (*ReceiptSQLType,
 	}, nil
 }
 
+// ToTransactionDBType : Converts an Ethereum transaction to a TransactionDB type
 func ToTransactionDBType(transaction *ethtypes.Transaction) (TransactionDB, error) {
 	data, err := transaction.MarshalBinary()
 	if err != nil {
@@ -137,12 +141,14 @@ func ToTransactionDBType(transaction *ethtypes.Transaction) (TransactionDB, erro
 	}, nil
 }
 
+// FromTransactionDBType : Converts a TransactionDB type to an Ethereum transaction
 func FromTransactionDBType(transaction TransactionDB) (*ethtypes.Transaction, error) {
 	res := &ethtypes.Transaction{}
 	err := res.UnmarshalBinary(transaction.TransactionData)
 	return res, err
 }
 
+// ToTransactionSQLType : Converts an Ethereum transaction to a TransactionSQLType
 func ToTransactionSQLType(transaction *ethtypes.Transaction, index string) (*TransactionSQLType, error) {
 	trans, err := ToTransactionDBType(transaction)
 	if err != nil {
@@ -154,6 +160,7 @@ func ToTransactionSQLType(transaction *ethtypes.Transaction, index string) (*Tra
 	}, nil
 }
 
+// ToLastBlockSQLType : Converts a last block number to a LastBlockSQLType
 func ToLastBlockSQLType(lastBlock uint64) *LastBlockSQLType {
 	return &LastBlockSQLType{
 		Model: gorm.Model{ID: LastBlockNumID},

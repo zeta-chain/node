@@ -252,7 +252,7 @@ func NewRPCTransactionFromIncompleteMsg(
 		Gas:      hexutil.Uint64(txAdditional.GasUsed),
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),
-		Input:    []byte{},
+		Input:    txAdditional.Data,
 		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from ethermint
 		To:       to,
 		Value:    (*hexutil.Big)(txAdditional.Value),

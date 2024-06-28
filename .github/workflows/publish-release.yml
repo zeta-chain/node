@@ -367,6 +367,8 @@ jobs:
         shell: bash
         run: |
           make start-e2e-admin-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -377,7 +379,7 @@ jobs:
   e2e-upgrade-test:
     needs:
       - check_branch
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: buildjet-16vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
@@ -388,7 +390,33 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         shell: bash
         run: |
-          make start-upgrade-test
+          make start-upgrade-import-mainnet-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
+
+      - name: Mark Job Complete Skipped
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        shell: bash
+        run: |
+          echo "continue"
+
+  e2e-stateful-data-test:
+    needs:
+      - check_branch
+    runs-on: buildjet-16vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute stateful-data-test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          make start-e2e-import-mainnet-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" & exit $(docker wait "${container_id}")
 
       - name: Mark Job Complete Skipped
         if: ${{ github.event.inputs.skip_checks == 'true' }}
@@ -397,6 +425,10 @@ jobs:
           echo "continue"
 
   publish-release:
+    permissions:
+      id-token: write
+      contents: write
+      attestations: write
     if: ${{ github.event.inputs.skip_release == 'false' }}
     needs:
       - gosec
@@ -407,6 +439,7 @@ jobs:
       - smoke-test
       - build-test
       - e2e-admin-tests
+      - e2e-stateful-data-test
       - e2e-upgrade-test
       - check_branch
     runs-on: ubuntu-22.04
@@ -466,17 +499,33 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           body_path: ${{ github.workspace }}-CHANGELOG.txt
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Publish Release Files
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
         run: |
           touch .release-env
           make release
+
+      - name: Artifact Attestations
+        id: attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            dist/zetacored_**/*
+            dist/zetaclientd_**/*
+            dist/checksums.txt
+
+      - name: Upload Attestation Bundle
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash 
+        run: | 
+          gh release upload ${{ env.GITHUB_TAG_MAJOR_VERSION }} ${{ steps.attestation.outputs.bundle-path }}
 
       - name: Clean Up Workspace
         if: always()

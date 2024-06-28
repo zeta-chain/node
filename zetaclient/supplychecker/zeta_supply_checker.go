@@ -1,3 +1,5 @@
+// Package supplychecker provides functionalities to check the total supply of Zeta tokens
+// Currently not used in the codebase
 package supplychecker
 
 import (
@@ -92,6 +94,7 @@ func NewZetaSupplyChecker(
 	return zetaSupplyChecker, nil
 }
 
+// Start starts the ZetaSupplyChecker
 func (zs *ZetaSupplyChecker) Start() {
 	defer zs.ticker.Stop()
 	for {
@@ -107,11 +110,13 @@ func (zs *ZetaSupplyChecker) Start() {
 	}
 }
 
+// Stop stops the ZetaSupplyChecker
 func (zs *ZetaSupplyChecker) Stop() {
 	zs.logger.Info().Msgf("ZetaSupplyChecker is stopping")
 	close(zs.stop)
 }
 
+// CheckZetaTokenSupply checks the total supply of Zeta tokens
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
@@ -122,7 +127,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 		zetaTokenAddressString := externalEvmChainParams.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
-		zetatokenNonEth, err := observer.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
+		zetatokenNonEth, err := observer.FetchZetaTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {
 			return err
 		}
@@ -193,6 +198,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	return nil
 }
 
+// AbortedTxAmount returns the amount of Zeta tokens in aborted transactions
 func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	amount, err := zs.zetaClient.GetAbortedZetaAmount()
 	if err != nil {
@@ -205,6 +211,7 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
+// GetAmountOfZetaInTransit returns the amount of Zeta tokens in transit
 func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
@@ -222,6 +229,7 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
+// GetPendingCCTXInTransit returns the pending CCTX in transit
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {
 	cctxInTransit := make([]*types.CrossChainTx, 0)
 	for _, chain := range receivingChains {

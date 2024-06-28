@@ -52,6 +52,7 @@ func NewZetacoreContext(cfg config.Config) *ZetacoreContext {
 	}
 }
 
+// GetKeygen returns the current keygen
 func (c *ZetacoreContext) GetKeygen() observertypes.Keygen {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
@@ -69,6 +70,7 @@ func (c *ZetacoreContext) GetKeygen() observertypes.Keygen {
 	}
 }
 
+// GetCurrentTssPubkey returns the current tss pubkey
 func (c *ZetacoreContext) GetCurrentTssPubkey() string {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
@@ -99,6 +101,7 @@ func (c *ZetacoreContext) GetEnabledExternalChains() []chains.Chain {
 	return externalChains
 }
 
+// GetEVMChainParams returns chain params for a specific EVM chain
 func (c *ZetacoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
@@ -107,6 +110,7 @@ func (c *ZetacoreContext) GetEVMChainParams(chainID int64) (*observertypes.Chain
 	return evmChainParams, found
 }
 
+// GetAllEVMChainParams returns all chain params for EVM chains
 func (c *ZetacoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
@@ -137,6 +141,7 @@ func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 	return *chain, c.bitcoinChainParams, true
 }
 
+// GetCrossChainFlags returns crosschain flags
 func (c *ZetacoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()

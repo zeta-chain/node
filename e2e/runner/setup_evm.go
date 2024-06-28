@@ -28,12 +28,12 @@ func (r *E2ERunner) SetEVMContractsFromConfig() {
 	require.NoError(r, err)
 
 	// Set ZetaEthAddr
-	r.ZetaEthAddr = ethcommon.HexToAddress(conf.Contracts.EVM.ZetaEthAddress)
+	r.ZetaEthAddr = ethcommon.HexToAddress(conf.Contracts.EVM.ZetaEthAddr.String())
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
 	require.NoError(r, err)
 
 	// Set ConnectorEthAddr
-	r.ConnectorEthAddr = ethcommon.HexToAddress(conf.Contracts.EVM.ConnectorEthAddr)
+	r.ConnectorEthAddr = ethcommon.HexToAddress(conf.Contracts.EVM.ConnectorEthAddr.String())
 	r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
 	require.NoError(r, err)
 }
@@ -66,14 +66,14 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	zetaEthAddr, txZetaEth, ZetaEth, err := zetaeth.DeployZetaEth(
 		r.EVMAuth,
 		r.EVMClient,
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(21_000_000_000),
 	)
 	require.NoError(r, err)
 
 	r.ZetaEth = ZetaEth
 	r.ZetaEthAddr = zetaEthAddr
-	conf.Contracts.EVM.ZetaEthAddress = zetaEthAddr.String()
+	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(zetaEthAddr.String())
 	r.Logger.Info("ZetaEth contract address: %s, tx hash: %s", zetaEthAddr.Hex(), zetaEthAddr.Hash().Hex())
 
 	r.Logger.Info("Deploying ZetaConnectorEth contract")
@@ -82,14 +82,14 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 		r.EVMClient,
 		zetaEthAddr,
 		r.TSSAddress,
-		r.DeployerAddress,
-		r.DeployerAddress,
+		r.EVMAddress(),
+		r.EVMAddress(),
 	)
 	require.NoError(r, err)
 
 	r.ConnectorEth = ConnectorEth
 	r.ConnectorEthAddr = connectorEthAddr
-	conf.Contracts.EVM.ConnectorEthAddr = connectorEthAddr.String()
+	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(connectorEthAddr.String())
 
 	r.Logger.Info(
 		"ZetaConnectorEth contract address: %s, tx hash: %s",
@@ -101,8 +101,8 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	erc20CustodyAddr, txCustody, ERC20Custody, err := erc20custody.DeployERC20Custody(
 		r.EVMAuth,
 		r.EVMClient,
-		r.DeployerAddress,
-		r.DeployerAddress,
+		r.EVMAddress(),
+		r.EVMAddress(),
 		big.NewInt(0),
 		big.NewInt(1e18),
 		ethcommon.HexToAddress("0x"),

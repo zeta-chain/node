@@ -1,3 +1,4 @@
+version: "3"
 # This docker-compose redefine the services:
 # - ZetaChain with 2 nodes (zetacore0, zetacore1) using the upgrade option for cosmovisor
 # - ZetaChain observer set with 2 clients (zetaclient0, zetaclient1) using the background option
