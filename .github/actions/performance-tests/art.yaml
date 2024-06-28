@@ -26,11 +26,11 @@ scenarios:
   - name: web3_clientVersion
     flow:
       - post:
-          url: "/getit"
+          url: "/"
           json:
             id: 1
             jsonrpc: "2.0"
-            method: "web3_clientVersion"
+            method: "web3_clientVersionxxxxx"
             params: [ ]
 
   - name: web3_sha3
