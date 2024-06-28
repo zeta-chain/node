@@ -55,6 +55,16 @@ jobs:
             echo "EVM Performance Testing Successful"
           fi
 
+          # Parse the results.json file to check for failed vusers
+          failed_vusers=$(jq '.vusers.failed // 0' ./report.json)
+          
+          if [ "$failed_vusers" -gt 0 ]; then
+            echo "Performance Testing had Failed Tests."
+            exit 1
+          else
+            echo "EVM Performance Testing Successful"
+          fi
+
       - name: "GENERATE:REPORT"
         if: always()
         run: | 
