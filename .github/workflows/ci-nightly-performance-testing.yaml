@@ -39,14 +39,30 @@ jobs:
       - name: "EXECUTE:PERFORMANCE:TESTS"
         run: | 
           artillery run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
+          if [ $? -ne 0 ]; then
+            echo "Performance Testing had Failed Tests."
+            exit 1
+          else
+            echo "EVM Performance Testing Successful"
+          fi
 
       - name: "GENERATE:REPORT"
+        if: always()
         run: | 
           artillery report report.json --output artillery_report.html
 
       - name: "UPLOAD:REPORT"
         uses: actions/upload-artifact@v3
-        if: success()
+        if: always()
         with:
           name: artillery-report
           path: ./artillery_report.html
+
+      - name: "NOTIFY:SLACK:FAILURE"
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}

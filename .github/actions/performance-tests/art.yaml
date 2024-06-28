@@ -13,6 +13,9 @@ config:
   plugins:
     metrics-by-endpoint:
       useOnlyRequestNames: true
+    ensure:
+      - type: "failure"
+        threshold: 1
   summary: true
   reports:
     - type: "html"
