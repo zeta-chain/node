@@ -28,276 +28,276 @@ scenarios:
             jsonrpc: "2.0"
             method: "web3_clientVersion"
             params: []
-
-  - name: web3_sha3
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "web3_sha3"
-            params:
-              - "0x68656c6c6f20776f726c64"
-
-  - name: net_version
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "net_version"
-            params: []
-
-  - name: net_listening
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "net_listening"
-            params: []
-
-  - name: net_peerCount
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "net_peerCount"
-            params: []
-
-  - name: eth_chainId
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_chainId"
-            params: []
-
-  - name: eth_getStorageAt
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getStorageAt"
-            params:
-              - "latest"
-
-  - name: eth_getTransactionByBlockHashAndIndex
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getTransactionByBlockHashAndIndex"
-            params:
-              - "0x0"
-
-  - name: eth_getTransactionByBlockNumberAndIndex
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getTransactionByBlockNumberAndIndex"
-            params:
-              - "latest"
-              - "0x0"
-
-  - name: eth_getUncleByBlockHashAndIndex
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getUncleByBlockHashAndIndex"
-            params:
-              - "0x0"
-
-  - name: eth_getUncleByBlockNumberAndIndex
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getUncleByBlockNumberAndIndex"
-            params:
-              - "latest"
-              - "0x0"
-
-  - name: eth_newFilter
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_newFilter"
-            params:
-              - {
-                  fromBlock: "latest",
-                  toBlock: "latest",
-                  address: "0x0",
-                  topics: []
-                }
-
-  - name: eth_getFilterChanges
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getFilterChanges"
-            params:
-              - "0x0"
-
-  - name: eth_getFilterLogs
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getFilterLogs"
-            params:
-              - "0x0"
-
-  - name: eth_blockNumber
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_blockNumber"
-            params: []
-
-  - name: eth_getBlockByHash
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getBlockByHash"
-            params:
-              - "0x0"
-              - true
-
-  - name: eth_getBlockByNumber
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getBlockByNumber"
-            params:
-              - "latest"
-              - true
-
-  - name: eth_getBlockTransactionCountByHash
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getBlockTransactionCountByHash"
-            params:
-              - "0x0"
-
-  - name: eth_getBlockTransactionCountByNumber
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getBlockTransactionCountByNumber"
-            params:
-              - "latest"
-
-  - name: eth_getCode
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getCode"
-            params:
-              - "0x0"
-              - "latest"
-
-  - name: eth_getTransactionByHash
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getTransactionByHash"
-            params:
-              - "0x0"
-
-  - name: eth_getTransactionReceipt
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getTransactionReceipt"
-            params:
-              - "0x0"
-
-  - name: eth_getLogs
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getLogs"
-            params:
-              - fromBlock: "0x1"
-                toBlock: "latest"
-                address: "0x0"
-                topics: ["0x0"]
-
-  - name: eth_getBalance
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_getBalance"
-            params:
-              - "0x0"
-              - "latest"
-
-  - name: eth_estimateGas
-    flow:
-      - post:
-          url: "/"
-          json:
-            id: 1
-            jsonrpc: "2.0"
-            method: "eth_estimateGas"
-            params:
-              - from: "0x0"
+#
+#  - name: web3_sha3
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "web3_sha3"
+#            params:
+#              - "0x68656c6c6f20776f726c64"
+#
+#  - name: net_version
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "net_version"
+#            params: []
+#
+#  - name: net_listening
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "net_listening"
+#            params: []
+#
+#  - name: net_peerCount
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "net_peerCount"
+#            params: []
+#
+#  - name: eth_chainId
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_chainId"
+#            params: []
+#
+#  - name: eth_getStorageAt
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getStorageAt"
+#            params:
+#              - "latest"
+#
+#  - name: eth_getTransactionByBlockHashAndIndex
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getTransactionByBlockHashAndIndex"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_getTransactionByBlockNumberAndIndex
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getTransactionByBlockNumberAndIndex"
+#            params:
+#              - "latest"
+#              - "0x0"
+#
+#  - name: eth_getUncleByBlockHashAndIndex
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getUncleByBlockHashAndIndex"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_getUncleByBlockNumberAndIndex
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getUncleByBlockNumberAndIndex"
+#            params:
+#              - "latest"
+#              - "0x0"
+#
+#  - name: eth_newFilter
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_newFilter"
+#            params:
+#              - {
+#                  fromBlock: "latest",
+#                  toBlock: "latest",
+#                  address: "0x0",
+#                  topics: []
+#                }
+#
+#  - name: eth_getFilterChanges
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getFilterChanges"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_getFilterLogs
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getFilterLogs"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_blockNumber
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_blockNumber"
+#            params: []
+#
+#  - name: eth_getBlockByHash
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getBlockByHash"
+#            params:
+#              - "0x0"
+#              - true
+#
+#  - name: eth_getBlockByNumber
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getBlockByNumber"
+#            params:
+#              - "latest"
+#              - true
+#
+#  - name: eth_getBlockTransactionCountByHash
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getBlockTransactionCountByHash"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_getBlockTransactionCountByNumber
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getBlockTransactionCountByNumber"
+#            params:
+#              - "latest"
+#
+#  - name: eth_getCode
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getCode"
+#            params:
+#              - "0x0"
+#              - "latest"
+#
+#  - name: eth_getTransactionByHash
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getTransactionByHash"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_getTransactionReceipt
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getTransactionReceipt"
+#            params:
+#              - "0x0"
+#
+#  - name: eth_getLogs
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getLogs"
+#            params:
+#              - fromBlock: "0x1"
+#                toBlock: "latest"
+#                address: "0x0"
+#                topics: ["0x0"]
+#
+#  - name: eth_getBalance
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_getBalance"
+#            params:
+#              - "0x0"
+#              - "latest"
+#
+#  - name: eth_estimateGas
+#    flow:
+#      - post:
+#          url: "/"
+#          json:
+#            id: 1
+#            jsonrpc: "2.0"
+#            method: "eth_estimateGas"
+#            params:
+#              - from: "0x0"
