@@ -30,9 +30,15 @@ scenarios:
             jsonrpc: "2.0"
             method: "web3_clientVersionxxxxx"  # Deliberate typo to force failure
             params: []
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: web3_sha3
     flow:
@@ -44,9 +50,15 @@ scenarios:
             method: "web3_sha3"
             params:
               - "0x68656c6c6f20776f726c64"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: net_version
     flow:
@@ -57,9 +69,15 @@ scenarios:
             jsonrpc: "2.0"
             method: "net_version"
             params: []
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: net_listening
     flow:
@@ -70,9 +88,15 @@ scenarios:
             jsonrpc: "2.0"
             method: "net_listening"
             params: []
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: net_peerCount
     flow:
@@ -83,9 +107,15 @@ scenarios:
             jsonrpc: "2.0"
             method: "net_peerCount"
             params: []
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_chainId
     flow:
@@ -96,9 +126,15 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_chainId"
             params: []
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getStorageAt
     flow:
@@ -110,9 +146,15 @@ scenarios:
             method: "eth_getStorageAt"
             params:
               - "latest"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getTransactionByBlockHashAndIndex
     flow:
@@ -124,9 +166,15 @@ scenarios:
             method: "eth_getTransactionByBlockHashAndIndex"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getTransactionByBlockNumberAndIndex
     flow:
@@ -139,9 +187,15 @@ scenarios:
             params:
               - "latest"
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getUncleByBlockHashAndIndex
     flow:
@@ -153,9 +207,15 @@ scenarios:
             method: "eth_getUncleByBlockHashAndIndex"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getUncleByBlockNumberAndIndex
     flow:
@@ -168,9 +228,15 @@ scenarios:
             params:
               - "latest"
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_newFilter
     flow:
@@ -187,9 +253,15 @@ scenarios:
                   address: "0x0",
                   topics: []
                 }
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getFilterChanges
     flow:
@@ -201,9 +273,15 @@ scenarios:
             method: "eth_getFilterChanges"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getFilterLogs
     flow:
@@ -215,9 +293,15 @@ scenarios:
             method: "eth_getFilterLogs"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_blockNumber
     flow:
@@ -228,9 +312,15 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_blockNumber"
             params: []
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getBlockByHash
     flow:
@@ -243,9 +333,15 @@ scenarios:
             params:
               - "0x0"
               - true
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getBlockByNumber
     flow:
@@ -258,9 +354,15 @@ scenarios:
             params:
               - "latest"
               - true
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getBlockTransactionCountByHash
     flow:
@@ -272,9 +374,15 @@ scenarios:
             method: "eth_getBlockTransactionCountByHash"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getBlockTransactionCountByNumber
     flow:
@@ -286,9 +394,15 @@ scenarios:
             method: "eth_getBlockTransactionCountByNumber"
             params:
               - "latest"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getCode
     flow:
@@ -301,9 +415,15 @@ scenarios:
             params:
               - "0x0"
               - "latest"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getTransactionByHash
     flow:
@@ -315,9 +435,15 @@ scenarios:
             method: "eth_getTransactionByHash"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getTransactionReceipt
     flow:
@@ -329,9 +455,15 @@ scenarios:
             method: "eth_getTransactionReceipt"
             params:
               - "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getLogs
     flow:
@@ -346,9 +478,15 @@ scenarios:
                 toBlock: "latest"
                 address: "0x0"
                 topics: ["0x0"]
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_getBalance
     flow:
@@ -361,9 +499,15 @@ scenarios:
             params:
               - "0x0"
               - "latest"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
 
   - name: eth_estimateGas
     flow:
@@ -375,6 +519,12 @@ scenarios:
             method: "eth_estimateGas"
             params:
               - from: "0x0"
+          capture:
+            - json: "$.error"
+              as: "error"
           ensure:
             - statusCode: 200
             - statusCode: 201
+          assert:
+            - subject: error
+              equals: null
