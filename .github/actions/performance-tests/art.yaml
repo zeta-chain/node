@@ -19,7 +19,6 @@ config:
       filename: "artillery_report.html"
   logLevel: debug
 
-
 scenarios:
   - name: web3_clientVersion
     flow:

@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: "INSTALL:NODEJS"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
       - name: "START:LOCAL:NET"
         run: | 
           make start-e2e-test
@@ -27,15 +32,17 @@ jobs:
                      "params": []
                    }'
 
-      - name: "EXECUTE:LOADTESTS"
-        uses: artilleryio/action-cli@v1
-        with:
-          command: run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
+      - name: "INSTALL:ARTILLERY"
+        run: | 
+          npm install -g artillery@latest
+
+      - name: "EXECUTE:PERFORMANCE:TESTS"
+        run: | 
+          artillery run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
 
       - name: "GENERATE:REPORT"
-        uses: artilleryio/action-cli@v1
-        with:
-          command: report report.json --output artillery_report.html
+        run: | 
+          artillery report report.json --output artillery_report.html
 
       - name: "UPLOAD:REPORT"
         uses: actions/upload-artifact@v3
