@@ -394,9 +394,11 @@ func TestChain_IsEmpty(t *testing.T) {
 }
 
 func TestGetChainFromChainID(t *testing.T) {
-	chain := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId, []chains.Chain{})
-	require.Equal(t, chains.ZetaChainMainnet, *chain)
-	require.Nil(t, chains.GetChainFromChainID(9999, []chains.Chain{}))
+	chain, found := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId, []chains.Chain{})
+	require.EqualValues(t, chains.ZetaChainMainnet, chain)
+	require.True(t, found)
+	chain, found = chains.GetChainFromChainID(9999, []chains.Chain{})
+	require.False(t, found)
 }
 
 func TestGetBTCChainParams(t *testing.T) {

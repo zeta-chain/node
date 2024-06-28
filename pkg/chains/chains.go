@@ -274,8 +274,8 @@ func BtcNonceMarkOffset() int64 {
 }
 
 // DefaultChainsList returns a list of default chains
-func DefaultChainsList() []*Chain {
-	return ChainListPointers([]Chain{
+func DefaultChainsList() []Chain {
+	return []Chain{
 		BitcoinMainnet,
 		BscMainnet,
 		Ethereum,
@@ -296,12 +296,12 @@ func DefaultChainsList() []*Chain {
 		OptimismSepolia,
 		BaseMainnet,
 		BaseSepolia,
-	})
+	}
 }
 
 // ChainListByNetworkType returns a list of chains by network type
-func ChainListByNetworkType(networkType NetworkType, additionalChains []Chain) []*Chain {
-	var chainList []*Chain
+func ChainListByNetworkType(networkType NetworkType, additionalChains []Chain) []Chain {
+	var chainList []Chain
 	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.NetworkType == networkType {
 			chainList = append(chainList, chain)
@@ -311,8 +311,8 @@ func ChainListByNetworkType(networkType NetworkType, additionalChains []Chain) [
 }
 
 // ChainListByNetwork returns a list of chains by network
-func ChainListByNetwork(network Network, additionalChains []Chain) []*Chain {
-	var chainList []*Chain
+func ChainListByNetwork(network Network, additionalChains []Chain) []Chain {
+	var chainList []Chain
 	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.Network == network {
 			chainList = append(chainList, chain)
@@ -322,8 +322,8 @@ func ChainListByNetwork(network Network, additionalChains []Chain) []*Chain {
 }
 
 // ExternalChainList returns a list chains that are not Zeta
-func ExternalChainList(additionalChains []Chain) []*Chain {
-	var chainList []*Chain
+func ExternalChainList(additionalChains []Chain) []Chain {
+	var chainList []Chain
 	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.IsExternal {
 			chainList = append(chainList, chain)
@@ -333,8 +333,8 @@ func ExternalChainList(additionalChains []Chain) []*Chain {
 }
 
 // ChainListByConsensus returns a list of chains by consensus
-func ChainListByConsensus(consensus Consensus, additionalChains []Chain) []*Chain {
-	var chainList []*Chain
+func ChainListByConsensus(consensus Consensus, additionalChains []Chain) []Chain {
+	var chainList []Chain
 	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.Consensus == consensus {
 			chainList = append(chainList, chain)
@@ -344,8 +344,8 @@ func ChainListByConsensus(consensus Consensus, additionalChains []Chain) []*Chai
 }
 
 // ChainListForHeaderSupport returns a list of chains that support headers
-func ChainListForHeaderSupport(additionalChains []Chain) []*Chain {
-	var chainList []*Chain
+func ChainListForHeaderSupport(additionalChains []Chain) []Chain {
+	var chainList []Chain
 	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.Consensus == Consensus_ethereum || chain.Consensus == Consensus_bitcoin {
 			chainList = append(chainList, chain)
@@ -382,19 +382,17 @@ func ZetaChainFromChainID(chainID int64) (Chain, error) {
 
 // CombineDefaultChainsList combines the default chains list with a list of chains
 // duplicated chain ID are overwritten by the second list
-func CombineDefaultChainsList(chains []Chain) []*Chain {
-	chainsPtr := ChainListPointers(chains)
-
-	return CombineChainList(DefaultChainsList(), chainsPtr)
+func CombineDefaultChainsList(chains []Chain) []Chain {
+	return CombineChainList(DefaultChainsList(), chains)
 }
 
 // CombineChainList combines a list of chains with a list of chains
 // duplicated chain ID are overwritten by the second list
 // TODO: remove pointers
 // https://github.com/zeta-chain/node/issues/2080
-func CombineChainList(base []*Chain, additional []*Chain) []*Chain {
-	combined := make([]*Chain, 0, len(base)+len(additional))
-	combined = append(combined, additional...)
+func CombineChainList(base []Chain, additional []Chain) []Chain {
+	combined := make([]Chain, 0, len(base)+len(additional))
+	combined = append(combined, base...)
 
 	// map chain ID in chains1 to index in the list
 	chainIDIndexMap := make(map[int64]int)
@@ -413,15 +411,4 @@ func CombineChainList(base []*Chain, additional []*Chain) []*Chain {
 	}
 
 	return combined
-}
-
-// ChainListPointers returns a list of chain pointers
-// TODO : https://github.com/zeta-chain/node/issues/2080
-// remove the usage of this function
-func ChainListPointers(chains []Chain) []*Chain {
-	var c []*Chain
-	for i := 0; i < len(chains); i++ {
-		c = append(c, &chains[i])
-	}
-	return c
 }

@@ -136,14 +136,14 @@ func (chain Chain) IsEmpty() bool {
 // GetChainFromChainID returns the chain from the chain ID
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
-func GetChainFromChainID(chainID int64, additionalChains []Chain) *Chain {
+func GetChainFromChainID(chainID int64, additionalChains []Chain) (Chain, bool) {
 	chains := CombineDefaultChainsList(additionalChains)
 	for _, chain := range chains {
 		if chainID == chain.ChainId {
-			return chain
+			return chain, true
 		}
 	}
-	return nil
+	return Chain{}, false
 }
 
 // GetBTCChainParams returns the bitcoin chain config params from the chain ID
@@ -175,7 +175,7 @@ func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 }
 
 // ChainIDInChainList checks whether the chainID is in the chain list
-func ChainIDInChainList(chainID int64, chainList []*Chain) bool {
+func ChainIDInChainList(chainID int64, chainList []Chain) bool {
 	for _, c := range chainList {
 		if chainID == c.ChainId {
 			return true
