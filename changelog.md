@@ -137,7 +137,7 @@
 * [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
-* [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
+* [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to app context in zetaclient
 * [1948](https://github.com/zeta-chain/node/pull/1948) - remove deprecated GetTSSAddress query in crosschain module
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
 * [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer

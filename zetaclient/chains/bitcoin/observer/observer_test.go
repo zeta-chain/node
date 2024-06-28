@@ -113,7 +113,7 @@ func Test_NewObserver(t *testing.T) {
 		chain       chains.Chain
 		btcClient   interfaces.BTCRPCClient
 		chainParams observertypes.ChainParams
-		coreContext *context.ZetacoreContext
+		appContext  *context.AppContext
 		coreClient  interfaces.ZetacoreClient
 		tss         interfaces.TSSSigner
 		dbpath      string
@@ -127,7 +127,7 @@ func Test_NewObserver(t *testing.T) {
 			chain:       chain,
 			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
 			chainParams: params,
-			coreContext: nil,
+			appContext:  nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      sample.CreateTempDir(t),
@@ -140,7 +140,7 @@ func Test_NewObserver(t *testing.T) {
 			chain:       chains.Chain{ChainId: 111}, // invalid chain id
 			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
 			chainParams: params,
-			coreContext: nil,
+			appContext:  nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      sample.CreateTempDir(t),
@@ -153,7 +153,7 @@ func Test_NewObserver(t *testing.T) {
 			name:        "should fail on invalid dbpath",
 			chain:       chain,
 			chainParams: params,
-			coreContext: nil,
+			appContext:  nil,
 			coreClient:  nil,
 			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
 			tss:         mocks.NewTSSMainnet(),
@@ -173,7 +173,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.chain,
 				tt.btcClient,
 				tt.chainParams,
-				tt.coreContext,
+				tt.appContext,
 				tt.coreClient,
 				tt.tss,
 				tt.dbpath,

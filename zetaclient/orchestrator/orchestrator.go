@@ -17,6 +17,7 @@ import (
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -37,20 +38,31 @@ const (
 )
 
 type Log struct {
-	Std     zerolog.Logger
+	// Base are the original base loggers used by orchestrator to create observers
+	Base base.Logger
+
+	// Std is the standard logger for orchestrator module
+	Std zerolog.Logger
+
+	// Sampled is the sampled logger for orchestrator module
 	Sampled zerolog.Logger
 }
 
 // Orchestrator wraps the zetacore client, chain observers and signers. This is the high level object used for CCTX scheduling
 type Orchestrator struct {
-	// appContext contains the config and zetacore context
+	// appContext contains the zetaclient application context
 	appContext *context.AppContext
 
 	// zetacore client
 	zetacoreClient interfaces.ZetacoreClient
 
-	// chain signers and observers
-	signerMap   map[int64]interfaces.ChainSigner
+	// tss is the TSS signer
+	tss interfaces.TSSSigner
+
+	// signerMap contains all external chain signers
+	signerMap map[int64]interfaces.ChainSigner
+
+	// observerMap contains all external chain observers
 	observerMap map[int64]interfaces.ChainObserver
 
 	// outbound processor
@@ -61,6 +73,9 @@ type Orchestrator struct {
 
 	// logger contains the loggers used by the orchestrator
 	logger Log
+
+	// dbPath is the path observer database
+	dbPath string
 
 	// ts is the telemetry server for metrics
 	ts *metrics.TelemetryServer
@@ -77,35 +92,36 @@ type Orchestrator struct {
 func NewOrchestrator(
 	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
-	signerMap map[int64]interfaces.ChainSigner,
-	observerMap map[int64]interfaces.ChainObserver,
-	logger zerolog.Logger,
+	tss interfaces.TSSSigner,
+	logger base.Logger,
+	dbPath string,
 	ts *metrics.TelemetryServer,
 ) *Orchestrator {
 	oc := Orchestrator{
-		appContext: appContext,
-		ts:         ts,
-		mu:         sync.Mutex{},
-		stop:       make(chan struct{}),
-		stopped:    false,
+		appContext:     appContext,
+		zetacoreClient: zetacoreClient,
+		tss:            tss,
+		signerMap:      make(map[int64]interfaces.ChainSigner),
+		observerMap:    make(map[int64]interfaces.ChainObserver),
+		dbPath:         dbPath,
+		ts:             ts,
+		mu:             sync.Mutex{},
+		stop:           make(chan struct{}),
+		stopped:        false,
 	}
 
 	// create loggers
 	oc.logger = Log{
-		Std: logger.With().Str("module", "orchestrator").Logger(),
+		Base: logger,
+		Std:  logger.Std.With().Str("module", "orchestrator").Logger(),
 	}
 	oc.logger.Sampled = oc.logger.Std.Sample(&zerolog.BasicSampler{N: loggerSamplingRate})
 
-	// set zetacore client, signers and chain observers
-	oc.zetacoreClient = zetacoreClient
-	oc.signerMap = signerMap
-	oc.observerMap = observerMap
-
 	// create outbound processor
-	oc.outboundProc = outboundprocessor.NewProcessor(logger)
+	oc.outboundProc = outboundprocessor.NewProcessor(logger.Std)
 
 	// initialize hot key balance
-	balance, err := zetacoreClient.GetZetaHotKeyBalance()
+	balance, err := oc.zetacoreClient.GetZetaHotKeyBalance()
 	if err != nil {
 		oc.logger.Std.Error().Err(err).Msg("error getting last balance of the hot key")
 	}
@@ -119,23 +135,31 @@ func (oc *Orchestrator) Start() {
 	// watch for upgrade plan in zetacore
 	go oc.WatchUpgradePlan()
 
-	// watch for zetaclient app context (config file and chain params) updates
-	go oc.UpdateAppContext()
+	// watch for zetaclient app context changes
+	go oc.WatchAppContext()
+
+	// watch for enabling/disabling chains
+	go oc.WatchEnabledChains()
 
 	// schedule pending cctxs across all enabled chains
 	go oc.SchedulePendingCctxs()
+
+	// watch for stop signals
+	oc.AwaitStopSignals()
 }
 
 // AwaitStopSignals waits for stop signals
 func (oc *Orchestrator) AwaitStopSignals() {
-	oc.logger.Std.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
+	oc.logger.Std.Info().Msgf("orchestrator awaiting the os.Interrupt, syscall.SIGTERM signals...")
 
 	// subscribe to stop signals
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-ch
 
-	oc.logger.Std.Info().Msgf("stop signal received: %s", sig)
+	// stop orchestrator
+	oc.Stop()
+	oc.logger.Std.Info().Msgf("orchestrator stopped on signal: %s", sig)
 }
 
 // Stop notifies all zetaclient goroutines to stop
@@ -159,62 +183,47 @@ func (oc *Orchestrator) Stop() {
 }
 
 // GetUpdatedSigner returns signer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedSigner(
-	coreContext *context.ZetacoreContext,
-	chainID int64,
-) (interfaces.ChainSigner, error) {
+func (oc *Orchestrator) GetUpdatedSigner(chainID int64) (interfaces.ChainSigner, error) {
 	signer, found := oc.signerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
 	}
-	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
-	if chains.IsEVMChain(chainID) {
-		evmParams, found := coreContext.GetEVMChainParams(chainID)
-		if found {
-			// update zeta connector and ERC20 custody addresses
-			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
-			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
-			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
-				signer.SetZetaConnectorAddress(zetaConnectorAddress)
-				oc.logger.Std.Info().Msgf(
-					"updated zeta connector address for chainID %d, new address: %s", chainID, zetaConnectorAddress)
-			}
-			if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
-				signer.SetERC20CustodyAddress(erc20CustodyAddress)
-				oc.logger.Std.Info().Msgf(
-					"updated ERC20 custody address for chainID %d, new address: %s", chainID, erc20CustodyAddress)
-			}
+
+	// update signer parameters for the chain.
+	// the logic is consistent for all chains, even if BTC chain doesn't have zetaConnector/erc20Custody.
+	evmParams, found := oc.appContext.GetExternalChainParams(chainID)
+	if found {
+		// update zeta connector and ERC20 custody addresses
+		zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
+		erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
+		if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
+			signer.SetZetaConnectorAddress(zetaConnectorAddress)
+			oc.logger.Std.Info().Msgf(
+				"updated zeta connector address for chainID %d, new address: %s", chainID, zetaConnectorAddress)
+		}
+		if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
+			signer.SetERC20CustodyAddress(erc20CustodyAddress)
+			oc.logger.Std.Info().Msgf(
+				"updated ERC20 custody address for chainID %d, new address: %s", chainID, erc20CustodyAddress)
 		}
 	}
 	return signer, nil
 }
 
 // GetUpdatedChainObserver returns chain observer with updated chain parameters
-func (oc *Orchestrator) GetUpdatedChainObserver(
-	coreContext *context.ZetacoreContext,
-	chainID int64,
-) (interfaces.ChainObserver, error) {
+func (oc *Orchestrator) GetUpdatedChainObserver(chainID int64) (interfaces.ChainObserver, error) {
 	observer, found := oc.observerMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("chain observer not found for chainID %d", chainID)
 	}
-	// update chain observer chain parameters
-	curParams := observer.GetChainParams()
-	if chains.IsEVMChain(chainID) {
-		evmParams, found := coreContext.GetEVMChainParams(chainID)
-		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
-			observer.SetChainParams(*evmParams)
-			oc.logger.Std.Info().Msgf(
-				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
-		}
-	} else if chains.IsBitcoinChain(chainID) {
-		_, btcParams, found := coreContext.GetBTCChainParams()
 
-		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
-			observer.SetChainParams(*btcParams)
-			oc.logger.Std.Info().Msgf(
-				"updated chain params for Bitcoin, new params: %v", *btcParams)
-		}
+	// update chain observer chain parameters
+	oldParams := observer.GetChainParams()
+	newParams, found := oc.appContext.GetExternalChainParams(chainID)
+	if found && !observertypes.ChainParamsEqual(oldParams, *newParams) {
+		observer.SetChainParams(*newParams)
+		oc.logger.Std.Info().Msgf(
+			"updated chain params for chainID %d, new params: %v", chainID, *newParams)
 	}
 	return observer, nil
 }
@@ -313,8 +322,7 @@ func (oc *Orchestrator) SchedulePendingCctxs() {
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// get supported external chains
-					coreContext := oc.appContext.ZetacoreContext()
-					externalChains := coreContext.GetEnabledExternalChains()
+					externalChains := oc.appContext.GetEnabledExternalChains()
 
 					// query pending cctxs across all external chains within rate limit
 					cctxMap, err := oc.GetPendingCctxsWithinRatelimit(externalChains)
@@ -332,21 +340,21 @@ func (oc *Orchestrator) SchedulePendingCctxs() {
 						}
 
 						// update chain parameters for signer and chain observer
-						signer, err := oc.GetUpdatedSigner(coreContext, c.ChainId)
+						signer, err := oc.GetUpdatedSigner(c.ChainId)
 						if err != nil {
 							oc.logger.Std.Error().
 								Err(err).
 								Msgf("StartCctxScheduler: GetUpdatedSigner failed for chain %d", c.ChainId)
 							continue
 						}
-						ob, err := oc.GetUpdatedChainObserver(coreContext, c.ChainId)
+						ob, err := oc.GetUpdatedChainObserver(c.ChainId)
 						if err != nil {
 							oc.logger.Std.Error().
 								Err(err).
 								Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
 							continue
 						}
-						if !context.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
+						if !context.IsOutboundObservationEnabled(oc.appContext, ob.GetChainParams()) {
 							continue
 						}
 

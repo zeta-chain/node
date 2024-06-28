@@ -66,8 +66,8 @@ type ChainSigner interface {
 
 // ZetacoreClient is the client interface to interact with zetacore
 type ZetacoreClient interface {
-	GetLatestZetacoreContext() (*clientcontext.ZetacoreContext, error)
-	UpdateZetacoreContext(coreContext *clientcontext.ZetacoreContext, init bool, sampledLogger zerolog.Logger) error
+	GetLatestAppContext() (*clientcontext.AppContext, error)
+	UpdateAppContext(appContext *clientcontext.AppContext, init bool, sampledLogger zerolog.Logger) error
 	GetUpgradePlan() (*upgradetypes.Plan, error)
 	GetChainParams() ([]*observertypes.ChainParams, error)
 	GetSupportedChains() ([]*chains.Chain, error)

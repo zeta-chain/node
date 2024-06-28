@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/simapp/params"
+	"github.com/btcsuite/btcd/chaincfg"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
@@ -225,10 +226,10 @@ func (c *Client) WaitForZetacoreToCreateBlocks() error {
 	return nil
 }
 
-// UpdateZetacoreContext updates zetacore context
-// zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(
-	coreContext *context.ZetacoreContext,
+// UpdateAppContext updates app context
+// zetacore stores app context for all clients
+func (c *Client) UpdateAppContext(
+	appContext *context.AppContext,
 	init bool,
 	sampledLogger zerolog.Logger,
 ) error {
@@ -253,8 +254,7 @@ func (c *Client) UpdateZetacoreContext(
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	newEVMParams := make(map[int64]*observertypes.ChainParams)
-	var newBTCParams *observertypes.ChainParams
+	newChainParams := make(map[int64]*observertypes.ChainParams)
 
 	// check and update chain params for each chain
 	for _, chainParam := range chainParams {
@@ -263,11 +263,7 @@ func (c *Client) UpdateZetacoreContext(
 			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
-		if chains.IsBitcoinChain(chainParam.ChainId) {
-			newBTCParams = chainParam
-		} else if chains.IsEVMChain(chainParam.ChainId) {
-			newEVMParams[chainParam.ChainId] = chainParam
-		}
+		newChainParams[chainParam.ChainId] = chainParam
 	}
 
 	supportedChains, err := c.GetSupportedChains()
@@ -284,6 +280,7 @@ func (c *Client) UpdateZetacoreContext(
 		return fmt.Errorf("failed to get keygen: %w", err)
 	}
 
+	// get latest TSS public key
 	tss, err := c.GetCurrentTss()
 	if err != nil {
 		c.logger.Info().Err(err).Msg("Unable to fetch TSS from zetacore")
@@ -303,11 +300,12 @@ func (c *Client) UpdateZetacoreContext(
 		return err
 	}
 
-	coreContext.Update(
-		keyGen,
+	appContext.Update(
+		config.NewConfig(),
+		*keyGen,
 		newChains,
-		newEVMParams,
-		newBTCParams,
+		newChainParams,
+		&chaincfg.RegressionNetParams,
 		tssPubKey,
 		crosschainFlags,
 		blockHeaderEnabledChains,
@@ -318,8 +316,8 @@ func (c *Client) UpdateZetacoreContext(
 	return nil
 }
 
-// GetLatestZetacoreContext queries zetacore to build the latest zetacore context
-func (c *Client) GetLatestZetacoreContext() (*context.ZetacoreContext, error) {
+// GetLatestAppContext queries zetacore to build the latest app context
+func (c *Client) GetLatestAppContext() (*context.AppContext, error) {
 	// get latest supported chains
 	supportedChains, err := c.GetSupportedChains()
 	if err != nil {
@@ -336,11 +334,9 @@ func (c *Client) GetLatestZetacoreContext() (*context.ZetacoreContext, error) {
 		return nil, errors.Wrap(err, "GetChainParams failed")
 	}
 
+	var btcNetParams *chaincfg.Params
 	chainsEnabled := make([]chains.Chain, 0)
 	chainParamMap := make(map[int64]*observertypes.ChainParams)
-
-	newEVMParams := make(map[int64]*observertypes.ChainParams)
-	var newBTCParams *observertypes.ChainParams
 
 	for _, chainParam := range chainParams {
 		// skip unsupported chain
@@ -359,16 +355,18 @@ func (c *Client) GetLatestZetacoreContext() (*context.ZetacoreContext, error) {
 			continue
 		}
 
-		// add chain param to map
-		chainParamMap[chainParam.ChainId] = chainParam
-
-		// keep this chain
-		chainsEnabled = append(chainsEnabled, chain)
+		// zetaclient detects Bitcoin network (regnet, testnet, mainnet) from chain params in zetacore
+		// The network params will be used by TSS to calculate the correct TSS address.
 		if chains.IsBitcoinChain(chainParam.ChainId) {
-			newBTCParams = chainParam
-		} else if chains.IsEVMChain(chainParam.ChainId) {
-			newEVMParams[chainParam.ChainId] = chainParam
+			btcNetParams, err = chains.BitcoinNetParamsFromChainID(chainParam.ChainId)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to get Bitcoin network params for chain %d", chainParam.ChainId)
+			}
 		}
+
+		// zetaclient should observe this chain
+		chainsEnabled = append(chainsEnabled, chain)
+		chainParamMap[chainParam.ChainId] = chainParam
 	}
 
 	// get latest keygen
@@ -396,12 +394,11 @@ func (c *Client) GetLatestZetacoreContext() (*context.ZetacoreContext, error) {
 		return nil, errors.Wrap(err, "GetBlockHeaderEnabledChains failed")
 	}
 
-	return context.CreateZetacoreContext(
-		keyGen,
+	return context.CreateAppContext(
+		*keyGen,
 		chainsEnabled,
 		chainParamMap,
-		newEVMParams,
-		newBTCParams,
+		btcNetParams,
 		tssPubKey,
 		crosschainFlags,
 		blockHeaderEnabledChains,

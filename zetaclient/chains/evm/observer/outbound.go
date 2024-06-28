@@ -50,7 +50,7 @@ func (ob *Observer) WatchOutbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsOutboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
+			if !clientcontext.IsOutboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -88,7 +88,7 @@ func (ob *Observer) WatchOutbound() {
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
-			ob.Logger().Outbound.Info().Msg("WatchOutbound: stopped")
+			ob.Logger().Outbound.Info().Msgf("WatchOutbound: stopped for chain %d", ob.Chain().ChainId)
 			return
 		}
 	}

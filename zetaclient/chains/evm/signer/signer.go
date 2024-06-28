@@ -82,7 +82,7 @@ type Signer struct {
 // NewSigner creates a new EVM signer
 func NewSigner(
 	chain chains.Chain,
-	zetacoreContext *clientcontext.ZetacoreContext,
+	appContext *clientcontext.AppContext,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
@@ -93,7 +93,7 @@ func NewSigner(
 	erc20CustodyAddress ethcommon.Address,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, zetacoreContext, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, appContext, tss, ts, logger)
 
 	// create EVM client
 	client, ethSigner, err := getEVMRPC(endpoint)
@@ -375,7 +375,7 @@ func (signer *Signer) TryProcessOutbound(
 	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 
 	// Get cross-chain flags
-	crossChainflags := signer.ZetacoreContext().GetCrossChainFlags()
+	crossChainflags := signer.AppContext().GetCrossChainFlags()
 	// https://github.com/zeta-chain/node/issues/2050
 	var tx *ethtypes.Transaction
 	// compliance check goes first

@@ -110,7 +110,7 @@ func NewObserver(
 	chain chains.Chain,
 	btcClient interfaces.BTCRPCClient,
 	chainParams observertypes.ChainParams,
-	zetacoreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -121,7 +121,7 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacoreContext,
+		appContext,
 		zetacoreClient,
 		tss,
 		btcBlocksPerDay,
@@ -427,8 +427,9 @@ func (ob *Observer) WatchUTXOs() {
 		ob.logger.UTXOs.Error().Err(err).Msg("error creating ticker")
 		return
 	}
-
 	defer ticker.Stop()
+	ob.logger.Outbound.Info().Msgf("WatchUTXOs started for chain %d", ob.Chain().ChainId)
+
 	for {
 		select {
 		case <-ticker.C():

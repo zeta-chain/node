@@ -57,7 +57,7 @@ func NewObserver(
 	evmCfg config.EVMConfig,
 	evmClient interfaces.EVMRPCClient,
 	chainParams observertypes.ChainParams,
-	zetacoreContext *clientcontext.ZetacoreContext,
+	appContext *clientcontext.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -68,7 +68,7 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		evmCfg.Chain,
 		chainParams,
-		zetacoreContext,
+		appContext,
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
@@ -184,7 +184,7 @@ func (ob *Observer) Start() {
 
 // WatchRPCStatus watches the RPC status of the evm chain
 func (ob *Observer) WatchRPCStatus() {
-	ob.Logger().Chain.Info().Msgf("Starting RPC status check for chain %d", ob.Chain().ChainId)
+	ob.Logger().Chain.Info().Msgf("WatchRPCStatus started for chain %d", ob.Chain().ChainId)
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
@@ -218,6 +218,7 @@ func (ob *Observer) WatchRPCStatus() {
 			ob.Logger().Chain.Info().
 				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
 		case <-ob.StopChannel():
+			ob.Logger().Chain.Info().Msgf("WatchRPCStatus stopped for chain %d", ob.Chain().ChainId)
 			return
 		}
 	}
@@ -320,7 +321,7 @@ func (ob *Observer) WatchGasPrice() {
 			}
 			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.Logger().GasPrice)
 		case <-ob.StopChannel():
-			ob.Logger().GasPrice.Info().Msg("WatchGasPrice stopped")
+			ob.Logger().GasPrice.Info().Msgf("WatchGasPrice stopped for chain %d", ob.Chain().ChainId)
 			return
 		}
 	}

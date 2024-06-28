@@ -31,6 +31,11 @@ import (
 
 type Multiaddr = core.Multiaddr
 
+const (
+	// ObserverDBPath is the path (relative to user's home) to the observer database.
+	ObserverDBPath = ".zetaclient/chainobserver"
+)
+
 var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start ZetaClient Observer",
@@ -157,7 +162,7 @@ func start(_ *cobra.Command, _ []string) error {
 	authzclient.SetupAuthZSignerList(granter, grantee)
 	startLogger.Info().Msgf("Authz is ready for granter %s grantee %s", granter, grantee)
 
-	// Initialize app context and zetacore context
+	// Initialize zetaclient app context
 	appContext, err := orchestrator.CreateAppContext(cfg, zetacoreClient, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("error creating app context")
@@ -237,10 +242,11 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().
 		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.ZetacoreContext().GetEnabledExternalChains()) == 0 {
+	if len(appContext.GetEnabledExternalChains()) == 0 {
 		startLogger.Error().Msgf("No external chains enabled in the zetacore %s ", cfg.String())
 	}
 
+	// Stop zetaclient if this node is not an active observer
 	observerList, err := zetacoreClient.GetObserverList()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetObserverList error")
@@ -248,42 +254,24 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	isNodeActive := false
 	for _, observer := range observerList {
-		if observer == zetacoreClient.GetKeys().GetOperatorAddress().String() {
+		if observer == granter {
 			isNodeActive = true
 			break
 		}
 	}
-
-	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := orchestrator.CreateSignerMap(appContext, tss, logger, telemetryServer)
-	if err != nil {
-		log.Error().Err(err).Msg("CreateSignerMap")
-		return err
+	if !isNodeActive {
+		startLogger.Error().Msgf("Node %s is not an active observer, zetaclient stopped", granter)
+		return nil
 	}
+	startLogger.Info().Msgf("Node %s is an active observer, starting orchestrator", granter)
 
+	// use the user's home path to store observer database
 	userDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Error().Err(err).Msg("os.UserHomeDir")
 		return err
 	}
-	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-
-	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := orchestrator.CreateChainObserverMap(appContext, zetacoreClient, tss, dbpath, logger, telemetryServer)
-	if err != nil {
-		startLogger.Err(err).Msg("CreateChainObserverMap")
-		return err
-	}
-
-	if !isNodeActive {
-		startLogger.Error().
-			Msgf("Node %s is not an active observer external chain observers will not be started", zetacoreClient.GetKeys().GetOperatorAddress().String())
-	} else {
-		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetacoreClient.GetKeys().GetOperatorAddress().String())
-		for _, observer := range observerMap {
-			observer.Start()
-		}
-	}
+	dbPath := filepath.Join(userDir, ObserverDBPath)
 
 	// start zeta supply checker
 	// TODO: enable
@@ -300,14 +288,15 @@ func start(_ *cobra.Command, _ []string) error {
 	//}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	orch := orchestrator.NewOrchestrator(appContext, zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
+	orch := orchestrator.NewOrchestrator(
+		appContext,
+		zetacoreClient,
+		tss,
+		logger,
+		dbPath,
+		telemetryServer,
+	)
 	orch.Start()
-
-	// Watch for stop signal
-	orch.AwaitStopSignals()
-
-	// Stop orchestrator
-	orch.Stop()
 
 	return nil
 }

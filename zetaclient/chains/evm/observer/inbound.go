@@ -51,7 +51,7 @@ func (ob *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsInboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
+			if !clientcontext.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -81,11 +81,11 @@ func (ob *Observer) WatchInboundTracker() {
 	}
 	defer ticker.Stop()
 
-	ob.Logger().Inbound.Info().Msgf("Inbound tracker watcher started for chain %d", ob.Chain().ChainId)
+	ob.Logger().Inbound.Info().Msgf("WatchInboundTracker started for chain %d", ob.Chain().ChainId)
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsInboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
+			if !clientcontext.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ProcessInboundTrackers()
@@ -391,7 +391,7 @@ func (ob *Observer) ObserverTSSReceive(startBlock, toBlock uint64) uint64 {
 		// post new block header (if any) to zetacore and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		blockHeaderVerification, found := ob.ZetacoreContext().GetBlockHeaderEnabledChains(ob.Chain().ChainId)
+		blockHeaderVerification, found := ob.AppContext().GetBlockHeaderEnabledChains(ob.Chain().ChainId)
 		if found && blockHeaderVerification.Enabled {
 			// post block header for supported chains
 			// TODO: move this logic in its own routine
@@ -655,7 +655,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	}
 
 	if !destChain.IsZetaChain() {
-		paramsDest, found := ob.ZetacoreContext().GetEVMChainParams(destChain.ChainId)
+		paramsDest, found := ob.AppContext().GetExternalChainParams(destChain.ChainId)
 		if !found {
 			ob.Logger().Inbound.Warn().
 				Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())

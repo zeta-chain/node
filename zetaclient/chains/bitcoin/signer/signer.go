@@ -57,13 +57,13 @@ type Signer struct {
 // NewSigner creates a new Bitcoin signer
 func NewSigner(
 	chain chains.Chain,
-	zetacoreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	cfg config.BTCConfig) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, zetacoreContext, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, appContext, tss, ts, logger)
 
 	// create the bitcoin rpc client using the provided config
 	connCfg := &rpcclient.ConnConfig{
@@ -345,7 +345,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Msgf("chain observer is not a bitcoin observer")
 		return
 	}
-	flags := signer.ZetacoreContext().GetCrossChainFlags()
+	flags := signer.AppContext().GetCrossChainFlags()
 	if !flags.IsOutboundEnabled {
 		logger.Info().Msgf("outbound is disabled")
 		return

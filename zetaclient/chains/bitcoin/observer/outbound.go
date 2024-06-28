@@ -42,7 +42,7 @@ func (ob *Observer) WatchOutbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsOutboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
+			if !context.IsOutboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
 				continue

@@ -53,14 +53,14 @@ func NewMockZetacoreClient() *MockZetacoreClient {
 	}
 }
 
-func (m *MockZetacoreClient) GetLatestZetacoreContext() (*clientcontext.ZetacoreContext, error) {
+func (m *MockZetacoreClient) GetLatestAppContext() (*clientcontext.AppContext, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
 	return nil, nil
 }
 
-func (m *MockZetacoreClient) UpdateZetacoreContext(_ *clientcontext.ZetacoreContext, _ bool, _ zerolog.Logger) error {
+func (m *MockZetacoreClient) UpdateAppContext(_ *clientcontext.AppContext, _ bool, _ zerolog.Logger) error {
 	if m.paused {
 		return errors.New(ErrMsgPaused)
 	}

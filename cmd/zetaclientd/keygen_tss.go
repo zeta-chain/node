@@ -36,7 +36,6 @@ func GenerateTss(
 ) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 
-	bitcoinChainID := appContext.GetBTCChainID()
 	tss, err := mc.NewTSS(
 		appContext,
 		peers,
@@ -44,7 +43,6 @@ func GenerateTss(
 		preParams,
 		client,
 		tssHistoricalList,
-		bitcoinChainID,
 		tssPassword,
 		hotkeyPassword,
 	)

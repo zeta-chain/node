@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
@@ -26,7 +27,6 @@ import (
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -79,9 +79,8 @@ type TSS struct {
 	ZetacoreClient  interfaces.ZetacoreClient
 	KeysignsTracker *ConcurrentKeysignsTracker
 
-	// TODO: support multiple Bitcoin network, not just one network
-	// https://github.com/zeta-chain/node/issues/1397
-	BitcoinChainID int64
+	// BitcoinNetParams is the Bitcoin network parameters for the TSS to create BTC addresses
+	BitcoinNetParams *chaincfg.Params
 }
 
 // NewTSS creates a new TSS instance
@@ -92,7 +91,6 @@ func NewTSS(
 	preParams *keygen.LocalPreParams,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
-	bitcoinChainID int64,
 	tssPassword string,
 	hotkeyPassword string,
 ) (*TSS, error) {
@@ -103,13 +101,13 @@ func NewTSS(
 	}
 
 	newTss := TSS{
-		Server:          server,
-		Keys:            make(map[string]*Key),
-		CurrentPubkey:   appContext.ZetacoreContext().GetCurrentTssPubkey(),
-		logger:          logger,
-		ZetacoreClient:  client,
-		KeysignsTracker: NewKeysignsTracker(logger),
-		BitcoinChainID:  bitcoinChainID,
+		Server:           server,
+		Keys:             make(map[string]*Key),
+		CurrentPubkey:    appContext.GetCurrentTssPubkey(),
+		logger:           logger,
+		ZetacoreClient:   client,
+		KeysignsTracker:  NewKeysignsTracker(logger),
+		BitcoinNetParams: appContext.GetBTCNetParams(),
 	}
 
 	err = newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
@@ -430,7 +428,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 
 // BTCAddress generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
-	addr, err := GetTssAddrBTC(tss.CurrentPubkey, tss.BitcoinChainID)
+	addr, err := GetTssAddrBTC(tss.CurrentPubkey, tss.BitcoinNetParams)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ""
@@ -439,7 +437,7 @@ func (tss *TSS) BTCAddress() string {
 }
 
 func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, tss.BitcoinChainID)
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, tss.BitcoinNetParams)
 	if err != nil {
 		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
 		return nil
@@ -528,8 +526,8 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	return nil
 }
 
-func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinChainID)
+func GetTssAddrBTC(tssPubkey string, btcNetParams *chaincfg.Params) (string, error) {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, btcNetParams)
 	if err != nil {
 		log.Fatal().Err(err)
 		return "", err
@@ -655,18 +653,16 @@ func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	return false
 }
 
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
+func getKeyAddrBTCWitnessPubkeyHash(
+	tssPubkey string,
+	btcNetParams *chaincfg.Params,
+) (*btcutil.AddressWitnessPubKeyHash, error) {
 	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return nil, err
 	}
 
-	bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
-	if err != nil {
-		return nil, err
-	}
-
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), bitcoinNetParams)
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), btcNetParams)
 	if err != nil {
 		return nil, err
 	}

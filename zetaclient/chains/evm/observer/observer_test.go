@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/btcsuite/btcd/chaincfg"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
@@ -32,12 +33,12 @@ import (
 // the relative path to the testdata directory
 var TestDataDir = "../../../"
 
-// getZetacoreContext creates a zetacore context for unit tests
-func getZetacoreContext(
+// getAppContext creates a app context for unit tests
+func getAppContext(
 	evmChain chains.Chain,
 	endpoint string,
 	evmChainParams *observertypes.ChainParams,
-) (*context.ZetacoreContext, config.EVMConfig) {
+) (*context.AppContext, config.EVMConfig) {
 	// use default endpoint if not provided
 	if endpoint == "" {
 		endpoint = "http://localhost:8545"
@@ -50,17 +51,18 @@ func getZetacoreContext(
 		Endpoint: endpoint,
 	}
 
-	// create zetacore context
-	coreCtx := context.NewZetacoreContext(cfg)
-	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
-	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+	// create app context
+	appCtx := context.NewAppContext(cfg)
+	newChainParams := make(map[int64]*observertypes.ChainParams)
+	newChainParams[evmChain.ChainId] = evmChainParams
 
 	// feed chain params
-	coreCtx.Update(
-		&observertypes.Keygen{},
+	appCtx.Update(
+		cfg,
+		observertypes.Keygen{},
 		[]chains.Chain{evmChain},
-		evmChainParamsMap,
-		nil,
+		newChainParams,
+		&chaincfg.RegressionNetParams,
 		"",
 		*sample.CrosschainFlags(),
 		sample.HeaderSupportedChains(),
@@ -68,7 +70,7 @@ func getZetacoreContext(
 		zerolog.Logger{},
 	)
 	// create app context
-	return coreCtx, cfg.EVMChainConfigs[evmChain.ChainId]
+	return appCtx, cfg.EVMChainConfigs[evmChain.ChainId]
 }
 
 // MockEVMObserver creates a mock ChainObserver with custom chain, TSS, params etc
@@ -96,11 +98,11 @@ func MockEVMObserver(
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
-	// create zetacore context
-	coreCtx, evmCfg := getZetacoreContext(chain, "", &params)
+	// create app context
+	appCtx, evmCfg := getAppContext(chain, "", &params)
 
 	// create observer
-	ob, err := observer.NewObserver(evmCfg, evmClient, params, coreCtx, zetacoreClient, tss, dbpath, base.Logger{}, nil)
+	ob, err := observer.NewObserver(evmCfg, evmClient, params, appCtx, zetacoreClient, tss, dbpath, base.Logger{}, nil)
 	require.NoError(t, err)
 	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
@@ -175,8 +177,8 @@ func Test_NewObserver(t *testing.T) {
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// create zetacore context, client and tss
-			zetacoreCtx, _ := getZetacoreContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
+			// create app context, client and tss
+			appCtx, _ := getAppContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
 			zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
 
 			// create observer
@@ -184,7 +186,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.evmCfg,
 				tt.evmClient,
 				tt.chainParams,
-				zetacoreCtx,
+				appCtx,
 				zetacoreClient,
 				tt.tss,
 				tt.dbpath,

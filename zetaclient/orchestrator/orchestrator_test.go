@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"testing"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -24,6 +25,7 @@ import (
 // MockOrchestrator creates a mock orchestrator for testing
 func MockOrchestrator(
 	t *testing.T,
+	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	evmChain, btcChain chains.Chain,
 	evmChainParams, btcChainParams *observertypes.ChainParams,
@@ -40,6 +42,7 @@ func MockOrchestrator(
 
 	// create orchestrator
 	orchestrator := &Orchestrator{
+		appContext:     appContext,
 		zetacoreClient: zetacoreClient,
 		signerMap: map[int64]interfaces.ChainSigner{
 			evmChain.ChainId: evmSigner,
@@ -53,10 +56,10 @@ func MockOrchestrator(
 	return orchestrator
 }
 
-func CreateCoreContext(
+func CreateTestAppContext(
 	evmChain, btcChain chains.Chain,
 	evmChainParams, btcChainParams *observertypes.ChainParams,
-) *context.ZetacoreContext {
+) *context.AppContext {
 	// new config
 	cfg := config.NewConfig()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
@@ -65,26 +68,28 @@ func CreateCoreContext(
 	cfg.BitcoinConfig = config.BTCConfig{
 		RPCHost: "localhost",
 	}
-	// new zetacore context
-	coreContext := context.NewZetacoreContext(cfg)
-	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
-	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+	// new app context
+	appContext := context.NewAppContext(cfg)
+	chainParamsMap := make(map[int64]*observertypes.ChainParams)
+	chainParamsMap[evmChain.ChainId] = evmChainParams
+	chainParamsMap[btcChain.ChainId] = btcChainParams
 	ccFlags := sample.CrosschainFlags()
 	verificationFlags := sample.HeaderSupportedChains()
 
 	// feed chain params
-	coreContext.Update(
-		&observertypes.Keygen{},
+	appContext.Update(
+		cfg,
+		observertypes.Keygen{},
 		[]chains.Chain{evmChain, btcChain},
-		evmChainParamsMap,
-		btcChainParams,
+		chainParamsMap,
+		&chaincfg.RegressionNetParams,
 		"",
 		*ccFlags,
 		verificationFlags,
 		true,
 		zerolog.Logger{},
 	)
-	return coreContext
+	return appContext
 }
 
 func Test_GetUpdatedSigner(t *testing.T) {
@@ -98,7 +103,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	}
 	btcChainParams := &observertypes.ChainParams{}
 
-	// new chain params in zetacore context
+	// new chain params in app context
 	evmChainParamsNew := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConnectorContractAddress:    testutils.OtherAddress1,
@@ -106,17 +111,18 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	}
 
 	t.Run("signer should not be found", func(t *testing.T) {
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		context := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		// BSC signer should not be found
-		_, err := orchestrator.GetUpdatedSigner(context, chains.BscMainnet.ChainId)
+		_, err := orchestrator.GetUpdatedSigner(chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		context := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
+
 		// update signer with new connector and erc20 custody address
-		signer, err := orchestrator.GetUpdatedSigner(context, evmChain.ChainId)
+		signer, err := orchestrator.GetUpdatedSigner(evmChain.ChainId)
 		require.NoError(t, err)
 		require.Equal(t, testutils.OtherAddress1, signer.GetZetaConnectorAddress().Hex())
 		require.Equal(t, testutils.OtherAddress2, signer.GetERC20CustodyAddress().Hex())
@@ -136,7 +142,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		ChainId: btcChain.ChainId,
 	}
 
-	// new chain params in zetacore context
+	// new chain params in app context
 	evmChainParamsNew := &observertypes.ChainParams{
 		ChainId:                     evmChain.ChainId,
 		ConfirmationCount:           10,
@@ -171,33 +177,37 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	}
 
 	t.Run("evm chain observer should not be found", func(t *testing.T) {
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
+
 		// BSC chain observer should not be found
-		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BscMainnet.ChainId)
+		_, err := orchestrator.GetUpdatedChainObserver(chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "chain observer not found")
 	})
 	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateCoreContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
+		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
+
 		// update evm chain observer with new chain params
-		chainOb, err := orchestrator.GetUpdatedChainObserver(coreContext, evmChain.ChainId)
+		chainOb, err := orchestrator.GetUpdatedChainObserver(evmChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.GetChainParams()))
 	})
 	t.Run("btc chain observer should not be found", func(t *testing.T) {
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateCoreContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
+		appCtx := CreateTestAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
+		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
+
 		// BTC testnet chain observer should not be found
-		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BitcoinTestnet.ChainId)
+		_, err := orchestrator.GetUpdatedChainObserver(chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "chain observer not found")
 	})
 	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateCoreContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
+		appCtx := CreateTestAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
+		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
+
 		// update btc chain observer with new chain params
-		chainOb, err := orchestrator.GetUpdatedChainObserver(coreContext, btcChain.ChainId)
+		chainOb, err := orchestrator.GetUpdatedChainObserver(btcChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.GetChainParams()))
@@ -362,7 +372,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 			client.WithRateLimiterInput(tt.response)
 
 			// create orchestrator
-			orchestrator := MockOrchestrator(t, client, ethChain, btcChain, ethChainParams, btcChainParams)
+			orchestrator := MockOrchestrator(t, nil, client, ethChain, btcChain, ethChainParams, btcChainParams)
 
 			// run the test
 			cctxsMap, err := orchestrator.GetPendingCctxsWithinRatelimit(foreignChains)

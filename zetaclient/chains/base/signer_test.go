@@ -17,12 +17,12 @@ import (
 func createSigner(_ *testing.T) *base.Signer {
 	// constructor parameters
 	chain := chains.Ethereum
-	zetacoreContext := context.NewZetacoreContext(config.NewConfig())
+	appContext := context.NewAppContext(config.NewConfig())
 	tss := mocks.NewTSSMainnet()
 	logger := base.DefaultLogger()
 
 	// create signer
-	return base.NewSigner(chain, zetacoreContext, tss, nil, logger)
+	return base.NewSigner(chain, appContext, tss, nil, logger)
 }
 
 func TestNewSigner(t *testing.T) {
@@ -39,13 +39,13 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		signer = signer.WithChain(chains.BscMainnet)
 		require.Equal(t, newChain, signer.Chain())
 	})
-	t.Run("should be able to update zetacore context", func(t *testing.T) {
+	t.Run("should be able to update app context", func(t *testing.T) {
 		signer := createSigner(t)
 
-		// update zetacore context
-		newZetacoreContext := context.NewZetacoreContext(config.NewConfig())
-		signer = signer.WithZetacoreContext(newZetacoreContext)
-		require.Equal(t, newZetacoreContext, signer.ZetacoreContext())
+		// update app context
+		newAppContext := context.NewAppContext(config.NewConfig())
+		signer = signer.WithAppContext(newAppContext)
+		require.Equal(t, newAppContext, signer.AppContext())
 	})
 	t.Run("should be able to update tss", func(t *testing.T) {
 		signer := createSigner(t)

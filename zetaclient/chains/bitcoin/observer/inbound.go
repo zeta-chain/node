@@ -39,7 +39,7 @@ func (ob *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsInboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
+			if !context.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -104,7 +104,7 @@ func (ob *Observer) ObserveInbound() error {
 	// https://github.com/zeta-chain/node/issues/1847
 	// TODO: move this logic in its own routine
 	// https://github.com/zeta-chain/node/issues/2204
-	blockHeaderVerification, found := ob.ZetacoreContext().GetBlockHeaderEnabledChains(ob.Chain().ChainId)
+	blockHeaderVerification, found := ob.AppContext().GetBlockHeaderEnabledChains(ob.Chain().ChainId)
 	if found && blockHeaderVerification.Enabled {
 		// #nosec G701 always in range
 		err = ob.postBlockHeader(int64(blockNumber))
@@ -181,7 +181,7 @@ func (ob *Observer) WatchInboundTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsInboundObservationEnabled(ob.ZetacoreContext(), ob.GetChainParams()) {
+			if !context.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ProcessInboundTrackers()

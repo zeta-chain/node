@@ -51,7 +51,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coreContext := clientcontext.NewZetacoreContext(cfg)
+			appContext := clientcontext.NewAppContext(cfg)
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -123,7 +123,7 @@ func DebugCmd() *cobra.Command {
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
 							Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
 						})
-						evmChainParams, found := coreContext.GetEVMChainParams(chainID)
+						evmChainParams, found := appContext.GetExternalChainParams(chainID)
 						if !found {
 							return fmt.Errorf("missing chain params for chain %d", chainID)
 						}
