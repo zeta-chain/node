@@ -217,12 +217,6 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	//if cfg.TestTssKeysign {
-	//	err = TestTSS(tss, masterLogger)
-	//	if err != nil {
-	//		startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
-	//	}
-	//}
 
 	bitcoinChainID := chains.BitcoinRegtest.ChainId
 	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
@@ -241,6 +235,12 @@ func start(_ *cobra.Command, _ []string) error {
 		hotkeyPass,
 		true,
 	)
+	if cfg.TestTssKeysign {
+		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
+		if err != nil {
+			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
+		}
+	}
 
 	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
 	// For existing keygen, this should directly proceed to the next step

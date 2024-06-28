@@ -3,21 +3,19 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 func TestERC20Deposit(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestERC20Deposit requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid amount specified for TestERC20Deposit.")
-	}
+	require.True(r, ok, "Invalid amount specified for TestERC20Deposit.")
 
-	hash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
+	hash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

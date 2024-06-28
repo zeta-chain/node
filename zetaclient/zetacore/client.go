@@ -1,3 +1,4 @@
+// Package zetacore provides functionalities for interacting with ZetaChain
 package zetacore
 
 import (
@@ -57,7 +58,6 @@ func NewClient(
 	hsmMode bool,
 	telemetry *metrics.TelemetryServer,
 ) (*Client, error) {
-
 	// main module logger
 	logger := log.With().Str("module", "ZetacoreClient").Logger()
 	cfg := config.ClientConfiguration{
@@ -284,14 +284,18 @@ func (c *Client) UpdateZetacoreContext(
 	return nil
 }
 
+// Pause pauses the client
 func (c *Client) Pause() {
 	<-c.pause
 }
 
+// Unpause unpauses the client
 func (c *Client) Unpause() {
 	c.pause <- struct{}{}
 }
 
+// EnableMockSDKClient enables the mock cosmos sdk client
+// TODO(revamp): move this to a test package
 func (c *Client) EnableMockSDKClient(client rpcclient.Client) {
 	c.mockSDKClient = client
 	c.enableMockSDKClient = true

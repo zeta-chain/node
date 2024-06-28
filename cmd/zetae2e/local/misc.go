@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -20,25 +19,13 @@ func miscTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("misc panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
+		account := conf.AdditionalAccounts.UserMisc
 		// initialize runner for misc test
 		miscRunner, err := initTestRunner(
 			"misc",
 			conf,
 			deployerRunner,
-			UserMiscAddress,
-			UserMiscPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgCyan, "misc"),
 		)
 		if err != nil {
@@ -49,7 +36,7 @@ func miscTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserMiscAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
 		miscRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain

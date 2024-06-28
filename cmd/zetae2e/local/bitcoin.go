@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -22,25 +21,13 @@ func bitcoinTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("bitcoin panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
+		account := conf.AdditionalAccounts.UserBitcoin
 		// initialize runner for bitcoin test
 		bitcoinRunner, err := initTestRunner(
 			"bitcoin",
 			conf,
 			deployerRunner,
-			UserBitcoinAddress,
-			UserBitcoinPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgYellow, "bitcoin"),
 		)
 		if err != nil {
@@ -51,7 +38,7 @@ func bitcoinTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(UserBitcoinAddress, 1000)
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
 		bitcoinRunner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain

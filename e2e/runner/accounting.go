@@ -21,23 +21,20 @@ type Response struct {
 	Amount Amount `json:"amount"`
 }
 
-func (runner *E2ERunner) CheckZRC20ReserveAndSupply() error {
-	runner.Logger.Info("Checking ZRC20 Reserve and Supply")
-	if err := runner.checkEthTSSBalance(); err != nil {
+func (r *E2ERunner) CheckZRC20ReserveAndSupply() error {
+	r.Logger.Info("Checking ZRC20 Reserve and Supply")
+	if err := r.checkEthTSSBalance(); err != nil {
 		return err
 	}
-	if err := runner.checkERC20TSSBalance(); err != nil {
+	if err := r.checkERC20TSSBalance(); err != nil {
 		return err
 	}
-	return runner.checkZetaTSSBalance()
+	return r.checkZetaTSSBalance()
 }
 
 func (runner *E2ERunner) checkEthTSSBalance() error {
 
 	allTssAddress, err := runner.ObserverClient.TssHistory(runner.Ctx, &observertypes.QueryTssHistoryRequest{})
-	if err != nil {
-		return err
-	}
 
 	tssTotalBalance := big.NewInt(0)
 
@@ -67,19 +64,19 @@ func (runner *E2ERunner) checkEthTSSBalance() error {
 	return nil
 }
 
-func (runner *E2ERunner) CheckBtcTSSBalance() error {
-	utxos, err := runner.BtcRPCClient.ListUnspent()
+func (r *E2ERunner) CheckBtcTSSBalance() error {
+	utxos, err := r.BtcRPCClient.ListUnspent()
 	if err != nil {
 		return err
 	}
 	var btcBalance float64
 	for _, utxo := range utxos {
-		if utxo.Address == runner.BTCTSSAddress.EncodeAddress() {
+		if utxo.Address == r.BTCTSSAddress.EncodeAddress() {
 			btcBalance += utxo.Amount
 		}
 	}
 
-	zrc20Supply, err := runner.BTCZRC20.TotalSupply(&bind.CallOpts{})
+	zrc20Supply, err := r.BTCZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
@@ -96,7 +93,7 @@ func (runner *E2ERunner) CheckBtcTSSBalance() error {
 		)
 	}
 	// #nosec G701 test - always in range
-	runner.Logger.Info(
+	r.Logger.Info(
 		"BTC: Balance (%d) >= ZRC20 TotalSupply (%d)",
 		int64(btcBalance*1e8),
 		zrc20Supply.Int64()-10000000,
@@ -105,24 +102,24 @@ func (runner *E2ERunner) CheckBtcTSSBalance() error {
 	return nil
 }
 
-func (runner *E2ERunner) checkERC20TSSBalance() error {
-	erc20Balance, err := runner.ERC20.BalanceOf(&bind.CallOpts{}, runner.ERC20CustodyAddr)
+func (r *E2ERunner) checkERC20TSSBalance() error {
+	erc20Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyAddr)
 	if err != nil {
 		return err
 	}
-	erc20zrc20Supply, err := runner.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
+	erc20zrc20Supply, err := r.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
 	if erc20Balance.Cmp(erc20zrc20Supply) < 0 {
 		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", erc20Balance, erc20zrc20Supply)
 	}
-	runner.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", erc20Balance, erc20zrc20Supply)
+	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", erc20Balance, erc20zrc20Supply)
 	return nil
 }
 
-func (runner *E2ERunner) checkZetaTSSBalance() error {
-	zetaLocked, err := runner.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
+func (r *E2ERunner) checkZetaTSSBalance() error {
+	zetaLocked, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
@@ -142,9 +139,9 @@ func (runner *E2ERunner) checkZetaTSSBalance() error {
 	}
 	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 	if zetaLocked.Cmp(zetaSupply) < 0 {
-		runner.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
+		r.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
 	} else {
-		runner.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
+		r.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	}
 	return nil
 }

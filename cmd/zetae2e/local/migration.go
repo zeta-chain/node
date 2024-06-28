@@ -28,14 +28,13 @@ func migrationTestRoutine(
 				err = fmt.Errorf("admin panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
-
+		account := conf.AdditionalAccounts.UserAdmin
 		// initialize runner for erc20 advanced test
 		migrationTestRunner, err := initTestRunner(
-			"admin",
+			"migration",
 			conf,
 			deployerRunner,
-			UserAdminAddress,
-			UserAdminPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgHiWhite, "migration"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)

@@ -18,7 +18,6 @@ func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 		Short: "Update the gas price increase flags",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

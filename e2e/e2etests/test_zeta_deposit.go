@@ -3,21 +3,19 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 func TestZetaDeposit(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestZetaDeposit requires exactly one argument for the amount.")
-	}
+	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	if !ok {
-		panic("Invalid amount specified for TestZetaDeposit.")
-	}
+	require.True(r, ok, "Invalid amount specified for TestZetaDeposit.")
 
-	hash := r.DepositZetaWithAmount(r.DeployerAddress, amount)
+	hash := r.DepositZetaWithAmount(r.EVMAddress(), amount)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

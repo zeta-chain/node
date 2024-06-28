@@ -15,6 +15,7 @@ const (
 	APIURLBlockTxsTestnet = "https://mempool.space/testnet/api/block/%s/txs"
 )
 
+// MempoolBlock represents a block in the mempool
 type MempoolBlock struct {
 	ID                string     `json:"id"`
 	Height            int        `json:"height"`
@@ -32,6 +33,7 @@ type MempoolBlock struct {
 	Extras            BlockExtra `json:"extras"`
 }
 
+// Vin represents a Bitcoin transaction input
 type Vin struct {
 	TxID    string `json:"txid"`
 	Vout    uint32 `json:"vout"`
@@ -47,6 +49,7 @@ type Vin struct {
 	Sequence   uint32 `json:"sequence"`
 }
 
+// Vout represents a Bitcoin transaction output
 type Vout struct {
 	Scriptpubkey     string `json:"scriptpubkey"`
 	ScriptpubkeyAsm  string `json:"scriptpubkey_asm"`
@@ -54,6 +57,7 @@ type Vout struct {
 	Value            int64  `json:"value"`
 }
 
+// MempoolTx represents a transaction in the mempool
 type MempoolTx struct {
 	TxID     string `json:"txid"`
 	Version  int    `json:"version"`
@@ -65,6 +69,7 @@ type MempoolTx struct {
 	Fee      int    `json:"fee"`
 }
 
+// BlockExtra represents extra information about a block
 type BlockExtra struct {
 	TotalFees int       `json:"totalFees"`
 	MedianFee float64   `json:"medianFee"`
@@ -105,6 +110,7 @@ type BlockExtra struct {
 	ExpectedWeight int     `json:"expectedWeight"`
 }
 
+// Get makes a GET request to the given path and decodes the response
 func Get(ctx context.Context, path string, v interface{}) error {
 	req, err := http.NewRequest("GET", path, nil)
 	if err != nil {

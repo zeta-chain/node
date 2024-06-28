@@ -51,7 +51,6 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	index := msg.Digest()
 	ballot, found := k.GetBallot(ctx, index)
 	if !found {
-
 		// if ballot does not exist, create a new ballot
 		var voterList []string
 

@@ -7,6 +7,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -15,11 +16,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
 // createObserver creates a new observer for testing
-func createObserver(t *testing.T, dbPath string) *base.Observer {
+func createObserver(t *testing.T) *base.Observer {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
@@ -36,8 +38,7 @@ func createObserver(t *testing.T, dbPath string) *base.Observer {
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeadersCacheSize,
-		dbPath,
+		base.DefaultHeaderCacheSize,
 		nil,
 		logger,
 	)
@@ -54,73 +55,55 @@ func TestNewObserver(t *testing.T) {
 	zetacoreClient := mocks.NewMockZetacoreClient()
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
-	headersCacheSize := base.DefaultHeadersCacheSize
-	dbPath := sample.CreateTempDir(t)
+	headersCacheSize := base.DefaultHeaderCacheSize
 
 	// test cases
 	tests := []struct {
-		name             string
-		chain            chains.Chain
-		chainParams      observertypes.ChainParams
-		zetacoreContext  *context.ZetacoreContext
-		zetacoreClient   interfaces.ZetacoreClient
-		tss              interfaces.TSSSigner
-		blockCacheSize   int
-		headersCacheSize int
-		dbPath           string
-		fail             bool
-		message          string
+		name            string
+		chain           chains.Chain
+		chainParams     observertypes.ChainParams
+		zetacoreContext *context.ZetacoreContext
+		zetacoreClient  interfaces.ZetacoreClient
+		tss             interfaces.TSSSigner
+		blockCacheSize  int
+		headerCacheSize int
+		fail            bool
+		message         string
 	}{
 		{
-			name:             "should be able to create new observer",
-			chain:            chain,
-			chainParams:      chainParams,
-			zetacoreContext:  zetacoreContext,
-			zetacoreClient:   zetacoreClient,
-			tss:              tss,
-			blockCacheSize:   blockCacheSize,
-			headersCacheSize: headersCacheSize,
-			dbPath:           dbPath,
-			fail:             false,
+			name:            "should be able to create new observer",
+			chain:           chain,
+			chainParams:     chainParams,
+			zetacoreContext: zetacoreContext,
+			zetacoreClient:  zetacoreClient,
+			tss:             tss,
+			blockCacheSize:  blockCacheSize,
+			headerCacheSize: headersCacheSize,
+			fail:            false,
 		},
 		{
-			name:             "should return error on invalid block cache size",
-			chain:            chain,
-			chainParams:      chainParams,
-			zetacoreContext:  zetacoreContext,
-			zetacoreClient:   zetacoreClient,
-			tss:              tss,
-			blockCacheSize:   0,
-			headersCacheSize: headersCacheSize,
-			dbPath:           dbPath,
-			fail:             true,
-			message:          "error creating block cache",
+			name:            "should return error on invalid block cache size",
+			chain:           chain,
+			chainParams:     chainParams,
+			zetacoreContext: zetacoreContext,
+			zetacoreClient:  zetacoreClient,
+			tss:             tss,
+			blockCacheSize:  0,
+			headerCacheSize: headersCacheSize,
+			fail:            true,
+			message:         "error creating block cache",
 		},
 		{
-			name:             "should return error on invalid header cache size",
-			chain:            chain,
-			chainParams:      chainParams,
-			zetacoreContext:  zetacoreContext,
-			zetacoreClient:   zetacoreClient,
-			tss:              tss,
-			blockCacheSize:   blockCacheSize,
-			headersCacheSize: 0,
-			dbPath:           dbPath,
-			fail:             true,
-			message:          "error creating header cache",
-		},
-		{
-			name:             "should return error on invalid db path",
-			chain:            chain,
-			chainParams:      chainParams,
-			zetacoreContext:  zetacoreContext,
-			zetacoreClient:   zetacoreClient,
-			tss:              tss,
-			blockCacheSize:   blockCacheSize,
-			headersCacheSize: headersCacheSize,
-			dbPath:           "/invalid/123db",
-			fail:             true,
-			message:          "error opening observer db",
+			name:            "should return error on invalid header cache size",
+			chain:           chain,
+			chainParams:     chainParams,
+			zetacoreContext: zetacoreContext,
+			zetacoreClient:  zetacoreClient,
+			tss:             tss,
+			blockCacheSize:  blockCacheSize,
+			headerCacheSize: 0,
+			fail:            true,
+			message:         "error creating header cache",
 		},
 	}
 
@@ -134,8 +117,7 @@ func TestNewObserver(t *testing.T) {
 				tt.zetacoreClient,
 				tt.tss,
 				tt.blockCacheSize,
-				tt.headersCacheSize,
-				tt.dbPath,
+				tt.headerCacheSize,
 				nil,
 				base.DefaultLogger(),
 			)
@@ -151,11 +133,20 @@ func TestNewObserver(t *testing.T) {
 	}
 }
 
-func TestObserverGetterAndSetter(t *testing.T) {
-	dbPath := sample.CreateTempDir(t)
+func TestStop(t *testing.T) {
+	t.Run("should be able to stop observer", func(t *testing.T) {
+		// create observer and initialize db
+		ob := createObserver(t)
+		ob.OpenDB(sample.CreateTempDir(t), "")
 
+		// stop observer
+		ob.Stop()
+	})
+}
+
+func TestObserverGetterAndSetter(t *testing.T) {
 	t.Run("should be able to update chain", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update chain
 		newChain := chains.BscMainnet
@@ -163,7 +154,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newChain, ob.Chain())
 	})
 	t.Run("should be able to update chain params", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update chain params
 		newChainParams := *sample.ChainParams(chains.BscMainnet.ChainId)
@@ -171,7 +162,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.True(t, observertypes.ChainParamsEqual(newChainParams, ob.ChainParams()))
 	})
 	t.Run("should be able to update zetacore context", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update zetacore context
 		newZetacoreContext := context.NewZetacoreContext(config.NewConfig())
@@ -179,7 +170,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newZetacoreContext, ob.ZetacoreContext())
 	})
 	t.Run("should be able to update zetacore client", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update zetacore client
 		newZetacoreClient := mocks.NewMockZetacoreClient()
@@ -187,7 +178,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newZetacoreClient, ob.ZetacoreClient())
 	})
 	t.Run("should be able to update tss", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update tss
 		newTSS := mocks.NewTSSAthens3()
@@ -195,7 +186,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newTSS, ob.TSS())
 	})
 	t.Run("should be able to update last block", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update last block
 		newLastBlock := uint64(100)
@@ -203,7 +194,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newLastBlock, ob.LastBlock())
 	})
 	t.Run("should be able to update last block scanned", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update last block scanned
 		newLastBlockScanned := uint64(100)
@@ -211,7 +202,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newLastBlockScanned, ob.LastBlockScanned())
 	})
 	t.Run("should be able to replace block cache", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 
 		// update block cache
 		newBlockCache, err := lru.New(200)
@@ -220,8 +211,8 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithBlockCache(newBlockCache)
 		require.Equal(t, newBlockCache, ob.BlockCache())
 	})
-	t.Run("should be able to replace headers cache", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+	t.Run("should be able to replace header cache", func(t *testing.T) {
+		ob := createObserver(t)
 
 		// update headers cache
 		newHeadersCache, err := lru.New(200)
@@ -231,13 +222,24 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newHeadersCache, ob.HeaderCache())
 	})
 	t.Run("should be able to get database", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		// create observer and open db
+		dbPath := sample.CreateTempDir(t)
+		ob := createObserver(t)
+		ob.OpenDB(dbPath, "")
 
 		db := ob.DB()
 		require.NotNil(t, db)
 	})
+	t.Run("should be able to update telemetry server", func(t *testing.T) {
+		ob := createObserver(t)
+
+		// update telemetry server
+		newServer := metrics.NewTelemetryServer()
+		ob = ob.WithTelemetryServer(newServer)
+		require.Equal(t, newServer, ob.TelemetryServer())
+	})
 	t.Run("should be able to get logger", func(t *testing.T) {
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
 		logger := ob.Logger()
 
 		// should be able to print log
@@ -250,16 +252,30 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 }
 
-func TestOpenDB(t *testing.T) {
+func TestOpenCloseDB(t *testing.T) {
 	dbPath := sample.CreateTempDir(t)
-	ob := createObserver(t, dbPath)
+	ob := createObserver(t)
 
-	t.Run("should be able to open db", func(t *testing.T) {
-		err := ob.OpenDB(dbPath)
+	t.Run("should be able to open/close db", func(t *testing.T) {
+		// open db
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// close db
+		err = ob.CloseDB()
+		require.NoError(t, err)
+	})
+	t.Run("should use memory db if specified", func(t *testing.T) {
+		// open db with memory
+		err := ob.OpenDB(testutils.SQLiteMemory, "")
+		require.NoError(t, err)
+
+		// close db
+		err = ob.CloseDB()
 		require.NoError(t, err)
 	})
 	t.Run("should return error on invalid db path", func(t *testing.T) {
-		err := ob.OpenDB("/invalid/123db")
+		err := ob.OpenDB("/invalid/123db", "")
 		require.ErrorContains(t, err, "error creating db path")
 	})
 }
@@ -269,71 +285,116 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	envvar := base.EnvVarLatestBlockByChain(chain)
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
-		// create db and write 100 as last block scanned
+		// create observer and open db
 		dbPath := sample.CreateTempDir(t)
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
 
 		// read last block scanned
-		fromLatest, err := ob.LoadLastBlockScanned(log.Logger)
+		err = ob.LoadLastBlockScanned(log.Logger)
 		require.NoError(t, err)
 		require.EqualValues(t, 100, ob.LastBlockScanned())
-		require.False(t, fromLatest)
 	})
-	t.Run("should use latest block if last block scanned not found", func(t *testing.T) {
-		// create empty db
+	t.Run("latest block scanned should be 0 if not found in db", func(t *testing.T) {
+		// create observer and open db
 		dbPath := sample.CreateTempDir(t)
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
 
 		// read last block scanned
-		fromLatest, err := ob.LoadLastBlockScanned(log.Logger)
+		err = ob.LoadLastBlockScanned(log.Logger)
 		require.NoError(t, err)
-		require.True(t, fromLatest)
+		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
-		// create db and write 100 as last block scanned
+		// create observer and open db
 		dbPath := sample.CreateTempDir(t)
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
 
 		// set env var
 		os.Setenv(envvar, "101")
 
 		// read last block scanned
-		fromLatest, err := ob.LoadLastBlockScanned(log.Logger)
+		err = ob.LoadLastBlockScanned(log.Logger)
 		require.NoError(t, err)
 		require.EqualValues(t, 101, ob.LastBlockScanned())
-		require.False(t, fromLatest)
+	})
+	t.Run("last block scanned should remain 0 if env var is set to latest", func(t *testing.T) {
+		// create observer and open db
+		dbPath := sample.CreateTempDir(t)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// create db and write 100 as last block scanned
+		ob.WriteLastBlockScannedToDB(100)
 
 		// set env var to 'latest'
 		os.Setenv(envvar, base.EnvVarLatestBlock)
 
-		// read last block scanned
-		fromLatest, err = ob.LoadLastBlockScanned(log.Logger)
+		// last block scanned should remain 0
+		err = ob.LoadLastBlockScanned(log.Logger)
 		require.NoError(t, err)
-		require.True(t, fromLatest)
+		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
 	t.Run("should return error on invalid env var", func(t *testing.T) {
-		// create db and write 100 as last block scanned
+		// create observer and open db
 		dbPath := sample.CreateTempDir(t)
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
 
 		// set invalid env var
 		os.Setenv(envvar, "invalid")
 
 		// read last block scanned
-		fromLatest, err := ob.LoadLastBlockScanned(log.Logger)
+		err = ob.LoadLastBlockScanned(log.Logger)
 		require.Error(t, err)
-		require.False(t, fromLatest)
+	})
+}
+
+func TestSaveLastBlockScanned(t *testing.T) {
+	t.Run("should be able to save last block scanned", func(t *testing.T) {
+		// create observer and open db
+		dbPath := sample.CreateTempDir(t)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// save 100 as last block scanned
+		err = ob.SaveLastBlockScanned(100)
+		require.NoError(t, err)
+
+		// check last block scanned in memory
+		require.EqualValues(t, 100, ob.LastBlockScanned())
+
+		// read last block scanned from db
+		lastBlockScanned, err := ob.ReadLastBlockScannedFromDB()
+		require.NoError(t, err)
+		require.EqualValues(t, 100, lastBlockScanned)
 	})
 }
 
 func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 	t.Run("should be able to write and read last block scanned to db", func(t *testing.T) {
-		// create db and write 100 as last block scanned
+		// create observer and open db
 		dbPath := sample.CreateTempDir(t)
-		ob := createObserver(t, dbPath)
-		err := ob.WriteLastBlockScannedToDB(100)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
+
+		// write last block scanned
+		err = ob.WriteLastBlockScannedToDB(100)
 		require.NoError(t, err)
 
 		lastBlockScanned, err := ob.ReadLastBlockScannedFromDB()
@@ -343,7 +404,9 @@ func TestReadWriteLastBlockScannedToDB(t *testing.T) {
 	t.Run("should return error when last block scanned not found in db", func(t *testing.T) {
 		// create empty db
 		dbPath := sample.CreateTempDir(t)
-		ob := createObserver(t, dbPath)
+		ob := createObserver(t)
+		err := ob.OpenDB(dbPath, "")
+		require.NoError(t, err)
 
 		lastScannedBlock, err := ob.ReadLastBlockScannedFromDB()
 		require.Error(t, err)

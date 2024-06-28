@@ -37,7 +37,6 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
-
 	err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
 	if err != nil {
 		return err

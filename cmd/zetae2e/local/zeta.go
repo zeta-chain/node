@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -20,25 +19,13 @@ func zetaTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("zeta panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
+		account := conf.AdditionalAccounts.UserZetaTest
 		// initialize runner for zeta test
 		zetaRunner, err := initTestRunner(
 			"zeta",
 			conf,
 			deployerRunner,
-			UserZetaTestAddress,
-			UserZetaTestPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgBlue, "zeta"),
 		)
 		if err != nil {
@@ -49,7 +36,7 @@ func zetaTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserZetaTestAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
 		zetaRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain

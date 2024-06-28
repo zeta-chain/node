@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set Version from the release title.
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.release.name }}" >> $GITHUB_ENV
 
@@ -62,7 +62,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set Version from the release title.
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.release.name }}" >> $GITHUB_ENV
 

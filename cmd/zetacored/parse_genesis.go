@@ -119,7 +119,7 @@ func CmdParseGenesisFile() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.PersistentFlags().Bool("modify", false, "Modify the genesis file before importing")
+	cmd.PersistentFlags().Bool("modify", false, "modify the genesis file before importing")
 	return cmd
 }
 
@@ -129,7 +129,6 @@ func ImportDataIntoFile(
 	cdc codec.Codec,
 	modifyEnabled bool,
 ) error {
-
 	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
 	if err != nil {
 		return err

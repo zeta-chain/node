@@ -7,8 +7,8 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -20,169 +20,146 @@ import (
 var blockHeaderETHTimeout = 5 * time.Minute
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
-func (runner *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
-	defer func() {
-		runner.Unlock()
-	}()
-	runner.Lock()
+func (r *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
+	r.Lock()
+	defer r.Unlock()
 
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("tx failed")
-	}
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt)
 }
 
 // MintERC20OnEvm mints ERC20 on EVM
 // amount is a multiple of 1e18
-func (runner *E2ERunner) MintERC20OnEvm(amountERC20 int64) {
-	defer func() {
-		runner.Unlock()
-	}()
-	runner.Lock()
+func (r *E2ERunner) MintERC20OnEvm(amountERC20 int64) {
+	r.Lock()
+	defer r.Unlock()
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountERC20))
 
-	tx, err := runner.ERC20.Mint(runner.EVMAuth, amount)
-	if err != nil {
-		panic(err)
-	}
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("mint failed")
-	}
-	runner.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
+	tx, err := r.ERC20.Mint(r.EVMAuth, amount)
+	require.NoError(r, err)
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt)
+
+	r.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 }
 
 // SendERC20OnEvm sends ERC20 to an address on EVM
 // this allows the ERC20 contract deployer to funds other accounts on EVM
 // amountERC20 is a multiple of 1e18
-func (runner *E2ERunner) SendERC20OnEvm(address ethcommon.Address, amountERC20 int64) *ethtypes.Transaction {
+func (r *E2ERunner) SendERC20OnEvm(address ethcommon.Address, amountERC20 int64) *ethtypes.Transaction {
 	// the deployer might be sending ERC20 in different goroutines
-	defer func() {
-		runner.Unlock()
-	}()
-	runner.Lock()
+	r.Lock()
+	defer r.Unlock()
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountERC20))
 
 	// transfer
-	tx, err := runner.ERC20.Transfer(runner.EVMAuth, address, amount)
-	if err != nil {
-		panic(err)
-	}
+	tx, err := r.ERC20.Transfer(r.EVMAuth, address, amount)
+	require.NoError(r, err)
+
 	return tx
 }
 
-func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
-	runner.Logger.Print("⏳ depositing ERC20 into ZEVM")
+func (r *E2ERunner) DepositERC20() ethcommon.Hash {
+	r.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
-	return runner.DepositERC20WithAmountAndMessage(runner.DeployerAddress, big.NewInt(1e18), []byte{})
+	return r.DepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(1e18), []byte{})
 }
 
-func (runner *E2ERunner) DepositERC20WithAmountAndMessage(
-	to ethcommon.Address,
-	amount *big.Int,
-	msg []byte,
-) ethcommon.Hash {
+func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
 	// reset allowance, necessary for USDT
-	tx, err := runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, big.NewInt(0))
-	if err != nil {
-		panic(err)
-	}
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("approve failed")
-	}
-	runner.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
+	tx, err := r.ERC20.Approve(r.EVMAuth, r.ERC20CustodyAddr, big.NewInt(0))
+	require.NoError(r, err)
 
-	tx, err = runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, amount)
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("approve failed")
-	}
-	runner.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt)
 
-	tx, err = runner.ERC20Custody.Deposit(runner.EVMAuth, to.Bytes(), runner.ERC20Addr, amount, msg)
-	runner.Logger.Info("TX: %v", tx)
+	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("deposit failed")
-	}
-	runner.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
+	tx, err = r.ERC20.Approve(r.EVMAuth, r.ERC20CustodyAddr, amount)
+	require.NoError(r, err)
+
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt)
+
+	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
+
+	tx, err = r.ERC20Custody.Deposit(r.EVMAuth, to.Bytes(), r.ERC20Addr, amount, msg)
+	require.NoError(r, err)
+
+	r.Logger.Info("TX: %v", tx)
+
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt)
+
+	r.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
-		event, err := runner.ERC20Custody.ParseDeposited(*log)
+		event, err := r.ERC20Custody.ParseDeposited(*log)
 		if err != nil {
 			continue
 		}
-		runner.Logger.Info("Deposited event:")
-		runner.Logger.Info("  Recipient address: %x", event.Recipient)
-		runner.Logger.Info("  ERC20 address: %s", event.Asset.Hex())
-		runner.Logger.Info("  Amount: %d", event.Amount)
-		runner.Logger.Info("  Message: %x", event.Message)
+		r.Logger.Info("Deposited event:")
+		r.Logger.Info("  Recipient address: %x", event.Recipient)
+		r.Logger.Info("  ERC20 address: %s", event.Asset.Hex())
+		r.Logger.Info("  Amount: %d", event.Amount)
+		r.Logger.Info("  Message: %x", event.Message)
 	}
 	return tx.Hash()
 }
 
 // DepositEther sends Ethers into ZEVM
-func (runner *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
+func (r *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
-	return runner.DepositEtherWithAmount(testHeader, amount)
+	return r.DepositEtherWithAmount(testHeader, amount)
 }
 
 // DepositEtherWithAmount sends Ethers into ZEVM
-func (runner *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
-	runner.Logger.Print("⏳ depositing Ethers into ZEVM")
+func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
+	r.Logger.Print("⏳ depositing Ethers into ZEVM")
 
-	signedTx, err := runner.SendEther(runner.TSSAddress, amount, nil)
-	if err != nil {
-		panic(err)
-	}
-	runner.Logger.EVMTransaction(*signedTx, "send to TSS")
+	signedTx, err := r.SendEther(r.TSSAddress, amount, nil)
+	require.NoError(r, err)
 
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, signedTx, runner.Logger, runner.ReceiptTimeout)
-	if receipt.Status == 0 {
-		panic("deposit failed")
-	}
-	runner.Logger.EVMReceipt(*receipt, "send to TSS")
+	r.Logger.EVMTransaction(*signedTx, "send to TSS")
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt, "deposit failed")
+
+	r.Logger.EVMReceipt(*receipt, "send to TSS")
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
 	if testHeader {
-		runner.ProveEthTransaction(receipt)
+		r.ProveEthTransaction(receipt)
 	}
 
 	return signedTx.Hash()
 }
 
 // SendEther sends ethers to the TSS on EVM
-func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
-	evmClient := runner.EVMClient
+func (r *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
+	evmClient := r.EVMClient
 
-	nonce, err := evmClient.PendingNonceAt(runner.Ctx, runner.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.EVMAddress())
 	if err != nil {
 		return nil, err
 	}
 
 	gasLimit := uint64(30000) // in units
-	gasPrice, err := evmClient.SuggestGasPrice(runner.Ctx)
+	gasPrice, err := evmClient.SuggestGasPrice(r.Ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := ethtypes.NewTransaction(nonce, runner.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := evmClient.ChainID(runner.Ctx)
+	tx := ethtypes.NewTransaction(nonce, r.TSSAddress, value, gasLimit, gasPrice, data)
+	chainID, err := evmClient.ChainID(r.Ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	deployerPrivkey, err := crypto.HexToECDSA(runner.DeployerPrivateKey)
+	deployerPrivkey, err := r.Account.PrivateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +168,7 @@ func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []b
 	if err != nil {
 		return nil, err
 	}
-	err = evmClient.SendTransaction(runner.Ctx, signedTx)
+	err = evmClient.SendTransaction(r.Ctx, signedTx)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +177,7 @@ func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []b
 }
 
 // ProveEthTransaction proves an ETH transaction on ZetaChain
-func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
+func (r *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	startTime := time.Now()
 
 	txHash := receipt.TxHash
@@ -209,23 +186,21 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	// #nosec G701 test - always in range
 	txIndex := int(receipt.TransactionIndex)
 
-	block, err := runner.EVMClient.BlockByHash(runner.Ctx, blockHash)
-	if err != nil {
-		panic(err)
-	}
+	block, err := r.EVMClient.BlockByHash(r.Ctx, blockHash)
+	require.NoError(r, err)
+
 	for {
 		// check timeout
-		if time.Since(startTime) > blockHeaderETHTimeout {
-			panic("timeout waiting for block header")
-		}
+		reachedTimeout := time.Since(startTime) > blockHeaderETHTimeout
+		require.False(r, reachedTimeout, "timeout waiting for block header")
 
-		_, err := runner.LightclientClient.BlockHeader(runner.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
+		_, err := r.LightclientClient.BlockHeader(r.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
 			BlockHash: blockHash.Bytes(),
 		})
 		if err != nil {
-			runner.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
+			r.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
 		} else {
-			runner.Logger.Info("OK: block header found")
+			r.Logger.Info("OK: block header found")
 			break
 		}
 
@@ -233,42 +208,36 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	}
 
 	trie := ethereum.NewTrie(block.Transactions())
-	if trie.Hash() != block.Header().TxHash {
-		panic("tx root hash & block tx root mismatch")
-	}
+	require.Equal(r, trie.Hash(), block.Header().TxHash, "tx root hash & block tx root mismatch")
+
 	txProof, err := trie.GenerateProof(txIndex)
-	if err != nil {
-		panic("error generating txProof")
-	}
+	require.NoError(r, err, "error generating txProof")
+
 	val, err := txProof.Verify(block.TxHash(), txIndex)
-	if err != nil {
-		panic("error verifying txProof")
-	}
+	require.NoError(r, err, "error verifying txProof")
+
 	var txx ethtypes.Transaction
-	err = txx.UnmarshalBinary(val)
-	if err != nil {
-		panic("error unmarshalling txProof'd tx")
-	}
-	res, err := runner.LightclientClient.Prove(runner.Ctx, &lightclienttypes.QueryProveRequest{
+	require.NoError(r, txx.UnmarshalBinary(val))
+
+	res, err := r.LightclientClient.Prove(r.Ctx, &lightclienttypes.QueryProveRequest{
 		BlockHash: blockHash.Hex(),
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),
 		Proof:     proofs.NewEthereumProof(txProof),
 		ChainId:   chains.GoerliLocalnet.ChainId,
 	})
-	if err != nil {
-		panic(err)
-	}
-	if !res.Valid {
-		panic("txProof invalid") // FIXME: don't do this in production
-	}
-	runner.Logger.Info("OK: txProof verified")
+
+	// FIXME: @lumtis: don't do this in production
+	require.NoError(r, err)
+	require.True(r, res.Valid, "txProof invalid")
+
+	r.Logger.Info("OK: txProof verified")
 }
 
 // AnvilMineBlocks mines blocks on Anvil localnet
 // the block time is provided in seconds
 // the method returns a function to stop the mining
-func (runner *E2ERunner) AnvilMineBlocks(url string, blockTime int) (func(), error) {
+func (r *E2ERunner) AnvilMineBlocks(url string, blockTime int) (func(), error) {
 	stop := make(chan struct{})
 
 	client, err := rpc.Dial(url)
@@ -286,7 +255,7 @@ func (runner *E2ERunner) AnvilMineBlocks(url string, blockTime int) (func(), err
 				time.Sleep(time.Duration(blockTime) * time.Second)
 
 				var result interface{}
-				err = client.CallContext(runner.Ctx, &result, "evm_mine")
+				err = client.CallContext(r.Ctx, &result, "evm_mine")
 				if err != nil {
 					log.Fatalf("Failed to mine a new block: %v", err)
 				}

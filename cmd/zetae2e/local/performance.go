@@ -5,7 +5,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -23,25 +22,12 @@ func ethereumDepositPerformanceRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("ethereum deposit perf panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
 		// initialize runner for ether test
 		r, err := initTestRunner(
 			"ether",
 			conf,
 			deployerRunner,
-			UserERC20Address,
-			UserERC20PrivateKey,
+			conf.AdditionalAccounts.UserERC20,
 			runner.NewLogger(verbose, color.FgHiMagenta, "perf_eth_deposit"),
 		)
 		if err != nil {
@@ -77,25 +63,12 @@ func ethereumWithdrawPerformanceRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("ethereum withdraw perf panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
 		// initialize runner for ether test
 		r, err := initTestRunner(
 			"ether",
 			conf,
 			deployerRunner,
-			UserEtherAddress,
-			UserEtherPrivateKey,
+			conf.AdditionalAccounts.UserEther,
 			runner.NewLogger(verbose, color.FgHiBlue, "perf_eth_withdraw"),
 		)
 		if err != nil {

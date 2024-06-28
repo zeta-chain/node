@@ -30170,21 +30170,6 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/observer/get_all_tss_fund_migrators:
-    get:
-      summary: Queries all TssFundMigratorInfo
-      operationId: Query_TssFundsMigratorInfoAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/observer/get_chain_params:
     get:
       summary: Queries a list of GetChainParams items.
@@ -30267,7 +30252,22 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_tss_fund_migrator:
+  /zeta-chain/observer/getAllTssFundsMigrators:
+    get:
+      summary: Queries all TssFundMigratorInfo
+      operationId: Query_TssFundsMigratorInfoAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/getTssFundsMigrator:
     get:
       summary: Queries the TssFundMigratorInfo for a specific chain
       operationId: Query_TssFundsMigratorInfo

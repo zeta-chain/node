@@ -155,6 +155,7 @@ func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) ([]byte, ab
 			{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
 				{Key: "ethereumTxHash", Value: txHash},
 				{Key: "txIndex", Value: "8888"},
+				{Key: "txData", Value: "0x1234"},
 				{Key: "amount", Value: "1000"},
 				{Key: "txGasUsed", Value: "21000"},
 				{Key: "txHash", Value: ""},

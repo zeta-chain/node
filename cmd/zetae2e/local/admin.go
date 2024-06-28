@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -20,24 +19,13 @@ func adminTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("admin panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
+		account := conf.AdditionalAccounts.UserAdmin
 		// initialize runner for erc20 advanced test
 		adminRunner, err := initTestRunner(
 			"admin",
 			conf,
 			deployerRunner,
-			UserAdminAddress,
-			UserAdminPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgHiGreen, "admin"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
@@ -50,8 +38,8 @@ func adminTestRoutine(
 
 		// funding the account
 		// we transfer around the total supply of Zeta to the admin for the chain migration test
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserAdminAddress, 20_500_000_000)
-		txERC20Send := deployerRunner.SendERC20OnEvm(UserAdminAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 20_500_000_000)
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
 		adminRunner.WaitForTxReceiptOnEvm(txZetaSend)
 		adminRunner.WaitForTxReceiptOnEvm(txERC20Send)
 
