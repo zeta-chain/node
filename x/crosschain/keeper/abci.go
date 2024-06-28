@@ -30,7 +30,7 @@ type CheckAndUpdateCctxGasPriceFunc func(
 // The function returns the number of cctxs updated and the gas price increase flags used
 func (k Keeper) IterateAndUpdateCctxGasPrice(
 	ctx sdk.Context,
-	chains []*zetachains.Chain,
+	chains []zetachains.Chain,
 	updateFunc CheckAndUpdateCctxGasPriceFunc,
 ) (int, observertypes.GasPriceIncreaseFlags) {
 	// fetch the gas price increase flags or use default

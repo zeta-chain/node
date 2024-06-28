@@ -22,7 +22,8 @@ func (k Keeper) TssFundsMigratorInfo(
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if chains.GetChainFromChainID(req.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) == nil {
+	_, found := chains.GetChainFromChainID(req.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
+	if !found {
 		return nil, status.Error(codes.InvalidArgument, "invalid chain id")
 	}
 

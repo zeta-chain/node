@@ -816,7 +816,7 @@ func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
 
 func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
-		Chains: []*chains.Chain{
+		Chains: []chains.Chain{
 			{
 				ChainName:   chains.BitcoinMainnet.ChainName,
 				ChainId:     chains.BitcoinMainnet.ChainId,

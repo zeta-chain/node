@@ -15,19 +15,19 @@ type FungibleObserverKeeper struct {
 }
 
 // GetSupportedChains provides a mock function with given fields: ctx
-func (_m *FungibleObserverKeeper) GetSupportedChains(ctx types.Context) []*chains.Chain {
+func (_m *FungibleObserverKeeper) GetSupportedChains(ctx types.Context) []chains.Chain {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSupportedChains")
 	}
 
-	var r0 []*chains.Chain
-	if rf, ok := ret.Get(0).(func(types.Context) []*chains.Chain); ok {
+	var r0 []chains.Chain
+	if rf, ok := ret.Get(0).(func(types.Context) []chains.Chain); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*chains.Chain)
+			r0 = ret.Get(0).([]chains.Chain)
 		}
 	}
 

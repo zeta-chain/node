@@ -138,8 +138,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
 
-	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
-	if receiverChain == nil {
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
+	if !found {
 		return errorsmod.Wrapf(
 			observertypes.ErrSupportedChains,
 			"chain with chainID %d not supported",
@@ -218,23 +218,27 @@ func (k Keeper) ProcessZetaSentEvent(
 
 	receiverChainID := event.DestinationChainId
 
-	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiverChainID.Int64())
-	if receiverChain == nil {
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiverChainID.Int64())
+	if !found {
 		return observertypes.ErrSupportedChains
 	}
+
 	// Validation if we want to send ZETA to an external chain, but there is no ZETA token.
 	chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
 		return observertypes.ErrChainParamsNotFound
 	}
+
 	if receiverChain.IsExternalChain() && chainParams.ZetaTokenContractAddress == "" {
 		return types.ErrUnableToSendCoinType
 	}
+
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
+
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.

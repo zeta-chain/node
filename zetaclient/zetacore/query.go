@@ -481,7 +481,7 @@ func (c *Client) GetBlockHeaderChainState(chainID int64) (lightclienttypes.Query
 }
 
 // GetSupportedChains returns the supported chains
-func (c *Client) GetSupportedChains() ([]*chains.Chain, error) {
+func (c *Client) GetSupportedChains() ([]chains.Chain, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.SupportedChains(context.Background(), &observertypes.QuerySupportedChains{})
 	if err != nil {

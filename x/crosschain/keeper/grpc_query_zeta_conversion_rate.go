@@ -19,9 +19,9 @@ func (k Keeper) ConvertGasToZeta(
 	request *types.QueryConvertGasToZetaRequest,
 ) (*types.QueryConvertGasToZetaResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
-	chain := chains.GetChainFromChainID(request.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 
-	if chain == nil {
+	chain, found := chains.GetChainFromChainID(request.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
+	if !found {
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
 

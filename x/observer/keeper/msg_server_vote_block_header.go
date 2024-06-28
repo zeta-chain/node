@@ -18,8 +18,8 @@ func (k msgServer) VoteBlockHeader(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if the chain is enabled
-	chain := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if chain == nil {
+	chain, found := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	if !found {
 		return nil, cosmoserrors.Wrapf(types.ErrSupportedChains, "chain id: %d", msg.ChainId)
 	}
 

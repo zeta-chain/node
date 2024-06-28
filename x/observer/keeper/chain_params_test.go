@@ -16,26 +16,29 @@ func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// no core params list
-		require.Nil(t, k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0)))
+		_, found := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+		require.False(t, found)
 
 		// core params list but chain not in list
 		setSupportedChain(ctx, *k, getValidEthChainIDWithIndex(t, 0))
-		require.Nil(t, k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 1)))
+		_, found = k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 1))
+		require.False(t, found)
 
 		// chain params list but chain not supported
 		chainParams := sample.ChainParams(getValidEthChainIDWithIndex(t, 0))
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{chainParams},
 		})
-		require.Nil(t, k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0)))
+		_, found = k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+		require.False(t, found)
 	})
 
 	t.Run("return chain if chain found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		chainID := getValidEthChainIDWithIndex(t, 0)
 		setSupportedChain(ctx, *k, getValidEthChainIDWithIndex(t, 1), chainID)
-		chain := k.GetSupportedChainFromChainID(ctx, chainID)
-		require.NotNil(t, chain)
+		chain, found := k.GetSupportedChainFromChainID(ctx, chainID)
+		require.True(t, found)
 		require.EqualValues(t, chainID, chain.ChainId)
 	})
 }

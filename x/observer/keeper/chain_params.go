@@ -43,10 +43,10 @@ func (k Keeper) GetChainParamsByChainID(ctx sdk.Context, chainID int64) (*types.
 
 // GetSupportedChainFromChainID returns the chain from the chain id
 // it returns nil if the chain doesn't exist or is not supported
-func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *chains.Chain {
+func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) (chains.Chain, bool) {
 	cpl, found := k.GetChainParamsList(ctx)
 	if !found {
-		return nil
+		return chains.Chain{}, false
 	}
 
 	for _, cp := range cpl.ChainParams {
@@ -54,30 +54,33 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *ch
 			return chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 		}
 	}
-	return nil
+	return chains.Chain{}, false
 }
 
 // GetSupportedChains returns the list of supported chains
-func (k Keeper) GetSupportedChains(ctx sdk.Context) []*chains.Chain {
+func (k Keeper) GetSupportedChains(ctx sdk.Context) []chains.Chain {
 	cpl, found := k.GetChainParamsList(ctx)
 	if !found {
-		return []*chains.Chain{}
+		return []chains.Chain{}
 	}
 
-	var c []*chains.Chain
+	var c []chains.Chain
 	for _, cp := range cpl.ChainParams {
 		if cp.IsSupported {
-			c = append(c, chains.GetChainFromChainID(cp.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)))
+			chain, found := chains.GetChainFromChainID(cp.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
+			if found {
+				c = append(c, chain)
+			}
 		}
 	}
 	return c
 }
 
 // GetSupportedForeignChains returns the list of supported foreign chains
-func (k Keeper) GetSupportedForeignChains(ctx sdk.Context) []*chains.Chain {
+func (k Keeper) GetSupportedForeignChains(ctx sdk.Context) []chains.Chain {
 	allChains := k.GetSupportedChains(ctx)
 
-	foreignChains := make([]*chains.Chain, 0)
+	foreignChains := make([]chains.Chain, 0)
 	for _, chain := range allChains {
 		if !chain.IsZetaChain() {
 			foreignChains = append(foreignChains, chain)

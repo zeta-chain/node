@@ -159,8 +159,7 @@ func (k Keeper) validateFailedOutbound(
 ) error {
 	switch oldStatus {
 	case types.CctxStatus_PendingOutbound:
-		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId)
-		if senderChain == nil {
+		if _, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundParams.SenderChainId); !found {
 			return observertypes.ErrSupportedChains
 		}
 

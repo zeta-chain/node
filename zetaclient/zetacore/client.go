@@ -247,7 +247,7 @@ func (c *Client) UpdateZetacoreContext(
 	}
 	newChains := make([]chains.Chain, len(supportedChains))
 	for i, chain := range supportedChains {
-		newChains[i] = *chain
+		newChains[i] = chain
 	}
 	keyGen, err := c.GetKeyGen()
 	if err != nil {

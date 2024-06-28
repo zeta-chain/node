@@ -72,13 +72,15 @@ func NewZetaSupplyChecker(
 	additionalChains := coreContext.GetAdditionalChains()
 
 	for chainID := range zetaSupplyChecker.evmClient {
-		chain := chains.GetChainFromChainID(chainID, additionalChains)
+		chain, found := chains.GetChainFromChainID(chainID, additionalChains)
+		if !found {
+			return zetaSupplyChecker, fmt.Errorf("chain not found for chain id %d", chainID)
+		}
 		if chain.IsExternalChain() && chain.Consensus == chains.Consensus_ethereum &&
 			chain.Network != chains.Network_eth {
-			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
-		}
-		if chain.Network == chains.Network_eth {
-			zetaSupplyChecker.ethereumChain = *chain
+			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, chain)
+		} else {
+			zetaSupplyChecker.ethereumChain = chain
 		}
 	}
 

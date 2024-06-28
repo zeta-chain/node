@@ -137,12 +137,12 @@ func (c *ZetacoreContext) GetBTCChainParams() (chains.Chain, *observertypes.Chai
 		return chains.Chain{}, nil, false
 	}
 
-	chain := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId, c.additionalChain)
-	if chain == nil {
+	chain, found := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId, c.additionalChain)
+	if !found {
 		return chains.Chain{}, nil, false
 	}
 
-	return *chain, c.bitcoinChainParams, true
+	return chain, c.bitcoinChainParams, true
 }
 
 // GetCrossChainFlags returns crosschain flags

@@ -31,8 +31,8 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	// additional on-chain static chain information
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 
-	chain := chains.GetChainFromChainID(chainID, additionalChains)
-	if chain == nil {
+	chain, found := chains.GetChainFromChainID(chainID, additionalChains)
+	if !found {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain.ChainName)
@@ -40,7 +40,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	transferGasLimit := gasLimit
 
 	// Check if gas coin already exists
-	_, found := k.GetGasCoinForForeignCoin(ctx, chainID)
+	_, found = k.GetGasCoinForForeignCoin(ctx, chainID)
 	if found {
 		return ethcommon.Address{}, types.ErrForeignCoinAlreadyExist
 	}

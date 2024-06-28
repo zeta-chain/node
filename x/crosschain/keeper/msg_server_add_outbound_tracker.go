@@ -27,8 +27,7 @@ func (k msgServer) AddOutboundTracker(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check the chain is supported
-	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if chain == nil {
+	if _, found := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId); !found {
 		return nil, observertypes.ErrSupportedChains
 	}
 

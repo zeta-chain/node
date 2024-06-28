@@ -248,18 +248,18 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 
 		// mock successful UpdateNonce
-		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
+		_ = keepertest.MockUpdateNonce(observerMock, senderChain)
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ValidateOutboundObservers(
 			ctx,
@@ -288,18 +288,18 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 0)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 0)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 
 		// mock successful UpdateNonce
-		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
+		_ = keepertest.MockUpdateNonce(observerMock, senderChain)
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ValidateOutboundObservers(
 			ctx,
@@ -328,19 +328,19 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 
 		// mock failed UpdateNonce
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ValidateOutboundObservers(
 			ctx,
@@ -367,15 +367,15 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 
 		// mock failed failed GetSupportedChainFromChainID to fail PayGasAndUpdateCctx
-		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, &senderChain)
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ValidateOutboundObservers(
 			ctx,
@@ -405,7 +405,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 				Zrc20ContractAddress: sample.EthAddress().String(),
 			}, false).Once()
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ValidateOutboundObservers(
 			ctx,
@@ -487,7 +487,7 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 		senderChain := getValidEthChain()
 		asset := ""
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		oldOutboundParamsLen := len(cctx.OutboundParams)
 		// mock failed GetRevertGasLimit for ERC20
@@ -521,7 +521,7 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 		senderChain := getValidEthChain()
 		asset := ""
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.OutboundParams = append(cctx.OutboundParams, sample.OutboundParams(sample.Rand()))
 		cctx.OutboundParams[1].ReceiverChainId = 5
 		cctx.OutboundParams[1].BallotIndex = ""
@@ -529,7 +529,7 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		err := k.ValidateOutboundObservers(
 			ctx,
@@ -554,20 +554,20 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 		senderChain := getValidEthChain()
 		asset := ""
 
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		oldOutboundParamsLen := len(cctx.OutboundParams)
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
+		keepertest.MockGetSupportedChainFromChainID(observerMock, &senderChain)
 
 		// mock successful UpdateNonce
-		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
+		_ = keepertest.MockUpdateNonce(observerMock, senderChain)
 
 		err := k.ValidateOutboundObservers(
 			ctx,

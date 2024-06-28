@@ -83,8 +83,8 @@ func DebugCmd() *cobra.Command {
 				return err
 			}
 
-			chain := chains.GetChainFromChainID(chainID, coreContext.GetAdditionalChains())
-			if chain == nil {
+			chain, found := chains.GetChainFromChainID(chainID, coreContext.GetAdditionalChains())
+			if !found {
 				return fmt.Errorf("invalid chain id")
 			}
 
@@ -104,7 +104,7 @@ func DebugCmd() *cobra.Command {
 						}
 						evmObserver.WithEvmClient(client)
 						evmObserver.WithEvmJSONRPC(ethRPC)
-						evmObserver.WithChain(*chain)
+						evmObserver.WithChain(chain)
 					}
 				}
 				hash := ethcommon.HexToHash(inboundHash)
@@ -168,7 +168,7 @@ func DebugCmd() *cobra.Command {
 			} else if chain.Consensus == chains.Consensus_bitcoin {
 				btcObserver := btcobserver.Observer{}
 				btcObserver.WithZetacoreClient(client)
-				btcObserver.WithChain(*chain)
+				btcObserver.WithChain(chain)
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
 					User:         cfg.BitcoinConfig.RPCUsername,

@@ -79,7 +79,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 			UseObserverMock: true,
 		})
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{})
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{})
 
 		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
 		require.NoError(t, err)
@@ -91,7 +91,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 			UseObserverMock: true,
 		})
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{nil})
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{})
 
 		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
 		require.Error(t, err)
@@ -104,7 +104,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		})
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
 		chainID := 5
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
 			{
 				ChainName: chains.ChainName(chainID),
 				ChainId:   int64(chainID),
@@ -124,7 +124,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
 		chainID := 5
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
 			{
 				ChainName: chains.ChainName(chainID),
 				ChainId:   int64(chainID),

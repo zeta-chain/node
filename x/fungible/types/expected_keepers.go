@@ -36,7 +36,7 @@ type BankKeeper interface {
 }
 
 type ObserverKeeper interface {
-	GetSupportedChains(ctx sdk.Context) []*chains.Chain
+	GetSupportedChains(ctx sdk.Context) []chains.Chain
 }
 
 type EVMKeeper interface {

@@ -251,7 +251,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				UnlimitedTimes().
 				WithPayload(observertypes.QuerySupportedChains{}).
 				Return(observertypes.QuerySupportedChainsResponse{
-					Chains: []*chains.Chain{
+					Chains: []chains.Chain{
 						{
 							chains.BitcoinMainnet.ChainId,
 							chains.BitcoinMainnet.ChainName,

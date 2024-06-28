@@ -56,7 +56,7 @@ type ObserverKeeper interface {
 	FindBallot(
 		ctx sdk.Context,
 		index string,
-		chain *chains.Chain,
+		chain chains.Chain,
 		observationType observertypes.ObservationType,
 	) (ballot observertypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
@@ -101,9 +101,9 @@ type ObserverKeeper interface {
 		receiveStatus chains.ReceiveStatus,
 		voter string,
 	) (bool, bool, observertypes.Ballot, string, error)
-	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *chains.Chain
-	GetSupportedChains(ctx sdk.Context) []*chains.Chain
-	GetSupportedForeignChains(ctx sdk.Context) []*chains.Chain
+	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) (chains.Chain, bool)
+	GetSupportedChains(ctx sdk.Context) []chains.Chain
+	GetSupportedForeignChains(ctx sdk.Context) []chains.Chain
 }
 
 type FungibleKeeper interface {
