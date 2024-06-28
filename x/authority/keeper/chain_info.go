@@ -28,7 +28,7 @@ func (k Keeper) GetChainInfo(ctx sdk.Context) (val types.ChainInfo, found bool) 
 
 // GetAdditionalChainList returns the list of chains in chain info object
 // returns empty list if no chains are present
-func (k Keeper) GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain) {
+func (k Keeper) GetAdditionalChainList(ctx sdk.Context) []chains.Chain {
 	chainInfo, found := k.GetChainInfo(ctx)
 	if !found {
 		return
