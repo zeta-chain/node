@@ -45,6 +45,8 @@ jobs:
             exit 1
           fi
           
+          cat report.json
+          
           # Parse the results.json file to check for failures
           failures=$(jq '.errors.ECONNREFUSED // 0' ./report.json)
           
