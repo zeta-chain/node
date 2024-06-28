@@ -338,7 +338,8 @@ func (ob *Observer) WatchGasPrice() {
 // PostGasPrice posts gas price to zetacore
 // TODO(revamp): move to gas price file
 func (ob *Observer) PostGasPrice() error {
-	// issue: https://github.com/zeta-chain/node/issues/1160
+	// TODO: add ctx to `PostGasPrice(ctx) error`
+	//  https://github.com/zeta-chain/node/issues/1160
 	ctx := context.Background()
 
 	// GAS PRICE

@@ -132,4 +132,16 @@ func TestNewOutboundData(t *testing.T) {
 		// ASSERT
 		assert.ErrorContains(t, err, "unknown chain")
 	})
+
+	t.Run("no outbound params", func(t *testing.T) {
+		// ARRANGE
+		cctx := getCCTX(t)
+		cctx.OutboundParams = nil
+
+		// ACT
+		_, _, err := newOutbound(cctx)
+
+		// ASSERT
+		assert.ErrorContains(t, err, "outboundParams is empty")
+	})
 }

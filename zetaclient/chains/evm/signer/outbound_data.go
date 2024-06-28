@@ -56,8 +56,8 @@ func NewOutboundData(
 	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
 	outboundParams := cctx.GetCurrentOutboundParam()
-	if outboundParams == nil {
-		return nil, false, errors.New("outboundParams is nil")
+	if err := validateParams(outboundParams); err != nil {
+		return nil, false, err
 	}
 
 	// Check if the CCTX has already been processed
@@ -193,4 +193,12 @@ func determineDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethc
 		Msgf("CCTX doesn't need to be processed")
 
 	return ethcommon.Address{}, nil, true
+}
+
+func validateParams(params *types.OutboundParams) error {
+	if params == nil || params.GasLimit == 0 {
+		return errors.New("outboundParams is empty")
+	}
+
+	return nil
 }
