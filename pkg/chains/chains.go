@@ -390,7 +390,7 @@ func CombineDefaultChainsList(chains []Chain) []*Chain {
 
 // CombineChainList combines a list of chains with a list of chains
 // duplicated chain ID are overwritten by the second list
-func CombineChainList(chains1 []*Chain, chains2 []*Chain) []*Chain {
+func CombineChainList(base []Chain, additional ...Chain) []Chain {
 	combined := make([]*Chain, 0, len(base) + len(additional))
 	combined = append(combined, chains1...)
 
