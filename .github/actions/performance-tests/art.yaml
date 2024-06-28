@@ -1,7 +1,7 @@
 # artillery run art.yaml --output results.json
 # artillery report results.json --output artillery_report.html
 config:
-  target: "http://127.0.0.1:9545"
+  target: "http://localhost:9545"
   phases:
     - duration: 60
       arrivalRate: 10
