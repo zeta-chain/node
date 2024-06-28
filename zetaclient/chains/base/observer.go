@@ -45,6 +45,7 @@ type Observer struct {
 	// chainParams contains the dynamic chain parameters of the observed chain
 	chainParams observertypes.ChainParams
 
+	// appContext contains context data for zetaclient & zetacore (e.g. supported chains)
 	appContext *context.AppContext
 
 	// zetacoreClient is the client to interact with ZetaChain

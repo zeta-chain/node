@@ -144,7 +144,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	appContext := context.New(cfg, logger.Std)
+	appContext := context.New(cfg, masterLogger)
 	err = zetacoreClient.UpdateZetacoreContext(appContext, true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
