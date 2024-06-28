@@ -1,5 +1,3 @@
-# artillery run art.yaml --output results.json
-# artillery report results.json --output artillery_report.html
 config:
   target: "http://localhost:9545"
   phases:
@@ -26,12 +24,15 @@ scenarios:
   - name: web3_clientVersion
     flow:
       - post:
-          url: "/"
+          url: "/sdfas"
           json:
             id: 1
             jsonrpc: "2.0"
-            method: "web3_clientVersionxxxxx"
-            params: [ ]
+            method: "web3_clientVersionxxxxx"  # Deliberate typo to force failure
+            params: []
+      - ensure:
+          check: "statusCode == 200"
+          message: "web3_clientVersion request failed"
 
   - name: web3_sha3
     flow:
@@ -43,6 +44,9 @@ scenarios:
             method: "web3_sha3"
             params:
               - "0x68656c6c6f20776f726c64"
+      - ensure:
+          check: "statusCode == 200"
+          message: "web3_sha3 request failed"
 
   - name: net_version
     flow:
@@ -53,6 +57,9 @@ scenarios:
             jsonrpc: "2.0"
             method: "net_version"
             params: []
+      - ensure:
+          check: "statusCode == 200"
+          message: "net_version request failed"
 
   - name: net_listening
     flow:
@@ -63,6 +70,9 @@ scenarios:
             jsonrpc: "2.0"
             method: "net_listening"
             params: []
+      - ensure:
+          check: "statusCode == 200"
+          message: "net_listening request failed"
 
   - name: net_peerCount
     flow:
@@ -73,6 +83,9 @@ scenarios:
             jsonrpc: "2.0"
             method: "net_peerCount"
             params: []
+      - ensure:
+          check: "statusCode == 200"
+          message: "net_peerCount request failed"
 
   - name: eth_chainId
     flow:
@@ -83,6 +96,9 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_chainId"
             params: []
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_chainId request failed"
 
   - name: eth_getStorageAt
     flow:
@@ -94,6 +110,9 @@ scenarios:
             method: "eth_getStorageAt"
             params:
               - "latest"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getStorageAt request failed"
 
   - name: eth_getTransactionByBlockHashAndIndex
     flow:
@@ -105,6 +124,9 @@ scenarios:
             method: "eth_getTransactionByBlockHashAndIndex"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getTransactionByBlockHashAndIndex request failed"
 
   - name: eth_getTransactionByBlockNumberAndIndex
     flow:
@@ -117,6 +139,9 @@ scenarios:
             params:
               - "latest"
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getTransactionByBlockNumberAndIndex request failed"
 
   - name: eth_getUncleByBlockHashAndIndex
     flow:
@@ -128,6 +153,9 @@ scenarios:
             method: "eth_getUncleByBlockHashAndIndex"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getUncleByBlockHashAndIndex request failed"
 
   - name: eth_getUncleByBlockNumberAndIndex
     flow:
@@ -140,6 +168,9 @@ scenarios:
             params:
               - "latest"
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getUncleByBlockNumberAndIndex request failed"
 
   - name: eth_newFilter
     flow:
@@ -156,6 +187,9 @@ scenarios:
                   address: "0x0",
                   topics: []
                 }
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_newFilter request failed"
 
   - name: eth_getFilterChanges
     flow:
@@ -167,6 +201,9 @@ scenarios:
             method: "eth_getFilterChanges"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getFilterChanges request failed"
 
   - name: eth_getFilterLogs
     flow:
@@ -178,6 +215,9 @@ scenarios:
             method: "eth_getFilterLogs"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getFilterLogs request failed"
 
   - name: eth_blockNumber
     flow:
@@ -188,6 +228,9 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_blockNumber"
             params: []
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_blockNumber request failed"
 
   - name: eth_getBlockByHash
     flow:
@@ -200,6 +243,9 @@ scenarios:
             params:
               - "0x0"
               - true
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getBlockByHash request failed"
 
   - name: eth_getBlockByNumber
     flow:
@@ -212,6 +258,9 @@ scenarios:
             params:
               - "latest"
               - true
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getBlockByNumber request failed"
 
   - name: eth_getBlockTransactionCountByHash
     flow:
@@ -223,6 +272,9 @@ scenarios:
             method: "eth_getBlockTransactionCountByHash"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getBlockTransactionCountByHash request failed"
 
   - name: eth_getBlockTransactionCountByNumber
     flow:
@@ -234,6 +286,9 @@ scenarios:
             method: "eth_getBlockTransactionCountByNumber"
             params:
               - "latest"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getBlockTransactionCountByNumber request failed"
 
   - name: eth_getCode
     flow:
@@ -246,6 +301,9 @@ scenarios:
             params:
               - "0x0"
               - "latest"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getCode request failed"
 
   - name: eth_getTransactionByHash
     flow:
@@ -257,6 +315,9 @@ scenarios:
             method: "eth_getTransactionByHash"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getTransactionByHash request failed"
 
   - name: eth_getTransactionReceipt
     flow:
@@ -268,6 +329,9 @@ scenarios:
             method: "eth_getTransactionReceipt"
             params:
               - "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getTransactionReceipt request failed"
 
   - name: eth_getLogs
     flow:
@@ -282,6 +346,9 @@ scenarios:
                 toBlock: "latest"
                 address: "0x0"
                 topics: ["0x0"]
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getLogs request failed"
 
   - name: eth_getBalance
     flow:
@@ -294,6 +361,9 @@ scenarios:
             params:
               - "0x0"
               - "latest"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_getBalance request failed"
 
   - name: eth_estimateGas
     flow:
@@ -305,3 +375,6 @@ scenarios:
             method: "eth_estimateGas"
             params:
               - from: "0x0"
+      - ensure:
+          check: "statusCode == 200"
+          message: "eth_estimateGas request failed"
