@@ -203,6 +203,12 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
+
+	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
+	if err != nil {
+		return fmt.Errorf("SetupTSSServer error: %w", err)
+	}
+	telemetryServer.SetP2PID(server.GetLocalPeerID())
 	err = GenerateTss(
 		appContext,
 		masterLogger,
@@ -213,6 +219,7 @@ func start(_ *cobra.Command, _ []string) error {
 		tssHistoricalList,
 		tssKeyPass,
 		hotkeyPass,
+		server,
 	)
 	if err != nil {
 		return err
@@ -234,6 +241,7 @@ func start(_ *cobra.Command, _ []string) error {
 		tssKeyPass,
 		hotkeyPass,
 		true,
+		server,
 	)
 	if cfg.TestTssKeysign {
 		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)

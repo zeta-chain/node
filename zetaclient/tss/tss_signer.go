@@ -100,15 +100,16 @@ func NewTSS(
 	tssPassword string,
 	hotkeyPassword string,
 	enableMonitor bool,
+	tssServer *tss.TssServer,
 ) (*TSS, error) {
 	logger := log.With().Str("module", "tss_signer").Logger()
-	server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword, enableMonitor)
-	if err != nil {
-		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
-	}
+	//server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword, enableMonitor)
+	//if err != nil {
+	//	return nil, fmt.Errorf("SetupTSSServer error: %w", err)
+	//}
 
 	newTss := TSS{
-		Server:          server,
+		Server:          tssServer,
 		Keys:            make(map[string]*Key),
 		CurrentPubkey:   appContext.ZetacoreContext().GetCurrentTssPubkey(),
 		logger:          logger,
@@ -117,7 +118,7 @@ func NewTSS(
 		BitcoinChainID:  bitcoinChainID,
 	}
 
-	err = newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
+	err := newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +239,6 @@ func (tss *TSS) Sign(
 		tssPubkey = optionalPubKey
 	}
 
-	fmt.Println("signing tssPubkey", tssPubkey)
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(
 		tssPubkey,
@@ -256,7 +256,7 @@ func (tss *TSS) Sign(
 	}
 
 	if ksRes.Status == thorcommon.Fail {
-		fmt.Println(ksRes.Signatures, ksRes.Blame)
+		fmt.Println("signing tssPubkey", tssPubkey)
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		// post blame data if enabled

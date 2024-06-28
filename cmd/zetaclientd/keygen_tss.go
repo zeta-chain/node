@@ -37,14 +37,15 @@ func GenerateTss(
 	ts *metrics.TelemetryServer,
 	tssHistoricalList []observertypes.TSS,
 	tssPassword string,
-	hotkeyPassword string) error {
+	hotkeyPassword string,
+	keygenTssServer *tss.TssServer) error {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
-	keygenTssServer, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssPassword, false)
-	if err != nil {
-		keygenLogger.Error().Err(err).Msg("NewTSS server error")
-		return err
-	}
-	ts.SetP2PID(keygenTssServer.GetLocalPeerID())
+	//keygenTssServer, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssPassword, false)
+	//if err != nil {
+	//	keygenLogger.Error().Err(err).Msg("NewTSS server error")
+	//	return err
+	//}
+
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
 	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
