@@ -88,7 +88,7 @@ func DebugCmd() *cobra.Command {
 				return fmt.Errorf("invalid chain id")
 			}
 
-			// get ballot identifier according to the chain type\
+			// get ballot identifier according to the chain type
 			if chain.Consensus == chains.Consensus_ethereum {
 				evmObserver := evmobserver.Observer{}
 				evmObserver.WithZetacoreClient(client)
