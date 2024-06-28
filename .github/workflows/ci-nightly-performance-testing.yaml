@@ -46,7 +46,7 @@ jobs:
           fi
           
           # Parse the results.json file to check for failures
-          failures=$(jq '.errors.ECONNREFUSED' ./report.json)
+          failures=$(jq '.errors.ECONNREFUSED // 0' ./report.json)
           
           if [ "$failures" -gt 0 ]; then
             echo "Performance Testing had Failed Tests."
