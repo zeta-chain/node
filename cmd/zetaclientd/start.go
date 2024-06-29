@@ -24,6 +24,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -163,9 +164,10 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("Authz is ready for granter %s grantee %s", granter, grantee)
 
 	// Initialize zetaclient app context
-	appContext, err := orchestrator.CreateAppContext(cfg, zetacoreClient, startLogger)
+	appContext := context.NewAppContext(cfg)
+	err = zetacoreClient.UpdateAppContext(appContext, startLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("error creating app context")
+		startLogger.Error().Err(err).Msg("error initializing app context")
 		return err
 	}
 

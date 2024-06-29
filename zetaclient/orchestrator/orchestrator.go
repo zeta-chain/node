@@ -132,11 +132,11 @@ func NewOrchestrator(
 
 // Start all orchestrator routines
 func (oc *Orchestrator) Start() {
-	// watch for upgrade plan in zetacore
-	go oc.WatchUpgradePlan()
-
 	// watch for zetaclient app context changes
 	go oc.WatchAppContext()
+
+	// watch for upgrade plan in zetacore
+	go oc.WatchUpgradePlan()
 
 	// watch for enabling/disabling chains
 	go oc.WatchEnabledChains()

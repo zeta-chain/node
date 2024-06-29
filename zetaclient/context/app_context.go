@@ -45,26 +45,11 @@ func NewAppContext(cfg config.Config) *AppContext {
 	}
 }
 
-// CreateAppContext creates a new AppContext
-func CreateAppContext(
-	keygen observertypes.Keygen,
-	chainsEnabled []chains.Chain,
-	chainParamMap map[int64]*observertypes.ChainParams,
-	btcNetParams *chaincfg.Params,
-	tssPubKey string,
-	crosschainFlags observertypes.CrosschainFlags,
-	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
-) *AppContext {
-	return &AppContext{
-		mu:                       new(sync.RWMutex),
-		keygen:                   keygen,
-		chainsEnabled:            chainsEnabled,
-		chainParamMap:            chainParamMap,
-		btcNetParams:             btcNetParams,
-		currentTssPubkey:         tssPubKey,
-		crosschainFlags:          crosschainFlags,
-		blockHeaderEnabledChains: blockHeaderEnabledChains,
-	}
+// SetConfig sets a new config to the app context
+func (c *AppContext) SetConfig(cfg config.Config) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.config = cfg
 }
 
 // Config returns the app context config
@@ -180,26 +165,9 @@ func (c *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttype
 	return lightclienttypes.HeaderSupportedChain{}, false
 }
 
-// Update updates the inner config and app context
-func (c *AppContext) UpdateContext(config config.Config, newContext *AppContext, logger zerolog.Logger) {
-	c.Update(
-		config,
-		newContext.GetKeygen(),
-		newContext.GetEnabledExternalChains(),
-		newContext.GetEnabledExternalChainParams(),
-		newContext.GetBTCNetParams(),
-		newContext.GetCurrentTssPubkey(),
-		newContext.GetCrossChainFlags(),
-		newContext.GetAllHeaderEnabledChains(),
-		false,
-		logger,
-	)
-}
-
 // Update updates app context and params for all chains
 // this must be the ONLY function that writes to app context
 func (c *AppContext) Update(
-	config config.Config,
 	keygen observertypes.Keygen,
 	newChains []chains.Chain,
 	newChainParams map[int64]*observertypes.ChainParams,
@@ -249,7 +217,6 @@ func (c *AppContext) Update(
 		c.btcNetParams = btcNetParams
 	}
 
-	c.config = config
 	c.keygen = keygen
 	c.chainsEnabled = newChains
 	c.chainParamMap = newChainParams

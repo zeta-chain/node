@@ -41,8 +41,6 @@ type Client struct {
 	broadcastLock *sync.RWMutex
 	chainID       string
 	chain         chains.Chain
-	stop          chan struct{}
-	pause         chan struct{}
 	Telemetry     *metrics.TelemetryServer
 
 	// enableMockSDKClient is a flag that determines whether the mock cosmos sdk client should be used, primarily for
@@ -132,10 +130,8 @@ func NewClient(
 		encodingCfg:         app.MakeEncodingConfig(),
 		keys:                keys,
 		broadcastLock:       &sync.RWMutex{},
-		stop:                make(chan struct{}),
 		chainID:             chainID,
 		chain:               zetaChain,
-		pause:               make(chan struct{}),
 		Telemetry:           telemetry,
 		enableMockSDKClient: false,
 		mockSDKClient:       nil,
@@ -167,11 +163,6 @@ func (c *Client) GetLogger() *zerolog.Logger {
 
 func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
-}
-
-func (c *Client) Stop() {
-	c.logger.Info().Msgf("zetacore client is stopping")
-	close(c.stop) // this notifies all configupdater to stop
 }
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
@@ -226,102 +217,12 @@ func (c *Client) WaitForZetacoreToCreateBlocks() error {
 	return nil
 }
 
-// UpdateAppContext updates app context
-// zetacore stores app context for all clients
-func (c *Client) UpdateAppContext(
-	appContext *context.AppContext,
-	init bool,
-	sampledLogger zerolog.Logger,
-) error {
-	bn, err := c.GetBlockHeight()
-	if err != nil {
-		return fmt.Errorf("failed to get zetablock height: %w", err)
-	}
-	plan, err := c.GetUpgradePlan()
-	if err != nil {
-		// if there is no active upgrade plan, plan will be nil, err will be nil as well.
-		return fmt.Errorf("failed to get upgrade plan: %w", err)
-	}
-	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		c.logger.Warn().
-			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
-				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
-	}
-
-	chainParams, err := c.GetChainParams()
-	if err != nil {
-		return fmt.Errorf("failed to get chain params: %w", err)
-	}
-
-	newChainParams := make(map[int64]*observertypes.ChainParams)
-
-	// check and update chain params for each chain
-	for _, chainParam := range chainParams {
-		err := observertypes.ValidateChainParams(chainParam)
-		if err != nil {
-			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
-			continue
-		}
-		newChainParams[chainParam.ChainId] = chainParam
-	}
-
-	supportedChains, err := c.GetSupportedChains()
-	if err != nil {
-		return fmt.Errorf("failed to get supported chains: %w", err)
-	}
-	newChains := make([]chains.Chain, len(supportedChains))
-	for i, chain := range supportedChains {
-		newChains[i] = *chain
-	}
-	keyGen, err := c.GetKeyGen()
-	if err != nil {
-		c.logger.Info().Msg("Unable to fetch keygen from zetacore")
-		return fmt.Errorf("failed to get keygen: %w", err)
-	}
-
-	// get latest TSS public key
-	tss, err := c.GetCurrentTss()
-	if err != nil {
-		c.logger.Info().Err(err).Msg("Unable to fetch TSS from zetacore")
-		return fmt.Errorf("failed to get current tss: %w", err)
-	}
-	tssPubKey := tss.GetTssPubkey()
-
-	crosschainFlags, err := c.GetCrosschainFlags()
-	if err != nil {
-		c.logger.Info().Msg("Unable to fetch cross-chain flags from zetacore")
-		return fmt.Errorf("failed to get crosschain flags: %w", err)
-	}
-
-	blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains()
-	if err != nil {
-		c.logger.Info().Msg("Unable to fetch block header enabled chains from zetacore")
-		return err
-	}
-
-	appContext.Update(
-		config.NewConfig(),
-		*keyGen,
-		newChains,
-		newChainParams,
-		&chaincfg.RegressionNetParams,
-		tssPubKey,
-		crosschainFlags,
-		blockHeaderEnabledChains,
-		init,
-		c.logger,
-	)
-
-	return nil
-}
-
-// GetLatestAppContext queries zetacore to build the latest app context
-func (c *Client) GetLatestAppContext() (*context.AppContext, error) {
+// UpdateAppContext queries zetacore to update app context fields
+func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog.Logger) error {
 	// get latest supported chains
 	supportedChains, err := c.GetSupportedChains()
 	if err != nil {
-		return nil, errors.Wrap(err, "GetSupportedChains failed")
+		return errors.Wrap(err, "GetSupportedChains failed")
 	}
 	supportedChainsMap := make(map[int64]chains.Chain)
 	for _, chain := range supportedChains {
@@ -331,7 +232,7 @@ func (c *Client) GetLatestAppContext() (*context.AppContext, error) {
 	// get latest chain parameters
 	chainParams, err := c.GetChainParams()
 	if err != nil {
-		return nil, errors.Wrap(err, "GetChainParams failed")
+		return errors.Wrap(err, "GetChainParams failed")
 	}
 
 	var btcNetParams *chaincfg.Params
@@ -360,7 +261,7 @@ func (c *Client) GetLatestAppContext() (*context.AppContext, error) {
 		if chains.IsBitcoinChain(chainParam.ChainId) {
 			btcNetParams, err = chains.BitcoinNetParamsFromChainID(chainParam.ChainId)
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to get Bitcoin network params for chain %d", chainParam.ChainId)
+				return errors.Wrapf(err, "BitcoinNetParamsFromChainID failed for chain %d", chainParam.ChainId)
 			}
 		}
 
@@ -372,29 +273,30 @@ func (c *Client) GetLatestAppContext() (*context.AppContext, error) {
 	// get latest keygen
 	keyGen, err := c.GetKeyGen()
 	if err != nil {
-		return nil, errors.Wrap(err, "GetKeyGen failed")
+		return errors.Wrap(err, "GetKeyGen failed")
 	}
 
 	// get latest TSS public key
 	tss, err := c.GetCurrentTss()
 	if err != nil {
-		return nil, errors.Wrap(err, "GetCurrentTss failed")
+		return errors.Wrap(err, "GetCurrentTss failed")
 	}
 	tssPubKey := tss.GetTssPubkey()
 
 	// get latest crosschain flags
 	crosschainFlags, err := c.GetCrosschainFlags()
 	if err != nil {
-		return nil, errors.Wrap(err, "GetCrosschainFlags failed")
+		return errors.Wrap(err, "GetCrosschainFlags failed")
 	}
 
 	// get latest block header enabled chains
 	blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains()
 	if err != nil {
-		return nil, errors.Wrap(err, "GetBlockHeaderEnabledChains failed")
+		return errors.Wrap(err, "GetBlockHeaderEnabledChains failed")
 	}
 
-	return context.CreateAppContext(
+	// update app context fields
+	appContext.Update(
 		*keyGen,
 		chainsEnabled,
 		chainParamMap,
@@ -402,15 +304,11 @@ func (c *Client) GetLatestAppContext() (*context.AppContext, error) {
 		tssPubKey,
 		crosschainFlags,
 		blockHeaderEnabledChains,
-	), nil
-}
+		false,
+		logger,
+	)
 
-func (c *Client) Pause() {
-	<-c.pause
-}
-
-func (c *Client) Unpause() {
-	c.pause <- struct{}{}
+	return nil
 }
 
 func (c *Client) EnableMockSDKClient(client rpcclient.Client) {

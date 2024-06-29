@@ -78,7 +78,6 @@ func CreateTestAppContext(
 
 	// feed chain params
 	appContext.Update(
-		cfg,
 		observertypes.Keygen{},
 		[]chains.Chain{evmChain, btcChain},
 		chainParamsMap,

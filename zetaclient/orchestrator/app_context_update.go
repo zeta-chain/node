@@ -5,13 +5,29 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 )
+
+// WatchAppContext watches for app context changes and updates app context
+func (oc *Orchestrator) WatchAppContext() {
+	oc.logger.Std.Info().Msg("UpdateAppContext started")
+
+	ticker := time.NewTicker(time.Duration(oc.appContext.Config().ConfigUpdateTicker) * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			err := oc.UpdateAppContext()
+			if err != nil {
+				oc.logger.Std.Err(err).Msg("error updating zetaclient app context")
+			}
+		case <-oc.stop:
+			oc.logger.Std.Info().Msg("UpdateAppContext stopped")
+			return
+		}
+	}
+}
 
 // WatchUpgradePlan watches for upgrade plan and stops orchestrator if upgrade height is reached
 func (oc *Orchestrator) WatchUpgradePlan() {
@@ -31,67 +47,26 @@ func (oc *Orchestrator) WatchUpgradePlan() {
 	}
 }
 
-// WatchAppContext watches for app context changes and updates app context
-func (oc *Orchestrator) WatchAppContext() {
-	oc.logger.Std.Info().Msg("UpdateAppContext started")
-
-	ticker := time.NewTicker(time.Duration(oc.appContext.Config().ConfigUpdateTicker) * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			err := UpdateAppContext(oc.appContext, oc.zetacoreClient, oc.logger.Std)
-			if err != nil {
-				oc.logger.Std.Err(err).Msg("error updating zetaclient app context")
-			}
-		case <-oc.stop:
-			oc.logger.Std.Info().Msg("UpdateAppContext stopped")
-			return
-		}
-	}
-}
-
-// CreateAppContext creates new app context from config and zetacore client
-func CreateAppContext(
-	config config.Config,
-	zetacoreClient interfaces.ZetacoreClient,
-	logger zerolog.Logger,
-) (*context.AppContext, error) {
-	// create app context from config
-	appContext := context.NewAppContext(config)
-
-	// update app context from zetacore
-	err := UpdateAppContext(appContext, zetacoreClient, logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "error updating app context")
-	}
-
-	return appContext, nil
-}
-
 // UpdateAppContext updates zetaclient app context
-func UpdateAppContext(
-	appContext *context.AppContext,
-	zetacoreClient interfaces.ZetacoreClient,
-	logger zerolog.Logger,
-) error {
-	// reload config from file
-	newConfig, err := config.Load(appContext.Config().ZetaCoreHome)
-	if err != nil {
-		return errors.Wrapf(
-			err,
-			"UpdateAppContext: error loading config from path %s",
-			appContext.Config().ZetaCoreHome,
-		)
-	}
-
+func (oc *Orchestrator) UpdateAppContext() error {
 	// fetch latest app context from zetacore
-	newContext, err := zetacoreClient.GetLatestAppContext()
+	err := oc.zetacoreClient.UpdateAppContext(oc.appContext, oc.logger.Std)
 	if err != nil {
-		return errors.Wrap(err, "UpdateAppContext: error getting latest app context")
+		return errors.Wrap(err, "UpdateAppContext: error updating app context from zetacore")
 	}
 
-	// update inner config and app context
-	appContext.UpdateContext(newConfig, newContext, logger)
+	// reload config from file to allow for runtime config changes
+	// this allows operator to update zetaclient config without restarting zetaclient
+	zetazoreHome := oc.appContext.Config().ZetaCoreHome
+	newConfig, err := config.Load(zetazoreHome)
+	if err != nil {
+		return errors.Wrapf(err, "UpdateAppContext: error loading config from path %s", zetazoreHome)
+	}
+
+	// set new config to app context
+	// we keep the old ZetaCoreHome because newConfig.ZetaCoreHome is empty after reload
+	newConfig.ZetaCoreHome = zetazoreHome
+	oc.appContext.SetConfig(newConfig)
 
 	return nil
 }

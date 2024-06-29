@@ -66,8 +66,7 @@ type ChainSigner interface {
 
 // ZetacoreClient is the client interface to interact with zetacore
 type ZetacoreClient interface {
-	GetLatestAppContext() (*clientcontext.AppContext, error)
-	UpdateAppContext(appContext *clientcontext.AppContext, init bool, sampledLogger zerolog.Logger) error
+	UpdateAppContext(appContext *clientcontext.AppContext, logger zerolog.Logger) error
 	GetUpgradePlan() (*upgradetypes.Plan, error)
 	GetChainParams() ([]*observertypes.ChainParams, error)
 	GetSupportedChains() ([]*chains.Chain, error)
@@ -119,8 +118,6 @@ type ZetacoreClient interface {
 	GetBtcTssAddress(chainID int64) (string, error)
 	GetZetaHotKeyBalance() (sdkmath.Int, error)
 	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InboundTracker, error)
-	Pause()
-	Unpause()
 }
 
 // BTCRPCClient is the interface for BTC RPC client

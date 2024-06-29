@@ -58,7 +58,6 @@ func getAppContext(
 
 	// feed chain params
 	appCtx.Update(
-		cfg,
 		observertypes.Keygen{},
 		[]chains.Chain{evmChain},
 		newChainParams,

@@ -48,7 +48,6 @@ func getTestAppContext(
 
 	// feed chain params
 	appContext.Update(
-		cfg,
 		observertypes.Keygen{},
 		[]chains.Chain{evmChain},
 		newChainParams,
@@ -185,7 +184,6 @@ func TestUpdateAppContext(t *testing.T) {
 
 		require.NotNil(t, crosschainFlags)
 		zetaContext.Update(
-			testCfg,
 			keyGenToUpdate,
 			enabledChainsToUpdate,
 			newChainParamsToUpdate,
@@ -279,7 +277,6 @@ func TestUpdateAppContext(t *testing.T) {
 			verificationFlags := sample.HeaderSupportedChains()
 			require.NotNil(t, crosschainFlags)
 			zetaContext.Update(
-				testCfg,
 				keyGenToUpdate,
 				enabledChainsToUpdate,
 				newChainParamsToUpdate,
