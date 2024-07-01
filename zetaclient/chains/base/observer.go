@@ -129,7 +129,7 @@ func NewObserver(
 
 // Stop notifies all goroutines to stop and closes the database.
 func (ob *Observer) Stop() {
-	ob.logger.Chain.Info().Msgf("observer is stopping for chain %d", ob.Chain().ChainId)
+	ob.logger.Chain.Info().Msgf("Observer is stopping for chain %d", ob.Chain().ChainId)
 	close(ob.stop)
 
 	// close database
@@ -140,7 +140,7 @@ func (ob *Observer) Stop() {
 		}
 		ob.db = nil
 	}
-	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
+	ob.Logger().Chain.Info().Msgf("Observer stopped for chain %d", ob.Chain().ChainId)
 }
 
 // Chain returns the chain for the observer.

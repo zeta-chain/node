@@ -89,7 +89,7 @@ func (ob *Observer) WatchOutbound() {
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
-			ob.Logger().Outbound.Info().Msgf("WatchOutbound: stopped for chain %d", ob.Chain().ChainId)
+			ob.Logger().Outbound.Info().Msgf("WatchOutbound stopped for chain %d", ob.Chain().ChainId)
 			return
 		}
 	}

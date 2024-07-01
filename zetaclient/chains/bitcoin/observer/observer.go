@@ -212,7 +212,7 @@ func (ob *Observer) Start() {
 // TODO(revamp): move ticker related functions to a specific file
 // TODO(revamp): move inner logic in a separate function
 func (ob *Observer) WatchRPCStatus() {
-	ob.logger.Chain.Info().Msgf("RPCStatus is starting")
+	ob.logger.Chain.Info().Msgf("WatchRPCStatus started for chain %d", ob.Chain().ChainId)
 	ticker := time.NewTicker(60 * time.Second)
 
 	for {
@@ -267,6 +267,7 @@ func (ob *Observer) WatchRPCStatus() {
 				Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
 
 		case <-ob.StopChannel():
+			ob.Logger().Chain.Info().Msgf("WatchRPCStatus stopped for chain %d", ob.Chain().ChainId)
 			return
 		}
 	}

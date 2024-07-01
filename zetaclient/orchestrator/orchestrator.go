@@ -153,7 +153,7 @@ func (oc *Orchestrator) Start() {
 
 // AwaitStopSignals waits for stop signals
 func (oc *Orchestrator) AwaitStopSignals() {
-	oc.logger.Std.Info().Msgf("orchestrator awaiting the os.Interrupt, syscall.SIGTERM signals...")
+	oc.logger.Std.Info().Msgf("Orchestrator awaiting the os.Interrupt, syscall.SIGTERM signals...")
 
 	// subscribe to stop signals
 	ch := make(chan os.Signal, 1)
@@ -162,7 +162,7 @@ func (oc *Orchestrator) AwaitStopSignals() {
 
 	// stop orchestrator
 	oc.Stop()
-	oc.logger.Std.Info().Msgf("orchestrator stopped on signal: %s", sig)
+	oc.logger.Std.Info().Msgf("Orchestrator stopped on signal: %s", sig)
 }
 
 // Stop notifies all zetaclient goroutines to stop
