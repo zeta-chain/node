@@ -358,7 +358,7 @@ func (oc *Orchestrator) SchedulePendingCctxs() {
 								Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
 							continue
 						}
-						if !context.IsOutboundObservationEnabled(oc.appContext, ob.GetChainParams()) {
+						if !oc.appContext.IsOutboundObservationEnabled(ob.GetChainParams()) {
 							continue
 						}
 

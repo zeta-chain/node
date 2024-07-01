@@ -68,12 +68,6 @@ func (s *Signer) AppContext() *context.AppContext {
 	return s.appContext
 }
 
-// WithAppContext attaches a new app context to the signer
-func (s *Signer) WithAppContext(context *context.AppContext) *Signer {
-	s.appContext = context
-	return s
-}
-
 // Tss returns the tss signer for the signer
 func (s *Signer) TSS() interfaces.TSSSigner {
 	return s.tss

@@ -16,43 +16,6 @@ import (
 	context "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
-// getTestAppContext creates a test app context with provided chain params and flags
-func getTestAppContext(
-	evmChain chains.Chain,
-	evmChainParams *observertypes.ChainParams,
-	ccFlags *observertypes.CrosschainFlags,
-	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
-) *context.AppContext {
-	// create config
-	cfg := config.NewConfig()
-	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
-		Chain: evmChain,
-	}
-
-	// create app context
-	appContext := context.NewAppContext(cfg)
-	newChainParams := make(map[int64]*observertypes.ChainParams)
-	newChainParams[evmChain.ChainId] = evmChainParams
-
-	// create crosschain flags if not provided
-	if ccFlags == nil {
-		ccFlags = sample.CrosschainFlags()
-	}
-
-	// feed app context fields
-	appContext.Update(
-		observertypes.Keygen{},
-		"",
-		[]chains.Chain{evmChain},
-		newChainParams,
-		&chaincfg.RegressionNetParams,
-		*ccFlags,
-		headerSupportedChains,
-		zerolog.Logger{},
-	)
-	return appContext
-}
-
 func Test_NewAppContext(t *testing.T) {
 	t.Run("should create new app context with empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
@@ -173,40 +136,40 @@ func Test_UpdateAndGetters(t *testing.T) {
 	})
 }
 
-func Test_IsOutboundObservationEnabled(t *testing.T) {
+func TestIsOutboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
 	evmChain := chains.Ethereum
-	ccFlags := *sample.CrosschainFlags()
-	headerSupportedFlags := sample.HeaderSupportedChains()
-	evmChainParams := &observertypes.ChainParams{
+	ccFlags := sample.CrosschainFlags()
+	verificationFlags := sample.HeaderSupportedChains()
+	chainParams := &observertypes.ChainParams{
 		ChainId:     evmChain.ChainId,
 		IsSupported: true,
 	}
 
 	t.Run("should return true if chain is supported and outbound flag is enabled", func(t *testing.T) {
-		appCTX := getTestAppContext(evmChain, evmChainParams, &ccFlags, headerSupportedFlags)
-		require.True(t, context.IsOutboundObservationEnabled(appCTX, *evmChainParams))
+		appContext := makeAppContext(evmChain, chainParams, *ccFlags, verificationFlags)
+
+		require.True(t, appContext.IsOutboundObservationEnabled(*chainParams))
 	})
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
-		paramsUnsupported := &observertypes.ChainParams{
-			ChainId:     evmChain.ChainId,
-			IsSupported: false,
-		}
-		appCTXUnsupported := getTestAppContext(evmChain, paramsUnsupported, &ccFlags, headerSupportedFlags)
-		require.False(t, context.IsOutboundObservationEnabled(appCTXUnsupported, *paramsUnsupported))
+		paramsUnsupported := &observertypes.ChainParams{ChainId: evmChain.ChainId, IsSupported: false}
+		appContextUnsupported := makeAppContext(evmChain, paramsUnsupported, *ccFlags, verificationFlags)
+
+		require.False(t, appContextUnsupported.IsOutboundObservationEnabled(*paramsUnsupported))
 	})
 	t.Run("should return false if outbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsOutboundEnabled = false
-		appCTXDisabled := getTestAppContext(evmChain, evmChainParams, &flagsDisabled, headerSupportedFlags)
-		require.False(t, context.IsOutboundObservationEnabled(appCTXDisabled, *evmChainParams))
+		coreContextDisabled := makeAppContext(evmChain, chainParams, *flagsDisabled, verificationFlags)
+
+		require.False(t, coreContextDisabled.IsOutboundObservationEnabled(*chainParams))
 	})
 }
 
 func TestIsInboundObservationEnabled(t *testing.T) {
 	// create test chain params and flags
 	evmChain := chains.Ethereum
-	ccFlags := *sample.CrosschainFlags()
+	ccFlags := sample.CrosschainFlags()
 	verificationFlags := sample.HeaderSupportedChains()
 	chainParams := &observertypes.ChainParams{
 		ChainId:     evmChain.ChainId,
@@ -214,21 +177,55 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 	}
 
 	t.Run("should return true if chain is supported and inbound flag is enabled", func(t *testing.T) {
-		appCTX := getTestAppContext(evmChain, chainParams, &ccFlags, verificationFlags)
-		require.True(t, context.IsInboundObservationEnabled(appCTX, *chainParams))
+		appContext := makeAppContext(evmChain, chainParams, *ccFlags, verificationFlags)
+
+		require.True(t, appContext.IsInboundObservationEnabled(*chainParams))
 	})
+
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
-		paramsUnsupported := &observertypes.ChainParams{
-			ChainId:     evmChain.ChainId,
-			IsSupported: false,
-		}
-		appCTXUnsupported := getTestAppContext(evmChain, paramsUnsupported, &ccFlags, verificationFlags)
-		require.False(t, context.IsInboundObservationEnabled(appCTXUnsupported, *paramsUnsupported))
+		paramsUnsupported := &observertypes.ChainParams{ChainId: evmChain.ChainId, IsSupported: false}
+		appContextUnsupported := makeAppContext(evmChain, paramsUnsupported, *ccFlags, verificationFlags)
+
+		require.False(t, appContextUnsupported.IsInboundObservationEnabled(*paramsUnsupported))
 	})
+
 	t.Run("should return false if inbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsInboundEnabled = false
-		appCTXDisabled := getTestAppContext(evmChain, chainParams, &flagsDisabled, verificationFlags)
-		require.False(t, context.IsInboundObservationEnabled(appCTXDisabled, *chainParams))
+		appContextDisabled := makeAppContext(evmChain, chainParams, *flagsDisabled, verificationFlags)
+
+		require.False(t, appContextDisabled.IsInboundObservationEnabled(*chainParams))
 	})
+}
+
+// makeAppContext makes a test app context with provided chain params and flags
+func makeAppContext(
+	evmChain chains.Chain,
+	evmChainParams *observertypes.ChainParams,
+	ccFlags observertypes.CrosschainFlags,
+	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
+) *context.AppContext {
+	// create config
+	cfg := config.NewConfig()
+	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
+		Chain: evmChain,
+	}
+
+	// create app context
+	appContext := context.NewAppContext(cfg)
+	newChainParams := make(map[int64]*observertypes.ChainParams)
+	newChainParams[evmChain.ChainId] = evmChainParams
+
+	// feed app context fields
+	appContext.Update(
+		observertypes.Keygen{},
+		"",
+		[]chains.Chain{evmChain},
+		newChainParams,
+		&chaincfg.RegressionNetParams,
+		ccFlags,
+		headerSupportedChains,
+		zerolog.Logger{},
+	)
+	return appContext
 }

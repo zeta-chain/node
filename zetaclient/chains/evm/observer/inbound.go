@@ -27,7 +27,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -52,7 +51,7 @@ func (ob *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
+			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -87,7 +86,7 @@ func (ob *Observer) WatchInboundTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
+			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ProcessInboundTrackers()
@@ -662,7 +661,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 		paramsDest, found := ob.AppContext().GetExternalChainParams(destChain.ChainId)
 		if !found {
 			ob.Logger().Inbound.Warn().
-				Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())
+				Msgf("chain params id not present in AppContext %d", destChain.ChainId)
 			return nil
 		}
 

@@ -120,12 +120,12 @@ func (zs *ZetaSupplyChecker) Stop() {
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
-		externalEvmChainParams, ok := zs.appContext.GetExternalChainParams(chain.ChainId)
+		evmChainParams, ok := zs.appContext.GetExternalChainParams(chain.ChainId)
 		if !ok {
 			return fmt.Errorf("externalEvmChainParams not found for chain id %d", chain.ChainId)
 		}
 
-		zetaTokenAddressString := externalEvmChainParams.ZetaTokenContractAddress
+		zetaTokenAddressString := evmChainParams.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
 		zetatokenNonEth, err := observer.FetchZetaTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {

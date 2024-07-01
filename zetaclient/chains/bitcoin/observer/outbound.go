@@ -16,7 +16,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -44,7 +43,7 @@ func (ob *Observer) WatchOutbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsOutboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
+			if !ob.AppContext().IsOutboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
 				continue

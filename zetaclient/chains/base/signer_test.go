@@ -39,14 +39,6 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		signer = signer.WithChain(chains.BscMainnet)
 		require.Equal(t, newChain, signer.Chain())
 	})
-	t.Run("should be able to update app context", func(t *testing.T) {
-		signer := createSigner(t)
-
-		// update app context
-		newAppContext := context.NewAppContext(config.NewConfig())
-		signer = signer.WithAppContext(newAppContext)
-		require.Equal(t, newAppContext, signer.AppContext())
-	})
 	t.Run("should be able to update tss", func(t *testing.T) {
 		signer := createSigner(t)
 

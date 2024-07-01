@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
@@ -42,7 +41,7 @@ func (ob *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
+			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -186,7 +185,7 @@ func (ob *Observer) WatchInboundTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsInboundObservationEnabled(ob.AppContext(), ob.GetChainParams()) {
+			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
 				continue
 			}
 			err := ob.ProcessInboundTrackers()

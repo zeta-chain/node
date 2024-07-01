@@ -46,52 +46,52 @@ func NewAppContext(cfg *config.Config) *AppContext {
 }
 
 // SetConfig sets a new config to the app context
-func (c *AppContext) SetConfig(cfg *config.Config) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.config = cfg
+func (a *AppContext) SetConfig(cfg *config.Config) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.config = cfg
 }
 
 // Config returns the app context config
-func (c *AppContext) Config() *config.Config {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.config
+func (a *AppContext) Config() *config.Config {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.config
 }
 
 // GetKeygen returns the current keygen information
-func (c *AppContext) GetKeygen() observertypes.Keygen {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+func (a *AppContext) GetKeygen() observertypes.Keygen {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
 	var copiedPubkeys []string
-	if c.keygen.GranteePubkeys != nil {
-		copiedPubkeys = make([]string, len(c.keygen.GranteePubkeys))
-		copy(copiedPubkeys, c.keygen.GranteePubkeys)
+	if a.keygen.GranteePubkeys != nil {
+		copiedPubkeys = make([]string, len(a.keygen.GranteePubkeys))
+		copy(copiedPubkeys, a.keygen.GranteePubkeys)
 	}
 
 	return observertypes.Keygen{
-		Status:         c.keygen.Status,
+		Status:         a.keygen.Status,
 		GranteePubkeys: copiedPubkeys,
-		BlockNumber:    c.keygen.BlockNumber,
+		BlockNumber:    a.keygen.BlockNumber,
 	}
 }
 
 // GetCurrentTssPubkey returns the current TSS public key
-func (c *AppContext) GetCurrentTssPubkey() string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.currentTssPubkey
+func (a *AppContext) GetCurrentTssPubkey() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.currentTssPubkey
 }
 
 // GetEnabledExternalChains returns all enabled external chains (excluding zetachain)
-func (c *AppContext) GetEnabledExternalChains() []chains.Chain {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+func (a *AppContext) GetEnabledExternalChains() []chains.Chain {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
 	// deep copy chains
 	externalChains := make([]chains.Chain, 0)
-	for _, chain := range c.chainsEnabled {
+	for _, chain := range a.chainsEnabled {
 		if chain.IsExternal {
 			externalChains = append(externalChains, chain)
 		}
@@ -100,13 +100,13 @@ func (c *AppContext) GetEnabledExternalChains() []chains.Chain {
 }
 
 // GetEnabledBTCChains returns the enabled bitcoin chains
-func (c *AppContext) GetEnabledBTCChains() []chains.Chain {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+func (a *AppContext) GetEnabledBTCChains() []chains.Chain {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
 	// deep copy btc chains
 	btcChains := make([]chains.Chain, 0)
-	for _, chain := range c.chainsEnabled {
+	for _, chain := range a.chainsEnabled {
 		if chain.Consensus == chains.Consensus_bitcoin {
 			btcChains = append(btcChains, chain)
 		}
@@ -115,13 +115,13 @@ func (c *AppContext) GetEnabledBTCChains() []chains.Chain {
 }
 
 // GetEnabledExternalChainParams returns all enabled chain params
-func (c *AppContext) GetEnabledExternalChainParams() map[int64]*observertypes.ChainParams {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+func (a *AppContext) GetEnabledExternalChainParams() map[int64]*observertypes.ChainParams {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
 	// deep copy chain params
-	copied := make(map[int64]*observertypes.ChainParams, len(c.chainParamMap))
-	for chainID, chainParams := range c.chainParamMap {
+	copied := make(map[int64]*observertypes.ChainParams, len(a.chainParamMap))
+	for chainID, chainParams := range a.chainParamMap {
 		copied[chainID] = &observertypes.ChainParams{}
 		*copied[chainID] = *chainParams
 	}
@@ -129,33 +129,33 @@ func (c *AppContext) GetEnabledExternalChainParams() map[int64]*observertypes.Ch
 }
 
 // GetExternalChainParams returns chain params for a specific chain ID
-func (c *AppContext) GetExternalChainParams(chainID int64) (*observertypes.ChainParams, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+func (a *AppContext) GetExternalChainParams(chainID int64) (*observertypes.ChainParams, bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
-	chainParams, found := c.chainParamMap[chainID]
+	chainParams, found := a.chainParamMap[chainID]
 	return chainParams, found
 }
 
 // GetBTCNetParams returns bitcoin network params
-func (c *AppContext) GetBTCNetParams() *chaincfg.Params {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.btcNetParams
+func (a *AppContext) GetBTCNetParams() *chaincfg.Params {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.btcNetParams
 }
 
 // GetCrossChainFlags returns crosschain flags
-func (c *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.crosschainFlags
+func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.crosschainFlags
 }
 
 // GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
-func (c *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	for _, flags := range c.blockHeaderEnabledChains {
+func (a *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for _, flags := range a.blockHeaderEnabledChains {
 		if flags.ChainId == chainID {
 			return flags, true
 		}
@@ -165,7 +165,7 @@ func (c *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttype
 
 // Update updates app context and params for all chains
 // this must be the ONLY function that writes to app context
-func (c *AppContext) Update(
+func (a *AppContext) Update(
 	keygen observertypes.Keygen,
 	tssPubKey string,
 	chainsEnabled []chains.Chain,
@@ -175,8 +175,8 @@ func (c *AppContext) Update(
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
 	logger zerolog.Logger,
 ) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 
 	// Ignore whatever order zetacore organizes chain list in state
 	sort.SliceStable(chainsEnabled, func(i, j int) bool {
@@ -188,36 +188,36 @@ func (c *AppContext) Update(
 	}
 
 	// Add log print if the number of enabled chains changes at runtime
-	if len(c.chainsEnabled) != len(chainsEnabled) {
+	if len(a.chainsEnabled) != len(chainsEnabled) {
 		logger.Info().Msgf(
 			"UpdateChainParams: number of enabled chains changed at runtime!! before: %d, after: %d",
-			len(c.chainsEnabled),
+			len(a.chainsEnabled),
 			len(chainsEnabled),
 		)
 	}
 
 	// btcNetParams points one of [mainnet, testnet, regnet]
 	// btcNetParams initialize only once and should never change
-	if c.btcNetParams == nil {
-		c.btcNetParams = btcNetParams
+	if a.btcNetParams == nil {
+		a.btcNetParams = btcNetParams
 	}
 
-	c.keygen = keygen
-	c.chainsEnabled = chainsEnabled
-	c.chainParamMap = chainParamMap
-	c.currentTssPubkey = tssPubKey
-	c.crosschainFlags = crosschainFlags
-	c.blockHeaderEnabledChains = blockHeaderEnabledChains
+	a.keygen = keygen
+	a.chainsEnabled = chainsEnabled
+	a.chainParamMap = chainParamMap
+	a.currentTssPubkey = tssPubKey
+	a.crosschainFlags = crosschainFlags
+	a.blockHeaderEnabledChains = blockHeaderEnabledChains
 }
 
 // IsOutboundObservationEnabled returns true if the chain is supported and outbound flag is enabled
-func IsOutboundObservationEnabled(c *AppContext, chainParams observertypes.ChainParams) bool {
-	flags := c.GetCrossChainFlags()
+func (a *AppContext) IsOutboundObservationEnabled(chainParams observertypes.ChainParams) bool {
+	flags := a.GetCrossChainFlags()
 	return chainParams.IsSupported && flags.IsOutboundEnabled
 }
 
 // IsInboundObservationEnabled returns true if the chain is supported and inbound flag is enabled
-func IsInboundObservationEnabled(c *AppContext, chainParams observertypes.ChainParams) bool {
-	flags := c.GetCrossChainFlags()
+func (a *AppContext) IsInboundObservationEnabled(chainParams observertypes.ChainParams) bool {
+	flags := a.GetCrossChainFlags()
 	return chainParams.IsSupported && flags.IsInboundEnabled
 }

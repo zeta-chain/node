@@ -164,14 +164,6 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithChainParams(newChainParams)
 		require.True(t, observertypes.ChainParamsEqual(newChainParams, ob.ChainParams()))
 	})
-	t.Run("should be able to update app context", func(t *testing.T) {
-		ob := createObserver(t)
-
-		// update app context
-		newAppContext := context.NewAppContext(config.NewConfig())
-		ob = ob.WithAppContext(newAppContext)
-		require.Equal(t, newAppContext, ob.AppContext())
-	})
 	t.Run("should be able to update zetacore client", func(t *testing.T) {
 		ob := createObserver(t)
 

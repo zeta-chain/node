@@ -45,7 +45,7 @@ type Observer struct {
 	// chainParams contains the dynamic chain parameters of the observed chain
 	chainParams observertypes.ChainParams
 
-	// appContext contains context data of zetaclient
+	// appContext contains context data for zetaclient & zetacore (e.g. supported chains)
 	appContext *context.AppContext
 
 	// zetacoreClient is the client to interact with ZetaChain
@@ -168,12 +168,6 @@ func (ob *Observer) WithChainParams(params observertypes.ChainParams) *Observer 
 // AppContext returns the app context for the observer.
 func (ob *Observer) AppContext() *context.AppContext {
 	return ob.appContext
-}
-
-// WithAppContext attaches a new app context to the observer.
-func (ob *Observer) WithAppContext(context *context.AppContext) *Observer {
-	ob.appContext = context
-	return ob
 }
 
 // ZetacoreClient returns the zetacore client for the observer.
