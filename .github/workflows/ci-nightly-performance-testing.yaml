@@ -60,6 +60,7 @@ jobs:
 
       - name: "NOTIFY:SLACK:FAILURE"
         #if: failure() && github.event_name == 'schedule'
+        if: failure()
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
