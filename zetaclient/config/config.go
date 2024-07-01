@@ -1,3 +1,4 @@
+// Package config provides functions to load and save ZetaClient config
 package config
 
 import (
@@ -8,7 +9,10 @@ import (
 	"strings"
 )
 
+// filename is config file name for ZetaClient
 const filename string = "zetaclient_config.json"
+
+// folder is the folder name for ZetaClient config
 const folder string = "config"
 
 // Save saves ZetaClient config
@@ -72,6 +76,7 @@ func Load(path string) (*Config, error) {
 	return cfg, nil
 }
 
+// GetPath returns the absolute path of the input path
 func GetPath(inputPath string) string {
 	path := strings.Split(inputPath, "/")
 	if len(path) > 0 {
@@ -84,5 +89,6 @@ func GetPath(inputPath string) string {
 			return filepath.Join(path...)
 		}
 	}
+
 	return inputPath
 }

@@ -25,6 +25,8 @@ import (
 )
 
 // WatchInbound watches Bitcoin chain for inbounds on a ticker
+// It starts a ticker and run ObserveInbound
+// TODO(revamp): move all ticker related methods in the same file
 func (ob *Observer) WatchInbound() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.GetChainParams().InboundTicker)
 	if err != nil {
@@ -36,6 +38,7 @@ func (ob *Observer) WatchInbound() {
 	ob.logger.Inbound.Info().Msgf("WatchInbound started for chain %d", ob.Chain().ChainId)
 	sampledLogger := ob.logger.Inbound.Sample(&zerolog.BasicSampler{N: 10})
 
+	// ticker loop
 	for {
 		select {
 		case <-ticker.C():
@@ -57,6 +60,7 @@ func (ob *Observer) WatchInbound() {
 }
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
+// TODO(revamp): simplify this function into smaller functions
 func (ob *Observer) ObserveInbound() error {
 	// get and update latest block height
 	cnt, err := ob.btcClient.GetBlockCount()
@@ -170,6 +174,7 @@ func (ob *Observer) ObserveInbound() error {
 }
 
 // WatchInboundTracker watches zetacore for bitcoin inbound trackers
+// TODO(revamp): move all ticker related methods in the same file
 func (ob *Observer) WatchInboundTracker() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
 	if err != nil {
@@ -199,6 +204,7 @@ func (ob *Observer) WatchInboundTracker() {
 }
 
 // ProcessInboundTrackers processes inbound trackers
+// TODO(revamp): move inbound tracker logic in a specific file
 func (ob *Observer) ProcessInboundTrackers() error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ob.Chain().ChainId)
 	if err != nil {
@@ -327,6 +333,7 @@ func FilterAndParseIncomingTx(
 	return inbounds, nil
 }
 
+// GetInboundVoteMessageFromBtcEvent converts a BTCInboundEvent to a MsgVoteInbound to enable voting on the inbound on zetacore
 func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	ob.logger.Inbound.Debug().Msgf("Processing inbound: %s", inbound.TxHash)
 	amount := big.NewFloat(inbound.Value)
@@ -359,6 +366,7 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) 
 }
 
 // DoesInboundContainsRestrictedAddress returns true if the inbound contains restricted addresses
+// TODO(revamp): move all compliance related functions in a specific file
 func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) bool {
 	receiver := ""
 	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
@@ -375,6 +383,7 @@ func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) 
 
 // GetBtcEvent either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
+// TODO(revamp): simplify this function
 func GetBtcEvent(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,

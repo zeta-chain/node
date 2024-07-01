@@ -5,7 +5,6 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -21,7 +20,7 @@ func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 
 	evmClient := r.EVMClient
 
-	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.EVMAddress())
 	require.NoError(r, err)
 
 	gasLimit := uint64(23000) // in units
@@ -33,7 +32,7 @@ func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	chainID, err := evmClient.NetworkID(r.Ctx)
 	require.NoError(r, err)
 
-	deployerPrivkey, err := crypto.HexToECDSA(r.DeployerPrivateKey)
+	deployerPrivkey, err := r.Account.PrivateKey()
 	require.NoError(r, err)
 
 	signedTx, err := ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
@@ -66,7 +65,7 @@ func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
 	utils.RequireTxSuccessful(r, receipt)
 
-	require.Equal(r, r.DeployerAddress, *tx.To(), "expected tx to %s; got %s", r.DeployerAddress.Hex(), tx.To().Hex())
+	require.Equal(r, r.EVMAddress(), *tx.To(), "expected tx to %s; got %s", r.EVMAddress().Hex(), tx.To().Hex())
 
 	// the received value must be lower than the original value because of the paid fees for the revert tx
 	// we check that the value is still greater than 0

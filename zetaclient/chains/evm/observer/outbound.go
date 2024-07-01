@@ -34,6 +34,8 @@ func (ob *Observer) GetTxID(nonce uint64) string {
 }
 
 // WatchOutbound watches evm chain for outgoing txs status
+// TODO(revamp): move ticker function to ticker file
+// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchOutbound() {
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchOutbound_%d", ob.Chain().ChainId),
@@ -130,6 +132,7 @@ func (ob *Observer) PostVoteOutbound(
 
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isConfirmed, error)
 // It also posts vote to zetacore if the tx is confirmed
+// TODO(revamp): rename as it also vote the outbound
 func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	// skip if outbound is not confirmed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce

@@ -56,7 +56,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 		big.NewInt(1000),
 		big.NewInt(90000),
 		big.NewInt(1000),
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	require.NoError(r, err)
@@ -64,7 +64,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	balETHBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	balETHBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	ethOutAmout := big.NewInt(1)
@@ -73,7 +73,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 		big.NewInt(1000),
 		ethOutAmout,
 		[]ethcommon.Address{r.ERC20ZRC20Addr, r.ETHZRC20Addr},
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	require.NoError(r, err)
@@ -81,7 +81,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Swap ERC20 ZRC20 for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
 
-	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	ethDiff := big.NewInt(0).Sub(balETHAfter, balETHBefore)

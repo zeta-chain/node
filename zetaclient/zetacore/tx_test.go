@@ -212,23 +212,6 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 		grpcmock.WithPlanner(planner.FirstMatch()),
 		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
-			// method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
-			// s.ExpectUnary(method).
-			// 	UnlimitedTimes().
-			// 	WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
-			// 	Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 12345})
-
-			// method = "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
-			// s.ExpectUnary(method).
-			// 	UnlimitedTimes().
-			// 	WithPayload(upgradetypes.QueryCurrentPlanRequest{}).
-			// 	Return(upgradetypes.QueryCurrentPlanResponse{
-			// 		Plan: &upgradetypes.Plan{
-			// 			Name:   "big upgrade",
-			// 			Height: 100,
-			// 		},
-			// 	})
-
 			method := "/zetachain.zetacore.observer.Query/GetChainParams"
 			s.ExpectUnary(method).
 				UnlimitedTimes().

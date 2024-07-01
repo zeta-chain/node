@@ -8,7 +8,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"google.golang.org/grpc"
 
@@ -20,7 +19,7 @@ import (
 )
 
 // getClientsFromConfig get clients from config
-func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey string) (
+func getClientsFromConfig(ctx context.Context, conf config.Config, account config.Account) (
 	*rpcclient.Client,
 	*ethclient.Client,
 	*bind.TransactOpts,
@@ -38,7 +37,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
 	}
-	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
+	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, account)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
@@ -48,7 +47,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
-	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, evmPrivKey)
+	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, account)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
 	}
@@ -91,7 +90,11 @@ func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
 }
 
 // getEVMClient get evm client
-func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
+func getEVMClient(
+	ctx context.Context,
+	rpc string,
+	account config.Account,
+) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial evm client: %w", err)
@@ -101,11 +104,11 @@ func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get chain id: %w", err)
 	}
-	deployerPrivkey, err := crypto.HexToECDSA(privKey)
+	privKey, err := account.PrivateKey()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get deployer privkey: %w", err)
 	}
-	evmAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
+	evmAuth, err := bind.NewKeyedTransactorWithChainID(privKey, chainid)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get keyed transactor: %w", err)
 	}

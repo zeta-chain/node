@@ -1,3 +1,4 @@
+// Package zetacore provides functionalities for interacting with ZetaChain
 package zetacore
 
 import (
@@ -310,6 +311,8 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 	return nil
 }
 
+// EnableMockSDKClient enables the mock cosmos sdk client
+// TODO(revamp): move this to a test package
 func (c *Client) EnableMockSDKClient(client rpcclient.Client) {
 	c.mockSDKClient = client
 	c.enableMockSDKClient = true

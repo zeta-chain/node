@@ -1,3 +1,4 @@
+// Package orchestrator provides the orchestrator for orchestrating cross-chain transactions
 package orchestrator
 
 import (
@@ -37,6 +38,8 @@ const (
 	loggerSamplingRate = 10
 )
 
+// Log is a struct that contains the logger
+// TODO(revamp): rename to logger
 type Log struct {
 	// Base are the original base loggers used by orchestrator to create observers
 	Base base.Logger
@@ -59,10 +62,10 @@ type Orchestrator struct {
 	// tss is the TSS signer
 	tss interfaces.TSSSigner
 
-	// signerMap contains all external chain signers
+	// signerMap contains the chain signers indexed by chainID
 	signerMap map[int64]interfaces.ChainSigner
 
-	// observerMap contains all external chain observers
+	// observerMap contains the chain observers indexed by chainID
 	observerMap map[int64]interfaces.ChainObserver
 
 	// outbound processor
@@ -278,7 +281,8 @@ func (oc *Orchestrator) GetPendingCctxsWithinRatelimit(
 	return output.CctxsMap, nil
 }
 
-// SchedulePendingCctxs schedules keysigns for pending cctxs across all chains
+// SchedulePendingCctxs schedules keysigns for pending cctxs across all chains on ticker
+// TODO(revamp): make this function simpler
 func (oc *Orchestrator) SchedulePendingCctxs() {
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64

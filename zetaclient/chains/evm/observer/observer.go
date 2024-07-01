@@ -1,3 +1,4 @@
+// Package observer implements the EVM chain observer
 package observer
 
 import (
@@ -140,6 +141,7 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 }
 
 // FetchConnectorContractEth returns the Eth connector address and binder
+// TODO(revamp): move this to a contract package
 func FetchConnectorContractEth(
 	addr ethcommon.Address,
 	client interfaces.EVMRPCClient,
@@ -148,6 +150,7 @@ func FetchConnectorContractEth(
 }
 
 // FetchZetaTokenContract returns the non-Eth ZETA token binder
+// TODO(revamp): move this to a contract package
 func FetchZetaTokenContract(
 	addr ethcommon.Address,
 	client interfaces.EVMRPCClient,
@@ -176,6 +179,8 @@ func (ob *Observer) Start() {
 }
 
 // WatchRPCStatus watches the RPC status of the evm chain
+// TODO(revamp): move ticker to ticker file
+// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchRPCStatus() {
 	ob.Logger().Chain.Info().Msgf("WatchRPCStatus started for chain %d", ob.Chain().ChainId)
 	ticker := time.NewTicker(60 * time.Second)
@@ -282,6 +287,8 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 }
 
 // WatchGasPrice watches evm chain for gas prices and post to zetacore
+// TODO(revamp): move ticker to ticker file
+// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchGasPrice() {
 	// report gas price right away as the ticker takes time to kick in
 	err := ob.PostGasPrice()
@@ -320,6 +327,8 @@ func (ob *Observer) WatchGasPrice() {
 	}
 }
 
+// PostGasPrice posts gas price to zetacore
+// TODO(revamp): move to gas price file
 func (ob *Observer) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
@@ -347,6 +356,7 @@ func (ob *Observer) PostGasPrice() error {
 }
 
 // TransactionByHash query transaction by hash via JSON-RPC
+// TODO(revamp): update this method as a pure RPC method that takes two parameters (jsonRPC, and txHash) and move to upper package to file rpc.go
 func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
 	tx, err := ob.evmJSONRPC.EthGetTransactionByHash(txHash)
 	if err != nil {
@@ -359,6 +369,7 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	return tx, tx.BlockNumber == nil, nil
 }
 
+// GetBlockHeaderCached get block header by number from cache
 func (ob *Observer) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
 	if result, ok := ob.HeaderCache().Get(blockNumber); ok {
 		if header, ok := result.(*ethtypes.Header); ok {
@@ -416,6 +427,7 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 }
 
 // LoadDB open sql database and load data into EVM observer
+// TODO(revamp): move to a db file
 func (ob *Observer) LoadDB(dbPath string) error {
 	if dbPath == "" {
 		return errors.New("empty db path")
@@ -444,6 +456,7 @@ func (ob *Observer) LoadDB(dbPath string) error {
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database
+// TODO(revamp): move to a db file
 func (ob *Observer) LoadLastBlockScanned() error {
 	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
 	if err != nil {
@@ -465,6 +478,8 @@ func (ob *Observer) LoadLastBlockScanned() error {
 	return nil
 }
 
+// postBlockHeader posts the block header to zetacore
+// TODO(revamp): move to a block header file
 func (ob *Observer) postBlockHeader(tip uint64) error {
 	bn := tip
 

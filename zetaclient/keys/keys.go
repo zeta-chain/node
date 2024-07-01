@@ -23,8 +23,11 @@ import (
 )
 
 var (
+	// ErrBech32ifyPubKey is an error when Bech32ifyPubKey fails
 	ErrBech32ifyPubKey = errors.New("Bech32ifyPubKey fail in main")
-	ErrNewPubKey       = errors.New("NewPubKey error from string")
+
+	// ErrNewPubKey is an error when NewPubKey fails
+	ErrNewPubKey = errors.New("NewPubKey error from string")
 )
 
 var _ interfaces.ObserverKeys = &Keys{}
@@ -52,6 +55,7 @@ func NewKeysWithKeybase(
 	}
 }
 
+// GetGranteeKeyName return the grantee name
 func GetGranteeKeyName(signerName string) string {
 	return signerName
 }
@@ -110,6 +114,7 @@ func (k *Keys) GetSignerInfo() *ckeys.Record {
 	return info
 }
 
+// GetOperatorAddress return the operator address
 func (k *Keys) GetOperatorAddress() sdk.AccAddress {
 	return k.OperatorAddress
 }

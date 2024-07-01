@@ -12,9 +12,14 @@ import (
 type KeyringBackend string
 
 const (
+	// KeyringBackendUndefined is undefined keyring backend
 	KeyringBackendUndefined KeyringBackend = ""
-	KeyringBackendTest      KeyringBackend = "test"
-	KeyringBackendFile      KeyringBackend = "file"
+
+	// KeyringBackendTest is the test Cosmos keyring backend
+	KeyringBackendTest KeyringBackend = "test"
+
+	// KeyringBackendFile is the file Cosmos keyring backend
+	KeyringBackendFile KeyringBackend = "file"
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -27,11 +32,13 @@ type ClientConfiguration struct {
 	HsmMode         bool   `json:"hsm_mode"`
 }
 
+// EVMConfig is the config for EVM chain
 type EVMConfig struct {
 	Chain    chains.Chain
 	Endpoint string
 }
 
+// BTCConfig is the config for Bitcoin chain
 type BTCConfig struct {
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
@@ -40,6 +47,7 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+// ComplianceConfig is the config for compliance
 type ComplianceConfig struct {
 	LogPath             string   `json:"LogPath"`
 	RestrictedAddresses []string `json:"RestrictedAddresses"`
@@ -78,6 +86,8 @@ type Config struct {
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
 }
 
+// NewConfig returns a new Config with initialize EVM chain mapping and a new mutex
+// TODO(revamp): consolidate with New function
 func NewConfig() *Config {
 	return &Config{
 		cfgLock:         &sync.RWMutex{},
@@ -85,6 +95,7 @@ func NewConfig() *Config {
 	}
 }
 
+// GetEVMConfig returns the EVM config for the given chain ID
 func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
@@ -92,6 +103,7 @@ func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
 	return evmCfg, found
 }
 
+// GetAllEVMConfigs returns a map of all EVM configs
 func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
@@ -104,6 +116,7 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	return copied
 }
 
+// GetBTCConfig returns the BTC config
 func (c Config) GetBTCConfig() (BTCConfig, bool) {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
@@ -111,6 +124,7 @@ func (c Config) GetBTCConfig() (BTCConfig, bool) {
 	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
 }
 
+// String returns the string representation of the config
 func (c Config) String() string {
 	s, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
@@ -131,6 +145,7 @@ func (c Config) GetRestrictedAddressBook() map[string]bool {
 	return restrictedAddresses
 }
 
+// GetKeyringBackend returns the keyring backend
 func (c *Config) GetKeyringBackend() KeyringBackend {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()

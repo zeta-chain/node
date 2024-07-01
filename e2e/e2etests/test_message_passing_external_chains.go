@@ -39,7 +39,7 @@ func TestMessagePassingExternalChains(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
-		DestinationAddress:  r.DeployerAddress.Bytes(),
+		DestinationAddress:  r.EVMAddress().Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,

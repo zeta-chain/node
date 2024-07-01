@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// ValidateZetaSupply validates the zeta supply from the checked values
 func ValidateZetaSupply(
 	logger zerolog.Logger,
 	abortedTxAmounts, zetaInTransit, genesisAmounts, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmount sdkmath.Int,

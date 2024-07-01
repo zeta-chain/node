@@ -1,3 +1,4 @@
+// Package compliance provides functions to check for compliance of cross-chain transactions
 package compliance
 
 import (

@@ -1,3 +1,4 @@
+// Package context provides global app context for ZetaClient
 package context
 
 import (

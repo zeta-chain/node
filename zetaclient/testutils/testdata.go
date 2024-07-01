@@ -57,6 +57,7 @@ func LoadZetaclientConfig(t *testing.T, dir string) *config.Config {
 }
 
 // ComplianceConfigTest returns a test compliance config
+// TODO(revamp): move to sample package
 func ComplianceConfigTest() config.ComplianceConfig {
 	return config.ComplianceConfig{
 		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},

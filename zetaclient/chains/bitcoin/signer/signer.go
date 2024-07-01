@@ -1,3 +1,4 @@
+// Package signer implements the ChainSigner interface for BTC
 package signer
 
 import (
@@ -168,6 +169,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
+// TODO(revamp): simplify the function
 func (signer *Signer) SignWithdrawTx(
 	to btcutil.Address,
 	amount float64,
@@ -291,6 +293,7 @@ func (signer *Signer) SignWithdrawTx(
 	return tx, nil
 }
 
+// Broadcast sends the signed transaction to the network
 func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
 
@@ -311,6 +314,8 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	return nil
 }
 
+// TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
+// TODO(revamp): simplify the function
 func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,

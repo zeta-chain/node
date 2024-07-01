@@ -17,7 +17,7 @@ import (
 
 func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	// Get the initial balance of the deployer
-	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	r.Logger.Info("Sending a deposit that should revert without a liquidity pool makes the cctx aborted")
@@ -36,13 +36,13 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	r.Logger.Info("Refunding the cctx via admin")
 
-	msg := types.NewMsgRefundAbortedCCTX(r.ZetaTxServer.GetAccountAddress(0), cctx.Index, r.DeployerAddress.String())
+	msg := types.NewMsgRefundAbortedCCTX(r.ZetaTxServer.GetAccountAddress(0), cctx.Index, r.EVMAddress().String())
 
 	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	require.NoError(r, err)
 
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
-	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	expectedBalance := initialBal.Add(initialBal, amount)
@@ -65,7 +65,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("Liquidity pool created")
 
-	erc20Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	erc20Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	// send the deposit
@@ -87,7 +87,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	utils.RequireTxSuccessful(r, receipt)
 
 	// check that the erc20 in the reverted cctx was refunded on EVM
-	erc20BalanceAfterRefund, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	erc20BalanceAfterRefund, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	// the new balance must be higher than the previous one because of the revert refund
@@ -118,7 +118,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 
 func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	amount := big.NewInt(1e10)
-	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
+	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
 	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
@@ -138,7 +138,7 @@ func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 		amount,
 		big.NewInt(0),
 		big.NewInt(0),
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	r.ZEVMAuth.Value = previousValue
@@ -163,7 +163,7 @@ func sendInvalidERC20Deposit(r *runner.E2ERunner, amount *big.Int) (string, erro
 
 	tx, err = r.ERC20Custody.Deposit(
 		r.EVMAuth,
-		r.DeployerAddress.Bytes(),
+		r.EVMAddress().Bytes(),
 		r.ERC20Addr,
 		amount,
 		[]byte("this is an invalid msg that will cause the contract to revert"),
