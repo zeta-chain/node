@@ -79,7 +79,6 @@ func MockEVMObserver(
 	evmJSONRPC interfaces.EVMJSONRPCClient,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
 	lastBlock uint64,
 	params observertypes.ChainParams,
 ) *observer.Observer {
@@ -100,7 +99,7 @@ func MockEVMObserver(
 	appCtx, evmCfg := getAppContext(chain, "", &params)
 
 	// create observer
-	ob, err := observer.NewObserver(evmCfg, evmClient, params, appCtx, zetacoreClient, tss, dbpath, base.Logger{}, nil)
+	ob, err := observer.NewObserver(evmCfg, evmClient, params, appCtx, zetacoreClient, tss, base.Logger{}, nil)
 	require.NoError(t, err)
 	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
@@ -120,7 +119,6 @@ func Test_NewObserver(t *testing.T) {
 		chainParams observertypes.ChainParams
 		evmClient   interfaces.EVMRPCClient
 		tss         interfaces.TSSSigner
-		dbpath      string
 		logger      base.Logger
 		ts          *metrics.TelemetryServer
 		fail        bool
@@ -135,40 +133,9 @@ func Test_NewObserver(t *testing.T) {
 			chainParams: params,
 			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        false,
-		},
-		{
-			name: "should fail on invalid dbpath",
-			evmCfg: config.EVMConfig{
-				Chain:    chain,
-				Endpoint: "http://localhost:8545",
-			},
-			chainParams: params,
-			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
-			tss:         mocks.NewTSSMainnet(),
-			dbpath:      "/invalid/dbpath", // invalid dbpath
-			logger:      base.Logger{},
-			ts:          nil,
-			fail:        true,
-			message:     "error creating db path",
-		},
-		{
-			name: "should fail if RPC call fails",
-			evmCfg: config.EVMConfig{
-				Chain:    chain,
-				Endpoint: "http://localhost:8545",
-			},
-			chainParams: params,
-			evmClient:   mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
-			tss:         mocks.NewTSSMainnet(),
-			dbpath:      sample.CreateTempDir(t),
-			logger:      base.Logger{},
-			ts:          nil,
-			fail:        true,
-			message:     "error RPC",
 		},
 	}
 
@@ -187,7 +154,6 @@ func Test_NewObserver(t *testing.T) {
 				appCtx,
 				zetacoreClient,
 				tt.tss,
-				tt.dbpath,
 				tt.logger,
 				tt.ts,
 			)
@@ -209,7 +175,7 @@ func Test_LoadDB(t *testing.T) {
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
 	dbpath := sample.CreateTempDir(t)
-	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, dbpath, 1, params)
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, params)
 
 	t.Run("should load db successfully", func(t *testing.T) {
 		err := ob.LoadDB(dbpath)
@@ -238,7 +204,7 @@ func Test_LoadDB(t *testing.T) {
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer
 		tempClient := mocks.NewMockEvmClient()
-		ob := MockEVMObserver(t, chain, tempClient, nil, nil, nil, dbpath, 1, params)
+		ob := MockEVMObserver(t, chain, tempClient, nil, nil, nil, 1, params)
 
 		// set RPC error
 		tempClient.WithError(fmt.Errorf("error RPC"))
@@ -257,7 +223,11 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	// create observer using mock evm client
 	evmClient := mocks.NewMockEvmClient().WithBlockNumber(100)
 	dbpath := sample.CreateTempDir(t)
-	ob := MockEVMObserver(t, chain, evmClient, nil, nil, nil, dbpath, 1, params)
+	ob := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
+
+	// load db
+	err := ob.LoadDB(dbpath)
+	require.NoError(t, err)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// create db and write 123 as last block scanned
@@ -281,7 +251,11 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer on separate path, as we need to reset last block scanned
 		otherPath := sample.CreateTempDir(t)
-		obOther := MockEVMObserver(t, chain, evmClient, nil, nil, nil, otherPath, 1, params)
+		obOther := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
+
+		// load db
+		err := obOther.LoadDB(otherPath)
+		require.NoError(t, err)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC
 		obOther.WithLastBlockScanned(0)
@@ -290,7 +264,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		evmClient.WithError(fmt.Errorf("error RPC"))
 
 		// load last block scanned
-		err := obOther.LoadLastBlockScanned()
+		err = obOther.LoadLastBlockScanned()
 		require.ErrorContains(t, err, "error RPC")
 	})
 }

@@ -55,8 +55,7 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	btcClient := mocks.NewMockBTCRPCClient()
 
 	// create observer
-	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, testutils.SQLiteMemory,
-		base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, base.DefaultLogger(), nil)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(ob)
 	suite.rpcClient, err = getRPCClient(18332)

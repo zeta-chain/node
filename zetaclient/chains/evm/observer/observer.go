@@ -60,7 +60,6 @@ func NewObserver(
 	appContext *clientcontext.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -88,12 +87,6 @@ func NewObserver(
 		outboundPendingTransactions:   make(map[string]*ethtypes.Transaction),
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
-	}
-
-	// open database and load data
-	err = ob.LoadDB(dbpath)
-	if err != nil {
-		return nil, err
 	}
 
 	return ob, nil

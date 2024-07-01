@@ -41,6 +41,7 @@ const (
 type ChainObserver interface {
 	Start()
 	Stop()
+	LoadDB(dbPath string) error
 	IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams

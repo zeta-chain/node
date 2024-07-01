@@ -30,6 +30,10 @@ func (ob *EVMObserver) Start() {
 func (ob *EVMObserver) Stop() {
 }
 
+func (ob *EVMObserver) LoadDB(_ string) error {
+	return nil
+}
+
 func (ob *EVMObserver) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
 	return false, false, nil
 }
@@ -69,6 +73,10 @@ func (ob *BTCObserver) Start() {
 }
 
 func (ob *BTCObserver) Stop() {
+}
+
+func (ob *BTCObserver) LoadDB(_ string) error {
+	return nil
 }
 
 func (ob *BTCObserver) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {

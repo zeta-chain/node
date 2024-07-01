@@ -122,19 +122,6 @@ func Test_CreateObserversEVM(t *testing.T) {
 			dbPath:             testutils.SQLiteMemory,
 			numObserverCreated: 0,
 		},
-		{
-			name: "should not create observer for EVM chain if db path is invalid",
-			evmCfg: config.EVMConfig{
-				Chain:    evmChain,
-				Endpoint: "http://localhost:8545",
-			},
-			btcCfg:             config.BTCConfig{},
-			evmChain:           evmChain,
-			btcChain:           btcChain,
-			evmChainParams:     evmChainParams,
-			dbPath:             "",
-			numObserverCreated: 0,
-		},
 	}
 
 	// run tests

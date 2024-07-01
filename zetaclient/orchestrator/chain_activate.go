@@ -47,7 +47,7 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 	for chainID, observer := range oc.observerMap {
 		_, found := newObserverMap[chainID]
 		if !found {
-			oc.logger.Std.Info().Msgf("orchestrator deactivating chain %d", chainID)
+			oc.logger.Std.Info().Msgf("ActivateDeactivateChains: deactivating chain %d", chainID)
 
 			observer.Stop()
 			delete(oc.signerMap, chainID)
@@ -59,7 +59,16 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 	for chainID, observer := range newObserverMap {
 		_, found := oc.observerMap[chainID]
 		if !found {
-			oc.logger.Std.Info().Msgf("orchestrator activating chain %d", chainID)
+			oc.logger.Std.Info().Msgf("ActivateDeactivateChains: activating chain %d", chainID)
+
+			// open database and load data
+			err := observer.LoadDB(oc.dbPath)
+			if err != nil {
+				oc.logger.Std.Error().
+					Err(err).
+					Msgf("ActivateDeactivateChains: error LoadDB for chain %d", chainID)
+				continue
+			}
 
 			observer.Start()
 			oc.signerMap[chainID] = newSignerMap[chainID]
@@ -120,7 +129,6 @@ func (oc *Orchestrator) CreateObserversEVM(
 			oc.appContext,
 			oc.zetacoreClient,
 			oc.tss,
-			oc.dbPath,
 			oc.logger.Base,
 			oc.ts,
 		)
@@ -190,7 +198,6 @@ func (oc *Orchestrator) CreateObserversBTC(
 			oc.appContext,
 			oc.zetacoreClient,
 			oc.tss,
-			oc.dbPath,
 			oc.logger.Base,
 			oc.ts,
 		)

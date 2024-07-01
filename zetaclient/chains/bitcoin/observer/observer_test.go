@@ -93,10 +93,13 @@ func MockBTCObserver(
 		nil,
 		nil,
 		nil,
-		dbpath,
 		base.Logger{},
 		nil,
 	)
+	require.NoError(t, err)
+
+	// load db
+	err = ob.LoadDB(dbpath)
 	require.NoError(t, err)
 
 	return ob
@@ -116,7 +119,6 @@ func Test_NewObserver(t *testing.T) {
 		appContext  *context.AppContext
 		coreClient  interfaces.ZetacoreClient
 		tss         interfaces.TSSSigner
-		dbpath      string
 		logger      base.Logger
 		ts          *metrics.TelemetryServer
 		fail        bool
@@ -130,7 +132,6 @@ func Test_NewObserver(t *testing.T) {
 			appContext:  nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        false,
@@ -143,25 +144,10 @@ func Test_NewObserver(t *testing.T) {
 			appContext:  nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
-			dbpath:      sample.CreateTempDir(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        true,
 			message:     "error getting net params",
-		},
-		{
-			name:        "should fail on invalid dbpath",
-			chain:       chain,
-			chainParams: params,
-			appContext:  nil,
-			coreClient:  nil,
-			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
-			tss:         mocks.NewTSSMainnet(),
-			dbpath:      "/invalid/dbpath", // invalid dbpath
-			logger:      base.Logger{},
-			ts:          nil,
-			fail:        true,
-			message:     "error creating db path",
 		},
 	}
 
@@ -176,7 +162,6 @@ func Test_NewObserver(t *testing.T) {
 				tt.appContext,
 				tt.coreClient,
 				tt.tss,
-				tt.dbpath,
 				tt.logger,
 				tt.ts,
 			)
@@ -254,7 +239,7 @@ func Test_LoadDB(t *testing.T) {
 
 	// create observer
 	dbpath := sample.CreateTempDir(t)
-	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, dbpath, base.Logger{}, nil)
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, base.Logger{}, nil)
 	require.NoError(t, err)
 
 	t.Run("should load db successfully", func(t *testing.T) {

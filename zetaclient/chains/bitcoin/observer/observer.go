@@ -113,7 +113,6 @@ func NewObserver(
 	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -153,12 +152,6 @@ func NewObserver(
 			ObserverLogger: *baseObserver.Logger(),
 			UTXOs:          baseObserver.Logger().Chain.With().Str("module", "utxos").Logger(),
 		},
-	}
-
-	// load btc chain observer DB
-	err = ob.LoadDB(dbpath)
-	if err != nil {
-		return nil, err
 	}
 
 	return ob, nil

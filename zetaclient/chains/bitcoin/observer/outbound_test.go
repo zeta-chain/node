@@ -27,7 +27,7 @@ func MockBTCObserverMainnet(t *testing.T) *Observer {
 	tss := mocks.NewTSSMainnet()
 
 	// create Bitcoin observer
-	ob, err := NewObserver(chain, btcClient, params, nil, nil, tss, testutils.SQLiteMemory, base.Logger{}, nil)
+	ob, err := NewObserver(chain, btcClient, params, nil, nil, tss, base.Logger{}, nil)
 	require.NoError(t, err)
 
 	return ob
