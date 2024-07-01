@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -12,68 +12,40 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	context "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
-func getTestCoreContext(
-	evmChain chains.Chain,
-	evmChainParams *observertypes.ChainParams,
-	ccFlags observertypes.CrosschainFlags,
-	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
-) *context.ZetacoreContext {
-	// create config
-	cfg := config.NewConfig()
-	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
-		Chain: evmChain,
-	}
-	// create zetacore context
-	coreContext := context.NewZetacoreContext(cfg)
-	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
-	evmChainParamsMap[evmChain.ChainId] = evmChainParams
-
-	// feed chain params
-	coreContext.Update(
-		&observertypes.Keygen{},
-		[]chains.Chain{evmChain},
-		evmChainParamsMap,
-		nil,
-		"",
-		ccFlags,
-		headerSupportedChains,
-		true,
-		zerolog.Logger{},
+func TestNew(t *testing.T) {
+	var (
+		testCfg = config.NewConfig()
+		logger  = zerolog.Nop()
 	)
-	return coreContext
-}
 
-func TestNewZetaCoreContext(t *testing.T) {
 	t.Run("should create new zetacore context with empty config", func(t *testing.T) {
-		testCfg := config.NewConfig()
-
-		zetaContext := context.NewZetacoreContext(testCfg)
-		require.NotNil(t, zetaContext)
+		appContext := context.New(testCfg, logger)
+		require.NotNil(t, appContext)
 
 		// assert keygen
-		keyGen := zetaContext.GetKeygen()
+		keyGen := appContext.GetKeygen()
 		require.Equal(t, observertypes.Keygen{}, keyGen)
 
 		// assert enabled chains
-		require.Empty(t, len(zetaContext.GetEnabledChains()))
+		require.Empty(t, len(appContext.GetEnabledChains()))
 
 		// assert external chains
-		require.Empty(t, len(zetaContext.GetEnabledExternalChains()))
+		require.Empty(t, len(appContext.GetEnabledExternalChains()))
 
 		// assert current tss pubkey
-		require.Equal(t, "", zetaContext.GetCurrentTssPubkey())
+		require.Equal(t, "", appContext.GetCurrentTssPubKey())
 
 		// assert btc chain params
-		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
+		chain, btcChainParams, btcChainParamsFound := appContext.GetBTCChainParams()
 		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
 		require.Nil(t, btcChainParams)
 
 		// assert evm chain params
-		allEVMChainParams := zetaContext.GetAllEVMChainParams()
+		allEVMChainParams := appContext.GetAllEVMChainParams()
 		require.Empty(t, allEVMChainParams)
 	})
 
@@ -86,11 +58,11 @@ func TestNewZetaCoreContext(t *testing.T) {
 		}
 
 		// create zetacore context with 0 chain id
-		zetaContext := context.NewZetacoreContext(testCfg)
-		require.NotNil(t, zetaContext)
+		appContext := context.New(testCfg, logger)
+		require.NotNil(t, appContext)
 
 		// assert btc chain params
-		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
+		chain, btcChainParams, btcChainParamsFound := appContext.GetBTCChainParams()
 		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
 		require.Nil(t, btcChainParams)
@@ -112,20 +84,20 @@ func TestNewZetaCoreContext(t *testing.T) {
 				},
 			},
 		}
-		zetaContext := context.NewZetacoreContext(testCfg)
-		require.NotNil(t, zetaContext)
+		appContext := context.New(testCfg, logger)
+		require.NotNil(t, appContext)
 
 		// assert evm chain params
-		allEVMChainParams := zetaContext.GetAllEVMChainParams()
+		allEVMChainParams := appContext.GetAllEVMChainParams()
 		require.Equal(t, 2, len(allEVMChainParams))
 		require.Equal(t, &observertypes.ChainParams{}, allEVMChainParams[1])
 		require.Equal(t, &observertypes.ChainParams{}, allEVMChainParams[2])
 
-		evmChainParams1, found := zetaContext.GetEVMChainParams(1)
+		evmChainParams1, found := appContext.GetEVMChainParams(1)
 		require.True(t, found)
 		require.Equal(t, &observertypes.ChainParams{}, evmChainParams1)
 
-		evmChainParams2, found := zetaContext.GetEVMChainParams(2)
+		evmChainParams2, found := appContext.GetEVMChainParams(2)
 		require.True(t, found)
 		require.Equal(t, &observertypes.ChainParams{}, evmChainParams2)
 	})
@@ -138,17 +110,20 @@ func TestNewZetaCoreContext(t *testing.T) {
 			RPCHost:     "test host",
 			RPCParams:   "test params",
 		}
-		zetaContext := context.NewZetacoreContext(testCfg)
-		require.NotNil(t, zetaContext)
+		appContext := context.New(testCfg, logger)
+		require.NotNil(t, appContext)
 	})
 }
 
-func TestUpdateZetacoreContext(t *testing.T) {
-	t.Run("should update zetacore context after being created from empty config", func(t *testing.T) {
-		testCfg := config.NewConfig()
+func TestAppContextUpdate(t *testing.T) {
+	var (
+		testCfg = config.NewConfig()
+		logger  = zerolog.Nop()
+	)
 
-		zetaContext := context.NewZetacoreContext(testCfg)
-		require.NotNil(t, zetaContext)
+	t.Run("should update zetacore context after being created from empty config", func(t *testing.T) {
+		appContext := context.New(testCfg, logger)
+		require.NotNil(t, appContext)
 
 		keyGenToUpdate := observertypes.Keygen{
 			Status:         observertypes.KeygenStatus_KeyGenSuccess,
@@ -183,7 +158,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 		verificationFlags := sample.HeaderSupportedChains()
 
 		require.NotNil(t, crosschainFlags)
-		zetaContext.Update(
+		appContext.Update(
 			&keyGenToUpdate,
 			enabledChainsToUpdate,
 			evmChainParamsToUpdate,
@@ -192,36 +167,35 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			*crosschainFlags,
 			verificationFlags,
 			false,
-			log.Logger,
 		)
 
 		// assert keygen updated
-		keyGen := zetaContext.GetKeygen()
+		keyGen := appContext.GetKeygen()
 		require.Equal(t, keyGenToUpdate, keyGen)
 
 		// assert enabled chains updated
-		require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
+		require.Equal(t, enabledChainsToUpdate, appContext.GetEnabledChains())
 
 		// assert enabled external chains
-		require.Equal(t, enabledChainsToUpdate[0:2], zetaContext.GetEnabledExternalChains())
+		require.Equal(t, enabledChainsToUpdate[0:2], appContext.GetEnabledExternalChains())
 
 		// assert current tss pubkey updated
-		require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())
+		require.Equal(t, tssPubKeyToUpdate, appContext.GetCurrentTssPubKey())
 
 		// assert btc chain params still empty because they were not specified in config
-		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
+		chain, btcChainParams, btcChainParamsFound := appContext.GetBTCChainParams()
 		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
 		require.Nil(t, btcChainParams)
 
 		// assert evm chain params still empty because they were not specified in config
-		allEVMChainParams := zetaContext.GetAllEVMChainParams()
+		allEVMChainParams := appContext.GetAllEVMChainParams()
 		require.Empty(t, allEVMChainParams)
 
-		ccFlags := zetaContext.GetCrossChainFlags()
+		ccFlags := appContext.GetCrossChainFlags()
 		require.Equal(t, *crosschainFlags, ccFlags)
 
-		verFlags := zetaContext.GetAllHeaderEnabledChains()
+		verFlags := appContext.GetAllHeaderEnabledChains()
 		require.Equal(t, verificationFlags, verFlags)
 	})
 
@@ -250,8 +224,8 @@ func TestUpdateZetacoreContext(t *testing.T) {
 				RPCParams:   "test params",
 			}
 
-			zetaContext := context.NewZetacoreContext(testCfg)
-			require.NotNil(t, zetaContext)
+			appContext := context.New(testCfg, logger)
+			require.NotNil(t, appContext)
 
 			keyGenToUpdate := observertypes.Keygen{
 				Status:         observertypes.KeygenStatus_KeyGenSuccess,
@@ -284,7 +258,7 @@ func TestUpdateZetacoreContext(t *testing.T) {
 			crosschainFlags := sample.CrosschainFlags()
 			verificationFlags := sample.HeaderSupportedChains()
 			require.NotNil(t, crosschainFlags)
-			zetaContext.Update(
+			appContext.Update(
 				&keyGenToUpdate,
 				enabledChainsToUpdate,
 				evmChainParamsToUpdate,
@@ -293,41 +267,40 @@ func TestUpdateZetacoreContext(t *testing.T) {
 				*crosschainFlags,
 				verificationFlags,
 				false,
-				log.Logger,
 			)
 
 			// assert keygen updated
-			keyGen := zetaContext.GetKeygen()
+			keyGen := appContext.GetKeygen()
 			require.Equal(t, keyGenToUpdate, keyGen)
 
 			// assert enabled chains updated
-			require.Equal(t, enabledChainsToUpdate, zetaContext.GetEnabledChains())
+			require.Equal(t, enabledChainsToUpdate, appContext.GetEnabledChains())
 
 			// assert current tss pubkey updated
-			require.Equal(t, tssPubKeyToUpdate, zetaContext.GetCurrentTssPubkey())
+			require.Equal(t, tssPubKeyToUpdate, appContext.GetCurrentTssPubKey())
 
 			// assert btc chain params
-			chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
+			chain, btcChainParams, btcChainParamsFound := appContext.GetBTCChainParams()
 			require.Equal(t, testBtcChain, chain)
 			require.True(t, btcChainParamsFound)
 			require.Equal(t, btcChainParamsToUpdate, btcChainParams)
 
 			// assert evm chain params
-			allEVMChainParams := zetaContext.GetAllEVMChainParams()
+			allEVMChainParams := appContext.GetAllEVMChainParams()
 			require.Equal(t, evmChainParamsToUpdate, allEVMChainParams)
 
-			evmChainParams1, found := zetaContext.GetEVMChainParams(1)
+			evmChainParams1, found := appContext.GetEVMChainParams(1)
 			require.True(t, found)
 			require.Equal(t, evmChainParamsToUpdate[1], evmChainParams1)
 
-			evmChainParams2, found := zetaContext.GetEVMChainParams(2)
+			evmChainParams2, found := appContext.GetEVMChainParams(2)
 			require.True(t, found)
 			require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
 
-			ccFlags := zetaContext.GetCrossChainFlags()
+			ccFlags := appContext.GetCrossChainFlags()
 			require.Equal(t, ccFlags, *crosschainFlags)
 
-			verFlags := zetaContext.GetAllHeaderEnabledChains()
+			verFlags := appContext.GetAllHeaderEnabledChains()
 			require.Equal(t, verFlags, verificationFlags)
 		},
 	)
@@ -344,22 +317,22 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 	}
 
 	t.Run("should return true if chain is supported and outbound flag is enabled", func(t *testing.T) {
-		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags, verificationFlags)
-		require.True(t, context.IsOutboundObservationEnabled(coreCTX, *chainParams))
+		appContext := makeAppContext(evmChain, chainParams, ccFlags, verificationFlags)
+
+		require.True(t, appContext.IsOutboundObservationEnabled(*chainParams))
 	})
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
-		paramsUnsupported := &observertypes.ChainParams{
-			ChainId:     evmChain.ChainId,
-			IsSupported: false,
-		}
-		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
-		require.False(t, context.IsOutboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
+		paramsUnsupported := &observertypes.ChainParams{ChainId: evmChain.ChainId, IsSupported: false}
+		appContextUnsupported := makeAppContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
+
+		require.False(t, appContextUnsupported.IsOutboundObservationEnabled(*paramsUnsupported))
 	})
 	t.Run("should return false if outbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsOutboundEnabled = false
-		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled, verificationFlags)
-		require.False(t, context.IsOutboundObservationEnabled(coreCTXDisabled, *chainParams))
+		coreContextDisabled := makeAppContext(evmChain, chainParams, flagsDisabled, verificationFlags)
+
+		require.False(t, coreContextDisabled.IsOutboundObservationEnabled(*chainParams))
 	})
 }
 
@@ -374,21 +347,179 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 	}
 
 	t.Run("should return true if chain is supported and inbound flag is enabled", func(t *testing.T) {
-		coreCTX := getTestCoreContext(evmChain, chainParams, ccFlags, verificationFlags)
-		require.True(t, context.IsInboundObservationEnabled(coreCTX, *chainParams))
+		appContext := makeAppContext(evmChain, chainParams, ccFlags, verificationFlags)
+
+		require.True(t, appContext.IsInboundObservationEnabled(*chainParams))
 	})
+
 	t.Run("should return false if chain is not supported yet", func(t *testing.T) {
-		paramsUnsupported := &observertypes.ChainParams{
-			ChainId:     evmChain.ChainId,
-			IsSupported: false,
-		}
-		coreCTXUnsupported := getTestCoreContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
-		require.False(t, context.IsInboundObservationEnabled(coreCTXUnsupported, *paramsUnsupported))
+		paramsUnsupported := &observertypes.ChainParams{ChainId: evmChain.ChainId, IsSupported: false}
+		appContextUnsupported := makeAppContext(evmChain, paramsUnsupported, ccFlags, verificationFlags)
+
+		require.False(t, appContextUnsupported.IsInboundObservationEnabled(*paramsUnsupported))
 	})
+
 	t.Run("should return false if inbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsInboundEnabled = false
-		coreCTXDisabled := getTestCoreContext(evmChain, chainParams, flagsDisabled, verificationFlags)
-		require.False(t, context.IsInboundObservationEnabled(coreCTXDisabled, *chainParams))
+		appContextDisabled := makeAppContext(evmChain, chainParams, flagsDisabled, verificationFlags)
+
+		require.False(t, appContextDisabled.IsInboundObservationEnabled(*chainParams))
 	})
+}
+
+func TestGetBTCChainAndConfig(t *testing.T) {
+	logger := zerolog.Nop()
+
+	emptyConfig := config.NewConfig()
+	nonEmptyConfig := config.New()
+
+	assertEmpty := func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool) {
+		assert.Empty(t, chain)
+		assert.Empty(t, btcConfig)
+		assert.False(t, enabled)
+	}
+
+	for _, tt := range []struct {
+		name   string
+		cfg    config.Config
+		setup  func(app *context.AppContext)
+		assert func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool)
+	}{
+		{
+			name:   "no btc config",
+			cfg:    emptyConfig,
+			setup:  nil,
+			assert: assertEmpty,
+		},
+		{
+			name:   "btc config exists, but not chain params are set",
+			cfg:    nonEmptyConfig,
+			setup:  nil,
+			assert: assertEmpty,
+		},
+		{
+			name: "btc config exists but chain is invalid",
+			cfg:  nonEmptyConfig,
+			setup: func(app *context.AppContext) {
+				app.Update(
+					&observertypes.Keygen{},
+					[]chains.Chain{},
+					nil,
+					&observertypes.ChainParams{ChainId: 123},
+					"",
+					observertypes.CrosschainFlags{},
+					nil,
+					true,
+				)
+			},
+			assert: assertEmpty,
+		},
+		{
+			name: "btc config exists and chain params are set",
+			cfg:  nonEmptyConfig,
+			setup: func(app *context.AppContext) {
+				app.Update(
+					&observertypes.Keygen{},
+					[]chains.Chain{},
+					nil,
+					&observertypes.ChainParams{ChainId: chains.BitcoinMainnet.ChainId},
+					"",
+					observertypes.CrosschainFlags{},
+					nil,
+					true,
+				)
+			},
+			assert: func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool) {
+				assert.Equal(t, chains.BitcoinMainnet.ChainId, chain.ChainId)
+				assert.Equal(t, "smoketest", btcConfig.RPCUsername)
+				assert.True(t, enabled)
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			// Given app context
+			appContext := context.New(tt.cfg, logger)
+
+			// And optional setup
+			if tt.setup != nil {
+				tt.setup(appContext)
+			}
+
+			// ACT
+			chain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
+
+			// ASSERT
+			tt.assert(t, chain, btcConfig, enabled)
+		})
+	}
+}
+
+func TestGetBlockHeaderEnabledChains(t *testing.T) {
+	// ARRANGE
+	// Given app config
+	appContext := context.New(config.New(), zerolog.Nop())
+
+	// That was eventually updated
+	appContext.Update(
+		&observertypes.Keygen{},
+		[]chains.Chain{},
+		nil,
+		&observertypes.ChainParams{ChainId: chains.BitcoinMainnet.ChainId},
+		"",
+		observertypes.CrosschainFlags{},
+		[]lightclienttypes.HeaderSupportedChain{
+			{ChainId: 1, Enabled: true},
+		},
+		true,
+	)
+
+	// ACT #1 (found)
+	chain, found := appContext.GetBlockHeaderEnabledChains(1)
+
+	// ASSERT #1
+	assert.True(t, found)
+	assert.Equal(t, int64(1), chain.ChainId)
+	assert.True(t, chain.Enabled)
+
+	// ACT #2 (not found)
+	chain, found = appContext.GetBlockHeaderEnabledChains(2)
+
+	// ASSERT #2
+	assert.False(t, found)
+	assert.Empty(t, chain)
+}
+
+func makeAppContext(
+	evmChain chains.Chain,
+	evmChainParams *observertypes.ChainParams,
+	ccFlags observertypes.CrosschainFlags,
+	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
+) *context.AppContext {
+	// create config
+	cfg := config.NewConfig()
+	logger := zerolog.Nop()
+	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
+		Chain: evmChain,
+	}
+
+	// create zetacore context
+	coreContext := context.New(cfg, logger)
+	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
+	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+
+	// feed chain params
+	coreContext.Update(
+		&observertypes.Keygen{},
+		[]chains.Chain{evmChain},
+		evmChainParamsMap,
+		nil,
+		"",
+		ccFlags,
+		headerSupportedChains,
+		true,
+	)
+
+	return coreContext
 }

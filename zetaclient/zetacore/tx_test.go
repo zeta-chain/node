@@ -333,9 +333,9 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.NewConfig()
-		coreCtx := context.NewZetacoreContext(cfg)
+		appContext := context.New(cfg, zerolog.Nop())
 		zetacoreBroadcast = MockBroadcast
-		err := client.UpdateZetacoreContext(coreCtx, false, zerolog.Logger{})
+		err := client.UpdateZetacoreContext(appContext, false, zerolog.Logger{})
 		require.NoError(t, err)
 	})
 }
