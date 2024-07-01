@@ -24,11 +24,11 @@ scenarios:
   - name: web3_clientVersion
     flow:
       - post:
-          url: "/"
+          url: "/xxxx"
           json:
             id: 1
             jsonrpc: "2.0"
-            method: "web3_clientVersion"
+            method: "web3_clientVersionxxx"
             params: []
           capture:
             - json: "$"
