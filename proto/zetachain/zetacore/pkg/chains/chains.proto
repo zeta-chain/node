@@ -43,6 +43,10 @@ enum ChainName {
   optimism_sepolia = 18;
   base_mainnet = 19;
   base_sepolia = 20;
+
+  solana_mainnet = 21;
+  solana_testnet = 22;
+  solana_localnet = 23;
 }
 
 // Network represents the network of the chain
@@ -57,6 +61,7 @@ enum Network {
   bsc = 4;
   optimism = 5;
   base = 6;
+  solana = 7;
 }
 
 // NetworkType represents the network type of the chain
@@ -75,6 +80,7 @@ enum Vm {
   option (gogoproto.goproto_enum_stringer) = true;
   no_vm = 0;
   evm = 1;
+  svm = 2;
 }
 
 // Consensus represents the consensus algorithm used by the chain
@@ -86,6 +92,7 @@ enum Consensus {
   tendermint = 1;
   bitcoin = 2;
   op_stack = 3;
+  solana_consensus = 4;
 }
 
 // CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
