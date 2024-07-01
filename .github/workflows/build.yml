@@ -106,38 +106,57 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      
+      # configure docker to use the containerd snapshotter
+      # so that we can use the buildkit cache
+      - uses: depot/use-containerd-snapshotter-action@v1
 
-      - name: Set CPU Architecture
-        shell: bash
-        run: |
-          if [ "$(uname -m)" == "aarch64" ]; then
-            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-          elif [ "$(uname -m)" == "x86_64" ]; then
-            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-          else
-            echo "Unsupported architecture" >&2
-            exit 1
-          fi
-
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
-        with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "false"
-          skip_aws_cli: "true"
-          skip_docker_compose: "false"
-
-      - run: |
-          echo "github.repository: ${{ github.repository }}"
-          echo "github.event.pull_request.head.repo.full_name: ${{ github.event.pull_request.head.repo.full_name }}"
-
-      - name: Login to Docker Hub
+      - name: Login to Docker Hub registry
         uses: docker/login-action@v2
-        if: github.event_name != 'pull_request' || github.repository == github.event.pull_request.head.repo.full_name
+        if: github.repository == 'zeta-chain/node'
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
+      - name: Login to github docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore go cache
+        uses: actions/cache@v4
+        id: restore-go-cache
+        with:
+          path: |
+            go-cache
+          key: cache-${{ hashFiles('go.sum') }}
+          lookup-only: ${{ github.event_name != 'push' }}
+
+      - name: Inject go cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        with:
+          cache-map: |
+            {
+              "go-cache": "/root/.cache/go-build"
+            }
+          skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit || github.event_name != 'push' }}
+
+      # build zetanode with cache options
+      - name: Build zetanode for cache
+        uses: docker/build-push-action@v6
+        env:
+          CACHE_FROM_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache"
+          CACHE_TO_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max"
+        with:
+          context: .
+          file: ./Dockerfile-localnet
+          push: false
+          tags: zetanode:latest
+          cache-from: ${{ env.CACHE_FROM_CONFIG }}
+          cache-to: ${{ github.event_name == 'push' && env.CACHE_TO_CONFIG || '' }}
+          target: latest-runtime
 
       - name: Start Test
         run: make start-e2e-test
