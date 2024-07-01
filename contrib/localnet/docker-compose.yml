@@ -1,11 +1,14 @@
 # This docker-compose file configures the localnet environment
 # it contains the following services:
-# - ZetaChain with 2 nodes (zetacore0, zetacore1)
-# - A observer set with 2 clients (zetaclient0, zetaclient1)
+# - ZetaChain with 2 nodes (zetacore0, zetacore1). When profile set to stress, 4 nodes will be created.
+# - A observer set with 2 clients (zetaclient0, zetaclient1). When profile set to stress, 4 clients will be created.
 # - An Ethereum node (eth)
+# - A secondary optional Ethereum node (eth2) enabled when profile is set to eth2
 # - A Bitcoin node (bitcoin)
 # - A Rosetta API (rosetta)
 # - An orchestrator to manage interaction with the localnet (orchestrator)
+# - An upgrade host to serve binaries for the upgrade tests (upgrade-host). Only enabled when profile is set to upgrade.
+# - An upgrade orchestrator to send the upgrade governance proposal (upgrade-orchestrator). Only enabled when profile is set to upgrade.
 
 networks:
   mynetwork:
@@ -56,7 +59,6 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
-      - ZETACORED_REPLICAS=2
       - ZETACORED_IMPORT_GENESIS_DATA=${ZETACORED_IMPORT_GENESIS_DATA}
     volumes:
       - ssh:/root/.ssh
@@ -73,7 +75,38 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
-      - ZETACORED_REPLICAS=2
+    volumes:
+      - ssh:/root/.ssh
+
+  zetacore2:
+    image: zetanode:latest
+    container_name: zetacore2
+    hostname: zetacore2
+    profiles:
+      - stress
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.13
+    entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+
+  zetacore3:
+    image: zetanode:latest
+    container_name: zetacore3
+    hostname: zetacore3
+    profiles:
+      - stress
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.14
+    entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
     volumes:
       - ssh:/root/.ssh
 
@@ -109,6 +142,40 @@ services:
       - ssh:/root/.ssh
       - preparams:/root/preparams
 
+  zetaclient2:
+    image: zetanode:latest
+    container_name: zetaclient2
+    hostname: zetaclient2
+    profiles:
+      - stress
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.23
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+      - preparams:/root/preparams
+
+  zetaclient3:
+    image: zetanode:latest
+    container_name: zetaclient3
+    hostname: zetaclient3
+    profiles:
+      - stress
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.24
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+      - preparams:/root/preparams
+
   eth:
     image: ethereum/client-go:v1.10.26
     container_name: eth
@@ -119,6 +186,20 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.100
     entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+
+  eth2:
+    build:
+      context: ./anvil
+    container_name: eth2
+    hostname: eth2
+    profiles:
+      - eth2
+    platform: linux/amd64
+    ports:
+      - "8546:8545"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.102
 
   bitcoin:
     image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
@@ -154,6 +235,38 @@ services:
     environment:
       - LOCALNET_MODE=${LOCALNET_MODE}
       - E2E_ARGS=${E2E_ARGS}
+      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT}
+    volumes:
+      - ssh:/root/.ssh
+
+  upgrade-host:
+    image: zetanode:latest
+    container_name: upgrade-host
+    hostname: upgrade-host
+    profiles:
+      - upgrade
+    entrypoint: ["/root/start-upgrade-host.sh"]
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.250
+    volumes:
+      - ssh:/root/.ssh
+
+  upgrade-orchestrator:
+    # must run from old node for api compatibility
+    image: zetanode:old
+    container_name: upgrade-orchestrator
+    hostname: upgrade-orchestrator
+    profiles:
+      - upgrade
+    entrypoint: ["/root/start-upgrade-orchestrator.sh"]
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.251
+    depends_on:
+      - zetacore0
+      - upgrade-host
+    environment:
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT}
     volumes:
       - ssh:/root/.ssh
