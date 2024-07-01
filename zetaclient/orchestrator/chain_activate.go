@@ -50,6 +50,10 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 			oc.logger.Std.Info().Msgf("ActivateDeactivateChains: deactivating chain %d", chainID)
 
 			observer.Stop()
+
+			// remove signer and observer from maps
+			oc.mu.Lock()
+			defer oc.mu.Unlock()
 			delete(oc.signerMap, chainID)
 			delete(oc.observerMap, chainID)
 		}
@@ -71,6 +75,10 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 			}
 
 			observer.Start()
+
+			// add signer and observer to maps
+			oc.mu.Lock()
+			defer oc.mu.Unlock()
 			oc.signerMap[chainID] = newSignerMap[chainID]
 			oc.observerMap[chainID] = observer
 		}

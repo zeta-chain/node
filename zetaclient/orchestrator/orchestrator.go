@@ -187,7 +187,9 @@ func (oc *Orchestrator) Stop() {
 
 // GetUpdatedSigner returns signer with updated chain parameters
 func (oc *Orchestrator) GetUpdatedSigner(chainID int64) (interfaces.ChainSigner, error) {
+	oc.mu.Lock()
 	signer, found := oc.signerMap[chainID]
+	oc.mu.Unlock()
 	if !found {
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
 	}
@@ -215,7 +217,9 @@ func (oc *Orchestrator) GetUpdatedSigner(chainID int64) (interfaces.ChainSigner,
 
 // GetUpdatedChainObserver returns chain observer with updated chain parameters
 func (oc *Orchestrator) GetUpdatedChainObserver(chainID int64) (interfaces.ChainObserver, error) {
+	oc.mu.Lock()
 	observer, found := oc.observerMap[chainID]
+	oc.mu.Unlock()
 	if !found {
 		return nil, fmt.Errorf("chain observer not found for chainID %d", chainID)
 	}

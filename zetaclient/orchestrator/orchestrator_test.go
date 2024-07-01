@@ -56,11 +56,8 @@ func MockOrchestrator(
 	return orchestrator
 }
 
-<<<<<<< HEAD
+// CreateTestAppContext creates a test app context for orchestrator testing
 func CreateTestAppContext(
-=======
-func CreateAppContext(
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 	evmChain, btcChain chains.Chain,
 	evmChainParams, btcChainParams *observertypes.ChainParams,
 ) *context.AppContext {
@@ -72,42 +69,24 @@ func CreateAppContext(
 	cfg.BitcoinConfig = config.BTCConfig{
 		RPCHost: "localhost",
 	}
-<<<<<<< HEAD
 	// new app context
 	appContext := context.NewAppContext(cfg)
 	chainParamsMap := make(map[int64]*observertypes.ChainParams)
 	chainParamsMap[evmChain.ChainId] = evmChainParams
 	chainParamsMap[btcChain.ChainId] = btcChainParams
-=======
-	// new zetacore context
-	appContext := context.New(cfg, zerolog.Nop())
-	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
-	evmChainParamsMap[evmChain.ChainId] = evmChainParams
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 	ccFlags := sample.CrosschainFlags()
 	verificationFlags := sample.HeaderSupportedChains()
 
 	// feed chain params
 	appContext.Update(
-<<<<<<< HEAD
 		observertypes.Keygen{},
-=======
-		&observertypes.Keygen{},
-		[]chains.Chain{evmChain, btcChain},
-		evmChainParamsMap,
-		btcChainParams,
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		"",
 		[]chains.Chain{evmChain, btcChain},
 		chainParamsMap,
 		&chaincfg.RegressionNetParams,
 		*ccFlags,
 		verificationFlags,
-<<<<<<< HEAD
 		zerolog.Logger{},
-=======
-		true,
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 	)
 	return appContext
 }
@@ -131,26 +110,16 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	}
 
 	t.Run("signer should not be found", func(t *testing.T) {
-<<<<<<< HEAD
 		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-=======
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		context := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		// BSC signer should not be found
 		_, err := orchestrator.GetUpdatedSigner(chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
-<<<<<<< HEAD
 		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 
-=======
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		context := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		// update signer with new connector and erc20 custody address
 		signer, err := orchestrator.GetUpdatedSigner(evmChain.ChainId)
 		require.NoError(t, err)
@@ -207,27 +176,17 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	}
 
 	t.Run("evm chain observer should not be found", func(t *testing.T) {
-<<<<<<< HEAD
 		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 
-=======
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		// BSC chain observer should not be found
 		_, err := orchestrator.GetUpdatedChainObserver(chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "chain observer not found")
 	})
 	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
-<<<<<<< HEAD
 		appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 
-=======
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		// update evm chain observer with new chain params
 		chainOb, err := orchestrator.GetUpdatedChainObserver(evmChain.ChainId)
 		require.NoError(t, err)
@@ -235,27 +194,17 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.GetChainParams()))
 	})
 	t.Run("btc chain observer should not be found", func(t *testing.T) {
-<<<<<<< HEAD
 		appCtx := CreateTestAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
 		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 
-=======
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		// BTC testnet chain observer should not be found
 		_, err := orchestrator.GetUpdatedChainObserver(chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "chain observer not found")
 	})
 	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
-<<<<<<< HEAD
 		appCtx := CreateTestAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
 		orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 
-=======
-		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
-		coreContext := CreateAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
->>>>>>> 2d5519f4d64bb05b64e6f2c7ec9ef6a87e97610f
 		// update btc chain observer with new chain params
 		chainOb, err := orchestrator.GetUpdatedChainObserver(btcChain.ChainId)
 		require.NoError(t, err)
