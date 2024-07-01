@@ -27,11 +27,13 @@ func (k Keeper) GetChainInfo(ctx sdk.Context) (val types.ChainInfo, found bool) 
 }
 
 // GetAdditionalChainList returns the list of chains in chain info object
+// additional chains are additional static chain information stored on-chain used in addition with the default chain information
+// this list allow to add new chain support without doing an upgrade
 // returns empty list if no chains are present
 func (k Keeper) GetAdditionalChainList(ctx sdk.Context) []chains.Chain {
 	chainInfo, found := k.GetChainInfo(ctx)
 	if !found {
-		return
+		return []chains.Chain{}
 	}
 	return chainInfo.Chains
 }
