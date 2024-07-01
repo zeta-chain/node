@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -365,6 +366,129 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 
 		require.False(t, appContextDisabled.IsInboundObservationEnabled(*chainParams))
 	})
+}
+
+func TestGetBTCChainAndConfig(t *testing.T) {
+	logger := zerolog.Nop()
+
+	emptyConfig := config.NewConfig()
+	nonEmptyConfig := config.New()
+
+	assertEmpty := func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool) {
+		assert.Empty(t, chain)
+		assert.Empty(t, btcConfig)
+		assert.False(t, enabled)
+	}
+
+	for _, tt := range []struct {
+		name   string
+		cfg    config.Config
+		setup  func(app *context.AppContext)
+		assert func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool)
+	}{
+		{
+			name:   "no btc config",
+			cfg:    emptyConfig,
+			setup:  nil,
+			assert: assertEmpty,
+		},
+		{
+			name:   "btc config exists, but not chain params are set",
+			cfg:    nonEmptyConfig,
+			setup:  nil,
+			assert: assertEmpty,
+		},
+		{
+			name: "btc config exists but chain is invalid",
+			cfg:  nonEmptyConfig,
+			setup: func(app *context.AppContext) {
+				app.Update(
+					&observertypes.Keygen{},
+					[]chains.Chain{},
+					nil,
+					&observertypes.ChainParams{ChainId: 123},
+					"",
+					observertypes.CrosschainFlags{},
+					nil,
+					true,
+				)
+			},
+			assert: assertEmpty,
+		},
+		{
+			name: "btc config exists and chain params are set",
+			cfg:  nonEmptyConfig,
+			setup: func(app *context.AppContext) {
+				app.Update(
+					&observertypes.Keygen{},
+					[]chains.Chain{},
+					nil,
+					&observertypes.ChainParams{ChainId: chains.BitcoinMainnet.ChainId},
+					"",
+					observertypes.CrosschainFlags{},
+					nil,
+					true,
+				)
+			},
+			assert: func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool) {
+				assert.Equal(t, chains.BitcoinMainnet.ChainId, chain.ChainId)
+				assert.Equal(t, "smoketest", btcConfig.RPCUsername)
+				assert.True(t, enabled)
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			// Given app context
+			appContext := context.New(tt.cfg, logger)
+
+			// And optional setup
+			if tt.setup != nil {
+				tt.setup(appContext)
+			}
+
+			// ACT
+			chain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
+
+			// ASSERT
+			tt.assert(t, chain, btcConfig, enabled)
+		})
+	}
+}
+
+func TestGetBlockHeaderEnabledChains(t *testing.T) {
+	// ARRANGE
+	// Given app config
+	appContext := context.New(config.New(), zerolog.Nop())
+
+	// That was eventually updated
+	appContext.Update(
+		&observertypes.Keygen{},
+		[]chains.Chain{},
+		nil,
+		&observertypes.ChainParams{ChainId: chains.BitcoinMainnet.ChainId},
+		"",
+		observertypes.CrosschainFlags{},
+		[]lightclienttypes.HeaderSupportedChain{
+			{ChainId: 1, Enabled: true},
+		},
+		true,
+	)
+
+	// ACT #1 (found)
+	chain, found := appContext.GetBlockHeaderEnabledChains(1)
+
+	// ASSERT #1
+	assert.True(t, found)
+	assert.Equal(t, int64(1), chain.ChainId)
+	assert.True(t, chain.Enabled)
+
+	// ACT #2 (not found)
+	chain, found = appContext.GetBlockHeaderEnabledChains(2)
+
+	// ASSERT #2
+	assert.False(t, found)
+	assert.Empty(t, chain)
 }
 
 func makeAppContext(
