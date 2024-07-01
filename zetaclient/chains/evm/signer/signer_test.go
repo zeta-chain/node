@@ -232,6 +232,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 		const gwei = 1_000_000_000
 
 		// ARRANGE
+		tss.Unpause()
 		ts := newTestSuite(t, tss)
 
 		// Given RPC NODE
