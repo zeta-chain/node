@@ -23,6 +23,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				&Polygon,
 				&OptimismMainnet,
 				&BaseMainnet,
+				&SolanaMainnet,
 			},
 		},
 		{
@@ -38,6 +39,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				&Sepolia,
 				&OptimismSepolia,
 				&BaseSepolia,
+				&SolanaTestnet,
 			},
 		},
 		{
@@ -47,6 +49,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				&ZetaChainPrivnet,
 				&BitcoinRegtest,
 				&GoerliLocalnet,
+				&SolanaLocalnet,
 			},
 		},
 	}
@@ -99,6 +102,11 @@ func TestChainListByNetwork(t *testing.T) {
 			Network_base,
 			[]*Chain{&BaseMainnet, &BaseSepolia},
 		},
+		{
+			"Solana",
+			Network_solana,
+			[]*Chain{&SolanaMainnet, &SolanaTestnet, &SolanaLocalnet},
+		},
 	}
 
 	for _, lt := range listTests {
@@ -137,6 +145,9 @@ func TestChainListFunctions(t *testing.T) {
 				&OptimismSepolia,
 				&BaseMainnet,
 				&BaseSepolia,
+				&SolanaMainnet,
+				&SolanaTestnet,
+				&SolanaLocalnet,
 			},
 		},
 		{
@@ -159,6 +170,9 @@ func TestChainListFunctions(t *testing.T) {
 				&OptimismSepolia,
 				&BaseMainnet,
 				&BaseSepolia,
+				&SolanaMainnet,
+				&SolanaTestnet,
+				&SolanaLocalnet,
 			},
 		},
 	}

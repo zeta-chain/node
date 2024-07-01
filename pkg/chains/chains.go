@@ -91,6 +91,18 @@ var (
 		CctxGateway: CCTXGateway_observers,
 	}
 
+	// SolanaMainnet is Solana mainnet
+	SolanaMainnet = Chain{
+		ChainName:   ChainName_solana_mainnet,
+		ChainId:     900,
+		Network:     Network_solana,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_svm,
+		Consensus:   Consensus_solana_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
 	/**
 	* Testnet chains
 	 */
@@ -179,6 +191,18 @@ var (
 		CctxGateway: CCTXGateway_observers,
 	}
 
+	// SolanaTestnet is Solana testnet
+	SolanaTestnet = Chain{
+		ChainName:   ChainName_solana_testnet,
+		ChainId:     901,
+		Network:     Network_solana,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_svm,
+		Consensus:   Consensus_solana_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
 	/**
 	* Devnet chains
 	 */
@@ -232,6 +256,18 @@ var (
 		NetworkType: NetworkType_privnet,
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
+	// SolanaLocalnet is Solana localnet
+	SolanaLocalnet = Chain{
+		ChainName:   ChainName_solana_localnet,
+		ChainId:     902,
+		Network:     Network_solana,
+		NetworkType: NetworkType_privnet,
+		Vm:          Vm_svm,
+		Consensus:   Consensus_solana_consensus,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
 	}
@@ -293,6 +329,9 @@ func DefaultChainsList() []*Chain {
 		OptimismSepolia,
 		BaseMainnet,
 		BaseSepolia,
+		SolanaMainnet,
+		SolanaTestnet,
+		SolanaLocalnet,
 	})
 }
 
