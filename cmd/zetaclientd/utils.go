@@ -65,7 +65,6 @@ func CreateSignerMap(
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
-	zetacoreContext := appContext.ZetacoreContext()
 	signerMap := make(map[int64]interfaces.ChainSigner)
 
 	// EVM signers
@@ -73,7 +72,7 @@ func CreateSignerMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		evmChainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
+		evmChainParams, found := appContext.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
 			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
@@ -82,7 +81,7 @@ func CreateSignerMap(
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
 		signer, err := evmsigner.NewSigner(
 			evmConfig.Chain,
-			zetacoreContext,
+			appContext,
 			tss,
 			ts,
 			logger,
@@ -100,7 +99,7 @@ func CreateSignerMap(
 	// BTC signer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		signer, err := btcsigner.NewSigner(btcChain, zetacoreContext, tss, ts, logger, btcConfig)
+		signer, err := btcsigner.NewSigner(btcChain, appContext, tss, ts, logger, btcConfig)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
@@ -120,14 +119,13 @@ func CreateChainObserverMap(
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainObserver, error) {
-	zetacoreContext := appContext.ZetacoreContext()
 	observerMap := make(map[int64]interfaces.ChainObserver)
 	// EVM observers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		chainParams, found := zetacoreContext.GetEVMChainParams(evmConfig.Chain.ChainId)
+		chainParams, found := appContext.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
 			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
@@ -145,7 +143,7 @@ func CreateChainObserverMap(
 			evmConfig,
 			evmClient,
 			*chainParams,
-			zetacoreContext,
+			appContext,
 			zetacoreClient,
 			tss,
 			dbpath,
@@ -160,7 +158,7 @@ func CreateChainObserverMap(
 	}
 
 	// BTC observer
-	_, chainParams, found := zetacoreContext.GetBTCChainParams()
+	_, chainParams, found := appContext.GetBTCChainParams()
 	if !found {
 		return nil, fmt.Errorf("bitcoin chains params not found")
 	}
@@ -177,7 +175,7 @@ func CreateChainObserverMap(
 				btcChain,
 				btcClient,
 				*chainParams,
-				zetacoreContext,
+				appContext,
 				zetacoreClient,
 				tss,
 				dbpath,

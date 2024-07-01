@@ -58,7 +58,7 @@ func NewObserver(
 	evmCfg config.EVMConfig,
 	evmClient interfaces.EVMRPCClient,
 	chainParams observertypes.ChainParams,
-	zetacoreContext *clientcontext.ZetacoreContext,
+	appClient *clientcontext.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -69,7 +69,7 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		evmCfg.Chain,
 		chainParams,
-		zetacoreContext,
+		appClient,
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,

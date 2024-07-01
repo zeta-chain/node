@@ -127,7 +127,7 @@ func (oc *Orchestrator) MonitorCore(appContext *context.AppContext) error {
 
 // GetUpdatedSigner returns signer with updated chain parameters
 func (oc *Orchestrator) GetUpdatedSigner(
-	coreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	chainID int64,
 ) (interfaces.ChainSigner, error) {
 	signer, found := oc.signerMap[chainID]
@@ -136,7 +136,7 @@ func (oc *Orchestrator) GetUpdatedSigner(
 	}
 	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
 	if chains.IsEVMChain(chainID) {
-		evmParams, found := coreContext.GetEVMChainParams(chainID)
+		evmParams, found := appContext.GetEVMChainParams(chainID)
 		if found {
 			// update zeta connector and ERC20 custody addresses
 			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
@@ -158,7 +158,7 @@ func (oc *Orchestrator) GetUpdatedSigner(
 
 // GetUpdatedChainObserver returns chain observer with updated chain parameters
 func (oc *Orchestrator) GetUpdatedChainObserver(
-	coreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	chainID int64,
 ) (interfaces.ChainObserver, error) {
 	observer, found := oc.observerMap[chainID]
@@ -168,14 +168,14 @@ func (oc *Orchestrator) GetUpdatedChainObserver(
 	// update chain observer chain parameters
 	curParams := observer.GetChainParams()
 	if chains.IsEVMChain(chainID) {
-		evmParams, found := coreContext.GetEVMChainParams(chainID)
+		evmParams, found := appContext.GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			observer.SetChainParams(*evmParams)
 			oc.logger.Std.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
 		}
 	} else if chains.IsBitcoinChain(chainID) {
-		_, btcParams, found := coreContext.GetBTCChainParams()
+		_, btcParams, found := appContext.GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
 			observer.SetChainParams(*btcParams)
@@ -281,8 +281,7 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// get supported external chains
-					coreContext := appContext.ZetacoreContext()
-					externalChains := coreContext.GetEnabledExternalChains()
+					externalChains := appContext.GetEnabledExternalChains()
 
 					// query pending cctxs across all external chains within rate limit
 					cctxMap, err := oc.GetPendingCctxsWithinRatelimit(externalChains)
@@ -300,21 +299,21 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 						}
 
 						// update chain parameters for signer and chain observer
-						signer, err := oc.GetUpdatedSigner(coreContext, c.ChainId)
+						signer, err := oc.GetUpdatedSigner(appContext, c.ChainId)
 						if err != nil {
 							oc.logger.Std.Error().
 								Err(err).
 								Msgf("StartCctxScheduler: GetUpdatedSigner failed for chain %d", c.ChainId)
 							continue
 						}
-						ob, err := oc.GetUpdatedChainObserver(coreContext, c.ChainId)
+						ob, err := oc.GetUpdatedChainObserver(appContext, c.ChainId)
 						if err != nil {
 							oc.logger.Std.Error().
 								Err(err).
 								Msgf("StartCctxScheduler: GetUpdatedChainObserver failed for chain %d", c.ChainId)
 							continue
 						}
-						if !context.IsOutboundObservationEnabled(coreContext, ob.GetChainParams()) {
+						if !appContext.IsOutboundObservationEnabled(ob.GetChainParams()) {
 							continue
 						}
 
