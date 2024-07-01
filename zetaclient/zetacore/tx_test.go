@@ -212,31 +212,40 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 		grpcmock.WithPlanner(planner.FirstMatch()),
 		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
-			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
-				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 12345})
+			// method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+			// s.ExpectUnary(method).
+			// 	UnlimitedTimes().
+			// 	WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
+			// 	Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 12345})
 
-			method = "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(upgradetypes.QueryCurrentPlanRequest{}).
-				Return(upgradetypes.QueryCurrentPlanResponse{
-					Plan: &upgradetypes.Plan{
-						Name:   "big upgrade",
-						Height: 100,
-					},
-				})
+			// method = "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
+			// s.ExpectUnary(method).
+			// 	UnlimitedTimes().
+			// 	WithPayload(upgradetypes.QueryCurrentPlanRequest{}).
+			// 	Return(upgradetypes.QueryCurrentPlanResponse{
+			// 		Plan: &upgradetypes.Plan{
+			// 			Name:   "big upgrade",
+			// 			Height: 100,
+			// 		},
+			// 	})
 
-			method = "/zetachain.zetacore.observer.Query/GetChainParams"
+			method := "/zetachain.zetacore.observer.Query/GetChainParams"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(observertypes.QueryGetChainParamsRequest{}).
 				Return(observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 					ChainParams: []*observertypes.ChainParams{
 						{
-							ChainId: 7000,
+							ChainId:     chains.ZetaChainMainnet.ChainId,
+							IsSupported: true,
+						},
+						{
+							ChainId:     chains.Ethereum.ChainId,
+							IsSupported: true,
+						},
+						{
+							ChainId:     chains.BitcoinMainnet.ChainId,
+							IsSupported: true,
 						},
 					},
 				}})
@@ -248,24 +257,18 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 				Return(observertypes.QuerySupportedChainsResponse{
 					Chains: []*chains.Chain{
 						{
-							chains.BitcoinMainnet.ChainId,
-							chains.BitcoinMainnet.ChainName,
-							chains.BscMainnet.Network,
-							chains.BscMainnet.NetworkType,
-							chains.BscMainnet.Vm,
-							chains.BscMainnet.Consensus,
-							chains.BscMainnet.IsExternal,
-							chains.BscMainnet.CctxGateway,
+							ChainId:    chains.ZetaChainMainnet.ChainId,
+							IsExternal: chains.ZetaChainMainnet.IsExternal,
 						},
 						{
-							chains.Ethereum.ChainId,
-							chains.Ethereum.ChainName,
-							chains.Ethereum.Network,
-							chains.Ethereum.NetworkType,
-							chains.Ethereum.Vm,
-							chains.Ethereum.Consensus,
-							chains.Ethereum.IsExternal,
-							chains.Ethereum.CctxGateway,
+							ChainId:    chains.BitcoinMainnet.ChainId,
+							Consensus:  chains.BitcoinMainnet.Consensus,
+							IsExternal: chains.BscMainnet.IsExternal,
+						},
+						{
+							ChainId:    chains.Ethereum.ChainId,
+							Consensus:  chains.Ethereum.Consensus,
+							IsExternal: chains.Ethereum.IsExternal,
 						},
 					},
 				})
@@ -335,8 +338,18 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 		cfg := config.NewConfig()
 		appCTX := context.NewAppContext(cfg)
 		zetacoreBroadcast = MockBroadcast
+
+		// Update app context
 		err := client.UpdateAppContext(appCTX, zerolog.Logger{})
 		require.NoError(t, err)
+
+		// Verify app context
+		require.Len(t, appCTX.GetEnabledExternalChainParams(), 2)
+		require.Len(t, appCTX.GetEnabledBTCChains(), 1)
+		chainParamMap := appCTX.GetEnabledExternalChainParams()
+		require.Len(t, chainParamMap, 2)
+		require.NotNil(t, chainParamMap[chains.Ethereum.ChainId])
+		require.NotNil(t, chainParamMap[chains.BitcoinMainnet.ChainId])
 	})
 }
 
