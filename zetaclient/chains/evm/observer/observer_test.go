@@ -59,13 +59,12 @@ func getAppContext(
 	// feed chain params
 	appCtx.Update(
 		observertypes.Keygen{},
+		"",
 		[]chains.Chain{evmChain},
 		newChainParams,
 		&chaincfg.RegressionNetParams,
-		"",
 		*sample.CrosschainFlags(),
 		sample.HeaderSupportedChains(),
-		true,
 		zerolog.Logger{},
 	)
 	// create app context

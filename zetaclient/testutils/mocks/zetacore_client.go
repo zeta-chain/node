@@ -31,8 +31,14 @@ type MockZetacoreClient struct {
 	paused    bool
 	zetaChain chains.Chain
 
+	// the mock block height
+	blockHeight int64
+
 	// the mock observer keys
 	keys keyinterfaces.ObserverKeys
+
+	// the mock upgrade plan
+	upgradePlan *upgradetypes.Plan
 
 	// the mock data for testing
 	// pending cctxs
@@ -64,7 +70,7 @@ func (m *MockZetacoreClient) GetUpgradePlan() (*upgradetypes.Plan, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
-	return nil, nil
+	return m.upgradePlan, nil
 }
 
 func (m *MockZetacoreClient) GetChainParams() ([]*observerTypes.ChainParams, error) {
@@ -186,7 +192,7 @@ func (m *MockZetacoreClient) GetBlockHeight() (int64, error) {
 	if m.paused {
 		return 0, errors.New(ErrMsgPaused)
 	}
-	return 0, nil
+	return m.blockHeight, nil
 }
 
 func (m *MockZetacoreClient) GetLastBlockHeightByChain(_ chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
@@ -310,6 +316,16 @@ func (m *MockZetacoreClient) GetZetaHotKeyBalance() (math.Int, error) {
 
 func (m *MockZetacoreClient) WithKeys(keys keyinterfaces.ObserverKeys) *MockZetacoreClient {
 	m.keys = keys
+	return m
+}
+
+func (m *MockZetacoreClient) WithBlockHeight(height int64) *MockZetacoreClient {
+	m.blockHeight = height
+	return m
+}
+
+func (m *MockZetacoreClient) WithUpgradedPlan(plan *upgradetypes.Plan) *MockZetacoreClient {
+	m.upgradePlan = plan
 	return m
 }
 

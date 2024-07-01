@@ -16,12 +16,12 @@ import (
 // AppContext contains zetaclient application context
 // these are initialized and updated at runtime periodically
 type AppContext struct {
-	config           config.Config
+	config           *config.Config
 	keygen           observertypes.Keygen
+	currentTssPubkey string
 	chainsEnabled    []chains.Chain
 	chainParamMap    map[int64]*observertypes.ChainParams
 	btcNetParams     *chaincfg.Params
-	currentTssPubkey string
 	crosschainFlags  observertypes.CrosschainFlags
 
 	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
@@ -29,36 +29,36 @@ type AppContext struct {
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
 
 	// mu is to protect the app context from concurrent access
-	mu *sync.RWMutex
+	mu sync.RWMutex
 }
 
-// NewAppContext creates and returns new AppContext
-// it is initializing chain params from provided config
-func NewAppContext(cfg config.Config) *AppContext {
+// NewAppContext creates empty app context with given config
+func NewAppContext(cfg *config.Config) *AppContext {
 	return &AppContext{
 		config:                   cfg,
 		chainsEnabled:            []chains.Chain{},
 		chainParamMap:            make(map[int64]*observertypes.ChainParams),
 		crosschainFlags:          observertypes.CrosschainFlags{},
 		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
-		mu:                       new(sync.RWMutex),
+		mu:                       sync.RWMutex{},
 	}
 }
 
 // SetConfig sets a new config to the app context
-func (c *AppContext) SetConfig(cfg config.Config) {
+func (c *AppContext) SetConfig(cfg *config.Config) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.config = cfg
 }
 
 // Config returns the app context config
-func (c *AppContext) Config() config.Config {
+func (c *AppContext) Config() *config.Config {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.config
 }
 
+// GetKeygen returns the current keygen information
 func (c *AppContext) GetKeygen() observertypes.Keygen {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -76,6 +76,7 @@ func (c *AppContext) GetKeygen() observertypes.Keygen {
 	}
 }
 
+// GetCurrentTssPubkey returns the current TSS public key
 func (c *AppContext) GetCurrentTssPubkey() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -87,6 +88,7 @@ func (c *AppContext) GetEnabledExternalChains() []chains.Chain {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
+	// deep copy chains
 	externalChains := make([]chains.Chain, 0)
 	for _, chain := range c.chainsEnabled {
 		if chain.IsExternal {
@@ -101,6 +103,7 @@ func (c *AppContext) GetEnabledBTCChains() []chains.Chain {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
+	// deep copy btc chains
 	btcChains := make([]chains.Chain, 0)
 	for _, chain := range c.chainsEnabled {
 		if chain.Consensus == chains.Consensus_bitcoin {
@@ -124,6 +127,7 @@ func (c *AppContext) GetEnabledExternalChainParams() map[int64]*observertypes.Ch
 	return copied
 }
 
+// GetExternalChainParams returns chain params for a specific chain ID
 func (c *AppContext) GetExternalChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -146,13 +150,6 @@ func (c *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return c.crosschainFlags
 }
 
-// GetAllHeaderEnabledChains returns all verification flags
-func (c *AppContext) GetAllHeaderEnabledChains() []lightclienttypes.HeaderSupportedChain {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.blockHeaderEnabledChains
-}
-
 // GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
 func (c *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
 	c.mu.RLock()
@@ -169,46 +166,33 @@ func (c *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttype
 // this must be the ONLY function that writes to app context
 func (c *AppContext) Update(
 	keygen observertypes.Keygen,
-	newChains []chains.Chain,
-	newChainParams map[int64]*observertypes.ChainParams,
-	btcNetParams *chaincfg.Params,
 	tssPubKey string,
+	chainsEnabled []chains.Chain,
+	chainParamMap map[int64]*observertypes.ChainParams,
+	btcNetParams *chaincfg.Params,
 	crosschainFlags observertypes.CrosschainFlags,
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
-	init bool,
 	logger zerolog.Logger,
 ) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	// Ignore whatever order zetacore organizes chain list in state
-	sort.SliceStable(newChains, func(i, j int) bool {
-		return newChains[i].ChainId < newChains[j].ChainId
+	sort.SliceStable(chainsEnabled, func(i, j int) bool {
+		return chainsEnabled[i].ChainId < chainsEnabled[j].ChainId
 	})
 
-	if len(newChains) == 0 {
-		logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
+	if len(chainsEnabled) == 0 {
+		logger.Warn().Msg("UpdateChainParams: no external chain enabled in the zetacore")
 	}
 
-	// Add some warnings if chain list changes at runtime
-	if !init {
-		if len(c.chainsEnabled) != len(newChains) {
-			logger.Warn().Msgf(
-				"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
-				c.chainsEnabled,
-				newChains,
-			)
-		} else {
-			for i, chain := range newChains {
-				if chain != c.chainsEnabled[i] {
-					logger.Warn().Msgf(
-						"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
-						c.chainsEnabled,
-						newChains,
-					)
-				}
-			}
-		}
+	// Add log print if the number of enabled chains changes at runtime
+	if len(c.chainsEnabled) != len(chainsEnabled) {
+		logger.Info().Msgf(
+			"UpdateChainParams: number of enabled chains changed at runtime!! before: %d, after: %d",
+			len(c.chainsEnabled),
+			len(chainsEnabled),
+		)
 	}
 
 	// btcNetParams points one of [mainnet, testnet, regnet]
@@ -218,8 +202,8 @@ func (c *AppContext) Update(
 	}
 
 	c.keygen = keygen
-	c.chainsEnabled = newChains
-	c.chainParamMap = newChainParams
+	c.chainsEnabled = chainsEnabled
+	c.chainParamMap = chainParamMap
 	c.currentTssPubkey = tssPubKey
 	c.crosschainFlags = crosschainFlags
 	c.blockHeaderEnabledChains = blockHeaderEnabledChains

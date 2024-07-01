@@ -17,7 +17,7 @@ func TestCctxRestricted(t *testing.T) {
 	cctx := testutils.LoadCctxByNonce(t, chain.ChainId, 6270)
 
 	// create config
-	cfg := config.Config{
+	cfg := &config.Config{
 		ComplianceConfig: config.ComplianceConfig{},
 	}
 

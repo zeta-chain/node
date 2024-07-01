@@ -82,7 +82,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// modify compliance config to restrict sender address
-		cfg := config.Config{
+		cfg := &config.Config{
 			ComplianceConfig: config.ComplianceConfig{},
 		}
 		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}

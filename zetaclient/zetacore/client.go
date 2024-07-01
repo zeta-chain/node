@@ -51,7 +51,7 @@ type Client struct {
 
 // CreateClient is a helper function to create a new instance of Client
 func CreateClient(
-	cfg config.Config,
+	cfg *config.Config,
 	telemetry *metrics.TelemetryServer,
 	hotkeyPassword string,
 ) (*Client, error) {
@@ -281,7 +281,7 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 	if err != nil {
 		return errors.Wrap(err, "GetCurrentTss failed")
 	}
-	tssPubKey := tss.GetTssPubkey()
+	currentTssPubkey := tss.GetTssPubkey()
 
 	// get latest crosschain flags
 	crosschainFlags, err := c.GetCrosschainFlags()
@@ -298,13 +298,12 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 	// update app context fields
 	appContext.Update(
 		*keyGen,
+		currentTssPubkey,
 		chainsEnabled,
 		chainParamMap,
 		btcNetParams,
-		tssPubKey,
 		crosschainFlags,
 		blockHeaderEnabledChains,
-		false,
 		logger,
 	)
 

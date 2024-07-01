@@ -1,0 +1,114 @@
+{
+  "Peer": "",
+  "PublicIP": "172.20.0.21",
+  "LogFormat": "text",
+  "LogLevel": 1,
+  "LogSampler": false,
+  "PreParamsPath": "/root/preparams/zetaclient0.json",
+  "ZetaCoreHome": "",
+  "ChainID": "athens_101-1",
+  "ZetaCoreURL": "zetacore0",
+  "AuthzGranter": "zeta1se2xay3sqeml2d8s3lumlgkkjmu4nsev0qyzaw",
+  "AuthzHotkey": "hotkey",
+  "P2PDiagnostic": false,
+  "ConfigUpdateTicker": 5,
+  "P2PDiagnosticTicker": 30,
+  "TssPath": "~/.tss",
+  "TestTssKeysign": false,
+  "KeyringBackend": "file",
+  "HsmMode": false,
+  "HsmHotKey": "hsm-hotkey",
+  "EVMChainConfigs": {
+    "1": {
+      "Chain": {
+        "chain_id": 1,
+        "chain_name": 1,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": ""
+    },
+    "11155111": {
+      "Chain": {
+        "chain_id": 11155111,
+        "chain_name": 13,
+        "network_type": 1,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": ""
+    },
+    "1337": {
+      "Chain": {
+        "chain_id": 1337,
+        "chain_name": 14,
+        "network_type": 2,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": "http://eth:8545"
+    },
+    "5": {
+      "Chain": {
+        "chain_id": 5,
+        "chain_name": 6,
+        "network_type": 1,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": ""
+    },
+    "56": {
+      "Chain": {
+        "chain_id": 56,
+        "chain_name": 5,
+        "network": 4,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": ""
+    },
+    "80001": {
+      "Chain": {
+        "chain_id": 80001,
+        "chain_name": 7,
+        "network": 3,
+        "network_type": 1,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": ""
+    },
+    "97": {
+      "Chain": {
+        "chain_id": 97,
+        "chain_name": 10,
+        "network": 4,
+        "network_type": 1,
+        "vm": 1,
+        "is_external": true,
+        "cctx_gateway": 1
+      },
+      "Endpoint": ""
+    }
+  },
+  "BitcoinConfig": {
+    "RPCUsername": "smoketest",
+    "RPCPassword": "123",
+    "RPCHost": "bitcoin:18443",
+    "RPCParams": "regtest"
+  },
+  "ComplianceConfig": {
+    "LogPath": "",
+    "RestrictedAddresses": [
+      "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6",
+      "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
+    ]
+  }
+}

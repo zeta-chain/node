@@ -239,13 +239,16 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
-	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
-		startLogger.Error().Msg("TSS address is not set in zetacore")
+	startLogger.Info().Msgf("Current TSS PubKey: %s", tss.CurrentPubkey)
+	if tss.EVMAddress() == (ethcommon.Address{}) {
+		return errors.New("Current TSS ETH address is empty")
 	}
-	startLogger.Info().
-		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.GetEnabledExternalChains()) == 0 {
-		startLogger.Error().Msgf("No external chains enabled in the zetacore %s ", cfg.String())
+	startLogger.Info().Msgf("Current TSS ETH address: %s", tss.EVMAddress())
+	if tss.BitcoinNetParams != nil {
+		if tss.BTCAddress() == "" {
+			return errors.New("Current TSS BTC address is empty")
+		}
+		startLogger.Info().Msgf("Current TSS BTC address: %s", tss.BTCAddress())
 	}
 
 	// Stop zetaclient if this node is not an active observer
@@ -289,7 +292,8 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
+	// Orchestrator wraps the app context, zetacore client, TSS and metrics server.
+	// This is the high level actor that monitors zetacore changes and coordinates CCTXs interactions.
 	orch := orchestrator.NewOrchestrator(
 		appContext,
 		zetacoreClient,

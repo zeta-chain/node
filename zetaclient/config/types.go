@@ -78,8 +78,8 @@ type Config struct {
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
 }
 
-func NewConfig() Config {
-	return Config{
+func NewConfig() *Config {
+	return &Config{
 		cfgLock:         &sync.RWMutex{},
 		EVMChainConfigs: make(map[int64]EVMConfig),
 	}

@@ -84,6 +84,15 @@ func (oc *Orchestrator) CreateObserversEVM(
 		connectorAddress := ethcommon.HexToAddress(chainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(chainParams.Erc20CustodyContractAddress)
 
+		// create RPC client
+		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
+		if err != nil {
+			oc.logger.Std.Error().
+				Err(err).
+				Msgf("CreateObserversEVM: error dailing endpoint %s for chain %d", evmConfig.Endpoint, evmConfig.Chain.ChainId)
+			continue
+		}
+
 		// create signer
 		signer, err := evmsigner.NewSigner(
 			evmConfig.Chain,
@@ -100,15 +109,6 @@ func (oc *Orchestrator) CreateObserversEVM(
 			oc.logger.Std.Error().
 				Err(err).
 				Msgf("CreateObserversEVM: error NewSigner for chain %d", evmConfig.Chain.ChainId)
-			continue
-		}
-
-		// create RPC client
-		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
-		if err != nil {
-			oc.logger.Std.Error().
-				Err(err).
-				Msgf("CreateObserversEVM: error dailing endpoint %s for chain %d", evmConfig.Endpoint, evmConfig.Chain.ChainId)
 			continue
 		}
 

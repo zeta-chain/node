@@ -14,7 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-func waitForZetaCore(config config.Config, logger zerolog.Logger) {
+func waitForZetaCore(config *config.Config, logger zerolog.Logger) {
 	// wait until zetacore is up
 	logger.Debug().Msg("Waiting for zetacore to open 9090 port...")
 	for {
@@ -55,8 +55,8 @@ func validatePeer(seedPeer string) error {
 // maskCfg sensitive fields are masked, currently only the EVM endpoints and bitcoin credentials,
 //
 //	other fields can be added.
-func maskCfg(cfg config.Config) string {
-	maskedCfg := cfg
+func maskCfg(cfg *config.Config) string {
+	maskedCfg := *cfg
 
 	maskedCfg.BitcoinConfig = config.BTCConfig{
 		RPCUsername: cfg.BitcoinConfig.RPCUsername,

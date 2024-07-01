@@ -22,6 +22,7 @@ const (
 	TestDataPathEVM          = "testdata/evm"
 	TestDataPathBTC          = "testdata/btc"
 	TestDataPathCctx         = "testdata/cctx"
+	TestDataPathConfig       = "testdata/config"
 	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
 	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
 )
@@ -48,6 +49,14 @@ func LoadObjectFromJSONFile(t *testing.T, obj interface{}, filename string) {
 	require.NoError(t, err)
 }
 
+// LoadZetaclientConfig loads archived zetaclient config JSON file
+func LoadZetaclientConfig(t *testing.T, dir string) *config.Config {
+	config := &config.Config{}
+	LoadObjectFromJSONFile(t, config, path.Join(dir, TestDataPathConfig, ConfigFileName()))
+	return config
+}
+
+// ComplianceConfigTest returns a test compliance config
 func ComplianceConfigTest() config.ComplianceConfig {
 	return config.ComplianceConfig{
 		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},

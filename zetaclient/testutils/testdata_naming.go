@@ -6,6 +6,11 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 )
 
+// ConfigFileName returns the archived zetaclient config file name
+func ConfigFileName() string {
+	return "zetaclient_config.json"
+}
+
 // FileNameEVMBlock returns unified archive file name for block
 func FileNameEVMBlock(chainID int64, blockNumber uint64, trimmed bool) string {
 	if !trimmed {

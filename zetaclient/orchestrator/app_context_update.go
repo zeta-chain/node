@@ -64,8 +64,6 @@ func (oc *Orchestrator) UpdateAppContext() error {
 	}
 
 	// set new config to app context
-	// we keep the old ZetaCoreHome because newConfig.ZetaCoreHome is empty after reload
-	newConfig.ZetaCoreHome = zetazoreHome
 	oc.appContext.SetConfig(newConfig)
 
 	return nil

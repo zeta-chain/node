@@ -30,7 +30,7 @@ func RunDiagnostics(
 	startLogger zerolog.Logger,
 	peers p2p.AddrList,
 	hotkeyPk cryptotypes.PrivKey,
-	cfg config.Config,
+	cfg *config.Config,
 ) error {
 	startLogger.Warn().Msg("P2P Diagnostic mode enabled")
 	startLogger.Warn().Msgf("seed peer: %s", peers)

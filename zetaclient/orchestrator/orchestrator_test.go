@@ -79,13 +79,12 @@ func CreateTestAppContext(
 	// feed chain params
 	appContext.Update(
 		observertypes.Keygen{},
+		"",
 		[]chains.Chain{evmChain, btcChain},
 		chainParamsMap,
 		&chaincfg.RegressionNetParams,
-		"",
 		*ccFlags,
 		verificationFlags,
-		true,
 		zerolog.Logger{},
 	)
 	return appContext
