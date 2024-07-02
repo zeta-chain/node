@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -26,7 +27,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 )
@@ -44,8 +45,7 @@ func init() {
 }
 
 func start(_ *cobra.Command, _ []string) error {
-	err := setHomeDir()
-	if err != nil {
+	if err := setHomeDir(); err != nil {
 		return err
 	}
 
@@ -62,23 +62,24 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	logger, err := base.InitLogger(cfg)
 	if err != nil {
-		log.Error().Err(err).Msg("InitLogger failed")
-		return err
+		return errors.Wrap(err, "initLogger failed")
 	}
 
-	//Wait until zetacore has started
+	// Wait until zetacore has started
 	if len(cfg.Peer) != 0 {
-		err := validatePeer(cfg.Peer)
-		if err != nil {
-			log.Error().Err(err).Msg("invalid peer")
-			return err
+		if err := validatePeer(cfg.Peer); err != nil {
+			return errors.Wrap(err, "unable to validate peer")
 		}
 	}
 
 	masterLogger := logger.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
+
+	appContext := zctx.New(cfg, masterLogger)
+	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	// Wait until zetacore is up
 	waitForZetaCore(cfg, startLogger)
@@ -102,8 +103,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Wait until zetacore is ready to create blocks
-	err = zetacoreClient.WaitForZetacoreToCreateBlocks()
-	if err != nil {
+	if err = zetacoreClient.WaitForZetacoreToCreateBlocks(ctx); err != nil {
 		startLogger.Error().Err(err).Msg("WaitForZetacoreToCreateBlocks error")
 		return err
 	}
@@ -117,7 +117,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// cross-check chainid
-	res, err := zetacoreClient.GetNodeInfo()
+	res, err := zetacoreClient.GetNodeInfo(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetNodeInfo error")
 		return err
@@ -144,8 +144,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	appContext := context.New(cfg, masterLogger)
-	err = zetacoreClient.UpdateZetacoreContext(appContext, true, startLogger)
+	err = zetacoreClient.UpdateZetacoreContext(ctx, appContext, true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
@@ -195,7 +194,7 @@ func start(_ *cobra.Command, _ []string) error {
 	metrics.LastStartTime.SetToCurrentTime()
 
 	var tssHistoricalList []observerTypes.TSS
-	tssHistoricalList, err = zetacoreClient.GetTssHistory()
+	tssHistoricalList, err = zetacoreClient.GetTSSHistory(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")
 	}
@@ -237,7 +236,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
 	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
-	currentTss, err := zetacoreClient.GetCurrentTss()
+	currentTss, err := zetacoreClient.GetCurrentTSS(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetCurrentTSS error")
 		return err
@@ -254,7 +253,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
-	observerList, err := zetacoreClient.GetObserverList()
+	observerList, err := zetacoreClient.GetObserverList(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetObserverList error")
 		return err
