@@ -100,6 +100,7 @@
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
 * [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
+* [2400](https://github.com/zeta-chain/node/pull/2400) - ci: adjusted the performance test to pass or fail pipeline based on test results, alert slack, and launch network with state. Fixed connection issues as well.
 
 ### Documentation
 
