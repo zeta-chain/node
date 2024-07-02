@@ -97,7 +97,7 @@ func NewSigner(
 	baseSigner := base.NewSigner(chain, appContext, tss, ts, logger)
 
 	// create EVM client
-	client, ethSigner, err := getEVMRPC(endpoint)
+	client, ethSigner, err := getEVMRPC(endpoint, chain.ChainId)
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +814,7 @@ func (signer *Signer) reportToOutboundTracker(
 }
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
-func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
+func getEVMRPC(endpoint string, chainID int64) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
 	if endpoint == mocks.EVMRPCEnabled {
 		chainID := big.NewInt(chains.BscMainnet.ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
@@ -827,11 +827,7 @@ func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error
 		return nil, nil, err
 	}
 
-	chainID, err := client.ChainID(context.TODO())
-	if err != nil {
-		return nil, nil, err
-	}
-	ethSigner := ethtypes.LatestSignerForChainID(chainID)
+	ethSigner := ethtypes.LatestSignerForChainID(big.NewInt(chainID))
 	return client, ethSigner, nil
 }
 

@@ -433,7 +433,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 func TestSigner_getEVMRPC(t *testing.T) {
 	t.Run("getEVMRPC error dialing", func(t *testing.T) {
-		client, signer, err := getEVMRPC("invalidEndpoint")
+		client, signer, err := getEVMRPC("invalidEndpoint", chains.Ethereum.ChainId)
 		require.Nil(t, client)
 		require.Nil(t, signer)
 		require.Error(t, err)
