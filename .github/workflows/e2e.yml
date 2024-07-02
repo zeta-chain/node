@@ -1,0 +1,26 @@
+name: e2e
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  e2e:
+    strategy:
+      matrix:
+        include:
+          - make_target: "start-e2e-test"
+            runs_on: ubuntu-20.04
+            run: true
+          - make_target: "start-upgrade-test-light"
+            runs_on: ubuntu-20.04
+            run: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'MINIMAL_CI') }}
+    uses: ./.github/actions/e2e.yml
+    with:
+      make_target: ${{ matrix.make_target }}
+      runs_on: ${{ matrix.runs_on}}
+      run: ${{ matrix.run }}
