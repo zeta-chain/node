@@ -1,6 +1,9 @@
 package zetacore
 
 const (
+	// DefaultBaseGasPrice is the default base gas price
+	DefaultBaseGasPrice = 1_000_000
+
 	// DefaultGasLimit is the default gas limit used for broadcasting txs
 	DefaultGasLimit = 200_000
 
