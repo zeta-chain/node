@@ -13,14 +13,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - make_target: "start-e2e-test"
-            runs_on: ubuntu-20.04
+          - make-target: "start-e2e-test"
+            runs-on: ubuntu-20.04
             run: true
-          - make_target: "start-upgrade-test-light"
-            runs_on: ubuntu-20.04
+          - make-target: "start-upgrade-test-light"
+            runs-on: ubuntu-20.04
             run: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'MINIMAL_CI') }}
-    uses: ./.github/actions/e2e.yml
+    uses: ./.github/workflows/reusable-e2e.yml
     with:
-      make_target: ${{ matrix.make_target }}
-      runs_on: ${{ matrix.runs_on}}
+      make-target: ${{ matrix.make-target }}
+      runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}

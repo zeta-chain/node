@@ -2,11 +2,11 @@ name: Reusable E2E Testing Workflow
 on:
   workflow_call:
     inputs:
-      make_target:
+      make-target:
         description: 'Makefile target to execute in the Start Test step'
         required: true
         type: string
-      timeout_minutes:
+      timeout-minutes:
         description: 'The maximum number of minutes the job can run'
         type: number
         default: 25
@@ -14,7 +14,7 @@ on:
         description: 'Whether to run the job or not'
         required: true
         type: boolean
-      runs_on:
+      runs-on:
         description: 'The runner to use for the job'
         required: true
         type: string
@@ -22,9 +22,9 @@ on:
 
 jobs:
   e2e-test:
-    if: ${{ run }}
-    runs-on: ${{ runs_on }}
-    timeout-minutes: ${{ inputs.timeout_minutes }}
+    if: ${{ inputs.run }}
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
       - uses: actions/checkout@v4
       
