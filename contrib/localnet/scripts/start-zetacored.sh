@@ -85,16 +85,6 @@ export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
 
-# generate node list
-START=1
-# shellcheck disable=SC2100
-END=$((ZETACORED_REPLICAS - 1))
-NODELIST=()
-for i in $(eval echo "{$START..$END}")
-do
-  NODELIST+=("zetacore$i")
-done
-
 echo "HOSTNAME: $HOSTNAME"
 
 # init ssh keys
@@ -162,6 +152,21 @@ fi
 # Skip genesis if it has already been completed (marked by presence of ~/.zetacored/init_complete file)
 if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
+  ZETACORED_REPLICAS=2
+  if host zetacore3 ; then
+    echo "zetacore3 exists, setting ZETACORED_REPLICAS to 4"
+    ZETACORED_REPLICAS=4
+  fi
+  # generate node list
+  START=1
+  # shellcheck disable=SC2100
+  END=$((ZETACORED_REPLICAS - 1))
+  NODELIST=()
+  for i in $(eval echo "{$START..$END}")
+  do
+    NODELIST+=("zetacore$i")
+  done
+
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient0 mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* zetaclient0:~/.zetacored/keyring-test/
