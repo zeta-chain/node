@@ -21,7 +21,7 @@ on:
         default: 'ubuntu-20.04'
 
 jobs:
-  e2e-test:
+  e2e:
     if: ${{ inputs.run }}
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: ${{ inputs.timeout-minutes }}
@@ -80,7 +80,7 @@ jobs:
           target: latest-runtime
 
       - name: Start Test
-        run: make ${{ inputs.make_target }}
+        run: make ${{ inputs.make-target }}
 
       # use docker logs -f rather than docker attach to make sure we get the initial logs
       - name: Watch Test

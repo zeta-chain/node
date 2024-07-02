@@ -24,3 +24,9 @@ jobs:
       make-target: ${{ matrix.make-target }}
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
+    secrets: inherit
+  ok:
+    runs-on: ubuntu-latest
+    needs: e2e
+    steps:
+      - run: echo "e2e tests passed"
