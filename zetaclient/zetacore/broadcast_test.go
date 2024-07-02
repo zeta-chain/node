@@ -112,13 +112,3 @@ func TestBroadcast(t *testing.T) {
 		require.Error(t, err)
 	})
 }
-
-func TestZetacore_GetContext(t *testing.T) {
-	address := types.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client, err := setupZetacoreClient()
-	require.NoError(t, err)
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")
-
-	_, err = client.GetContext()
-	require.NoError(t, err)
-}
