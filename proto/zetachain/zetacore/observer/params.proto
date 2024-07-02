@@ -29,6 +29,7 @@ message ChainParams {
     (gogoproto.nullable) = false
   ];
   bool is_supported = 16;
+  string gateway_address = 17;
 }
 
 // Deprecated(v17)

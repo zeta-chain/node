@@ -91,6 +91,20 @@ var (
 		CctxGateway: CCTXGateway_observers,
 	}
 
+	// SolanaMainnet is Solana mainnet
+	// TODO: define final chain ID
+	// https://github.com/zeta-chain/node/issues/2421
+	SolanaMainnet = Chain{
+		ChainName:   ChainName_solana_mainnet,
+		ChainId:     900,
+		Network:     Network_solana,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_svm,
+		Consensus:   Consensus_solana_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
 	/**
 	* Testnet chains
 	 */
@@ -179,6 +193,22 @@ var (
 		CctxGateway: CCTXGateway_observers,
 	}
 
+	// SolanaDevnet is Solana devnet
+	// NOTE: Solana devnet refers to Solana testnet in our terminology
+	// Solana uses devnet denomitation for network for development
+	// TODO: define final chain ID
+	// https://github.com/zeta-chain/node/issues/2421
+	SolanaDevnet = Chain{
+		ChainName:   ChainName_solana_devnet,
+		ChainId:     901,
+		Network:     Network_solana,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_svm,
+		Consensus:   Consensus_solana_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
 	/**
 	* Devnet chains
 	 */
@@ -232,6 +262,20 @@ var (
 		NetworkType: NetworkType_privnet,
 		Vm:          Vm_evm,
 		Consensus:   Consensus_ethereum,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+	}
+
+	// SolanaLocalnet is Solana localnet
+	// TODO: define final chain ID
+	// https://github.com/zeta-chain/node/issues/2421
+	SolanaLocalnet = Chain{
+		ChainName:   ChainName_solana_localnet,
+		ChainId:     902,
+		Network:     Network_solana,
+		NetworkType: NetworkType_privnet,
+		Vm:          Vm_svm,
+		Consensus:   Consensus_solana_consensus,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
 	}
@@ -296,6 +340,9 @@ func DefaultChainsList() []Chain {
 		OptimismSepolia,
 		BaseMainnet,
 		BaseSepolia,
+		SolanaMainnet,
+		SolanaDevnet,
+		SolanaLocalnet,
 	}
 }
 
