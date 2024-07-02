@@ -81,5 +81,12 @@ jobs:
   ok:
     runs-on: ubuntu-22.04
     needs: e2e
+    if: always()
     steps:
-      - run: echo "e2e tests passed"
+      - run: |
+          result="${{ needs.e2e.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
