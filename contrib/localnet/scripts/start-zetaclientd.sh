@@ -7,7 +7,6 @@
 /usr/sbin/sshd
 
 HOSTNAME=$(hostname)
-OPTION=$1
 export ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD=true
 
 # sepolia is used in chain migration tests, this functions set the sepolia endpoint in the zetaclient_config.json
@@ -28,14 +27,11 @@ while [ ! -f ~/.ssh/authorized_keys ]; do
     sleep 1
 done
 
-
-
 # need to wait for zetacore0 to be up
 while ! curl -s -o /dev/null zetacore0:26657/status ; do
     echo "Waiting for zetacore0 rpc"
     sleep 10
 done
-
 
 # read HOTKEY_BACKEND env var for hotkey keyring backend and set default to test
 BACKEND="test"
@@ -60,10 +56,11 @@ then
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
-    # check if the option is additional-evm
+    # if eth2 is enabled, set the endpoint in the zetaclient_config.json
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
     # in /root/.zetacored/config/zetaclient_config.json
-    if [[ -n $ADDITIONAL_EVM ]]; then
+    if host eth2 ; then
+     echo "enabling additional evm (eth2)"
      set_sepolia_endpoint
     fi
 fi

@@ -1,8 +1,5 @@
 version: "3"
-# This docker-compose redefine the services:
-# - ZetaChain with 2 nodes (zetacore0, zetacore1) using the upgrade option for cosmovisor
-# - ZetaChain observer set with 2 clients (zetaclient0, zetaclient1) using the background option
-# - Orchestrator with upgrade option
+# This docker-compose updates the services to use the old version of the zetanode image
 
 services:
   zetacore0:
@@ -11,36 +8,20 @@ services:
   zetacore1:
     image: zetanode:old
 
+  zetacore2:
+    image: zetanode:old
+
+  zetacore3:
+    image: zetanode:old
+
   zetaclient0:
     image: zetanode:old
 
   zetaclient1:
     image: zetanode:old
 
-  upgrade-host:
-    image: zetanode:latest
-    container_name: upgrade-host
-    hostname: upgrade-host
-    entrypoint: ["/root/start-upgrade-host.sh"]
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.250
-    volumes:
-      - ssh:/root/.ssh
-
-  upgrade-orchestrator:
-    # must run from old node for api compatibility
+  zetaclient2:
     image: zetanode:old
-    container_name: upgrade-orchestrator
-    hostname: upgrade-orchestrator
-    entrypoint: ["/root/start-upgrade-orchestrator.sh"]
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.251
-    depends_on:
-      - zetacore0
-      - upgrade-host
-    environment:
-      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT}
-    volumes:
-      - ssh:/root/.ssh
+
+  zetaclient3:  
+    image: zetanode:old
