@@ -33,7 +33,7 @@ func (k Keeper) GetChainInfo(ctx sdk.Context) (val types.ChainInfo, found bool) 
 func (k Keeper) GetAdditionalChainList(ctx sdk.Context) []chains.Chain {
 	chainInfo, found := k.GetChainInfo(ctx)
 	if !found {
-		return []chains.Chain{}
+		return nil
 	}
 	return chainInfo.Chains
 }
