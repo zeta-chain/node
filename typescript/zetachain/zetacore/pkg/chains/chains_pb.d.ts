@@ -139,9 +139,9 @@ export declare enum ChainName {
   solana_mainnet = 21,
 
   /**
-   * @generated from enum value: solana_testnet = 22;
+   * @generated from enum value: solana_devnet = 22;
    */
-  solana_testnet = 22,
+  solana_devnet = 22,
 
   /**
    * @generated from enum value: solana_localnet = 23;

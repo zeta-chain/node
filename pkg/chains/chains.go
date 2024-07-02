@@ -92,6 +92,8 @@ var (
 	}
 
 	// SolanaMainnet is Solana mainnet
+	// TODO: define final chain ID
+	// https://github.com/zeta-chain/node/issues/2421
 	SolanaMainnet = Chain{
 		ChainName:   ChainName_solana_mainnet,
 		ChainId:     900,
@@ -191,9 +193,13 @@ var (
 		CctxGateway: CCTXGateway_observers,
 	}
 
-	// SolanaTestnet is Solana testnet
-	SolanaTestnet = Chain{
-		ChainName:   ChainName_solana_testnet,
+	// SolanaDevnet is Solana devnet
+	// NOTE: Solana devnet refers to Solana testnet in our terminology
+	// Solana uses devnet denomitation for network for development
+	// TODO: define final chain ID
+	// https://github.com/zeta-chain/node/issues/2421
+	SolanaDevnet = Chain{
+		ChainName:   ChainName_solana_devnet,
 		ChainId:     901,
 		Network:     Network_solana,
 		NetworkType: NetworkType_testnet,
@@ -261,6 +267,8 @@ var (
 	}
 
 	// SolanaLocalnet is Solana localnet
+	// TODO: define final chain ID
+	// https://github.com/zeta-chain/node/issues/2421
 	SolanaLocalnet = Chain{
 		ChainName:   ChainName_solana_localnet,
 		ChainId:     902,
@@ -333,7 +341,7 @@ func DefaultChainsList() []Chain {
 		BaseMainnet,
 		BaseSepolia,
 		SolanaMainnet,
-		SolanaTestnet,
+		SolanaDevnet,
 		SolanaLocalnet,
 	}
 }

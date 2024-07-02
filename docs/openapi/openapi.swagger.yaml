@@ -56966,7 +56966,7 @@ definitions:
       - base_mainnet
       - base_sepolia
       - solana_mainnet
-      - solana_testnet
+      - solana_devnet
       - solana_localnet
     default: empty
     title: ChainName represents the name of the chain

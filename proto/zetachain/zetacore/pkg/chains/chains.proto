@@ -45,7 +45,7 @@ enum ChainName {
   base_sepolia = 20;
 
   solana_mainnet = 21;
-  solana_testnet = 22;
+  solana_devnet = 22;
   solana_localnet = 23;
 }
 
