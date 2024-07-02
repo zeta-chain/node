@@ -363,7 +363,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutboundData(signer.ZetacoreContext(), cctx, evmObserver, signer.client, logger, height)
+	txData, skipTx, err := NewOutboundData(signer.AppContext(), cctx, evmObserver, signer.client, logger, height)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -374,7 +374,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	toChain, found := chains.GetChainFromChainID(
 		txData.toChainID.Int64(),
-		signer.ZetacoreContext().GetAdditionalChains(),
+		signer.AppContext().GetAdditionalChains(),
 	)
 	if !found {
 		logger.Warn().Msgf("unknown chain: %d", txData.toChainID.Int64())
@@ -547,7 +547,7 @@ func (signer *Signer) BroadcastOutbound(
 	// Get destination chain for logging
 	toChain, found := chains.GetChainFromChainID(
 		txData.toChainID.Int64(),
-		signer.ZetacoreContext().GetAdditionalChains(),
+		signer.AppContext().GetAdditionalChains(),
 	)
 	if !found {
 		logger.Warn().Msgf("BroadcastOutbound: unknown chain %d", txData.toChainID.Int64())

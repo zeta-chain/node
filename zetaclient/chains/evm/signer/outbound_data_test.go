@@ -76,7 +76,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 	t.Run("NewOutboundData success", func(t *testing.T) {
 		cctx := getCCTX(t)
 		_, skip, err := NewOutboundData(
-			evmSigner.ZetacoreContext(),
+			evmSigner.AppContext(),
 			cctx,
 			mockObserver,
 			evmSigner.EvmClient(),
@@ -91,7 +91,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		cctx := getCCTX(t)
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
 		_, skip, err := NewOutboundData(
-			evmSigner.ZetacoreContext(),
+			evmSigner.AppContext(),
 			cctx,
 			mockObserver,
 			evmSigner.EvmClient(),
@@ -106,7 +106,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		cctx := getInvalidCCTX(t)
 		require.NoError(t, err)
 		_, skip, err := NewOutboundData(
-			evmSigner.ZetacoreContext(),
+			evmSigner.AppContext(),
 			cctx,
 			mockObserver,
 			evmSigner.EvmClient(),
@@ -122,7 +122,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		require.NoError(t, err)
 		cctx.GetCurrentOutboundParam().GasPrice = "invalidGasPrice"
 		_, skip, err := NewOutboundData(
-			evmSigner.ZetacoreContext(),
+			evmSigner.AppContext(),
 			cctx,
 			mockObserver,
 			evmSigner.EvmClient(),

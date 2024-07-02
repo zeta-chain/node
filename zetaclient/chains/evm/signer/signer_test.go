@@ -181,7 +181,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -222,7 +222,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -267,7 +267,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -312,7 +312,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -355,7 +355,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -407,7 +407,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -452,7 +452,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -509,7 +509,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),
@@ -559,7 +559,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(
-		evmSigner.ZetacoreContext(),
+		evmSigner.AppContext(),
 		cctx,
 		mockObserver,
 		evmSigner.EvmClient(),

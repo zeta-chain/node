@@ -45,8 +45,6 @@ func NewZetaSupplyChecker(
 		return ZetaSupplyChecker{}, err
 	}
 
-	coreContext := appContext.ZetacoreContext()
-
 	zetaSupplyChecker := ZetaSupplyChecker{
 		stop:      make(chan struct{}),
 		ticker:    dynamicTicker,
@@ -69,10 +67,8 @@ func NewZetaSupplyChecker(
 		zetaSupplyChecker.evmClient[evmConfig.Chain.ChainId] = client
 	}
 
-	additionalChains := coreContext.GetAdditionalChains()
-
 	for chainID := range zetaSupplyChecker.evmClient {
-		chain, found := chains.GetChainFromChainID(chainID, additionalChains)
+		chain, found := chains.GetChainFromChainID(chainID, appContext.GetAdditionalChains())
 		if !found {
 			return zetaSupplyChecker, fmt.Errorf("chain not found for chain id %d", chainID)
 		}

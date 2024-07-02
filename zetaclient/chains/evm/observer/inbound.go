@@ -644,7 +644,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 ) *types.MsgVoteInbound {
 	destChain, found := chains.GetChainFromChainID(
 		event.DestinationChainId.Int64(),
-		ob.ZetacoreContext().GetAdditionalChains(),
+		ob.AppContext().GetAdditionalChains(),
 	)
 	if !found {
 		ob.Logger().Inbound.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())

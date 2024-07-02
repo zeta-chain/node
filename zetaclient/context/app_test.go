@@ -411,6 +411,7 @@ func TestGetBTCChainAndConfig(t *testing.T) {
 					&observertypes.ChainParams{ChainId: 123},
 					"",
 					observertypes.CrosschainFlags{},
+					[]chains.Chain{},
 					nil,
 					true,
 				)
@@ -428,6 +429,7 @@ func TestGetBTCChainAndConfig(t *testing.T) {
 					&observertypes.ChainParams{ChainId: chains.BitcoinMainnet.ChainId},
 					"",
 					observertypes.CrosschainFlags{},
+					[]chains.Chain{},
 					nil,
 					true,
 				)
@@ -471,6 +473,7 @@ func TestGetBlockHeaderEnabledChains(t *testing.T) {
 		&observertypes.ChainParams{ChainId: chains.BitcoinMainnet.ChainId},
 		"",
 		observertypes.CrosschainFlags{},
+		[]chains.Chain{},
 		[]lightclienttypes.HeaderSupportedChain{
 			{ChainId: 1, Enabled: true},
 		},
@@ -491,6 +494,39 @@ func TestGetBlockHeaderEnabledChains(t *testing.T) {
 	// ASSERT #2
 	assert.False(t, found)
 	assert.Empty(t, chain)
+}
+
+func TestGetAdditionalChains(t *testing.T) {
+	// ARRANGE
+	// Given app config
+	appContext := context.New(config.New(), zerolog.Nop())
+
+	additionalChains := []chains.Chain{
+		sample.Chain(1),
+		sample.Chain(2),
+		sample.Chain(3),
+	}
+
+	// That was eventually updated
+	appContext.Update(
+		&observertypes.Keygen{},
+		[]chains.Chain{},
+		nil,
+		&observertypes.ChainParams{},
+		"",
+		observertypes.CrosschainFlags{},
+		additionalChains,
+		[]lightclienttypes.HeaderSupportedChain{
+			{ChainId: 1, Enabled: true},
+		},
+		true,
+	)
+
+	// ACT
+	found := appContext.GetAdditionalChains()
+
+	// ASSERT
+	assert.EqualValues(t, additionalChains, found)
 }
 
 func makeAppContext(
@@ -519,6 +555,7 @@ func makeAppContext(
 		nil,
 		"",
 		ccFlags,
+		[]chains.Chain{},
 		headerSupportedChains,
 		true,
 	)

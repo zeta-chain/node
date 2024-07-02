@@ -112,7 +112,7 @@ func (txData *OutboundData) SetupGas(
 //     cctx will be skipped and false otherwise.
 //  3. error
 func NewOutboundData(
-	coreContext *clientcontext.ZetacoreContext,
+	appontext *clientcontext.AppContext,
 	cctx *types.CrossChainTx,
 	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
@@ -134,7 +134,7 @@ func NewOutboundData(
 		return nil, true, nil
 	}
 
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), coreContext.GetAdditionalChains())
+	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), appontext.GetAdditionalChains())
 	if !found {
 		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}
