@@ -60,10 +60,10 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	totalSupply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	require.NoError(r, err)
 
-	balance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	balance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
-	approval, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.DeployerAddress, approved)
+	approval, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.EVMAddress(), approved)
 	require.NoError(r, err)
 
 	r.Logger.Info("Updating the bytecode of the ZRC20")
@@ -95,11 +95,11 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 	require.Equal(r, 0, totalSupply.Cmp(newTotalSupply))
 
-	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, 0, balance.Cmp(newBalance))
 
-	newApproval, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.DeployerAddress, approved)
+	newApproval, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.EVMAddress(), approved)
 	require.NoError(r, err)
 	require.Equal(r, 0, approval.Cmp(newApproval))
 

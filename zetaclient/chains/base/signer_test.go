@@ -3,6 +3,7 @@ package base_test
 import (
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -17,12 +18,12 @@ import (
 func createSigner(_ *testing.T) *base.Signer {
 	// constructor parameters
 	chain := chains.Ethereum
-	zetacoreContext := context.NewZetacoreContext(config.NewConfig())
+	appContext := context.New(config.NewConfig(), zerolog.Nop())
 	tss := mocks.NewTSSMainnet()
 	logger := base.DefaultLogger()
 
 	// create signer
-	return base.NewSigner(chain, zetacoreContext, tss, nil, logger)
+	return base.NewSigner(chain, appContext, tss, nil, logger)
 }
 
 func TestNewSigner(t *testing.T) {
@@ -38,14 +39,6 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		newChain := chains.BscMainnet
 		signer = signer.WithChain(chains.BscMainnet)
 		require.Equal(t, newChain, signer.Chain())
-	})
-	t.Run("should be able to update zetacore context", func(t *testing.T) {
-		signer := createSigner(t)
-
-		// update zetacore context
-		newZetacoreContext := context.NewZetacoreContext(config.NewConfig())
-		signer = signer.WithZetacoreContext(newZetacoreContext)
-		require.Equal(t, newZetacoreContext, signer.ZetacoreContext())
 	})
 	t.Run("should be able to update tss", func(t *testing.T) {
 		signer := createSigner(t)

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
@@ -16,8 +14,7 @@ func RunnerFromConfig(
 	name string,
 	ctxCancel context.CancelFunc,
 	conf config.Config,
-	evmUserAddr ethcommon.Address,
-	evmUserPrivKey string,
+	account config.Account,
 	logger *runner.Logger,
 	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
@@ -33,7 +30,7 @@ func RunnerFromConfig(
 		lightClient,
 		zevmClient,
 		zevmAuth,
-		err := getClientsFromConfig(ctx, conf, evmUserPrivKey)
+		err := getClientsFromConfig(ctx, conf, account)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clients from config: %w", err)
 	}
@@ -43,8 +40,7 @@ func RunnerFromConfig(
 		ctx,
 		name,
 		ctxCancel,
-		evmUserAddr,
-		evmUserPrivKey,
+		account,
 		evmClient,
 		zevmClient,
 		cctxClient,
@@ -79,23 +75,23 @@ func RunnerFromConfig(
 // ExportContractsFromRunner export contracts from the runner to config using a source config
 func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.Config {
 	// copy contracts from deployer runner
-	conf.Contracts.EVM.ZetaEthAddress = r.ZetaEthAddr.Hex()
-	conf.Contracts.EVM.ConnectorEthAddr = r.ConnectorEthAddr.Hex()
-	conf.Contracts.EVM.CustodyAddr = r.ERC20CustodyAddr.Hex()
-	conf.Contracts.EVM.ERC20 = r.ERC20Addr.Hex()
-	conf.Contracts.EVM.TestDappAddr = r.EvmTestDAppAddr.Hex()
+	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
+	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())
+	conf.Contracts.EVM.CustodyAddr = config.DoubleQuotedString(r.ERC20CustodyAddr.Hex())
+	conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(r.ERC20Addr.Hex())
+	conf.Contracts.EVM.TestDappAddr = config.DoubleQuotedString(r.EvmTestDAppAddr.Hex())
 
-	conf.Contracts.ZEVM.SystemContractAddr = r.SystemContractAddr.Hex()
-	conf.Contracts.ZEVM.ETHZRC20Addr = r.ETHZRC20Addr.Hex()
-	conf.Contracts.ZEVM.ERC20ZRC20Addr = r.ERC20ZRC20Addr.Hex()
-	conf.Contracts.ZEVM.BTCZRC20Addr = r.BTCZRC20Addr.Hex()
-	conf.Contracts.ZEVM.UniswapFactoryAddr = r.UniswapV2FactoryAddr.Hex()
-	conf.Contracts.ZEVM.UniswapRouterAddr = r.UniswapV2RouterAddr.Hex()
-	conf.Contracts.ZEVM.ConnectorZEVMAddr = r.ConnectorZEVMAddr.Hex()
-	conf.Contracts.ZEVM.WZetaAddr = r.WZetaAddr.Hex()
-	conf.Contracts.ZEVM.ZEVMSwapAppAddr = r.ZEVMSwapAppAddr.Hex()
-	conf.Contracts.ZEVM.ContextAppAddr = r.ContextAppAddr.Hex()
-	conf.Contracts.ZEVM.TestDappAddr = r.ZevmTestDAppAddr.Hex()
+	conf.Contracts.ZEVM.SystemContractAddr = config.DoubleQuotedString(r.SystemContractAddr.Hex())
+	conf.Contracts.ZEVM.ETHZRC20Addr = config.DoubleQuotedString(r.ETHZRC20Addr.Hex())
+	conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(r.ERC20ZRC20Addr.Hex())
+	conf.Contracts.ZEVM.BTCZRC20Addr = config.DoubleQuotedString(r.BTCZRC20Addr.Hex())
+	conf.Contracts.ZEVM.UniswapFactoryAddr = config.DoubleQuotedString(r.UniswapV2FactoryAddr.Hex())
+	conf.Contracts.ZEVM.UniswapRouterAddr = config.DoubleQuotedString(r.UniswapV2RouterAddr.Hex())
+	conf.Contracts.ZEVM.ConnectorZEVMAddr = config.DoubleQuotedString(r.ConnectorZEVMAddr.Hex())
+	conf.Contracts.ZEVM.WZetaAddr = config.DoubleQuotedString(r.WZetaAddr.Hex())
+	conf.Contracts.ZEVM.ZEVMSwapAppAddr = config.DoubleQuotedString(r.ZEVMSwapAppAddr.Hex())
+	conf.Contracts.ZEVM.ContextAppAddr = config.DoubleQuotedString(r.ContextAppAddr.Hex())
+	conf.Contracts.ZEVM.TestDappAddr = config.DoubleQuotedString(r.ZevmTestDAppAddr.Hex())
 
 	return conf
 }

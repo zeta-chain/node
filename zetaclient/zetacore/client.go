@@ -193,11 +193,7 @@ func (c *Client) WaitForZetacoreToCreateBlocks() error {
 
 // UpdateZetacoreContext updates zetacore context
 // zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(
-	coreContext *context.ZetacoreContext,
-	init bool,
-	sampledLogger zerolog.Logger,
-) error {
+func (c *Client) UpdateZetacoreContext(coreContext *context.AppContext, init bool, sampledLogger zerolog.Logger) error {
 	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)
@@ -284,7 +280,6 @@ func (c *Client) UpdateZetacoreContext(
 		additionalChains,
 		blockHeaderEnabledChains,
 		init,
-		c.logger,
 	)
 
 	return nil

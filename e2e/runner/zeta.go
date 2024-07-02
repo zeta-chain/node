@@ -66,7 +66,7 @@ func (r *E2ERunner) DepositZeta() ethcommon.Hash {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
-	return r.DepositZetaWithAmount(r.DeployerAddress, amount)
+	return r.DepositZetaWithAmount(r.EVMAddress(), amount)
 }
 
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
@@ -149,7 +149,7 @@ func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Tr
 
 	tx, err := r.ConnectorZEVM.Send(r.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
-		DestinationAddress:  r.DeployerAddress.Bytes(),
+		DestinationAddress:  r.EVMAddress().Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
@@ -182,7 +182,7 @@ func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Tr
 // WithdrawEther withdraws Ether from ZetaChain to the ZETA smart contract on EVM
 func (r *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
 	// withdraw
-	tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), amount)
+	tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
 	require.NoError(r, err)
 
 	r.Logger.EVMTransaction(*tx, "withdraw")
@@ -198,7 +198,7 @@ func (r *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
 
 // WithdrawERC20 withdraws an ERC20 token from ZetaChain to the ZETA smart contract on EVM
 func (r *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
-	tx, err := r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), amount)
+	tx, err := r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
 	require.NoError(r, err)
 
 	r.Logger.EVMTransaction(*tx, "withdraw")

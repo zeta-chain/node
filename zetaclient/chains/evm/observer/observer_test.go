@@ -37,7 +37,7 @@ func getZetacoreContext(
 	evmChain chains.Chain,
 	endpoint string,
 	evmChainParams *observertypes.ChainParams,
-) (*context.ZetacoreContext, config.EVMConfig) {
+) (*context.AppContext, config.EVMConfig) {
 	// use default endpoint if not provided
 	if endpoint == "" {
 		endpoint = "http://localhost:8545"
@@ -51,12 +51,12 @@ func getZetacoreContext(
 	}
 
 	// create zetacore context
-	coreCtx := context.NewZetacoreContext(cfg)
+	appContext := context.New(cfg, zerolog.Nop())
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 
 	// feed chain params
-	coreCtx.Update(
+	appContext.Update(
 		&observertypes.Keygen{},
 		[]chains.Chain{evmChain},
 		evmChainParamsMap,
@@ -66,10 +66,9 @@ func getZetacoreContext(
 		[]chains.Chain{},
 		sample.HeaderSupportedChains(),
 		true,
-		zerolog.Logger{},
 	)
 	// create app context
-	return coreCtx, cfg.EVMChainConfigs[evmChain.ChainId]
+	return appContext, cfg.EVMChainConfigs[evmChain.ChainId]
 }
 
 // MockEVMObserver creates a mock ChainObserver with custom chain, TSS, params etc

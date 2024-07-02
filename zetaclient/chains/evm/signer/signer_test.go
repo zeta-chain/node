@@ -47,7 +47,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 
 	return NewSigner(
 		chains.BscMainnet,
-		context.NewZetacoreContext(cfg),
+		context.New(cfg, zerolog.Nop()),
 		tss,
 		nil,
 		logger,
@@ -71,7 +71,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
 	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
-	coreCTX := context.NewZetacoreContext(cfg)
+	appContext := context.New(cfg, zerolog.Nop())
 	dbpath := sample.CreateTempDir(t)
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
@@ -80,7 +80,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 		evmcfg,
 		evmClient,
 		params,
-		coreCTX,
+		appContext,
 		mocks.NewMockZetacoreClient(),
 		tss,
 		dbpath,

@@ -25,8 +25,7 @@ func ethereumTestRoutine(
 			"ether",
 			conf,
 			deployerRunner,
-			UserEtherAddress,
-			UserEtherPrivateKey,
+			conf.AdditionalAccounts.UserEther,
 			runner.NewLogger(verbose, color.FgMagenta, "ether"),
 		)
 		if err != nil {
