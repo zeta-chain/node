@@ -53,9 +53,9 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 
 			// remove signer and observer from maps
 			oc.mu.Lock()
-			defer oc.mu.Unlock()
 			delete(oc.signerMap, chainID)
 			delete(oc.observerMap, chainID)
+			oc.mu.Unlock()
 		}
 	}
 
@@ -78,9 +78,9 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 
 			// add signer and observer to maps
 			oc.mu.Lock()
-			defer oc.mu.Unlock()
 			oc.signerMap[chainID] = newSignerMap[chainID]
 			oc.observerMap[chainID] = observer
+			oc.mu.Unlock()
 		}
 	}
 }

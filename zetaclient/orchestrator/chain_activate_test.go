@@ -84,7 +84,7 @@ func Test_CreateObserversEVM(t *testing.T) {
 		numObserverCreated int
 	}{
 		{
-			name: "should create observers for EVM chain and BTC chain",
+			name: "should create observers for EVM chain",
 			evmCfg: config.EVMConfig{
 				Chain:    evmChain,
 				Endpoint: "http://localhost:8545",
@@ -146,6 +146,7 @@ func Test_CreateObserversEVM(t *testing.T) {
 			// assert signer/observer chain ID
 			if tt.numObserverCreated > 0 {
 				require.NotNil(t, signerMap[evmChain.ChainId])
+				require.NotNil(t, observerMap[evmChain.ChainId])
 			}
 		})
 	}
