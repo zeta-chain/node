@@ -157,15 +157,17 @@ func TestParseZRC20WithdrawalEvent(t *testing.T) {
 }
 func TestValidateZrc20WithdrawEvent(t *testing.T) {
 	t.Run("successfully validate a valid event", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 	})
 
 	t.Run("unable to validate a btc withdrawal event with an invalid amount", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
@@ -173,32 +175,34 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 
 		// 1000 satoshis is the minimum amount that can be withdrawn
 		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 
 		// 999 satoshis cannot be withdrawn
 		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount - 1)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "less than minimum amount")
 	})
 
 	t.Run("unable to validate a event with an invalid chain ID", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
+		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "invalid address")
 	})
 
 	t.Run("unable to validate an unsupported address type", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
 			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
 		)
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
 			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "unsupported address")
 	})
 }
@@ -313,7 +317,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		ctx = ctx.WithChainID("test_21-1")
 
 		err = k.ProcessZRC20WithdrawalEvent(ctx, event, emittingContract, txOrigin.Hex())
-		require.ErrorContains(t, err, "failed to convert chainID: chain 21 not found")
+		require.ErrorContains(t, err, "failed to convert chainID")
 		require.Empty(t, k.GetAllCrossChainTx(ctx))
 	})
 

@@ -180,7 +180,14 @@ func TestSigner_SignOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -214,7 +221,14 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -252,7 +266,14 @@ func TestSigner_SignCancelTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -290,7 +311,14 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -326,7 +354,14 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -371,7 +406,14 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -409,7 +451,14 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -459,7 +508,14 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -502,7 +558,14 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 

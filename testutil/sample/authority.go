@@ -29,15 +29,11 @@ func Policies() authoritytypes.Policies {
 }
 
 func ChainInfo(startChainID int64) authoritytypes.ChainInfo {
-	chain1 := Chain(startChainID)
-	chain2 := Chain(startChainID + 1)
-	chain3 := Chain(startChainID + 2)
-
 	return authoritytypes.ChainInfo{
 		Chains: []chains.Chain{
-			*chain1,
-			*chain2,
-			*chain3,
+			Chain(startChainID),
+			Chain(startChainID + 1),
+			Chain(startChainID + 2),
 		},
 	}
 }

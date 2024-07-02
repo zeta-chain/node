@@ -23,8 +23,8 @@ func (k Keeper) VoteOnOutboundBallot(
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
-	observationChain := k.GetSupportedChainFromChainID(ctx, outTxChainID)
-	if observationChain == nil {
+	observationChain, found := k.GetSupportedChainFromChainID(ctx, outTxChainID)
+	if !found {
 		return false, false, ballot, "", observertypes.ErrSupportedChains
 	}
 	if observertypes.CheckReceiveStatus(receiveStatus) != nil {

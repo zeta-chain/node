@@ -234,7 +234,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		// mock failed GetSupportedChainFromChainID
-		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, sample.Chain(5))
 
 		err := k.SetObserverOutboundInfo(ctx, 5, nil)
 		require.Error(t, err)
@@ -248,7 +248,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
@@ -274,7 +274,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
@@ -304,7 +304,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
@@ -336,7 +336,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})
@@ -370,7 +370,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		// mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, &chains.Chain{
+		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainName: 5,
 			ChainId:   5,
 		})

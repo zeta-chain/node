@@ -74,6 +74,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			ChainNonceHigh: 5,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.ErrorIs(t, err, types.ErrSupportedChains)
@@ -109,6 +110,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			ChainNonceHigh: int64(nonceHigh),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 

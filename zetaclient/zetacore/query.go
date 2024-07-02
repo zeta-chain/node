@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -480,13 +481,23 @@ func (c *Client) GetBlockHeaderChainState(chainID int64) (lightclienttypes.Query
 }
 
 // GetSupportedChains returns the supported chains
-func (c *Client) GetSupportedChains() ([]*chains.Chain, error) {
+func (c *Client) GetSupportedChains() ([]chains.Chain, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.SupportedChains(context.Background(), &observertypes.QuerySupportedChains{})
 	if err != nil {
 		return nil, err
 	}
 	return resp.GetChains(), nil
+}
+
+// GetAdditionalChains returns the additional chains
+func (c *Client) GetAdditionalChains() ([]chains.Chain, error) {
+	client := authoritytypes.NewQueryClient(c.grpcConn)
+	resp, err := client.ChainInfo(context.Background(), &authoritytypes.QueryGetChainInfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetChainInfo().Chains, nil
 }
 
 // GetPendingNonces returns the pending nonces

@@ -280,9 +280,9 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	return types.MsgVoteInbound{
 		Creator:            "",
 		Sender:             EthAddress().String(),
-		SenderChainId:      Chain(from).GetChainId(),
+		SenderChainId:      Chain(from).ChainId,
 		Receiver:           EthAddress().String(),
-		ReceiverChain:      Chain(to).GetChainId(),
+		ReceiverChain:      Chain(to).ChainId,
 		Amount:             UintInRange(10000000, 1000000000),
 		Message:            base64.StdEncoding.EncodeToString(Bytes()),
 		InboundBlockHeight: Uint64InRange(1, 10000),

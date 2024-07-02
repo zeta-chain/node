@@ -177,7 +177,7 @@ func SetBitcoinFinalizedInbound(ctx sdk.Context, crosschainKeeper crosschainKeep
 	for _, cctx := range crosschainKeeper.GetAllCrossChainTx(ctx) {
 		if cctx.InboundParams != nil {
 			// check if bitcoin inbound
-			if chains.IsBitcoinChain(cctx.InboundParams.SenderChainId) {
+			if chains.IsBitcoinChain(cctx.InboundParams.SenderChainId, []chains.Chain{}) {
 				// add finalized inbound
 				crosschainKeeper.AddFinalizedInbound(
 					ctx,

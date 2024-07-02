@@ -34,14 +34,14 @@ type Signer struct {
 // NewSigner creates a new base signer
 func NewSigner(
 	chain chains.Chain,
-	zetacoreContext *context.AppContext,
+	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger Logger,
 ) *Signer {
 	return &Signer{
 		chain:      chain,
-		appContext: zetacoreContext,
+		appContext: appContext,
 		tss:        tss,
 		ts:         ts,
 		logger: Logger{

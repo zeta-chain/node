@@ -21,9 +21,11 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 
-		chain1 := chains.ExternalChainList()[0].ChainId
-		chain2 := chains.ExternalChainList()[1].ChainId
-		chain3 := chains.ExternalChainList()[2].ChainId
+		chainList := chains.ExternalChainList([]chains.Chain{})
+
+		chain1 := chainList[0].ChainId
+		chain2 := chainList[1].ChainId
+		chain3 := chainList[2].ChainId
 
 		// set admin
 		admin := sample.AccAddress()
@@ -113,7 +115,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		msg := types.MsgUpdateChainParams{
 			Creator:     admin,
-			ChainParams: sample.ChainParams(chains.ExternalChainList()[0].ChainId),
+			ChainParams: sample.ChainParams(chains.ExternalChainList([]chains.Chain{})[0].ChainId),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &msg)

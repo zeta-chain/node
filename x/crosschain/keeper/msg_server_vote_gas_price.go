@@ -26,8 +26,8 @@ func (k msgServer) VoteGasPrice(
 ) (*types.MsgVoteGasPriceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if chain == nil {
+	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	if !found {
 		return nil, cosmoserrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
 	}
 	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {

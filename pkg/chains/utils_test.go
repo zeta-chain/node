@@ -27,41 +27,6 @@ func TestNonceMarkAmount(t *testing.T) {
 	}
 }
 
-func TestHashToString(t *testing.T) {
-	evmChainId := int64(5)
-	btcChainId := int64(8332)
-	unknownChainId := int64(3)
-	mockEthBlockHash := []byte("0xc2339489a45f8976d45482ad6fa08751a1eae91f92d60645521ca0aff2422639")
-	mockBtcBlockHash := []byte("00000000000000000002dcaa3853ac587d4cafdd0aa1fff45942ab5798f29afd")
-	expectedBtcHash, err := chainhash.NewHashFromStr("00000000000000000002dcaa3853ac587d4cafdd0aa1fff45942ab5798f29afd")
-	require.NoError(t, err)
-
-	tests := []struct {
-		name      string
-		chainID   int64
-		blockHash []byte
-		expect    string
-		wantErr   bool
-	}{
-		{"evm chain", evmChainId, mockEthBlockHash, hex.EncodeToString(mockEthBlockHash), false},
-		{"btc chain", btcChainId, expectedBtcHash.CloneBytes(), expectedBtcHash.String(), false},
-		{"btc chain invalid hash", btcChainId, mockBtcBlockHash, "", true},
-		{"unknown chain", unknownChainId, mockEthBlockHash, "", true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := HashToString(tt.chainID, tt.blockHash)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.expect, result)
-			}
-		})
-	}
-}
-
 func TestStringToHash(t *testing.T) {
 	evmChainId := int64(5)
 	btcChainId := int64(8332)
@@ -91,7 +56,7 @@ func TestStringToHash(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := StringToHash(tt.chainID, tt.hash)
+			result, err := StringToHash(tt.chainID, tt.hash, []Chain{})
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

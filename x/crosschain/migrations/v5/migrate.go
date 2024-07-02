@@ -97,11 +97,11 @@ func SetZetaAccounting(
 			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
-					receiverChain := observerKeeper.GetSupportedChainFromChainID(
+					receiverChain, found := observerKeeper.GetSupportedChainFromChainID(
 						ctx,
 						cctx.GetCurrentOutboundParam().ReceiverChainId,
 					)
-					if receiverChain == nil {
+					if !found {
 						ctx.Logger().
 							Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutboundParam().ReceiverChainId), cctx.Index)
 						continue

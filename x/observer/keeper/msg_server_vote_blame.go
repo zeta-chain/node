@@ -19,8 +19,8 @@ func (k msgServer) VoteBlame(
 	observationType := types.ObservationType_TSSKeySign
 
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
-	observationChain := k.GetSupportedChainFromChainID(ctx, vote.ChainId)
-	if observationChain == nil {
+	observationChain, found := k.GetSupportedChainFromChainID(ctx, vote.ChainId)
+	if !found {
 		return nil, cosmoserrors.Wrap(
 			crosschainTypes.ErrUnsupportedChain,
 			fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId),
