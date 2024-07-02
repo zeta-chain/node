@@ -7,6 +7,11 @@ on:
   pull_request:
     branches:
       - "*"
+  workflow_dispatch:
+  schedule:
+    # run at 6AM UTC Daily
+    # 6AM UTC -> 11PM PT
+    - cron: "0 6 * * *"
 
 jobs:
   e2e:
@@ -19,12 +24,14 @@ jobs:
           - make-target: "start-upgrade-test-light"
             runs-on: ubuntu-20.04
             run: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'MINIMAL_CI') }}
+    name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
       make-target: ${{ matrix.make-target }}
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
     secrets: inherit
+  # this allows you to set a required status check
   ok:
     runs-on: ubuntu-latest
     needs: e2e
