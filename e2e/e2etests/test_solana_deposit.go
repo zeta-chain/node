@@ -52,12 +52,14 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	type InitializeParams struct {
 		Discriminator [8]byte
 		TssAddress    [20]byte
+		ChainId       uint64
 	}
 	r.Logger.Print("TSS EthAddress: %s", r.TSSAddress)
 
 	inst.DataBytes, err = borsh.Serialize(InitializeParams{
 		Discriminator: [8]byte{175, 175, 109, 31, 13, 152, 155, 237},
 		TssAddress:    r.TSSAddress,
+		ChainId:       111111,
 	})
 	if err != nil {
 		panic(err)
