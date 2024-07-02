@@ -49,11 +49,11 @@ func TestMigrateStore(t *testing.T) {
 		for _, cctx := range cctxListUpdated {
 			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
-				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(
+				receiverChain, found := zk.ObserverKeeper.GetSupportedChainFromChainID(
 					ctx,
 					cctx.GetCurrentOutboundParam().ReceiverChainId,
 				)
-				require.NotNil(t, receiverChain)
+				require.True(t, found)
 				if receiverChain.IsZetaChain() {
 					require.True(t, cctx.CctxStatus.IsAbortRefunded)
 				} else {

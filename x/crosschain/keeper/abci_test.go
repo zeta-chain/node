@@ -42,7 +42,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	}
 
 	// add some evm and non-evm chains
-	supportedChains := []*chains.Chain{
+	supportedChains := []chains.Chain{
 		{ChainId: chains.Ethereum.ChainId},
 		{ChainId: chains.BitcoinMainnet.ChainId},
 		{ChainId: chains.BscMainnet.ChainId},

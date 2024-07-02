@@ -265,14 +265,17 @@ var (
 	}
 )
 
+// ErrNotZetaChain is the error for chain not being a ZetaChain chain
+var ErrNotZetaChain = fmt.Errorf("chain is not a ZetaChain chain")
+
 // BtcNonceMarkOffset is the offset satoshi amount to calculate the nonce mark output
 func BtcNonceMarkOffset() int64 {
 	return 2000
 }
 
 // DefaultChainsList returns a list of default chains
-func DefaultChainsList() []*Chain {
-	return chainListPointers([]Chain{
+func DefaultChainsList() []Chain {
+	return []Chain{
 		BitcoinMainnet,
 		BscMainnet,
 		Ethereum,
@@ -293,13 +296,13 @@ func DefaultChainsList() []*Chain {
 		OptimismSepolia,
 		BaseMainnet,
 		BaseSepolia,
-	})
+	}
 }
 
 // ChainListByNetworkType returns a list of chains by network type
-func ChainListByNetworkType(networkType NetworkType) []*Chain {
-	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+func ChainListByNetworkType(networkType NetworkType, additionalChains []Chain) []Chain {
+	var chainList []Chain
+	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.NetworkType == networkType {
 			chainList = append(chainList, chain)
 		}
@@ -308,9 +311,9 @@ func ChainListByNetworkType(networkType NetworkType) []*Chain {
 }
 
 // ChainListByNetwork returns a list of chains by network
-func ChainListByNetwork(network Network) []*Chain {
-	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+func ChainListByNetwork(network Network, additionalChains []Chain) []Chain {
+	var chainList []Chain
+	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.Network == network {
 			chainList = append(chainList, chain)
 		}
@@ -319,9 +322,9 @@ func ChainListByNetwork(network Network) []*Chain {
 }
 
 // ExternalChainList returns a list chains that are not Zeta
-func ExternalChainList() []*Chain {
-	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+func ExternalChainList(additionalChains []Chain) []Chain {
+	var chainList []Chain
+	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.IsExternal {
 			chainList = append(chainList, chain)
 		}
@@ -330,9 +333,9 @@ func ExternalChainList() []*Chain {
 }
 
 // ChainListByConsensus returns a list of chains by consensus
-func ChainListByConsensus(consensus Consensus) []*Chain {
-	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+func ChainListByConsensus(consensus Consensus, additionalChains []Chain) []Chain {
+	var chainList []Chain
+	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.Consensus == consensus {
 			chainList = append(chainList, chain)
 		}
@@ -341,9 +344,9 @@ func ChainListByConsensus(consensus Consensus) []*Chain {
 }
 
 // ChainListForHeaderSupport returns a list of chains that support headers
-func ChainListForHeaderSupport() []*Chain {
-	var chainList []*Chain
-	for _, chain := range DefaultChainsList() {
+func ChainListForHeaderSupport(additionalChains []Chain) []Chain {
+	var chainList []Chain
+	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.Consensus == Consensus_ethereum || chain.Consensus == Consensus_bitcoin {
 			chainList = append(chainList, chain)
 		}
@@ -351,14 +354,19 @@ func ChainListForHeaderSupport() []*Chain {
 	return chainList
 }
 
-// ZetaChainFromChainID returns a ZetaChain chain object  from a Cosmos chain ID
-func ZetaChainFromChainID(chainID string) (Chain, error) {
+// ZetaChainFromCosmosChainID returns a ZetaChain chain object from a Cosmos chain ID
+func ZetaChainFromCosmosChainID(chainID string) (Chain, error) {
 	ethChainID, err := CosmosToEthChainID(chainID)
 	if err != nil {
 		return Chain{}, err
 	}
 
-	switch ethChainID {
+	return ZetaChainFromChainID(ethChainID)
+}
+
+// ZetaChainFromChainID returns a ZetaChain chain object from a chain ID
+func ZetaChainFromChainID(chainID int64) (Chain, error) {
+	switch chainID {
 	case ZetaChainPrivnet.ChainId:
 		return ZetaChainPrivnet, nil
 	case ZetaChainMainnet.ChainId:
@@ -368,17 +376,37 @@ func ZetaChainFromChainID(chainID string) (Chain, error) {
 	case ZetaChainDevnet.ChainId:
 		return ZetaChainDevnet, nil
 	default:
-		return Chain{}, fmt.Errorf("chain %d not found", ethChainID)
+		return Chain{}, ErrNotZetaChain
 	}
 }
 
-// TODO : https://github.com/zeta-chain/node/issues/2080
-// remove the usage of this function
-// chainListPointers returns a list of chain pointers
-func chainListPointers(chains []Chain) []*Chain {
-	var c []*Chain
-	for i := 0; i < len(chains); i++ {
-		c = append(c, &chains[i])
+// CombineDefaultChainsList combines the default chains list with a list of chains
+// duplicated chain ID are overwritten by the second list
+func CombineDefaultChainsList(chains []Chain) []Chain {
+	return CombineChainList(DefaultChainsList(), chains)
+}
+
+// CombineChainList combines a list of chains with a list of chains
+// duplicated chain ID are overwritten by the second list
+func CombineChainList(base []Chain, additional []Chain) []Chain {
+	combined := make([]Chain, 0, len(base)+len(additional))
+	combined = append(combined, base...)
+
+	// map chain ID in combined to index in the list
+	chainIDIndexMap := make(map[int64]int)
+	for i, chain := range combined {
+		chainIDIndexMap[chain.ChainId] = i
 	}
-	return c
+
+	// add chains2 to combined
+	// if chain ID already exists in chains1, overwrite it
+	for _, chain := range additional {
+		if index, ok := chainIDIndexMap[chain.ChainId]; ok {
+			combined[index] = chain
+		} else {
+			combined = append(combined, chain)
+		}
+	}
+
+	return combined
 }

@@ -129,15 +129,6 @@ func TestCrossChainTx_Validate(t *testing.T) {
 	require.ErrorContains(t, cctx.Validate(), "invalid index length 1")
 	cctx = sample.CrossChainTx(t, "foo")
 	cctx.InboundParams = sample.InboundParamsValidChainID(rand.New(rand.NewSource(42)))
-	cctx.InboundParams.SenderChainId = 1000
-	require.ErrorContains(t, cctx.Validate(), "invalid sender chain id 1000")
-	cctx = sample.CrossChainTx(t, "foo")
-	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParamsValidChainID(rand.New(rand.NewSource(42)))}
-	cctx.InboundParams = sample.InboundParamsValidChainID(rand.New(rand.NewSource(42)))
-	cctx.InboundParams.ObservedHash = sample.Hash().String()
-	cctx.InboundParams.BallotIndex = sample.ZetaIndex(t)
-	cctx.OutboundParams[0].ReceiverChainId = 1000
-	require.ErrorContains(t, cctx.Validate(), "invalid receiver chain id 1000")
 }
 
 func TestCrossChainTx_GetCurrentOutboundParam(t *testing.T) {

@@ -33,7 +33,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 
 		msg := types.MsgAddInboundTracker{
@@ -62,7 +62,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, false)
 
 		msg := types.MsgAddInboundTracker{
 			Creator:   sample.AccAddress(),
@@ -92,7 +92,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 
 		setSupportedChain(ctx, zk, chainID)
@@ -127,7 +127,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
 
 		msg := types.MsgAddInboundTracker{
@@ -161,7 +161,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error"))
@@ -195,7 +195,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(sample.Bytes(), nil)
@@ -231,7 +231,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		lightclientMock.On("VerifyProof", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(sample.Bytes(), nil)
@@ -271,7 +271,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		txHash := "string"
 		chainID := getValidEthChainID()
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
 			Return(sample.ChainParams(chains.Ethereum.ChainId), true)
@@ -317,7 +317,7 @@ func TestMsgServer_AddToInboundTracker(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		lightclientMock := keepertest.GetCrosschainLightclientMock(t, k)
 
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{})
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		observerMock.On("GetChainParamsByChainID", mock.Anything, mock.Anything).
 			Return(sample.ChainParams(chains.Ethereum.ChainId), true)

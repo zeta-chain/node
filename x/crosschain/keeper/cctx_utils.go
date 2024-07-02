@@ -19,8 +19,8 @@ import (
 // SetObserverOutboundInfo sets the CCTX outbound nonce to the next available nonce for the TSS address, and updates the nonce of blockchain state.
 // It also updates the PendingNonces that is used to track the unfulfilled outbound txs.
 func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
-	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, receiveChainID)
-	if chain == nil {
+	chain, found := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, receiveChainID)
+	if !found {
 		return zetaObserverTypes.ErrSupportedChains
 	}
 

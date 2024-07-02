@@ -30,15 +30,6 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 			error: true,
 		},
 		{
-			name: "invalid chain id",
-			msg: types.NewMsgMigrateTssFunds(
-				sample.AccAddress(),
-				999,
-				sdkmath.NewUintFromString("100000"),
-			),
-			error: true,
-		},
-		{
 			name: "invalid amount",
 			msg: types.NewMsgMigrateTssFunds(
 				sample.AccAddress(),
