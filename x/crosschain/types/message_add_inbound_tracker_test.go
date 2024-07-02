@@ -37,7 +37,7 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 				ChainId:  chains.ZetaChainTestnet.ChainId,
 				CoinType: 5,
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "coin-type not supported"),
+			err: errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "coin-type not supported"),
 		},
 		{
 			name: "valid",

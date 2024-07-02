@@ -335,49 +335,6 @@ func TestIsEVMChain(t *testing.T) {
 	}
 }
 
-func TestIsHeaderSupportedChain(t *testing.T) {
-	tests := []struct {
-		name    string
-		chainID int64
-		want    bool
-	}{
-		{"Ethereum Mainnet", chains.Ethereum.ChainId, true},
-		{"Goerli Testnet", chains.Goerli.ChainId, true},
-		{"Goerli Localnet", chains.GoerliLocalnet.ChainId, true},
-		{"Sepolia Testnet", chains.Sepolia.ChainId, true},
-		{"BSC Testnet", chains.BscTestnet.ChainId, true},
-		{"BSC Mainnet", chains.BscMainnet.ChainId, true},
-		{"BTC", chains.BitcoinMainnet.ChainId, true},
-		{"Zeta Mainnet", chains.ZetaChainMainnet.ChainId, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, chains.IsHeaderSupportedChain(tt.chainID, []chains.Chain{}))
-		})
-	}
-}
-
-func TestSupportMerkleProof(t *testing.T) {
-	tests := []struct {
-		name  string
-		chain chains.Chain
-		want  bool
-	}{
-		{"Ethereum Mainnet", chains.Ethereum, true},
-		{"BSC Testnet", chains.BscTestnet, true},
-		{"BSC Mainnet", chains.BscMainnet, true},
-		{"Non-EVM", chains.BitcoinMainnet, true},
-		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, tt.chain.SupportMerkleProof([]chains.Chain{}))
-		})
-	}
-}
-
 func TestIsBitcoinChain(t *testing.T) {
 	tests := []struct {
 		name    string

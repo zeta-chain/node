@@ -50,7 +50,7 @@ func (msg *MsgAddInboundTracker) ValidateBasic() error {
 
 	_, ok := coin.CoinType_value[msg.CoinType.String()]
 	if !ok {
-		return errorsmod.Wrapf(ErrProofVerificationFail, "coin-type not supported")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "coin-type not supported")
 	}
 	return nil
 }

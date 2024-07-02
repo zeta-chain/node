@@ -55,6 +55,10 @@ func ValidateChainParams(params *ChainParams) error {
 	if params == nil {
 		return fmt.Errorf("chain params cannot be nil")
 	}
+
+	// TODO: ZetaChain chain params should be completely removed
+	// Once removed, this check is no longer necessary as all chasin params would need the same checks
+	// https://github.com/zeta-chain/node/issues/2419
 	_, err := chains.ZetaChainFromChainID(params.ChainId)
 	if err == nil {
 		// zeta chain skips the rest of the checks for now

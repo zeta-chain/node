@@ -126,18 +126,6 @@ func IsZetaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_zeta, additionalChains))
 }
 
-// IsHeaderSupportedChain returns true if the chain's consensus supports block header-based verification
-// additionalChains is a list of additional chains to search from
-// in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
-func IsHeaderSupportedChain(chainID int64, additionalChains []Chain) bool {
-	return ChainIDInChainList(chainID, ChainListForHeaderSupport(additionalChains))
-}
-
-// SupportMerkleProof returns true if the chain supports block header-based verification
-func (chain Chain) SupportMerkleProof(additionalChains []Chain) bool {
-	return IsEVMChain(chain.ChainId, additionalChains) || IsBitcoinChain(chain.ChainId, additionalChains)
-}
-
 // IsEmpty is to determinate whether the chain is empty
 func (chain Chain) IsEmpty() bool {
 	return strings.TrimSpace(chain.String()) == ""

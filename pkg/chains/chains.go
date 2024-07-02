@@ -388,13 +388,11 @@ func CombineDefaultChainsList(chains []Chain) []Chain {
 
 // CombineChainList combines a list of chains with a list of chains
 // duplicated chain ID are overwritten by the second list
-// TODO: remove pointers
-// https://github.com/zeta-chain/node/issues/2080
 func CombineChainList(base []Chain, additional []Chain) []Chain {
 	combined := make([]Chain, 0, len(base)+len(additional))
 	combined = append(combined, base...)
 
-	// map chain ID in chains1 to index in the list
+	// map chain ID in combined to index in the list
 	chainIDIndexMap := make(map[int64]int)
 	for i, chain := range combined {
 		chainIDIndexMap[chain.ChainId] = i
