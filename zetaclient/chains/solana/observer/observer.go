@@ -3,9 +3,11 @@ package observer
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"sync"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -13,12 +15,15 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	solanaclient "github.com/zeta-chain/zetacore/zetaclient/chains/solana"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 type Observer struct {
@@ -225,11 +230,38 @@ func (o *Observer) ObserveInbound() error {
 		}
 		o.logger.Info().Msgf("  Amount Parameter: %d", inst.Amount)
 		o.logger.Info().Msgf("  Memo (%d): %x", len(inst.Memo), inst.Memo)
-		//var accounts []solana.PublicKey
-		//for _, accIndex := range instruction.Accounts {
-		//	accKey := transaction.Message.AccountKeys[accIndex]
-		//	accounts = append(accounts, accKey)
-		//}
+		memoHex := hex.EncodeToString(inst.Memo)
+		var accounts []solana.PublicKey
+		for _, accIndex := range instruction.Accounts {
+			accKey := transaction.Message.AccountKeys[accIndex]
+			accounts = append(accounts, accKey)
+		}
+		msg := zetacore.GetInboundVoteMessage(
+			accounts[0].String(), // check this--is this the signer?
+			solanaclient.LocalnetChainID,
+			accounts[0].String(), // check this--is this the signer?
+			accounts[0].String(), // check this--is this the signer?
+			o.zetacoreClient.Chain().ChainId,
+			sdkmath.NewUint(inst.Amount),
+			memoHex,
+			sig.Signature.String(),
+			sig.Slot, // TODO: check this; is slot equivalent to block height?
+			90_000,
+			coin.CoinType_Gas,
+			"",
+			o.zetacoreClient.GetKeys().GetOperatorAddress().String(),
+			0, // not a smart contract call
+		)
+		zetaHash, ballot, err := o.zetacoreClient.PostVoteInbound(zetacore.PostVoteInboundGasLimit, zetacore.PostVoteInboundExecutionGasLimit, msg)
+		if err != nil {
+			o.logger.Err(err).Msg("PostVoteInbound error")
+			continue // TODO: should lastTxSig be updated here?
+		}
+		if zetaHash != "" {
+			o.logger.Info().Msgf("inbound detected: inbound %s vote %s ballot %s", sig.Signature, zetaHash, ballot)
+		} else {
+			o.logger.Info().Msgf("inbound detected: inbound %s; seems to be already voted?", sig.Signature)
+		}
 
 	}
 	return nil
