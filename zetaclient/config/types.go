@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
@@ -57,8 +56,6 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	cfgLock *sync.RWMutex `json:"-"`
-
 	Peer                string         `json:"Peer"`
 	PublicIP            string         `json:"PublicIP"`
 	LogFormat           string         `json:"LogFormat"`
@@ -88,26 +85,14 @@ type Config struct {
 
 // NewConfig returns a new Config with initialize EVM chain mapping and a new mutex
 // TODO(revamp): consolidate with New function
-func NewConfig() *Config {
-	return &Config{
-		cfgLock:         &sync.RWMutex{},
+func NewConfig() Config {
+	return Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
 	}
 }
 
-// GetEVMConfig returns the EVM config for the given chain ID
-func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	evmCfg, found := c.EVMChainConfigs[chainID]
-	return evmCfg, found
-}
-
 // GetAllEVMConfigs returns a map of all EVM configs
 func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-
 	// deep copy evm configs
 	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
 	for chainID, evmConfig := range c.EVMChainConfigs {
@@ -118,9 +103,6 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 
 // GetBTCConfig returns the BTC config
 func (c Config) GetBTCConfig() (BTCConfig, bool) {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-
 	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
 }
 
@@ -145,9 +127,27 @@ func (c Config) GetRestrictedAddressBook() map[string]bool {
 	return restrictedAddresses
 }
 
-// GetKeyringBackend returns the keyring backend
-func (c *Config) GetKeyringBackend() KeyringBackend {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	return c.KeyringBackend
+// Clone returns a deep copy of the config
+// config is accessed concurrently, so a deep copy is needed
+func (c Config) Clone() Config {
+	// deep copy evm config map
+	copiedEVMConfigs := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
+	for chainID, evmConfig := range c.EVMChainConfigs {
+		copiedEVMConfigs[chainID] = evmConfig
+	}
+
+	// deep copy compliance config address array
+	copiedComplianceConfig := c.ComplianceConfig
+	copiedRestrictedAddresses := make([]string, len(copiedComplianceConfig.RestrictedAddresses))
+	copy(copiedRestrictedAddresses, copiedComplianceConfig.RestrictedAddresses)
+	copiedComplianceConfig.RestrictedAddresses = copiedRestrictedAddresses
+
+	// duplicate a config
+	copied := c
+
+	// set deep copied evm configs, and compliance config
+	copied.EVMChainConfigs = copiedEVMConfigs
+	copied.ComplianceConfig = copiedComplianceConfig
+
+	return copied
 }

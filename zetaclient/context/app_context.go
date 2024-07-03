@@ -17,7 +17,7 @@ import (
 // AppContext contains zetaclient application context
 // these are initialized and updated at runtime periodically
 type AppContext struct {
-	config           *config.Config
+	config           config.Config
 	keygen           observertypes.Keygen
 	currentTssPubkey string
 	chainsEnabled    []chains.Chain
@@ -33,8 +33,8 @@ type AppContext struct {
 	mu sync.RWMutex
 }
 
-// NewAppContext creates empty app context with given config
-func NewAppContext(cfg *config.Config) *AppContext {
+// New creates empty app context with given config
+func New(cfg config.Config) *AppContext {
 	return &AppContext{
 		config:                   cfg,
 		chainsEnabled:            []chains.Chain{},
@@ -46,17 +46,17 @@ func NewAppContext(cfg *config.Config) *AppContext {
 }
 
 // SetConfig sets a new config to the app context
-func (a *AppContext) SetConfig(cfg *config.Config) {
+func (a *AppContext) SetConfig(cfg config.Config) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.config = cfg
 }
 
 // Config returns the app context config
-func (a *AppContext) Config() *config.Config {
+func (a *AppContext) Config() config.Config {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.config
+	return a.config.Clone()
 }
 
 // GetKeygen returns the current keygen information

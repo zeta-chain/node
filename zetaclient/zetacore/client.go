@@ -52,7 +52,7 @@ type Client struct {
 
 // CreateClient is a helper function to create a new instance of Client
 func CreateClient(
-	cfg *config.Config,
+	cfg config.Config,
 	telemetry *metrics.TelemetryServer,
 	hotkeyPassword string,
 ) (*Client, error) {

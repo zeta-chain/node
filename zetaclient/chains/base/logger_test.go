@@ -15,12 +15,12 @@ func TestInitLogger(t *testing.T) {
 	tests := []struct {
 		name string
 		t    *testing.T
-		cfg  *config.Config
+		cfg  config.Config
 		fail bool
 	}{
 		{
 			name: "should be able to initialize json formatted logger",
-			cfg: &config.Config{
+			cfg: config.Config{
 				LogFormat: "json",
 				LogLevel:  1, // zerolog.InfoLevel,
 				ComplianceConfig: config.ComplianceConfig{
@@ -31,7 +31,7 @@ func TestInitLogger(t *testing.T) {
 		},
 		{
 			name: "should be able to initialize plain text logger",
-			cfg: &config.Config{
+			cfg: config.Config{
 				LogFormat: "text",
 				LogLevel:  2, // zerolog.WarnLevel,
 				ComplianceConfig: config.ComplianceConfig{
@@ -42,7 +42,7 @@ func TestInitLogger(t *testing.T) {
 		},
 		{
 			name: "should be able to initialize default formatted logger",
-			cfg: &config.Config{
+			cfg: config.Config{
 				LogFormat: "unknown",
 				LogLevel:  3, // zerolog.ErrorLevel,
 				ComplianceConfig: config.ComplianceConfig{
@@ -53,7 +53,7 @@ func TestInitLogger(t *testing.T) {
 		},
 		{
 			name: "should be able to initialize sampled logger",
-			cfg: &config.Config{
+			cfg: config.Config{
 				LogFormat:  "json",
 				LogLevel:   4, // zerolog.DebugLevel,
 				LogSampler: true,
@@ -64,7 +64,7 @@ func TestInitLogger(t *testing.T) {
 		},
 		{
 			name: "should fail on invalid compliance log path",
-			cfg: &config.Config{
+			cfg: config.Config{
 				LogFormat: "json",
 				LogLevel:  1, // zerolog.InfoLevel,
 				ComplianceConfig: config.ComplianceConfig{

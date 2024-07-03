@@ -17,7 +17,7 @@ import (
 func createSigner(_ *testing.T) *base.Signer {
 	// constructor parameters
 	chain := chains.Ethereum
-	appContext := context.NewAppContext(config.NewConfig())
+	appContext := context.New(config.NewConfig())
 	tss := mocks.NewTSSMainnet()
 	logger := base.DefaultLogger()
 

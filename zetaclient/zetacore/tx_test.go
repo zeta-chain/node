@@ -319,7 +319,7 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.NewConfig()
-		appCTX := context.NewAppContext(cfg)
+		appCTX := context.New(cfg)
 		zetacoreBroadcast = MockBroadcast
 
 		// Update app context

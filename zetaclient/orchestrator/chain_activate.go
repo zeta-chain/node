@@ -20,11 +20,11 @@ import (
 func (oc *Orchestrator) WatchEnabledChains() {
 	oc.logger.Std.Info().Msg("WatchChainActivation started")
 
-	ticker := time.NewTicker(common.ZetaBlockTime)
+	ticker := time.NewTicker(common.ZetaBlockTime * 2)
 	for {
 		select {
 		case <-ticker.C:
-			oc.ActivateDeactivateChains()
+			oc.ActivateAndDeactivateChains()
 		case <-oc.stop:
 			oc.logger.Std.Info().Msg("WatchChainActivation stopped")
 			return
@@ -32,8 +32,8 @@ func (oc *Orchestrator) WatchEnabledChains() {
 	}
 }
 
-// ActivateDeactivateChains activates or deactivates chain observers and signers
-func (oc *Orchestrator) ActivateDeactivateChains() {
+// ActivateAndDeactivateChains activates and deactivates chains according to chain params and config file
+func (oc *Orchestrator) ActivateAndDeactivateChains() {
 	// create new signer and observer maps
 	// Note: the keys of the two maps are chain IDs and they are always exactly matched
 	newSignerMap := make(map[int64]interfaces.ChainSigner)
@@ -43,37 +43,51 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 	oc.CreateObserversEVM(newSignerMap, newObserverMap)
 	oc.CreateObserversBTC(newSignerMap, newObserverMap)
 
+	// activate newly supported chains and deactivate chains that are no longer supported
+	oc.DeactivateChains(newObserverMap)
+	oc.ActivateChains(newSignerMap, newObserverMap)
+}
+
+// DeactivateChains deactivates chains that are no longer supported
+func (oc *Orchestrator) DeactivateChains(
+	newObserverMap map[int64]interfaces.ChainObserver,
+) {
 	// loop through existing observer map to deactivate chains that are not in new observer map
+	oc.mu.Lock()
+	defer oc.mu.Unlock()
 	for chainID, observer := range oc.observerMap {
 		_, found := newObserverMap[chainID]
 		if !found {
-			oc.logger.Std.Info().Msgf("ActivateDeactivateChains: deactivating chain %d", chainID)
-
+			oc.logger.Std.Info().Msgf("DeactivateChains: deactivating chain %d", chainID)
 			observer.Stop()
 
 			// remove signer and observer from maps
-			oc.mu.Lock()
 			delete(oc.signerMap, chainID)
 			delete(oc.observerMap, chainID)
-			oc.mu.Unlock()
+			oc.logger.Std.Info().Msgf("DeactivateChains: deactivated chain %d", chainID)
 		}
 	}
+}
 
+// ActivateChains activates newly supported chains
+func (oc *Orchestrator) ActivateChains(
+	newSignerMap map[int64]interfaces.ChainSigner,
+	newObserverMap map[int64]interfaces.ChainObserver,
+) {
 	// loop through new observer map to activate chains that are not in existing observer map
 	for chainID, observer := range newObserverMap {
 		_, found := oc.observerMap[chainID]
 		if !found {
-			oc.logger.Std.Info().Msgf("ActivateDeactivateChains: activating chain %d", chainID)
+			oc.logger.Std.Info().Msgf("ActivateChains: activating chain %d", chainID)
 
 			// open database and load data
 			err := observer.LoadDB(oc.dbPath)
 			if err != nil {
 				oc.logger.Std.Error().
 					Err(err).
-					Msgf("ActivateDeactivateChains: error LoadDB for chain %d", chainID)
+					Msgf("ActivateChains: error LoadDB for chain %d", chainID)
 				continue
 			}
-
 			observer.Start()
 
 			// add signer and observer to maps
@@ -81,6 +95,8 @@ func (oc *Orchestrator) ActivateDeactivateChains() {
 			oc.signerMap[chainID] = newSignerMap[chainID]
 			oc.observerMap[chainID] = observer
 			oc.mu.Unlock()
+
+			oc.logger.Std.Info().Msgf("ActivateChains: activated chain %d", chainID)
 		}
 	}
 }

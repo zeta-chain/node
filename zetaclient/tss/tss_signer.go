@@ -149,7 +149,7 @@ func SetupTSSServer(
 	peer p2p.AddrList,
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
-	cfg *config.Config,
+	cfg config.Config,
 	tssPassword string,
 ) (*tss.TssServer, error) {
 	bootstrapPeers := peer

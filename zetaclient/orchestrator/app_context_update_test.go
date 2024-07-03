@@ -54,7 +54,9 @@ func Test_UpdateAppContext(t *testing.T) {
 		cfg.TssPath = config.GetPath(cfg.TssPath)
 
 		// set zetacore home directory to the archived testdata directory
-		appCtx.Config().ZetaCoreHome = zetacoreHome
+		copyConfig := appCtx.Config()
+		copyConfig.ZetaCoreHome = zetacoreHome
+		appCtx.SetConfig(copyConfig)
 
 		// update app context
 		err := oc.UpdateAppContext()
@@ -91,7 +93,9 @@ func Test_UpdateAppContext(t *testing.T) {
 		oc := orchestrator.NewOrchestrator(appCtx, ztacoreClient, nil, base.Logger{}, testutils.SQLiteMemory, nil)
 
 		// set invalid zetacore home directory
-		appCtx.Config().ZetaCoreHome = "/invalid/path"
+		copyConfig := appCtx.Config()
+		copyConfig.ZetaCoreHome = "/invalid/path"
+		appCtx.SetConfig(copyConfig)
 
 		// update app context
 		err := oc.UpdateAppContext()

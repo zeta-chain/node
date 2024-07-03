@@ -41,7 +41,7 @@ func (w *serializedWriter) Write(p []byte) (n int, err error) {
 	return w.upstream.Write(p)
 }
 
-func getLogger(cfg *config.Config, out io.Writer) zerolog.Logger {
+func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 	var logger zerolog.Logger
 	switch cfg.LogFormat {
 	case "json":

@@ -47,7 +47,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 
 	return NewSigner(
 		chains.BscMainnet,
-		context.NewAppContext(cfg),
+		context.New(cfg),
 		tss,
 		nil,
 		logger,
@@ -71,7 +71,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
 	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
-	appContext := context.NewAppContext(cfg)
+	appContext := context.New(cfg)
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 

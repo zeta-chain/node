@@ -14,7 +14,7 @@ import (
 var restrictedAddressBook = map[string]bool{}
 
 // LoadComplianceConfig loads compliance config from zetaclient config
-func LoadComplianceConfig(cfg *config.Config) {
+func LoadComplianceConfig(cfg config.Config) {
 	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 

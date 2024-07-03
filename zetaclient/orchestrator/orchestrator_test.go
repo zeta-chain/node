@@ -70,7 +70,7 @@ func CreateTestAppContext(
 		RPCHost: "localhost",
 	}
 	// new app context
-	appContext := context.NewAppContext(cfg)
+	appContext := context.New(cfg)
 	chainParamsMap := make(map[int64]*observertypes.ChainParams)
 	chainParamsMap[evmChain.ChainId] = evmChainParams
 	chainParamsMap[btcChain.ChainId] = btcChainParams

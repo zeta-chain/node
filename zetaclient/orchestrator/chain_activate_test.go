@@ -46,7 +46,7 @@ func createTestAppContext(
 	}
 
 	// create app context
-	appContext := context.NewAppContext(cfg)
+	appContext := context.New(cfg)
 
 	// create sample crosschain flags and header supported chains
 	ccFlags := sample.CrosschainFlags()
@@ -64,6 +64,160 @@ func createTestAppContext(
 		zerolog.Logger{},
 	)
 	return appContext
+}
+
+func Test_ActivateChains(t *testing.T) {
+	// define test chain and chain params
+	evmChain := chains.Ethereum
+	evmChainParams := sample.ChainParams(evmChain.ChainId)
+
+	// test cases
+	tests := []struct {
+		name           string
+		evmCfg         config.EVMConfig
+		btcCfg         config.BTCConfig
+		evmChain       chains.Chain
+		btcChain       chains.Chain
+		evmChainParams *observertypes.ChainParams
+		dbPath         string
+		fail           bool
+	}{
+		{
+			name: "should activate newly supported chains that are not in existing observer map",
+			evmCfg: config.EVMConfig{
+				Chain:    evmChain,
+				Endpoint: "http://localhost:8545",
+			},
+			btcCfg:         config.BTCConfig{}, // btc chain is not needed for this test
+			evmChain:       evmChain,
+			evmChainParams: evmChainParams,
+			dbPath:         testutils.SQLiteMemory,
+			fail:           false,
+		},
+		{
+			name: "should not activate chain if dbPath is invalid",
+			evmCfg: config.EVMConfig{
+				Chain:    evmChain,
+				Endpoint: "http://localhost:8545",
+			},
+			btcCfg:         config.BTCConfig{}, // btc chain is not needed for this test
+			evmChain:       evmChain,
+			evmChainParams: evmChainParams,
+			dbPath:         "", // invalid db path
+			fail:           true,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create app context
+			appCtx := createTestAppContext(tt.evmCfg, tt.btcCfg, tt.evmChain, tt.btcChain, tt.evmChainParams, nil)
+
+			// create orchestrator
+			ztacoreClient := mocks.NewMockZetacoreClient()
+			oc := orchestrator.NewOrchestrator(appCtx, ztacoreClient, nil, base.Logger{}, tt.dbPath, nil)
+
+			// create new signer and observer maps
+			newSignerMap := make(map[int64]interfaces.ChainSigner)
+			newObserverMap := make(map[int64]interfaces.ChainObserver)
+			oc.CreateObserversEVM(newSignerMap, newObserverMap)
+
+			// activate chains
+			oc.ActivateChains(newSignerMap, newObserverMap)
+
+			// assert signer/observer map
+			ob, err1 := oc.GetUpdatedChainObserver(tt.evmChain.ChainId)
+			signer, err2 := oc.GetUpdatedSigner(tt.evmChain.ChainId)
+
+			if tt.fail {
+				require.Error(t, err1)
+				require.Error(t, err2)
+				require.Nil(t, ob)
+				require.Nil(t, signer)
+			} else {
+				require.NoError(t, err1)
+				require.NoError(t, err2)
+				require.NotNil(t, ob)
+				require.NotNil(t, signer)
+			}
+		})
+	}
+}
+
+func Test_DeactivateChains(t *testing.T) {
+	// define test chain and chain params
+	evmChain := chains.Ethereum
+	evmChainParams := sample.ChainParams(evmChain.ChainId)
+
+	// test cases
+	tests := []struct {
+		name           string
+		evmCfg         config.EVMConfig
+		btcCfg         config.BTCConfig
+		evmChain       chains.Chain
+		btcChain       chains.Chain
+		evmChainParams *observertypes.ChainParams
+		dbPath         string
+	}{
+		{
+			name: "should deactivate chains that are not in new observer map",
+			evmCfg: config.EVMConfig{
+				Chain:    evmChain,
+				Endpoint: "http://localhost:8545",
+			},
+			btcCfg:         config.BTCConfig{}, // btc chain is not needed for this test
+			evmChain:       evmChain,
+			evmChainParams: evmChainParams,
+			dbPath:         testutils.SQLiteMemory,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create app context
+			appCtx := createTestAppContext(tt.evmCfg, tt.btcCfg, tt.evmChain, tt.btcChain, tt.evmChainParams, nil)
+
+			// create orchestrator
+			ztacoreClient := mocks.NewMockZetacoreClient()
+			oc := orchestrator.NewOrchestrator(appCtx, ztacoreClient, nil, base.Logger{}, tt.dbPath, nil)
+
+			// create new signer and observer maps
+			newSignerMap := make(map[int64]interfaces.ChainSigner)
+			newObserverMap := make(map[int64]interfaces.ChainObserver)
+			oc.CreateObserversEVM(newSignerMap, newObserverMap)
+
+			// activate chains
+			oc.ActivateChains(newSignerMap, newObserverMap)
+
+			// assert signer/observer map
+			ob, err := oc.GetUpdatedChainObserver(tt.evmChain.ChainId)
+			require.NoError(t, err)
+			require.NotNil(t, ob)
+
+			// create new config and set EVM chain params as empty
+			newCfg := appCtx.Config()
+			newCfg.EVMChainConfigs = make(map[int64]config.EVMConfig)
+			appCtx.SetConfig(newCfg)
+
+			// create maps again based on newly updated config
+			newSignerMap = make(map[int64]interfaces.ChainSigner)
+			newObserverMap = make(map[int64]interfaces.ChainObserver)
+			oc.CreateObserversEVM(newSignerMap, newObserverMap)
+
+			// deactivate chains
+			oc.DeactivateChains(newObserverMap)
+
+			// assert signer/observer map
+			ob, err1 := oc.GetUpdatedChainObserver(tt.evmChain.ChainId)
+			signer, err2 := oc.GetUpdatedSigner(tt.evmChain.ChainId)
+			require.Error(t, err1)
+			require.Error(t, err2)
+			require.Nil(t, ob)
+			require.Nil(t, signer)
+		})
+	}
 }
 
 func Test_CreateObserversEVM(t *testing.T) {

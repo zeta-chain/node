@@ -51,7 +51,7 @@ type ObserverLogger struct {
 }
 
 // InitLogger initializes the base loggers
-func InitLogger(cfg *config.Config) (Logger, error) {
+func InitLogger(cfg config.Config) (Logger, error) {
 	// open compliance log file
 	file, err := openComplianceLogFile(cfg)
 	if err != nil {
@@ -89,7 +89,7 @@ func InitLogger(cfg *config.Config) (Logger, error) {
 }
 
 // openComplianceLogFile opens the compliance log file
-func openComplianceLogFile(cfg *config.Config) (*os.File, error) {
+func openComplianceLogFile(cfg config.Config) (*os.File, error) {
 	// use zetacore home as default
 	logPath := cfg.ZetaCoreHome
 	if cfg.ComplianceConfig.LogPath != "" {

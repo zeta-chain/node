@@ -50,9 +50,9 @@ func LoadObjectFromJSONFile(t *testing.T, obj interface{}, filename string) {
 }
 
 // LoadZetaclientConfig loads archived zetaclient config JSON file
-func LoadZetaclientConfig(t *testing.T, dir string) *config.Config {
-	config := &config.Config{}
-	LoadObjectFromJSONFile(t, config, path.Join(dir, TestDataPathConfig, ConfigFileName()))
+func LoadZetaclientConfig(t *testing.T, dir string) config.Config {
+	config := config.Config{}
+	LoadObjectFromJSONFile(t, &config, path.Join(dir, TestDataPathConfig, ConfigFileName()))
 	return config
 }
 

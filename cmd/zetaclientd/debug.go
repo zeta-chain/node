@@ -56,7 +56,7 @@ func debugCmd(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	appContext := clientcontext.NewAppContext(cfg)
+	appContext := clientcontext.New(cfg)
 
 	chainID, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {

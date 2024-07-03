@@ -164,7 +164,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("Authz is ready for granter %s grantee %s", granter, grantee)
 
 	// Initialize zetaclient app context
-	appContext := context.NewAppContext(cfg)
+	appContext := context.New(cfg)
 	err = zetacoreClient.UpdateAppContext(appContext, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("error initializing app context")

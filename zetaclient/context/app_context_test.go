@@ -20,7 +20,7 @@ func Test_NewAppContext(t *testing.T) {
 	t.Run("should create new app context with empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 
-		appContext := context.NewAppContext(testCfg)
+		appContext := context.New(testCfg)
 		require.NotNil(t, appContext)
 
 		// assert config
@@ -47,7 +47,7 @@ func Test_NewAppContext(t *testing.T) {
 func Test_SetGetConfig(t *testing.T) {
 	t.Run("should create new app context with empty config", func(t *testing.T) {
 		oldCfg := config.NewConfig()
-		appContext := context.NewAppContext(oldCfg)
+		appContext := context.New(oldCfg)
 		require.NotNil(t, appContext)
 		require.Equal(t, oldCfg, appContext.Config())
 
@@ -80,7 +80,7 @@ func Test_UpdateAndGetters(t *testing.T) {
 	headerSupportedChains := sample.HeaderSupportedChains()
 
 	// feed app context fields
-	appContext := context.NewAppContext(config.NewConfig())
+	appContext := context.New(config.NewConfig())
 	appContext.Update(
 		*keyGen,
 		tssPubKey,
@@ -212,7 +212,7 @@ func makeAppContext(
 	}
 
 	// create app context
-	appContext := context.NewAppContext(cfg)
+	appContext := context.New(cfg)
 	newChainParams := make(map[int64]*observertypes.ChainParams)
 	newChainParams[evmChain.ChainId] = evmChainParams
 

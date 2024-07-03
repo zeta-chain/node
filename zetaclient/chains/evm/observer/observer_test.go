@@ -52,7 +52,7 @@ func getAppContext(
 	}
 
 	// create app context
-	appCtx := context.NewAppContext(cfg)
+	appCtx := context.New(cfg)
 	newChainParams := make(map[int64]*observertypes.ChainParams)
 	newChainParams[evmChain.ChainId] = evmChainParams
 
