@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -35,17 +36,13 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 	}
 
 	cmd.Flags().StringVarP(&configFile, flagConfig, "c", "", "path to the configuration file")
-	err := cmd.MarkFlagRequired(flagConfig)
-	if err != nil {
-		panic(err)
+	if err := cmd.MarkFlagRequired(flagConfig); err != nil {
+		fmt.Println("Error marking flag as required")
+		os.Exit(1)
 	}
 
 	// Retain the verbose flag
-	cmd.Flags().Bool(
-		flagVerbose,
-		false,
-		"set to true to enable verbose logging",
-	)
+	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
 	return cmd
 }
@@ -75,13 +72,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
-
-	// get EVM address from config
-	evmAddr := conf.Accounts.EVMAddress
-	if !ethcommon.IsHexAddress(evmAddr) {
-		cancel()
-		return errors.New("invalid EVM address")
-	}
+	defer cancel()
 
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
@@ -89,12 +80,10 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		"e2e",
 		cancel,
 		conf,
-		ethcommon.HexToAddress(evmAddr),
-		conf.Accounts.EVMPrivKey,
+		conf.DefaultAccount,
 		logger,
 	)
 	if err != nil {
-		cancel()
 		return err
 	}
 
@@ -112,31 +101,26 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 	balancesBefore, err := testRunner.GetAccountBalances(true)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	// parse test names and arguments from cmd args and run them
 	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	testsToRun, err := testRunner.GetE2ETestsToRunByConfig(e2etests.AllE2ETests, userTestsConfigs)
 	if err != nil {
-		cancel()
 		return err
 	}
 	reports, err := testRunner.RunE2ETestsIntoReport(testsToRun)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	balancesAfter, err := testRunner.GetAccountBalances(true)
 	if err != nil {
-		cancel()
 		return err
 	}
 

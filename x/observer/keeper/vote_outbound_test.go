@@ -102,6 +102,9 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -140,6 +143,9 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -182,6 +188,9 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		// threshold high enough to not finalize the ballot
 		threshold, err := sdk.NewDecFromStr("0.7")
@@ -228,6 +237,9 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -286,6 +298,9 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{

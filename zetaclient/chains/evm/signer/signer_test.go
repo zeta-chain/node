@@ -47,7 +47,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 
 	return NewSigner(
 		chains.BscMainnet,
-		context.NewZetacoreContext(cfg),
+		context.New(cfg, zerolog.Nop()),
 		tss,
 		nil,
 		logger,
@@ -59,22 +59,34 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 }
 
 // getNewEvmChainObserver creates a new EVM chain observer for testing
-func getNewEvmChainObserver(tss interfaces.TSSSigner) (*observer.Observer, error) {
+func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.Observer, error) {
 	// use default mock TSS if not provided
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
-
-	logger := base.Logger{}
-	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 
+	// prepare mock arguments to create observer
 	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
+	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
+	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
-	coreCTX := context.NewZetacoreContext(cfg)
-	appCTX := context.NewAppContext(coreCTX, cfg)
+	appContext := context.New(cfg, zerolog.Nop())
+	dbpath := sample.CreateTempDir(t)
+	logger := base.Logger{}
+	ts := &metrics.TelemetryServer{}
 
-	return observer.NewObserver(appCTX, mocks.NewMockZetacoreClient(), tss, "", logger, evmcfg, ts)
+	return observer.NewObserver(
+		evmcfg,
+		evmClient,
+		params,
+		appContext,
+		mocks.NewMockZetacoreClient(),
+		tss,
+		dbpath,
+		logger,
+		ts,
+	)
 }
 
 func getNewOutboundProcessor() *outboundprocessor.Processor {
@@ -145,7 +157,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	require.NoError(t, err)
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
-	mockObserver, err := getNewEvmChainObserver(nil)
+	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 
 	// Test with mock client that has keys
@@ -166,9 +178,16 @@ func TestSigner_SignOutbound(t *testing.T) {
 	// Setup txData struct
 
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -200,9 +219,16 @@ func TestSigner_SignRevertTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -238,9 +264,16 @@ func TestSigner_SignCancelTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -276,9 +309,16 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -312,9 +352,16 @@ func TestSigner_SignCommandTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(nil)
+	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -357,9 +404,16 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -395,9 +449,16 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(nil)
+	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -445,9 +506,16 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -488,9 +556,16 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(tss)
+	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(
+		evmSigner.AppContext(),
+		cctx,
+		mockObserver,
+		evmSigner.EvmClient(),
+		zerolog.Logger{},
+		123,
+	)
 	require.False(t, skip)
 	require.NoError(t, err)
 

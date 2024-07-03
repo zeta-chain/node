@@ -34,7 +34,6 @@ func GetMinObserverDelegation() (sdkmath.Int, bool) {
 
 func GetMinObserverDelegationDec() (sdk.Dec, error) {
 	return sdk.NewDecFromStr(MinObserverDelegation)
-
 }
 
 func KeyPrefix(p string) []byte {

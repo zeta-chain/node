@@ -1,7 +1,5 @@
 #!/bin/bash
 
-UPGRADE_HEIGHT=$1
-
 CHAINID="athens_101-1"
 UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
@@ -65,7 +63,7 @@ cat > upgrade.json <<EOF
     }
   ],
   "metadata": "",
-  "deposit": "100000000azeta",
+  "deposit": "1000000000000000000000azeta",
   "title": "${UPGRADE_NAME}",
   "summary": "${UPGRADE_NAME}"
 }

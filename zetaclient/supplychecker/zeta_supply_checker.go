@@ -1,3 +1,5 @@
+// Package supplychecker provides functionalities to check the total supply of Zeta tokens
+// Currently not used in the codebase
 package supplychecker
 
 import (
@@ -21,7 +23,7 @@ import (
 
 // ZetaSupplyChecker is a utility to check the total supply of Zeta tokens
 type ZetaSupplyChecker struct {
-	coreContext      *context.ZetacoreContext
+	appContext       *context.AppContext
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetacore.Client
 	ticker           *clienttypes.DynamicTicker
@@ -50,8 +52,8 @@ func NewZetaSupplyChecker(
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
-		coreContext: appContext.ZetacoreContext(),
-		zetaClient:  zetaClient,
+		appContext: appContext,
+		zetaClient: zetaClient,
 	}
 
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
@@ -66,12 +68,15 @@ func NewZetaSupplyChecker(
 	}
 
 	for chainID := range zetaSupplyChecker.evmClient {
-		chain := chains.GetChainFromChainID(chainID)
-		if chain.IsExternalChain() && chains.IsEVMChain(chain.ChainId) && !chains.IsEthereumChain(chain.ChainId) {
-			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
+		chain, found := chains.GetChainFromChainID(chainID, appContext.GetAdditionalChains())
+		if !found {
+			return zetaSupplyChecker, fmt.Errorf("chain not found for chain id %d", chainID)
 		}
-		if chains.IsEthereumChain(chain.ChainId) {
-			zetaSupplyChecker.ethereumChain = *chain
+		if chain.IsExternalChain() && chain.IsEVMChain() &&
+			chain.Network != chains.Network_eth {
+			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, chain)
+		} else {
+			zetaSupplyChecker.ethereumChain = chain
 		}
 	}
 
@@ -92,6 +97,7 @@ func NewZetaSupplyChecker(
 	return zetaSupplyChecker, nil
 }
 
+// Start starts the ZetaSupplyChecker
 func (zs *ZetaSupplyChecker) Start() {
 	defer zs.ticker.Stop()
 	for {
@@ -107,23 +113,24 @@ func (zs *ZetaSupplyChecker) Start() {
 	}
 }
 
+// Stop stops the ZetaSupplyChecker
 func (zs *ZetaSupplyChecker) Stop() {
 	zs.logger.Info().Msgf("ZetaSupplyChecker is stopping")
 	close(zs.stop)
 }
 
+// CheckZetaTokenSupply checks the total supply of Zeta tokens
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
-
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
-		externalEvmChainParams, ok := zs.coreContext.GetEVMChainParams(chain.ChainId)
+		externalEvmChainParams, ok := zs.appContext.GetEVMChainParams(chain.ChainId)
 		if !ok {
 			return fmt.Errorf("externalEvmChainParams not found for chain id %d", chain.ChainId)
 		}
 
 		zetaTokenAddressString := externalEvmChainParams.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
-		zetatokenNonEth, err := observer.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
+		zetatokenNonEth, err := observer.FetchZetaTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {
 			return err
 		}
@@ -142,7 +149,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		externalChainTotalSupply = externalChainTotalSupply.Add(totalSupplyInt)
 	}
 
-	evmChainParams, ok := zs.coreContext.GetEVMChainParams(zs.ethereumChain.ChainId)
+	evmChainParams, ok := zs.appContext.GetEVMChainParams(zs.ethereumChain.ChainId)
 	if !ok {
 		return fmt.Errorf("eth config not found for chain id %d", zs.ethereumChain.ChainId)
 	}
@@ -194,6 +201,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	return nil
 }
 
+// AbortedTxAmount returns the amount of Zeta tokens in aborted transactions
 func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	amount, err := zs.zetaClient.GetAbortedZetaAmount()
 	if err != nil {
@@ -206,6 +214,7 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
+// GetAmountOfZetaInTransit returns the amount of Zeta tokens in transit
 func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
@@ -223,6 +232,7 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() (sdkmath.Int, error) {
 	return amountInt, nil
 }
 
+// GetPendingCCTXInTransit returns the pending CCTX in transit
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {
 	cctxInTransit := make([]*types.CrossChainTx, 0)
 	for _, chain := range receivingChains {

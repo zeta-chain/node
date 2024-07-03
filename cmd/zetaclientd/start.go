@@ -144,8 +144,8 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	appContext := context.NewAppContext(context.NewZetacoreContext(cfg), cfg)
-	err = zetacoreClient.UpdateZetacoreContext(appContext.ZetacoreContext(), true, startLogger)
+	appContext := context.New(cfg, masterLogger)
+	err = zetacoreClient.UpdateZetacoreContext(appContext, true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
@@ -226,7 +226,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		keyGen := appContext.ZetacoreContext().GetKeygen()
+		keyGen := appContext.GetKeygen()
 		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
 			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
 			continue
@@ -250,7 +250,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().
 		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.ZetacoreContext().GetEnabledChains()) == 0 {
+	if len(appContext.GetEnabledChains()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 

@@ -42,5 +42,4 @@ func SetupConfigForTest() {
 	})
 
 	rand.Seed(time.Now().UnixNano())
-
 }

@@ -17,6 +17,6 @@ func TestKeeper_SupportedChains(t *testing.T) {
 
 		res, err := k.SupportedChains(wctx, nil)
 		require.NoError(t, err)
-		require.Equal(t, []*chains.Chain{}, res.Chains)
+		require.Equal(t, []chains.Chain{}, res.Chains)
 	})
 }

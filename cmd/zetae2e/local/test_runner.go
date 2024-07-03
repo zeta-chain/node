@@ -1,8 +1,6 @@
 package local
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -14,8 +12,7 @@ func initTestRunner(
 	name string,
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
-	userAddress ethcommon.Address,
-	userPrivKey string,
+	account config.Account,
 	logger *runner.Logger,
 	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
@@ -25,8 +22,7 @@ func initTestRunner(
 		name,
 		deployerRunner.CtxCancel,
 		conf,
-		userAddress,
-		userPrivKey,
+		account,
 		logger,
 		opts...,
 	)

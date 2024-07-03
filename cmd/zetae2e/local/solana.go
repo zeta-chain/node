@@ -33,16 +33,17 @@ func solanaTestRoutine(
 				err = fmt.Errorf("solana panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
+		account := conf.AdditionalAccounts.UserBitcoin
 
 		// initialize runner for bitcoin test
 		solanaRunner, err := initTestRunner(
-			"bitcoin",
+			"solana",
 			conf,
 			deployerRunner,
-			UserBitcoinAddress,
-			UserBitcoinPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgCyan, "solana"),
 		)
+
 		if err != nil {
 			return err
 		}

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 	"sync/atomic"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -11,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -28,9 +31,9 @@ const (
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
 
-	// DefaultHeadersCacheSize is the default number of headers that the observer will keep in cache for performance (without RPC calls)
+	// DefaultHeaderCacheSize is the default number of headers that the observer will keep in cache for performance (without RPC calls)
 	// Cached headers can be used to get header information
-	DefaultHeadersCacheSize = 1000
+	DefaultHeaderCacheSize = 1000
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -42,8 +45,8 @@ type Observer struct {
 	// chainParams contains the dynamic chain parameters of the observed chain
 	chainParams observertypes.ChainParams
 
-	// coreContext contains context data of ZetaChain
-	zetacoreContext *context.ZetacoreContext
+	// appContext contains context data for zetaclient & zetacore (e.g. supported chains)
+	appContext *context.AppContext
 
 	// zetacoreClient is the client to interact with ZetaChain
 	zetacoreClient interfaces.ZetacoreClient
@@ -72,6 +75,10 @@ type Observer struct {
 	// logger contains the loggers used by observer
 	logger ObserverLogger
 
+	// mu protects fields from concurrent access
+	// Note: base observer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
+	mu *sync.Mutex
+
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
 }
@@ -80,24 +87,24 @@ type Observer struct {
 func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
-	zetacoreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
-	headersCacheSize int,
-	dbPath string,
+	headerCacheSize int,
 	ts *metrics.TelemetryServer,
 	logger Logger,
 ) (*Observer, error) {
 	ob := Observer{
 		chain:            chain,
 		chainParams:      chainParams,
-		zetacoreContext:  zetacoreContext,
+		appContext:       appContext,
 		zetacoreClient:   zetacoreClient,
 		tss:              tss,
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		ts:               ts,
+		mu:               &sync.Mutex{},
 		stop:             make(chan struct{}),
 	}
 
@@ -112,18 +119,27 @@ func NewObserver(
 	}
 
 	// create header cache
-	ob.headerCache, err = lru.New(headersCacheSize)
+	ob.headerCache, err = lru.New(headerCacheSize)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating header cache")
 	}
 
-	// open database
-	err = ob.OpenDB(dbPath)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error opening observer db for chain: %s", chain.ChainName))
-	}
-
 	return &ob, nil
+}
+
+// Stop notifies all goroutines to stop and closes the database.
+func (ob *Observer) Stop() {
+	ob.logger.Chain.Info().Msgf("observer is stopping for chain %d", ob.Chain().ChainId)
+	close(ob.stop)
+
+	// close database
+	if ob.db != nil {
+		err := ob.CloseDB()
+		if err != nil {
+			ob.Logger().Chain.Error().Err(err).Msgf("CloseDB failed for chain %d", ob.Chain().ChainId)
+		}
+	}
+	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
 }
 
 // Chain returns the chain for the observer.
@@ -148,15 +164,9 @@ func (ob *Observer) WithChainParams(params observertypes.ChainParams) *Observer 
 	return ob
 }
 
-// ZetacoreContext returns the zetacore context for the observer.
-func (ob *Observer) ZetacoreContext() *context.ZetacoreContext {
-	return ob.zetacoreContext
-}
-
-// WithZetacoreContext attaches a new zetacore context to the observer.
-func (ob *Observer) WithZetacoreContext(context *context.ZetacoreContext) *Observer {
-	ob.zetacoreContext = context
-	return ob
+// AppContext returns the zetacore context for the observer.
+func (ob *Observer) AppContext() *context.AppContext {
+	return ob.appContext
 }
 
 // ZetacoreClient returns the zetacore client for the observer.
@@ -232,9 +242,20 @@ func (ob *Observer) DB() *gorm.DB {
 	return ob.db
 }
 
+// WithTelemetryServer attaches a new telemetry server to the observer.
+func (ob *Observer) WithTelemetryServer(ts *metrics.TelemetryServer) *Observer {
+	ob.ts = ts
+	return ob
+}
+
+// TelemetryServer returns the telemetry server for the observer.
+func (ob *Observer) TelemetryServer() *metrics.TelemetryServer {
+	return ob.ts
+}
+
 // Logger returns the logger for the observer.
-func (ob *Observer) Logger() ObserverLogger {
-	return ob.logger
+func (ob *Observer) Logger() *ObserverLogger {
+	return &ob.logger
 }
 
 // WithLogger attaches a new logger to the observer.
@@ -251,45 +272,69 @@ func (ob *Observer) WithLogger(logger Logger) *Observer {
 	return ob
 }
 
-// Stop returns the stop channel for the observer.
-func (ob *Observer) Stop() chan struct{} {
+// Mu returns the mutex for the observer.
+func (ob *Observer) Mu() *sync.Mutex {
+	return ob.mu
+}
+
+// StopChannel returns the stop channel for the observer.
+func (ob *Observer) StopChannel() chan struct{} {
 	return ob.stop
 }
 
 // OpenDB open sql database in the given path.
-func (ob *Observer) OpenDB(dbPath string) error {
-	if dbPath != "" {
-		// create db path if not exist
-		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-			err := os.MkdirAll(dbPath, os.ModePerm)
-			if err != nil {
-				return errors.Wrap(err, "error creating db path")
-			}
-		}
-
-		// open db by chain name
-		chainName := ob.chain.ChainName.String()
-		path := fmt.Sprintf("%s/%s", dbPath, chainName)
-		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+func (ob *Observer) OpenDB(dbPath string, dbName string) error {
+	// create db path if not exist
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		err := os.MkdirAll(dbPath, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "error opening db")
+			return errors.Wrapf(err, "error creating db path: %s", dbPath)
 		}
+	}
 
-		// migrate db
-		err = db.AutoMigrate(&clienttypes.ReceiptSQLType{},
-			&clienttypes.TransactionSQLType{},
-			&clienttypes.LastBlockSQLType{})
-		if err != nil {
-			return errors.Wrap(err, "error migrating db")
-		}
-		ob.db = db
+	// use custom dbName or chain name if not provided
+	if dbName == "" {
+		dbName = ob.chain.ChainName.String()
+	}
+	path := fmt.Sprintf("%s/%s", dbPath, dbName)
+
+	// use memory db if specified
+	if strings.Contains(dbPath, ":memory:") {
+		path = dbPath
+	}
+
+	// open db
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	if err != nil {
+		return errors.Wrap(err, "error opening db")
+	}
+
+	// migrate db
+	err = db.AutoMigrate(&clienttypes.LastBlockSQLType{})
+	if err != nil {
+		return errors.Wrap(err, "error migrating db")
+	}
+	ob.db = db
+
+	return nil
+}
+
+// CloseDB close the database.
+func (ob *Observer) CloseDB() error {
+	dbInst, err := ob.db.DB()
+	if err != nil {
+		return fmt.Errorf("error getting database instance: %w", err)
+	}
+	err = dbInst.Close()
+	if err != nil {
+		return fmt.Errorf("error closing database: %w", err)
 	}
 	return nil
 }
 
 // LoadLastBlockScanned loads last scanned block from environment variable or from database.
 // The last scanned block is the height from which the observer should continue scanning.
-func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) (fromLatest bool, err error) {
+func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
 	// get environment variable
 	envvar := EnvVarLatestBlockByChain(ob.chain)
 	scanFromBlock := os.Getenv(envvar)
@@ -299,27 +344,33 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) (fromLatest bool
 		logger.Info().
 			Msgf("LoadLastBlockScanned: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == EnvVarLatestBlock {
-			return true, nil
+			return nil
 		}
 		blockNumber, err := strconv.ParseUint(scanFromBlock, 10, 64)
 		if err != nil {
-			return false, err
+			return err
 		}
 		ob.WithLastBlockScanned(blockNumber)
-		return false, nil
+		return nil
 	}
 
 	// load from DB otherwise. If not found, start from latest block
 	blockNumber, err := ob.ReadLastBlockScannedFromDB()
 	if err != nil {
-		logger.Info().Msgf("LoadLastBlockScanned: chain %d starts scanning from latest block", ob.chain.ChainId)
-		return true, nil
+		logger.Info().Msgf("LoadLastBlockScanned: last scanned block not found in db for chain %d", ob.chain.ChainId)
+		return nil
 	}
 	ob.WithLastBlockScanned(blockNumber)
 	logger.Info().
 		Msgf("LoadLastBlockScanned: chain %d starts scanning from block %d", ob.chain.ChainId, ob.LastBlockScanned())
 
-	return false, nil
+	return nil
+}
+
+// SaveLastBlockScanned saves the last scanned block to memory and database.
+func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
+	ob.WithLastBlockScanned(blockNumber)
+	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
 // WriteLastBlockScannedToDB saves the last scanned block to the database.
@@ -339,5 +390,5 @@ func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 
 // EnvVarLatestBlock returns the environment variable for the latest block by chain.
 func EnvVarLatestBlockByChain(chain chains.Chain) string {
-	return chain.ChainName.String() + "_SCAN_FROM"
+	return fmt.Sprintf("CHAIN_%d_SCAN_FROM", chain.ChainId)
 }

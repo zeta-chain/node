@@ -28,6 +28,9 @@
 * [2319](https://github.com/zeta-chain/node/pull/2319) - use `CheckAuthorization` function in all messages
 * [2325](https://github.com/zeta-chain/node/pull/2325) - revert telemetry server changes
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
+* [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
+* [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
+* [2416g](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
 
 ### Refactor
 
@@ -51,6 +54,10 @@
 * [2340](https://github.com/zeta-chain/node/pull/2340) - add ValidateInbound method for cctx orchestrator
 * [2344](https://github.com/zeta-chain/node/pull/2344) - group common data of EVM/Bitcoin signer and observer using base structs
 * [2357](https://github.com/zeta-chain/node/pull/2357) - integrate base Signer structure into EVM/Bitcoin Signer
+* [2359](https://github.com/zeta-chain/node/pull/2359) - integrate base Observer structure into EVM/Bitcoin Observer
+* [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
+* [2380](https://github.com/zeta-chain/node/pull/2380) - use `ChainInfo` in `authority` to allow dynamically support new chains
+* [2395](https://github.com/zeta-chain/node/pull/2395) - converge AppContext with ZetaCoreContext in zetaclient
 
 ### Tests
 
@@ -64,9 +71,12 @@
 * [2329](https://github.com/zeta-chain/node/pull/2329) - fix TODOs in rpc unit tests
 * [2342](https://github.com/zeta-chain/node/pull/2342) - extend rpc unit tests with testing extension to include synthetic ethereum txs
 * [2299](https://github.com/zeta-chain/node/pull/2299) - add `zetae2e` command to deploy test contracts
+* [2364](https://github.com/zeta-chain/node/pull/2364) - add stateful upgrade test
 * [2360](https://github.com/zeta-chain/node/pull/2360) - add stateful e2e tests.
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
+* [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
+
 
 ### Fixes
 
@@ -78,9 +88,10 @@
 * [2256](https://github.com/zeta-chain/node/pull/2256) - fix rate limiter falsely included reverted non-withdraw cctxs
 * [2327](https://github.com/zeta-chain/node/pull/2327) - partially cherry picked the fix to Bitcoin outbound dust amount
 * [2362](https://github.com/zeta-chain/node/pull/2362) - set 1000 satoshis as minimum BTC amount that can be withdrawn from zEVM
+* [2382](https://github.com/zeta-chain/node/pull/2382) - add tx input and gas in rpc methods for synthetic eth txs
 
 ### CI
-
+* [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
 * [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilitze debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
 * [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes
@@ -89,6 +100,12 @@
 * [2191](https://github.com/zeta-chain/node/pull/2191) - Fixed conditional logic for the docker build step for non release builds to not overwrite the github tag
 * [2192](https://github.com/zeta-chain/node/pull/2192) - Added release status checker and updater pipeline that will update release statuses when they go live on network
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
+* [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
+* [2400](https://github.com/zeta-chain/node/pull/2400) - ci: adjusted the performance test to pass or fail pipeline based on test results, alert slack, and launch network with state. Fixed connection issues as well.
+
+### Documentation
+
+* [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
 
 ## v17.0.0
 

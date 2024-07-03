@@ -7,12 +7,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// DynamicTicker is a ticker that can have its interval updated
 type DynamicTicker struct {
 	name     string
 	interval uint64
 	impl     *time.Ticker
 }
 
+// NewDynamicTicker creates a new DynamicTicker
 func NewDynamicTicker(name string, interval uint64) (*DynamicTicker, error) {
 	if interval <= 0 {
 		return nil, fmt.Errorf("non-positive ticker interval %d for %s", interval, name)
@@ -25,10 +27,12 @@ func NewDynamicTicker(name string, interval uint64) (*DynamicTicker, error) {
 	}, nil
 }
 
+// C returns the channel of the ticker
 func (t *DynamicTicker) C() <-chan time.Time {
 	return t.impl.C
 }
 
+// UpdateInterval updates the interval of the ticker
 func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger) {
 	if newInterval > 0 && t.interval != newInterval {
 		t.impl.Stop()
@@ -39,6 +43,7 @@ func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger
 	}
 }
 
+// Stop stops the ticker
 func (t *DynamicTicker) Stop() {
 	t.impl.Stop()
 }

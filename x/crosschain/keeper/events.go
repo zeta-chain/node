@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -15,13 +14,11 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 		MsgTypeUrl:         sdk.MsgTypeURL(&types.MsgVoteInbound{}),
 		CctxIndex:          cctx.Index,
 		Sender:             cctx.InboundParams.Sender,
-		SenderChain:        chains.GetChainFromChainID(cctx.InboundParams.SenderChainId).ChainName.String(),
 		TxOrgin:            cctx.InboundParams.TxOrigin,
 		Asset:              cctx.InboundParams.Asset,
 		InboundHash:        cctx.InboundParams.ObservedHash,
 		InboundBlockHeight: strconv.FormatUint(cctx.InboundParams.ObservedExternalHeight, 10),
 		Receiver:           currentOutParam.Receiver,
-		ReceiverChain:      chains.GetChainFromChainID(currentOutParam.ReceiverChainId).ChainName.String(),
 		Amount:             cctx.InboundParams.Amount.String(),
 		RelayedMessage:     cctx.RelayedMessage,
 		NewStatus:          cctx.CctxStatus.Status.String(),
@@ -56,7 +53,6 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	if err != nil {
 		ctx.Logger().Error("Error emitting ZetaWithdrawCreated :", err)
 	}
-
 }
 
 func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {
@@ -70,7 +66,6 @@ func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string
 	if err != nil {
 		ctx.Logger().Error("Error emitting MsgVoteOutbound :", err)
 	}
-
 }
 
 func EmitOutboundFailure(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {

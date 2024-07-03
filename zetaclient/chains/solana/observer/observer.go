@@ -34,9 +34,9 @@ type Observer struct {
 	chain        chains.Chain
 	solanaClient *rpc.Client
 
-	stop        chan struct{}
-	logger      zerolog.Logger
-	coreContext *clientcontext.ZetacoreContext
+	stop   chan struct{}
+	logger zerolog.Logger
+	//coreContext *clientcontext.ZetacoreContext
 	chainParams observertypes.ChainParams
 	programId   solana.PublicKey
 	ts          *metrics.TelemetryServer
@@ -63,7 +63,7 @@ func NewObserver(
 	logger := log.With().Str("chain", "solana").Logger()
 	ob.logger = logger
 
-	ob.coreContext = appContext.ZetacoreContext()
+	//ob.coreContext = appContext.ZetacoreContext()
 	chainParams := observertypes.ChainParams{
 		IsSupported: true,
 	}
@@ -159,11 +159,11 @@ func (o *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !clientcontext.IsInboundObservationEnabled(o.coreContext, o.GetChainParams()) {
-				o.logger.Info().
-					Msgf("WatchInbound: inbound observation is disabled for chain solana")
-				continue
-			}
+			//if !clientcontext.IsInboundObservationEnabled(o.coreContext, o.GetChainParams()) {
+			//	o.logger.Info().
+			//		Msgf("WatchInbound: inbound observation is disabled for chain solana")
+			//	continue
+			//}
 			err := o.ObserveInbound()
 			if err != nil {
 				o.logger.Err(err).Msg("WatchInbound: observeInbound error")

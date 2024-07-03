@@ -49,7 +49,6 @@ func HeaderSupportedChains() []lightclienttypes.HeaderSupportedChain {
 
 func BlockHeaderVerification() lightclienttypes.BlockHeaderVerification {
 	return lightclienttypes.BlockHeaderVerification{HeaderSupportedChains: HeaderSupportedChains()}
-
 }
 
 // Proof generates a proof and block header

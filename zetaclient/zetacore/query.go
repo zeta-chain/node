@@ -19,12 +19,14 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
 
+// GetCrosschainFlags returns the crosschain flags
 func (c *Client) GetCrosschainFlags() (observertypes.CrosschainFlags, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.CrosschainFlags(context.Background(), &observertypes.QueryGetCrosschainFlagsRequest{})
@@ -34,6 +36,7 @@ func (c *Client) GetCrosschainFlags() (observertypes.CrosschainFlags, error) {
 	return resp.CrosschainFlags, nil
 }
 
+// GetBlockHeaderEnabledChains returns the enabled chains for block headers
 func (c *Client) GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error) {
 	client := lightclienttypes.NewQueryClient(c.grpcConn)
 	resp, err := client.HeaderEnabledChains(context.Background(), &lightclienttypes.QueryHeaderEnabledChainsRequest{})
@@ -43,6 +46,7 @@ func (c *Client) GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupport
 	return resp.HeaderEnabledChains, nil
 }
 
+// GetRateLimiterFlags returns the rate limiter flags
 func (c *Client) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.RateLimiterFlags(context.Background(), &crosschaintypes.QueryRateLimiterFlagsRequest{})
@@ -52,6 +56,7 @@ func (c *Client) GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error)
 	return resp.RateLimiterFlags, nil
 }
 
+// GetChainParamsForChainID returns the chain params for a given chain ID
 func (c *Client) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.GetChainParamsForChain(
@@ -64,6 +69,7 @@ func (c *Client) GetChainParamsForChainID(externalChainID int64) (*observertypes
 	return resp.ChainParams, nil
 }
 
+// GetChainParams returns all the chain params
 func (c *Client) GetChainParams() ([]*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	var err error
@@ -79,6 +85,7 @@ func (c *Client) GetChainParams() ([]*observertypes.ChainParams, error) {
 	return nil, fmt.Errorf("failed to get chain params | err %s", err.Error())
 }
 
+// GetUpgradePlan returns the current upgrade plan
 func (c *Client) GetUpgradePlan() (*upgradetypes.Plan, error) {
 	client := upgradetypes.NewQueryClient(c.grpcConn)
 
@@ -89,6 +96,7 @@ func (c *Client) GetUpgradePlan() (*upgradetypes.Plan, error) {
 	return resp.Plan, nil
 }
 
+// GetAllCctx returns all cross chain transactions
 func (c *Client) GetAllCctx() ([]*crosschaintypes.CrossChainTx, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.CctxAll(context.Background(), &crosschaintypes.QueryAllCctxRequest{})
@@ -98,6 +106,7 @@ func (c *Client) GetAllCctx() ([]*crosschaintypes.CrossChainTx, error) {
 	return resp.CrossChainTx, nil
 }
 
+// GetCctxByHash returns a cross chain transaction by hash
 func (c *Client) GetCctxByHash(sendHash string) (*crosschaintypes.CrossChainTx, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.Cctx(context.Background(), &crosschaintypes.QueryGetCctxRequest{Index: sendHash})
@@ -107,6 +116,7 @@ func (c *Client) GetCctxByHash(sendHash string) (*crosschaintypes.CrossChainTx, 
 	return resp.CrossChainTx, nil
 }
 
+// GetCctxByNonce returns a cross chain transaction by nonce
 func (c *Client) GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.CctxByNonce(context.Background(), &crosschaintypes.QueryGetCctxByNonceRequest{
@@ -119,6 +129,7 @@ func (c *Client) GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.C
 	return resp.CrossChainTx, nil
 }
 
+// GetObserverList returns the list of observers
 func (c *Client) GetObserverList() ([]string, error) {
 	var err error
 	client := observertypes.NewQueryClient(c.grpcConn)
@@ -185,6 +196,7 @@ func (c *Client) ListPendingCctxWithinRatelimit() ([]*crosschaintypes.CrossChain
 	return resp.CrossChainTx, resp.TotalPending, resp.CurrentWithdrawWindow, resp.CurrentWithdrawRate, resp.RateLimitExceeded, nil
 }
 
+// GetAbortedZetaAmount returns the amount of zeta that has been aborted
 func (c *Client) GetAbortedZetaAmount() (string, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.ZetaAccounting(context.Background(), &crosschaintypes.QueryZetaAccountingRequest{})
@@ -194,6 +206,7 @@ func (c *Client) GetAbortedZetaAmount() (string, error) {
 	return resp.AbortedZetaAmount, nil
 }
 
+// GetGenesisSupply returns the genesis supply
 func (c *Client) GetGenesisSupply() (sdkmath.Int, error) {
 	tmURL := fmt.Sprintf("http://%s", c.cfg.ChainRPC)
 	s, err := tmhttp.New(tmURL, "/websocket")
@@ -212,6 +225,7 @@ func (c *Client) GetGenesisSupply() (sdkmath.Int, error) {
 	return bankstate.Supply.AmountOf(config.BaseDenom), nil
 }
 
+// GetZetaTokenSupplyOnNode returns the zeta token supply on the node
 func (c *Client) GetZetaTokenSupplyOnNode() (sdkmath.Int, error) {
 	client := banktypes.NewQueryClient(c.grpcConn)
 	resp, err := client.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{Denom: config.BaseDenom})
@@ -221,6 +235,7 @@ func (c *Client) GetZetaTokenSupplyOnNode() (sdkmath.Int, error) {
 	return resp.GetAmount().Amount, nil
 }
 
+// GetLastBlockHeight returns the last block height
 func (c *Client) GetLastBlockHeight() ([]*crosschaintypes.LastBlockHeight, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &crosschaintypes.QueryAllLastBlockHeightRequest{})
@@ -231,6 +246,7 @@ func (c *Client) GetLastBlockHeight() ([]*crosschaintypes.LastBlockHeight, error
 	return resp.LastBlockHeight, nil
 }
 
+// GetLatestZetaBlock returns the latest zeta block
 func (c *Client) GetLatestZetaBlock() (*tmservice.Block, error) {
 	client := tmservice.NewServiceClient(c.grpcConn)
 	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
@@ -240,6 +256,7 @@ func (c *Client) GetLatestZetaBlock() (*tmservice.Block, error) {
 	return res.SdkBlock, nil
 }
 
+// GetNodeInfo returns the node info
 func (c *Client) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	var err error
 
@@ -254,18 +271,7 @@ func (c *Client) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	return nil, err
 }
 
-func (c *Client) GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error) {
-	client := crosschaintypes.NewQueryClient(c.grpcConn)
-	resp, err := client.LastBlockHeight(
-		context.Background(),
-		&crosschaintypes.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return resp.LastBlockHeight, nil
-}
-
+// GetBlockHeight returns the zetachain block height
 func (c *Client) GetBlockHeight() (int64, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
@@ -275,6 +281,7 @@ func (c *Client) GetBlockHeight() (int64, error) {
 	return resp.Height, nil
 }
 
+// GetBaseGasPrice returns the base gas price
 func (c *Client) GetBaseGasPrice() (int64, error) {
 	client := feemarkettypes.NewQueryClient(c.grpcConn)
 	resp, err := client.Params(context.Background(), &feemarkettypes.QueryParamsRequest{})
@@ -287,6 +294,7 @@ func (c *Client) GetBaseGasPrice() (int64, error) {
 	return resp.Params.BaseFee.Int64(), nil
 }
 
+// GetBallotByID returns a ballot by ID
 func (c *Client) GetBallotByID(id string) (*observertypes.QueryBallotByIdentifierResponse, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	return client.BallotByIdentifier(context.Background(), &observertypes.QueryBallotByIdentifierRequest{
@@ -294,6 +302,7 @@ func (c *Client) GetBallotByID(id string) (*observertypes.QueryBallotByIdentifie
 	})
 }
 
+// GetNonceByChain returns the nonce by chain
 func (c *Client) GetNonceByChain(chain chains.Chain) (observertypes.ChainNonces, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.ChainNonces(
@@ -306,6 +315,7 @@ func (c *Client) GetNonceByChain(chain chains.Chain) (observertypes.ChainNonces,
 	return resp.ChainNonces, nil
 }
 
+// GetAllNodeAccounts returns all node accounts
 func (c *Client) GetAllNodeAccounts() ([]*observertypes.NodeAccount, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.NodeAccountAll(context.Background(), &observertypes.QueryAllNodeAccountRequest{})
@@ -316,6 +326,7 @@ func (c *Client) GetAllNodeAccounts() ([]*observertypes.NodeAccount, error) {
 	return resp.NodeAccount, nil
 }
 
+// GetKeyGen returns the keygen
 func (c *Client) GetKeyGen() (*observertypes.Keygen, error) {
 	var err error
 	client := observertypes.NewQueryClient(c.grpcConn)
@@ -330,6 +341,7 @@ func (c *Client) GetKeyGen() (*observertypes.Keygen, error) {
 	return nil, fmt.Errorf("failed to get keygen | err %s", err.Error())
 }
 
+// GetBallot returns a ballot by ID
 func (c *Client) GetBallot(ballotIdentifier string) (*observertypes.QueryBallotByIdentifierResponse, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.BallotByIdentifier(context.Background(), &observertypes.QueryBallotByIdentifierRequest{
@@ -341,6 +353,7 @@ func (c *Client) GetBallot(ballotIdentifier string) (*observertypes.QueryBallotB
 	return resp, nil
 }
 
+// GetInboundTrackersForChain returns the inbound trackers for a chain
 func (c *Client) GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.InboundTrackerAllByChain(
@@ -353,6 +366,7 @@ func (c *Client) GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.In
 	return resp.InboundTracker, nil
 }
 
+// GetCurrentTss returns the current TSS
 func (c *Client) GetCurrentTss() (observertypes.TSS, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.TSS(context.Background(), &observertypes.QueryGetTSSRequest{})
@@ -362,6 +376,8 @@ func (c *Client) GetCurrentTss() (observertypes.TSS, error) {
 	return resp.TSS, nil
 }
 
+// GetEthTssAddress returns the ETH TSS address
+// TODO(revamp): rename to EVM
 func (c *Client) GetEthTssAddress() (string, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
@@ -371,6 +387,7 @@ func (c *Client) GetEthTssAddress() (string, error) {
 	return resp.Eth, nil
 }
 
+// GetBtcTssAddress returns the BTC TSS address
 func (c *Client) GetBtcTssAddress(chainID int64) (string, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{
@@ -382,6 +399,7 @@ func (c *Client) GetBtcTssAddress(chainID int64) (string, error) {
 	return resp.Btc, nil
 }
 
+// GetTssHistory returns the TSS history
 func (c *Client) GetTssHistory() ([]observertypes.TSS, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.TssHistory(context.Background(), &observertypes.QueryTssHistoryRequest{})
@@ -391,6 +409,7 @@ func (c *Client) GetTssHistory() ([]observertypes.TSS, error) {
 	return resp.TssList, nil
 }
 
+// GetOutboundTracker returns the outbound tracker for a chain and nonce
 func (c *Client) GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error) {
 	client := crosschaintypes.NewQueryClient(c.grpcConn)
 	resp, err := client.OutboundTracker(context.Background(), &crosschaintypes.QueryGetOutboundTrackerRequest{
@@ -403,6 +422,7 @@ func (c *Client) GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosscha
 	return &resp.OutboundTracker, nil
 }
 
+// GetAllOutboundTrackerByChain returns all outbound trackers for a chain
 func (c *Client) GetAllOutboundTrackerByChain(
 	chainID int64,
 	order interfaces.Order,
@@ -437,6 +457,7 @@ func (c *Client) GetAllOutboundTrackerByChain(
 	return resp.OutboundTracker, nil
 }
 
+// GetPendingNoncesByChain returns the pending nonces for a chain and current tss address
 func (c *Client) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.PendingNoncesByChain(
@@ -449,6 +470,7 @@ func (c *Client) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNo
 	return resp.PendingNonces, nil
 }
 
+// GetBlockHeaderChainState returns the block header chain state
 func (c *Client) GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error) {
 	client := lightclienttypes.NewQueryClient(c.grpcConn)
 	resp, err := client.ChainState(context.Background(), &lightclienttypes.QueryGetChainStateRequest{ChainId: chainID})
@@ -458,7 +480,8 @@ func (c *Client) GetBlockHeaderChainState(chainID int64) (lightclienttypes.Query
 	return *resp, nil
 }
 
-func (c *Client) GetSupportedChains() ([]*chains.Chain, error) {
+// GetSupportedChains returns the supported chains
+func (c *Client) GetSupportedChains() ([]chains.Chain, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.SupportedChains(context.Background(), &observertypes.QuerySupportedChains{})
 	if err != nil {
@@ -467,6 +490,17 @@ func (c *Client) GetSupportedChains() ([]*chains.Chain, error) {
 	return resp.GetChains(), nil
 }
 
+// GetAdditionalChains returns the additional chains
+func (c *Client) GetAdditionalChains() ([]chains.Chain, error) {
+	client := authoritytypes.NewQueryClient(c.grpcConn)
+	resp, err := client.ChainInfo(context.Background(), &authoritytypes.QueryGetChainInfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetChainInfo().Chains, nil
+}
+
+// GetPendingNonces returns the pending nonces
 func (c *Client) GetPendingNonces() (*observertypes.QueryAllPendingNoncesResponse, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.PendingNoncesAll(context.Background(), &observertypes.QueryAllPendingNoncesRequest{})
@@ -476,6 +510,7 @@ func (c *Client) GetPendingNonces() (*observertypes.QueryAllPendingNoncesRespons
 	return resp, nil
 }
 
+// Prove returns whether a proof is valid
 func (c *Client) Prove(
 	blockHash string,
 	txHash string,
@@ -497,6 +532,7 @@ func (c *Client) Prove(
 	return resp.Valid, nil
 }
 
+// HasVoted returns whether an observer has voted
 func (c *Client) HasVoted(ballotIndex string, voterAddress string) (bool, error) {
 	client := observertypes.NewQueryClient(c.grpcConn)
 	resp, err := client.HasVoted(context.Background(), &observertypes.QueryHasVotedRequest{
@@ -509,6 +545,7 @@ func (c *Client) HasVoted(ballotIndex string, voterAddress string) (bool, error)
 	return resp.HasVoted, nil
 }
 
+// GetZetaHotKeyBalance returns the zeta hot key balance
 func (c *Client) GetZetaHotKeyBalance() (sdkmath.Int, error) {
 	client := banktypes.NewQueryClient(c.grpcConn)
 	address, err := c.keys.GetAddress()

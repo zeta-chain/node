@@ -119,7 +119,7 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		txFactory:    txf,
 		name:         names,
 		address:      addresses,
-		blockTimeout: 1 * time.Minute,
+		blockTimeout: 2 * time.Minute,
 	}, nil
 }
 
@@ -157,7 +157,6 @@ func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 // GetAllAccountAddress returns all account addresses
 func (zts ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
-
 }
 
 // GetAccountMnemonic returns the account name from the given index
@@ -201,7 +200,6 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 	if err != nil {
 		return nil, err
 	}
-
 	return broadcastWithBlockTimeout(zts, txBytes)
 }
 
@@ -272,7 +270,6 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 		addr.String(),
 		chainIDList,
 	))
-
 	return err
 }
 

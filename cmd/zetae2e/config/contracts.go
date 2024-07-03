@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
@@ -32,169 +31,173 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	// set EVM contracts
-	if c := conf.Contracts.EVM.ZetaEthAddress; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ZetaEthAddress: %s", c)
+	if c := conf.Contracts.EVM.ZetaEthAddr; c != "" {
+		r.ZetaEthAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ZetaEthAddr: %w", err)
 		}
-		r.ZetaEthAddr = ethcommon.HexToAddress(c)
 		r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.EVM.ConnectorEthAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ConnectorEthAddr: %s", c)
+		r.ConnectorEthAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorEthAddr: %w", err)
 		}
-		r.ConnectorEthAddr = ethcommon.HexToAddress(c)
 		r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.EVM.CustodyAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid CustodyAddr: %s", c)
+		r.ERC20CustodyAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid CustodyAddr: %w", err)
 		}
-		r.ERC20CustodyAddr = ethcommon.HexToAddress(c)
 		r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.EVM.ERC20; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ERC20: %s", c)
+		r.ERC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ERC20: %w", err)
 		}
-		r.ERC20Addr = ethcommon.HexToAddress(c)
 		r.ERC20, err = erc20.NewERC20(r.ERC20Addr, r.EVMClient)
 		if err != nil {
 			return err
 		}
 	}
 
-	// set Zevm contracts
+	// set ZEVM contracts
 	if c := conf.Contracts.ZEVM.SystemContractAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid SystemContractAddr: %s", c)
+		r.SystemContractAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid SystemContractAddr: %w", err)
 		}
-		r.SystemContractAddr = ethcommon.HexToAddress(c)
 		r.SystemContract, err = systemcontract.NewSystemContract(r.SystemContractAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.ETHZRC20Addr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ETHZRC20Addr: %s", c)
+		r.ETHZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ETHZRC20Addr: %w", err)
 		}
-		r.ETHZRC20Addr = ethcommon.HexToAddress(c)
 		r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.ERC20ZRC20Addr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ERC20ZRC20Addr: %s", c)
+		r.ERC20ZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ERC20ZRC20Addr: %w", err)
 		}
-		r.ERC20ZRC20Addr = ethcommon.HexToAddress(c)
 		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.BTCZRC20Addr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid BTCZRC20Addr: %s", c)
+		r.BTCZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid BTCZRC20Addr: %w", err)
 		}
-		r.BTCZRC20Addr = ethcommon.HexToAddress(c)
 		r.BTCZRC20, err = zrc20.NewZRC20(r.BTCZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
-	if c := conf.Contracts.ZEVM.ERC20ZRC20Addr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ERC20ZRC20Addr: %s", c)
-		}
-		r.ERC20ZRC20Addr = ethcommon.HexToAddress(c)
-		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
-		if err != nil {
-			return err
-		}
-	}
+
 	if c := conf.Contracts.ZEVM.UniswapFactoryAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid UniswapFactoryAddr: %s", c)
+		r.UniswapV2FactoryAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid UniswapFactoryAddr: %w", err)
 		}
-		r.UniswapV2FactoryAddr = ethcommon.HexToAddress(c)
 		r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.UniswapRouterAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid UniswapRouterAddr: %s", c)
+		r.UniswapV2RouterAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid UniswapRouterAddr: %w", err)
 		}
-		r.UniswapV2RouterAddr = ethcommon.HexToAddress(c)
 		r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.ConnectorZEVMAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ConnectorZEVMAddr: %s", c)
+		r.ConnectorZEVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorZEVMAddr: %w", err)
 		}
-		r.ConnectorZEVMAddr = ethcommon.HexToAddress(c)
 		r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.WZetaAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid WZetaAddr: %s", c)
+		r.WZetaAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid WZetaAddr: %w", err)
 		}
-		r.WZetaAddr = ethcommon.HexToAddress(c)
 		r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.ZEVMSwapAppAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ZEVMSwapAppAddr: %s", c)
+		r.ZEVMSwapAppAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ZEVMSwapAppAddr: %w", err)
 		}
-		r.ZEVMSwapAppAddr = ethcommon.HexToAddress(c)
 		r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.ContextAppAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ContextAppAddr: %s", c)
+		r.ContextAppAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ContextAppAddr: %w", err)
 		}
-		r.ContextAppAddr = ethcommon.HexToAddress(c)
 		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ZevmTestDappAddr: %s", c)
+		r.ZevmTestDAppAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ZevmTestDappAddr: %w", err)
 		}
-		r.ZevmTestDAppAddr = ethcommon.HexToAddress(c)
 	}
+
 	if c := conf.Contracts.EVM.TestDappAddr; c != "" {
-		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid EvmTestDappAddr: %s", c)
+		r.EvmTestDAppAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid EvmTestDappAddr: %w", err)
 		}
-		r.EvmTestDAppAddr = ethcommon.HexToAddress(c)
 	}
 
 	return nil

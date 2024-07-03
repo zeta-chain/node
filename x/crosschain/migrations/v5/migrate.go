@@ -94,15 +94,14 @@ func SetZetaAccounting(
 	abortedAmountZeta := sdkmath.ZeroUint()
 	for _, cctx := range ccctxList {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-
 			switch cctx.InboundParams.CoinType {
 			case coin.CoinType_ERC20:
 				{
-					receiverChain := observerKeeper.GetSupportedChainFromChainID(
+					receiverChain, found := observerKeeper.GetSupportedChainFromChainID(
 						ctx,
 						cctx.GetCurrentOutboundParam().ReceiverChainId,
 					)
-					if receiverChain == nil {
+					if !found {
 						ctx.Logger().
 							Error(fmt.Sprintf("Error getting chain from chain id: %d , cctx index", cctx.GetCurrentOutboundParam().ReceiverChainId), cctx.Index)
 						continue
@@ -124,7 +123,6 @@ func SetZetaAccounting(
 					abortedValue := GetAbortedAmount(cctx)
 					abortedAmountZeta = abortedAmountZeta.Add(abortedValue)
 					cctx.CctxStatus.IsAbortRefunded = false
-
 				}
 			case coin.CoinType_Gas:
 				{
@@ -134,7 +132,6 @@ func SetZetaAccounting(
 			}
 			crosschainKeeper.SetCrossChainTx(ctx, cctx)
 		}
-
 	}
 	crosschainKeeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: abortedAmountZeta})
 

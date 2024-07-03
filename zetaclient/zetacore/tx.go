@@ -24,6 +24,7 @@ import (
 )
 
 // GetInboundVoteMessage returns a new MsgVoteInbound
+// TODO(revamp): move to a different file
 func GetInboundVoteMessage(
 	sender string,
 	senderChain int64,
@@ -60,15 +61,17 @@ func GetInboundVoteMessage(
 }
 
 // GasPriceMultiplier returns the gas price multiplier for the given chain
-func GasPriceMultiplier(chainID int64) (float64, error) {
-	if chains.IsEVMChain(chainID) {
+func GasPriceMultiplier(chain chains.Chain) (float64, error) {
+	if chain.IsEVMChain() {
 		return clientcommon.EVMOutboundGasPriceMultiplier, nil
-	} else if chains.IsBitcoinChain(chainID) {
+	} else if chain.IsBitcoinChain() {
 		return clientcommon.BTCOutboundGasPriceMultiplier, nil
 	}
-	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chainID)
+	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chain.ChainId)
 }
 
+// WrapMessageWithAuthz wraps a message with an authz message
+// used since a hotkey is used to broadcast the transactions, instead of the operator
 func (c *Client) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
 
@@ -82,9 +85,11 @@ func (c *Client) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer,
 	return &authzMessage, authzSigner, nil
 }
 
+// PostGasPrice posts a gas price vote
+// TODO(revamp): rename to PostVoteGasPrice
 func (c *Client) PostGasPrice(chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	// apply gas price multiplier for the chain
-	multiplier, err := GasPriceMultiplier(chain.ChainId)
+	multiplier, err := GasPriceMultiplier(chain)
 	if err != nil {
 		return "", err
 	}
@@ -110,6 +115,8 @@ func (c *Client) PostGasPrice(chain chains.Chain, gasPrice uint64, supply string
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
+// AddOutboundTracker adds an outbound tracker
+// TODO(revamp): rename to PostAddOutboundTracker
 func (c *Client) AddOutboundTracker(
 	chainID int64,
 	nonce uint64,
@@ -143,6 +150,8 @@ func (c *Client) AddOutboundTracker(
 	return zetaTxHash, nil
 }
 
+// SetTSS sends message to vote tss
+// TODO(revamp): rename to PostVoteTSS
 func (c *Client) SetTSS(tssPubkey string, keyGenZetaHeight int64, status chains.ReceiveStatus) (string, error) {
 	signerAddress := c.keys.GetOperatorAddress().String()
 	msg := observertypes.NewMsgVoteTSS(signerAddress, tssPubkey, keyGenZetaHeight, status)
@@ -166,6 +175,8 @@ func (c *Client) SetTSS(tssPubkey string, keyGenZetaHeight int64, status chains.
 }
 
 // ZetacoreContextUpdater is a polling goroutine that checks and updates zetacore context at every height
+// TODO(revamp): move to a different file
+// TODO(revamp): rename to UpdateZetacoreContext
 func (c *Client) ZetacoreContextUpdater(appContext *appcontext.AppContext) {
 	c.logger.Info().Msg("ZetacoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
@@ -174,7 +185,7 @@ func (c *Client) ZetacoreContextUpdater(appContext *appcontext.AppContext) {
 		select {
 		case <-ticker.C:
 			c.logger.Debug().Msg("Running Updater")
-			err := c.UpdateZetacoreContext(appContext.ZetacoreContext(), false, sampledLogger)
+			err := c.UpdateZetacoreContext(appContext, false, sampledLogger)
 			if err != nil {
 				c.logger.Err(err).Msg("ZetacoreContextUpdater failed to update config")
 			}
@@ -185,6 +196,8 @@ func (c *Client) ZetacoreContextUpdater(appContext *appcontext.AppContext) {
 	}
 }
 
+// PostBlameData posts blame data message to zetacore
+// TODO(revamp): rename to PostVoteBlame
 func (c *Client) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {
 	signerAddress := c.keys.GetOperatorAddress().String()
 	zetaBlame := observertypes.Blame{
@@ -212,6 +225,7 @@ func (c *Client) PostBlameData(blame *blame.Blame, chainID int64, index string) 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
+// PostVoteBlockHeader posts a vote on an observed block header
 func (c *Client) PostVoteBlockHeader(
 	chainID int64,
 	blockHash []byte,
@@ -280,6 +294,7 @@ func (c *Client) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgV
 // MonitorVoteInboundResult monitors the result of a vote inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
+// TODO(revamp): move to a monitor file
 func (c *Client) MonitorVoteInboundResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteInbound) {
 	var lastErr error
 
@@ -330,6 +345,7 @@ func (c *Client) MonitorVoteInboundResult(zetaTxHash string, retryGasLimit uint6
 }
 
 // PostVoteOutbound posts a vote on an observed outbound tx
+// TODO(revamp): rename and move to a different file
 func (c *Client) PostVoteOutbound(
 	cctxIndex string,
 	outboundHash string,
@@ -372,6 +388,7 @@ func (c *Client) PostVoteOutbound(
 }
 
 // PostVoteOutboundFromMsg posts a vote on an observed outbound tx from a MsgVoteOutbound
+// TODO(revamp): rename to PostVoteOutbound
 func (c *Client) PostVoteOutboundFromMsg(
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteOutbound,
@@ -412,6 +429,7 @@ func (c *Client) PostVoteOutboundFromMsg(
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // if retryGasLimit is 0, the tx is not resent
+// TODO(revamp): move to a monitor file
 func (c *Client) MonitorVoteOutboundResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOutbound) {
 	var lastErr error
 

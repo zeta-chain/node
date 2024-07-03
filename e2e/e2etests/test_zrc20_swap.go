@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -24,22 +25,19 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	}
 
 	zrc20EthPair, err := r.UniswapV2Factory.GetPair(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	r.Logger.Info("ZRC20-ETH pair receipt pair addr %s", zrc20EthPair.Hex())
 
 	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("ERC20 ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	tx, err = r.ETHZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("ETH ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
@@ -58,40 +56,34 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 		big.NewInt(1000),
 		big.NewInt(90000),
 		big.NewInt(1000),
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	balETHBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	balETHBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
 	ethOutAmout := big.NewInt(1)
 	tx, err = r.UniswapV2Router.SwapExactTokensForTokens(
 		r.ZEVMAuth,
 		big.NewInt(1000),
 		ethOutAmout,
 		[]ethcommon.Address{r.ERC20ZRC20Addr, r.ETHZRC20Addr},
-		r.DeployerAddress,
+		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(r, err)
+
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Swap ERC20 ZRC20 for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
 
-	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
 	ethDiff := big.NewInt(0).Sub(balETHAfter, balETHBefore)
-	if ethDiff.Cmp(ethOutAmout) < 0 {
-		panic("swap failed")
-	}
+	require.NotEqual(r, -1, ethDiff.Cmp(ethOutAmout), "swap failed")
 }

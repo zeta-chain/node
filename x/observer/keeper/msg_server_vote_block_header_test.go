@@ -93,6 +93,9 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
 		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -131,6 +134,9 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
 		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -176,6 +182,9 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
 		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -250,6 +259,9 @@ func TestMsgServer_VoteBlockHeader(t *testing.T) {
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
 		lightclientMock := keepertest.GetObserverLightclientMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{

@@ -137,14 +137,14 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		observer := sample.AccAddress()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
 		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
-		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, *senderChain, observer)
+		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, senderChain, observer)
 
 		// Successfully mock GetOutbound
 		keepertest.MockGetOutbound(observerMock, ctx)
@@ -188,23 +188,22 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		observer := sample.AccAddress()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
 		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
-		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
+		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, senderChain, observer)
 
 		// Successfully mock GetOutbound
 		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Successfully mock ProcessOutbound
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
-		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
+		_ = keepertest.MockUpdateNonce(observerMock, senderChain)
 
 		//Successfully mock SaveOutbound
 		keepertest.MockSaveOutboundNewRevertCreated(observerMock, ctx, cctx, tss)
@@ -248,21 +247,21 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		observer := sample.AccAddress()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
 		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
-		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
+		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, senderChain, observer)
 
 		// Successfully mock GetOutbound
 		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Mock Failed ProcessOutbound
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
 		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
@@ -312,7 +311,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		observer := sample.AccAddress()
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
@@ -321,7 +320,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
-		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
+		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, senderChain, observer)
 
 		// Successfully mock GetOutbound
 		keepertest.MockGetOutbound(observerMock, ctx)
@@ -330,7 +329,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
 			Return(fungibletypes.ForeignCoins{}, false)
 
-			// Successfully mock GetSupportedChainFromChainID
+		// Successfully mock GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		//Successfully mock SaveFailedOutbound
@@ -379,7 +378,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 			},
 		)
 		sk.StakingKeeper.SetValidator(ctx, validator)
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
@@ -426,7 +425,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		require.NoError(t, err)
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{accAddress.String()}})
 		sk.StakingKeeper.SetValidator(ctx, validator)
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)

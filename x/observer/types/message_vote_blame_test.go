@@ -29,15 +29,6 @@ func TestNewMsgVoteBlameMsg_ValidateBasic(t *testing.T) {
 			error: true,
 		},
 		{
-			name: "invalid chain id",
-			msg: types.NewMsgVoteBlameMsg(
-				sample.AccAddress(),
-				-1,
-				sample.BlameRecordsList(t, 1)[0],
-			),
-			error: true,
-		},
-		{
 			name: "valid",
 			msg: types.NewMsgVoteBlameMsg(
 				sample.AccAddress(),

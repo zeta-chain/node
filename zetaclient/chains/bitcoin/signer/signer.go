@@ -1,3 +1,4 @@
+// Package signer implements the ChainSigner interface for BTC
 package signer
 
 import (
@@ -5,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -37,14 +37,19 @@ const (
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
+
+	// broadcastBackoff is the initial backoff duration for retrying broadcast
+	broadcastBackoff = 1000 * time.Millisecond
+
+	// broadcastRetries is the maximum number of retries for broadcasting a transaction
+	broadcastRetries = 5
 )
 
 var _ interfaces.ChainSigner = &Signer{}
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
-	// base.Signer implements the base chain signer
-	base.Signer
+	*base.Signer
 
 	// client is the RPC client to interact with the Bitcoin chain
 	client interfaces.BTCRPCClient
@@ -53,13 +58,13 @@ type Signer struct {
 // NewSigner creates a new Bitcoin signer
 func NewSigner(
 	chain chains.Chain,
-	zetacoreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	cfg config.BTCConfig) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, zetacoreContext, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, appContext, tss, ts, logger)
 
 	// create the bitcoin rpc client using the provided config
 	connCfg := &rpcclient.ConnConfig{
@@ -76,7 +81,7 @@ func NewSigner(
 	}
 
 	return &Signer{
-		Signer: *baseSigner,
+		Signer: baseSigner,
 		client: client,
 	}, nil
 }
@@ -164,6 +169,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
+// TODO(revamp): simplify the function
 func (signer *Signer) SignWithdrawTx(
 	to btcutil.Address,
 	amount float64,
@@ -287,6 +293,7 @@ func (signer *Signer) SignWithdrawTx(
 	return tx, nil
 }
 
+// Broadcast sends the signed transaction to the network
 func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
 
@@ -307,6 +314,8 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 	return nil
 }
 
+// TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
+// TODO(revamp): simplify the function
 func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,
@@ -341,7 +350,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Msgf("chain observer is not a bitcoin observer")
 		return
 	}
-	flags := signer.ZetacoreContext().GetCrossChainFlags()
+	flags := signer.AppContext().GetCrossChainFlags()
 	if !flags.IsOutboundEnabled {
 		logger.Info().Msgf("outbound is disabled")
 		return
@@ -422,17 +431,17 @@ func (signer *Signer) TryProcessOutbound(
 		outboundHash := tx.TxHash().String()
 		logger.Info().
 			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, signerAddress)
-		// TODO: pick a few broadcasters.
-		//if len(signers) == 0 || myid == signers[send.OutboundParams.Broadcaster] || myid == signers[int(send.OutboundParams.Broadcaster+1)%len(signers)] {
-		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
-		for i := 0; i < 5; i++ {
-			// #nosec G404 randomness is not a security issue here
-			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+
+		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
+		backOff := broadcastBackoff
+		for i := 0; i < broadcastRetries; i++ {
+			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
 				logger.Warn().
 					Err(err).
 					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
+				backOff *= 2
 				continue
 			}
 			logger.Info().

@@ -5,8 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
-
-	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgVoteBlame = "vote_blame"
@@ -34,9 +32,7 @@ func (m *MsgVoteBlame) ValidateBasic() error {
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if chains.GetChainFromChainID(m.ChainId) == nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "chain id (%d)", m.ChainId)
-	}
+
 	return nil
 }
 

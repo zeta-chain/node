@@ -1,6 +1,7 @@
 package local
 
 import (
+	"fmt"
 	"path/filepath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,12 +15,7 @@ import (
 func GetConfig(cmd *cobra.Command) (config.Config, error) {
 	configFile, err := cmd.Flags().GetString(FlagConfigFile)
 	if err != nil {
-		return config.Config{}, err
-	}
-
-	// use default config if no config file is specified
-	if configFile == "" {
-		return config.DefaultConfig(), nil
+		return config.Config{}, fmt.Errorf("--config is a required parameter")
 	}
 
 	configFile, err = filepath.Abs(configFile)

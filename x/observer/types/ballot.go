@@ -62,7 +62,6 @@ func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 		if vote == VoteType_FailureObservation {
 			failure = failure.Add(sdk.OneDec())
 		}
-
 	}
 	if failure.IsPositive() {
 		if failure.Quo(total).GTE(m.BallotThreshold) {

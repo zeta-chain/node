@@ -12,7 +12,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -24,6 +23,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/testutil"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -37,15 +37,15 @@ var (
 )
 
 type stressArguments struct {
-	deployerAddress    string
-	deployerPrivateKey string
-	network            string
-	txnInterval        int64
-	contractsDeployed  bool
-	config             string
+	network           string
+	txnInterval       int64
+	contractsDeployed bool
+	config            string
 }
 
 var stressTestArgs = stressArguments{}
+
+var noError = testutil.NoError
 
 func NewStressTestCmd() *cobra.Command {
 	var StressCmd = &cobra.Command{
@@ -54,10 +54,6 @@ func NewStressTestCmd() *cobra.Command {
 		Run:   StressTest,
 	}
 
-	StressCmd.Flags().
-		StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
-	StressCmd.Flags().
-		StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "LOCAL", "--network TESTNET")
 	StressCmd.Flags().
 		Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
@@ -65,8 +61,6 @@ func NewStressTestCmd() *cobra.Command {
 		BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
 	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the E2E test")
 	StressCmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
-
-	local.DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
 
 	return StressCmd
 }
@@ -88,27 +82,17 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	cosmosConf.Seal()
 
 	// initialize E2E tests config
-	conf, err := local.GetConfig(cmd)
-	if err != nil {
-		panic(err)
-	}
+	conf := must(local.GetConfig(cmd))
+
+	deployerAccount := conf.DefaultAccount
 
 	// Initialize clients ----------------------------------------------------------------
-	evmClient, err := ethclient.Dial(conf.RPCs.EVM)
-	if err != nil {
-		panic(err)
-	}
+	evmClient := must(ethclient.Dial(conf.RPCs.EVM))
+	bal := must(evmClient.BalanceAt(context.TODO(), deployerAccount.EVMAddress(), nil))
 
-	bal, err := evmClient.BalanceAt(context.TODO(), local.DeployerAddress, nil)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Deployer address: %s, balance: %d Wei\n", local.DeployerAddress.Hex(), bal)
+	fmt.Printf("Deployer address: %s, balance: %d Wei\n", deployerAccount.EVMAddress().Hex(), bal)
 
-	grpcConn, err := grpc.Dial(conf.RPCs.ZetaCoreGRPC, grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
+	grpcConn := must(grpc.Dial(conf.RPCs.ZetaCoreGRPC, grpc.WithInsecure()))
 
 	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
 	// -----------------------------------------------------------------------------------
@@ -136,84 +120,58 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	verbose, err := cmd.Flags().GetBool(flagVerbose)
-	if err != nil {
-		panic(err)
-	}
+	verbose := must(cmd.Flags().GetBool(flagVerbose))
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	// initialize E2E test runner
-	e2eTest, err := zetae2econfig.RunnerFromConfig(
+	e2eTest := must(zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
 		conf,
-		local.DeployerAddress,
-		local.DeployerPrivateKey,
+		conf.DefaultAccount,
 		logger,
-	)
-	if err != nil {
-		panic(err)
-	}
+	))
 
 	// setup TSS addresses
-	if err := e2eTest.SetTSSAddresses(); err != nil {
-		panic(err)
-	}
-
+	noError(e2eTest.SetTSSAddresses())
 	e2eTest.SetupEVM(stressTestArgs.contractsDeployed, true)
 
 	// If stress test is running on local docker environment
-	if stressTestArgs.network == "LOCAL" {
+	switch stressTestArgs.network {
+	case "LOCAL":
 		// deploy and set zevm contract
 		e2eTest.SetZEVMContracts()
 
 		// deposit on ZetaChain
 		e2eTest.DepositEther(false)
 		e2eTest.DepositZeta()
-	} else if stressTestArgs.network == "TESTNET" {
-		ethZRC20Addr, err := e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
-		if err != nil {
-			panic(err)
-		}
+	case "TESTNET":
+		ethZRC20Addr := must(e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5)))
 		e2eTest.ETHZRC20Addr = ethZRC20Addr
-		e2eTest.ETHZRC20, err = zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZEVMClient)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		err := errors.New("invalid network argument: " + stressTestArgs.network)
-		panic(err)
+
+		e2eTest.ETHZRC20 = must(zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZEVMClient))
+	default:
+		noError(errors.New("invalid network argument: " + stressTestArgs.network))
 	}
 
 	// Check zrc20 balance of Deployer address
-	ethZRC20Balance, err := e2eTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+	ethZRC20Balance := must(e2eTest.ETHZRC20.BalanceOf(nil, deployerAccount.EVMAddress()))
 	fmt.Printf("eth zrc20 balance: %s Wei \n", ethZRC20Balance.String())
 
 	//Pre-approve ETH withdraw on ZEVM
-	fmt.Printf("approving ETH ZRC20...\n")
+	fmt.Println("approving ETH ZRC20...")
 	ethZRC20 := e2eTest.ETHZRC20
-	tx, err := ethZRC20.Approve(e2eTest.ZEVMAuth, e2eTest.ETHZRC20Addr, big.NewInt(1e18))
-	if err != nil {
-		panic(err)
-	}
-	receipt := utils.MustWaitForTxReceipt(ctx, e2eTest.ZEVMClient, tx, logger, e2eTest.ReceiptTimeout)
+	tx := must(ethZRC20.Approve(e2eTest.ZEVMAuth, e2eTest.ETHZRC20Addr, big.NewInt(1e18)))
+
+	receipt := utils.MustWaitForTxReceipt(e2eTest.Ctx, e2eTest.ZEVMClient, tx, logger, e2eTest.ReceiptTimeout)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
-	blockNum, err := e2eTest.ZEVMClient.BlockNumber(context.Background())
-	if err != nil {
-		panic(err)
-	}
+	blockNum := must(e2eTest.ZEVMClient.BlockNumber(ctx))
 
 	// #nosec G701 e2eTest - always in range
-	nonce, err := e2eTest.ZEVMClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
-	if err != nil {
-		panic(err)
-	}
+	nonce := must(e2eTest.ZEVMClient.NonceAt(ctx, deployerAccount.EVMAddress(), big.NewInt(int64(blockNum))))
 
 	// #nosec G701 e2e - always in range
 	zevmNonce = big.NewInt(int64(nonce))
@@ -256,24 +214,22 @@ func WithdrawCCtx(runner *runner.E2ERunner) {
 	}
 }
 
-func EchoNetworkMetrics(runner *runner.E2ERunner) {
-	ticker := time.NewTicker(time.Second * StatInterval)
-	var queue = make([]uint64, 0)
-	var numTicks = 0
-	var totalMinedTxns = uint64(0)
-	var previousMinedTxns = uint64(0)
-	chainID, err := getChainID(runner.EVMClient)
-
-	if err != nil {
-		panic(err)
-	}
+func EchoNetworkMetrics(r *runner.E2ERunner) {
+	var (
+		ticker            = time.NewTicker(time.Second * StatInterval)
+		queue             = make([]uint64, 0)
+		numTicks          int
+		totalMinedTxns    uint64
+		previousMinedTxns uint64
+		chainID           = must(getChainID(r.EVMClient))
+	)
 
 	for {
 		select {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := runner.CctxClient.ListPendingCctx(
+			cctxResp, err := r.CctxClient.ListPendingCctx(
 				context.Background(),
 				&crosschaintypes.QueryListPendingCctxRequest{
 					ChainId: chainID.Int64(),
@@ -297,7 +253,7 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 			}
 			//
 			// Get all trackers
-			trackerResp, err := runner.CctxClient.OutboundTrackerAll(
+			trackerResp, err := r.CctxClient.OutboundTrackerAll(
 				context.Background(),
 				&crosschaintypes.QueryAllOutboundTrackerRequest{},
 			)
@@ -337,21 +293,22 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 	}
 }
 
-func WithdrawETHZRC20(runner *runner.E2ERunner) {
+func WithdrawETHZRC20(r *runner.E2ERunner) {
 	defer func() {
 		zevmNonce.Add(zevmNonce, big.NewInt(1))
 	}()
 
-	ethZRC20 := runner.ETHZRC20
+	ethZRC20 := r.ETHZRC20
+	r.ZEVMAuth.Nonce = zevmNonce
 
-	runner.ZEVMAuth.Nonce = zevmNonce
-	_, err := ethZRC20.Withdraw(runner.ZEVMAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
-	if err != nil {
-		panic(err)
-	}
+	must(ethZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), big.NewInt(100)))
 }
 
 // Get ETH based chain ID
 func getChainID(client *ethclient.Client) (*big.Int, error) {
 	return client.ChainID(context.Background())
+}
+
+func must[T any](v T, err error) T {
+	return testutil.Must(v, err)
 }

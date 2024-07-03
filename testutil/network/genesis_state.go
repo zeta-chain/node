@@ -28,7 +28,6 @@ func SetupZetaGenesisState(
 	observerList []string,
 	setupChainNonces bool,
 ) {
-
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
 	require.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
@@ -67,7 +66,7 @@ func SetupZetaGenesisState(
 	}
 
 	if setupChainNonces {
-		privatenetChains := chains.ChainListByNetworkType(chains.NetworkType_privnet)
+		privatenetChains := chains.ChainListByNetworkType(chains.NetworkType_privnet, []chains.Chain{})
 		chainNonceList := make([]observertypes.ChainNonces, len(privatenetChains))
 		for i, chain := range privatenetChains {
 			chainNonceList[i] = observertypes.ChainNonces{

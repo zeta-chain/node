@@ -1,26 +1,70 @@
 package config
 
 import (
+	"crypto/ecdsa"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"gopkg.in/yaml.v2"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+	"gopkg.in/yaml.v3"
 )
+
+// DoubleQuotedString forces a string to be double quoted when marshaling to yaml.
+// This is required because of https://github.com/go-yaml/yaml/issues/847
+type DoubleQuotedString string
+
+func (s DoubleQuotedString) MarshalYAML() (interface{}, error) {
+	return yaml.Node{
+		Value: string(s),
+		Kind:  yaml.ScalarNode,
+		Style: yaml.DoubleQuotedStyle,
+	}, nil
+}
+
+func (s DoubleQuotedString) String() string {
+	return string(s)
+}
+
+func (s DoubleQuotedString) AsEVMAddress() (ethcommon.Address, error) {
+	if !ethcommon.IsHexAddress(string(s)) {
+		return ethcommon.Address{}, fmt.Errorf("invalid evm address: %s", string(s))
+	}
+	return ethcommon.HexToAddress(string(s)), nil
+}
 
 // Config contains the configuration for the e2e test
 type Config struct {
-	Accounts    Accounts  `yaml:"accounts"`
-	RPCs        RPCs      `yaml:"rpcs"`
-	Contracts   Contracts `yaml:"contracts"`
-	ZetaChainID string    `yaml:"zeta_chain_id"`
+	// Default account to use when running tests and running setup
+	DefaultAccount     Account            `yaml:"default_account"`
+	AdditionalAccounts AdditionalAccounts `yaml:"additional_accounts"`
+	RPCs               RPCs               `yaml:"rpcs"`
+	Contracts          Contracts          `yaml:"contracts"`
+	ZetaChainID        string             `yaml:"zeta_chain_id"`
 }
 
-// Accounts contains the configuration for the accounts
-type Accounts struct {
-	EVMAddress string `yaml:"evm_address"`
-	EVMPrivKey string `yaml:"evm_priv_key"`
+// Account contains configuration for an account
+type Account struct {
+	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
+	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
+	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
+}
+
+// AdditionalAccounts are extra accounts required to run specific tests
+type AdditionalAccounts struct {
+	UserERC20         Account `yaml:"user_erc20"`
+	UserZetaTest      Account `yaml:"user_zeta_test"`
+	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
+	UserBitcoin       Account `yaml:"user_bitcoin"`
+	UserEther         Account `yaml:"user_ether"`
+	UserMisc          Account `yaml:"user_misc"`
+	UserAdmin         Account `yaml:"user_admin"`
+	UserFungibleAdmin Account `yaml:"user_fungible_admin"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -57,26 +101,26 @@ type Solana struct {
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
 type EVM struct {
-	ZetaEthAddress   string `yaml:"zeta_eth"`
-	ConnectorEthAddr string `yaml:"connector_eth"`
-	CustodyAddr      string `yaml:"custody"`
-	ERC20            string `yaml:"erc20"`
-	TestDappAddr     string `yaml:"test_dapp"`
+	ZetaEthAddr      DoubleQuotedString `yaml:"zeta_eth"`
+	ConnectorEthAddr DoubleQuotedString `yaml:"connector_eth"`
+	CustodyAddr      DoubleQuotedString `yaml:"custody"`
+	ERC20            DoubleQuotedString `yaml:"erc20"`
+	TestDappAddr     DoubleQuotedString `yaml:"test_dapp"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
 type ZEVM struct {
-	SystemContractAddr string `yaml:"system_contract"`
-	ETHZRC20Addr       string `yaml:"eth_zrc20"`
-	ERC20ZRC20Addr     string `yaml:"erc20_zrc20"`
-	BTCZRC20Addr       string `yaml:"btc_zrc20"`
-	UniswapFactoryAddr string `yaml:"uniswap_factory"`
-	UniswapRouterAddr  string `yaml:"uniswap_router"`
-	ConnectorZEVMAddr  string `yaml:"connector_zevm"`
-	WZetaAddr          string `yaml:"wzeta"`
-	ZEVMSwapAppAddr    string `yaml:"zevm_swap_app"`
-	ContextAppAddr     string `yaml:"context_app"`
-	TestDappAddr       string `yaml:"test_dapp"`
+	SystemContractAddr DoubleQuotedString `yaml:"system_contract"`
+	ETHZRC20Addr       DoubleQuotedString `yaml:"eth_zrc20"`
+	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
+	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
+	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
+	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
+	ConnectorZEVMAddr  DoubleQuotedString `yaml:"connector_zevm"`
+	WZetaAddr          DoubleQuotedString `yaml:"wzeta"`
+	ZEVMSwapAppAddr    DoubleQuotedString `yaml:"zevm_swap_app"`
+	ContextAppAddr     DoubleQuotedString `yaml:"context_app"`
+	TestDappAddr       DoubleQuotedString `yaml:"test_dapp"`
 }
 
 // DefaultConfig returns the default config using values for localnet testing
@@ -145,12 +189,126 @@ func WriteConfig(file string, config Config) error {
 	return nil
 }
 
+// AsSlice gets all accounts as a slice rather than a
+// struct
+func (a AdditionalAccounts) AsSlice() []Account {
+	return []Account{
+		a.UserERC20,
+		a.UserZetaTest,
+		a.UserZEVMMPTest,
+		a.UserBitcoin,
+		a.UserEther,
+		a.UserMisc,
+		a.UserAdmin,
+		a.UserFungibleAdmin,
+	}
+}
+
 // Validate validates the config
 func (c Config) Validate() error {
 	if c.RPCs.Bitcoin.Params != Mainnet &&
 		c.RPCs.Bitcoin.Params != Testnet3 &&
 		c.RPCs.Bitcoin.Params != Regnet {
 		return errors.New("invalid bitcoin params")
+	}
+
+	err := c.DefaultAccount.Validate()
+	if err != nil {
+		return fmt.Errorf("validating deployer account: %w", err)
+	}
+
+	accounts := c.AdditionalAccounts.AsSlice()
+	for i, account := range accounts {
+		if account.RawEVMAddress == "" {
+			continue
+		}
+		err := account.Validate()
+		if err != nil {
+			return fmt.Errorf("validating account %d: %w", i, err)
+		}
+	}
+	return nil
+}
+
+// GenerateKeys generates new key pairs for all accounts
+func (c *Config) GenerateKeys() error {
+	var err error
+	c.DefaultAccount, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserERC20, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserZetaTest, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserZEVMMPTest, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserBitcoin, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserEther, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserMisc, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserAdmin, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserFungibleAdmin, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a Account) EVMAddress() ethcommon.Address {
+	return ethcommon.HexToAddress(a.RawEVMAddress.String())
+}
+
+func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
+	return crypto.HexToECDSA(a.RawPrivateKey.String())
+}
+
+// Validate that the address and the private key specified in the
+// config actually match
+func (a Account) Validate() error {
+	privateKey, err := a.PrivateKey()
+	if err != nil {
+		return fmt.Errorf("invalid private key: %w", err)
+	}
+	privateKeyAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
+	if a.RawEVMAddress.String() != privateKeyAddress.Hex() {
+		return fmt.Errorf(
+			"address derived from private key (%s) does not match configured address (%s)",
+			privateKeyAddress,
+			a.RawEVMAddress,
+		)
+	}
+	_, _, err = bech32.DecodeAndConvert(a.RawBech32Address.String())
+	if err != nil {
+		return fmt.Errorf("decoding bech32 address: %w", err)
+	}
+	bech32PrivateKeyAddress, err := bech32.ConvertAndEncode("zeta", privateKeyAddress.Bytes())
+	if err != nil {
+		return fmt.Errorf("encoding private key to bech32: %w", err)
+	}
+	if a.RawBech32Address.String() != bech32PrivateKeyAddress {
+		return fmt.Errorf(
+			"address derived from private key (%s) does not match configured address (%s)",
+			bech32PrivateKeyAddress,
+			a.RawBech32Address,
+		)
 	}
 	return nil
 }
@@ -177,4 +335,26 @@ func (bnt BitcoinNetworkType) GetParams() (chaincfg.Params, error) {
 	default:
 		return chaincfg.Params{}, fmt.Errorf("invalid bitcoin params %s", bnt)
 	}
+}
+
+func generateAccount() (Account, error) {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		return Account{}, fmt.Errorf("generating private key: %w", err)
+	}
+	// encode private key and strip 0x prefix
+	encodedPrivateKey := hexutil.Encode(crypto.FromECDSA(privateKey))
+	encodedPrivateKey = strings.TrimPrefix(encodedPrivateKey, "0x")
+
+	evmAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
+	bech32Address, err := bech32.ConvertAndEncode("zeta", evmAddress.Bytes())
+	if err != nil {
+		return Account{}, fmt.Errorf("bech32 convert and encode: %w", err)
+	}
+
+	return Account{
+		RawEVMAddress:    DoubleQuotedString(evmAddress.String()),
+		RawPrivateKey:    DoubleQuotedString(encodedPrivateKey),
+		RawBech32Address: DoubleQuotedString(bech32Address),
+	}, nil
 }

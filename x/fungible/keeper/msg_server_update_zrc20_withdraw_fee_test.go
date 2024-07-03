@@ -31,6 +31,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		// set coin admin
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		// deploy the system contract and a ZRC20 contract
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)

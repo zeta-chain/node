@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -58,6 +59,11 @@ func EthAddress() ethcommon.Address {
 // Hash returns a sample hash
 func Hash() ethcommon.Hash {
 	return EthAddress().Hash()
+}
+
+// BtcHash returns a sample btc hash
+func BtcHash() chainhash.Hash {
+	return chainhash.Hash(Hash())
 }
 
 // PubKey returns a sample account PubKey

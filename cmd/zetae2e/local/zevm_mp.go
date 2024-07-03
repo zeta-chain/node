@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -20,25 +19,13 @@ func zevmMPTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		// return an error on panic
-		// TODO: remove and instead return errors in the tests
-		// https://github.com/zeta-chain/node/issues/1500
-		defer func() {
-			if r := recover(); r != nil {
-				// print stack trace
-				stack := make([]byte, 4096)
-				n := runtime.Stack(stack, false)
-				err = fmt.Errorf("zevm mp panic: %v, stack trace %s", r, stack[:n])
-			}
-		}()
-
+		account := conf.AdditionalAccounts.UserZEVMMPTest
 		// initialize runner for zevm mp test
 		zevmMPRunner, err := initTestRunner(
 			"zevm_mp",
 			conf,
 			deployerRunner,
-			UserZEVMMPTestAddress,
-			UserZEVMMPTestPrivateKey,
+			account,
 			runner.NewLogger(verbose, color.FgHiRed, "zevm_mp"),
 		)
 		if err != nil {
@@ -49,7 +36,7 @@ func zevmMPTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserZEVMMPTestAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
 		zevmMPRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain

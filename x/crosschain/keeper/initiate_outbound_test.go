@@ -103,7 +103,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
-			cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+			cctx := GetERC20Cctx(t, receiver, senderChain, "", amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 			require.NoError(t, err)
@@ -143,7 +143,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			Return(fungibletypes.ForeignCoins{}, false)
 
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.NoError(t, err)
@@ -180,13 +180,13 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// mock successful GetRevertGasLimit for ERC20
-			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 			// mock unsuccessful PayGasInERC20AndUpdateCctx
 			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
-			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+			cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 			require.NoError(t, err)
@@ -225,13 +225,13 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// mock successful GetRevertGasLimit for ERC20
-			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 0)
+			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 0)
 
 			// mock unsuccessful PayGasInERC20AndUpdateCctx
 			keepertest.MockFailedGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// call InitiateOutbound
-			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+			cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 			require.NoError(t, err)
@@ -268,17 +268,17 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 
 		// Mock unsuccessful UpdateNonce
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
 
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.NoError(t, err)
@@ -306,19 +306,16 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		// mock unsuccessful HandleEVMDeposit which reverts , i.e returns err and isContractReverted = true
 		keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
-		// Mock successful GetSupportedChainFromChainID
-		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
-
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 		// mock successful UpdateNonce
-		updatedNonce := keepertest.MockUpdateNonce(observerMock, *senderChain)
+		updatedNonce := keepertest.MockUpdateNonce(observerMock, senderChain)
 
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.NoError(t, err)
@@ -352,10 +349,10 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 			// mock successful GetRevertGasLimit for ERC20
-			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
+			keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 
 			// call InitiateOutbound
-			cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+			cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
 			cctx.GetCurrentOutboundParam().ReceiverChainId = chains.ZetaChainPrivnet.ChainId
 			cctx.OutboundParams = append(cctx.OutboundParams, cctx.GetCurrentOutboundParam())
 			newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
@@ -386,18 +383,27 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		receiverChain := getValidEthChain()
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *receiverChain, "")
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, receiverChain, "")
 
 		// mock successful UpdateNonce
-		updatedNonce := keepertest.MockUpdateNonce(observerMock, *receiverChain)
+		nonce := uint64(1)
+		tss := sample.Tss()
+		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainName.String()).
+			Return(observertypes.ChainNonces{Nonce: nonce}, true)
+		observerMock.On("GetTSS", mock.Anything).
+			Return(tss, true)
+		observerMock.On("GetPendingNonces", mock.Anything, tss.TssPubkey, mock.Anything).
+			Return(observertypes.PendingNonces{NonceHigh: int64(nonce)}, true)
+		observerMock.On("SetChainNonces", mock.Anything, mock.Anything)
+		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything)
 
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, receiverChain, "", amount)
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_PendingOutbound, newStatus)
-		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
+		require.Equal(t, nonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
 
 	t.Run("unable to process crosschain msg passing PayGasAndUpdateCctx fails", func(t *testing.T) {
@@ -413,10 +419,10 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		receiverChain := getValidEthChain()
 
 		// mock unsuccessful PayGasAndUpdateCctx
-		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, nil)
+		keepertest.MockFailedGetSupportedChainFromChainID(observerMock, receiverChain)
 
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, receiverChain, "", amount)
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
@@ -438,14 +444,14 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		receiverChain := getValidEthChain()
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *receiverChain, "")
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, receiverChain, "")
 
 		// mock unsuccessful UpdateNonce
 		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
 
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, receiverChain, "", amount)
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.ErrorContains(t, err, "cannot find receiver chain nonce")
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
@@ -467,7 +473,7 @@ func TestKeeper_InitiateOutboundFailures(t *testing.T) {
 		receiverChain := getValidEthChain()
 		receiverChain.ChainId = 123
 		// call InitiateOutbound
-		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, receiverChain, "", amount)
 		newStatus, err := k.InitiateOutbound(ctx, keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true})
 		require.Error(t, err)
 		require.Equal(t, types.CctxStatus_PendingInbound, newStatus)

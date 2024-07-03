@@ -12,23 +12,57 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: "START:LOCAL:NET"
-        run: | 
-          make start-e2e-test
-
-      - name: "EXECUTE:LOADTESTS"
-        uses: artilleryio/action-cli@v1
+      - name: "INSTALL:NODEJS"
+        uses: actions/setup-node@v4
         with:
-          command: run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
+          node-version: 16
+
+      - name: "START:LOCAL:NET:WITH:STATE"
+        run: | 
+          make start-e2e-import-mainnet-test
+
+      - name: "INSTALL:ARTILLERY"
+        run: | 
+          npm install -g artillery@latest
+
+      - name: "EXECUTE:PERFORMANCE:TESTS"
+        run: | 
+          artillery run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
+          # Check Artillery exit status
+          if [ $? -ne 0 ]; then
+            echo "Artillery command failed to execute."
+            exit 1
+          fi
+          
+          # Parse the results.json file to check for failed vusers and http response codes
+          failed_vusers=$(jq '.aggregate.counters["vusers.failed"] // 0' ./report.json)
+          http_codes_200=$(jq '.aggregate.counters["http.codes.200"] // 0' ./report.json)
+          http_responses=$(jq '.aggregate.counters["http.responses"] // 0' ./report.json)
+          
+          if [ "$failed_vusers" -gt 1 ] || [ "$http_codes_200" -ne "$http_responses" ]; then
+            echo "Performance Testing had Failed Tests."
+            exit 1
+          else
+            echo "EVM Performance Testing Successful"
+          fi
 
       - name: "GENERATE:REPORT"
-        uses: artilleryio/action-cli@v1
-        with:
-          command: report report.json --output artillery_report.html
+        if: always()
+        run: | 
+          artillery report report.json --output artillery_report.html
 
       - name: "UPLOAD:REPORT"
         uses: actions/upload-artifact@v3
-        if: success()
+        if: always()
         with:
           name: artillery-report
           path: ./artillery_report.html
+
+      - name: "NOTIFY:SLACK:FAILURE"
+        if: failure() && github.event_name == 'schedule'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}

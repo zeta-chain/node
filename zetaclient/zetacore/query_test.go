@@ -1,6 +1,7 @@
 package zetacore
 
 import (
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"net"
 	"testing"
 
@@ -461,30 +462,6 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 	require.Equal(t, expectedOutput, *resp)
 }
 
-func TestZetacore_GetLastBlockHeightByChain(t *testing.T) {
-	index := chains.BscMainnet
-	expectedOutput := crosschainTypes.QueryGetLastBlockHeightResponse{
-		LastBlockHeight: &crosschainTypes.LastBlockHeight{
-			Index:              index.ChainName.String(),
-			Chain:              "7000",
-			LastOutboundHeight: 2134123,
-			LastInboundHeight:  1234333,
-		},
-	}
-	input := crosschainTypes.QueryGetLastBlockHeightRequest{Index: index.ChainName.String()}
-	method := "/zetachain.zetacore.crosschain.Query/LastBlockHeight"
-	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
-	server.Serve()
-	defer closeMockServer(t, server)
-
-	client, err := setupZetacoreClient()
-	require.NoError(t, err)
-
-	resp, err := client.GetLastBlockHeightByChain(index)
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.LastBlockHeight, resp)
-}
-
 func TestZetacore_GetZetaBlockHeight(t *testing.T) {
 	expectedOutput := crosschainTypes.QueryLastZetaHeightResponse{Height: 12345}
 	input := crosschainTypes.QueryLastZetaHeightRequest{}
@@ -839,7 +816,7 @@ func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
 
 func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
-		Chains: []*chains.Chain{
+		Chains: []chains.Chain{
 			{
 				ChainName:   chains.BitcoinMainnet.ChainName,
 				ChainId:     chains.BitcoinMainnet.ChainId,
@@ -872,6 +849,29 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	resp, err := client.GetSupportedChains()
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Chains, resp)
+}
+
+func TestZetacore_GetAdditionalChains(t *testing.T) {
+	expectedOutput := authoritytypes.QueryGetChainInfoResponse{
+		ChainInfo: authoritytypes.ChainInfo{
+			Chains: []chains.Chain{
+				chains.BitcoinMainnet,
+				chains.Ethereum,
+			},
+		},
+	}
+	input := observertypes.QuerySupportedChains{}
+	method := "/zetachain.zetacore.authority.Query/ChainInfo"
+	server := setupMockServer(t, authoritytypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	client, err := setupZetacoreClient()
+	require.NoError(t, err)
+
+	resp, err := client.GetAdditionalChains()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.ChainInfo.Chains, resp)
 }
 
 func TestZetacore_GetPendingNonces(t *testing.T) {

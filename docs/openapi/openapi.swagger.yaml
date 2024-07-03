@@ -30252,6 +30252,42 @@ paths:
           format: int64
       tags:
         - Query
+  /zeta-chain/observer/getAllTssFundsMigrators:
+    get:
+      summary: Queries all TssFundMigratorInfo
+      operationId: Query_TssFundsMigratorInfoAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/getTssFundsMigrator:
+    get:
+      summary: Queries the TssFundMigratorInfo for a specific chain
+      operationId: Query_TssFundsMigratorInfo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}:
     get:
       summary: Query if a voter has voted for a ballot
@@ -56929,6 +56965,9 @@ definitions:
       - optimism_sepolia
       - base_mainnet
       - base_sepolia
+      - solana_mainnet
+      - solana_devnet
+      - solana_localnet
     default: empty
     title: ChainName represents the name of the chain
   chainsConsensus:
@@ -56938,6 +56977,7 @@ definitions:
       - tendermint
       - bitcoin
       - op_stack
+      - solana_consensus
     default: ethereum
     title: |-
       Consensus represents the consensus algorithm used by the chain
@@ -56953,6 +56993,7 @@ definitions:
       - bsc
       - optimism
       - base
+      - solana
     default: eth
     title: |-
       Network represents the network of the chain
@@ -56986,6 +57027,7 @@ definitions:
     enum:
       - no_vm
       - evm
+      - svm
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
@@ -57796,6 +57838,8 @@ definitions:
         type: string
       is_supported:
         type: boolean
+      gateway_address:
+        type: string
   observerChainParamsList:
     type: object
     properties:
@@ -58111,6 +58155,19 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chainsChain'
+  observerQueryTssFundsMigratorInfoAllResponse:
+    type: object
+    properties:
+      tss_funds_migrators:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerTssFundMigratorInfo'
+  observerQueryTssFundsMigratorInfoResponse:
+    type: object
+    properties:
+      tss_funds_migrator:
+        $ref: '#/definitions/observerTssFundMigratorInfo'
   observerQueryTssHistoryResponse:
     type: object
     properties:
@@ -58140,6 +58197,14 @@ definitions:
       keyGenZetaHeight:
         type: string
         format: int64
+  observerTssFundMigratorInfo:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      migration_cctx_index:
+        type: string
   observerVoteType:
     type: string
     enum:

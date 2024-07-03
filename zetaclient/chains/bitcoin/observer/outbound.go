@@ -13,19 +13,21 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 // GetTxID returns a unique id for outbound tx
 func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.Tss.BTCAddress()
-	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+	tssAddr := ob.TSS().BTCAddress()
+	return fmt.Sprintf("%d-%s-%d", ob.Chain().ChainId, tssAddr, nonce)
 }
 
 // WatchOutbound watches Bitcoin chain for outgoing txs status
+// TODO(revamp): move ticker functions to a specific file
+// TODO(revamp): move into a separate package
 func (ob *Observer) WatchOutbound() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.GetChainParams().OutboundTicker)
 	if err != nil {
@@ -34,32 +36,33 @@ func (ob *Observer) WatchOutbound() {
 	}
 	defer ticker.Stop()
 
-	ob.logger.Outbound.Info().Msgf("WatchInbound started for chain %d", ob.chain.ChainId)
+	chainID := ob.Chain().ChainId
+	ob.logger.Outbound.Info().Msgf("WatchOutbound started for chain %d", chainID)
 	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
 
 	for {
 		select {
 		case <-ticker.C():
-			if !context.IsOutboundObservationEnabled(ob.coreContext, ob.GetChainParams()) {
+			if !ob.AppContext().IsOutboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
-					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.chain.ChainId)
+					Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
 				continue
 			}
-			trackers, err := ob.zetacoreClient.GetAllOutboundTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
+			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(chainID, interfaces.Ascending)
 			if err != nil {
 				ob.logger.Outbound.Error().
 					Err(err).
-					Msgf("WatchOutbound: error GetAllOutboundTrackerByChain for chain %d", ob.chain.ChainId)
+					Msgf("WatchOutbound: error GetAllOutboundTrackerByChain for chain %d", chainID)
 				continue
 			}
 			for _, tracker := range trackers {
 				// get original cctx parameters
 				outboundID := ob.GetTxID(tracker.Nonce)
-				cctx, err := ob.zetacoreClient.GetCctxByNonce(ob.chain.ChainId, tracker.Nonce)
+				cctx, err := ob.ZetacoreClient().GetCctxByNonce(chainID, tracker.Nonce)
 				if err != nil {
 					ob.logger.Outbound.Info().
 						Err(err).
-						Msgf("WatchOutbound: can't find cctx for chain %d nonce %d", ob.chain.ChainId, tracker.Nonce)
+						Msgf("WatchOutbound: can't find cctx for chain %d nonce %d", chainID, tracker.Nonce)
 					break
 				}
 
@@ -85,10 +88,10 @@ func (ob *Observer) WatchOutbound() {
 						txCount++
 						txResult = result
 						ob.logger.Outbound.Info().
-							Msgf("WatchOutbound: included outbound %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, tracker.Nonce)
+							Msgf("WatchOutbound: included outbound %s for chain %d nonce %d", txHash.TxHash, chainID, tracker.Nonce)
 						if txCount > 1 {
 							ob.logger.Outbound.Error().Msgf(
-								"WatchOutbound: checkIncludedTx passed, txCount %d chain %d nonce %d result %v", txCount, ob.chain.ChainId, tracker.Nonce, result)
+								"WatchOutbound: checkIncludedTx passed, txCount %d chain %d nonce %d result %v", txCount, chainID, tracker.Nonce, result)
 						}
 					}
 				}
@@ -97,18 +100,19 @@ func (ob *Observer) WatchOutbound() {
 					ob.setIncludedTx(tracker.Nonce, txResult)
 				} else if txCount > 1 {
 					ob.removeIncludedTx(tracker.Nonce) // we can't tell which txHash is true, so we remove all (if any) to be safe
-					ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, ob.chain.ChainId, tracker.Nonce)
+					ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, chainID, tracker.Nonce)
 				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.logger.Outbound)
-		case <-ob.stop:
-			ob.logger.Outbound.Info().Msgf("WatchOutbound stopped for chain %d", ob.chain.ChainId)
+		case <-ob.StopChannel():
+			ob.logger.Outbound.Info().Msgf("WatchOutbound stopped for chain %d", chainID)
 			return
 		}
 	}
 }
 
 // IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
+// TODO(revamp): rename as it vote the outbound and doesn't only check if outbound is processed
 func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	params := *cctx.GetCurrentOutboundParam()
 	sendHash := cctx.Index
@@ -118,10 +122,10 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	outboundID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsOutboundProcessed %s", outboundID)
 
-	ob.Mu.Lock()
+	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
 	res, included := ob.includedTxResults[outboundID]
-	ob.Mu.Unlock()
+	ob.Mu().Unlock()
 
 	if !included {
 		if !broadcasted {
@@ -162,7 +166,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	}
 
 	// Get outbound block height
-	blockHeight, err := GetBlockHeightByHash(ob.rpcClient, res.BlockHash)
+	blockHeight, err := rpc.GetBlockHeightByHash(ob.btcClient, res.BlockHash)
 	if err != nil {
 		return true, false, errors.Wrapf(
 			err,
@@ -172,7 +176,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	}
 
 	logger.Debug().Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
-	zetaHash, ballot, err := ob.zetacoreClient.PostVoteOutbound(
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive
@@ -182,7 +186,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		0,   // gas limit not used with Bitcoin
 		amountInSat,
 		chains.ReceiveStatus_success,
-		ob.chain,
+		ob.Chain(),
 		nonce,
 		coin.CoinType_Gas,
 	)
@@ -211,6 +215,8 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 //   - the total value of the selected UTXOs.
 //   - the number of consolidated UTXOs.
 //   - the total value of the consolidated UTXOs.
+//
+// TODO(revamp): move to utxo file
 func (ob *Observer) SelectUTXOs(
 	amount float64,
 	utxosToSpend uint16,
@@ -221,16 +227,16 @@ func (ob *Observer) SelectUTXOs(
 	idx := -1
 	if nonce == 0 {
 		// for nonce = 0; make exception; no need to include nonce-mark utxo
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
+		ob.Mu().Lock()
+		defer ob.Mu().Unlock()
 	} else {
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
 		preTxid, err := ob.getOutboundIDByNonce(nonce-1, test)
 		if err != nil {
 			return nil, 0, 0, 0, err
 		}
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
+		ob.Mu().Lock()
+		defer ob.Mu().Unlock()
 		idx, err = ob.findNonceMarkUTXO(nonce-1, preTxid)
 		if err != nil {
 			return nil, 0, 0, 0, err
@@ -299,15 +305,15 @@ func (ob *Observer) SelectUTXOs(
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce() {
 	// get pending nonces from zetacore
-	p, err := ob.zetacoreClient.GetPendingNoncesByChain(ob.chain.ChainId)
+	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ob.Chain().ChainId)
 	if err != nil {
 		ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting pending nonces")
 	}
 
 	// increase pending nonce if lagged behind
-	ob.Mu.Lock()
+	ob.Mu().Lock()
 	pendingNonce := ob.pendingNonce
-	ob.Mu.Unlock()
+	ob.Mu().Unlock()
 
 	// #nosec G701 always non-negative
 	nonceLow := uint64(p.NonceLow)
@@ -319,16 +325,17 @@ func (ob *Observer) refreshPendingNonce() {
 		}
 
 		// set 'NonceLow' as the new pending nonce
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
+		ob.Mu().Lock()
+		defer ob.Mu().Unlock()
 		ob.pendingNonce = nonceLow
 		ob.logger.Chain.Info().
 			Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
 	}
 }
 
+// getOutboundIDByNonce gets the outbound ID from the nonce of the outbound transaction
+// test is true for unit test only
 func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error) {
-
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
 	// 2. The ones had been finalized in zetacore based on majority vote.
@@ -336,7 +343,7 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 		return res.TxID, nil
 	}
 	if !test { // if not unit test, get cctx from zetacore
-		send, err := ob.zetacoreClient.GetCctxByNonce(ob.chain.ChainId, nonce)
+		send, err := ob.ZetacoreClient().GetCctxByNonce(ob.Chain().ChainId, nonce)
 		if err != nil {
 			return "", errors.Wrapf(err, "getOutboundIDByNonce: error getting cctx for nonce %d", nonce)
 		}
@@ -345,7 +352,7 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 			return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 		}
 		// make sure it's a real Bitcoin txid
-		_, getTxResult, err := GetTxResultByHash(ob.rpcClient, txid)
+		_, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txid)
 		if err != nil {
 			return "", errors.Wrapf(
 				err,
@@ -362,8 +369,9 @@ func (ob *Observer) getOutboundIDByNonce(nonce uint64, test bool) (string, error
 	return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 }
 
+// findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
-	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
 		sats, err := bitcoin.GetSatoshis(utxo.Amount)
@@ -386,7 +394,7 @@ func (ob *Observer) checkIncludedTx(
 	txHash string,
 ) (*btcjson.GetTransactionResult, bool) {
 	outboundID := ob.GetTxID(cctx.GetCurrentOutboundParam().TssNonce)
-	hash, getTxResult, err := GetTxResultByHash(ob.rpcClient, txHash)
+	hash, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
 	if err != nil {
 		ob.logger.Outbound.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
 		return nil, false
@@ -416,8 +424,8 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	txHash := getTxResult.TxID
 	outboundID := ob.GetTxID(nonce)
 
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	res, found := ob.includedTxResults[outboundID]
 
 	if !found { // not found.
@@ -442,15 +450,15 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 
 // getIncludedTx gets the receipt and transaction from memory
 func (ob *Observer) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	return ob.includedTxResults[ob.GetTxID(nonce)]
 }
 
 // removeIncludedTx removes included tx from memory
 func (ob *Observer) removeIncludedTx(nonce uint64) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	txResult, found := ob.includedTxResults[ob.GetTxID(nonce)]
 	if found {
 		delete(ob.includedTxHashes, txResult.TxID)
@@ -470,7 +478,7 @@ func (ob *Observer) checkTssOutboundResult(
 ) error {
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
-	rawResult, err := GetRawTxResult(ob.rpcClient, hash, res)
+	rawResult, err := rpc.GetRawTxResult(ob.btcClient, hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTxResultByHash %s", hash.String())
 	}
@@ -507,7 +515,7 @@ func (ob *Observer) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
-	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())
+	pubKeyTss := hex.EncodeToString(ob.TSS().PubKeyCompressedBytes())
 	for i, vin := range vins {
 		// The length of the Witness should be always 2 for SegWit inputs.
 		if len(vin.Witness) != 2 {
@@ -547,7 +555,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 	}
 
 	nonce := params.TssNonce
-	tssAddress := ob.Tss.BTCAddress()
+	tssAddress := ob.TSS().BTCAddress()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
 		receiverExpected := tssAddress
@@ -555,7 +563,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 			// the 2nd output is the payment to recipient
 			receiverExpected = params.Receiver
 		}
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, receiverExpected, ob.chain)
+		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, receiverExpected, ob.Chain())
 		if err != nil {
 			return err
 		}
@@ -606,10 +614,10 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 	}
 
 	nonce := params.TssNonce
-	tssAddress := ob.Tss.BTCAddress()
+	tssAddress := ob.TSS().BTCAddress()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.chain)
+		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.Chain())
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}
