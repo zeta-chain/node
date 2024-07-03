@@ -61,11 +61,7 @@ COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclien
 
 # optional old version build. This old build is used as the genesis version in the upgrade tests.
 # use --target latest-runtime to skip
-# 
-# TODO: just download binaries from github release now that we're using glibc
-# we can't do this right now since we do not have a v16 release candidate
-# https://github.com/zeta-chain/node/issues/2179
-FROM base-build as old-build
+FROM base-build as old-build-source
 
 ARG OLD_VERSION
 RUN git clone https://github.com/zeta-chain/node.git
@@ -74,8 +70,19 @@ RUN cd node && git fetch
 RUN cd node && git checkout ${OLD_VERSION}
 RUN cd node && make install
 
-FROM base-runtime AS old-runtime
+FROM base-runtime AS old-runtime-source
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=old-build /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
+COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
 COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
+
+FROM base-runtime AS old-runtime
+
+ARG BUILDARCH
+
+COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
+COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
+RUN curl -Lo /usr/local/bin/zetacored https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal/zetacored-linux-${BUILDARCH} && \
+    chmod 755 /usr/local/bin/zetacored && \
+    curl -Lo /usr/local/bin/zetaclientd https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal/zetaclientd-linux-${BUILDARCH} && \
+    chmod 755 /usr/local/bin/zetaclientd
