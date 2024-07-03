@@ -1,7 +1,7 @@
 reviews:
   path_filters:
-    - "**/*.pb.go"
-    - "**/*.pb.gw.go"
+    - "!**/*.pb.go"
+    - "!**/*.pb.gw.go"
   path_instructions:
     - path: '**/*.go'
       instructions: >-
