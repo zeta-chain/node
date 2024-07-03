@@ -168,6 +168,7 @@ func NewE2ERunner(
 		EVMAuth:      evmAuth,
 		ZEVMAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
+		SolanaClient: solanaClient,
 
 		Logger: logger,
 	}

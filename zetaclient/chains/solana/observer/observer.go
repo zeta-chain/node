@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	solanaclient "github.com/zeta-chain/zetacore/zetaclient/chains/solana"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -51,8 +50,8 @@ var _ interfaces.ChainObserver = &Observer{}
 func NewObserver(
 	appContext *clientcontext.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
+	chainParams observertypes.ChainParams,
 	tss interfaces.TSSSigner,
-	programIdStr string,
 	dbpath string,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -64,15 +63,12 @@ func NewObserver(
 	ob.logger = logger
 
 	//ob.coreContext = appContext.ZetacoreContext()
-	chainParams := observertypes.ChainParams{
-		IsSupported: true,
-	}
 	ob.chainParams = chainParams
 	ob.stop = make(chan struct{})
 	ob.Mu = &sync.Mutex{}
 	ob.zetacoreClient = zetacoreClient
 	ob.Tss = tss
-	ob.programId = solana.MustPublicKeyFromBase58(programIdStr)
+	ob.programId = solana.MustPublicKeyFromBase58(chainParams.GatewayAddress)
 
 	endpoint := "http://solana:8899"
 	logger.Info().Msgf("Chain solana endpoint %s", endpoint)
@@ -238,7 +234,7 @@ func (o *Observer) ObserveInbound() error {
 		}
 		msg := zetacore.GetInboundVoteMessage(
 			accounts[0].String(), // check this--is this the signer?
-			solanaclient.LocalnetChainID,
+			o.chainParams.ChainId,
 			accounts[0].String(), // check this--is this the signer?
 			accounts[0].String(), // check this--is this the signer?
 			o.zetacoreClient.Chain().ChainId,

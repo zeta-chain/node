@@ -36,8 +36,6 @@ import (
 	"github.com/evmos/ethermint/crypto/hd"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	solanaclient "github.com/zeta-chain/zetacore/zetaclient/chains/solana"
-
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -373,7 +371,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		solanaclient.LocalnetChainID,
+		chains.SolanaLocalnet.ChainId,
 		9,
 		"Solana",
 		"SOL",
