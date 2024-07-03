@@ -159,6 +159,10 @@ func NewClient(
 
 // buildCosmosClientContext constructs a valid context with all relevant values set
 func (c *Client) buildCosmosClientContext() (cosmosclient.Context, error) {
+	if c.keys == nil {
+		return cosmosclient.Context{}, errors.New("client key are not set")
+	}
+
 	addr, err := c.keys.GetAddress()
 	if err != nil {
 		return cosmosclient.Context{}, errors.Wrap(err, "fail to get address from key")

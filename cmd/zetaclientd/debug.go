@@ -21,7 +21,7 @@ import (
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
@@ -57,7 +57,8 @@ func debugCmd(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	appContext := clientcontext.New(cfg, zerolog.Nop())
+	appContext := zctx.New(cfg, zerolog.Nop())
+	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	chainID, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {
@@ -74,15 +75,17 @@ func debugCmd(_ *cobra.Command, args []string) error {
 		"",
 		debugArgs.zetaChainID,
 		false,
-		nil)
+		nil,
+		zerolog.Nop(),
+	)
 	if err != nil {
 		return err
 	}
-	chainParams, err := client.GetChainParams()
+	chainParams, err := client.GetChainParams(ctx)
 	if err != nil {
 		return err
 	}
-	tssEthAddress, err := client.GetEthTssAddress()
+	tssEthAddress, err := client.GetEVMTSSAddress(ctx)
 	if err != nil {
 		return err
 	}
@@ -194,7 +197,7 @@ func debugCmd(_ *cobra.Command, args []string) error {
 	fmt.Println("BallotIdentifier : ", ballotIdentifier)
 
 	// query ballot
-	ballot, err := client.GetBallot(ballotIdentifier)
+	ballot, err := client.GetBallot(ctx, ballotIdentifier)
 	if err != nil {
 		return err
 	}
