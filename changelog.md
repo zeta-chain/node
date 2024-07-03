@@ -102,6 +102,7 @@
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
 * [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
 * [2400](https://github.com/zeta-chain/node/pull/2400) - ci: adjusted the performance test to pass or fail pipeline based on test results, alert slack, and launch network with state. Fixed connection issues as well.
+* [2425](https://github.com/zeta-chain/node/pull/2425) - Added verification to performance testing pipeline to ensure p99 aren't above 2000ms and p50 aren't above 40ms, Tweaked the config to 400 users requests per second. 425 is the current max before it starts failing.
 
 ### Documentation
 
