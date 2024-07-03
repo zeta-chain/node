@@ -53,6 +53,7 @@ jobs:
   e2e:
     needs: matrix-conditionals
     strategy:
+      fail-fast: false
       matrix:
         include:
           - make-target: "start-e2e-test"
