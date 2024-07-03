@@ -11,6 +11,8 @@ import (
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/solana"
+	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -144,6 +146,16 @@ func CreateChainObserverMap(
 		} else {
 			observerMap[btcChain.ChainId] = co
 		}
+	}
+
+	// TODO: config this
+	programId := "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+	co, err := solanaobserver.NewObserver(appContext, zetacoreClient, tss, programId, dbpath, ts)
+	if err != nil {
+		logger.Std.Error().Err(err).Msg("NewObserver error for solana chain")
+	} else {
+		// TODO: config this
+		observerMap[solana.LocalnetChainID] = co
 	}
 
 	return observerMap, nil
