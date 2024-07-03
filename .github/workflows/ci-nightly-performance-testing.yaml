@@ -75,11 +75,8 @@ jobs:
         run: | 
           # Execute Artillery to run performance tests using the specified configuration file
           artillery run .github/actions/performance-tests/art.yaml \
-          # Enable recording of test results to Artillery's reporting service
           --record \
-          # Use the secret ARTILLERY_KEY for authentication with the reporting service
           --key ${{ secrets.ARTILLERY_KEY }} \
-          # Output the test results to a JSON file named report.json
           --output ./report.json
 
       - name: "CHECK:TEST:RESULTS"
