@@ -24,7 +24,11 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	blockHash, err := chains.StringToHash(req.ChainId, req.BlockHash)
+	// additionalChains is a list of additional chains to search from
+	// it is used in the protocol to dynamically support new chains without doing an upgrade
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
+
+	blockHash, err := chains.StringToHash(req.ChainId, req.BlockHash, additionalChains)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -40,7 +44,7 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if err == nil {
-		if chains.IsEVMChain(req.ChainId) {
+		if chains.IsEVMChain(req.ChainId, additionalChains) {
 			var txx ethtypes.Transaction
 			err = txx.UnmarshalBinary(txBytes)
 			if err != nil {
@@ -53,7 +57,7 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 				)
 			}
 			proven = true
-		} else if chains.IsBitcoinChain(req.ChainId) {
+		} else if chains.IsBitcoinChain(req.ChainId, additionalChains) {
 			tx, err := btcutil.NewTxFromBytes(txBytes)
 			if err != nil {
 				return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal btc transaction: %s", err))

@@ -56965,6 +56965,9 @@ definitions:
       - optimism_sepolia
       - base_mainnet
       - base_sepolia
+      - solana_mainnet
+      - solana_devnet
+      - solana_localnet
     default: empty
     title: ChainName represents the name of the chain
   chainsConsensus:
@@ -56974,6 +56977,7 @@ definitions:
       - tendermint
       - bitcoin
       - op_stack
+      - solana_consensus
     default: ethereum
     title: |-
       Consensus represents the consensus algorithm used by the chain
@@ -56989,6 +56993,7 @@ definitions:
       - bsc
       - optimism
       - base
+      - solana
     default: eth
     title: |-
       Network represents the network of the chain
@@ -57022,6 +57027,7 @@ definitions:
     enum:
       - no_vm
       - evm
+      - svm
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
@@ -57832,6 +57838,8 @@ definitions:
         type: string
       is_supported:
         type: boolean
+      gateway_address:
+        type: string
   observerChainParamsList:
     type: object
     properties:

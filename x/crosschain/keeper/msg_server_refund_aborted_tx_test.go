@@ -116,6 +116,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			RefundAddress: cctx.InboundParams.Sender,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
@@ -160,6 +161,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			RefundAddress: cctx.InboundParams.Sender,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
@@ -274,6 +276,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			RefundAddress: refundAddress.String(),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 
@@ -325,6 +328,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			RefundAddress: cctx.InboundParams.Sender,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)
 		require.NoError(t, err)
 

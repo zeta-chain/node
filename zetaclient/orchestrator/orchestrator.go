@@ -86,8 +86,11 @@ type Orchestrator struct {
 	// mu protects fields from concurrent access
 	mu sync.Mutex
 
-	// stop channel and flag to avoid closing twice
-	stop    chan struct{}
+	// stop channel
+	stop chan struct{}
+
+	// stop flag to used to prevent the 'stop' channel from being closed multiple times (panic).
+	// the 'stop' channel will be closed either by system signals or by the 'WatchUpgradePlan' goroutine
 	stopped bool
 }
 
@@ -368,9 +371,10 @@ func (oc *Orchestrator) SchedulePendingCctxs() {
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
-						if chains.IsEVMChain(c.ChainId) {
+						additionalChains := oc.appContext.GetAdditionalChains()
+						if chains.IsEVMChain(c.ChainId, additionalChains) {
 							oc.ScheduleCctxEVM(zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else if chains.IsBitcoinChain(c.ChainId) {
+						} else if chains.IsBitcoinChain(c.ChainId, additionalChains) {
 							oc.ScheduleCctxBTC(zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							oc.logger.Std.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)

@@ -25,6 +25,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		chainID := getValidChainID(t)
 
@@ -53,6 +54,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", "foo")

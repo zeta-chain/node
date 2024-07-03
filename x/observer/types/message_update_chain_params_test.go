@@ -13,6 +13,8 @@ import (
 )
 
 func TestMsgUpdateChainParams_ValidateBasic(t *testing.T) {
+	chainList := chains.ExternalChainList([]chains.Chain{})
+
 	tests := []struct {
 		name string
 		msg  *types.MsgUpdateChainParams
@@ -22,14 +24,14 @@ func TestMsgUpdateChainParams_ValidateBasic(t *testing.T) {
 			name: "valid message",
 			msg: types.NewMsgUpdateChainParams(
 				sample.AccAddress(),
-				sample.ChainParams(chains.ExternalChainList()[0].ChainId),
+				sample.ChainParams(chainList[0].ChainId),
 			),
 		},
 		{
 			name: "invalid address",
 			msg: types.NewMsgUpdateChainParams(
 				"invalid_address",
-				sample.ChainParams(chains.ExternalChainList()[0].ChainId),
+				sample.ChainParams(chainList[0].ChainId),
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},

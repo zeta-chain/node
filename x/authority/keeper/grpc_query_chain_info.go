@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -21,9 +22,10 @@ func (k Keeper) ChainInfo(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// fetch chain info
+	// if the object has not been initialized, return an object containing an empty list
 	chainInfo, found := k.GetChainInfo(ctx)
 	if !found {
-		return nil, status.Error(codes.NotFound, "chain info not found")
+		chainInfo.Chains = []chains.Chain{}
 	}
 
 	return &types.QueryGetChainInfoResponse{ChainInfo: chainInfo}, nil

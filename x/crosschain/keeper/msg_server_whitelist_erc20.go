@@ -63,8 +63,8 @@ func (k msgServer) WhitelistERC20(
 		return nil, errorsmod.Wrapf(types.ErrCannotFindTSSKeys, "Cannot create new admin cmd of type whitelistERC20")
 	}
 
-	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if chain == nil {
+	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	if !found {
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
 	}
 

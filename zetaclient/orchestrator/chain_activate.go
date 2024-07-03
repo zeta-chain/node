@@ -33,6 +33,18 @@ func (oc *Orchestrator) WatchEnabledChains() {
 }
 
 // ActivateAndDeactivateChains activates and deactivates chains according to chain params and config file
+//
+// The chains to be activated:
+//   - chain params flag 'IsSupported' is true AND
+//   - chain is configured in config file
+//
+// The chains to be deactivated:
+//   - chain params flag 'IsSupported' is false OR
+//   - chain is not configured in config file
+//
+// Note:
+//   - zetaclient will reload config file periodically and update in-memory config accordingly.
+//   - As an tss signer, please make sure the config file is always well configured and not missing any chain
 func (oc *Orchestrator) ActivateAndDeactivateChains() {
 	// create new signer and observer maps
 	// Note: the keys of the two maps are chain IDs and they are always exactly matched

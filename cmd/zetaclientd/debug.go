@@ -85,20 +85,20 @@ func debugCmd(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	chain := chains.GetChainFromChainID(chainID)
-	if chain == nil {
+	chain, found := chains.GetChainFromChainID(chainID, appContext.GetAdditionalChains())
+	if !found {
 		return fmt.Errorf("invalid chain id")
 	}
 
 	// get ballot identifier according to the chain type
-	if chains.IsEVMChain(chain.ChainId) {
+	if chains.IsEVMChain(chain.ChainId, appContext.GetAdditionalChains()) {
 		evmObserver := evmobserver.Observer{}
 		evmObserver.WithZetacoreClient(client)
 		var ethRPC *ethrpc.EthRPC
 		var client *ethclient.Client
 		coinType := coin.CoinType_Cmd
-		for chain, evmConfig := range cfg.GetAllEVMConfigs() {
-			if chainID == chain {
+		for chainIDFromConfig, evmConfig := range cfg.GetAllEVMConfigs() {
+			if chainIDFromConfig == chainID {
 				ethRPC = ethrpc.NewEthRPC(evmConfig.Endpoint)
 				client, err = ethclient.Dial(evmConfig.Endpoint)
 				if err != nil {
@@ -106,7 +106,7 @@ func debugCmd(_ *cobra.Command, args []string) error {
 				}
 				evmObserver.WithEvmClient(client)
 				evmObserver.WithEvmJSONRPC(ethRPC)
-				evmObserver.WithChain(*chains.GetChainFromChainID(chainID))
+				evmObserver.WithChain(chain)
 			}
 		}
 		hash := ethcommon.HexToHash(inboundHash)
@@ -167,10 +167,10 @@ func debugCmd(_ *cobra.Command, args []string) error {
 			fmt.Println("CoinType not detected")
 		}
 		fmt.Println("CoinType : ", coinType)
-	} else if chains.IsBitcoinChain(chain.ChainId) {
+	} else if chains.IsBitcoinChain(chain.ChainId, appContext.GetAdditionalChains()) {
 		btcObserver := btcobserver.Observer{}
 		btcObserver.WithZetacoreClient(client)
-		btcObserver.WithChain(*chains.GetChainFromChainID(chainID))
+		btcObserver.WithChain(chain)
 		connCfg := &rpcclient.ConnConfig{
 			Host:         cfg.BitcoinConfig.RPCHost,
 			User:         cfg.BitcoinConfig.RPCUsername,

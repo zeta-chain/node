@@ -117,7 +117,7 @@ func NewClient(
 		seqMap[keyType] = 0
 	}
 
-	zetaChain, err := chains.ZetaChainFromChainID(chainID)
+	zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid chain id %s, %w", chainID, err)
 	}
@@ -143,7 +143,7 @@ func (c *Client) UpdateChainID(chainID string) error {
 	if c.chainID != chainID {
 		c.chainID = chainID
 
-		zetaChain, err := chains.ZetaChainFromChainID(chainID)
+		zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 		if err != nil {
 			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
 		}
@@ -227,7 +227,13 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 	}
 	supportedChainsMap := make(map[int64]chains.Chain)
 	for _, chain := range supportedChains {
-		supportedChainsMap[chain.ChainId] = *chain
+		supportedChainsMap[chain.ChainId] = chain
+	}
+
+	// get additional chains that were dynamically to zetacore to support new chains
+	additionalChains, err := c.GetAdditionalChains()
+	if err != nil {
+		return fmt.Errorf("failed to additional chains: %w", err)
 	}
 
 	// get latest chain parameters
@@ -257,9 +263,15 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 			continue
 		}
 
+		// just in case (zetacore already validated)
+		err := observertypes.ValidateChainParams(chainParam)
+		if err != nil {
+			return errors.Wrapf(err, "Invalid chain params for chain %d", chainParam.ChainId)
+		}
+
 		// zetaclient detects Bitcoin network (regnet, testnet, mainnet) from chain params in zetacore
 		// The network params will be used by TSS to calculate the correct TSS address.
-		if chains.IsBitcoinChain(chainParam.ChainId) {
+		if chains.IsBitcoinChain(chainParam.ChainId, additionalChains) {
 			btcNetParams, err = chains.BitcoinNetParamsFromChainID(chainParam.ChainId)
 			if err != nil {
 				return errors.Wrapf(err, "BitcoinNetParamsFromChainID failed for chain %d", chainParam.ChainId)
@@ -304,6 +316,7 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 		chainParamMap,
 		btcNetParams,
 		crosschainFlags,
+		additionalChains,
 		blockHeaderEnabledChains,
 		logger,
 	)

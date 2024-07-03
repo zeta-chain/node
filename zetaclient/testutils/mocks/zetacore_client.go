@@ -80,7 +80,7 @@ func (m *MockZetacoreClient) GetChainParams() ([]*observerTypes.ChainParams, err
 	return nil, nil
 }
 
-func (m *MockZetacoreClient) GetSupportedChains() ([]*chains.Chain, error) {
+func (m *MockZetacoreClient) GetSupportedChains() ([]chains.Chain, error) {
 	if m.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}

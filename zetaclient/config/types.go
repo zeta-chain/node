@@ -88,6 +88,9 @@ type Config struct {
 func NewConfig() Config {
 	return Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
+		ComplianceConfig: ComplianceConfig{
+			RestrictedAddresses: make([]string, 0),
+		},
 	}
 }
 

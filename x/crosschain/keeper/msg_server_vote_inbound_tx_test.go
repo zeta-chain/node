@@ -53,10 +53,10 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId) {
+			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
-			if chains.IsZetaChain(chain.ChainId) {
+			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
 				to = chain.ChainId
 			}
 		}
@@ -78,10 +78,14 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			)
 			require.NoError(t, err)
 		}
+
+		chain, found := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
+		require.True(t, found)
+
 		ballot, _, _ := zk.ObserverKeeper.FindBallot(
 			ctx,
 			msg.Digest(),
-			zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId),
+			chain,
 			observertypes.ObservationType_InboundTx,
 		)
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
@@ -201,10 +205,10 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId) {
+			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
-			if chains.IsZetaChain(chain.ChainId) {
+			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
 				to = chain.ChainId
 			}
 		}
@@ -219,16 +223,20 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			)
 			require.NoError(t, err)
 		}
+
+		chain, found := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
+		require.True(t, found)
+
 		ballot, _, _ := zk.ObserverKeeper.FindBallot(
 			ctx,
 			msg.Digest(),
-			zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId),
+			chain,
 			observertypes.ObservationType_InboundTx,
 		)
 		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotInProgress)
 		require.Equal(t, ballot.Votes[0], observertypes.VoteType_SuccessObservation)
 		require.Equal(t, ballot.Votes[1], observertypes.VoteType_NotYetVoted)
-		_, found := k.GetCrossChainTx(ctx, msg.Digest())
+		_, found = k.GetCrossChainTx(ctx, msg.Digest())
 		require.False(t, found)
 	})
 
@@ -307,7 +315,7 @@ func TestKeeper_SaveObservedInboundInformation(t *testing.T) {
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain()
-		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, "", amount)
 		eventIndex := sample.Uint64InRange(1, 100)
 		k.SaveObservedInboundInformation(ctx, cctx, eventIndex)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundParams.TxFinalizationStatus)
@@ -329,7 +337,7 @@ func TestKeeper_SaveObservedInboundInformation(t *testing.T) {
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain()
-		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+		cctx := GetERC20Cctx(t, receiver, senderChain, "", amount)
 		hash := sample.Hash()
 		cctx.InboundParams.ObservedHash = hash.String()
 		k.SetInboundTracker(ctx, types.InboundTracker{

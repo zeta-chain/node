@@ -207,7 +207,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")
 	}
 
-	tss, err := GenerateTss(
+	tss, err := GenerateTSS(
 		appContext,
 		masterLogger,
 		zetacoreClient,

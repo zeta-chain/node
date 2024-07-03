@@ -71,7 +71,7 @@ type ZetacoreClient interface {
 	UpdateAppContext(appContext *clientcontext.AppContext, logger zerolog.Logger) error
 	GetUpgradePlan() (*upgradetypes.Plan, error)
 	GetChainParams() ([]*observertypes.ChainParams, error)
-	GetSupportedChains() ([]*chains.Chain, error)
+	GetSupportedChains() ([]chains.Chain, error)
 	GetCurrentTss() (observertypes.TSS, error)
 	GetBlockHeaderEnabledChains() ([]lightclienttypes.HeaderSupportedChain, error)
 	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)

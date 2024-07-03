@@ -25,6 +25,10 @@ type AppContext struct {
 	btcNetParams     *chaincfg.Params
 	crosschainFlags  observertypes.CrosschainFlags
 
+	// additionalChains is a list of additional static chain information to use when searching from chain IDs
+	// it is stored in the protocol to dynamically support new chains without doing an upgrade
+	additionalChain []chains.Chain
+
 	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
 	// All chains in this list will have Enabled flag set to true
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
@@ -40,6 +44,7 @@ func New(cfg config.Config) *AppContext {
 		chainsEnabled:            []chains.Chain{},
 		chainParamMap:            make(map[int64]*observertypes.ChainParams),
 		crosschainFlags:          observertypes.CrosschainFlags{},
+		additionalChain:          []chains.Chain{},
 		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
 		mu:                       sync.RWMutex{},
 	}
@@ -151,6 +156,18 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return a.crosschainFlags
 }
 
+// GetAdditionalChains returns additional chains
+func (a *AppContext) GetAdditionalChains() []chains.Chain {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	// deep copy additional chains
+	additionalChains := make([]chains.Chain, len(a.additionalChain))
+	copy(additionalChains, a.additionalChain)
+
+	return a.additionalChain
+}
+
 // GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
 func (a *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
 	a.mu.RLock()
@@ -172,6 +189,7 @@ func (a *AppContext) Update(
 	chainParamMap map[int64]*observertypes.ChainParams,
 	btcNetParams *chaincfg.Params,
 	crosschainFlags observertypes.CrosschainFlags,
+	additionalChains []chains.Chain,
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
 	logger zerolog.Logger,
 ) {
@@ -207,6 +225,7 @@ func (a *AppContext) Update(
 	a.chainParamMap = chainParamMap
 	a.currentTssPubkey = tssPubKey
 	a.crosschainFlags = crosschainFlags
+	a.additionalChain = additionalChains
 	a.blockHeaderEnabledChains = blockHeaderEnabledChains
 }
 

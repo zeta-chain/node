@@ -22,8 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// GenerateTss waits for the keygen block height to arrive and generates a new TSS
-func GenerateTss(
+// GenerateTSS waits for the keygen block height to arrive and generates a new TSS
+func GenerateTSS(
 	appContext *context.AppContext,
 	logger zerolog.Logger,
 	client *zetacore.Client,

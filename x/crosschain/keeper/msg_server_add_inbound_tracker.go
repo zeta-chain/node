@@ -18,8 +18,8 @@ func (k msgServer) AddInboundTracker(
 	msg *types.MsgAddInboundTracker,
 ) (*types.MsgAddInboundTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if chain == nil {
+
+	if _, found := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId); !found {
 		return nil, observertypes.ErrSupportedChains
 	}
 

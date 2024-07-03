@@ -85,6 +85,7 @@ func CreateTestAppContext(
 		chainParamsMap,
 		&chaincfg.RegressionNetParams,
 		*ccFlags,
+		[]chains.Chain{},
 		verificationFlags,
 		zerolog.Logger{},
 	)

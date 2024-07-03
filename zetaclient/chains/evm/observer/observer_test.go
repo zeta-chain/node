@@ -64,6 +64,7 @@ func getAppContext(
 		newChainParams,
 		&chaincfg.RegressionNetParams,
 		*sample.CrosschainFlags(),
+		[]chains.Chain{},
 		sample.HeaderSupportedChains(),
 		zerolog.Logger{},
 	)

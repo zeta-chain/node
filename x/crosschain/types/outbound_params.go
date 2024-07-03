@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func (m OutboundParams) GetGasPriceUInt64() (uint64, error) {
@@ -19,10 +17,6 @@ func (m OutboundParams) GetGasPriceUInt64() (uint64, error) {
 func (m OutboundParams) Validate() error {
 	if m.Receiver == "" {
 		return fmt.Errorf("receiver cannot be empty")
-	}
-
-	if chains.GetChainFromChainID(m.ReceiverChainId) == nil {
-		return fmt.Errorf("invalid receiver chain id %d", m.ReceiverChainId)
 	}
 
 	if m.Amount.IsNil() {

@@ -41,6 +41,9 @@ func Test_NewAppContext(t *testing.T) {
 
 		// assert crosschain flags
 		require.Equal(t, observertypes.CrosschainFlags{}, appContext.GetCrossChainFlags())
+
+		// assert additional chains
+		require.Empty(t, appContext.GetAdditionalChains())
 	})
 }
 
@@ -77,6 +80,11 @@ func Test_UpdateAndGetters(t *testing.T) {
 	btcNetParams := &chaincfg.MainNetParams
 	tssPubKey := "tsspubkeytest"
 	ccFlags := *sample.CrosschainFlags()
+	additionalChains := []chains.Chain{
+		sample.Chain(1),
+		sample.Chain(2),
+		sample.Chain(3),
+	}
 	headerSupportedChains := sample.HeaderSupportedChains()
 
 	// feed app context fields
@@ -88,6 +96,7 @@ func Test_UpdateAndGetters(t *testing.T) {
 		chainParamMap,
 		btcNetParams,
 		ccFlags,
+		additionalChains,
 		headerSupportedChains,
 		log.Logger,
 	)
@@ -126,6 +135,10 @@ func Test_UpdateAndGetters(t *testing.T) {
 	t.Run("should get crosschain flags", func(t *testing.T) {
 		result := appContext.GetCrossChainFlags()
 		require.Equal(t, ccFlags, result)
+	})
+	t.Run("should get additional chains", func(t *testing.T) {
+		result := appContext.GetAdditionalChains()
+		require.Equal(t, additionalChains, result)
 	})
 	t.Run("should get block header enabled chains", func(t *testing.T) {
 		for _, chain := range headerSupportedChains {
@@ -224,6 +237,7 @@ func makeAppContext(
 		newChainParams,
 		&chaincfg.RegressionNetParams,
 		ccFlags,
+		[]chains.Chain{},
 		headerSupportedChains,
 		zerolog.Logger{},
 	)

@@ -60,6 +60,7 @@ func createTestAppContext(
 		chainParamMap,
 		&chaincfg.MainNetParams,
 		*ccFlags,
+		[]chains.Chain{},
 		headerSupportedChains,
 		zerolog.Logger{},
 	)

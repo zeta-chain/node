@@ -105,7 +105,7 @@ func (k Keeper) ProcessLogs(
 
 			// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
 			// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
-			if err := ValidateZrc20WithdrawEvent(eventZrc20Withdrawal, coin.ForeignChainId); err != nil {
+			if err := k.ValidateZrc20WithdrawEvent(ctx, eventZrc20Withdrawal, coin.ForeignChainId); err != nil {
 				return err
 			}
 			// If the event is valid, we will process it and create a new CCTX
@@ -137,18 +137,21 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 	if !found {
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
-	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
-	if receiverChain == nil {
+
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
+	if !found {
 		return errorsmod.Wrapf(
 			observertypes.ErrSupportedChains,
 			"chain with chainID %d not supported",
 			foreignCoin.ForeignChainId,
 		)
 	}
-	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
+
+	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to convert chainID: %s", err.Error())
 	}
+
 	toAddr, err := receiverChain.EncodeAddress(event.To)
 	if err != nil {
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
@@ -215,23 +218,27 @@ func (k Keeper) ProcessZetaSentEvent(
 
 	receiverChainID := event.DestinationChainId
 
-	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiverChainID.Int64())
-	if receiverChain == nil {
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiverChainID.Int64())
+	if !found {
 		return observertypes.ErrSupportedChains
 	}
+
 	// Validation if we want to send ZETA to an external chain, but there is no ZETA token.
 	chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
 		return observertypes.ErrChainParamsNotFound
 	}
+
 	if receiverChain.IsExternalChain() && chainParams.ZetaTokenContractAddress == "" {
 		return types.ErrUnableToSendCoinType
 	}
+
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
-	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
+	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
+
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
@@ -264,29 +271,12 @@ func (k Keeper) ProcessZetaSentEvent(
 	return nil
 }
 
-// ParseZRC20WithdrawalEvent tries extracting ZRC20Withdrawal event from the input logs using the zrc20 contract;
-// It only returns a not-nil event if the event has been correctly validated as a valid withdrawal event
-func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
-	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
-	if err != nil {
-		return nil, err
-	}
-	if len(log.Topics) == 0 {
-		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid log - no topics")
-	}
-	event, err := zrc20ZEVM.ParseWithdrawal(log)
-	if err != nil {
-		return nil, err
-	}
-	return event, nil
-}
-
 // ValidateZrc20WithdrawEvent checks if the ZRC20Withdrawal event is valid
 // It verifies event information for BTC chains and returns an error if the event is invalid
-func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) error {
+func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
-	if chains.IsBitcoinChain(chainID) {
+	if chains.IsBitcoinChain(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
@@ -304,6 +294,23 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 		}
 	}
 	return nil
+}
+
+// ParseZRC20WithdrawalEvent tries extracting ZRC20Withdrawal event from the input logs using the zrc20 contract;
+// It only returns a not-nil event if the event has been correctly validated as a valid withdrawal event
+func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
+	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
+	if err != nil {
+		return nil, err
+	}
+	if len(log.Topics) == 0 {
+		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid log - no topics")
+	}
+	event, err := zrc20ZEVM.ParseWithdrawal(log)
+	if err != nil {
+		return nil, err
+	}
+	return event, nil
 }
 
 // ParseZetaSentEvent tries extracting ZetaSent event from connectorZEVM contract;

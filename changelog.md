@@ -30,6 +30,7 @@
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
+* [2416g](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
 
 ### Refactor
 
@@ -55,6 +56,7 @@
 * [2357](https://github.com/zeta-chain/node/pull/2357) - integrate base Signer structure into EVM/Bitcoin Signer
 * [2359](https://github.com/zeta-chain/node/pull/2359) - integrate base Observer structure into EVM/Bitcoin Observer
 * [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
+* [2380](https://github.com/zeta-chain/node/pull/2380) - use `ChainInfo` in `authority` to allow dynamically support new chains
 * [2395](https://github.com/zeta-chain/node/pull/2395) - converge AppContext with ZetaCoreContext in zetaclient
 
 ### Tests
