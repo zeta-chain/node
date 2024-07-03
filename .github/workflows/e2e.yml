@@ -24,6 +24,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     outputs:
+      DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
       UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
@@ -32,6 +33,7 @@ jobs:
       - id: matrix-conditionals
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
             labels=$(gh pr view -R ${{github.repository}} ${{github.event.pull_request.number}} --json labels -q '.labels[].name')
             if [[ "$labels" == *"UPGRADE_TESTS"* ]]; then
               echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
@@ -44,6 +46,10 @@ jobs:
             if [[ "$labels" == *"ADMIN_TESTS"* ]]; then
               echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
             fi
+          elif [[ ${{ github.event_name }} == 'merge_group' ]]; then
+            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref }} == 'refs/heads/develop' ]]; then
+            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
           elif [[ ${{ github.event_name }} == 'schedule' ]]; then
             echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
             echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
@@ -58,7 +64,7 @@ jobs:
         include:
           - make-target: "start-e2e-test"
             runs-on: ubuntu-20.04
-            run: true
+            run: ${{ needs.matrix-conditionals.outputs.DEFAULT_TESTS == 'true' }}
           - make-target: "start-upgrade-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
