@@ -213,7 +213,7 @@ start-localnet-skip-build:
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
-	cd contrib/localnet/ && $(DOCKER) compose --profile all --remove-orphans
+	cd contrib/localnet/ && $(DOCKER) compose --profile all down --remove-orphans
 
 ###############################################################################
 ###                         E2E tests               						###
