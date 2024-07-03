@@ -28,11 +28,7 @@ export DOCKER_BUILDKIT := 1
 
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
-export LOCALNET_MODE
 export E2E_ARGS := $(E2E_ARGS)
-export UPGRADE_HEIGHT
-export ZETACORED_IMPORT_GENESIS_DATA
-export ZETACORED_START_PERIOD := 30s
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
@@ -217,7 +213,7 @@ start-localnet-skip-build:
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
-	cd contrib/localnet/ && $(DOCKER) compose --profile eth2 --profile stress --profile upgrade down --remove-orphans
+	cd contrib/localnet/ && $(DOCKER) compose --profile all down --remove-orphans
 
 ###############################################################################
 ###                         E2E tests               						###
