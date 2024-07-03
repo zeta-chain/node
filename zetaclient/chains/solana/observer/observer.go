@@ -35,6 +35,8 @@ type Observer struct {
 	chainParams observertypes.ChainParams
 	programId   solana.PublicKey
 	ts          *metrics.TelemetryServer
+
+	lastTxSig solana.Signature
 }
 
 var _ interfaces.ChainObserver = &Observer{}
@@ -170,7 +172,7 @@ func (o *Observer) WatchInbound() {
 }
 
 func (o *Observer) ObserveInbound() error {
-	limit := 100
+	limit := 1000
 
 	out, err := o.solanaClient.GetSignaturesForAddressWithOpts(
 		context.TODO(),
@@ -178,7 +180,7 @@ func (o *Observer) ObserveInbound() error {
 		&rpc.GetSignaturesForAddressOpts{
 			Limit: &limit,
 			//Before: solana.MustSignatureFromBase58("5pLBywq74Nc6jYrWUqn9KjnYXHbQEY2UPkhWefZF5u4NYaUvEwz1Cirqaym9wDeHNAjiQwuLBfrdhXo8uFQA45jL"),
-			//Until:  solana.MustSignatureFromBase58("2coX9CckSmJWeHVqJNANeD7m4J7pctpSomxMon3h36droxCVB3JDbLyWQKMjnf85ntuFGxMLySykEMaRd5MDw35e"),
+			Until:      o.lastTxSig,
 			Commitment: rpc.CommitmentFinalized,
 		},
 	)
@@ -188,7 +190,7 @@ func (o *Observer) ObserveInbound() error {
 	}
 	o.logger.Info().Msgf("GetSignaturesForAddressWithOpts length %d", len(out))
 
-	for i := len(out) - 1; i >= 0; i-- {
+	for i := len(out) - 1; i >= 0; i-- { // iterate txs from oldest to latest
 		sig := out[i]
 		o.logger.Info().Msgf("found sig: %s", sig.Signature)
 		if sig.Err != nil { // ignore "failed" tx
@@ -199,6 +201,7 @@ func (o *Observer) ObserveInbound() error {
 			o.logger.Err(err).Msg("GetTransaction error")
 			return err // abort this observe operation in order to restart in next ticker trigger
 		}
+		o.lastTxSig = sig.Signature
 		type DepositInstructionParams struct {
 			Discriminator [8]byte
 			Amount        uint64
