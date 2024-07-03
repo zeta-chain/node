@@ -91,7 +91,14 @@ jobs:
       - name: Full Log Dump On Failure
         if: failure()
         run: |
-          make stop-localnet
+          cd contrib/localnet && docker compose --profile all logs --timestamps > /tmp/logs.txt
+
+      - name: Upload Logs On Failure
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.make-target }}-docker-logs
+          path: /tmp/logs.txt
 
       - name: Notify Slack on Failure
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/develop'
