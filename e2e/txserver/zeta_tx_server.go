@@ -36,6 +36,7 @@ import (
 	"github.com/evmos/ethermint/crypto/hd"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	solanaclient "github.com/zeta-chain/zetacore/zetaclient/chains/solana"
 
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
@@ -364,6 +365,21 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		8,
 		"BTC",
 		"tBTC",
+		coin.CoinType_Gas,
+		100000,
+	))
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+	}
+
+	// deploy sol zrc20
+	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addr.String(),
+		"",
+		solanaclient.LocalnetChainID,
+		9,
+		"Solana",
+		"SOL",
 		coin.CoinType_Gas,
 		100000,
 	))
