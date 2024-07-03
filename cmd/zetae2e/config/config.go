@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
@@ -19,7 +18,7 @@ func RunnerFromConfig(
 	logger *runner.Logger,
 	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
-	spew.Dump("RunnerFromConfig conf struct", conf)
+	//spew.Dump("RunnerFromConfig conf struct", conf)
 	// initialize clients
 	btcRPCClient,
 		solanaClient,

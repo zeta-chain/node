@@ -2,6 +2,7 @@ package txserver
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -189,6 +190,11 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		return nil, err
 	}
 
+	{
+		tx := txBuilder.GetTx()
+		fmt.Printf("txBuilder.GetTx(): fee %s, gas %d", tx.GetFee().String(), tx.GetGas())
+	}
+
 	// Sign tx
 	err = tx.Sign(zts.txFactory, account, txBuilder, true)
 	if err != nil {
@@ -202,6 +208,7 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 }
 
 func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
+	fmt.Printf("broadcasting tx:\n%s\n", base64.StdEncoding.EncodeToString(txBytes))
 	res, err := zts.clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		if res == nil {
@@ -222,11 +229,13 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 	for {
 		select {
 		case <-exitAfter:
-			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", zts.blockTimeout)
+			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d; tx hash %s", zts.blockTimeout, res.TxHash)
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
+
 			if err == nil {
-				return mkTxResult(zts.clientCtx, resTx)
+				txr, err := mkTxResult(zts.clientCtx, resTx)
+				return txr, err
 			}
 		}
 	}
@@ -367,14 +376,33 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
-	//chainParams := getNewEVMChainParams(newRunner)
-	//adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
-	//require.NoError(r, err)
-	//
-	//_, err = zts.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
-	//	adminAddr,
-	//	chainParams,
-	//))
+	// FIXME: config this
+	chainParams := observertypes.ChainParams{
+		ChainId:                   chains.SolanaLocalnet.ChainId,
+		IsSupported:               true,
+		GatewayAddress:            "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+		BallotThreshold:           sdktypes.MustNewDecFromStr("0.66"),
+		ConfirmationCount:         32,
+		GasPriceTicker:            100,
+		InboundTicker:             5,
+		OutboundTicker:            5,
+		OutboundScheduleInterval:  10,
+		OutboundScheduleLookahead: 10,
+		MinObserverDelegation:     sdktypes.MustNewDecFromStr("1"),
+	}
+	msg := observertypes.NewMsgUpdateChainParams(
+		addr.String(),
+		&chainParams,
+	)
+	err = msg.ValidateBasic()
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to validate chain params: %s", err.Error())
+	}
+	_, err = zts.BroadcastTx(account, msg)
+	if err != nil {
+		fmt.Printf("failed to update chain params: %s\n", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to update chain params (FungibleAdminName): %s", err.Error())
+	}
 	//require.NoError(r, err)
 
 	// deploy sol zrc20

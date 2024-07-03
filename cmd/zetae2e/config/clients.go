@@ -39,7 +39,6 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("solana rpc is empty")
 	}
 	solanaClient := rpc.New(conf.RPCs.SolanaRPC)
-	fmt.Printf("solana client URL: %s\n", conf.RPCs.SolanaRPC)
 	if solanaClient == nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get solana client")
 	}

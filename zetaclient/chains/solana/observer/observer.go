@@ -209,7 +209,7 @@ func (o *Observer) ObserveInbound() error {
 			Memo          []byte
 		}
 		transaction, _ := tx.Transaction.GetTransaction()
-		instruction := transaction.Message.Instructions[0] // TODO: parse not only the first instruction
+		instruction := transaction.Message.Instructions[0] // FIXME: parse not only the first instruction
 		data := instruction.Data
 		pk, _ := transaction.Message.Program(instruction.ProgramIDIndex)
 		log.Info().Msgf("Program ID: %s", pk)
