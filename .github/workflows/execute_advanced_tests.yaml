@@ -3,23 +3,11 @@ name: "TESTING:ADVANCED:E2E"
 on:
   workflow_dispatch:
     inputs:
-      e2e-admin-tests:
-        type: boolean
-        required: false
-        default: false
-      e2e-upgrade-test:
-        type: boolean
-        required: false
-        default: false
       e2e-stateful-upgrade-test:
         type: boolean
         required: false
         default: false
       e2e-performance-test:
-        type: boolean
-        required: false
-        default: false
-      e2e-upgrade-test-light:
         type: boolean
         required: false
         default: false
@@ -37,69 +25,6 @@ on:
     - cron: "0 6 * * *"
 
 jobs:
-  e2e-admin-tests:
-    if: ${{ github.event.inputs.e2e-admin-tests == 'true' || github.event_name == 'schedule' }}
-    runs-on: buildjet-4vcpu-ubuntu-2204
-    timeout-minutes: 120
-    steps:
-      - name: "Checkout Code"
-        uses: actions/checkout@v4
-
-      - name: Start Test
-        run: make start-e2e-admin-test
-
-      # use docker logs -f rather than docker attach to make sure we get the initial logs
-      - name: Watch Test
-        run: |
-          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
-          docker logs -f "${container_id}" &
-          exit $(docker wait "${container_id}")
-        
-      - name: Full Log Dump On Failure
-        if: failure()
-        run: |
-          make stop-localnet
-
-      - name: Notify Slack on Failure
-        if: failure() && github.event_name == 'schedule'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
-
-  e2e-upgrade-test:
-    if: ${{ github.event.inputs.e2e-upgrade-test == 'true' || github.event_name == 'schedule' }}
-    runs-on: buildjet-16vcpu-ubuntu-2204
-    timeout-minutes: 120
-    steps:
-      - name: "Checkout Code"
-        uses: actions/checkout@v4
-
-      - name: Start Test
-        run: make start-upgrade-test
-
-      - name: Watch Test
-        run: |
-          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
-          docker logs -f "${container_id}" &
-          exit $(docker wait "${container_id}")
-
-      - name: Full Log Dump On Failure
-        if: failure()
-        run: |
-          make stop-localnet
-
-      - name: Notify Slack on Failure
-        if: failure() && github.event_name == 'schedule'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
-
   e2e-stateful-upgrade-test:
     if: ${{ github.event.inputs.e2e-stateful-upgrade-test == 'true' || github.event_name == 'schedule' }}
     runs-on: buildjet-16vcpu-ubuntu-2204
@@ -110,37 +35,6 @@ jobs:
 
       - name: Start Test
         run: make start-upgrade-import-mainnet-test
-
-      - name: Watch Test
-        run: |
-          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
-          docker logs -f "${container_id}" &
-          exit $(docker wait "${container_id}")
-
-      - name: Full Log Dump On Failure
-        if: failure()
-        run: |
-          make stop-localnet
-
-      - name: Notify Slack on Failure
-        if: failure() && github.event_name == 'schedule'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
-
-  e2e-upgrade-test-light:
-    if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
-    runs-on: buildjet-4vcpu-ubuntu-2204
-    timeout-minutes: 120
-    steps:
-      - name: "Checkout Code"
-        uses: actions/checkout@v4
-
-      - name: Start Test
-        run: make start-upgrade-test-light
 
       - name: Watch Test
         run: |

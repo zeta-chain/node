@@ -44,9 +44,6 @@ jobs:
             if [[ "$labels" == *"ADMIN_TESTS"* ]]; then
               echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
             fi
-          elif [[ ${{ github.event_name }} == 'merge_group' ]]; then
-            #TODO: add ability to opt out via MINIMAL_TESTS
-            echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
           elif [[ ${{ github.event_name }} == 'schedule' ]]; then
             echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
             echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT

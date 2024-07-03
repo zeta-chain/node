@@ -84,6 +84,7 @@ services:
     hostname: zetacore2
     profiles:
       - stress
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.13
@@ -100,6 +101,7 @@ services:
     hostname: zetacore3
     profiles:
       - stress
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.14
@@ -148,6 +150,7 @@ services:
     hostname: zetaclient2
     profiles:
       - stress
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.23
@@ -165,6 +168,7 @@ services:
     hostname: zetaclient3
     profiles:
       - stress
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
@@ -194,6 +198,7 @@ services:
     hostname: eth2
     profiles:
       - eth2
+      - all
     platform: linux/amd64
     ports:
       - "8546:8545"
@@ -245,6 +250,7 @@ services:
     hostname: upgrade-host
     profiles:
       - upgrade
+      - all
     entrypoint: ["/root/start-upgrade-host.sh"]
     networks:
       mynetwork:
@@ -259,6 +265,7 @@ services:
     hostname: upgrade-orchestrator
     profiles:
       - upgrade
+      - all
     entrypoint: ["/root/start-upgrade-orchestrator.sh"]
     networks:
       mynetwork:
