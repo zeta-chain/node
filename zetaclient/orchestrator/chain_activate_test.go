@@ -122,7 +122,7 @@ func Test_ActivateChains(t *testing.T) {
 			// create new signer and observer maps
 			newSignerMap := make(map[int64]interfaces.ChainSigner)
 			newObserverMap := make(map[int64]interfaces.ChainObserver)
-			oc.CreateObserversEVM(newSignerMap, newObserverMap)
+			oc.CreateSignerObserverEVM(newSignerMap, newObserverMap)
 
 			// activate chains
 			oc.ActivateChains(newSignerMap, newObserverMap)
@@ -187,7 +187,7 @@ func Test_DeactivateChains(t *testing.T) {
 			// create new signer and observer maps
 			newSignerMap := make(map[int64]interfaces.ChainSigner)
 			newObserverMap := make(map[int64]interfaces.ChainObserver)
-			oc.CreateObserversEVM(newSignerMap, newObserverMap)
+			oc.CreateSignerObserverEVM(newSignerMap, newObserverMap)
 
 			// activate chains
 			oc.ActivateChains(newSignerMap, newObserverMap)
@@ -205,7 +205,7 @@ func Test_DeactivateChains(t *testing.T) {
 			// create maps again based on newly updated config
 			newSignerMap = make(map[int64]interfaces.ChainSigner)
 			newObserverMap = make(map[int64]interfaces.ChainObserver)
-			oc.CreateObserversEVM(newSignerMap, newObserverMap)
+			oc.CreateSignerObserverEVM(newSignerMap, newObserverMap)
 
 			// deactivate chains
 			oc.DeactivateChains(newObserverMap)
@@ -221,7 +221,7 @@ func Test_DeactivateChains(t *testing.T) {
 	}
 }
 
-func Test_CreateObserversEVM(t *testing.T) {
+func Test_CreateSignerObserverEVM(t *testing.T) {
 	// define test chains and chain params
 	evmChain := chains.Ethereum
 	btcChain := chains.BitcoinMainnet
@@ -292,7 +292,7 @@ func Test_CreateObserversEVM(t *testing.T) {
 			// create observers
 			signerMap := make(map[int64]interfaces.ChainSigner)
 			observerMap := make(map[int64]interfaces.ChainObserver)
-			oc.CreateObserversEVM(signerMap, observerMap)
+			oc.CreateSignerObserverEVM(signerMap, observerMap)
 
 			// assert signer/observer map
 			require.Len(t, signerMap, tt.numObserverCreated)
@@ -307,7 +307,7 @@ func Test_CreateObserversEVM(t *testing.T) {
 	}
 }
 
-func Test_CreateObserversBTC(t *testing.T) {
+func Test_CreateSignerObserverBTC(t *testing.T) {
 	// define test chains and chain params
 	evmChain := chains.Ethereum
 	btcChain := chains.BitcoinMainnet
@@ -373,7 +373,7 @@ func Test_CreateObserversBTC(t *testing.T) {
 			// create observers
 			signerMap := make(map[int64]interfaces.ChainSigner)
 			observerMap := make(map[int64]interfaces.ChainObserver)
-			oc.CreateObserversBTC(signerMap, observerMap)
+			oc.CreateSignerObserverBTC(signerMap, observerMap)
 
 			// assert signer/observer map
 			require.Len(t, signerMap, tt.numObserverCreated)

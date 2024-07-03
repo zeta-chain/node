@@ -52,8 +52,8 @@ func (oc *Orchestrator) ActivateAndDeactivateChains() {
 	newObserverMap := make(map[int64]interfaces.ChainObserver)
 
 	// create new signers and observers
-	oc.CreateObserversEVM(newSignerMap, newObserverMap)
-	oc.CreateObserversBTC(newSignerMap, newObserverMap)
+	oc.CreateSignerObserverEVM(newSignerMap, newObserverMap)
+	oc.CreateSignerObserverBTC(newSignerMap, newObserverMap)
 
 	// activate newly supported chains and deactivate chains that are no longer supported
 	oc.DeactivateChains(newObserverMap)
@@ -113,8 +113,8 @@ func (oc *Orchestrator) ActivateChains(
 	}
 }
 
-// CreateObserversEVM creates signer and observer maps for all enabled EVM chains
-func (oc *Orchestrator) CreateObserversEVM(
+// CreateSignerObserverEVM creates signer and observer maps for all enabled EVM chains
+func (oc *Orchestrator) CreateSignerObserverEVM(
 	resultSignerMap map[int64]interfaces.ChainSigner,
 	resultObserverMap map[int64]interfaces.ChainObserver,
 ) {
@@ -181,8 +181,8 @@ func (oc *Orchestrator) CreateObserversEVM(
 	}
 }
 
-// CreateObserversBTC creates signer and observer maps for all enabled BTC chains
-func (oc *Orchestrator) CreateObserversBTC(
+// CreateSignerObserverBTC creates signer and observer maps for all enabled BTC chains
+func (oc *Orchestrator) CreateSignerObserverBTC(
 	resultSignerMap map[int64]interfaces.ChainSigner,
 	resultObserverMap map[int64]interfaces.ChainObserver,
 ) {
