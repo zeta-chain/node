@@ -76,7 +76,7 @@ jobs:
       run: ${{ matrix.run }}
     secrets: inherit
   # this allows you to set a required status check
-  ok:
+  e2e-ok:
     runs-on: ubuntu-22.04
     needs: e2e
     if: always()
