@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:9545"
+  target: "-=http_request_protocol=-://-=endpoint_to_test=-"
   phases:
     - duration: 300
       arrivalRate: 425
