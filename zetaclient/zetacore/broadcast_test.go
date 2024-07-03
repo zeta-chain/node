@@ -1,6 +1,7 @@
 package zetacore
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"net"
@@ -39,6 +40,8 @@ func TestHandleBroadcastError(t *testing.T) {
 }
 
 func TestBroadcast(t *testing.T) {
+	ctx := context.Background()
+
 	address := types.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 
 	//Setup server for multiple grpc calls
@@ -87,9 +90,10 @@ func TestBroadcast(t *testing.T) {
 			18495266,
 			getHeaderData(t),
 		)
-		authzMsg, authzSigner, err := client.WrapMessageWithAuthz(msg)
+		authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
-		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)
+
+		_, err = client.Broadcast(ctx, 10_000, authzMsg, authzSigner)
 		require.NoError(t, err)
 	})
 
@@ -106,9 +110,10 @@ func TestBroadcast(t *testing.T) {
 			18495266,
 			getHeaderData(t),
 		)
-		authzMsg, authzSigner, err := client.WrapMessageWithAuthz(msg)
+		authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
-		_, err = BroadcastToZetaCore(client, 10000, authzMsg, authzSigner)
+
+		_, err = client.Broadcast(ctx, 10_000, authzMsg, authzSigner)
 		require.Error(t, err)
 	})
 }

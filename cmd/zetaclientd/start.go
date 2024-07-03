@@ -151,7 +151,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
-	go zetacoreClient.ZetacoreContextUpdater(appContext)
+	go zetacoreClient.UpdateZetacoreContextWorker(ctx, appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions

@@ -16,11 +16,21 @@ import (
 // 32MB
 var maxSizeOption = grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 
+// GetLastBlockHeight returns the zetachain block height
+func (c *Client) GetLastBlockHeight(ctx context.Context) (uint64, error) {
+	resp, err := c.client.crosschain.LastBlockHeight(ctx, &types.QueryGetLastBlockHeightRequest{})
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get block height")
+	}
+
+	return resp.GetLastBlockHeight().LastInboundHeight, nil
+}
+
 // GetBlockHeight returns the zetachain block height
 func (c *Client) GetBlockHeight(ctx context.Context) (int64, error) {
 	resp, err := c.client.crosschain.LastZetaHeight(ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to get block height")
+		return 0, err
 	}
 
 	return resp.Height, nil
@@ -107,9 +117,9 @@ func (c *Client) ListPendingCCTXWithinRateLimit(
 	return resp, nil
 }
 
-// ListPendingCctx returns a list of pending cctxs for a given chainID
+// ListPendingCCTX returns a list of pending cctxs for a given chainID
 //   - The max size of the list is crosschainkeeper.MaxPendingCctxs
-func (c *Client) ListPendingCctx(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
+func (c *Client) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	in := &types.QueryListPendingCctxRequest{ChainId: chainID}
 
 	resp, err := c.client.crosschain.ListPendingCctx(ctx, in, maxSizeOption)

@@ -1,6 +1,7 @@
 package zetacore
 
 import (
+	"context"
 	"net"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
@@ -59,10 +61,14 @@ func setupZetacoreClient() (*Client, error) {
 		testSigner,
 		"zetachain_7000-1",
 		false,
-		&metrics.TelemetryServer{})
+		&metrics.TelemetryServer{},
+		zerolog.Nop(),
+	)
 }
 
 func TestZetacore_GetBallot(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryBallotByIdentifierResponse{
 		BallotIdentifier: "123",
 		Voters:           nil,
@@ -78,12 +84,14 @@ func TestZetacore_GetBallot(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetBallotByID("123")
+	resp, err := client.GetBallotByID(ctx, "123")
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, *resp)
 }
 
 func TestZetacore_GetCrosschainFlags(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetCrosschainFlagsResponse{CrosschainFlags: observertypes.CrosschainFlags{
 		IsInboundEnabled:      true,
 		IsOutboundEnabled:     false,
@@ -98,12 +106,14 @@ func TestZetacore_GetCrosschainFlags(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetCrosschainFlags()
+	resp, err := client.GetCrosschainFlags(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrosschainFlags, resp)
 }
 
 func TestZetacore_GetRateLimiterFlags(t *testing.T) {
+	ctx := context.Background()
+
 	// create sample flags
 	rateLimiterFlags := sample.RateLimiterFlags()
 	expectedOutput := crosschainTypes.QueryRateLimiterFlagsResponse{
@@ -121,12 +131,14 @@ func TestZetacore_GetRateLimiterFlags(t *testing.T) {
 	require.NoError(t, err)
 
 	// query
-	resp, err := client.GetRateLimiterFlags()
+	resp, err := client.GetRateLimiterFlags(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.RateLimiterFlags, resp)
 }
 
 func TestZetacore_HeaderEnabledChains(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := lightclienttypes.QueryHeaderEnabledChainsResponse{
 		HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
 			{
@@ -148,12 +160,14 @@ func TestZetacore_HeaderEnabledChains(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetBlockHeaderEnabledChains()
+	resp, err := client.GetBlockHeaderEnabledChains(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.HeaderEnabledChains, resp)
 }
 
 func TestZetacore_GetChainParamsForChainID(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetChainParamsForChainResponse{ChainParams: &observertypes.ChainParams{
 		ChainId:               123,
 		BallotThreshold:       types.ZeroDec(),
@@ -168,12 +182,14 @@ func TestZetacore_GetChainParamsForChainID(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetChainParamsForChainID(123)
+	resp, err := client.GetChainParamsForChainID(ctx, 123)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.ChainParams, resp)
 }
 
 func TestZetacore_GetChainParams(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 		ChainParams: []*observertypes.ChainParams{
 			{
@@ -192,12 +208,14 @@ func TestZetacore_GetChainParams(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetChainParams()
+	resp, err := client.GetChainParams(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.ChainParams.ChainParams, resp)
 }
 
 func TestZetacore_GetUpgradePlan(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := upgradetypes.QueryCurrentPlanResponse{
 		Plan: &upgradetypes.Plan{
 			Name:   "big upgrade",
@@ -213,12 +231,14 @@ func TestZetacore_GetUpgradePlan(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetUpgradePlan()
+	resp, err := client.GetUpgradePlan(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Plan, resp)
 }
 
 func TestZetacore_GetAllCctx(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryAllCctxResponse{
 		CrossChainTx: []*crosschainTypes.CrossChainTx{
 			{
@@ -236,12 +256,14 @@ func TestZetacore_GetAllCctx(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetAllCctx()
+	resp, err := client.GetAllCctx(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrossChainTx, resp)
 }
 
 func TestZetacore_GetCctxByHash(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryGetCctxResponse{CrossChainTx: &crosschainTypes.CrossChainTx{
 		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
 	}}
@@ -256,12 +278,14 @@ func TestZetacore_GetCctxByHash(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetCctxByHash("9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3")
+	resp, err := client.GetCctxByHash(ctx, "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3")
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrossChainTx, resp)
 }
 
 func TestZetacore_GetCctxByNonce(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryGetCctxResponse{CrossChainTx: &crosschainTypes.CrossChainTx{
 		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
 	}}
@@ -277,12 +301,14 @@ func TestZetacore_GetCctxByNonce(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetCctxByNonce(7000, 55)
+	resp, err := client.GetCctxByNonce(ctx, 7000, 55)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrossChainTx, resp)
 }
 
 func TestZetacore_GetObserverList(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryObserverSetResponse{
 		Observers: []string{
 			"zeta19jr7nl82lrktge35f52x9g5y5prmvchmk40zhg",
@@ -299,12 +325,14 @@ func TestZetacore_GetObserverList(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetObserverList()
+	resp, err := client.GetObserverList(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Observers, resp)
 }
 
 func TestZetacore_GetRateLimiterInput(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryRateLimiterInputResponse{
 		Height:                  10,
 		CctxsMissed:             []*crosschainTypes.CrossChainTx{sample.CrossChainTx(t, "1-1")},
@@ -323,12 +351,14 @@ func TestZetacore_GetRateLimiterInput(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetRateLimiterInput(10)
+	resp, err := client.GetRateLimiterInput(ctx, 10)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, resp)
 }
 
 func TestZetacore_ListPendingCctx(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryListPendingCctxResponse{
 		CrossChainTx: []*crosschainTypes.CrossChainTx{
 			{
@@ -346,13 +376,15 @@ func TestZetacore_ListPendingCctx(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, totalPending, err := client.ListPendingCctx(7000)
+	resp, totalPending, err := client.ListPendingCCTX(ctx, 7000)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.CrossChainTx, resp)
 	require.Equal(t, expectedOutput.TotalPending, totalPending)
 }
 
 func TestZetacore_GetAbortedZetaAmount(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryZetaAccountingResponse{AbortedZetaAmount: "1080999"}
 	input := crosschainTypes.QueryZetaAccountingRequest{}
 	method := "/zetachain.zetacore.crosschain.Query/ZetaAccounting"
@@ -363,7 +395,7 @@ func TestZetacore_GetAbortedZetaAmount(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetAbortedZetaAmount()
+	resp, err := client.GetAbortedZetaAmount(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.AbortedZetaAmount, resp)
 }
@@ -373,6 +405,8 @@ func TestZetacore_GetGenesisSupply(t *testing.T) {
 }
 
 func TestZetacore_GetZetaTokenSupplyOnNode(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := banktypes.QuerySupplyOfResponse{
 		Amount: types.Coin{
 			Denom:  config.BaseDenom,
@@ -387,12 +421,14 @@ func TestZetacore_GetZetaTokenSupplyOnNode(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetZetaTokenSupplyOnNode()
+	resp, err := client.GetZetaTokenSupplyOnNode(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.GetAmount().Amount, resp)
 }
 
 func TestZetacore_GetLastBlockHeight(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := crosschainTypes.QueryAllLastBlockHeightResponse{
 		LastBlockHeight: []*crosschainTypes.LastBlockHeight{
 			{
@@ -413,13 +449,15 @@ func TestZetacore_GetLastBlockHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("last block height", func(t *testing.T) {
-		resp, err := client.GetLastBlockHeight()
+		resp, err := client.GetLastBlockHeight(ctx)
 		require.NoError(t, err)
 		require.Equal(t, expectedOutput.LastBlockHeight, resp)
 	})
 }
 
 func TestZetacore_GetLatestZetaBlock(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := tmservice.GetLatestBlockResponse{
 		SdkBlock: &tmservice.Block{
 			Header:     tmservice.Header{},
@@ -437,12 +475,14 @@ func TestZetacore_GetLatestZetaBlock(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetLatestZetaBlock()
+	resp, err := client.GetLatestZetaBlock(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.SdkBlock, resp)
 }
 
 func TestZetacore_GetNodeInfo(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := tmservice.GetNodeInfoResponse{
 		DefaultNodeInfo:    nil,
 		ApplicationVersion: &tmservice.VersionInfo{},
@@ -456,30 +496,14 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetNodeInfo()
+	resp, err := client.GetNodeInfo(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, *resp)
 }
 
-func TestZetacore_GetZetaBlockHeight(t *testing.T) {
-	expectedOutput := crosschainTypes.QueryLastZetaHeightResponse{Height: 12345}
-	input := crosschainTypes.QueryLastZetaHeightRequest{}
-	method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
-	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
-	server.Serve()
-	defer closeMockServer(t, server)
-
-	client, err := setupZetacoreClient()
-	require.NoError(t, err)
-
-	t.Run("get zeta block height success", func(t *testing.T) {
-		resp, err := client.GetBlockHeight()
-		require.NoError(t, err)
-		require.Equal(t, expectedOutput.Height, resp)
-	})
-}
-
 func TestZetacore_GetBaseGasPrice(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := feemarkettypes.QueryParamsResponse{
 		Params: feemarkettypes.Params{
 			BaseFee: types.NewInt(23455),
@@ -494,12 +518,14 @@ func TestZetacore_GetBaseGasPrice(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetBaseGasPrice()
+	resp, err := client.GetBaseGasPrice(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Params.BaseFee.Int64(), resp)
 }
 
 func TestZetacore_GetNonceByChain(t *testing.T) {
+	ctx := context.Background()
+
 	chain := chains.BscMainnet
 	expectedOutput := observertypes.QueryGetChainNoncesResponse{
 		ChainNonces: observertypes.ChainNonces{
@@ -520,12 +546,14 @@ func TestZetacore_GetNonceByChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetNonceByChain(chain)
+	resp, err := client.GetNonceByChain(ctx, chain)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.ChainNonces, resp)
 }
 
 func TestZetacore_GetAllNodeAccounts(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryAllNodeAccountResponse{
 		NodeAccount: []*observertypes.NodeAccount{
 			{
@@ -545,12 +573,14 @@ func TestZetacore_GetAllNodeAccounts(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetAllNodeAccounts()
+	resp, err := client.GetAllNodeAccounts(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.NodeAccount, resp)
 }
 
 func TestZetacore_GetKeyGen(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetKeygenResponse{
 		Keygen: &observertypes.Keygen{
 			Status:         observertypes.KeygenStatus_KeyGenSuccess,
@@ -566,12 +596,14 @@ func TestZetacore_GetKeyGen(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetKeyGen()
+	resp, err := client.GetKeyGen(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Keygen, resp)
 }
 
 func TestZetacore_GetBallotByID(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryBallotByIdentifierResponse{
 		BallotIdentifier: "ballot1235",
 	}
@@ -584,12 +616,14 @@ func TestZetacore_GetBallotByID(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetBallot("ballot1235")
+	resp, err := client.GetBallot(ctx, "ballot1235")
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, *resp)
 }
 
 func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
+	ctx := context.Background()
+
 	chainID := chains.BscMainnet.ChainId
 	expectedOutput := crosschainTypes.QueryAllInboundTrackerByChainResponse{
 		InboundTracker: []crosschainTypes.InboundTracker{
@@ -609,12 +643,14 @@ func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetInboundTrackersForChain(chainID)
+	resp, err := client.GetInboundTrackersForChain(ctx, chainID)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.InboundTracker, resp)
 }
 
 func TestZetacore_GetCurrentTss(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetTSSResponse{
 		TSS: observertypes.TSS{
 			TssPubkey:           "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
@@ -633,12 +669,14 @@ func TestZetacore_GetCurrentTss(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetCurrentTss()
+	resp, err := client.GetCurrentTSS(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.TSS, resp)
 }
 
 func TestZetacore_GetEthTssAddress(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetTssAddressResponse{
 		Eth: "0x70e967acfcc17c3941e87562161406d41676fd83",
 		Btc: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
@@ -652,12 +690,14 @@ func TestZetacore_GetEthTssAddress(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetEthTssAddress()
+	resp, err := client.GetEVMTSSAddress(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Eth, resp)
 }
 
 func TestZetacore_GetBtcTssAddress(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryGetTssAddressResponse{
 		Eth: "0x70e967acfcc17c3941e87562161406d41676fd83",
 		Btc: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
@@ -671,12 +711,14 @@ func TestZetacore_GetBtcTssAddress(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetBtcTssAddress(8332)
+	resp, err := client.GetBTCTSSAddress(ctx, 8332)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Btc, resp)
 }
 
 func TestZetacore_GetTssHistory(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryTssHistoryResponse{
 		TssList: []observertypes.TSS{
 			{
@@ -697,7 +739,7 @@ func TestZetacore_GetTssHistory(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetTssHistory()
+	resp, err := client.GetTSSHistory(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.TssList, resp)
 }
@@ -724,12 +766,15 @@ func TestZetacore_GetOutboundTracker(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetOutboundTracker(chain, 456)
+	ctx := context.Background()
+	resp, err := client.GetOutboundTracker(ctx, chain, 456)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, *resp)
 }
 
 func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
+	ctx := context.Background()
+
 	chain := chains.BscMainnet
 	expectedOutput := crosschainTypes.QueryAllOutboundTrackerByChainResponse{
 		OutboundTracker: []crosschainTypes.OutboundTracker{
@@ -759,16 +804,18 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Ascending)
+	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
 
-	resp, err = client.GetAllOutboundTrackerByChain(chain.ChainId, interfaces.Descending)
+	resp, err = client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Descending)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
 }
 
 func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryPendingNoncesByChainResponse{
 		PendingNonces: observertypes.PendingNonces{
 			NonceLow:  0,
@@ -786,12 +833,14 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetPendingNoncesByChain(chains.Ethereum.ChainId)
+	resp, err := client.GetPendingNoncesByChain(ctx, chains.Ethereum.ChainId)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.PendingNonces, resp)
 }
 
 func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
+	ctx := context.Background()
+
 	chainID := chains.BscMainnet.ChainId
 	expectedOutput := lightclienttypes.QueryGetChainStateResponse{ChainState: &lightclienttypes.ChainState{
 		ChainId:         chainID,
@@ -808,12 +857,14 @@ func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetBlockHeaderChainState(chainID)
+	resp, err := client.GetBlockHeaderChainState(ctx, chainID)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, resp)
 }
 
 func TestZetacore_GetSupportedChains(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []*chains.Chain{
 			{
@@ -845,12 +896,14 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetSupportedChains()
+	resp, err := client.GetSupportedChains(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Chains, resp)
 }
 
 func TestZetacore_GetPendingNonces(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryAllPendingNoncesResponse{
 		PendingNonces: []observertypes.PendingNonces{
 			{
@@ -870,12 +923,14 @@ func TestZetacore_GetPendingNonces(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.GetPendingNonces()
+	resp, err := client.GetPendingNonces(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, *resp)
 }
 
 func TestZetacore_Prove(t *testing.T) {
+	ctx := context.Background()
+
 	chainId := chains.BscMainnet.ChainId
 	txHash := "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3"
 	blockHash := "0000000000000000000172c9a64f86f208b867a84dc7a0b7c75be51e750ed8eb"
@@ -898,12 +953,14 @@ func TestZetacore_Prove(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.Prove(blockHash, txHash, int64(txIndex), nil, chainId)
+	resp, err := client.Prove(ctx, blockHash, txHash, int64(txIndex), nil, chainId)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Valid, resp)
 }
 
 func TestZetacore_HasVoted(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: true}
 	input := observertypes.QueryHasVotedRequest{
 		BallotIdentifier: "123456asdf",
@@ -917,12 +974,14 @@ func TestZetacore_HasVoted(t *testing.T) {
 	client, err := setupZetacoreClient()
 	require.NoError(t, err)
 
-	resp, err := client.HasVoted("123456asdf", "zeta1l40mm7meacx03r4lp87s9gkxfan32xnznp42u6")
+	resp, err := client.HasVoted(ctx, "123456asdf", "zeta1l40mm7meacx03r4lp87s9gkxfan32xnznp42u6")
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.HasVoted, resp)
 }
 
 func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
+	ctx := context.Background()
+
 	expectedOutput := banktypes.QueryBalanceResponse{
 		Balance: &types.Coin{
 			Denom:  config.BaseDenom,
@@ -943,13 +1002,13 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 
 	// should be able to get balance of signer
 	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "bob", "")
-	resp, err := client.GetZetaHotKeyBalance()
+	resp, err := client.GetZetaHotKeyBalance(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Balance.Amount, resp)
 
 	// should return error on empty signer
 	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "", "")
-	resp, err = client.GetZetaHotKeyBalance()
+	resp, err = client.GetZetaHotKeyBalance(ctx)
 	require.Error(t, err)
 	require.Equal(t, types.ZeroInt(), resp)
 }

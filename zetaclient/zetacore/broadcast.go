@@ -154,6 +154,7 @@ func (c *Client) SignTx(
 	if c.config.HsmMode {
 		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
 	}
+
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
 
