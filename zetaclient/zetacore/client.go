@@ -266,7 +266,8 @@ func (c *Client) UpdateAppContext(appContext *context.AppContext, logger zerolog
 		// just in case (zetacore already validated)
 		err := observertypes.ValidateChainParams(chainParam)
 		if err != nil {
-			return errors.Wrapf(err, "Invalid chain params for chain %d", chainParam.ChainId)
+			logger.Error().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
+			continue
 		}
 
 		// zetaclient detects Bitcoin network (regnet, testnet, mainnet) from chain params in zetacore

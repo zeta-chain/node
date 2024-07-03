@@ -30,7 +30,15 @@ func (ob *EVMObserver) Start() {
 func (ob *EVMObserver) Stop() {
 }
 
+func (ob *EVMObserver) OpenDB(_, _ string) error {
+	return nil
+}
+
 func (ob *EVMObserver) LoadDB(_ string) error {
+	return nil
+}
+
+func (ob *EVMObserver) SaveLastBlockScanned(_ uint64) error {
 	return nil
 }
 
@@ -75,7 +83,15 @@ func (ob *BTCObserver) Start() {
 func (ob *BTCObserver) Stop() {
 }
 
+func (ob *BTCObserver) OpenDB(_, _ string) error {
+	return nil
+}
+
 func (ob *BTCObserver) LoadDB(_ string) error {
+	return nil
+}
+
+func (ob *BTCObserver) SaveLastBlockScanned(_ uint64) error {
 	return nil
 }
 

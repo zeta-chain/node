@@ -42,7 +42,9 @@ const (
 type ChainObserver interface {
 	Start()
 	Stop()
+	OpenDB(dbPath string, dbName string) error
 	LoadDB(dbPath string) error
+	SaveLastBlockScanned(blockNumber uint64) error
 	IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams

@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"math/big"
 	"net"
 	"os"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -228,12 +230,28 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 							IsSupported: true,
 						},
 						{
-							ChainId:     chains.Ethereum.ChainId,
-							IsSupported: true,
+							ChainId:                   chains.Ethereum.ChainId,
+							ConfirmationCount:         32,
+							InboundTicker:             15,
+							OutboundTicker:            15,
+							GasPriceTicker:            300,
+							OutboundScheduleInterval:  64,
+							OutboundScheduleLookahead: 10,
+							BallotThreshold:           sdk.MustNewDecFromStr("0.6"),
+							MinObserverDelegation:     sdk.MustNewDecFromStr("1000000000000000000"),
+							IsSupported:               true,
 						},
 						{
-							ChainId:     chains.BitcoinMainnet.ChainId,
-							IsSupported: true,
+							ChainId:                   chains.BitcoinMainnet.ChainId,
+							ConfirmationCount:         32,
+							InboundTicker:             15,
+							OutboundTicker:            15,
+							GasPriceTicker:            300,
+							OutboundScheduleInterval:  64,
+							OutboundScheduleLookahead: 10,
+							BallotThreshold:           sdk.MustNewDecFromStr("0.6"),
+							MinObserverDelegation:     sdk.MustNewDecFromStr("1000000000000000000"),
+							IsSupported:               true,
 						},
 					},
 				}})

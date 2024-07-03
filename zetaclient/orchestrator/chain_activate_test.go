@@ -124,6 +124,15 @@ func Test_ActivateChains(t *testing.T) {
 			newObserverMap := make(map[int64]interfaces.ChainObserver)
 			oc.CreateSignerObserverEVM(newSignerMap, newObserverMap)
 
+			// open db and save last block number to db to avoid RPC call
+			ob := newObserverMap[tt.evmChain.ChainId]
+			require.NotNil(t, ob)
+			err := ob.OpenDB(testutils.SQLiteMemory, tt.evmCfg.Chain.ChainName.String())
+			require.NoError(t, err)
+
+			err = ob.SaveLastBlockScanned(100)
+			require.NoError(t, err)
+
 			// activate chains
 			oc.ActivateChains(newSignerMap, newObserverMap)
 
@@ -189,11 +198,20 @@ func Test_DeactivateChains(t *testing.T) {
 			newObserverMap := make(map[int64]interfaces.ChainObserver)
 			oc.CreateSignerObserverEVM(newSignerMap, newObserverMap)
 
+			// open db and save last block number to db to avoid RPC call
+			ob := newObserverMap[tt.evmChain.ChainId]
+			require.NotNil(t, ob)
+			err := ob.OpenDB(testutils.SQLiteMemory, tt.evmCfg.Chain.ChainName.String())
+			require.NoError(t, err)
+
+			err = ob.SaveLastBlockScanned(100)
+			require.NoError(t, err)
+
 			// activate chains
 			oc.ActivateChains(newSignerMap, newObserverMap)
 
 			// assert signer/observer map
-			ob, err := oc.GetUpdatedChainObserver(tt.evmChain.ChainId)
+			ob, err = oc.GetUpdatedChainObserver(tt.evmChain.ChainId)
 			require.NoError(t, err)
 			require.NotNil(t, ob)
 
