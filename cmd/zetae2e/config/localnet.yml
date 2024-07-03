@@ -48,4 +48,6 @@ rpcs:
     params: regnet
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
+  solana_rpc: "http://solana:8899"
+
 # contracts will be populated on first run

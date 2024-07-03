@@ -367,6 +367,16 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
+	//chainParams := getNewEVMChainParams(newRunner)
+	//adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
+	//require.NoError(r, err)
+	//
+	//_, err = zts.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
+	//	adminAddr,
+	//	chainParams,
+	//))
+	//require.NoError(r, err)
+
 	// deploy sol zrc20
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),

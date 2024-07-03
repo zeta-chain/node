@@ -193,7 +193,7 @@ func CreateChainObserverMap(
 		}
 	}
 
-	// TODO: config this
+	// FIXME: config this
 	solChainParams := observertypes.ChainParams{
 		GatewayAddress: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
 		IsSupported:    true,

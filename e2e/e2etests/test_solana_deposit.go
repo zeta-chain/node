@@ -9,6 +9,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
@@ -17,6 +18,20 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	}
 
 	client := r.SolanaClient
+	//r.Logger.Print("solana client URL", client.)
+	if client == nil {
+		r.Logger.Error("Solana client is nil")
+		panic("Solana client is nil")
+	}
+	{
+		res, err := client.GetVersion(context.Background())
+		if err != nil {
+			r.Logger.Error("error getting solana version: %v", err)
+			panic(err)
+		}
+		r.Logger.Print("solana RPC version: %+v", res)
+	}
+
 	// building the transaction
 	recent, err := client.GetRecentBlockhash(context.TODO(), rpc.CommitmentFinalized)
 	if err != nil {
@@ -59,7 +74,7 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	inst.DataBytes, err = borsh.Serialize(InitializeParams{
 		Discriminator: [8]byte{175, 175, 109, 31, 13, 152, 155, 237},
 		TssAddress:    r.TSSAddress,
-		ChainId:       111111,
+		ChainId:       uint64(chains.SolanaLocalnet.ChainId),
 	})
 	if err != nil {
 		panic(err)
