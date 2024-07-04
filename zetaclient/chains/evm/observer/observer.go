@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/zetacore/pkg/bg"
 
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -166,28 +167,11 @@ func FetchZetaTokenContract(
 func (ob *Observer) Start(ctx context.Context) {
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
-	go ob.watch(ctx, ob.WatchInbound, "WatchInbound")
-	go ob.watch(ctx, ob.WatchOutbound, "WatchOutbound")
-	go ob.watch(ctx, ob.WatchGasPrice, "WatchGasPrice")
-	go ob.watch(ctx, ob.WatchInboundTracker, "WatchInboundTracker")
-	go ob.watch(ctx, ob.WatchRPCStatus, "WatchRPCStatus")
-}
-
-// watch watches the worker function and recovers from panics.
-// Ideally we need to move this to a package with graceful shutdown as well
-func (ob *Observer) watch(ctx context.Context, worker func(ctx context.Context) error, name string) {
-	defer func() {
-		if r := recover(); r != nil {
-			ob.Logger().Chain.Error().
-				Str("name", name).
-				Interface("panic", r).
-				Msg("EVM Observer panic recovered")
-		}
-	}()
-
-	if err := worker(ctx); err != nil {
-		ob.Logger().Chain.Error().Err(err).Str("name", name).Msg("EVM Observer worker error")
-	}
+	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
+	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
+	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
+	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
+	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // WatchRPCStatus watches the RPC status of the evm chain
