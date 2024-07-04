@@ -25,7 +25,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -58,7 +57,6 @@ func NewObserver(
 	evmCfg config.EVMConfig,
 	evmClient interfaces.EVMRPCClient,
 	chainParams observertypes.ChainParams,
-	appClient *clientcontext.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -69,7 +67,6 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		evmCfg.Chain,
 		chainParams,
-		appClient,
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
@@ -166,29 +163,37 @@ func FetchZetaTokenContract(
 }
 
 // Start all observation routines for the evm chain
-func (ob *Observer) Start() {
+func (ob *Observer) Start(ctx context.Context) {
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
-	// watch evm chain for incoming txs and post votes to zetacore
-	go ob.WatchInbound()
+	go ob.watch(ctx, ob.WatchInbound, "WatchInbound")
+	go ob.watch(ctx, ob.WatchOutbound, "WatchOutbound")
+	go ob.watch(ctx, ob.WatchGasPrice, "WatchGasPrice")
+	go ob.watch(ctx, ob.WatchInboundTracker, "WatchInboundTracker")
+	go ob.watch(ctx, ob.WatchRPCStatus, "WatchRPCStatus")
+}
 
-	// watch evm chain for outgoing txs status
-	go ob.WatchOutbound()
+// watch watches the worker function and recovers from panics.
+// Ideally we need to move this to a package with graceful shutdown as well
+func (ob *Observer) watch(ctx context.Context, worker func(ctx context.Context) error, name string) {
+	defer func() {
+		if r := recover(); r != nil {
+			ob.Logger().Chain.Error().
+				Str("name", name).
+				Interface("panic", r).
+				Msg("EVM Observer panic recovered")
+		}
+	}()
 
-	// watch evm chain for gas prices and post to zetacore
-	go ob.WatchGasPrice()
-
-	// watch zetacore for inbound trackers
-	go ob.WatchInboundTracker()
-
-	// watch the RPC status of the evm chain
-	go ob.WatchRPCStatus()
+	if err := worker(ctx); err != nil {
+		ob.Logger().Chain.Error().Err(err).Str("name", name).Msg("EVM Observer worker error")
+	}
 }
 
 // WatchRPCStatus watches the RPC status of the evm chain
 // TODO(revamp): move ticker to ticker file
 // TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchRPCStatus() {
+func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 	ob.Logger().Chain.Info().Msgf("Starting RPC status check for chain %d", ob.Chain().ChainId)
 	ticker := time.NewTicker(60 * time.Second)
 	for {
@@ -223,7 +228,7 @@ func (ob *Observer) WatchRPCStatus() {
 			ob.Logger().Chain.Info().
 				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
 		case <-ob.StopChannel():
-			return
+			return nil
 		}
 	}
 }
@@ -295,9 +300,9 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 // WatchGasPrice watches evm chain for gas prices and post to zetacore
 // TODO(revamp): move ticker to ticker file
 // TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchGasPrice() {
+func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	// report gas price right away as the ticker takes time to kick in
-	err := ob.PostGasPrice()
+	err := ob.PostGasPrice(ctx)
 	if err != nil {
 		ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 	}
@@ -309,7 +314,7 @@ func (ob *Observer) WatchGasPrice() {
 	)
 	if err != nil {
 		ob.Logger().GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
-		return
+		return err
 	}
 	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
 		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
@@ -321,28 +326,28 @@ func (ob *Observer) WatchGasPrice() {
 			if !ob.GetChainParams().IsSupported {
 				continue
 			}
-			err = ob.PostGasPrice()
+			err = ob.PostGasPrice(ctx)
 			if err != nil {
 				ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 			}
 			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.Logger().GasPrice)
 		case <-ob.StopChannel():
 			ob.Logger().GasPrice.Info().Msg("WatchGasPrice stopped")
-			return
+			return nil
 		}
 	}
 }
 
 // PostGasPrice posts gas price to zetacore
 // TODO(revamp): move to gas price file
-func (ob *Observer) PostGasPrice() error {
+func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// GAS PRICE
-	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
+	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("Err SuggestGasPrice:")
 		return err
 	}
-	blockNum, err := ob.evmClient.BlockNumber(context.TODO())
+	blockNum, err := ob.evmClient.BlockNumber(ctx)
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
 		return err
@@ -351,7 +356,7 @@ func (ob *Observer) PostGasPrice() error {
 	// SUPPLY
 	supply := "100" // lockedAmount on ETH, totalSupply on other chains
 
-	zetaHash, err := ob.ZetacoreClient().PostGasPrice(ob.Chain(), gasPrice.Uint64(), supply, blockNum)
+	zetaHash, err := ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
 		return err
@@ -486,13 +491,13 @@ func (ob *Observer) LoadLastBlockScanned() error {
 
 // postBlockHeader posts the block header to zetacore
 // TODO(revamp): move to a block header file
-func (ob *Observer) postBlockHeader(tip uint64) error {
+func (ob *Observer) postBlockHeader(ctx context.Context, tip uint64) error {
 	bn := tip
 
-	res, err := ob.ZetacoreClient().GetBlockHeaderChainState(ob.Chain().ChainId)
-	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
+	chainState, err := ob.ZetacoreClient().GetBlockHeaderChainState(ctx, ob.Chain().ChainId)
+	if err == nil && chainState != nil && chainState.EarliestHeight > 0 {
 		// #nosec G701 always positive
-		bn = uint64(res.ChainState.LatestHeight) + 1 // the next header to post
+		bn = uint64(chainState.LatestHeight) + 1 // the next header to post
 	}
 
 	if bn > tip {
@@ -511,6 +516,7 @@ func (ob *Observer) postBlockHeader(tip uint64) error {
 	}
 
 	_, err = ob.ZetacoreClient().PostVoteBlockHeader(
+		ctx,
 		ob.Chain().ChainId,
 		header.Hash().Bytes(),
 		header.Number.Int64(),

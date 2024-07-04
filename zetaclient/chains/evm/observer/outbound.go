@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -23,7 +24,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 // GetTxID returns a unique id for outbound tx
@@ -35,14 +38,19 @@ func (ob *Observer) GetTxID(nonce uint64) string {
 // WatchOutbound watches evm chain for outgoing txs status
 // TODO(revamp): move ticker function to ticker file
 // TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchOutbound() {
+func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchOutbound_%d", ob.Chain().ChainId),
 		ob.GetChainParams().OutboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
-		return
+		return err
+	}
+
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
 	}
 
 	ob.Logger().Outbound.Info().Msgf("WatchOutbound started for chain %d", ob.Chain().ChainId)
@@ -51,12 +59,13 @@ func (ob *Observer) WatchOutbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.AppContext().IsOutboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsOutboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
 			}
-			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ob.Chain().ChainId, interfaces.Ascending)
+			trackers, err := ob.ZetacoreClient().
+				GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
@@ -90,49 +99,74 @@ func (ob *Observer) WatchOutbound() {
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
 			ob.Logger().Outbound.Info().Msg("WatchOutbound: stopped")
-			return
+			return nil
 		}
 	}
 }
 
 // PostVoteOutbound posts vote to zetacore for the confirmed outbound
 func (ob *Observer) PostVoteOutbound(
+	ctx context.Context,
 	cctxIndex string,
 	receipt *ethtypes.Receipt,
 	transaction *ethtypes.Transaction,
 	receiveValue *big.Int,
 	receiveStatus chains.ReceiveStatus,
 	nonce uint64,
-	cointype coin.CoinType,
+	coinType coin.CoinType,
 	logger zerolog.Logger,
 ) {
 	chainID := ob.Chain().ChainId
-	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(
+	lf := map[string]any{
+		"outbound.chain_id":         chainID,
+		"outbound.external_tx_hash": receipt.TxHash.String(),
+		"outbound.nonce":            nonce,
+	}
+
+	signerAddress := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+
+	msg := crosschaintypes.NewMsgVoteOutbound(
+		signerAddress.String(),
 		cctxIndex,
 		receipt.TxHash.Hex(),
 		receipt.BlockNumber.Uint64(),
 		receipt.GasUsed,
-		transaction.GasPrice(),
+		math.NewIntFromBigInt(transaction.GasPrice()),
 		transaction.Gas(),
-		receiveValue,
+		math.NewUintFromBigInt(receiveValue),
 		receiveStatus,
-		ob.Chain(),
+		chainID,
 		nonce,
-		cointype,
+		coinType,
 	)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Msgf("PostVoteOutbound: error posting vote for chain %d nonce %d outbound %s ", chainID, nonce, receipt.TxHash)
-	} else if zetaTxHash != "" {
-		logger.Info().Msgf("PostVoteOutbound: posted vote for chain %d nonce %d outbound %s vote %s ballot %s", chainID, nonce, receipt.TxHash, zetaTxHash, ballot)
+
+	const gasLimit = zetacore.PostVoteOutboundGasLimit
+
+	var retryGasLimit uint64
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
+
+	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
+	if err != nil {
+		logger.Error().Err(err).Fields(lf).Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
+		return
+	}
+
+	lf["outbound.zeta_tx_hash"] = zetaTxHash
+	lf["outbound.ballot"] = ballot
+
+	logger.Info().Fields(lf).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
 }
 
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isConfirmed, error)
 // It also posts vote to zetacore if the tx is confirmed
 // TODO(revamp): rename as it also vote the outbound
-func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+func (ob *Observer) IsOutboundProcessed(
+	ctx context.Context,
+	cctx *crosschaintypes.CrossChainTx,
+	logger zerolog.Logger,
+) (bool, bool, error) {
 	// skip if outbound is not confirmed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 	if !ob.IsTxConfirmed(nonce) {
@@ -165,7 +199,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 			receiveStatus = chains.ReceiveStatus_success
 		}
-		ob.PostVoteOutbound(cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
+		ob.PostVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 		return true, true, nil
 	}
 
@@ -188,7 +222,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	}
 
 	// post vote to zetacore
-	ob.PostVoteOutbound(cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
+	ob.PostVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 	return true, true, nil
 }
 
