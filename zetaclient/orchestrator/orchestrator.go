@@ -144,8 +144,8 @@ func (oc *Orchestrator) Start() {
 	// watch for upgrade plan in zetacore
 	go oc.WatchUpgradePlan()
 
-	// watch for enabling/disabling chains
-	go oc.WatchEnabledChains()
+	// watch for chain activation/deactivation
+	go oc.WatchActivatedChains()
 
 	// schedule pending cctxs across all enabled chains
 	go oc.SchedulePendingCctxs()

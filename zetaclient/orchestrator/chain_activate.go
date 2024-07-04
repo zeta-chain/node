@@ -16,15 +16,15 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-// WatchEnabledChains watches for run-time chain activation and deactivation
-func (oc *Orchestrator) WatchEnabledChains() {
+// WatchActivatedChains watches for run-time chain activation and deactivation
+func (oc *Orchestrator) WatchActivatedChains() {
 	oc.logger.Std.Info().Msg("WatchChainActivation started")
 
 	ticker := time.NewTicker(common.ZetaBlockTime * 2)
 	for {
 		select {
 		case <-ticker.C:
-			oc.ActivateAndDeactivateChains()
+			oc.UpdateActivatedChains()
 		case <-oc.stop:
 			oc.logger.Std.Info().Msg("WatchChainActivation stopped")
 			return
@@ -32,7 +32,7 @@ func (oc *Orchestrator) WatchEnabledChains() {
 	}
 }
 
-// ActivateAndDeactivateChains activates and deactivates chains according to chain params and config file
+// UpdateActivatedChains updates activated chains accordingly according to chain params and config file
 //
 // The chains to be activated:
 //   - chain params flag 'IsSupported' is true AND
@@ -45,7 +45,7 @@ func (oc *Orchestrator) WatchEnabledChains() {
 // Note:
 //   - zetaclient will reload config file periodically and update in-memory config accordingly.
 //   - As an tss signer, please make sure the config file is always well configured and not missing any chain
-func (oc *Orchestrator) ActivateAndDeactivateChains() {
+func (oc *Orchestrator) UpdateActivatedChains() {
 	// create new signer and observer maps
 	// Note: the keys of the two maps are chain IDs and they are always exactly matched
 	newSignerMap := make(map[int64]interfaces.ChainSigner)
