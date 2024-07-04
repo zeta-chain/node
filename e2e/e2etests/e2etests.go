@@ -546,7 +546,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMigrateTssEthName,
-		"migrate TSS funds on the ethereum chain",
+		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTss,
 	),

@@ -57,9 +57,10 @@ func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 
 // GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address
 func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, error) {
+	r.Logger.Print(fmt.Sprintf("⚙️ getting top 20 UTXOs for TSS address %s", r.BTCTSSAddress))
 	// query UTXOs from node
 	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(
-		1,
+		0,
 		9999999,
 		[]btcutil.Address{r.BTCTSSAddress},
 	)
@@ -210,7 +211,7 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		scriptPubkeys[i] = utxo.ScriptPubKey
 	}
 
-	feeSats := btcutil.Amount(0.0001 * btcutil.SatoshiPerBitcoin)
+	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
 	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
 	change := inputSats - feeSats - amountSats
 

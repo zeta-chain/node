@@ -99,6 +99,8 @@ func (s *zetaclientdSupervisor) Start(ctx context.Context) {
 	go s.watchForVersionChanges(ctx)
 	go s.handleCoreUpgradePlan(ctx)
 	go s.handleNewKeygen(ctx)
+	go s.handleNewTssKeyGeneration(ctx)
+	go s.handleTssUpdate(ctx)
 }
 
 func (s *zetaclientdSupervisor) WaitForReloadSignal(ctx context.Context) {
@@ -172,6 +174,90 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 		}
 		s.reloadSignals <- true
 	}
+}
+
+func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
+	maxRetries := 11
+	retryInterval := 5 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		client := observertypes.NewQueryClient(s.zetacoredConn)
+		tss, err := client.TSS(ctx, &observertypes.QueryGetTSSRequest{})
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("unable to get original tss")
+			time.Sleep(retryInterval)
+			continue
+		}
+		i = 0
+		for {
+			select {
+			case <-time.After(time.Second):
+			case <-ctx.Done():
+				return
+			}
+			tssNew, err := client.TSS(ctx, &observertypes.QueryGetTSSRequest{})
+			if err != nil {
+				s.logger.Warn().Err(err).Msg("unable to get tss")
+				continue
+			}
+
+			if tssNew.TSS.TssPubkey == tss.TSS.TssPubkey {
+				continue
+			}
+
+			tss = tssNew
+			s.logger.Warn().Msg(fmt.Sprintf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey))
+			time.Sleep(6 * time.Second)
+			s.logger.Warn().Msg("restarting zetaclientd to update tss address")
+			s.restartChan <- syscall.SIGHUP
+		}
+	}
+	return
+}
+
+func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
+	maxRetries := 11
+	retryInterval := 5 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		client := observertypes.NewQueryClient(s.zetacoredConn)
+		alltss, err := client.TssHistory(ctx, &observertypes.QueryTssHistoryRequest{})
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("unable to get tss original history")
+			time.Sleep(retryInterval)
+			continue
+		}
+		i = 0
+		tssLenCurrent := len(alltss.TssList)
+		for {
+			select {
+			case <-time.After(time.Second):
+			case <-ctx.Done():
+				return
+			}
+			tssListNew, err := client.TssHistory(ctx, &observertypes.QueryTssHistoryRequest{})
+			if err != nil {
+				s.logger.Warn().Err(err).Msg("unable to get tss new history")
+				continue
+			}
+			tssLenUpdated := len(tssListNew.TssList)
+
+			if tssLenUpdated == tssLenCurrent {
+				continue
+			}
+			if tssLenUpdated < tssLenCurrent {
+				tssLenCurrent = len(tssListNew.TssList)
+				continue
+			}
+
+			tssLenCurrent = tssLenUpdated
+			s.logger.Warn().Msg(fmt.Sprintf("tss list updated from %d to %d", tssLenCurrent, tssLenUpdated))
+			time.Sleep(5 * time.Second)
+			s.logger.Warn().Msg("restarting zetaclientd to update tss list")
+			s.restartChan <- syscall.SIGHUP
+		}
+	}
+	return
 }
 
 func (s *zetaclientdSupervisor) handleNewKeygen(ctx context.Context) {

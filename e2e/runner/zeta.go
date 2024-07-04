@@ -179,6 +179,8 @@ func (r *E2ERunner) WithdrawZeta(amount *big.Int, waitReceipt bool) *ethtypes.Tr
 	return tx
 }
 
+// zetacored tx crosschain remove-outbound-tracker 1337 13 --from=operator --fees=2000000000000000azeta --chain-id=athens_101-1 --yes
+
 // WithdrawEther withdraws Ether from ZetaChain to the ZETA smart contract on EVM
 func (r *E2ERunner) WithdrawEther(amount *big.Int) *ethtypes.Transaction {
 	// withdraw

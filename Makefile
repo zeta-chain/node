@@ -235,6 +235,7 @@ install-zetae2e: go.sum
 
 start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
+	export LOCALNET_MODE=migrate && \
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
 start-e2e-admin-test: zetanode

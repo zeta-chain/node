@@ -37,6 +37,8 @@ const (
 	flagSkipMigrationTest = "skip-migration-test"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
+
+	flagPostMigration = "post-migration"
 )
 
 var (
@@ -68,6 +70,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagSkipMigrationTest, false, "set to true to skip migration tests")
+	cmd.Flags().Bool(flagPostMigration, false, "set to true to run post migration tests")
 
 	return cmd
 }
@@ -89,6 +92,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
 		skipMigrationTest = must(cmd.Flags().GetBool(flagSkipMigrationTest))
+		postMigration     = must(cmd.Flags().GetBool(flagPostMigration))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -200,6 +204,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// run tests
 	var eg errgroup.Group
+
 	if !skipRegular {
 		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
@@ -257,6 +262,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestEtherWithdrawRestrictedName,
 		}
 
+		light = true
+
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
@@ -267,15 +274,25 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// skip the header proof test if we run light test or skipHeaderProof is enabled
 		testHeader := !light && !skipHeaderProof
-		logger.Print("skipBitcoinSetup", skipBitcoinSetup)
-		logger.Print("testHeader", testHeader)
 
 		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		//eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
-		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
+
+	if postMigration {
+		ethereumTests := []string{
+			e2etests.TestEtherWithdrawName,
+		}
+		bitcoinTests := []string{
+			e2etests.TestBitcoinWithdrawSegWitName,
+		}
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, false, ethereumTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, false, bitcoinTests...))
+	}
+
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestRateLimiterName,
@@ -323,13 +340,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	logger.Print("🏁 starting migration tests")
-
-	//if skipMigrationTest is set to true , there is no need to update the keygen height to generate a new tss
-	migrationCtx, cancel := context.WithCancel(context.Background())
-	deployerRunner.CtxCancel = cancel
-	var migrationGroup errgroup.Group
-	if !skipMigrationTest {
+	if !skipMigrationTest && !postMigration {
+		migrationCtx, cancel := context.WithCancel(context.Background())
+		deployerRunner.CtxCancel = cancel
+		migrationStartTime := time.Now()
+		logger.Print("🏁 starting migration tests")
 		response, err := deployerRunner.CctxClient.LastZetaHeight(migrationCtx, &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
@@ -340,15 +355,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			panic(err)
 		}
 		waitKeygenHeight(migrationCtx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
-		migrationGroup.Go(migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTssEthName))
+		eg.Go(migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTssEthName))
+
+		if err := eg.Wait(); err != nil {
+			deployerRunner.CtxCancel()
+			logger.Print("❌ %v", err)
+			logger.Print("❌ migration tests failed")
+			os.Exit(1)
+		}
+		logger.Print("✅ migration tests completed in %s", time.Since(migrationStartTime).String())
 	}
 
-	if err := migrationGroup.Wait(); err != nil {
-		deployerRunner.CtxCancel()
-		logger.Print("❌ %v", err)
-		logger.Print("❌ migration tests failed")
-		os.Exit(1)
-	}
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {

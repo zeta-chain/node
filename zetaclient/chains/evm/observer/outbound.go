@@ -334,6 +334,10 @@ func ParseOutboundReceivedValue(
 	default:
 		return nil, chains.ReceiveStatus_failed, fmt.Errorf("unknown coin type %s", cointype)
 	}
+
+	if receipt.Status == ethtypes.ReceiptStatusFailed {
+		fmt.Println("Receipt status is failed")
+	}
 	return receiveValue, receiveStatus, nil
 }
 

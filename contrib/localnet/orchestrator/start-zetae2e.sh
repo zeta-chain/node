@@ -176,18 +176,34 @@ else
     exit 0
   fi
 
-  echo "running e2e tests..."
+  echo "running e2e tests with migration"
 
   zetae2e local $E2E_ARGS --skip-setup --config deployed.yml
   ZETAE2E_EXIT_CODE=$?
 
   # if e2e passed, exit with 0, otherwise exit with 1
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
-    echo "e2e passed"
-    exit 0
+    echo "e2e passed before migration"
   else
     echo "e2e failed"
     exit 1
   fi
+
+  echo "waiting for 30 seconds before running tests post migration"
+
+#  sleep for 1 mins
+  sleep 30
+
+  zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-regular --post-migration
+      ZETAE2E_EXIT_CODE=$?
+
+      # if e2e passed continue otherwise exit with 1
+      if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+        echo "e2e passed after migration"
+        exit 0
+      else
+        echo "e2e failed"
+        exit 1
+      fi
 
 fi

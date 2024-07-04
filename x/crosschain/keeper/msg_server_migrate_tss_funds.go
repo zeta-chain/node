@@ -176,6 +176,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 				),
 			)
 		}
+		evmFee = evmFee.Mul(sdkmath.NewUint(2))
 		cctx.GetCurrentOutboundParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain

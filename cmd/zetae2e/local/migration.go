@@ -28,7 +28,7 @@ func migrationTestRoutine(
 				err = fmt.Errorf("admin panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
-		account := conf.AdditionalAccounts.UserAdmin
+		account := conf.AdditionalAccounts.UserBitcoin
 		// initialize runner for erc20 advanced test
 		migrationTestRunner, err := initTestRunner(
 			"migration",
@@ -44,6 +44,9 @@ func migrationTestRoutine(
 
 		migrationTestRunner.Logger.Print("🏃 starting migration tests")
 		startTime := time.Now()
+
+		//migrationTestRunner.SetupBitcoinAccount(false)
+		//migrationTestRunner.DepositBTC(false)
 
 		//// funding the account
 		//// we transfer around the total supply of Zeta to the admin for the chain migration test
