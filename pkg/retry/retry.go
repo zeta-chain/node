@@ -127,6 +127,7 @@ func Retry(err error) error {
 // RetryTyped wraps error to mark it as retryable
 //
 //goland:noinspection GoNameStartsWithPackageName
+//nolint:revive
 func RetryTyped[T any](result T, err error) (T, error) {
 	if err == nil {
 		return result, nil

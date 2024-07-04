@@ -24,6 +24,7 @@ func (c *Client) GetGenesisSupply(ctx context.Context) (sdkmath.Int, error) {
 		return sdkmath.ZeroInt(), errors.Wrap(err, "failed to create tm client")
 	}
 
+	// nolint:errcheck
 	defer s.Stop()
 
 	res, err := s.Genesis(ctx)

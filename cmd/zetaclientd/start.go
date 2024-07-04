@@ -96,7 +96,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetacoreClient(cfg, telemetryServer, hotkeyPass)
+	zetacoreClient, err := CreateZetacoreClient(cfg, telemetryServer, hotkeyPass, masterLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
 		return err
@@ -201,7 +201,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(
-		appContext,
+		ctx,
 		masterLogger,
 		zetacoreClient,
 		peers,
@@ -293,13 +293,20 @@ func start(_ *cobra.Command, _ []string) error {
 	} else {
 		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetacoreClient.GetKeys().GetOperatorAddress().String())
 		for _, observer := range observerMap {
-			observer.Start()
+			observer.Start(ctx)
 		}
 	}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	orchestrator := orchestrator.NewOrchestrator(zetacoreClient, signerMap, observerMap, masterLogger, telemetryServer)
-	err = orchestrator.MonitorCore(appContext)
+	orchestrator := orchestrator.NewOrchestrator(
+		ctx,
+		zetacoreClient,
+		signerMap,
+		observerMap,
+		masterLogger,
+		telemetryServer,
+	)
+	err = orchestrator.MonitorCore(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Orchestrator failed to start")
 		return err

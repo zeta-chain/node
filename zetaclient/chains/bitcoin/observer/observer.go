@@ -214,12 +214,6 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
-func (ob *Observer) watch(ctx context.Context, worker func(ctx2 context.Context) error, name string) {
-	if err := worker(ctx); err != nil {
-		ob.Logger().Chain.Error().Err(err).Msgf("error in %s", name)
-	}
-}
-
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
 // TODO(revamp): move ticker related functions to a specific file
 // TODO(revamp): move inner logic in a separate function

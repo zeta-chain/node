@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -30,6 +31,7 @@ func CreateZetacoreClient(
 	cfg config.Config,
 	telemetry *metrics.TelemetryServer,
 	hotkeyPassword string,
+	logger zerolog.Logger,
 ) (*zetacore.Client, error) {
 	hotKey := cfg.AuthzHotkey
 	if cfg.HsmMode {
@@ -50,7 +52,7 @@ func CreateZetacoreClient(
 
 	k := keys.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, hotkeyPassword)
 
-	client, err := zetacore.NewClient(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, telemetry)
+	client, err := zetacore.NewClient(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, telemetry, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +83,6 @@ func CreateSignerMap(
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
 		signer, err := evmsigner.NewSigner(
 			evmConfig.Chain,
-			appContext,
 			tss,
 			ts,
 			logger,
@@ -99,7 +100,7 @@ func CreateSignerMap(
 	// BTC signer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		signer, err := btcsigner.NewSigner(btcChain, appContext, tss, ts, logger, btcConfig)
+		signer, err := btcsigner.NewSigner(btcChain, tss, ts, logger, btcConfig)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
@@ -143,7 +144,6 @@ func CreateChainObserverMap(
 			evmConfig,
 			evmClient,
 			*chainParams,
-			appContext,
 			zetacoreClient,
 			tss,
 			dbpath,
@@ -175,7 +175,6 @@ func CreateChainObserverMap(
 				btcChain,
 				btcClient,
 				*chainParams,
-				appContext,
 				zetacoreClient,
 				tss,
 				dbpath,

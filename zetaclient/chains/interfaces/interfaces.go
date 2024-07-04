@@ -37,18 +37,23 @@ const (
 
 // ChainObserver is the interface for chain observer
 type ChainObserver interface {
-	Start()
+	Start(ctx context.Context)
 	Stop()
-	IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
+	IsOutboundProcessed(
+		ctx context.Context,
+		cctx *crosschaintypes.CrossChainTx,
+		logger zerolog.Logger,
+	) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetTxID(nonce uint64) string
-	WatchInboundTracker()
+	WatchInboundTracker(ctx context.Context) error
 }
 
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
 	TryProcessOutbound(
+		ctx context.Context,
 		cctx *crosschaintypes.CrossChainTx,
 		outboundProc *outboundprocessor.Processor,
 		outboundID string,
@@ -64,6 +69,20 @@ type ChainSigner interface {
 
 // ZetacoreVoter represents voter interface.
 type ZetacoreVoter interface {
+	PostVoteBlockHeader(
+		ctx context.Context,
+		chainID int64,
+		txhash []byte,
+		height int64,
+		header proofs.HeaderData,
+	) (string, error)
+	PostVoteGasPrice(
+		ctx context.Context,
+		chain chains.Chain,
+		gasPrice uint64,
+		supply string,
+		blockNum uint64,
+	) (string, error)
 	PostVoteInbound(
 		ctx context.Context,
 		gasLimit, retryGasLimit uint64,
@@ -74,20 +93,6 @@ type ZetacoreVoter interface {
 		gasLimit, retryGasLimit uint64,
 		msg *crosschaintypes.MsgVoteOutbound,
 	) (string, string, error)
-	PostVoteGasPrice(
-		ctx context.Context,
-		chain chains.Chain,
-		gasPrice uint64,
-		supply string,
-		blockNum uint64,
-	) (string, error)
-	PostVoteBlockHeader(
-		ctx context.Context,
-		chainID int64,
-		txhash []byte,
-		height int64,
-		header proofs.HeaderData,
-	) (string, error)
 	PostVoteBlameData(ctx context.Context, blame *blame.Blame, chainID int64, index string) (string, error)
 }
 
@@ -196,10 +201,17 @@ type TSSSigner interface {
 	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
 	// TODO: check if optionalPubkey is needed
 	// https://github.com/zeta-chain/node/issues/2085
-	Sign(data []byte, height uint64, nonce uint64, chainID int64, optionalPubkey string) ([65]byte, error)
+	Sign(
+		ctx context.Context,
+		data []byte,
+		height uint64,
+		nonce uint64,
+		chainID int64,
+		optionalPubkey string,
+	) ([65]byte, error)
 
 	// SignBatch signs the data in batch
-	SignBatch(digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
+	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
 
 	EVMAddress() ethcommon.Address
 	BTCAddress() string

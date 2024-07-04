@@ -151,19 +151,19 @@ func debugCmd(_ *cobra.Command, args []string) error {
 
 		switch coinType {
 		case coin.CoinType_Zeta:
-			ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenZeta(tx, receipt, false)
+			ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, false)
 			if err != nil {
 				return err
 			}
 
 		case coin.CoinType_ERC20:
-			ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenERC20(tx, receipt, false)
+			ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
 			if err != nil {
 				return err
 			}
 
 		case coin.CoinType_Gas:
-			ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenGas(tx, receipt, false)
+			ballotIdentifier, err = evmObserver.CheckAndVoteInboundTokenGas(ctx, tx, receipt, false)
 			if err != nil {
 				return err
 			}
@@ -189,7 +189,7 @@ func debugCmd(_ *cobra.Command, args []string) error {
 			return err
 		}
 		btcObserver.WithBtcClient(btcClient)
-		ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(inboundHash, false)
+		ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(ctx, inboundHash, false)
 		if err != nil {
 			return err
 		}
