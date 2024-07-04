@@ -35,12 +35,12 @@ func (c *Client) Broadcast(
 ) (string, error) {
 	blockHeight, err := c.GetBlockHeight(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to get block height")
 	}
 
 	baseGasPrice, err := c.GetBaseGasPrice(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to get base gas price")
 	}
 
 	// shouldn't happen, but just in case
@@ -101,14 +101,14 @@ func (c *Client) Broadcast(
 
 	txBytes, err := c.cosmosClientContext.TxConfig.TxEncoder()(builder.GetTx())
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to encode tx")
 	}
 
 	// broadcast to a Tendermint node
 	commit, err := c.cosmosClientContext.BroadcastTxSync(txBytes)
 	if err != nil {
 		c.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
-		return "", err
+		return "", errors.Wrap(err, "fail to broadcast tx sync")
 	}
 
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero

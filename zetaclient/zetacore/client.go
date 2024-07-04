@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"cosmossdk.io/simapp/params"
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -32,7 +31,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}
@@ -55,14 +53,8 @@ type Client struct {
 	chain       chains.Chain
 	stop        chan struct{}
 	pause       chan struct{}
-	Telemetry   *metrics.TelemetryServer
 
 	mu sync.RWMutex
-
-	// enableMockSDKClient is a flag that determines whether the mock cosmos sdk client should be used, primarily for
-	// unit testing
-	enableMockSDKClient bool
-	mockSDKClient       rpcclient.Client
 }
 
 type clients struct {
@@ -75,6 +67,34 @@ type clients struct {
 	tendermint tmservice.ServiceClient
 }
 
+var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
+
+type constructOpts struct {
+	customTendermint bool
+	tendermintClient cosmosclient.TendermintRPC
+
+	customAccountRetriever bool
+	accountRetriever       cosmosclient.AccountRetriever
+}
+
+type Opt func(cfg *constructOpts)
+
+// WithTendermintClient sets custom tendermint client
+func WithTendermintClient(client cosmosclient.TendermintRPC) Opt {
+	return func(c *constructOpts) {
+		c.customTendermint = true
+		c.tendermintClient = client
+	}
+}
+
+// WithCustomAccountRetriever sets custom tendermint client
+func WithCustomAccountRetriever(ac cosmosclient.AccountRetriever) Opt {
+	return func(c *constructOpts) {
+		c.customAccountRetriever = true
+		c.accountRetriever = ac
+	}
+}
+
 // NewClient create a new instance of Client
 func NewClient(
 	keys keyinterfaces.ObserverKeys,
@@ -82,9 +102,14 @@ func NewClient(
 	signerName string,
 	chainID string,
 	hsmMode bool,
-	telemetry *metrics.TelemetryServer,
 	logger zerolog.Logger,
+	opts ...Opt,
 ) (*Client, error) {
+	var constructOptions constructOpts
+	for _, opt := range opts {
+		opt(&constructOptions)
+	}
+
 	zetaChain, err := chains.ZetaChainFromChainID(chainID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid chain id %q", chainID)
@@ -100,10 +125,9 @@ func NewClient(
 		HsmMode:      hsmMode,
 	}
 
-	grpcConn, err := grpc.Dial(
-		cosmosGRPC(chainIP),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	encodingCfg := app.MakeEncodingConfig()
+
+	grpcConn, err := grpc.Dial(cosmosGRPC(chainIP), unsecureGRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "grpc dial fail")
 	}
@@ -115,12 +139,16 @@ func NewClient(
 		seqMap[keyType] = 0
 	}
 
-	c := &Client{
+	cosmosContext, err := buildCosmosClientContext(chainID, keys, cfg, encodingCfg, constructOptions)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to build cosmos client context")
+	}
+
+	return &Client{
 		logger: log,
 		config: cfg,
 
-		cosmosClientContext: cosmosclient.Context{},
-
+		cosmosClientContext: cosmosContext,
 		client: clients{
 			observer:   observertypes.NewQueryClient(grpcConn),
 			light:      lightclienttypes.NewQueryClient(grpcConn),
@@ -134,36 +162,28 @@ func NewClient(
 		accountNumber: accountsMap,
 		seqNumber:     seqMap,
 
-		encodingCfg: app.MakeEncodingConfig(),
+		encodingCfg: encodingCfg,
 		keys:        keys,
 		stop:        make(chan struct{}),
 		chainID:     chainID,
 		chain:       zetaChain,
 		pause:       make(chan struct{}),
-		Telemetry:   telemetry,
-
-		mu:                  sync.RWMutex{},
-		enableMockSDKClient: false,
-		mockSDKClient:       nil,
-	}
-
-	cosmosClientContext, err := c.buildCosmosClientContext()
-	if err != nil {
-		return nil, errors.Wrap(err, "fail to resolve cosmos client context")
-	}
-
-	c.cosmosClientContext = cosmosClientContext
-
-	return c, nil
+	}, nil
 }
 
 // buildCosmosClientContext constructs a valid context with all relevant values set
-func (c *Client) buildCosmosClientContext() (cosmosclient.Context, error) {
-	if c.keys == nil {
+func buildCosmosClientContext(
+	chainID string,
+	keys keyinterfaces.ObserverKeys,
+	config config.ClientConfiguration,
+	encodingConfig params.EncodingConfig,
+	opts constructOpts,
+) (cosmosclient.Context, error) {
+	if keys == nil {
 		return cosmosclient.Context{}, errors.New("client key are not set")
 	}
 
-	addr, err := c.keys.GetAddress()
+	addr, err := keys.GetAddress()
 	if err != nil {
 		return cosmosclient.Context{}, errors.Wrap(err, "fail to get address from key")
 	}
@@ -175,16 +195,17 @@ func (c *Client) buildCosmosClientContext() (cosmosclient.Context, error) {
 	)
 
 	// if password is needed, set it as input
-	password := c.keys.GetHotkeyPassword()
+	password := keys.GetHotkeyPassword()
 	if password != "" {
 		input = strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", password))
 	}
 
-	if c.enableMockSDKClient {
-		client = c.mockSDKClient
-	} else {
-		remote := c.config.ChainRPC
-		if !strings.HasPrefix(c.config.ChainHost, "http") {
+	// note that in rare cases, this might give FALSE positive
+	// (google "golang nil interface comparison")
+	client = opts.tendermintClient
+	if !opts.customTendermint {
+		remote := config.ChainRPC
+		if !strings.HasPrefix(config.ChainHost, "http") {
 			remote = fmt.Sprintf("tcp://%s", remote)
 		}
 
@@ -197,21 +218,31 @@ func (c *Client) buildCosmosClientContext() (cosmosclient.Context, error) {
 		nodeURI = remote
 	}
 
+	var accountRetriever cosmosclient.AccountRetriever
+	if opts.customAccountRetriever {
+		accountRetriever = opts.accountRetriever
+	} else {
+		accountRetriever = authtypes.AccountRetriever{}
+	}
+
 	return cosmosclient.Context{
-		Client:            client,
-		NodeURI:           nodeURI,
-		FromAddress:       addr,
-		ChainID:           c.chainID,
-		Codec:             c.encodingCfg.Codec,
-		InterfaceRegistry: c.encodingCfg.InterfaceRegistry,
-		Keyring:           c.keys.GetKeybase(),
-		HomeDir:           c.config.ChainHomeFolder,
-		BroadcastMode:     "sync",
-		FromName:          c.config.SignerName,
-		TxConfig:          c.encodingCfg.TxConfig,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		LegacyAmino:       c.encodingCfg.Amino,
-		Input:             input,
+		Client:        client,
+		NodeURI:       nodeURI,
+		FromAddress:   addr,
+		ChainID:       chainID,
+		Keyring:       keys.GetKeybase(),
+		BroadcastMode: "sync",
+		HomeDir:       config.ChainHomeFolder,
+		FromName:      config.SignerName,
+
+		AccountRetriever: accountRetriever,
+
+		Codec:             encodingConfig.Codec,
+		InterfaceRegistry: encodingConfig.InterfaceRegistry,
+		TxConfig:          encodingConfig.TxConfig,
+		LegacyAmino:       encodingConfig.Amino,
+
+		Input: input,
 	}, nil
 }
 
@@ -399,13 +430,6 @@ func (c *Client) Pause() {
 // Unpause unpauses the client
 func (c *Client) Unpause() {
 	c.pause <- struct{}{}
-}
-
-// EnableMockSDKClient enables the mock cosmos sdk client
-// TODO(revamp): move this to a test package
-func (c *Client) EnableMockSDKClient(client rpcclient.Client) {
-	c.mockSDKClient = client
-	c.enableMockSDKClient = true
 }
 
 func cosmosREST(host string) string {

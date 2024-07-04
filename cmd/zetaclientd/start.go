@@ -96,7 +96,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetacoreClient(cfg, telemetryServer, hotkeyPass, masterLogger)
+	zetacoreClient, err := CreateZetacoreClient(cfg, hotkeyPass, masterLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
 		return err

@@ -75,7 +75,6 @@ func debugCmd(_ *cobra.Command, args []string) error {
 		"",
 		debugArgs.zetaChainID,
 		false,
-		nil,
 		zerolog.Nop(),
 	)
 	if err != nil {

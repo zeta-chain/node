@@ -144,7 +144,7 @@ func (c *Client) PostVoteOutbound(
 ) (string, string, error) {
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
-		return "", "", err
+		return "", "", errors.Wrap(err, "unable to wrap message with authz")
 	}
 
 	// don't post confirmation if it  already voted before
