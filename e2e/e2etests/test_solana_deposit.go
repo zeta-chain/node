@@ -9,7 +9,9 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
@@ -176,7 +178,7 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	inst.DataBytes, err = borsh.Serialize(DepositInstructionParams{
 		Discriminator: [8]byte{0xf2, 0x23, 0xc6, 0x89, 0x52, 0xe1, 0xf2, 0xb6},
 		Amount:        1338,
-		Memo:          []byte("hello this is a good memo for you to enjoy"),
+		Memo:          r.Account.EVMAddress().Bytes(),
 	})
 	if err != nil {
 		r.Logger.Error("Error serializing deposit instruction: %v", err)
@@ -228,15 +230,15 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("transaction status: %v, %v", out.Meta.Err, out.Meta.Status)
 	r.Logger.Print("transaction logs: %v", out.Meta.LogMessages)
 
-	// wait for the cctx to be mined
-	//cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	//r.Logger.CCTX(*cctx, "deposit")
-	//if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-	//	panic(fmt.Sprintf(
-	//		"expected mined status; got %s, message: %s",
-	//		cctx.CctxStatus.Status.String(),
-	//		cctx.CctxStatus.StatusMessage),
-	//	)
-	//}
+	//wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit")
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf(
+			"expected mined status; got %s, message: %s",
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage),
+		)
+	}
 
 }
