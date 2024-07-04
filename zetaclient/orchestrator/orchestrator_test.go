@@ -52,6 +52,8 @@ func MockOrchestrator(
 			evmChain.ChainId: evmObserver,
 			btcChain.ChainId: btcObserver,
 		},
+		stop:    make(chan struct{}),
+		stopped: false,
 	}
 	return orchestrator
 }
@@ -90,6 +92,28 @@ func CreateTestAppContext(
 		zerolog.Logger{},
 	)
 	return appContext
+}
+
+func Test_Stop(t *testing.T) {
+	// initial parameters for orchestrator creation
+	evmChain := chains.Ethereum
+	btcChain := chains.BitcoinMainnet
+	evmChainParams := &observertypes.ChainParams{
+		ChainId: evmChain.ChainId,
+	}
+	btcChainParams := &observertypes.ChainParams{
+		ChainId: btcChain.ChainId,
+	}
+
+	// create orchestrator
+	appCtx := CreateTestAppContext(evmChain, btcChain, evmChainParams, btcChainParams)
+	orchestrator := MockOrchestrator(t, appCtx, nil, evmChain, btcChain, evmChainParams, btcChainParams)
+
+	// stop orchestrator 1st time
+	orchestrator.Stop()
+
+	// stop orchestrator 2nd time without panic
+	orchestrator.Stop()
 }
 
 func Test_GetUpdatedSigner(t *testing.T) {
