@@ -111,6 +111,7 @@ func (txData *OutboundData) SetupGas(
 //     cctx will be skipped and false otherwise.
 //  3. error
 func NewOutboundData(
+	ctx context.Context,
 	cctx *types.CrossChainTx,
 	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
@@ -139,7 +140,7 @@ func NewOutboundData(
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	included, confirmed, err := evmObserver.IsOutboundProcessed(cctx, logger)
+	included, confirmed, err := evmObserver.IsOutboundProcessed(ctx, cctx, logger)
 	if err != nil {
 		return nil, true, errors.New("IsOutboundProcessed failed")
 	}
