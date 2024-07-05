@@ -250,7 +250,7 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s", r.SOLZRC20Addr.String())
 
 	solZRC20 := r.SOLZRC20
-	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
 	if err != nil {
 		r.Logger.Error("Error getting total supply of sol zrc20: %v", err)
 		panic(err)
@@ -258,8 +258,9 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print(" supply of %s sol zrc20: %d", r.EVMAddress(), supply)
 
 	amount := big.NewInt(1337)
-
-	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, amount)
+	approveAmount := big.NewInt(1e18)
+	//r.Logger.Print("Approving %s sol zrc20 to spend %d", r.ZEVMAuth.From.Hex(), approveAmount)
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)

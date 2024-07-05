@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sync"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/davecgh/go-spew/spew"
@@ -64,6 +65,8 @@ func NewObserver(
 
 	//ob.coreContext = appContext.ZetacoreContext()
 	ob.chainParams = chainParams
+	// FIXME: config this
+	ob.chain = chains.SolanaLocalnet
 	ob.stop = make(chan struct{})
 	ob.Mu = &sync.Mutex{}
 	ob.zetacoreClient = zetacoreClient
@@ -135,6 +138,8 @@ func (o *Observer) WatchInboundTracker() {
 func (o *Observer) Start() {
 	o.logger.Info().Msgf("observer starting...")
 	go o.WatchInbound()
+	go o.WatchGasPrice()
+
 }
 
 func (o *Observer) Stop() {
@@ -261,4 +266,28 @@ func (o *Observer) ObserveInbound() error {
 
 	}
 	return nil
+}
+
+func (o *Observer) WatchGasPrice() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			slot, err := o.solanaClient.GetSlot(context.Background(), rpc.CommitmentConfirmed)
+			if err != nil {
+				o.logger.Err(err).Msg("GetSlot error")
+				continue
+			}
+			txhash, err := o.zetacoreClient.PostGasPrice(o.chain, 1, "", slot)
+			if err != nil {
+				o.logger.Err(err).Msg("PostGasPrice error")
+				continue
+			}
+			o.logger.Info().Msgf("gas price posted: %s", txhash)
+		case <-o.stop:
+			o.logger.Info().Msgf("WatchGasPrice stopped for chain %d", o.chain.ChainId)
+			return
+		}
+	}
 }

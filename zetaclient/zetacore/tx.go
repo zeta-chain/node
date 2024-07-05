@@ -66,8 +66,9 @@ func GasPriceMultiplier(chain chains.Chain) (float64, error) {
 		return clientcommon.EVMOutboundGasPriceMultiplier, nil
 	} else if chain.IsBitcoinChain() {
 		return clientcommon.BTCOutboundGasPriceMultiplier, nil
+	} else {
+		return 1.0, nil // default to 1x multiplier, why not?
 	}
-	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chain.ChainId)
 }
 
 // WrapMessageWithAuthz wraps a message with an authz message
