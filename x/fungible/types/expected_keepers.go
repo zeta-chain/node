@@ -36,7 +36,7 @@ type BankKeeper interface {
 }
 
 type ObserverKeeper interface {
-	GetSupportedChains(ctx sdk.Context) []*chains.Chain
+	GetSupportedChains(ctx sdk.Context) []chains.Chain
 }
 
 type EVMKeeper interface {
@@ -60,4 +60,5 @@ type EVMKeeper interface {
 
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
+	GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain)
 }

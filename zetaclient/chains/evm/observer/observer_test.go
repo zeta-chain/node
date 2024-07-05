@@ -63,6 +63,7 @@ func getZetacoreContext(
 		nil,
 		"",
 		*sample.CrosschainFlags(),
+		[]chains.Chain{},
 		sample.HeaderSupportedChains(),
 		true,
 	)

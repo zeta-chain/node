@@ -2,17 +2,11 @@ package types
 
 import (
 	"fmt"
-
-	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func (m InboundParams) Validate() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender cannot be empty")
-	}
-
-	if chains.GetChainFromChainID(m.SenderChainId) == nil {
-		return fmt.Errorf("invalid sender chain id %d", m.SenderChainId)
 	}
 
 	if m.Amount.IsNil() {

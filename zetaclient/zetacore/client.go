@@ -109,7 +109,7 @@ func NewClient(
 		opt(&constructOptions)
 	}
 
-	zetaChain, err := chains.ZetaChainFromChainID(chainID)
+	zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid chain id %q", chainID)
 	}
@@ -248,7 +248,7 @@ func (c *Client) UpdateChainID(chainID string) error {
 	if c.chainID != chainID {
 		c.chainID = chainID
 
-		zetaChain, err := chains.ZetaChainFromChainID(chainID)
+		zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 		if err != nil {
 			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
 		}
@@ -349,6 +349,11 @@ func (c *Client) UpdateZetacoreContext(
 		c.stop <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 
+	additionalChains, err := c.GetAdditionalChains(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to additional chains: %w", err)
+	}
+
 	chainParams, err := c.GetChainParams(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
@@ -364,9 +369,9 @@ func (c *Client) UpdateZetacoreContext(
 			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
-		if chains.IsBitcoinChain(chainParam.ChainId) {
+		if chains.IsBitcoinChain(chainParam.ChainId, additionalChains) {
 			newBTCParams = chainParam
-		} else if chains.IsEVMChain(chainParam.ChainId) {
+		} else if chains.IsEVMChain(chainParam.ChainId, additionalChains) {
 			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}
@@ -378,7 +383,7 @@ func (c *Client) UpdateZetacoreContext(
 
 	newChains := make([]chains.Chain, len(supportedChains))
 	for i, chain := range supportedChains {
-		newChains[i] = *chain
+		newChains[i] = chain
 	}
 
 	keyGen, err := c.GetKeyGen(ctx)
@@ -413,6 +418,7 @@ func (c *Client) UpdateZetacoreContext(
 		newBTCParams,
 		tssPubKey,
 		crosschainFlags,
+		additionalChains,
 		blockHeaderEnabledChains,
 		init,
 	)

@@ -27,14 +27,14 @@ func getValidEthChainID() int64 {
 }
 
 // getValidEthChain() get a valid eth chain
-func getValidEthChain() *chains.Chain {
+func getValidEthChain() chains.Chain {
 	goerli := chains.GoerliLocalnet
-	return &goerli
+	return goerli
 }
 
-func getValidBTCChain() *chains.Chain {
+func getValidBTCChain() chains.Chain {
 	btcRegNet := chains.BitcoinRegtest
-	return &btcRegNet
+	return btcRegNet
 }
 
 func getValidBtcChainID() int64 {

@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"errors"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	"math/big"
 	"net"
 	"os"
 	"testing"
@@ -41,68 +45,70 @@ const (
 func Test_GasPriceMultiplier(t *testing.T) {
 	tt := []struct {
 		name       string
-		chainID    int64
+		chain      chains.Chain
 		multiplier float64
 		fail       bool
 	}{
 		{
 			name:       "get Ethereum multiplier",
-			chainID:    1,
+			chain:      chains.Ethereum,
 			multiplier: 1.2,
 			fail:       false,
 		},
 		{
 			name:       "get Goerli multiplier",
-			chainID:    5,
+			chain:      chains.Goerli,
 			multiplier: 1.2,
 			fail:       false,
 		},
 		{
 			name:       "get BSC multiplier",
-			chainID:    56,
+			chain:      chains.BscMainnet,
 			multiplier: 1.2,
 			fail:       false,
 		},
 		{
 			name:       "get BSC Testnet multiplier",
-			chainID:    97,
+			chain:      chains.BscTestnet,
 			multiplier: 1.2,
 			fail:       false,
 		},
 		{
 			name:       "get Polygon multiplier",
-			chainID:    137,
+			chain:      chains.Polygon,
 			multiplier: 1.2,
 			fail:       false,
 		},
 		{
 			name:       "get Mumbai Testnet multiplier",
-			chainID:    80001,
+			chain:      chains.Mumbai,
 			multiplier: 1.2,
 			fail:       false,
 		},
 		{
 			name:       "get Bitcoin multiplier",
-			chainID:    8332,
+			chain:      chains.BitcoinMainnet,
 			multiplier: 2.0,
 			fail:       false,
 		},
 		{
 			name:       "get Bitcoin Testnet multiplier",
-			chainID:    18332,
+			chain:      chains.BitcoinTestnet,
 			multiplier: 2.0,
 			fail:       false,
 		},
 		{
-			name:       "get unknown chain gas price multiplier",
-			chainID:    1234,
+			name: "get unknown chain gas price multiplier",
+			chain: chains.Chain{
+				Consensus: chains.Consensus_tendermint,
+			},
 			multiplier: 1.0,
 			fail:       true,
 		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			multiplier, err := GasPriceMultiplier(tc.chainID)
+			multiplier, err := GasPriceMultiplier(tc.chain)
 			if tc.fail {
 				require.Error(t, err)
 				return
@@ -239,6 +245,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
 		grpcmock.RegisterService(observertypes.RegisterQueryServer),
 		grpcmock.RegisterService(lightclienttypes.RegisterQueryServer),
+		grpcmock.RegisterService(authoritytypes.RegisterQueryServer),
 		grpcmock.WithPlanner(planner.FirstMatch()),
 		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
@@ -276,7 +283,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				UnlimitedTimes().
 				WithPayload(observertypes.QuerySupportedChains{}).
 				Return(observertypes.QuerySupportedChainsResponse{
-					Chains: []*chains.Chain{
+					Chains: []chains.Chain{
 						{
 							chains.BitcoinMainnet.ChainId,
 							chains.BitcoinMainnet.ChainName,
@@ -349,6 +356,20 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 						Enabled: false,
 					},
 				}})
+
+			method = "/zetachain.zetacore.authority.Query/ChainInfo"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(authoritytypes.QueryGetChainInfoRequest{}).
+				Return(authoritytypes.QueryGetChainInfoResponse{
+					ChainInfo: authoritytypes.ChainInfo{
+						Chains: []chains.Chain{
+							sample.Chain(1000),
+							sample.Chain(1001),
+							sample.Chain(1002),
+						},
+					},
+				})
 		},
 	)(t)
 

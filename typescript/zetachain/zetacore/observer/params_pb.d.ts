@@ -104,6 +104,11 @@ export declare class ChainParams extends Message<ChainParams> {
    */
   isSupported: boolean;
 
+  /**
+   * @generated from field: string gateway_address = 17;
+   */
+  gatewayAddress: string;
+
   constructor(data?: PartialMessage<ChainParams>);
 
   static readonly runtime: typeof proto3;

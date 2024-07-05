@@ -114,6 +114,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -179,6 +182,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -221,6 +227,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -265,6 +274,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -316,6 +328,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		// threshold high enough to not finalize ballot
 		threshold, err := sdk.NewDecFromStr("0.7")
@@ -369,6 +384,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -433,6 +451,9 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
 		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,

@@ -27,8 +27,7 @@ func (k msgServer) AddOutboundTracker(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check the chain is supported
-	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if chain == nil {
+	if _, found := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, msg.ChainId); !found {
 		return nil, observertypes.ErrSupportedChains
 	}
 
@@ -138,7 +137,7 @@ func verifyProofAndOutboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddO
 
 	// get tss address
 	var bitcoinChainID int64
-	if chains.IsBitcoinChain(msg.ChainId) {
+	if chains.IsBitcoinChain(msg.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		bitcoinChainID = msg.ChainId
 	}
 

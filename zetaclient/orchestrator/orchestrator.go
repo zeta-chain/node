@@ -138,7 +138,7 @@ func (oc *Orchestrator) GetUpdatedSigner(
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
 	}
 	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
-	if chains.IsEVMChain(chainID) {
+	if chains.IsEVMChain(chainID, appContext.GetAdditionalChains()) {
 		evmParams, found := appContext.GetEVMChainParams(chainID)
 		if found {
 			// update zeta connector and ERC20 custody addresses
@@ -170,14 +170,14 @@ func (oc *Orchestrator) GetUpdatedChainObserver(
 	}
 	// update chain observer chain parameters
 	curParams := observer.GetChainParams()
-	if chains.IsEVMChain(chainID) {
+	if chains.IsEVMChain(chainID, appContext.GetAdditionalChains()) {
 		evmParams, found := appContext.GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			observer.SetChainParams(*evmParams)
 			oc.logger.Std.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
 		}
-	} else if chains.IsBitcoinChain(chainID) {
+	} else if chains.IsBitcoinChain(chainID, appContext.GetAdditionalChains()) {
 		_, btcParams, found := appContext.GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
@@ -328,9 +328,9 @@ func (oc *Orchestrator) StartCctxScheduler(ctx context.Context) error {
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
-						if chains.IsEVMChain(c.ChainId) {
+						if chains.IsEVMChain(c.ChainId, appContext.GetAdditionalChains()) {
 							oc.ScheduleCctxEVM(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else if chains.IsBitcoinChain(c.ChainId) {
+						} else if chains.IsBitcoinChain(c.ChainId, appContext.GetAdditionalChains()) {
 							oc.ScheduleCctxBTC(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							oc.logger.Std.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)

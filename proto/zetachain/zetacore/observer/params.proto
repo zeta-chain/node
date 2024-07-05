@@ -3,7 +3,6 @@ package zetachain.zetacore.observer;
 
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/observer/observer.proto";
-import "zetachain/zetacore/pkg/chains/chains.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -30,6 +29,7 @@ message ChainParams {
     (gogoproto.nullable) = false
   ];
   bool is_supported = 16;
+  string gateway_address = 17;
 }
 
 // Deprecated(v17)

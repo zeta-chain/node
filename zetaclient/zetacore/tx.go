@@ -56,13 +56,13 @@ func GetInboundVoteMessage(
 }
 
 // GasPriceMultiplier returns the gas price multiplier for the given chain
-func GasPriceMultiplier(chainID int64) (float64, error) {
-	if chains.IsEVMChain(chainID) {
+func GasPriceMultiplier(chain chains.Chain) (float64, error) {
+	if chain.IsEVMChain() {
 		return clientcommon.EVMOutboundGasPriceMultiplier, nil
-	} else if chains.IsBitcoinChain(chainID) {
+	} else if chain.IsBitcoinChain() {
 		return clientcommon.BTCOutboundGasPriceMultiplier, nil
 	}
-	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chainID)
+	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chain.ChainId)
 }
 
 // WrapMessageWithAuthz wraps a message with an authz message

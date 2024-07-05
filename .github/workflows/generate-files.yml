@@ -1,5 +1,6 @@
 name: Generated Files are Updated
 on:
+  merge_group:
   pull_request:
     branches:
       - "*"

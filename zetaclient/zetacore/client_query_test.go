@@ -2,6 +2,7 @@ package zetacore
 
 import (
 	"context"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"net"
 	"testing"
 
@@ -863,7 +864,7 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	ctx := context.Background()
 
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
-		Chains: []*chains.Chain{
+		Chains: []chains.Chain{
 			{
 				ChainName:   chains.BitcoinMainnet.ChainName,
 				ChainId:     chains.BitcoinMainnet.ChainId,
@@ -893,6 +894,30 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	resp, err := client.GetSupportedChains(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.Chains, resp)
+}
+
+func TestZetacore_GetAdditionalChains(t *testing.T) {
+	// TODO AFTER MERGE
+	expectedOutput := authoritytypes.QueryGetChainInfoResponse{
+		ChainInfo: authoritytypes.ChainInfo{
+			Chains: []chains.Chain{
+				chains.BitcoinMainnet,
+				chains.Ethereum,
+			},
+		},
+	}
+	input := observertypes.QuerySupportedChains{}
+	method := "/zetachain.zetacore.authority.Query/ChainInfo"
+	server := setupMockServer(t, authoritytypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	client, err := setupZetacoreClient()
+	require.NoError(t, err)
+
+	resp, err := client.GetAdditionalChains()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.ChainInfo.Chains, resp)
 }
 
 func TestZetacore_GetPendingNonces(t *testing.T) {

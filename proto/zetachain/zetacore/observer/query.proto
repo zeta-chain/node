@@ -263,7 +263,9 @@ message QueryObserverSetResponse { repeated string observers = 1; }
 
 message QuerySupportedChains {}
 
-message QuerySupportedChainsResponse { repeated pkg.chains.Chain chains = 1; }
+message QuerySupportedChainsResponse {
+  repeated pkg.chains.Chain chains = 1 [ (gogoproto.nullable) = false ];
+}
 
 message QueryGetChainParamsForChainRequest { int64 chain_id = 1; }
 

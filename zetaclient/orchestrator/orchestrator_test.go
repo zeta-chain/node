@@ -82,6 +82,7 @@ func CreateAppContext(
 		btcChainParams,
 		"",
 		*ccFlags,
+		[]chains.Chain{},
 		verificationFlags,
 		true,
 	)

@@ -56,7 +56,7 @@ func (k Keeper) IsNonTombstonedObserver(ctx sdk.Context, address string) bool {
 func (k Keeper) FindBallot(
 	ctx sdk.Context,
 	index string,
-	chain *chains.Chain,
+	chain chains.Chain,
 	observationType types.ObservationType,
 ) (ballot types.Ballot, isNew bool, err error) {
 	isNew = false

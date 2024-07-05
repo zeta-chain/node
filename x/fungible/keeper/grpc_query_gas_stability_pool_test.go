@@ -79,23 +79,11 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 			UseObserverMock: true,
 		})
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{})
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{})
 
 		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
 		require.NoError(t, err)
 		require.Empty(t, res.Balances)
-	})
-
-	t.Run("should error if chain is nil", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetFungibleObserverMock(t, k)
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{nil})
-
-		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
-		require.Error(t, err)
-		require.Nil(t, res)
 	})
 
 	t.Run("should error if system contracts not deployed", func(t *testing.T) {
@@ -104,7 +92,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		})
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
 		chainID := 5
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
 			{
 				ChainName: chains.ChainName(chainID),
 				ChainId:   int64(chainID),
@@ -124,7 +112,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
 		chainID := 5
-		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
 			{
 				ChainName: chains.ChainName(chainID),
 				ChainId:   int64(chainID),

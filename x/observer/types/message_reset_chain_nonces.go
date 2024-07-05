@@ -6,8 +6,6 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgResetChainNonces = "reset_chain_nonces"
@@ -53,12 +51,6 @@ func (msg *MsgResetChainNonces) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-
-	// Check if chain exists
-	chain := chains.GetChainFromChainID(msg.ChainId)
-	if chain == nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain id (%d)", msg.ChainId)
 	}
 
 	if msg.ChainNonceLow < 0 {

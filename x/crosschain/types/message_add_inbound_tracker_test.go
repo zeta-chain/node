@@ -10,7 +10,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -32,37 +31,13 @@ func TestMsgAddInboundTracker_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid chain id",
-			msg: types.NewMsgAddInboundTracker(
-				sample.AccAddress(),
-				42,
-				coin.CoinType_Gas,
-				"hash",
-			),
-			err: errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d)", 42),
-		},
-		{
-			name: "invalid proof",
-			msg: &types.MsgAddInboundTracker{
-				Creator:  sample.AccAddress(),
-				ChainId:  chains.ZetaChainTestnet.ChainId,
-				CoinType: coin.CoinType_Gas,
-				Proof:    &proofs.Proof{},
-			},
-			err: errorsmod.Wrapf(
-				types.ErrProofVerificationFail,
-				"chain id %d does not support proof-based trackers",
-				chains.ZetaChainTestnet.ChainId,
-			),
-		},
-		{
 			name: "invalid coin type",
 			msg: &types.MsgAddInboundTracker{
 				Creator:  sample.AccAddress(),
 				ChainId:  chains.ZetaChainTestnet.ChainId,
 				CoinType: 5,
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "coin-type not supported"),
+			err: errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "coin-type not supported"),
 		},
 		{
 			name: "valid",

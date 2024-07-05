@@ -679,8 +679,11 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	appContext *zctx.AppContext,
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 ) *types.MsgVoteInbound {
-	destChain := chains.GetChainFromChainID(event.DestinationChainId.Int64())
-	if destChain == nil {
+	destChain, found := chains.GetChainFromChainID(
+		event.DestinationChainId.Int64(),
+		ob.AppContext().GetAdditionalChains(),
+	)
+	if !found {
 		ob.Logger().Inbound.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
 		return nil
 	}
@@ -704,7 +707,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 
 		if strings.EqualFold(destAddr, paramsDest.ZetaTokenContractAddress) {
 			ob.Logger().Inbound.Warn().
-				Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+				Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain.String(), destAddr)
 			return nil
 		}
 	}

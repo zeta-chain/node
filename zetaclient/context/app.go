@@ -25,6 +25,10 @@ type AppContext struct {
 	currentTssPubkey   string
 	crosschainFlags    observertypes.CrosschainFlags
 
+	// additionalChains is a list of additional static chain information to use when searching from chain IDs
+	// it is stored in the protocol to dynamically support new chains without doing an upgrade
+	additionalChain []chains.Chain
+
 	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
 	// All chains in this list will have Enabled flag set to true
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
@@ -173,12 +177,12 @@ func (a *AppContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainPara
 		return chains.Chain{}, nil, false
 	}
 
-	chain := chains.GetChainFromChainID(a.bitcoinChainParams.ChainId)
-	if chain == nil {
+	chain, found := chains.GetChainFromChainID(a.bitcoinChainParams.ChainId, a.additionalChain)
+	if !found {
 		return chains.Chain{}, nil, false
 	}
 
-	return *chain, a.bitcoinChainParams, true
+	return chain, a.bitcoinChainParams, true
 }
 
 // GetCrossChainFlags returns crosschain flags
@@ -187,6 +191,13 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	defer a.mu.RUnlock()
 
 	return a.crosschainFlags
+}
+
+// GetAdditionalChains returns additional chains
+func (a *AppContext) GetAdditionalChains() []chains.Chain {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.additionalChain
 }
 
 // GetAllHeaderEnabledChains returns all verification flags
@@ -220,6 +231,7 @@ func (a *AppContext) Update(
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
+	additionalChains []chains.Chain,
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
 	init bool,
 ) {
@@ -249,6 +261,7 @@ func (a *AppContext) Update(
 
 	a.chainsEnabled = newChains
 	a.crosschainFlags = crosschainFlags
+	a.additionalChain = additionalChains
 	a.blockHeaderEnabledChains = blockHeaderEnabledChains
 
 	// update chain params for bitcoin if it has config in file

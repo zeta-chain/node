@@ -54,19 +54,20 @@ func TestSigner_SetupGas(t *testing.T) {
 
 	t.Run("SetupGas_success", func(t *testing.T) {
 		chain := chains.BscMainnet
-		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
+		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), chain)
 		require.NoError(t, err)
 	})
 
 	t.Run("SetupGas_error", func(t *testing.T) {
 		cctx.GetCurrentOutboundParam().GasPrice = "invalidGasPrice"
 		chain := chains.BscMainnet
-		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
+		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), chain)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})
 }
 
 func TestSigner_NewOutboundData(t *testing.T) {
+	// TODO APP CONFIG AFTER MERGE
 	ctx := context.Background()
 
 	// Setup evm signer

@@ -99,9 +99,9 @@ func (s *UpdateChainParamsSuite) TestCommonParams() {
 	s.Validate(s.btcParams)
 }
 
-func (s *UpdateChainParamsSuite) TestBTCParams() {
+func (s *UpdateChainParamsSuite) TestBTCParamsInvalid() {
 	copy := *s.btcParams
-	copy.WatchUtxoTicker = 0
+	copy.WatchUtxoTicker = 301
 	err := types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 }
