@@ -3,11 +3,14 @@ package e2etests
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -177,8 +180,8 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 
 	inst.DataBytes, err = borsh.Serialize(DepositInstructionParams{
 		Discriminator: [8]byte{0xf2, 0x23, 0xc6, 0x89, 0x52, 0xe1, 0xf2, 0xb6},
-		Amount:        1338,
-		Memo:          r.Account.EVMAddress().Bytes(),
+		Amount:        13370000,
+		Memo:          r.EVMAddress().Bytes(),
 	})
 	if err != nil {
 		r.Logger.Error("Error serializing deposit instruction: %v", err)
@@ -241,4 +244,30 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 		)
 	}
 
+}
+
+func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
+	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s", r.SOLZRC20Addr.String())
+
+	solZRC20 := r.SOLZRC20
+	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	if err != nil {
+		r.Logger.Error("Error getting total supply of sol zrc20: %v", err)
+		panic(err)
+	}
+	r.Logger.Print(" supply of %s sol zrc20: %d", r.EVMAddress(), supply)
+
+	amount := big.NewInt(1337)
+
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, amount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
+	require.NoError(r, err)
+	r.Logger.EVMTransaction(*tx, "withdraw")
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 }

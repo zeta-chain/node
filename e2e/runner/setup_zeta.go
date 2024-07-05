@@ -135,6 +135,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 	// set ZRC20 contracts
 	r.SetupETHZRC20()
 	r.SetupBTCZRC20()
+	r.SetupSOLZRC20()
 
 	// deploy TestDApp contract on zEVM
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
@@ -183,6 +184,22 @@ func (r *E2ERunner) SetZEVMContracts() {
 
 	r.ContextAppAddr = contextAppAddr
 	r.ContextApp = contextApp
+}
+
+// SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
+func (r *E2ERunner) SetupSOLZRC20() {
+	solZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chains.SolanaLocalnet.ChainId),
+	)
+	require.NoError(r, err)
+	require.NotEqual(r, ethcommon.Address{}, solZRC20Addr, "sol zrc20 not found")
+
+	r.SOLZRC20Addr = solZRC20Addr
+	solZRC20, err := zrc20.NewZRC20(solZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	r.SOLZRC20 = solZRC20
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain

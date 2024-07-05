@@ -231,6 +231,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		solanaTests := []string{
 			e2etests.TestSolanaIntializeGatewayName,
 			e2etests.TestSolanaDepositName,
+			e2etests.TestSolanaWithdrawName,
 		}
 
 		bitcoinTests := []string{

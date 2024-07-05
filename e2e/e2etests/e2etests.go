@@ -56,7 +56,7 @@ const (
 	*/
 	TestSolanaIntializeGatewayName = "solana_initialize_gateway"
 	TestSolanaDepositName          = "solana_deposit"
-
+	TestSolanaWithdrawName         = "solana_withdraw"
 	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
@@ -345,6 +345,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in SOL", DefaultValue: "0.1"},
 		},
 		TestSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawName,
+		"withdraw Sol from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in SOL", DefaultValue: "0.1"},
+		},
+		TestSolanaWithdraw,
 	),
 
 	/*

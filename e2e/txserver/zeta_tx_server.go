@@ -2,7 +2,6 @@ package txserver
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -190,11 +189,6 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		return nil, err
 	}
 
-	{
-		tx := txBuilder.GetTx()
-		fmt.Printf("txBuilder.GetTx(): fee %s, gas %d", tx.GetFee().String(), tx.GetGas())
-	}
-
 	// Sign tx
 	err = tx.Sign(zts.txFactory, account, txBuilder, true)
 	if err != nil {
@@ -208,7 +202,6 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 }
 
 func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
-	fmt.Printf("broadcasting tx:\n%s\n", base64.StdEncoding.EncodeToString(txBytes))
 	res, err := zts.clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		if res == nil {
