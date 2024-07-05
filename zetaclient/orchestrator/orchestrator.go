@@ -116,7 +116,7 @@ func (oc *Orchestrator) MonitorCore(ctx context.Context) error {
 	// watch for upgrade plan from zetacore
 	go func() {
 		// wait for upgrade plan signal to arrive
-		oc.zetacoreClient.Pause()
+		oc.zetacoreClient.Stop()
 
 		// now stop orchestrator and all observers
 		close(oc.stop)

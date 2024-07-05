@@ -21,7 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -92,7 +91,6 @@ func MockBTCObserver(
 		params,
 		nil,
 		nil,
-		nil,
 		dbpath,
 		base.Logger{},
 		nil,
@@ -113,7 +111,6 @@ func Test_NewObserver(t *testing.T) {
 		chain       chains.Chain
 		btcClient   interfaces.BTCRPCClient
 		chainParams observertypes.ChainParams
-		appContext  *context.AppContext
 		coreClient  interfaces.ZetacoreClient
 		tss         interfaces.TSSSigner
 		dbpath      string
@@ -127,7 +124,6 @@ func Test_NewObserver(t *testing.T) {
 			chain:       chain,
 			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
 			chainParams: params,
-			appContext:  nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      sample.CreateTempDir(t),
@@ -140,7 +136,6 @@ func Test_NewObserver(t *testing.T) {
 			chain:       chains.Chain{ChainId: 111}, // invalid chain id
 			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
 			chainParams: params,
-			appContext:  nil,
 			coreClient:  nil,
 			tss:         mocks.NewTSSMainnet(),
 			dbpath:      sample.CreateTempDir(t),
@@ -153,7 +148,6 @@ func Test_NewObserver(t *testing.T) {
 			name:        "should fail on invalid dbpath",
 			chain:       chain,
 			chainParams: params,
-			appContext:  nil,
 			coreClient:  nil,
 			btcClient:   mocks.NewMockBTCRPCClient().WithBlockCount(100),
 			tss:         mocks.NewTSSMainnet(),
@@ -173,7 +167,6 @@ func Test_NewObserver(t *testing.T) {
 				tt.chain,
 				tt.btcClient,
 				tt.chainParams,
-				tt.appContext,
 				tt.coreClient,
 				tt.tss,
 				tt.dbpath,
@@ -254,7 +247,7 @@ func Test_LoadDB(t *testing.T) {
 
 	// create observer
 	dbpath := sample.CreateTempDir(t)
-	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, dbpath, base.Logger{}, nil)
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, tss, dbpath, base.Logger{}, nil)
 	require.NoError(t, err)
 
 	t.Run("should load db successfully", func(t *testing.T) {

@@ -52,7 +52,6 @@ type Client struct {
 	chainID     string
 	chain       chains.Chain
 	stop        chan struct{}
-	pause       chan struct{}
 
 	mu sync.RWMutex
 }
@@ -167,7 +166,6 @@ func NewClient(
 		stop:        make(chan struct{}),
 		chainID:     chainID,
 		chain:       zetaChain,
-		pause:       make(chan struct{}),
 	}, nil
 }
 
@@ -348,7 +346,7 @@ func (c *Client) UpdateZetacoreContext(
 		c.logger.Warn().
 			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
 				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
+		c.stop <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
 	}
 
 	chainParams, err := c.GetChainParams(ctx)
@@ -420,16 +418,6 @@ func (c *Client) UpdateZetacoreContext(
 	)
 
 	return nil
-}
-
-// Pause pauses the client
-func (c *Client) Pause() {
-	<-c.pause
-}
-
-// Unpause unpauses the client
-func (c *Client) Unpause() {
-	c.pause <- struct{}{}
 }
 
 func cosmosREST(host string) string {

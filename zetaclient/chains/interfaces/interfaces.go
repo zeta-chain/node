@@ -144,8 +144,7 @@ type ZetacoreClient interface {
 		txIndex int64,
 	) (string, error)
 
-	Pause()
-	Unpause()
+	Stop()
 }
 
 // BTCRPCClient is the interface for BTC RPC client

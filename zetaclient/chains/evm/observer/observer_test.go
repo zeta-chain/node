@@ -12,6 +12,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -23,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -89,17 +89,21 @@ func MockEVMObserver(
 
 	// use default mock zetacore client if not provided
 	if zetacoreClient == nil {
-		zetacoreClient = mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
+		zetacoreClient = mocks.NewZetacoreClient(t).
+			WithKeys(&keys.Keys{}).
+			WithZetaChain().
+			WithPostVoteInbound("", "").
+			WithPostVoteOutbound("", "")
 	}
 	// use default mock tss if not provided
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
 	// create zetacore context
-	coreCtx, evmCfg := getZetacoreContext(chain, "", &params)
+	_, evmCfg := getZetacoreContext(chain, "", &params)
 
 	// create observer
-	ob, err := observer.NewObserver(evmCfg, evmClient, params, coreCtx, zetacoreClient, tss, dbpath, base.Logger{}, nil)
+	ob, err := observer.NewObserver(evmCfg, evmClient, params, zetacoreClient, tss, dbpath, base.Logger{}, nil)
 	require.NoError(t, err)
 	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
@@ -175,15 +179,14 @@ func Test_NewObserver(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// create zetacore context, client and tss
-			zetacoreCtx, _ := getZetacoreContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
-			zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
+			//zetacoreCtx, _ := getZetacoreContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
+			zetacoreClient := mocks.NewZetacoreClient(t)
 
 			// create observer
 			ob, err := observer.NewObserver(
 				tt.evmCfg,
 				tt.evmClient,
 				tt.chainParams,
-				zetacoreCtx,
 				zetacoreClient,
 				tt.tss,
 				tt.dbpath,

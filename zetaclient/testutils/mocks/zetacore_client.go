@@ -593,11 +593,6 @@ func (_m *ZetacoreClient) ListPendingCCTXWithinRateLimit(ctx context.Context) (*
 	return r0, r1
 }
 
-// Pause provides a mock function with given fields:
-func (_m *ZetacoreClient) Pause() {
-	_m.Called()
-}
-
 // PostVoteBlameData provides a mock function with given fields: ctx, _a1, chainID, index
 func (_m *ZetacoreClient) PostVoteBlameData(ctx context.Context, _a1 *blame.Blame, chainID int64, index string) (string, error) {
 	ret := _m.Called(ctx, _a1, chainID, index)
@@ -752,8 +747,8 @@ func (_m *ZetacoreClient) PostVoteOutbound(ctx context.Context, gasLimit uint64,
 	return r0, r1, r2
 }
 
-// Unpause provides a mock function with given fields:
-func (_m *ZetacoreClient) Unpause() {
+// Stop provides a mock function with given fields:
+func (_m *ZetacoreClient) Stop() {
 	_m.Called()
 }
 
