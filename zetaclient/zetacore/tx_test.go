@@ -6,13 +6,13 @@ import (
 	"encoding/hex"
 	"net"
 	"os"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,8 +33,8 @@ import (
 )
 
 const (
-	testSigner   = `jack`
-	sampleHash   = "fa51db4412144f1130669f2bae8cb44aadbd8d85958dbffcb0fe236878097e1a"
+	testSigner   = "jack"
+	sampleHash   = "FA51DB4412144F1130669F2BAE8CB44AADBD8D85958DBFFCB0FE236878097E1A"
 	ethBlockHash = "1a17bcc359e84ba8ae03b17ec425f97022cd11c3e279f6bdf7a96fcffa12b366"
 )
 
@@ -132,11 +132,13 @@ func getHeaderData(t *testing.T) proofs.HeaderData {
 func TestZetacore_PostGasPrice(t *testing.T) {
 	ctx := context.Background()
 
-	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
+	extraGRPC := withDummyServer(100)
+	setupMockServer(t, observertypes.RegisterQueryServer, skipMethod, nil, nil, extraGRPC...)
 
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("post gas price success", func(t *testing.T) {
@@ -158,31 +160,59 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 func TestZetacore_AddOutboundTracker(t *testing.T) {
 	ctx := context.Background()
 
-	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
+	const nonce = 123
+	chainID := chains.BscMainnet.ChainId
+
+	method := "/zetachain.zetacore.crosschain.Query/OutboundTracker"
+	input := &crosschaintypes.QueryGetOutboundTrackerRequest{
+		ChainID: chains.BscMainnet.ChainId,
+		Nonce:   nonce,
+	}
+	output := &crosschaintypes.QueryGetOutboundTrackerResponse{
+		OutboundTracker: crosschaintypes.OutboundTracker{
+			Index:    "456",
+			ChainId:  chainID,
+			Nonce:    nonce,
+			HashList: nil,
+		},
+	}
+
+	extraGRPC := withDummyServer(100)
+	setupMockServer(t, observertypes.RegisterQueryServer, method, input, output, extraGRPC...)
+
+	tendermintMock := mocks.NewSDKClientWithErr(t, nil, 0)
 
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(tendermintMock),
 	)
 
 	t.Run("add tx hash success", func(t *testing.T) {
-		hash, err := client.AddOutboundTracker(ctx, chains.BscMainnet.ChainId, 123, "", nil, "", 456)
-		require.NoError(t, err)
-		require.Equal(t, sampleHash, hash)
+		tendermintMock.SetBroadcastTxHash(sampleHash)
+		hash, err := client.AddOutboundTracker(ctx, chainID, nonce, "", nil, "", 456)
+		assert.NoError(t, err)
+		assert.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
-		hash, err := client.AddOutboundTracker(ctx, chains.BscMainnet.ChainId, 123, "", nil, "", 456)
-		require.Error(t, err)
-		require.Equal(t, "", hash)
+		tendermintMock.SetError(errors.New("broadcast error"))
+		hash, err := client.AddOutboundTracker(ctx, chainID, nonce, "", nil, "", 456)
+		assert.Error(t, err)
+		assert.Empty(t, hash)
 	})
 }
 
 func TestZetacore_SetTSS(t *testing.T) {
 	ctx := context.Background()
 
-	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
+	extraGRPC := withDummyServer(100)
+	setupMockServer(t, crosschaintypes.RegisterMsgServer, skipMethod, nil, nil, extraGRPC...)
+
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("set tss success", func(t *testing.T) {
@@ -342,9 +372,13 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 func TestZetacore_PostBlameData(t *testing.T) {
 	ctx := context.Background()
 
-	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
+	extraGRPC := withDummyServer(100)
+	setupMockServer(t, observertypes.RegisterQueryServer, skipMethod, nil, nil, extraGRPC...)
+
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("post blame data success", func(t *testing.T) {
@@ -358,17 +392,21 @@ func TestZetacore_PostBlameData(t *testing.T) {
 			chains.BscMainnet.ChainId,
 			"102394876-bsc",
 		)
-		require.NoError(t, err)
-		require.Equal(t, sampleHash, hash)
+		assert.NoError(t, err)
+		assert.Equal(t, sampleHash, hash)
 	})
 }
 
 func TestZetacore_PostVoteBlockHeader(t *testing.T) {
 	ctx := context.Background()
 
-	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
+	extraGRPC := withDummyServer(100)
+	setupMockServer(t, observertypes.RegisterQueryServer, skipMethod, nil, nil, extraGRPC...)
+
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	blockHash, err := hex.DecodeString(ethBlockHash)
@@ -398,11 +436,14 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 		VoterAddress:     address.String(),
 	}
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
-	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+
+	extraGRPC := withDummyServer(100)
+	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput, extraGRPC...)
 
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
@@ -466,18 +507,18 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 
 	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
-		BallotIdentifier: "0xc1ebc3b76ebcc7ff9a9e543062c31b9f9445506e4924df858460bf2926be1a25",
+		BallotIdentifier: "0xf52f379287561dd07869de72b09fb56b7f6dfdda65b01c25882722e315f333f1",
 		VoterAddress:     address.String(),
 	}
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
 
-	extraGRPC := withEchoBroadcaster(blockHeight, sampleHash)
+	extraGRPC := withDummyServer(blockHeight)
 
 	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput, extraGRPC...)
 	require.NotNil(t, server)
 
 	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
+		withDefaultObserverKeys(),
 		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 		withAccountRetriever(t, accountNum, accountSeq),
 	)
@@ -500,8 +541,8 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 	hash, ballot, err := client.PostVoteOutbound(ctx, 100_000, 200_000, msg)
 
 	assert.NoError(t, err)
-	assert.Equal(t, strings.ToUpper(sampleHash), hash)
-	assert.Equal(t, "0xc1ebc3b76ebcc7ff9a9e543062c31b9f9445506e4924df858460bf2926be1a25", ballot)
+	assert.Equal(t, sampleHash, hash)
+	assert.Equal(t, "0xf52f379287561dd07869de72b09fb56b7f6dfdda65b01c25882722e315f333f1", ballot)
 }
 
 func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {

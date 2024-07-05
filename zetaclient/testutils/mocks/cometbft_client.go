@@ -77,6 +77,11 @@ func (c *CometBFTClient) SetBroadcastTxHash(hash string) *CometBFTClient {
 	return c
 }
 
+func (c *CometBFTClient) SetError(err error) *CometBFTClient {
+	c.err = err
+	return c
+}
+
 func NewSDKClientWithErr(t *testing.T, err error, code uint32) *CometBFTClient {
 	return &CometBFTClient{
 		t:      t,
