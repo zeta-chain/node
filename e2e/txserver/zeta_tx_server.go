@@ -375,11 +375,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		IsSupported:               true,
 		GatewayAddress:            "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
 		BallotThreshold:           sdktypes.MustNewDecFromStr("0.66"),
-		ConfirmationCount:         32,
+		ConfirmationCount:         16,
 		GasPriceTicker:            100,
 		InboundTicker:             5,
 		OutboundTicker:            5,
-		OutboundScheduleInterval:  10,
+		OutboundScheduleInterval:  2,
 		OutboundScheduleLookahead: 10,
 		MinObserverDelegation:     sdktypes.MustNewDecFromStr("1"),
 	}

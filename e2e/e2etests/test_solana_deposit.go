@@ -119,6 +119,7 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 		Nonce         uint64
 		TssAddress    [20]byte
 		Authority     [32]byte
+		ChainID       uint64
 	}
 	pdaInfo, err := client.GetAccountInfo(context.TODO(), pdaComputed)
 	if err != nil {
@@ -128,7 +129,7 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	var pda PdaInfo
 	borsh.Deserialize(&pda, pdaInfo.Bytes())
 
-	r.Logger.Print("PDA info Tss: %v", pda.TssAddress)
+	r.Logger.Print("PDA info Tss: %v, chain id %d", pda.TssAddress, pda.ChainID)
 
 }
 
@@ -248,6 +249,7 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 
 func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s", r.SOLZRC20Addr.String())
+	privkey := solana.MustPrivateKeyFromBase58("4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C")
 
 	solZRC20 := r.SOLZRC20
 	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
@@ -265,10 +267,13 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
+	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privkey.PublicKey().String()), amount)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
-	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	r.Logger.Print("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "withdraw")
 }

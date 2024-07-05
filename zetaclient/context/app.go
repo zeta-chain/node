@@ -22,6 +22,7 @@ type AppContext struct {
 	chainsEnabled      []chains.Chain
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
+	solanaChainParams  *observertypes.ChainParams
 	currentTssPubkey   string
 	crosschainFlags    observertypes.CrosschainFlags
 
@@ -185,6 +186,23 @@ func (a *AppContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainPara
 	return chain, a.bitcoinChainParams, true
 }
 
+// GetSolanaChainParams returns (chain, chain params, found) for solana chain
+func (a *AppContext) GetSolanaChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	if a.solanaChainParams == nil { // solana is not enabled
+		return chains.Chain{}, nil, false
+	}
+
+	chain, found := chains.GetChainFromChainID(a.solanaChainParams.ChainId, a.additionalChain)
+	if !found {
+		return chains.Chain{}, nil, false
+	}
+
+	return chain, a.solanaChainParams, true
+}
+
 // GetCrossChainFlags returns crosschain flags
 func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	a.mu.RLock()
@@ -229,6 +247,7 @@ func (a *AppContext) Update(
 	newChains []chains.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,
 	btcChainParams *observertypes.ChainParams,
+	solanaChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
 	additionalChains []chains.Chain,
@@ -268,6 +287,8 @@ func (a *AppContext) Update(
 	if a.bitcoinChainParams != nil && btcChainParams != nil {
 		a.bitcoinChainParams = btcChainParams
 	}
+
+	a.solanaChainParams = solanaChainParams
 
 	// update core params for evm chains we have configs in file
 	for _, params := range evmChainParams {

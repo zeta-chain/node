@@ -18,6 +18,8 @@ import (
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
+	solanasigner "github.com/zeta-chain/zetacore/zetaclient/chains/solana/signer"
+
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -107,6 +109,18 @@ func CreateSignerMap(
 			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
 			signerMap[btcChain.ChainId] = signer
+		}
+	}
+
+	// FIXME: config this
+	solChain := chains.SolanaLocalnet
+	{
+		signer, err := solanasigner.NewSigner(solChain, appContext, tss, ts, logger)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("NewSolanaSigner error for chain %s", solChain.String())
+		} else {
+			logger.Std.Info().Msgf("NewSolanaSigner for chain %s", solChain.String())
+			signerMap[solChain.ChainId] = signer
 		}
 	}
 

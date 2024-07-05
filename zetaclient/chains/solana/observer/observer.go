@@ -108,21 +108,23 @@ func NewObserver(
 	return &ob, nil
 }
 
+// IsOutboundProcessed returns included, confirmed, error
 func (o *Observer) IsOutboundProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
 	//TODO implement me
-	panic("implement me")
+	//panic("implement me")
+	return false, false, nil
 }
 
 func (o *Observer) SetChainParams(params observertypes.ChainParams) {
-	//TODO implement me
-	panic("implement me")
+	o.Mu.Lock()
+	defer o.Mu.Unlock()
+	o.chainParams = params
 }
 
 func (o *Observer) GetChainParams() observertypes.ChainParams {
-	//TODO implement me
-	return observertypes.ChainParams{
-		IsSupported: true,
-	}
+	o.Mu.Lock()
+	defer o.Mu.Unlock()
+	return o.chainParams
 }
 
 func (o *Observer) GetTxID(nonce uint64) string {
@@ -279,6 +281,7 @@ func (o *Observer) WatchGasPrice() {
 				o.logger.Err(err).Msg("GetSlot error")
 				continue
 			}
+			// FIXME: what's the fee rate of compute unit? How to query?
 			txhash, err := o.zetacoreClient.PostGasPrice(o.chain, 1, "", slot)
 			if err != nil {
 				o.logger.Err(err).Msg("PostGasPrice error")

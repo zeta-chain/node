@@ -15,6 +15,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const (
@@ -163,7 +164,7 @@ func main() {
 		}
 		fmt.Println("recent blockhash:", recent.Value.Blockhash)
 
-		programId := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
+		programId := solana.MustPublicKeyFromBase58("8J5Kxan9DTZTcHq6W5zj2UFuoARiwyLmUx87qPL1L7eP")
 		seed := []byte("meta")
 		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
 		if err != nil {
@@ -255,7 +256,7 @@ func main() {
 			Nonce         uint64
 		}
 		// fetch PDA account
-		programId := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
+		programId := solana.MustPublicKeyFromBase58("8J5Kxan9DTZTcHq6W5zj2UFuoARiwyLmUx87qPL1L7eP")
 		seed := []byte("meta")
 		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
 		if err != nil {
@@ -295,6 +296,7 @@ func main() {
 		to := privkey.PublicKey()
 		bytes := make([]byte, 8)
 		nonce := pda.Nonce
+		binary.BigEndian.PutUint64(bytes, uint64(chains.SolanaLocalnet.ChainId))
 		binary.BigEndian.PutUint64(bytes, nonce)
 		message = append(message, bytes...)
 		binary.BigEndian.PutUint64(bytes, amount)

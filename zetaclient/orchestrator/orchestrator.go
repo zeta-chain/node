@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
@@ -182,6 +183,13 @@ func (oc *Orchestrator) GetUpdatedChainObserver(
 			oc.logger.Std.Info().Msgf(
 				"updated chain params for Bitcoin, new params: %v", *btcParams)
 		}
+	} else if chains.IsSolanaChain(chainID, appContext.GetAdditionalChains()) {
+		_, solParams, found := appContext.GetSolanaChainParams()
+		if found && !observertypes.ChainParamsEqual(curParams, *solParams) {
+			observer.SetChainParams(*solParams)
+			oc.logger.Std.Info().Msgf(
+				"updated chain params for Solana, new params: %v", *solParams)
+		}
 	}
 	return observer, nil
 }
@@ -323,6 +331,8 @@ func (oc *Orchestrator) StartCctxScheduler(appContext *context.AppContext) {
 							oc.ScheduleCctxEVM(zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else if chains.IsBitcoinChain(c.ChainId, appContext.GetAdditionalChains()) {
 							oc.ScheduleCctxBTC(zetaHeight, c.ChainId, cctxList, ob, signer)
+						} else if chains.IsSolanaChain(c.ChainId, appContext.GetAdditionalChains()) {
+							oc.ScheduleCctxSolana(zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							oc.logger.Std.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)
 							continue
@@ -489,6 +499,69 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
 			oc.logger.Std.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d\n", outboundID, params.Amount)
+			go signer.TryProcessOutbound(cctx, oc.outboundProc, outboundID, observer, oc.zetacoreClient, zetaHeight)
+		}
+	}
+}
+
+// ScheduleCctxSolana schedules Solana outbound keysign on each ZetaChain block (the ticker)
+
+func (oc *Orchestrator) ScheduleCctxSolana(
+	zetaHeight uint64,
+	chainID int64,
+	cctxList []*types.CrossChainTx,
+	observer interfaces.ChainObserver,
+	signer interfaces.ChainSigner,
+) {
+	oc.logger.Std.Info().Msgf("ScheduleCctxSolana: zetaHeight %d, chainID %d, cctxList %d", zetaHeight, chainID, len(cctxList))
+	solObserver, ok := observer.(*solanaobserver.Observer)
+	if !ok { // should never happen
+		oc.logger.Std.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
+		return
+	}
+	// #nosec G701 positive
+	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+	//lookahead := observer.GetChainParams().OutboundScheduleLookahead
+
+	// schedule at most one keysign per ticker
+	for idx, cctx := range cctxList {
+		_ = idx
+		params := cctx.GetCurrentOutboundParam()
+		nonce := params.TssNonce
+		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+
+		if params.ReceiverChainId != chainID {
+			oc.logger.Std.Error().
+				Msgf("ScheduleCctxSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
+			continue
+		}
+		// try confirming the outbound
+		included, confirmed, err := solObserver.IsOutboundProcessed(cctx, oc.logger.Std)
+		if err != nil {
+			oc.logger.Std.Error().
+				Err(err).
+				Msgf("ScheduleCctxSolana: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+			continue
+		}
+		if included || confirmed {
+			oc.logger.Std.Info().
+				Msgf("ScheduleCctxSolana: outbound %s already included; do not schedule keysign", outboundID)
+			continue
+		}
+		oc.logger.Std.Info().Msgf("ScheduleCctxSolana: idx: %d; interval %d", idx, interval)
+
+		// stop if lookahead is reached
+		//if int64(
+		//	idx,
+		//) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
+		//	oc.logger.Std.Warn().
+		//		Msgf("ScheduleCctxSolana: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
+		//	break
+		//}
+		// try confirming the outbound or scheduling a keysign
+		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
+			oc.outboundProc.StartTryProcess(outboundID)
+			oc.logger.Std.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d\n", outboundID, params.Amount)
 			go signer.TryProcessOutbound(cctx, oc.outboundProc, outboundID, observer, oc.zetacoreClient, zetaHeight)
 		}
 	}
