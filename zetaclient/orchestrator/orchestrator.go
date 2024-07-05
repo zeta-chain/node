@@ -328,9 +328,9 @@ func (oc *Orchestrator) StartCctxScheduler(ctx context.Context) error {
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
-						if chains.IsEVMChain(c.ChainId, appContext.GetAdditionalChains()) {
+						if chains.IsEVMChain(c.ChainId, app.GetAdditionalChains()) {
 							oc.ScheduleCctxEVM(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else if chains.IsBitcoinChain(c.ChainId, appContext.GetAdditionalChains()) {
+						} else if chains.IsBitcoinChain(c.ChainId, app.GetAdditionalChains()) {
 							oc.ScheduleCctxBTC(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							oc.logger.Std.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)

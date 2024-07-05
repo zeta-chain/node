@@ -73,7 +73,7 @@ func NewZetaSupplyChecker(
 	}
 
 	for chainID := range zetaSupplyChecker.evmClient {
-		chain, found := chains.GetChainFromChainID(chainID, appContext.GetAdditionalChains())
+		chain, found := chains.GetChainFromChainID(chainID, app.GetAdditionalChains())
 		if !found {
 			return zetaSupplyChecker, fmt.Errorf("chain not found for chain id %d", chainID)
 		}

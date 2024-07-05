@@ -2,9 +2,10 @@ package zetacore
 
 import (
 	"context"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"net"
 	"testing"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -897,7 +898,8 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 }
 
 func TestZetacore_GetAdditionalChains(t *testing.T) {
-	// TODO AFTER MERGE
+	ctx := context.Background()
+
 	expectedOutput := authoritytypes.QueryGetChainInfoResponse{
 		ChainInfo: authoritytypes.ChainInfo{
 			Chains: []chains.Chain{
@@ -908,14 +910,16 @@ func TestZetacore_GetAdditionalChains(t *testing.T) {
 	}
 	input := observertypes.QuerySupportedChains{}
 	method := "/zetachain.zetacore.authority.Query/ChainInfo"
-	server := setupMockServer(t, authoritytypes.RegisterQueryServer, method, input, expectedOutput)
-	server.Serve()
-	defer closeMockServer(t, server)
 
-	client, err := setupZetacoreClient()
-	require.NoError(t, err)
+	setupMockServer(t, authoritytypes.RegisterQueryServer, method, input, expectedOutput)
 
-	resp, err := client.GetAdditionalChains()
+	client := setupZetacoreClient(t,
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 100, 100),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
+	)
+
+	resp, err := client.GetAdditionalChains(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.ChainInfo.Chains, resp)
 }

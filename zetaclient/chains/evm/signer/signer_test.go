@@ -176,7 +176,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 }
 
 func TestSigner_SignOutbound(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -213,7 +213,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 }
 
 func TestSigner_SignRevertTx(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -253,7 +253,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 }
 
 func TestSigner_SignCancelTx(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -293,7 +293,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 }
 
 func TestSigner_SignWithdrawTx(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -332,7 +332,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 }
 
 func TestSigner_SignCommandTx(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	evmSigner, err := getNewEvmSigner(nil)
@@ -378,7 +378,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 }
 
 func TestSigner_SignERC20WithdrawTx(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -419,7 +419,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 }
 
 func TestSigner_BroadcastOutbound(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	evmSigner, err := getNewEvmSigner(nil)
@@ -471,7 +471,7 @@ func TestSigner_SignerErrorMsg(t *testing.T) {
 }
 
 func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -516,7 +516,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 }
 
 func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
-	ctx := context.Background()
+	ctx := makeCtx()
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -554,4 +554,9 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 		require.ErrorContains(t, err, "SignMigrateTssFundsCmd error")
 		require.Nil(t, tx)
 	})
+}
+func makeCtx() context.Context {
+	app := zctx.New(config.New(), zerolog.Nop())
+
+	return zctx.WithAppContext(context.Background(), app)
 }

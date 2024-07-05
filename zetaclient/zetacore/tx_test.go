@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"errors"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"math/big"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	"cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"

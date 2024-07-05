@@ -50,7 +50,7 @@ func (c *Client) PostVoteGasPrice(
 	blockNum uint64,
 ) (string, error) {
 	// apply gas price multiplier for the chain
-	multiplier, err := GasPriceMultiplier(chain.ChainId)
+	multiplier, err := GasPriceMultiplier(chain)
 	if err != nil {
 		return "", err
 	}

@@ -8,6 +8,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -67,8 +69,8 @@ func TestSigner_SetupGas(t *testing.T) {
 }
 
 func TestSigner_NewOutboundData(t *testing.T) {
-	// TODO APP CONFIG AFTER MERGE
-	ctx := context.Background()
+	app := zctx.New(config.New(), zerolog.Nop())
+	ctx := zctx.WithAppContext(context.Background(), app)
 
 	// Setup evm signer
 	evmSigner, err := getNewEvmSigner(nil)

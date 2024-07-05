@@ -21,7 +21,7 @@ func (c *Client) GetCrosschainFlags(ctx context.Context) (types.CrosschainFlags,
 }
 
 // GetSupportedChains returns the supported chains
-func (c *Client) GetSupportedChains(ctx context.Context) ([]*chains.Chain, error) {
+func (c *Client) GetSupportedChains(ctx context.Context) ([]chains.Chain, error) {
 	resp, err := c.client.observer.SupportedChains(ctx, &types.QuerySupportedChains{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get supported chains")

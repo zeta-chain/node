@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
 const (
@@ -134,8 +134,12 @@ func NewOutboundData(
 		return nil, true, nil
 	}
 
-	// TODO
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), appontext.GetAdditionalChains())
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+
+	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
 	if !found {
 		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}

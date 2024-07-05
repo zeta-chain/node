@@ -24,6 +24,7 @@ import (
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -63,6 +64,7 @@ type clients struct {
 	bank       banktypes.QueryClient
 	upgrade    upgradetypes.QueryClient
 	fees       feemarkettypes.QueryClient
+	authority  authoritytypes.QueryClient
 	tendermint tmservice.ServiceClient
 }
 
@@ -155,6 +157,7 @@ func NewClient(
 			bank:       banktypes.NewQueryClient(grpcConn),
 			upgrade:    upgradetypes.NewQueryClient(grpcConn),
 			fees:       feemarkettypes.NewQueryClient(grpcConn),
+			authority:  authoritytypes.NewQueryClient(grpcConn),
 			tendermint: tmservice.NewServiceClient(grpcConn),
 		},
 

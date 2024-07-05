@@ -390,11 +390,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// TODO AFTER MERGE
-	toChain, found := chains.GetChainFromChainID(
-		txData.toChainID.Int64(),
-		signer.AppContext().GetAdditionalChains(),
-	)
+	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
 	if !found {
 		logger.Warn().Msgf("unknown chain: %d", txData.toChainID.Int64())
 		return
@@ -564,12 +560,14 @@ func (signer *Signer) BroadcastOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	txData *OutboundData,
 ) {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		logger.Err(err).Msg("error getting app context")
+		return
+	}
+
 	// Get destination chain for logging
-	// TODO AFTER MERGE
-	toChain, found := chains.GetChainFromChainID(
-		txData.toChainID.Int64(),
-		signer.AppContext().GetAdditionalChains(),
-	)
+	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
 	if !found {
 		logger.Warn().Msgf("BroadcastOutbound: unknown chain %d", txData.toChainID.Int64())
 		return
@@ -600,7 +598,7 @@ func (signer *Signer) BroadcastOutbound(
 				outboundHash,
 			)
 			if report {
-				signer.reportToOutboundTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
+				signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 			}
 			if !retry {
 				break
@@ -610,8 +608,7 @@ func (signer *Signer) BroadcastOutbound(
 		}
 		logger.Info().Msgf("BroadcastOutbound: broadcasted tx %s on chain %d nonce %d signer %s",
 			outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, myID)
-		// TODO AFTER MERGE
-		signer.reportToOutboundTracker(zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
+		signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
 		break // successful broadcast; no need to retry
 	}
 }
