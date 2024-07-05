@@ -255,6 +255,8 @@ func Test_CreateSignerObserverEVM(t *testing.T) {
 		evmChainParams     *observertypes.ChainParams
 		dbPath             string
 		numObserverCreated int
+		fail               bool
+		message            string
 	}{
 		{
 			name: "should create observers for EVM chain",
@@ -268,6 +270,7 @@ func Test_CreateSignerObserverEVM(t *testing.T) {
 			evmChainParams:     evmChainParams,
 			dbPath:             testutils.SQLiteMemory,
 			numObserverCreated: 1,
+			fail:               false,
 		},
 		{
 			name: "should not create observer for EVM chain if chain params not found",
@@ -281,9 +284,10 @@ func Test_CreateSignerObserverEVM(t *testing.T) {
 			evmChainParams:     nil,
 			dbPath:             testutils.SQLiteMemory,
 			numObserverCreated: 0,
+			fail:               false,
 		},
 		{
-			name: "should not create observer for EVM chain if endpoint is invalid",
+			name: "should fail if endpoint is invalid",
 			evmCfg: config.EVMConfig{
 				Chain:    evmChain,
 				Endpoint: "invalid_endpoint",
@@ -294,6 +298,8 @@ func Test_CreateSignerObserverEVM(t *testing.T) {
 			evmChainParams:     evmChainParams,
 			dbPath:             testutils.SQLiteMemory,
 			numObserverCreated: 0,
+			fail:               true,
+			message:            "error dailing endpoint",
 		},
 	}
 
@@ -310,7 +316,12 @@ func Test_CreateSignerObserverEVM(t *testing.T) {
 			// create observers
 			signerMap := make(map[int64]interfaces.ChainSigner)
 			observerMap := make(map[int64]interfaces.ChainObserver)
-			oc.CreateSignerObserverEVM(signerMap, observerMap)
+			err := oc.CreateSignerObserverEVM(signerMap, observerMap)
+
+			// assert error if it should fail
+			if tt.fail {
+				require.ErrorContains(t, err, tt.message)
+			}
 
 			// assert signer/observer map
 			require.Len(t, signerMap, tt.numObserverCreated)
@@ -341,6 +352,8 @@ func Test_CreateSignerObserverBTC(t *testing.T) {
 		btcChainParams     *observertypes.ChainParams
 		dbPath             string
 		numObserverCreated int
+		fail               bool
+		message            string
 	}{
 		{
 			name:               "should not create observer for BTC chain if btc config is missing",
@@ -353,7 +366,7 @@ func Test_CreateSignerObserverBTC(t *testing.T) {
 			numObserverCreated: 0,
 		},
 		{
-			name:   "should not create observer for BTC chain if chain is not enabled",
+			name:   "should fail if number of BTC chain is not 1",
 			evmCfg: config.EVMConfig{},
 			btcCfg: config.BTCConfig{
 				RPCUsername: "user",
@@ -363,9 +376,11 @@ func Test_CreateSignerObserverBTC(t *testing.T) {
 			btcChainParams:     nil, // disabled btc chain
 			dbPath:             testutils.SQLiteMemory,
 			numObserverCreated: 0,
+			fail:               true,
+			message:            "want single BTC chain, got 0",
 		},
 		{
-			name:   "should not create observer for BTC chain if failed to Ping endpoint",
+			name:   "should fail if unable to create rpc client",
 			evmCfg: config.EVMConfig{},
 			btcCfg: config.BTCConfig{
 				RPCUsername: "user",
@@ -375,6 +390,8 @@ func Test_CreateSignerObserverBTC(t *testing.T) {
 			btcChainParams:     btcChainParams,
 			dbPath:             testutils.SQLiteMemory,
 			numObserverCreated: 0,
+			fail:               true,
+			message:            "error NewRPCClient",
 		},
 	}
 
@@ -391,7 +408,12 @@ func Test_CreateSignerObserverBTC(t *testing.T) {
 			// create observers
 			signerMap := make(map[int64]interfaces.ChainSigner)
 			observerMap := make(map[int64]interfaces.ChainObserver)
-			oc.CreateSignerObserverBTC(signerMap, observerMap)
+			err := oc.CreateSignerObserverBTC(signerMap, observerMap)
+
+			// assert error if it should fail
+			if tt.fail {
+				require.ErrorContains(t, err, tt.message)
+			}
 
 			// assert signer/observer map
 			require.Len(t, signerMap, tt.numObserverCreated)
