@@ -412,6 +412,15 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
+	_, err = zts.BroadcastTx(account, observertypes.NewMsgResetChainNonces(
+		addr.String(),
+		chains.SolanaLocalnet.ChainId,
+		0,
+		0,
+	))
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to reset chain nonces of solana: %s", err.Error())
+	}
 
 	// deploy erc20 zrc20
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(

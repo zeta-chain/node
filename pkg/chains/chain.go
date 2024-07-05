@@ -72,6 +72,10 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", fmt.Errorf("address is not for network %s", chainParams.Name)
 		}
 		return addrStr, nil
+	} else if chain.Consensus == Consensus_solana_consensus {
+		addrStr := string(b)
+		//FIXME: add validation here
+		return addrStr, nil
 	}
 	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
