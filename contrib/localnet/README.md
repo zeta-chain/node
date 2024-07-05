@@ -67,3 +67,11 @@ The following are required to run the localnet:
 - [Git](https://git-scm.com/downloads)
 - [Go](https://golang.org/doc/install)
 - [jq](https://stedolan.github.io/jq/download/)
+
+
+### Integration of OP
+
+1 - Run localnet from docker-compose-optimism.yml
+2 - Run localnet from OP documentation https://docs.optimism.io/chain/testing/dev-node 
+3 - Make sure OP components are running alongside with Zeta localnet with existing EVM, BTC, and Zetachain nodes.
+4 - Deploy OP smart contracts https://docs.optimism.io/builders/chain-operators/deploy/smart-contracts
