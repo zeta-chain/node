@@ -249,7 +249,6 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 
 func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s", r.SOLZRC20Addr.String())
-	privkey := solana.MustPrivateKeyFromBase58("4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C")
 
 	solZRC20 := r.SOLZRC20
 	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
@@ -267,7 +266,10 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privkey.PublicKey().String()), amount)
+	toKey, err := solana.NewRandomPrivateKey()
+	require.NoError(r, err)
+
+	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(toKey.PublicKey().String()), amount)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

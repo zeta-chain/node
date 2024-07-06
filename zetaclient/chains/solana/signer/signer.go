@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -71,18 +72,9 @@ func (s *Signer) TryProcessOutbound(cctx *types.CrossChainTx, outboundProc *outb
 		logger.Error().Msgf("Solana TryProcessOutbound: can only send SOL to a Solana network")
 		return
 	}
-	logger.Info().
-		Msgf("Solana TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+	logger.Info().Msgf("Solana TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
 
-	//solObserver, ok := observer.(*Observer)
-	//chain := solObserver.chain
 	outboundTssNonce := params.TssNonce
-	//signerAddress, err := zetacoreClient.GetKeys().GetAddress()
-	//if err != nil {
-	//	logger.Error().Err(err).Msgf("cannot get signer address")
-	//	return
-	//}
-
 	// get size limit and gas price
 	//fee := 5000 // FIXME: this is the fixed fee (for signatures), explore priority fee for compute units
 
@@ -205,61 +197,52 @@ func (s *Signer) TryProcessOutbound(cctx *types.CrossChainTx, outboundProc *outb
 		txsig, err := s.client.SendTransactionWithOpts(
 			context.TODO(),
 			tx,
-			rpc.TransactionOpts{},
+			rpc.TransactionOpts{
+				// default PreflightCommitment is "finalized" which is too conservative
+				// and results in repeated broadcast attempts that only 1 will succeed
+				// Setting a "processed" level will simulate tx against more recent state
+				// thus fails faster after a tx is already broadcasted and processed in a block.
+				// This reduces the number of "failed" txs due to repeated broadcast attempts.
+				PreflightCommitment: rpc.CommitmentProcessed,
+			},
 		)
-		//broadcast success! see
 		if err != nil {
-			panic(err)
+			s.Logger().Std.Warn().Err(err).Msg("broadcast error")
+		} else {
+			s.Logger().Std.Info().Msgf("broadcast success! tx sig %s; waiting for confirmation...", txsig)
+			// launch a go routine with timeout to check for tx confirmation;
+			// repeatedly query until timeout or the transaction is included in a block, either with success or failure
+			go func() {
+				txsig := txsig // capture the value
+				nonce := nonce
+				t1 := time.Now()
+				for {
+					if time.Since(t1) > 2*time.Minute {
+						return
+					}
+					out, err := s.client.GetConfirmedTransactionWithOpts(context.TODO(), txsig, &rpc.GetTransactionOpts{
+						// I'd like to use "CommitmentProcessed" but it seems not supported in RPC: see https://solana.com/docs/rpc/http/gettransaction
+						Commitment: rpc.CommitmentConfirmed,
+					})
+					if err == nil {
+						if out.Meta.Err == nil { // successfully included in a block; report and exit goroutine
+							txhash, err := zetacoreClient.AddOutboundTracker(s.Chain().ChainId, nonce, txsig.String(), nil, "", -1)
+							if err != nil {
+								s.Logger().Std.Error().Err(err).Msgf("unable to add to tracker: tx %s", txsig)
+							} else {
+								s.Logger().Std.Info().Msgf("added txsig %s to outbound tracker; zeta txhash %s", txsig, txhash)
+							}
+							return
+						} else { // it's included by failed (likely competing txs succeeded). exit goroutine.
+							s.Logger().Std.Warn().Msgf("tx %s failed: %v", txsig, out.Meta.Err)
+							return
+						}
+					}
+					time.Sleep(10 * time.Second)
+				}
+			}()
 		}
-		spew.Dump(txsig)
 	}
-
-	// FIXME: add prometheus metrics
-	//_, err = zetacoreClient.GetObserverList()
-	//if err != nil {
-	//	logger.Warn().
-	//		Err(err).
-	//		Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
-	//}
-	//if tx != nil {
-	//	outboundHash := tx.TxHash().String()
-	//	logger.Info().
-	//		Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, signerAddress)
-	//
-	//	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
-	//	backOff := broadcastBackoff
-	//	for i := 0; i < broadcastRetries; i++ {
-	//		time.Sleep(backOff)
-	//		err := signer.Broadcast(tx)
-	//		if err != nil {
-	//			logger.Warn().
-	//				Err(err).
-	//				Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
-	//			backOff *= 2
-	//			continue
-	//		}
-	//		logger.Info().
-	//			Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
-	//		zetaHash, err := zetacoreClient.AddOutboundTracker(
-	//			chain.ChainId,
-	//			outboundTssNonce,
-	//			outboundHash,
-	//			nil,
-	//			"",
-	//			-1,
-	//		)
-	//		if err != nil {
-	//			logger.Err(err).
-	//				Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.ChainName, outboundHash)
-	//		}
-	//		logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
-	//
-	//		// Save successfully broadcasted transaction to btc chain observer
-	//		btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)
-	//
-	//		break // successful broadcast; no need to retry
-	//	}
-	//}
 }
 
 func (s *Signer) SetZetaConnectorAddress(address ethcommon.Address) {
