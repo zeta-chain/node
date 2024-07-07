@@ -70,7 +70,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(
 	refundAmount := GetAbortedAmount(cctx)
 	chainID := cctx.InboundParams.SenderChainId
 	// check if chain is an EVM chain
-	if !chains.IsEVMChain(chainID) {
+	if !chains.IsEVMChain(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		return errors.New("only EVM chains are supported for refund when coin type is Zeta")
 	}
 	if cctx.InboundParams.Amount.IsNil() || cctx.InboundParams.Amount.IsZero() {
@@ -96,7 +96,7 @@ func (k Keeper) RefundAmountOnZetaChainERC20(
 	if cctx.InboundParams.CoinType != coin.CoinType_ERC20 {
 		return errors.New("unsupported coin type for refund on ZetaChain")
 	}
-	if !chains.IsEVMChain(cctx.InboundParams.SenderChainId) {
+	if !chains.IsEVMChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		return errors.New("only EVM chains are supported for refund on ZetaChain")
 	}
 

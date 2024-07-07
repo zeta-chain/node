@@ -83,7 +83,7 @@ func NewClient(
 		seqMap[keyType] = 0
 	}
 
-	zetaChain, err := chains.ZetaChainFromChainID(chainID)
+	zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid chain id %s, %w", chainID, err)
 	}
@@ -111,7 +111,7 @@ func (c *Client) UpdateChainID(chainID string) error {
 	if c.chainID != chainID {
 		c.chainID = chainID
 
-		zetaChain, err := chains.ZetaChainFromChainID(chainID)
+		zetaChain, err := chains.ZetaChainFromCosmosChainID(chainID)
 		if err != nil {
 			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
 		}
@@ -193,11 +193,7 @@ func (c *Client) WaitForZetacoreToCreateBlocks() error {
 
 // UpdateZetacoreContext updates zetacore context
 // zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(
-	coreContext *context.ZetacoreContext,
-	init bool,
-	sampledLogger zerolog.Logger,
-) error {
+func (c *Client) UpdateZetacoreContext(coreContext *context.AppContext, init bool, sampledLogger zerolog.Logger) error {
 	bn, err := c.GetBlockHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get zetablock height: %w", err)
@@ -212,6 +208,11 @@ func (c *Client) UpdateZetacoreContext(
 			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
 				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
 		c.pause <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
+	}
+
+	additionalChains, err := c.GetAdditionalChains()
+	if err != nil {
+		return fmt.Errorf("failed to additional chains: %w", err)
 	}
 
 	chainParams, err := c.GetChainParams()
@@ -229,9 +230,9 @@ func (c *Client) UpdateZetacoreContext(
 			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
-		if chains.IsBitcoinChain(chainParam.ChainId) {
+		if chains.IsBitcoinChain(chainParam.ChainId, additionalChains) {
 			newBTCParams = chainParam
-		} else if chains.IsEVMChain(chainParam.ChainId) {
+		} else if chains.IsEVMChain(chainParam.ChainId, additionalChains) {
 			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}
@@ -242,7 +243,7 @@ func (c *Client) UpdateZetacoreContext(
 	}
 	newChains := make([]chains.Chain, len(supportedChains))
 	for i, chain := range supportedChains {
-		newChains[i] = *chain
+		newChains[i] = chain
 	}
 	keyGen, err := c.GetKeyGen()
 	if err != nil {
@@ -276,9 +277,9 @@ func (c *Client) UpdateZetacoreContext(
 		newBTCParams,
 		tssPubKey,
 		crosschainFlags,
+		additionalChains,
 		blockHeaderEnabledChains,
 		init,
-		c.logger,
 	)
 
 	return nil

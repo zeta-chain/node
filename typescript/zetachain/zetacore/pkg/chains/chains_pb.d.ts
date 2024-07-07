@@ -132,6 +132,21 @@ export declare enum ChainName {
    * @generated from enum value: base_sepolia = 20;
    */
   base_sepolia = 20,
+
+  /**
+   * @generated from enum value: solana_mainnet = 21;
+   */
+  solana_mainnet = 21,
+
+  /**
+   * @generated from enum value: solana_devnet = 22;
+   */
+  solana_devnet = 22,
+
+  /**
+   * @generated from enum value: solana_localnet = 23;
+   */
+  solana_localnet = 23,
 }
 
 /**
@@ -176,6 +191,11 @@ export declare enum Network {
    * @generated from enum value: base = 6;
    */
   base = 6,
+
+  /**
+   * @generated from enum value: solana = 7;
+   */
+  solana = 7,
 }
 
 /**
@@ -222,6 +242,11 @@ export declare enum Vm {
    * @generated from enum value: evm = 1;
    */
   evm = 1,
+
+  /**
+   * @generated from enum value: svm = 2;
+   */
+  svm = 2,
 }
 
 /**
@@ -251,6 +276,11 @@ export declare enum Consensus {
    * @generated from enum value: op_stack = 3;
    */
   op_stack = 3,
+
+  /**
+   * @generated from enum value: solana_consensus = 4;
+   */
+  solana_consensus = 4,
 }
 
 /**

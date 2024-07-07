@@ -29,8 +29,8 @@ func (k Keeper) VoteOnInboundBallot(
 	// makes sure we are getting only supported chains
 	// if a chain support has been turned on using gov proposal
 	// this function returns nil
-	senderChain := k.GetSupportedChainFromChainID(ctx, senderChainID)
-	if senderChain == nil {
+	senderChain, found := k.GetSupportedChainFromChainID(ctx, senderChainID)
+	if !found {
 		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			senderChainID,
@@ -44,8 +44,8 @@ func (k Keeper) VoteOnInboundBallot(
 	}
 
 	// makes sure we are getting only supported chains
-	receiverChain := k.GetSupportedChainFromChainID(ctx, receiverChainID)
-	if receiverChain == nil {
+	receiverChain, found := k.GetSupportedChainFromChainID(ctx, receiverChainID)
+	if !found {
 		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			receiverChainID,

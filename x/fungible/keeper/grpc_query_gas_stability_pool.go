@@ -57,9 +57,6 @@ func (k Keeper) GasStabilityPoolBalanceAll(
 	chains := k.observerKeeper.GetSupportedChains(ctx)
 	balances := make([]types.QueryAllGasStabilityPoolBalanceResponse_Balance, 0, len(chains))
 	for _, chain := range chains {
-		if chain == nil {
-			return nil, status.Error(codes.Internal, "invalid chain")
-		}
 		chainID := chain.ChainId
 
 		balance, err := k.GetGasStabilityPoolBalance(ctx, chainID)

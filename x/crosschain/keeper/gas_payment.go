@@ -97,7 +97,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 			cctx.InboundParams.CoinType.String(),
 		)
 	}
-	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
+	if _, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); !found {
 		return observertypes.ErrSupportedChains
 	}
 
@@ -151,7 +151,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		)
 	}
 
-	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
+	if _, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); !found {
 		return observertypes.ErrSupportedChains
 	}
 	// get gas params
@@ -300,7 +300,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		)
 	}
 
-	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
+	if _, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); !found {
 		return observertypes.ErrSupportedChains
 	}
 

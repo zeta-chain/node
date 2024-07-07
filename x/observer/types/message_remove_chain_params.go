@@ -4,8 +4,6 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgRemoveChainParams = "remove_chain_params"
@@ -44,12 +42,6 @@ func (msg *MsgRemoveChainParams) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-
-	// Check if chain exists
-	chain := chains.GetChainFromChainID(msg.ChainId)
-	if chain == nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain id (%d)", msg.ChainId)
 	}
 
 	return nil

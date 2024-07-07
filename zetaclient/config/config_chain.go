@@ -1,6 +1,10 @@
 package config
 
-import "github.com/zeta-chain/zetacore/pkg/chains"
+import (
+	"sync"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
+)
 
 const (
 	MaxBlocksPerPeriod = 100
@@ -32,6 +36,7 @@ func GetERC20CustodyABI() string {
 // It is initialize with default chain configs
 func New() Config {
 	return Config{
+		cfgLock:         &sync.RWMutex{},
 		EVMChainConfigs: evmChainsConfigs,
 		BitcoinConfig:   bitcoinConfigRegnet,
 	}

@@ -112,7 +112,7 @@ func NewObserver(
 	chain chains.Chain,
 	btcClient interfaces.BTCRPCClient,
 	chainParams observertypes.ChainParams,
-	zetacoreContext *context.ZetacoreContext,
+	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -123,7 +123,7 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacoreContext,
+		appContext,
 		zetacoreClient,
 		tss,
 		btcBlocksPerDay,

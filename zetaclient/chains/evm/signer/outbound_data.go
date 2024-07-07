@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
 const (
@@ -69,7 +70,7 @@ func (txData *OutboundData) SetupGas(
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
-	chain *chains.Chain,
+	chain chains.Chain,
 ) error {
 	txData.gasLimit = cctx.GetCurrentOutboundParam().GasLimit
 	if txData.gasLimit < MinGasLimit {
@@ -89,10 +90,10 @@ func (txData *OutboundData) SetupGas(
 	// we should possibly remove it completely and return an error if no GasPrice is provided because it means no fee is processed on ZetaChain
 	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutboundParam().GasPrice, 10)
 	if !ok {
-		if chains.IsEthereumChain(chain.ChainId) {
+		if chain.Network == chains.Network_eth {
 			suggested, err := client.SuggestGasPrice(context.Background())
 			if err != nil {
-				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain))
+				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain.String()))
 			}
 			txData.gasPrice = roundUpToNearestGwei(suggested)
 		} else {
@@ -111,6 +112,7 @@ func (txData *OutboundData) SetupGas(
 //     cctx will be skipped and false otherwise.
 //  3. error
 func NewOutboundData(
+	appontext *clientcontext.AppContext,
 	cctx *types.CrossChainTx,
 	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
@@ -132,8 +134,8 @@ func NewOutboundData(
 		return nil, true, nil
 	}
 
-	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
-	if toChain == nil {
+	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), appontext.GetAdditionalChains())
+	if !found {
 		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}
 
@@ -156,7 +158,7 @@ func NewOutboundData(
 
 	// Get sendHash
 	logger.Info().
-		Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
+		Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain.String(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
 	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(cctxIndex) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)

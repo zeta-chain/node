@@ -261,24 +261,14 @@ func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainm
 	return cfk
 }
 
-func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
-	if senderChain != nil {
-		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(senderChain).Once()
-	} else {
-		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
-			Return(&chains.Chain{}).Once()
-	}
+func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) {
+	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+		Return(senderChain, true).Once()
 }
 
-func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
-	if senderChain != nil {
-		m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-			Return(nil).Once()
-	} else {
-		m.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).
-			Return(nil).Once()
-	}
+func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) {
+	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+		Return(chains.Chain{}, false).Once()
 }
 
 func MockGetRevertGasLimitForERC20(
@@ -304,7 +294,7 @@ func MockPayGasAndUpdateCCTX(
 	asset string,
 ) {
 	m2.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-		Return(&senderChain).Twice()
+		Return(senderChain, true).Twice()
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 		Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
@@ -340,7 +330,7 @@ func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain ch
 	nonce = uint64(1)
 	tss := sample.Tss()
 	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
-		Return(senderChain)
+		Return(senderChain, true).Once()
 	m.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 		Return(observertypes.ChainNonces{Nonce: nonce}, true)
 	m.On("GetTSS", mock.Anything).

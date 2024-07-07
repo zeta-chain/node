@@ -28,11 +28,7 @@ export DOCKER_BUILDKIT := 1
 
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
-export LOCALNET_MODE
 export E2E_ARGS := $(E2E_ARGS)
-export UPGRADE_HEIGHT
-export ZETACORED_IMPORT_GENESIS_DATA
-export ZETACORED_START_PERIOD := 30s
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
@@ -215,8 +211,9 @@ start-localnet-skip-build:
 	export LOCALNET_MODE=setup-only && \
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
 
+# stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
-	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+	cd contrib/localnet/ && $(DOCKER) compose --profile all down --remove-orphans
 
 ###############################################################################
 ###                         E2E tests               						###
@@ -244,7 +241,7 @@ start-e2e-test: zetanode
 start-e2e-admin-test: zetanode
 	@echo "--> Starting e2e admin test"
 	export E2E_ARGS="--skip-regular --test-admin" && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-additionalevm.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose --profile eth2 -f docker-compose.yml up -d
 
 start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
@@ -259,7 +256,7 @@ start-e2e-import-mainnet-test: zetanode
 
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stress.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose --profile stress -f docker-compose.yml up -d
 
 start-migrate-test: zetanode
 	@echo "--> Starting migration test"
@@ -281,13 +278,13 @@ start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
@@ -295,7 +292,8 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
 ###############################################################################
 ###                              Monitoring                                 ###
 ###############################################################################

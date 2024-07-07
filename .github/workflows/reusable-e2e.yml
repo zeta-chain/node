@@ -1,0 +1,120 @@
+name: Reusable E2E Testing Workflow
+on:
+  workflow_call:
+    inputs:
+      make-target:
+        description: 'Makefile target to execute in the Start Test step'
+        required: true
+        type: string
+      timeout-minutes:
+        description: 'The maximum number of minutes the job can run'
+        type: number
+        default: 25
+      run:
+        description: 'Whether to run the job or not'
+        required: true
+        type: boolean
+      runs-on:
+        description: 'The runner to use for the job'
+        required: true
+        type: string
+        default: 'ubuntu-20.04'
+
+jobs:
+  e2e:
+    if: ${{ inputs.run }}
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      # configure docker to use the containerd snapshotter
+      # so that we can use the buildkit cache
+      - uses: depot/use-containerd-snapshotter-action@v1
+
+      - name: Login to Docker Hub registry
+        uses: docker/login-action@v3
+        if: (github.event_name == 'push' && github.repository == 'zeta-chain/node') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'zeta-chain/node')
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
+      - name: Login to github docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore go cache
+        uses: actions/cache@v4
+        id: restore-go-cache
+        with:
+          path: |
+            go-cache
+          key: cache-${{ hashFiles('go.sum') }}
+
+      - name: Inject go cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        with:
+          cache-map: |
+            {
+              "go-cache": "/root/.cache/go-build"
+            }
+          skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit || github.event_name != 'push' }}
+
+      # build zetanode with cache options
+      - name: Build zetanode for cache
+        uses: docker/build-push-action@v6
+        env:
+          CACHE_FROM_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache"
+          CACHE_TO_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max"
+        with:
+          context: .
+          file: ./Dockerfile-localnet
+          push: false
+          tags: zetanode:latest
+          cache-from: ${{ env.CACHE_FROM_CONFIG }}
+          cache-to: ${{ github.event_name == 'push' && env.CACHE_TO_CONFIG || '' }}
+          target: latest-runtime
+
+      - name: Start Test
+        run: make ${{ inputs.make-target }}
+
+      # use docker logs -f rather than docker attach to make sure we get the initial logs
+      - name: Watch Test
+        run: |
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs -f "${container_id}" &
+          exit $(docker wait "${container_id}")
+
+      - name: Full Log Dump On Failure
+        if: failure()
+        run: |
+          cd contrib/localnet && docker compose --profile all logs --timestamps > /tmp/logs.txt
+
+      - name: Upload Logs On Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.make-target }}-docker-logs
+          path: /tmp/logs.txt
+
+      - name: Notify Slack on Failure
+        if: failure() && (github.event_name == 'push' && github.ref == 'refs/heads/develop') || github.event_name == 'schedule'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
+
+      - name: Stop Private Network
+        if: always()
+        run: |
+          make stop-localnet
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: sudo rm -rf *

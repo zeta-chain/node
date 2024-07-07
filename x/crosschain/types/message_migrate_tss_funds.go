@@ -5,8 +5,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgMigrateTssFunds = "MigrateTssFunds"
@@ -47,9 +45,7 @@ func (msg *MsgMigrateTssFunds) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if chains.GetChainFromChainID(msg.ChainId) == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
-	}
+
 	if msg.Amount.IsZero() {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "amount cannot be zero")
 	}
