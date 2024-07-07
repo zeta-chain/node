@@ -204,23 +204,17 @@ func start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 
+	// Create TSS server
 	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
 	}
+	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
-	err = GenerateTss(
-		appContext,
-		masterLogger,
-		zetacoreClient,
-		peers,
-		priKey,
-		telemetryServer,
-		tssHistoricalList,
-		tssKeyPass,
-		hotkeyPass,
-		server,
-	)
+
+	// Generate a new TSS if keygen is set and add it into the tss server
+	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
+	err = GenerateTss(appContext, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}
@@ -232,15 +226,10 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	tss, err := mc.NewTSS(
 		appContext,
-		peers,
-		priKey,
-		preParams,
 		zetacoreClient,
 		tssHistoricalList,
 		bitcoinChainID,
-		tssKeyPass,
 		hotkeyPass,
-		true,
 		server,
 	)
 	if cfg.TestTssKeysign {
@@ -261,9 +250,6 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 		break
 	}
-
-	keyGen := appContext.ZetacoreContext().GetKeygen()
-	tss.Signers = keyGen.GranteePubkeys
 
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set

@@ -7,11 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/rs/zerolog"
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
-	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"golang.org/x/crypto/sha3"
@@ -24,7 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// GenerateTss generates a new TSS
+// GenerateTss generates a new TSS if keygen is set.
+// If a TSS was generated successfully in the past,and the keygen was successful, the function will return without doing anything.
 // If a keygen has been set the functions will wait for the correct block to arrive and generate a new TSS.
 // In case of a successful keygen a TSS success vote is broadcasted to zetacore and the newly generate TSS is tested. The generated keyshares are stored in the correct directory
 // In case of a failed keygen a TSS failed vote is broadcasted to zetacore.
@@ -32,19 +31,8 @@ func GenerateTss(
 	appContext *context.AppContext,
 	logger zerolog.Logger,
 	zetaCoreClient *zetacore.Client,
-	peers p2p.AddrList,
-	priKey secp256k1.PrivKey,
-	ts *metrics.TelemetryServer,
-	tssHistoricalList []observertypes.TSS,
-	tssPassword string,
-	hotkeyPassword string,
 	keygenTssServer *tss.TssServer) error {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
-	//keygenTssServer, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssPassword, false)
-	//if err != nil {
-	//	keygenLogger.Error().Err(err).Msg("NewTSS server error")
-	//	return err
-	//}
 
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
@@ -60,7 +48,6 @@ func GenerateTss(
 		// Break out of loop only when TSS is generated successfully, either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
-
 		keyGen := appContext.GetKeygen()
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return nil

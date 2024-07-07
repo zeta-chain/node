@@ -17,7 +17,7 @@ func (k Keeper) ValidateInbound(
 	shouldPayGas bool,
 ) (*types.CrossChainTx, error) {
 
-	err := k.IsMigration(ctx, msg)
+	err := k.CheckMigration(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -57,11 +57,17 @@ func (k Keeper) ValidateInbound(
 	return &cctx, nil
 }
 
-func (k Keeper) IsMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error {
+// CheckMigration checks if the sender is a TSS address and returns an error if it is.
+// If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit.
+func (k Keeper) CheckMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 	historicalTssList := k.zetaObserverKeeper.GetAllTSS(ctx)
-	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
+	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
+	if !found {
+		return observertypes.ErrSupportedChains.Wrapf("chain not found for chainID %d", msg.SenderChainId)
+	}
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 	for _, tss := range historicalTssList {
-		if chains.IsEVMChain(chain.ChainId) {
+		if chains.IsEVMChain(chain.ChainId, additionalChains) {
 			ethTssAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
 			if err != nil {
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
@@ -70,7 +76,7 @@ func (k Keeper) IsMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 				ctx.Logger().Info("Sender is a TSS, cannot create CCTX")
 				return types.ErrTssAddress
 			}
-		} else if chains.IsBitcoinChain(chain.ChainId) {
+		} else if chains.IsBitcoinChain(chain.ChainId, additionalChains) {
 			bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 			if err != nil {
 				return err
@@ -80,11 +86,9 @@ func (k Keeper) IsMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
 			}
 			if btcTssAddress == msg.Sender {
-				ctx.Logger().Info("Sender is a TSS, cannot create CCTX")
 				return types.ErrTssAddress
 			}
 		}
-
 	}
 	return nil
 }

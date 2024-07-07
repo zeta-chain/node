@@ -84,6 +84,7 @@ func newZetaclientdSupervisor(
 	if err != nil {
 		return nil, fmt.Errorf("grpc dial: %w", err)
 	}
+	// these signals will result in the supervisor process only restarting zetaclientd
 	restartChan := make(chan os.Signal, 1)
 	return &zetaclientdSupervisor{
 		zetacoredConn:      conn,
@@ -208,7 +209,7 @@ func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
 			tss = tssNew
 			s.logger.Warn().Msg(fmt.Sprintf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey))
 			time.Sleep(6 * time.Second)
-			s.logger.Warn().Msg("restarting zetaclientd to update tss address")
+			s.logger.Info().Msg("restarting zetaclientd to update tss address")
 			s.restartChan <- syscall.SIGHUP
 		}
 	}
@@ -253,7 +254,7 @@ func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
 			tssLenCurrent = tssLenUpdated
 			s.logger.Warn().Msg(fmt.Sprintf("tss list updated from %d to %d", tssLenCurrent, tssLenUpdated))
 			time.Sleep(5 * time.Second)
-			s.logger.Warn().Msg("restarting zetaclientd to update tss list")
+			s.logger.Info().Msg("restarting zetaclientd to update tss list")
 			s.restartChan <- syscall.SIGHUP
 		}
 	}
@@ -287,7 +288,7 @@ func (s *zetaclientdSupervisor) handleNewKeygen(ctx context.Context) {
 			continue
 		}
 		prevKeygenBlock = keygenBlock
-		s.logger.Warn().Msgf("got new keygen at block %d", keygenBlock)
+		s.logger.Info().Msgf("got new keygen at block %d", keygenBlock)
 		s.restartChan <- syscall.SIGHUP
 	}
 }

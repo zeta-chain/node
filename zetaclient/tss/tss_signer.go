@@ -88,25 +88,16 @@ type TSS struct {
 	BitcoinChainID int64
 }
 
-// NewTSS creates a new TSS instance
+// NewTSS creates a new TSS instance which can be used to sign transactions
 func NewTSS(
 	appContext *appcontext.AppContext,
-	peer p2p.AddrList,
-	privkey tmcrypto.PrivKey,
-	preParams *keygen.LocalPreParams,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
 	bitcoinChainID int64,
-	tssPassword string,
 	hotkeyPassword string,
-	enableMonitor bool,
 	tssServer *tss.TssServer,
 ) (*TSS, error) {
 	logger := log.With().Str("module", "tss_signer").Logger()
-	//server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword, enableMonitor)
-	//if err != nil {
-	//	return nil, fmt.Errorf("SetupTSSServer error: %w", err)
-	//}
 
 	newTss := TSS{
 		Server:          tssServer,
@@ -143,6 +134,8 @@ func NewTSS(
 		metrics.TssNodeBlamePerPubKey.WithLabelValues(key).Inc()
 	}
 	metrics.NumActiveMsgSigns.Set(0)
+
+	newTss.Signers = appContext.GetKeygen().GranteePubkeys
 
 	return &newTss, nil
 }
