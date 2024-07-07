@@ -34,7 +34,6 @@ func (r *E2ERunner) CheckZRC20ReserveAndSupply() error {
 }
 
 func (r *E2ERunner) checkEthTSSBalance() error {
-
 	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
