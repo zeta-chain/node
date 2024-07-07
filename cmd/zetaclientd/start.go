@@ -20,10 +20,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -31,6 +30,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
+	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 )
 
 type Multiaddr = core.Multiaddr

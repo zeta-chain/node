@@ -9,6 +9,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
@@ -19,7 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -331,7 +332,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		migrationStartTime := time.Now()
 		logger.Print("🏁 starting tss migration")
 
-		response, err := deployerRunner.CctxClient.LastZetaHeight(migrationCtx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		response, err := deployerRunner.CctxClient.LastZetaHeight(
+			migrationCtx,
+			&crosschaintypes.QueryLastZetaHeightRequest{},
+		)
 		require.NoError(deployerRunner, err)
 		err = zetaTxServer.UpdateKeygen(response.Height)
 		require.NoError(deployerRunner, err)

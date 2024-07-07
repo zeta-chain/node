@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/e2e/e2etests"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 

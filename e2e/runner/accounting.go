@@ -9,6 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -42,9 +43,12 @@ func (r *E2ERunner) checkEthTSSBalance() error {
 	tssTotalBalance := big.NewInt(0)
 
 	for _, tssAddress := range allTssAddress.TssList {
-		evmAddress, err := r.ObserverClient.GetTssAddressByFinalizedHeight(r.Ctx, &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
-			FinalizedZetaHeight: tssAddress.FinalizedZetaHeight,
-		})
+		evmAddress, err := r.ObserverClient.GetTssAddressByFinalizedHeight(
+			r.Ctx,
+			&observertypes.QueryGetTssAddressByFinalizedHeightRequest{
+				FinalizedZetaHeight: tssAddress.FinalizedZetaHeight,
+			},
+		)
 		if err != nil {
 			continue
 		}

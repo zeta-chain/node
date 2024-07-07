@@ -11,11 +11,11 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/tss"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
@@ -120,7 +120,12 @@ func GenerateTss(
 // keygenTss generates a new TSS using the keygen request and the TSS server.
 // If the keygen is successful, the function returns the new TSS pubkey.
 // If the keygen is unsuccessful, the function posts blame and returns an error.
-func keygenTss(keyGen observertypes.Keygen, tssServer tss.TssServer, zetacoreClient interfaces.ZetacoreClient, keygenLogger zerolog.Logger) (string, error) {
+func keygenTss(
+	keyGen observertypes.Keygen,
+	tssServer tss.TssServer,
+	zetacoreClient interfaces.ZetacoreClient,
+	keygenLogger zerolog.Logger,
+) (string, error) {
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request
 	req = keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0")

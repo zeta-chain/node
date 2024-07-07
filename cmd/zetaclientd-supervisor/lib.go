@@ -19,9 +19,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/rs/zerolog"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
 
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -207,7 +207,8 @@ func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
 			}
 
 			tss = tssNew
-			s.logger.Warn().Msg(fmt.Sprintf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey))
+			s.logger.Warn().
+				Msg(fmt.Sprintf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey))
 			time.Sleep(6 * time.Second)
 			s.logger.Info().Msg("restarting zetaclientd to update tss address")
 			s.restartChan <- syscall.SIGHUP

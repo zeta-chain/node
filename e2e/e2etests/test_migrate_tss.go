@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
@@ -87,7 +88,10 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	// Fetch migrator cctx for eth migration
-	migrator, err = r.ObserverClient.TssFundsMigratorInfo(r.Ctx, &observertypes.QueryTssFundsMigratorInfoRequest{ChainId: evmChainID.Int64()})
+	migrator, err = r.ObserverClient.TssFundsMigratorInfo(
+		r.Ctx,
+		&observertypes.QueryTssFundsMigratorInfoRequest{ChainId: evmChainID.Int64()},
+	)
 	require.NoError(r, err)
 	cctxETHMigration := migrator.TssFundsMigrator.MigrationCctxIndex
 
@@ -149,7 +153,11 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info(fmt.Sprintf("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount))
 
 	// btcTSSBalanceNew should be less than btcTSSBalanceOld as there is some loss of funds during migration
-	require.Equal(r, strconv.FormatInt(int64(btcTSSBalanceNew*1e8), 10), cctxBTC.GetCurrentOutboundParam().Amount.String())
+	require.Equal(
+		r,
+		strconv.FormatInt(int64(btcTSSBalanceNew*1e8), 10),
+		cctxBTC.GetCurrentOutboundParam().Amount.String(),
+	)
 	require.LessOrEqual(r, btcTSSBalanceNew*1e8, btcTSSBalanceOld*1e8)
 
 	// ETH

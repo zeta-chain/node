@@ -182,7 +182,9 @@ func (k Keeper) MigrateTSSFundsForChain(
 			)
 		}
 
-		cctx.GetCurrentOutboundParam().Amount = amount.Sub(evmFee.Add(sdkmath.NewUintFromString(types.TSSMigrationBufferAmountEVM)))
+		cctx.GetCurrentOutboundParam().Amount = amount.Sub(
+			evmFee.Add(sdkmath.NewUintFromString(types.TSSMigrationBufferAmountEVM)),
+		)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
 	if chains.IsBitcoinChain(chainID, additionalChains) {

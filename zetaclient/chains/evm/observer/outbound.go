@@ -376,8 +376,9 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 			}
 		}
 		if !isOldTssAddress {
-			log.Error().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not current or old TSS address. Current TSS %s",
-				from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
+			log.Error().
+				Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not current or old TSS address. Current TSS %s",
+					from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
 			return nil, nil, false
 		}
 	}
@@ -407,7 +408,9 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	// check confirmations
 	lastHeight, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
-		log.Error().Err(err).Msgf("confirmTxByHash: error getting block number for chain %d", ob.GetChainParams().ChainId)
+		log.Error().
+			Err(err).
+			Msgf("confirmTxByHash: error getting block number for chain %d", ob.GetChainParams().ChainId)
 		return nil, nil, false
 	}
 	if !ob.HasEnoughConfirmations(receipt, lastHeight) {

@@ -224,7 +224,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.UpdateTssAddress(ctx, &msg)
-		require.ErrorContains(t, err, "cannot update tss address incorrect number of migrations have been created and completed: unable to update TSS address")
+		require.ErrorContains(
+			t,
+			err,
+			"cannot update tss address incorrect number of migrations have been created and completed: unable to update TSS address",
+		)
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		require.True(t, found)

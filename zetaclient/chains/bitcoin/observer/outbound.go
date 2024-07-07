@@ -138,7 +138,6 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
 		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
 		if nonce == 0 {
-			fmt.Println("IsOutboundProcessed: nonce is zero")
 			return true, false, nil
 		}
 
@@ -167,7 +166,11 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutbound()
 	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
-		fmt.Printf("IsOutboundProcessed: outbound not confirmed yet %d: %d", res.Confirmations, ob.ConfirmationsThreshold(amountInSat))
+		fmt.Printf(
+			"IsOutboundProcessed: outbound not confirmed yet %d: %d",
+			res.Confirmations,
+			ob.ConfirmationsThreshold(amountInSat),
+		)
 		return true, false, nil
 	}
 

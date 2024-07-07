@@ -385,7 +385,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
 		feeCalculated := sdk.NewUint(cctx.GetCurrentOutboundParam().GasLimit).
-			Mul(sdkmath.NewUintFromString(cctx.GetCurrentOutboundParam().GasPrice)).Add(sdkmath.NewUintFromString(crosschaintypes.TSSMigrationBufferAmountEVM))
+			Mul(sdkmath.NewUintFromString(cctx.GetCurrentOutboundParam().GasPrice)).
+			Add(sdkmath.NewUintFromString(crosschaintypes.TSSMigrationBufferAmountEVM))
 		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.String(), amount.Sub(feeCalculated).String())
 	})
 
