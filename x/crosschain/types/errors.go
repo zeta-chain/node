@@ -50,4 +50,6 @@ var (
 	ErrMaxTxOutTrackerHashesReached  = errorsmod.Register(ModuleName, 1153, "max tx out tracker hashes reached")
 	ErrInitiatitingOutbound          = errorsmod.Register(ModuleName, 1154, "cannot initiate outbound")
 	ErrInvalidWithdrawalAmount       = errorsmod.Register(ModuleName, 1155, "invalid withdrawal amount")
+
+	ErrTssAddress = errorsmod.Register(ModuleName, 1156, "sender cannot be a TSS address")
 )

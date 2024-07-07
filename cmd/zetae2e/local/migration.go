@@ -35,7 +35,7 @@ func migrationTestRoutine(
 			conf,
 			deployerRunner,
 			account,
-			runner.NewLogger(verbose, color.FgHiWhite, "migration"),
+			runner.NewLogger(verbose, color.FgHiGreen, "migration"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
@@ -44,24 +44,6 @@ func migrationTestRoutine(
 
 		migrationTestRunner.Logger.Print("🏃 starting migration tests")
 		startTime := time.Now()
-
-		//migrationTestRunner.SetupBitcoinAccount(false)
-		//migrationTestRunner.DepositBTC(false)
-
-		//// funding the account
-		//// we transfer around the total supply of Zeta to the admin for the chain migration test
-		//txZetaSend := deployerRunner.SendZetaOnEvm(UserAdminAddress, 20_500_000_000)
-		//txERC20Send := deployerRunner.SendERC20OnEvm(UserAdminAddress, 1000)
-		//migrationTestRunner.WaitForTxReceiptOnEvm(txZetaSend)
-		//migrationTestRunner.WaitForTxReceiptOnEvm(txERC20Send)
-		//
-		//// depositing the necessary tokens on ZetaChain
-		//txZetaDeposit := migrationTestRunner.DepositZeta()
-		//txEtherDeposit := migrationTestRunner.DepositEther(false)
-		//txERC20Deposit := migrationTestRunner.DepositERC20()
-		//migrationTestRunner.WaitForMinedCCTX(txZetaDeposit)
-		//migrationTestRunner.WaitForMinedCCTX(txEtherDeposit)
-		//migrationTestRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		if len(testNames) == 0 {
 			migrationTestRunner.Logger.Print("🍾 migration tests completed in %s", time.Since(startTime).String())
@@ -78,6 +60,10 @@ func migrationTestRoutine(
 
 		if err := migrationTestRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("migration tests failed: %v", err)
+		}
+
+		if err := migrationTestRunner.CheckBtcTSSBalance(); err != nil {
+			migrationTestRunner.Logger.Print("🍾 BTC check error")
 		}
 
 		migrationTestRunner.Logger.Print("🍾 migration tests completed in %s", time.Since(startTime).String())

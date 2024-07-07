@@ -57,7 +57,6 @@ func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 
 // GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address
 func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, error) {
-	r.Logger.Print(fmt.Sprintf("⚙️ getting top 20 UTXOs for TSS address %s", r.BTCTSSAddress))
 	// query UTXOs from node
 	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(
 		0,

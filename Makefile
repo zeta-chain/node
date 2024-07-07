@@ -235,7 +235,10 @@ install-zetae2e: go.sum
 
 start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
-	export LOCALNET_MODE=migrate && \
+	cd contrib/localnet/ && $(DOCKER) compose up -d
+
+start-e2e-test: zetanode
+	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
 start-e2e-admin-test: zetanode
@@ -257,6 +260,11 @@ start-e2e-import-mainnet-test: zetanode
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stress.yml up -d
+
+start-migrate-test: zetanode
+	@echo "--> Starting migration test"
+	export E2E_ARGS="--test-migration" && \
+	cd contrib/localnet/ && $(DOCKER) compose up -d
 
 ###############################################################################
 ###                         Upgrade Tests              						###
