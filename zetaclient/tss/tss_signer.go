@@ -438,7 +438,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 }
 
 func (tss *TSS) EVMAddressList() []ethcommon.Address {
-	var addresses []ethcommon.Address
+	addresses := make([]ethcommon.Address, 0)
 	for _, key := range tss.Keys {
 		addr, err := GetTssAddrEVM(key.PubkeyInBech32)
 		if err != nil {

@@ -33,9 +33,9 @@ func (r *E2ERunner) CheckZRC20ReserveAndSupply() error {
 	return r.checkZetaTSSBalance()
 }
 
-func (runner *E2ERunner) checkEthTSSBalance() error {
+func (r *E2ERunner) checkEthTSSBalance() error {
 
-	allTssAddress, err := runner.ObserverClient.TssHistory(runner.Ctx, &observertypes.QueryTssHistoryRequest{})
+	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
 	}
@@ -43,33 +43,32 @@ func (runner *E2ERunner) checkEthTSSBalance() error {
 	tssTotalBalance := big.NewInt(0)
 
 	for _, tssAddress := range allTssAddress.TssList {
-		evmAddress, err := runner.ObserverClient.GetTssAddressByFinalizedHeight(runner.Ctx, &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
+		evmAddress, err := r.ObserverClient.GetTssAddressByFinalizedHeight(r.Ctx, &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
 			FinalizedZetaHeight: tssAddress.FinalizedZetaHeight,
 		})
 		if err != nil {
 			continue
 		}
 
-		tssBal, err := runner.EVMClient.BalanceAt(runner.Ctx, common.HexToAddress(evmAddress.Eth), nil)
+		tssBal, err := r.EVMClient.BalanceAt(r.Ctx, common.HexToAddress(evmAddress.Eth), nil)
 		if err != nil {
 			continue
 		}
 		tssTotalBalance.Add(tssTotalBalance, tssBal)
 	}
 
-	zrc20Supply, err := runner.ETHZRC20.TotalSupply(&bind.CallOpts{})
+	zrc20Supply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
 	if tssTotalBalance.Cmp(zrc20Supply) < 0 {
 		return fmt.Errorf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssTotalBalance, zrc20Supply)
 	}
-	runner.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssTotalBalance, zrc20Supply)
+	r.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssTotalBalance, zrc20Supply)
 	return nil
 }
 
 func (r *E2ERunner) CheckBtcTSSBalance() error {
-
 	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
@@ -91,19 +90,7 @@ func (r *E2ERunner) CheckBtcTSSBalance() error {
 				tssTotalBalance += utxo.Amount
 			}
 		}
-
 	}
-
-	//utxos, err := r.BtcRPCClient.ListUnspent()
-	//if err != nil {
-	//	return err
-	//}
-	//var btcBalance float64
-	//for _, utxo := range utxos {
-	//	if utxo.Address == r.BTCTSSAddress.EncodeAddress() {
-	//		btcBalance += utxo.Amount
-	//	}
-	//}
 
 	zrc20Supply, err := r.BTCZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {

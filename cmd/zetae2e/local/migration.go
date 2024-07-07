@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// adminTestRoutine runs admin functions tests
+// migrationTestRoutine runs migration related e2e tests
 func migrationTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
@@ -28,8 +28,8 @@ func migrationTestRoutine(
 				err = fmt.Errorf("admin panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
-		account := conf.AdditionalAccounts.UserBitcoin
-		// initialize runner for erc20 advanced test
+		account := conf.AdditionalAccounts.UserMigration
+		// initialize runner for migration test
 		migrationTestRunner, err := initTestRunner(
 			"migration",
 			conf,
@@ -49,7 +49,7 @@ func migrationTestRoutine(
 			migrationTestRunner.Logger.Print("🍾 migration tests completed in %s", time.Since(startTime).String())
 			return nil
 		}
-		// run erc20 advanced test
+		// run migration test
 		testsToRun, err := migrationTestRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			testNames...,
@@ -61,7 +61,6 @@ func migrationTestRoutine(
 		if err := migrationTestRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("migration tests failed: %v", err)
 		}
-
 		if err := migrationTestRunner.CheckBtcTSSBalance(); err != nil {
 			migrationTestRunner.Logger.Print("🍾 BTC check error")
 		}
@@ -70,5 +69,4 @@ func migrationTestRoutine(
 
 		return err
 	}
-
 }

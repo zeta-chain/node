@@ -433,13 +433,7 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	res, found := ob.includedTxResults[outboundID]
-
-	fmt.Printf("latest confirmations %d", getTxResult.Confirmations)
-
 	if !found { // not found.
-
-		fmt.Printf("setIncludedTx: included new bitcoin outbound %s outboundID %s pending nonce %d", txHash, outboundID, ob.pendingNonce)
-
 		ob.includedTxHashes[txHash] = true
 		ob.includedTxResults[outboundID] = getTxResult // include new outbound and enforce rigid 1-to-1 mapping: nonce <===> txHash
 		if nonce >= ob.pendingNonce {                  // try increasing pending nonce on every newly included outbound
@@ -447,16 +441,12 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		}
 		ob.logger.Outbound.Info().
 			Msgf("setIncludedTx: included new bitcoin outbound %s outboundID %s pending nonce %d", txHash, outboundID, ob.pendingNonce)
-	} else if txHash == res.TxID { // found same hash.
-
-		fmt.Printf("setIncludedTx: update bitcoin outbound %s got confirmations %d", txHash, getTxResult.Confirmations)
+	} else if txHash == res.TxID { // found same hash
 		ob.includedTxResults[outboundID] = getTxResult // update tx result as confirmations may increase
 		if getTxResult.Confirmations > res.Confirmations {
 			ob.logger.Outbound.Info().Msgf("setIncludedTx: bitcoin outbound %s got confirmations %d", txHash, getTxResult.Confirmations)
 		}
 	} else { // found other hash.
-
-		fmt.Printf("setIncludedTx: duplicate payment by bitcoin outbound %s outboundID %s, prior outbound %s", txHash, outboundID, res.TxID)
 		// be alert for duplicate payment!!! As we got a new hash paying same cctx (for whatever reason).
 		delete(ob.includedTxResults, outboundID) // we can't tell which txHash is true, so we remove all to be safe
 		ob.logger.Outbound.Error().Msgf("setIncludedTx: duplicate payment by bitcoin outbound %s outboundID %s, prior outbound %s", txHash, outboundID, res.TxID)

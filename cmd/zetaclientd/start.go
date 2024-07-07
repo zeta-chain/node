@@ -232,6 +232,10 @@ func start(_ *cobra.Command, _ []string) error {
 		hotkeyPass,
 		server,
 	)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("NewTSS error")
+		return err
+	}
 	if cfg.TestTssKeysign {
 		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
 		if err != nil {

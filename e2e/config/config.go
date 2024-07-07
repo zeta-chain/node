@@ -65,6 +65,7 @@ type AdditionalAccounts struct {
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
 	UserFungibleAdmin Account `yaml:"user_fungible_admin"`
+	UserMigration     Account `yaml:"user_migration"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -193,6 +194,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserFungibleAdmin,
+		a.UserMigration,
 	}
 }
 
@@ -258,6 +260,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserFungibleAdmin, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserMigration, err = generateAccount()
 	if err != nil {
 		return err
 	}

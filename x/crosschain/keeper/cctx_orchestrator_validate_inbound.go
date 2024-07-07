@@ -16,7 +16,6 @@ func (k Keeper) ValidateInbound(
 	msg *types.MsgVoteInbound,
 	shouldPayGas bool,
 ) (*types.CrossChainTx, error) {
-
 	err := k.CheckMigration(ctx, msg)
 	if err != nil {
 		return nil, err

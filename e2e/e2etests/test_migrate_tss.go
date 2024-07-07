@@ -18,8 +18,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMigrateTss(r *runner.E2ERunner, args []string) {
-
+func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	r.SetBtcAddress(r.Name, false)
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
