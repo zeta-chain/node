@@ -75,6 +75,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			})
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		chain := chains.Chain{
 			ChainId: 999,
 		}
@@ -84,6 +85,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		// Set up mocks
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", ctx, chain.ChainId).Return(chain, false)
+		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
 
 		msg := types.MsgVoteInbound{
 			SenderChainId: chain.ChainId,
@@ -236,5 +238,27 @@ func TestKeeper_CheckMigration(t *testing.T) {
 
 		err := k.CheckMigration(ctx, &msg)
 		require.ErrorContains(t, err, "no Bitcoin net params for chain ID: 999")
+	})
+
+	t.Run("returns early if sender chain is zeta chain", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t,
+			keepertest.CrosschainMockOptions{
+				UseAuthorityMock: true,
+			})
+
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		chain := chains.ZetaChainTestnet
+		sender := sample.AccAddress()
+
+		// Set up mocks
+		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
+
+		msg := types.MsgVoteInbound{
+			SenderChainId: chain.ChainId,
+			Sender:        sender,
+		}
+
+		err := k.CheckMigration(ctx, &msg)
+		require.NoError(t, err)
 	})
 }

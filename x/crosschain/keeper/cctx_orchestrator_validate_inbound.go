@@ -60,12 +60,18 @@ func (k Keeper) ValidateInbound(
 // CheckMigration checks if the sender is a TSS address and returns an error if it is.
 // If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit.
 func (k Keeper) CheckMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error {
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
+	// Ignore cctx originating from zeta chain/zevm for this check as there is no TSS in zeta chain
+	if chains.IsZetaChain(msg.SenderChainId, additionalChains) {
+		return nil
+	}
+
 	historicalTssList := k.zetaObserverKeeper.GetAllTSS(ctx)
 	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
 	if !found {
 		return observertypes.ErrSupportedChains.Wrapf("chain not found for chainID %d", msg.SenderChainId)
 	}
-	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
+
 	for _, tss := range historicalTssList {
 		if chains.IsEVMChain(chain.ChainId, additionalChains) {
 			ethTssAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)

@@ -117,6 +117,9 @@ func GenerateTss(
 	return errors.New("unexpected state for TSS generation")
 }
 
+// keygenTss generates a new TSS using the keygen request and the TSS server.
+// If the keygen is successful, the function returns the new TSS pubkey.
+// If the keygen is unsuccessful, the function posts blame and returns an error.
 func keygenTss(keyGen observertypes.Keygen, tssServer tss.TssServer, zetacoreClient interfaces.ZetacoreClient, keygenLogger zerolog.Logger) (string, error) {
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request
@@ -148,20 +151,11 @@ func keygenTss(keyGen observertypes.Keygen, tssServer tss.TssServer, zetacoreCli
 		keygenLogger.Error().Msgf("keygen fail: reason %s ", err.Error())
 		return "", err
 	}
-	// Keygen succeed! Report TSS address
-	keygenLogger.Debug().Msgf("Keygen success! keygen response: %v", res)
+	// Keygen succeed
+	keygenLogger.Info().Msgf("Keygen success! keygen response: %v", res)
 	return res.PubKey, nil
 }
 
-func SetTSSPubKey(tss *mc.TSS, logger zerolog.Logger) error {
-	err := tss.InsertPubKey(tss.CurrentPubkey)
-	if err != nil {
-		logger.Error().Msgf("SetPubKey fail")
-		return err
-	}
-	logger.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
-	return nil
-}
 func TestTSS(pubkey string, tssServer tss.TssServer, logger zerolog.Logger) error {
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()
 	keygenLogger.Info().Msgf("KeyGen success ! Doing a Key-sign test")

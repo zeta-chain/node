@@ -37,8 +37,6 @@ const (
 	flagTestMigration     = "test-migration"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
-
-	flagPostMigration = "post-migration"
 )
 
 var (
@@ -70,7 +68,6 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestMigration, false, "set to true to skip migration tests")
-	cmd.Flags().Bool(flagPostMigration, false, "set to true to run post migration tests")
 
 	return cmd
 }
@@ -260,8 +257,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
 		}
-
-		light = true
 
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)

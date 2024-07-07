@@ -437,6 +437,19 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 	return addr
 }
 
+func (tss *TSS) EVMAddressList() []ethcommon.Address {
+	var addresses []ethcommon.Address
+	for _, key := range tss.Keys {
+		addr, err := GetTssAddrEVM(key.PubkeyInBech32)
+		if err != nil {
+			log.Error().Err(err).Msg("getKeyAddr error")
+			return nil
+		}
+		addresses = append(addresses, addr)
+	}
+	return addresses
+}
+
 // BTCAddress generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
 	addr, err := GetTssAddrBTC(tss.CurrentPubkey, tss.BitcoinChainID)

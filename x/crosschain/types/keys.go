@@ -28,6 +28,8 @@ const (
 	//TssMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the tss migration . This is done to avoid the tss migration tx getting stuck in the mempool
 	TssMigrationGasMultiplierEVM = "2.5"
 
+	TSSMigrationBufferAmountEVM = "2100000000"
+
 	// CCTXIndexLength is the length of a crosschain transaction index
 	CCTXIndexLength = 66
 )

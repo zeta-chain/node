@@ -365,9 +365,21 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 		return nil, nil, false
 	}
 	if from != ob.TSS().EVMAddress() { // must be TSS address
-		log.Error().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not TSS address %s",
+		// If from is not TSS address, check if it is one of the previous TSS addresses We can still try to confirm a tx which was broadcast by an old TSS
+		log.Info().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not current TSS address %s",
 			from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
-		return nil, nil, false
+		addressList := ob.TSS().EVMAddressList()
+		isOldTssAddress := false
+		for _, addr := range addressList {
+			if from == addr {
+				isOldTssAddress = true
+			}
+		}
+		if !isOldTssAddress {
+			log.Error().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not current or old TSS address. Current TSS %s",
+				from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
+			return nil, nil, false
+		}
 	}
 	if transaction.Nonce() != nonce { // must match cctx nonce
 		log.Error().
