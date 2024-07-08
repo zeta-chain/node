@@ -40,7 +40,6 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 
 	var btcBalance float64
 	for _, utxo := range utxos {
-		r.Logger.Info(fmt.Sprintf("UTXO Amount old : %d, Spendable : %t", int64(utxo.Amount*1e8), utxo.Spendable))
 		btcBalance += utxo.Amount
 	}
 
@@ -50,9 +49,8 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	btcBalance -= fees
 	btcChain := int64(18444)
 
-	r.Logger.Info("BTC TSS migration amount: %d", int64(btcBalance*1e8))
-
 	//migrate btc funds
+	// #nosec G701 e2eTest - always in range
 	migrationAmountBTC := sdkmath.NewUint(uint64(btcBalance * 1e8))
 	msgMigrateFunds := crosschaintypes.NewMsgMigrateTssFunds(
 		r.ZetaTxServer.GetAccountAddress(0),
@@ -143,8 +141,8 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	var btcTSSBalanceNew float64
+	// #nosec G701 e2eTest - always in range
 	for _, utxo := range utxos {
-		r.Logger.Info(fmt.Sprintf("UTXO Amount new : %d, Spendable : %t", int64(utxo.Amount*1e8), utxo.Spendable))
 		btcTSSBalanceNew += utxo.Amount
 	}
 
@@ -153,6 +151,7 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info(fmt.Sprintf("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount))
 
 	// btcTSSBalanceNew should be less than btcTSSBalanceOld as there is some loss of funds during migration
+	// #nosec G701 e2eTest - always in range
 	require.Equal(
 		r,
 		strconv.FormatInt(int64(btcTSSBalanceNew*1e8), 10),
