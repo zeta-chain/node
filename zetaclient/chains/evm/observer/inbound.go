@@ -203,13 +203,19 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	startBlock, toBlock := ob.calcBlockRangeToScan(confirmedBlockNum, lastScanned, config.MaxBlocksPerPeriod)
 
 	// task 1:  query evm chain for zeta sent logs (read at most 100 blocks in one go)
-	lastScannedZetaSent, _ := ob.ObserveZetaSent(ctx, startBlock, toBlock)
+	lastScannedZetaSent, err := ob.ObserveZetaSent(ctx, startBlock, toBlock)
+	if err != nil {
+		return errors.Wrap(err, "unable to observe ZetaSent")
+	}
 
 	// task 2: query evm chain for deposited logs (read at most 100 blocks in one go)
 	lastScannedDeposited := ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd, _ := ob.ObserverTSSReceive(ctx, startBlock, toBlock)
+	lastScannedTssRecvd, err := ob.ObserverTSSReceive(ctx, startBlock, toBlock)
+	if err != nil {
+		return errors.Wrap(err, "unable to observe TSSReceive")
+	}
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
