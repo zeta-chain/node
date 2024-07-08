@@ -244,7 +244,6 @@ func (tss *TSS) Sign(
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	tss.KeysignsTracker.EndMsgSign()
 	if err != nil {
-		fmt.Println("keysign fail reason : ", err.Error())
 		log.Warn().Msg("keysign fail")
 	}
 
