@@ -248,7 +248,6 @@ func (tss *TSS) Sign(
 	}
 
 	if ksRes.Status == thorcommon.Fail {
-		fmt.Println("signing tssPubkey", tssPubkey)
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		// post blame data if enabled

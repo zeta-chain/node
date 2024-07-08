@@ -207,8 +207,8 @@ func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
 			}
 
 			tss = tssNew
-			s.logger.Warn().
-				Msg(fmt.Sprintf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey))
+			s.logger.Info().
+				Msgf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey)
 			time.Sleep(6 * time.Second)
 			s.logger.Info().Msg("restarting zetaclientd to update tss address")
 			s.restartChan <- syscall.SIGHUP
@@ -253,7 +253,7 @@ func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
 			}
 
 			tssLenCurrent = tssLenUpdated
-			s.logger.Warn().Msg(fmt.Sprintf("tss list updated from %d to %d", tssLenCurrent, tssLenUpdated))
+			s.logger.Info().Msgf("tss list updated from %d to %d", tssLenCurrent, tssLenUpdated)
 			time.Sleep(5 * time.Second)
 			s.logger.Info().Msg("restarting zetaclientd to update tss list")
 			s.restartChan <- syscall.SIGHUP

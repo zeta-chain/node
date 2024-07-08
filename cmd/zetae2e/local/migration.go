@@ -62,7 +62,7 @@ func migrationTestRoutine(
 			return fmt.Errorf("migration tests failed: %v", err)
 		}
 		if err := migrationTestRunner.CheckBtcTSSBalance(); err != nil {
-			migrationTestRunner.Logger.Print("🍾 BTC check error")
+			return err
 		}
 
 		migrationTestRunner.Logger.Print("🍾 migration tests completed in %s", time.Since(startTime).String())

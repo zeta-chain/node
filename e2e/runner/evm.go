@@ -129,8 +129,6 @@ func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) eth
 
 	r.Logger.EVMReceipt(*receipt, "send to TSS")
 
-	r.Logger.Print("✅ Ethers deposited into ZEVM")
-
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
 	if testHeader {

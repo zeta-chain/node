@@ -77,8 +77,6 @@ func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, e
 	return utxos, nil
 }
 
-// query UTXOs from node
-
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
 func (r *E2ERunner) DepositBTCWithAmount(amount float64) *chainhash.Hash {
 	r.Logger.Print("⏳ depositing BTC into ZEVM")

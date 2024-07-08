@@ -79,7 +79,6 @@ func (k Keeper) CheckMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
 			}
 			if ethTssAddress.Hex() == msg.Sender {
-				ctx.Logger().Info("Sender is a TSS, cannot create CCTX")
 				return types.ErrTssAddress
 			}
 		} else if chains.IsBitcoinChain(chain.ChainId, additionalChains) {

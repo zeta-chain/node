@@ -129,7 +129,6 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 
 	if !included {
 		if !broadcasted {
-			fmt.Println("IsOutboundProcessed: outbound not broadcasted yet")
 			return false, false, nil
 		}
 		// If the broadcasted outbound is nonce 0, just wait for inclusion and don't schedule more keysign
@@ -144,10 +143,8 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		// Try including this outbound broadcasted by myself
 		txResult, inMempool := ob.checkIncludedTx(cctx, txnHash)
 		if txResult == nil { // check failed, try again next time
-			fmt.Println("IsOutboundProcessed: txResult is nil, check failed, try again next time")
 			return false, false, nil
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
-			fmt.Println("IsOutboundProcessed: outbound still in mempool")
 			ob.logger.Outbound.Info().Msgf("IsOutboundProcessed: outbound %s is still in mempool", outboundID)
 			return true, false, nil
 		}
@@ -157,7 +154,6 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 		// Get tx result again in case it is just included
 		res = ob.getIncludedTx(nonce)
 		if res == nil {
-			fmt.Println("IsOutboundProcessed: setIncludedTx failed")
 			return false, false, nil
 		}
 		ob.logger.Outbound.Info().Msgf("IsOutboundProcessed: setIncludedTx succeeded for outbound %s", outboundID)
@@ -166,7 +162,7 @@ func (ob *Observer) IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logg
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutbound()
 	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
-		fmt.Printf(
+		ob.logger.Outbound.Debug().Msgf(
 			"IsOutboundProcessed: outbound not confirmed yet %d: %d",
 			res.Confirmations,
 			ob.ConfirmationsThreshold(amountInSat),
