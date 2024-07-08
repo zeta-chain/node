@@ -214,7 +214,7 @@ func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
 			s.restartChan <- syscall.SIGHUP
 		}
 	}
-	return
+	s.logger.Warn().Msg("handleTssUpdate exiting without success")
 }
 
 func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
@@ -259,7 +259,7 @@ func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
 			s.restartChan <- syscall.SIGHUP
 		}
 	}
-	return
+	s.logger.Warn().Msg("handleNewTssKeyGeneration exiting without success")
 }
 
 func (s *zetaclientdSupervisor) handleNewKeygen(ctx context.Context) {
