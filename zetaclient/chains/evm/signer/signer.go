@@ -81,6 +81,7 @@ type Signer struct {
 
 // NewSigner creates a new EVM signer
 func NewSigner(
+	ctx context.Context,
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
@@ -95,7 +96,7 @@ func NewSigner(
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
 	// create EVM client
-	client, ethSigner, err := getEVMRPC(endpoint)
+	client, ethSigner, err := getEVMRPC(ctx, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -787,7 +788,7 @@ func (signer *Signer) reportToOutboundTracker(
 				break
 			}
 			// try getting the tx
-			_, isPending, err = signer.client.TransactionByHash(context.TODO(), ethcommon.HexToHash(outboundHash))
+			_, isPending, err = signer.client.TransactionByHash(ctx, ethcommon.HexToHash(outboundHash))
 			if err != nil {
 				logger.Info().
 					Err(err).
@@ -797,7 +798,7 @@ func (signer *Signer) reportToOutboundTracker(
 			// if tx is include in a block, try getting receipt
 			if !isPending {
 				report = true // included
-				receipt, err := signer.client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(outboundHash))
+				receipt, err := signer.client.TransactionReceipt(ctx, ethcommon.HexToHash(outboundHash))
 				if err != nil {
 					logger.Info().
 						Err(err).
@@ -853,7 +854,7 @@ func (signer *Signer) reportToOutboundTracker(
 }
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
-func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
+func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
 	if endpoint == mocks.EVMRPCEnabled {
 		chainID := big.NewInt(chains.BscMainnet.ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
@@ -866,7 +867,7 @@ func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error
 		return nil, nil, err
 	}
 
-	chainID, err := client.ChainID(context.TODO())
+	chainID, err := client.ChainID(ctx)
 	if err != nil {
 		return nil, nil, err
 	}

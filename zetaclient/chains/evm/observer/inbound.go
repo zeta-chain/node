@@ -131,7 +131,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			)
 		}
 
-		receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tracker.TxHash))
+		receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(tracker.TxHash))
 		if err != nil {
 			return errors.Wrapf(
 				err,
@@ -168,7 +168,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 // ObserveInbound observes the evm chain for inbounds and posts votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Logger) error {
 	// get and update latest block height
-	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
+	blockNumber, err := ob.evmClient.BlockNumber(ctx)
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 	iter, err := connector.FilterZetaSent(&bind.FilterOpts{
 		Start:   startBlock,
 		End:     &toBlock,
-		Context: context.TODO(),
+		Context: ctx,
 	}, []ethcommon.Address{}, []*big.Int{})
 	if err != nil {
 		ob.Logger().Chain.Warn().Err(err).Msgf(
@@ -341,7 +341,7 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 	iter, err := erc20custodyContract.FilterDeposited(&bind.FilterOpts{
 		Start:   startBlock,
 		End:     &toBlock,
-		Context: context.TODO(),
+		Context: ctx,
 	}, []ethcommon.Address{})
 	if err != nil {
 		ob.Logger().Inbound.Warn().Err(err).Msgf(
@@ -799,7 +799,7 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
 		if ethcommon.HexToAddress(tx.To) == ob.TSS().EVMAddress() {
-			receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tx.Hash))
+			receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(tx.Hash))
 			if err != nil {
 				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 			}

@@ -36,6 +36,8 @@ var (
 
 // getNewEvmSigner creates a new EVM chain signer for testing
 func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
+	ctx := context.Background()
+
 	// use default mock TSS if not provided
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
@@ -46,6 +48,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 	logger := base.Logger{}
 
 	return NewSigner(
+		ctx,
 		chains.BscMainnet,
 		tss,
 		nil,
@@ -60,6 +63,8 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 
 // getNewEvmChainObserver creates a new EVM chain observer for testing
 func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.Observer, error) {
+	ctx := context.Background()
+
 	// use default mock TSS if not provided
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
@@ -77,6 +82,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	ts := &metrics.TelemetryServer{}
 
 	return observer.NewObserver(
+		ctx,
 		evmcfg,
 		evmClient,
 		params,
@@ -152,8 +158,7 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 }
 
 func TestSigner_TryProcessOutbound(t *testing.T) {
-	app := zctx.New(config.New(), zerolog.Nop())
-	ctx := zctx.WithAppContext(context.Background(), app)
+	ctx := makeCtx()
 
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
@@ -455,8 +460,10 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 }
 
 func TestSigner_getEVMRPC(t *testing.T) {
+	ctx := context.Background()
+
 	t.Run("getEVMRPC error dialing", func(t *testing.T) {
-		client, signer, err := getEVMRPC("invalidEndpoint")
+		client, signer, err := getEVMRPC(ctx, "invalidEndpoint")
 		require.Nil(t, client)
 		require.Nil(t, signer)
 		require.Error(t, err)

@@ -1,6 +1,7 @@
 package observer_test
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -23,7 +25,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -37,7 +38,7 @@ func getZetacoreContext(
 	evmChain chains.Chain,
 	endpoint string,
 	evmChainParams *observertypes.ChainParams,
-) (*context.AppContext, config.EVMConfig) {
+) (*zctx.AppContext, config.EVMConfig) {
 	// use default endpoint if not provided
 	if endpoint == "" {
 		endpoint = "http://localhost:8545"
@@ -51,7 +52,7 @@ func getZetacoreContext(
 	}
 
 	// create zetacore context
-	appContext := context.New(cfg, zerolog.Nop())
+	appContext := zctx.New(cfg, zerolog.Nop())
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 
@@ -83,6 +84,8 @@ func MockEVMObserver(
 	lastBlock uint64,
 	params observertypes.ChainParams,
 ) *observer.Observer {
+	ctx := context.Background()
+
 	// use default mock evm client if not provided
 	if evmClient == nil {
 		evmClient = mocks.NewMockEvmClient().WithBlockNumber(1000)
@@ -104,7 +107,7 @@ func MockEVMObserver(
 	_, evmCfg := getZetacoreContext(chain, "", &params)
 
 	// create observer
-	ob, err := observer.NewObserver(evmCfg, evmClient, params, zetacoreClient, tss, dbpath, base.Logger{}, nil)
+	ob, err := observer.NewObserver(ctx, evmCfg, evmClient, params, zetacoreClient, tss, dbpath, base.Logger{}, nil)
 	require.NoError(t, err)
 	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
@@ -113,6 +116,8 @@ func MockEVMObserver(
 }
 
 func Test_NewObserver(t *testing.T) {
+	ctx := context.Background()
+
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -185,6 +190,7 @@ func Test_NewObserver(t *testing.T) {
 
 			// create observer
 			ob, err := observer.NewObserver(
+				ctx,
 				tt.evmCfg,
 				tt.evmClient,
 				tt.chainParams,
@@ -208,6 +214,8 @@ func Test_NewObserver(t *testing.T) {
 }
 
 func Test_LoadDB(t *testing.T) {
+	ctx := context.Background()
+
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -215,17 +223,17 @@ func Test_LoadDB(t *testing.T) {
 	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, dbpath, 1, params)
 
 	t.Run("should load db successfully", func(t *testing.T) {
-		err := ob.LoadDB(dbpath)
+		err := ob.LoadDB(ctx, dbpath)
 		require.NoError(t, err)
 		require.EqualValues(t, 1000, ob.LastBlockScanned())
 	})
 	t.Run("should fail on invalid dbpath", func(t *testing.T) {
 		// load db with empty dbpath
-		err := ob.LoadDB("")
+		err := ob.LoadDB(ctx, "")
 		require.ErrorContains(t, err, "empty db path")
 
 		// load db with invalid dbpath
-		err = ob.LoadDB("/invalid/dbpath")
+		err = ob.LoadDB(ctx, "/invalid/dbpath")
 		require.ErrorContains(t, err, "error OpenDB")
 	})
 	t.Run("should fail on invalid env var", func(t *testing.T) {
@@ -235,7 +243,7 @@ func Test_LoadDB(t *testing.T) {
 		defer os.Unsetenv(envvar)
 
 		// load db
-		err := ob.LoadDB(dbpath)
+		err := ob.LoadDB(ctx, dbpath)
 		require.ErrorContains(t, err, "error LoadLastBlockScanned")
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
@@ -247,12 +255,14 @@ func Test_LoadDB(t *testing.T) {
 		tempClient.WithError(fmt.Errorf("error RPC"))
 
 		// load db
-		err := ob.LoadDB(dbpath)
+		err := ob.LoadDB(ctx, dbpath)
 		require.ErrorContains(t, err, "error RPC")
 	})
 }
 
 func Test_LoadLastBlockScanned(t *testing.T) {
+	ctx := context.Background()
+
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -267,7 +277,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		ob.WriteLastBlockScannedToDB(123)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned()
+		err := ob.LoadLastBlockScanned(ctx)
 		require.NoError(t, err)
 		require.EqualValues(t, 123, ob.LastBlockScanned())
 	})
@@ -278,7 +288,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		defer os.Unsetenv(envvar)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned()
+		err := ob.LoadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "error LoadLastBlockScanned")
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
@@ -293,7 +303,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		evmClient.WithError(fmt.Errorf("error RPC"))
 
 		// load last block scanned
-		err := obOther.LoadLastBlockScanned()
+		err := obOther.LoadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "error RPC")
 	})
 }
@@ -367,6 +377,8 @@ func Test_BlockCache(t *testing.T) {
 }
 
 func Test_HeaderCache(t *testing.T) {
+	ctx := context.Background()
+
 	t.Run("should get block header from cache", func(t *testing.T) {
 		// create observer
 		ob := &observer.Observer{}
@@ -383,7 +395,7 @@ func Test_HeaderCache(t *testing.T) {
 		evmClient.WithHeader(header)
 
 		// get block header from observer
-		resHeader, err := ob.GetBlockHeaderCached(uint64(100))
+		resHeader, err := ob.GetBlockHeaderCached(ctx, uint64(100))
 		require.NoError(t, err)
 		require.EqualValues(t, header, resHeader)
 	})
@@ -399,7 +411,7 @@ func Test_HeaderCache(t *testing.T) {
 		headerCache.Add(blockNumber, "a string value")
 
 		// get block header from cache
-		header, err := ob.GetBlockHeaderCached(blockNumber)
+		header, err := ob.GetBlockHeaderCached(ctx, blockNumber)
 		require.ErrorContains(t, err, "cached value is not of type *ethtypes.Header")
 		require.Nil(t, header)
 	})

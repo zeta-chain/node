@@ -1,6 +1,7 @@
 package main
 
 import (
+	gocontext "context"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,6 +58,7 @@ func CreateZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerol
 
 // CreateSignerMap creates a map of ChainSigners for all chains in the config
 func CreateSignerMap(
+	ctx gocontext.Context,
 	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
@@ -77,6 +79,7 @@ func CreateSignerMap(
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
 		signer, err := evmsigner.NewSigner(
+			ctx,
 			evmConfig.Chain,
 			tss,
 			ts,
@@ -85,7 +88,8 @@ func CreateSignerMap(
 			config.GetConnectorABI(),
 			config.GetERC20CustodyABI(),
 			mpiAddress,
-			erc20CustodyAddress)
+			erc20CustodyAddress,
+		)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
 			continue
@@ -108,6 +112,7 @@ func CreateSignerMap(
 
 // CreateChainObserverMap creates a map of ChainObservers for all chains in the config
 func CreateChainObserverMap(
+	ctx gocontext.Context,
 	appContext *context.AppContext,
 	zetacoreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
@@ -136,6 +141,7 @@ func CreateChainObserverMap(
 
 		// create EVM chain observer
 		observer, err := evmobserver.NewObserver(
+			ctx,
 			evmConfig,
 			evmClient,
 			*chainParams,

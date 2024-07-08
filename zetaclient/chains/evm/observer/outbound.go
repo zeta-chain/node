@@ -78,7 +78,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 				var outboundReceipt *ethtypes.Receipt
 				var outbound *ethtypes.Transaction
 				for _, txHash := range tracker.HashList {
-					if receipt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
+					if receipt, tx, ok := ob.checkConfirmedTx(ctx, txHash.TxHash, nonceInt); ok {
 						txCount++
 						outboundReceipt = receipt
 						outbound = tx
@@ -150,6 +150,10 @@ func (ob *Observer) PostVoteOutbound(
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
 		logger.Error().Err(err).Fields(lf).Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
+		return
+	}
+
+	if zetaTxHash == "" {
 		return
 	}
 
@@ -373,12 +377,16 @@ func ParseOutboundReceivedValue(
 
 // checkConfirmedTx checks if a txHash is confirmed
 // returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
-func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
-	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+func (ob *Observer) checkConfirmedTx(
+	ctx context.Context,
+	txHash string,
+	nonce uint64,
+) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	// query transaction
-	transaction, isPending, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
+	transaction, isPending, err := ob.evmClient.TransactionByHash(ctx, ethcommon.HexToHash(txHash))
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -417,7 +425,7 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	}
 
 	// query receipt
-	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
+	receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
 			log.Warn().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)

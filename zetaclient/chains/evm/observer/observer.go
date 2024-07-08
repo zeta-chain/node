@@ -55,6 +55,7 @@ type Observer struct {
 
 // NewObserver returns a new EVM chain observer
 func NewObserver(
+	ctx context.Context,
 	evmCfg config.EVMConfig,
 	evmClient interfaces.EVMRPCClient,
 	chainParams observertypes.ChainParams,
@@ -90,7 +91,7 @@ func NewObserver(
 	}
 
 	// open database and load data
-	err = ob.LoadDB(dbpath)
+	err = ob.LoadDB(ctx, dbpath)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +178,7 @@ func (ob *Observer) Start(ctx context.Context) {
 // WatchRPCStatus watches the RPC status of the evm chain
 // TODO(revamp): move ticker to ticker file
 // TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchRPCStatus(_ context.Context) error {
+func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 	ob.Logger().Chain.Info().Msgf("Starting RPC status check for chain %d", ob.Chain().ChainId)
 	ticker := time.NewTicker(60 * time.Second)
 	for {
@@ -186,17 +187,17 @@ func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 			if !ob.GetChainParams().IsSupported {
 				continue
 			}
-			bn, err := ob.evmClient.BlockNumber(context.Background())
+			bn, err := ob.evmClient.BlockNumber(ctx)
 			if err != nil {
 				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
-			gasPrice, err := ob.evmClient.SuggestGasPrice(context.Background())
+			gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 			if err != nil {
 				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
-			header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(bn))
+			header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 			if err != nil {
 				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
@@ -365,14 +366,14 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 }
 
 // GetBlockHeaderCached get block header by number from cache
-func (ob *Observer) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
+func (ob *Observer) GetBlockHeaderCached(ctx context.Context, blockNumber uint64) (*ethtypes.Header, error) {
 	if result, ok := ob.HeaderCache().Get(blockNumber); ok {
 		if header, ok := result.(*ethtypes.Header); ok {
 			return header, nil
 		}
 		return nil, errors.New("cached value is not of type *ethtypes.Header")
 	}
-	header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
+	header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(blockNumber))
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +424,7 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 
 // LoadDB open sql database and load data into EVM observer
 // TODO(revamp): move to a db file
-func (ob *Observer) LoadDB(dbPath string) error {
+func (ob *Observer) LoadDB(ctx context.Context, dbPath string) error {
 	if dbPath == "" {
 		return errors.New("empty db path")
 	}
@@ -445,14 +446,14 @@ func (ob *Observer) LoadDB(dbPath string) error {
 	}
 
 	// load last block scanned
-	err = ob.LoadLastBlockScanned()
+	err = ob.LoadLastBlockScanned(ctx)
 
 	return err
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database
 // TODO(revamp): move to a db file
-func (ob *Observer) LoadLastBlockScanned() error {
+func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
 	if err != nil {
 		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", ob.Chain().ChainId)
@@ -462,7 +463,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 	// 1. environment variable is set explicitly to "latest"
 	// 2. environment variable is empty and last scanned block is not found in DB
 	if ob.LastBlockScanned() == 0 {
-		blockNumber, err := ob.evmClient.BlockNumber(context.Background())
+		blockNumber, err := ob.evmClient.BlockNumber(ctx)
 		if err != nil {
 			return errors.Wrapf(err, "error BlockNumber for chain %d", ob.Chain().ChainId)
 		}
@@ -488,7 +489,7 @@ func (ob *Observer) postBlockHeader(ctx context.Context, tip uint64) error {
 		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
 	}
 
-	header, err := ob.GetBlockHeaderCached(bn)
+	header, err := ob.GetBlockHeaderCached(ctx, bn)
 	if err != nil {
 		ob.Logger().Inbound.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
 		return err
