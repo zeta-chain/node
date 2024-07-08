@@ -19,7 +19,7 @@ func postMigrationTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		account := conf.AdditionalAccounts.UserMigration
+		account := conf.AdditionalAccounts.UserBitcoin
 		// initialize runner for post migration test
 		postMigrationRunner, err := initTestRunner(
 			"postMigration",
