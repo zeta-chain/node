@@ -211,7 +211,6 @@ Sensitive values saved to: /Users/aminechakrellah/Desktop/Projects/ZetaChain/opt
 
 create genesis file : 
 
-
 ```sh
 go run cmd/main.go genesis l2 \
   --deploy-config ../packages/contracts-bedrock/deploy-config/devnetL1.json \
@@ -220,3 +219,4 @@ go run cmd/main.go genesis l2 \
   --outfile.rollup rollup.json \
   --l1-rpc 0.0.0.0:18545
 ```
+
