@@ -72,17 +72,17 @@ The following are required to run the localnet:
 ### OP Integration
 
 1 - Run localnet from `docker-compose-optimism.yml`.
-On the new docker-compose make sure to adjust exposed ports as necessary to avoid port conflict.
+>Adjust the exposed ports as necessary to avoid conflicts.
 
-2 - Run localnet from OP documentation https://docs.optimism.io/chain/testing/dev-node
+2 - Run localnet from OP documentation :  [Optimism Dev Node](https://docs.optimism.io/chain/testing/dev-node) 
 
 3 - Make sure OP components are running alongside with Zeta localnet with existing EVM, BTC, and Zetachain nodes.
 
-4 - Deploy OP smart contracts https://docs.optimism.io/builders/chain-operators/deploy/smart-contracts
+4 - Deploy OP smart contracts from [Optimism Smart Contract Deployment Guide](https://docs.optimism.io/builders/chain-operators/deploy/smart-contracts)
 
- After running all scripts, depending on the local environement you may face some issues, like:
-   
-* variable not being declared while they are, on my case i had to change `Config.sol` for being able to deploy the contract, some functions needed some vars, were put statically since this is just a local dev network.
+After running all scripts, you may encounter issues depending on your local environment, such as:
+
+* Variables not being declared correctly. For instance, in my case, I had to modify `Config.sol` to deploy the contract. Some functions required static variables because this is just a local dev network.
 
 >before:
 ```solidity
@@ -105,7 +105,7 @@ On the new docker-compose make sure to adjust exposed ports as necessary to avoi
 
 * Error message like `(called 'Option::unwrap()' on a 'None' value)` which do indicates a problem inside the Foundry's forge tool, specifically within the `revm` library. 
 
-For that i had to add some debugging steps in my `deploy.sh` to make sure vars are env vars are properly set.
+To resolve this, I added debugging steps in my `deploy.sh` to ensure environment variables are set correctly.
 
 ````bash
 echo "> Deploying contracts"
@@ -114,7 +114,7 @@ echo "Private Key: $DEPLOY_PRIVATE_KEY"
 echo "Config Path: $DEPLOY_CONFIG_PATH"
 ````
 
-I had to make sure also foundry and forge versions latest one used, can be checked and updated using `foundryup`.
+Ensure that Foundry and Forge are updated to the latest versions using  `foundryup`.
 
 Compile a minimal Forge smart contract , such as `SimpleDeploy.s.sol`and execute it:
 
@@ -135,7 +135,7 @@ forge script -vvv scripts/deploy/SimpleDeploy.s.sol:SimpleDeploy --rpc-url 127.0
 
 If execution is correct, try redepoying the set of contracts using `deploy.sh`.
 
-- Deployment can go thru, but you can probably face issues with CREATE2 Deployer contract if not existing in your local network :  
+- Deployment may proceed, but you might face issues with the `CREATE2` Deployer contract if it is not present in your local network: :  
 
 
 ```log
@@ -167,11 +167,11 @@ If execution is correct, try redepoying the set of contracts using `deploy.sh`.
 Error: 
 script failed: missing CREATE2 deployer
 ```
+Follow up with the [Optimism Documentation on how to deploy CREATE2 factory](https://docs.optimism.io/builders/chain-operators/tutorials/create-l2-rollup#deploy-the-create2-factory-optional).
 
-Make sure also to follow-up : https://docs.optimism.io/builders/chain-operators/tutorials/create-l2-rollup#deploy-the-create2-factory-optional 
 
-- Add `rpc.allow-unprotected-txs` to geth if you can't post txs while deploy create2
-- Use Metamask and connect to your localnet to send tx and fund smart contract addresess easily.
+- Add `rpc.allow-unprotected-txs` to geth if you cannot post transactions while deploying CREATE2.
+- Use MetaMask to connect to your localnet to send transactions and fund smart contract addresses easily.
 - Deploy the factory
 ```bash
 cast publish --rpc-url http://0.0.0.0:18545 0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222 
@@ -179,13 +179,33 @@ cast publish --rpc-url http://0.0.0.0:18545 0xf8a58085174876e800830186a08080b853
 
 >output
 ```json
-{"status":"0x1","cumulativeGasUsed":"0x10a23","logs":[],"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","type":"0x0","transactionHash":"0xeddf9e61fb9d8f5111840daef55e5fde0041f5702856532cdbb5a02998033d26","transactionIndex":"0x0","blockHash":"0xa11e0bb5e8d2d6be633f16a46070fb1e2d8104778d84d1bb08fc997a3e754c26","blockNumber":"0x2e2","gasUsed":"0x10a23","effectiveGasPrice":"0x174876e800","from":"0x3fab184622dc19b6109349b94811493bf2a45362","to":null,"contractAddress":"0x4e59b44847b379578588920ca78fbf26c0b4956c"}
+{
+  "status":"0x1",
+  "cumulativeGasUsed":"0x10a23",
+  "logs":[],
+  "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  "type":"0x0",
+  "transactionHash":"0xeddf9e61fb9d8f5111840daef55e5fde0041f5702856532cdbb5a02998033d26",
+  "transactionIndex":"0x0",
+  "blockHash":"0xa11e0bb5e8d2d6be633f16a46070fb1e2d8104778d84d1bb08fc997a3e754c26",
+  "blockNumber":"0x2e2",
+  "gasUsed":"0x10a23",
+  "effectiveGasPrice":"0x174876e800",
+  "from":"0x3fab184622dc19b6109349b94811493bf2a45362",
+  "to":null,
+  "contractAddress":"0x4e59b44847b379578588920ca78fbf26c0b4956c"
+}
 ```
 
 - Check Tx is mined : 
 
 ```json
-{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["0xeddf9e61fb9d8f5111840daef55e5fde0041f5702856532cdbb5a02998033d26"],"id":1}
+{
+  "jsonrpc":"2.0",
+  "method":"eth_getTransactionReceipt",
+  "params":["0xeddf9e61fb9d8f5111840daef55e5fde0041f5702856532cdbb5a02998033d26"],
+  "id":1
+}
 ```
 
 - Verify the factory is deployed : 
@@ -221,4 +241,20 @@ go run cmd/main.go genesis l2 \
   --outfile.rollup rollup.json \
   --l1-rpc 0.0.0.0:18545
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
