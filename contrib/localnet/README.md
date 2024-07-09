@@ -198,3 +198,25 @@ At this stage you can redploy the L1 contracts :
 ```sh
 npm run deploy
 ```
+
+```log
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+
+Transactions saved to: /Users/aminechakrellah/Desktop/Projects/ZetaChain/optimism/packages/contracts-bedrock/broadcast/Deploy.s.sol/1337/run-latest.json
+
+Sensitive values saved to: /Users/aminechakrellah/Desktop/Projects/ZetaChain/optimism/packages/contracts-bedrock/cache/Deploy.s.sol/1337/run-latest.json
+```
+
+create genesis file : 
+
+
+```sh
+go run cmd/main.go genesis l2 \
+  --deploy-config ../packages/contracts-bedrock/deploy-config/devnetL1.json \
+  --l1-deployments ../packages/contracts-bedrock/deployments/devnetL1/.deploy \
+  --outfile.l2 genesis.json \
+  --outfile.rollup rollup.json \
+  --l1-rpc 0.0.0.0:18545
+```
