@@ -69,19 +69,22 @@ The following are required to run the localnet:
 - [jq](https://stedolan.github.io/jq/download/)
 
 
-### Integration of OP
+### OP Integration
 
-1 - Run localnet from docker-compose-optimism.yml.
-    - In this localnet Eth2 service was removed since it's not part of the challenge.
-    - on the new docker-compose make sure to adjust exposed ports as necessary to avoid port conflict.
+1 - Run localnet from `docker-compose-optimism.yml`.
+On the new docker-compose make sure to adjust exposed ports as necessary to avoid port conflict.
+
 2 - Run localnet from OP documentation https://docs.optimism.io/chain/testing/dev-node
+
 3 - Make sure OP components are running alongside with Zeta localnet with existing EVM, BTC, and Zetachain nodes.
+
 4 - Deploy OP smart contracts https://docs.optimism.io/builders/chain-operators/deploy/smart-contracts
-  - After running all scripts, depending on the local environement you may face some issues, like:
+
+ After running all scripts, depending on the local environement you may face some issues, like:
    
 * variable not being declared while they are, on my case i had to change `Config.sol` for being able to deploy the contract, some functions needed some vars, were put statically since this is just a local dev network.
 
- >before:
+>before:
 ```solidity
  function deployConfigPath() internal view returns (string memory _env) {
         if (vm.isContext(VmSafe.ForgeContext.TestGroup)) {
@@ -92,12 +95,14 @@ The following are required to run the localnet:
         }
     }
  ```
+
  >after:
  ```solidity
  function deployConfigPath() internal pure returns (string memory _env) {
         _env = "deploy-config/devnetL1.json";
     }
  ```
+
 * Error message like `(called 'Option::unwrap()' on a 'None' value)` which do indicates a problem inside the Foundry's forge tool, specifically within the `revm` library. 
 
 For that i had to add some debugging steps in my `deploy.sh` to make sure vars are env vars are properly set.
@@ -127,6 +132,7 @@ contract SimpleDeploy {
 ```sh
 forge script -vvv scripts/deploy/SimpleDeploy.s.sol:SimpleDeploy --rpc-url 127.0.0.1:18545 --broadcast --private-key xxxxxxxxxxxxxxxxxxx
 ```
+
 If execution is correct, try redepoying the set of contracts using `deploy.sh`.
 
 - Deployment can go thru, but you can probably face issues with CREATE2 Deployer contract if not existing in your local network :  
@@ -162,13 +168,9 @@ Error:
 script failed: missing CREATE2 deployer
 ```
 
-At this stage you need to make sure your localnet is having eth2 profile up: 
-
-`docker-compose --profile eth2 up`
-
 Make sure also to follow-up : https://docs.optimism.io/builders/chain-operators/tutorials/create-l2-rollup#deploy-the-create2-factory-optional 
 
-- add `rpc.allow-unprotected-txs` to geth if you can't post txs while deploy create2
+- Add `rpc.allow-unprotected-txs` to geth if you can't post txs while deploy create2
 - Use Metamask and connect to your localnet to send tx and fund smart contract addresess easily.
 - Deploy the factory
 ```bash
@@ -180,7 +182,7 @@ cast publish --rpc-url http://0.0.0.0:18545 0xf8a58085174876e800830186a08080b853
 {"status":"0x1","cumulativeGasUsed":"0x10a23","logs":[],"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","type":"0x0","transactionHash":"0xeddf9e61fb9d8f5111840daef55e5fde0041f5702856532cdbb5a02998033d26","transactionIndex":"0x0","blockHash":"0xa11e0bb5e8d2d6be633f16a46070fb1e2d8104778d84d1bb08fc997a3e754c26","blockNumber":"0x2e2","gasUsed":"0x10a23","effectiveGasPrice":"0x174876e800","from":"0x3fab184622dc19b6109349b94811493bf2a45362","to":null,"contractAddress":"0x4e59b44847b379578588920ca78fbf26c0b4956c"}
 ```
 
-- check Tx is mined : 
+- Check Tx is mined : 
 
 ```json
 {"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["0xeddf9e61fb9d8f5111840daef55e5fde0041f5702856532cdbb5a02998033d26"],"id":1}
@@ -209,7 +211,7 @@ Transactions saved to: /Users/aminechakrellah/Desktop/Projects/ZetaChain/optimis
 Sensitive values saved to: /Users/aminechakrellah/Desktop/Projects/ZetaChain/optimism/packages/contracts-bedrock/cache/Deploy.s.sol/1337/run-latest.json
 ```
 
-create genesis file : 
+- Create genesis file : 
 
 ```sh
 go run cmd/main.go genesis l2 \
