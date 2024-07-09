@@ -59,8 +59,8 @@ FROM base-runtime AS latest-runtime
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
 COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin
 
-# optional old version build. This old build is used as the genesis version in the upgrade tests.
-# use --target latest-runtime to skip
+# Optional old version build (from source). This old build is used as the genesis version in the upgrade tests. 
+# Use --target latest-runtime to skip.
 FROM base-build as old-build-source
 
 ARG OLD_VERSION
@@ -76,13 +76,16 @@ COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
 COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
 COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 
+# Optional old version build (from binary).
+# Use --target latest-runtime to skip.
 FROM base-runtime AS old-runtime
 
+ARG OLD_VERSION
 ARG BUILDARCH
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
 COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
-RUN curl -Lo /usr/local/bin/zetacored https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal/zetacored-linux-${BUILDARCH} && \
+RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
-    curl -Lo /usr/local/bin/zetaclientd https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal/zetaclientd-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/zetaclientd ${OLD_VERSION}/zetaclientd-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetaclientd
