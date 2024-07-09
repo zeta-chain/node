@@ -254,7 +254,7 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose --profile stress -f docker-compose.yml up -d
 
-start-migrate-test: zetanode
+start-tss-migration-test: zetanode
 	@echo "--> Starting migration test"
 	export E2E_ARGS="--test-migration" && \
 	cd contrib/localnet/ && $(DOCKER) compose up -d
