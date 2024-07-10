@@ -89,6 +89,7 @@
 * [2327](https://github.com/zeta-chain/node/pull/2327) - partially cherry picked the fix to Bitcoin outbound dust amount
 * [2362](https://github.com/zeta-chain/node/pull/2362) - set 1000 satoshis as minimum BTC amount that can be withdrawn from zEVM
 * [2382](https://github.com/zeta-chain/node/pull/2382) - add tx input and gas in rpc methods for synthetic eth txs
+* [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 
 ### CI
 * [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
