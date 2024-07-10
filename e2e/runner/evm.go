@@ -183,7 +183,7 @@ func (r *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	txHash := receipt.TxHash
 	blockHash := receipt.BlockHash
 
-	// #nosec G701 test - always in range
+	// #nosec G115 test - always in range
 	txIndex := int(receipt.TransactionIndex)
 
 	block, err := r.EVMClient.BlockByHash(r.Ctx, blockHash)

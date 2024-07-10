@@ -26,7 +26,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx 
 		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{
 			ChainId: cctx.GetCurrentOutboundParam().ReceiverChainId,
-			// #nosec G701 always in range
+			// #nosec G115 always in range
 			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
 			CctxIndex: cctx.Index,
 			Tss:       tss.TssPubkey,

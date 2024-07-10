@@ -170,10 +170,10 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
 	blockNum := must(e2eTest.ZEVMClient.BlockNumber(ctx))
 
-	// #nosec G701 e2eTest - always in range
+	// #nosec G115 e2eTest - always in range
 	nonce := must(e2eTest.ZEVMClient.NonceAt(ctx, deployerAccount.EVMAddress(), big.NewInt(int64(blockNum))))
 
-	// #nosec G701 e2e - always in range
+	// #nosec G115 e2e - always in range
 	zevmNonce = big.NewInt(int64(nonce))
 
 	// -------------- TEST BEGINS ------------------

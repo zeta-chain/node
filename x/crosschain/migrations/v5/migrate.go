@@ -62,9 +62,9 @@ func ResetTestnetNonce(
 		if !found {
 			continue
 		}
-		// #nosec G701 always in range for testnet chains
+		// #nosec G115 always in range for testnet chains
 		pn.NonceLow = int64(chainNonce.nonceLow)
-		// #nosec G701 always in range for testnet chains
+		// #nosec G115 always in range for testnet chains
 		pn.NonceHigh = int64(chainNonce.nonceHigh)
 		observerKeeper.SetPendingNonces(ctx, pn)
 	}

@@ -76,7 +76,7 @@ func (k msgServer) WhitelistERC20(
 		tmpCtx,
 		msg.Name,
 		msg.Symbol,
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		uint8(msg.Decimals),
 		chain.ChainId,
 		coin.CoinType_ERC20,
@@ -176,7 +176,7 @@ func (k msgServer) WhitelistERC20(
 		Name:                 msg.Name,
 		Symbol:               msg.Symbol,
 		CoinType:             coin.CoinType_ERC20,
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		GasLimit: uint64(msg.GasLimit),
 	}
 	k.fungibleKeeper.SetForeignCoins(ctx, foreignCoin)
