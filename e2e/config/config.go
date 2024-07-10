@@ -43,6 +43,7 @@ type Config struct {
 	// Default account to use when running tests and running setup
 	DefaultAccount     Account            `yaml:"default_account"`
 	AdditionalAccounts AdditionalAccounts `yaml:"additional_accounts"`
+	PolicyAccounts     PolicyAccounts     `yaml:"policy_accounts"`
 	RPCs               RPCs               `yaml:"rpcs"`
 	Contracts          Contracts          `yaml:"contracts"`
 	ZetaChainID        string             `yaml:"zeta_chain_id"`
@@ -65,6 +66,12 @@ type AdditionalAccounts struct {
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
 	UserFungibleAdmin Account `yaml:"user_fungible_admin"`
+}
+
+type PolicyAccounts struct {
+	EmergencyPolicyAccount   Account `yaml:"emergency_policy_account"`
+	OperationalPolicyAccount Account `yaml:"operational_policy_account"`
+	AdminPolicyAccount       Account `yaml:"admin_policy_account"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -196,6 +203,15 @@ func (a AdditionalAccounts) AsSlice() []Account {
 	}
 }
 
+func (a PolicyAccounts) AsSlice() []Account {
+	return []Account{
+		a.EmergencyPolicyAccount,
+		a.OperationalPolicyAccount,
+		a.AdminPolicyAccount,
+	}
+
+}
+
 // Validate validates the config
 func (c Config) Validate() error {
 	if c.RPCs.Bitcoin.Params != Mainnet &&
@@ -258,6 +274,18 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserFungibleAdmin, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.PolicyAccounts.EmergencyPolicyAccount, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.PolicyAccounts.OperationalPolicyAccount, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.PolicyAccounts.AdminPolicyAccount, err = generateAccount()
 	if err != nil {
 		return err
 	}
