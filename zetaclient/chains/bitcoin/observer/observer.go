@@ -656,7 +656,7 @@ func (ob *Observer) postBlockHeader(ctx context.Context, tip int64) error {
 	ob.logger.Inbound.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
 	chainState, err := ob.ZetacoreClient().GetBlockHeaderChainState(ctx, ob.Chain().ChainId)
-	if err == nil && chainState.EarliestHeight > 0 {
+	if err == nil && chainState != nil && chainState.EarliestHeight > 0 {
 		bn = chainState.LatestHeight + 1
 	}
 	if bn > tip {
