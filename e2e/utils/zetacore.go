@@ -18,6 +18,10 @@ type CCTXClient = crosschaintypes.QueryClient
 const (
 	FungibleAdminName = "fungibleadmin"
 
+	EmergencyPolicyName   = "emergency"
+	AdminPolicyName       = "admin"
+	OperationalPolicyName = "operational"
+
 	DefaultCctxTimeout = 4 * time.Minute
 )
 

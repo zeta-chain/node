@@ -35,10 +35,10 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	// Pause ETH ZRC20
 	r.Logger.Info("Pausing ETH")
 	msgPause := fungibletypes.NewMsgPauseZRC20(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.EmergencyPolicyName),
 		[]string{r.ETHZRC20Addr.Hex()},
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgPause)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msgPause)
 	require.NoError(r, err)
 	r.Logger.Info("pause zrc20 tx hash: %s", res.TxHash)
 
@@ -106,10 +106,10 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	// Unpause ETH ZRC20
 	r.Logger.Info("Unpausing ETH")
 	msgUnpause := fungibletypes.NewMsgUnpauseZRC20(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		[]string{r.ETHZRC20Addr.Hex()},
 	)
-	res, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgUnpause)
+	res, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUnpause)
 	require.NoError(r, err)
 
 	r.Logger.Info("unpause zrc20 tx hash: %s", res.TxHash)
