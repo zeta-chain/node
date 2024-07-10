@@ -163,7 +163,7 @@ func (signer *Signer) Sign(
 	nonce uint64,
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
-	log.Debug().Msgf("Sign: TSS signer: %s", signer.TSS().Pubkey())
+	log.Debug().Bytes("tss.pub_key", signer.TSS().Pubkey()).Msg("Sign: TSS signer")
 
 	// TODO: use EIP-1559 transaction type
 	// https://github.com/zeta-chain/node/issues/1952

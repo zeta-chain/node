@@ -4,14 +4,13 @@ package bg
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/rs/zerolog"
 )
 
 type config struct {
 	name   string
-	logger *zerolog.Logger
+	logger zerolog.Logger
 }
 
 type Opt func(*config)
@@ -21,12 +20,16 @@ func WithName(name string) Opt {
 }
 
 func WithLogger(logger zerolog.Logger) Opt {
-	return func(cfg *config) { cfg.logger = &logger }
+	return func(cfg *config) { cfg.logger = logger }
 }
 
 // Work emits a new task in the background
 func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
-	var cfg config
+	cfg := config{
+		name:   "",
+		logger: zerolog.Nop(),
+	}
+
 	for _, opt := range opts {
 		opt(&cfg)
 	}
@@ -55,10 +58,5 @@ func logError(err error, cfg config) {
 		name = "no task name specified"
 	}
 
-	if cfg.logger == nil {
-		log.Printf("Error occurred in background task %q: %s \n", name, err.Error())
-		return
-	}
-
-	cfg.logger.Error().Err(err).Str("worker.name", name).Msgf("Error occurred in background task")
+	cfg.logger.Error().Err(err).Str("worker.name", name).Msgf("Background task failed")
 }
