@@ -76,8 +76,11 @@ func CreateSignerMap(
 			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
+
+		chainName := evmConfig.Chain.ChainName.String()
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
+
 		signer, err := evmsigner.NewSigner(
 			ctx,
 			evmConfig.Chain,
@@ -91,19 +94,25 @@ func CreateSignerMap(
 			erc20CustodyAddress,
 		)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Err(err).Msgf("NewSigner error for EVM chain %q", chainName)
 			continue
 		}
+
 		signerMap[evmConfig.Chain.ChainId] = signer
+		logger.Std.Info().Msgf("NewSigner succeeded for EVM chain %q", chainName)
 	}
+
 	// BTC signer
-	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
-	if enabled {
+	btcChain, btcConfig, btcEnabled := appContext.GetBTCChainAndConfig()
+	if btcEnabled {
+		chainName := btcChain.ChainName.String()
+
 		signer, err := btcsigner.NewSigner(btcChain, tss, ts, logger, btcConfig)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
+			logger.Std.Error().Err(err).Msgf("NewSigner error for BTC chain %q", chainName)
 		} else {
 			signerMap[btcChain.ChainId] = signer
+			logger.Std.Info().Msgf("NewSigner succeeded for BTC chain %q", chainName)
 		}
 	}
 
@@ -135,7 +144,7 @@ func CreateChainObserverMap(
 		// create EVM client
 		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error dailing endpoint %s", evmConfig.Endpoint)
+			logger.Std.Error().Err(err).Msgf("error dailing endpoint %q", evmConfig.Endpoint)
 			continue
 		}
 
