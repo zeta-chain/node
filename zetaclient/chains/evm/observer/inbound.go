@@ -420,19 +420,26 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 		return 0, err
 	}
 
-	// query incoming gas asset
-	for bn := startBlock; bn <= toBlock; bn++ {
+	var (
 		// post new block header (if any) to zetacore and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
 		// https://github.com/zeta-chain/node/issues/1847
-		blockHeaderVerification, found := app.GetBlockHeaderEnabledChains(ob.Chain().ChainId)
-		if found && blockHeaderVerification.Enabled {
+		chainID                        = ob.Chain().ChainId
+		blockHeaderVerification, found = app.GetBlockHeaderEnabledChains(chainID)
+		shouldPostBlockHeader          = found && blockHeaderVerification.Enabled
+	)
+
+	// query incoming gas asset
+	for bn := startBlock; bn <= toBlock; bn++ {
+		if shouldPostBlockHeader {
 			// post block header for supported chains
 			// TODO: move this logic in its own routine
 			// https://github.com/zeta-chain/node/issues/2204
-			err := ob.postBlockHeader(ctx, toBlock)
-			if err != nil {
-				ob.Logger().Inbound.Error().Err(err).Msg("error posting block header")
+			if err := ob.postBlockHeader(ctx, toBlock); err != nil {
+				ob.Logger().Inbound.
+					Error().Err(err).
+					Uint64("tss.to_block", toBlock).
+					Msg("error posting block header")
 			}
 		}
 
@@ -441,8 +448,12 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 		if err != nil {
 			ob.Logger().Inbound.Error().
 				Err(err).
-				Msgf("ObserverTSSReceive: error observing TSS received token in block %d for chain %d", bn, ob.Chain().ChainId)
-			return bn - 1, nil // we have to re-scan from this block next time
+				Int64("tss.chain_id", chainID).
+				Uint64("tss.block_number", bn).
+				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlock")
+
+			// we have to re-scan from this block next time
+			return bn - 1, nil
 		}
 	}
 
