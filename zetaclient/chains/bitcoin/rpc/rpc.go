@@ -119,6 +119,7 @@ func GetRawTxResult(
 }
 
 // GetRecentFeeRate gets the highest fee rate from recent blocks
+// Note: this method is only used for testnet
 func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
 	blockNumber, err := rpcClient.GetBlockCount()
 	if err != nil {
@@ -148,7 +149,7 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 		}
 	}
 
-	// use 10 sat/byte as default estimation when fee rate is 0
+	// use 10 sat/byte as default estimation if recent fee rate drops to 0
 	if highestRate == 0 {
 		highestRate = defaultTestnetFeeRate
 	}
