@@ -346,6 +346,8 @@ func (ob *Observer) PostGasPrice() error {
 	feeRateEstimated := uint64(0)
 
 	// special handle regnet and testnet gas rate
+	// regnet:  RPC 'EstimateSmartFee' is not available
+	// testnet: RPC 'EstimateSmartFee' returns unreasonable high gas rate
 	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
 		feeRateEstimated, err = ob.specialHandleFeeRate()
 		if err != nil {
@@ -647,7 +649,7 @@ func (ob *Observer) LoadBroadcastedTxMap() error {
 func (ob *Observer) specialHandleFeeRate() (uint64, error) {
 	switch ob.Chain().NetworkType {
 	case chains.NetworkType_privnet:
-		// hardcode gas price here since RPC 'EstimateSmartFee' is not available on regtest (privnet)
+		// hardcode gas price for regnet
 		return 1, nil
 	case chains.NetworkType_testnet:
 		feeRateEstimated, err := rpc.GetRecentFeeRate(ob.btcClient, ob.netParams)
