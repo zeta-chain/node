@@ -258,12 +258,18 @@ start-stress-test: zetanode
 ###                         Upgrade Tests              						###
 ###############################################################################
 
-
+# build from source only if requested
+ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
-	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+	@echo "Building zetanode-upgrade from source"
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v17' .
 .PHONY: zetanode-upgrade
+else
+zetanode-upgrade: zetanode
+	@echo "Building zetanode-upgrade from binaries"
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal' .
+.PHONY: zetanode-upgrade
+endif
 
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
