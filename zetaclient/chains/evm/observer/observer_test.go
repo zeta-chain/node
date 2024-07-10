@@ -45,7 +45,7 @@ func getZetacoreContext(
 	}
 
 	// create config
-	cfg := config.NewConfig()
+	cfg := config.New(false)
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain:    evmChain,
 		Endpoint: endpoint,

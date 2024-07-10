@@ -78,7 +78,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	}
 
 	//Create new config struct
-	configData := config.New()
+	configData := config.New(true)
 
 	//Validate Peer eg. /ip4/172.0.2.1/tcp/6668/p2p/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp
 	if len(initArgs.peer) != 0 {

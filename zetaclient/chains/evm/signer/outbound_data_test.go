@@ -69,7 +69,7 @@ func TestSigner_SetupGas(t *testing.T) {
 }
 
 func TestSigner_NewOutboundData(t *testing.T) {
-	app := zctx.New(config.New(), zerolog.Nop())
+	app := zctx.New(config.New(false), zerolog.Nop())
 	ctx := zctx.WithAppContext(context.Background(), app)
 
 	// Setup evm signer

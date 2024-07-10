@@ -487,7 +487,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 
 func makeAppContext(_ *testing.T) (context.Context, *zctx.AppContext) {
 	var (
-		app = zctx.New(config.NewConfig(), zerolog.Nop())
+		app = zctx.New(config.New(false), zerolog.Nop())
 		ctx = context.Background()
 	)
 

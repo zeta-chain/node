@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -98,17 +99,18 @@ func NewSigner(
 	// create EVM client
 	client, ethSigner, err := getEVMRPC(ctx, endpoint)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to create EVM client")
 	}
 
 	// prepare ABIs
 	connectorABI, err := abi.JSON(strings.NewReader(zetaConnectorABI))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to build ZetaConnector ABI")
 	}
+
 	custodyABI, err := abi.JSON(strings.NewReader(erc20CustodyABI))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to build ERC20Custody ABI")
 	}
 
 	return &Signer{
@@ -163,7 +165,7 @@ func (signer *Signer) Sign(
 	nonce uint64,
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
-	log.Debug().Bytes("tss.pub_key", signer.TSS().Pubkey()).Msg("Sign: TSS signer")
+	log.Debug().Str("tss.pub_key", signer.TSS().EVMAddress().String()).Msg("Sign: TSS signer")
 
 	// TODO: use EIP-1559 transaction type
 	// https://github.com/zeta-chain/node/issues/1952
@@ -864,14 +866,16 @@ func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, e
 
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrapf(err, "unable to dial EVM client (endpoint %q)", endpoint)
 	}
 
 	chainID, err := client.ChainID(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unable to get chain ID")
 	}
+
 	ethSigner := ethtypes.LatestSignerForChainID(chainID)
+
 	return client, ethSigner, nil
 }
 

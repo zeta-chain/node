@@ -69,7 +69,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
-	cfg := config.NewConfig()
+	cfg := config.New(false)
 
 	// prepare mock arguments to create observer
 	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
@@ -563,7 +563,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	})
 }
 func makeCtx() context.Context {
-	app := zctx.New(config.New(), zerolog.Nop())
+	app := zctx.New(config.New(false), zerolog.Nop())
 
 	return zctx.WithAppContext(context.Background(), app)
 }

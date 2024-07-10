@@ -60,7 +60,7 @@ func CreateAppContext(
 	evmChainParams, btcChainParams *observertypes.ChainParams,
 ) *zctx.AppContext {
 	// new config
-	cfg := config.NewConfig()
+	cfg := config.New(false)
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain: evmChain,
 	}

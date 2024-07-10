@@ -17,7 +17,7 @@ import (
 
 func TestNew(t *testing.T) {
 	var (
-		testCfg = config.NewConfig()
+		testCfg = config.New(false)
 		logger  = zerolog.Nop()
 	)
 
@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("should return nil chain params if chain id is not found", func(t *testing.T) {
 		// create config with btc config
-		testCfg := config.NewConfig()
+		testCfg := config.New(false)
 		testCfg.BitcoinConfig = config.BTCConfig{
 			RPCUsername: "test_user",
 			RPCPassword: "test_password",
@@ -69,7 +69,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("should create new zetacore context with config containing evm chain params", func(t *testing.T) {
-		testCfg := config.NewConfig()
+		testCfg := config.New(false)
 		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
 				Chain: chains.Chain{
@@ -103,7 +103,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("should create new zetacore context with config containing btc config", func(t *testing.T) {
-		testCfg := config.NewConfig()
+		testCfg := config.New(false)
 		testCfg.BitcoinConfig = config.BTCConfig{
 			RPCUsername: "test username",
 			RPCPassword: "test password",
@@ -117,7 +117,7 @@ func TestNew(t *testing.T) {
 
 func TestAppContextUpdate(t *testing.T) {
 	var (
-		testCfg = config.NewConfig()
+		testCfg = config.New(false)
 		logger  = zerolog.Nop()
 	)
 
@@ -203,7 +203,7 @@ func TestAppContextUpdate(t *testing.T) {
 	t.Run(
 		"should update zetacore context after being created from config with evm and btc chain params",
 		func(t *testing.T) {
-			testCfg := config.NewConfig()
+			testCfg := config.New(false)
 			testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 				1: {
 					Chain: chains.Chain{
@@ -373,8 +373,8 @@ func TestIsInboundObservationEnabled(t *testing.T) {
 func TestGetBTCChainAndConfig(t *testing.T) {
 	logger := zerolog.Nop()
 
-	emptyConfig := config.NewConfig()
-	nonEmptyConfig := config.New()
+	emptyConfig := config.New(false)
+	nonEmptyConfig := config.New(true)
 
 	assertEmpty := func(t *testing.T, chain chains.Chain, btcConfig config.BTCConfig, enabled bool) {
 		assert.Empty(t, chain)
@@ -463,7 +463,7 @@ func TestGetBTCChainAndConfig(t *testing.T) {
 func TestGetBlockHeaderEnabledChains(t *testing.T) {
 	// ARRANGE
 	// Given app config
-	appContext := context.New(config.New(), zerolog.Nop())
+	appContext := context.New(config.New(false), zerolog.Nop())
 
 	// That was eventually updated
 	appContext.Update(
@@ -499,7 +499,7 @@ func TestGetBlockHeaderEnabledChains(t *testing.T) {
 func TestGetAdditionalChains(t *testing.T) {
 	// ARRANGE
 	// Given app config
-	appContext := context.New(config.New(), zerolog.Nop())
+	appContext := context.New(config.New(false), zerolog.Nop())
 
 	additionalChains := []chains.Chain{
 		sample.Chain(1),
@@ -536,7 +536,7 @@ func makeAppContext(
 	headerSupportedChains []lightclienttypes.HeaderSupportedChain,
 ) *context.AppContext {
 	// create config
-	cfg := config.NewConfig()
+	cfg := config.New(false)
 	logger := zerolog.Nop()
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain: evmChain,

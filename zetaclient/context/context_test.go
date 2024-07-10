@@ -24,7 +24,7 @@ func TestFromContext(t *testing.T) {
 
 	// ARRANGE #2
 	// Given basic app
-	app := context.New(config.NewConfig(), zerolog.Nop())
+	app := context.New(config.New(false), zerolog.Nop())
 
 	// That is included in the ctx
 	ctx = context.WithAppContext(ctx, app)
