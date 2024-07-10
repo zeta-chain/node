@@ -153,7 +153,8 @@ func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 	return addr.String(), nil
 }
 
-// GetAccountAddressFromName returns the account address from the given name
+// MustGetAccountAddressFromName returns the account address from the given name.It panics on error
+// and should be used in tests only
 func (zts ZetaTxServer) MustGetAccountAddressFromName(name string) string {
 	acc, err := zts.clientCtx.Keyring.Key(name)
 	if err != nil {

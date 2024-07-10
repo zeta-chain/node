@@ -58,14 +58,13 @@ type Account struct {
 
 // AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
-	UserERC20         Account `yaml:"user_erc20"`
-	UserZetaTest      Account `yaml:"user_zeta_test"`
-	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
-	UserBitcoin       Account `yaml:"user_bitcoin"`
-	UserEther         Account `yaml:"user_ether"`
-	UserMisc          Account `yaml:"user_misc"`
-	UserAdmin         Account `yaml:"user_admin"`
-	UserFungibleAdmin Account `yaml:"user_fungible_admin"`
+	UserERC20      Account `yaml:"user_erc20"`
+	UserZetaTest   Account `yaml:"user_zeta_test"`
+	UserZEVMMPTest Account `yaml:"user_zevm_mp_test"`
+	UserBitcoin    Account `yaml:"user_bitcoin"`
+	UserEther      Account `yaml:"user_ether"`
+	UserMisc       Account `yaml:"user_misc"`
+	UserAdmin      Account `yaml:"user_admin"`
 }
 
 type PolicyAccounts struct {
@@ -199,7 +198,6 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserEther,
 		a.UserMisc,
 		a.UserAdmin,
-		a.UserFungibleAdmin,
 	}
 }
 
@@ -209,7 +207,6 @@ func (a PolicyAccounts) AsSlice() []Account {
 		a.OperationalPolicyAccount,
 		a.AdminPolicyAccount,
 	}
-
 }
 
 // Validate validates the config
@@ -232,9 +229,21 @@ func (c Config) Validate() error {
 		}
 		err := account.Validate()
 		if err != nil {
-			return fmt.Errorf("validating account %d: %w", i, err)
+			return fmt.Errorf("validating additional account %d: %w", i, err)
 		}
 	}
+
+	policyAccounts := c.PolicyAccounts.AsSlice()
+	for i, account := range policyAccounts {
+		if account.RawEVMAddress == "" {
+			continue
+		}
+		err := account.Validate()
+		if err != nil {
+			return fmt.Errorf("validating policy account %d: %w", i, err)
+		}
+	}
+
 	return nil
 }
 
@@ -270,10 +279,6 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserAdmin, err = generateAccount()
-	if err != nil {
-		return err
-	}
-	c.AdditionalAccounts.UserFungibleAdmin, err = generateAccount()
 	if err != nil {
 		return err
 	}

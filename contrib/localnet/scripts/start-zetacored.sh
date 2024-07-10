@@ -219,8 +219,7 @@ then
 
 # set admin account
   zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
-  
-  address=$(yq -r '.additional_accounts.user_fungible_admin.bech32_address' /root/config.yml)
+
   emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
   operational_policy=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)

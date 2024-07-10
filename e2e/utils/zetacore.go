@@ -16,8 +16,6 @@ import (
 type CCTXClient = crosschaintypes.QueryClient
 
 const (
-	FungibleAdminName = "fungibleadmin"
-
 	EmergencyPolicyName   = "emergency"
 	AdminPolicyName       = "admin"
 	OperationalPolicyName = "operational"
