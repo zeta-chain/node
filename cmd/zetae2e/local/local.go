@@ -127,7 +127,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.EmergencyPolicyName, utils.OperationalPolicyName, utils.AdminPolicyName},
-		[]string{conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String(), conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String(), conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String()},
+		[]string{
+			conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String(),
+			conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String(),
+			conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String(),
+		},
 		conf.ZetaChainID,
 	)
 	noError(err)

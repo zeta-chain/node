@@ -67,16 +67,19 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// setup the gas token
 	require.NoError(r, err)
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		"",
-		chainParams.ChainId,
-		18,
-		"Sepolia ETH",
-		"sETH",
-		coin.CoinType_Gas,
-		100000,
-	))
+	_, err = newRunner.ZetaTxServer.BroadcastTx(
+		utils.OperationalPolicyName,
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+			"",
+			chainParams.ChainId,
+			18,
+			"Sepolia ETH",
+			"sETH",
+			coin.CoinType_Gas,
+			100000,
+		),
+	)
 	require.NoError(r, err)
 
 	// set the gas token in the runner
