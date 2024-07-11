@@ -47,6 +47,11 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+// SolanaConfig is the config for Solana chain
+type SolanaConfig struct {
+	Endpoint string
+}
+
 // ComplianceConfig is the config for compliance
 type ComplianceConfig struct {
 	LogPath             string   `json:"LogPath"`
@@ -81,6 +86,7 @@ type Config struct {
 
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   BTCConfig           `json:"BitcoinConfig"`
+	SolanaConfig    SolanaConfig        `json:"SolanaConfig"`
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
@@ -92,6 +98,11 @@ func NewConfig() Config {
 	return Config{
 		cfgLock:         &sync.RWMutex{},
 		EVMChainConfigs: make(map[int64]EVMConfig),
+
+		// FIXME_SOLANA: config this
+		SolanaConfig: SolanaConfig{
+			Endpoint: "http://solana:8899",
+		},
 	}
 }
 
@@ -122,6 +133,11 @@ func (c Config) GetBTCConfig() (BTCConfig, bool) {
 	defer c.cfgLock.RUnlock()
 
 	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
+}
+
+// GetSolanaConfig returns the Solana config
+func (c Config) GetSolanaConfig() (SolanaConfig, bool) {
+	return c.SolanaConfig, c.SolanaConfig != (SolanaConfig{})
 }
 
 // String returns the string representation of the config

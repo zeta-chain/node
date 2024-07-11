@@ -17,8 +17,7 @@ func solanaTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	initBitcoinNetwork bool,
-	testHeader bool,
+	_ bool,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {

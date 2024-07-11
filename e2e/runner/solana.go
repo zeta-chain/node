@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+
 	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 )
 
 // DepositSolWithAmount deposits Sol on ZetaChain with a specific amount
-func (runner *E2ERunner) DepositSolWithAmount(amount float64) (txHash *chainhash.Hash) {
-	runner.Logger.Print("⏳ depositing Sol into ZEVM")
+func (r *E2ERunner) DepositSolWithAmount(amount float64) (txHash *chainhash.Hash) {
+	r.Logger.Print("⏳ depositing Sol into ZEVM")
 
 	// list deployer utxos
-	utxos, err := runner.ListDeployerUTXOs()
+	utxos, err := r.ListDeployerUTXOs()
 	if err != nil {
 		panic(err)
 	}
@@ -34,17 +35,17 @@ func (runner *E2ERunner) DepositSolWithAmount(amount float64) (txHash *chainhash
 		))
 	}
 
-	runner.Logger.Info("ListUnspent:")
-	runner.Logger.Info("  spendableAmount: %f", spendableAmount)
-	runner.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
-	runner.Logger.Info("Now sending two txs to TSS address...")
+	r.Logger.Info("ListUnspent:")
+	r.Logger.Info("  spendableAmount: %f", spendableAmount)
+	r.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	r.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetabitcoin.DefaultDepositorFee
-	txHash, err = runner.SendToTSSFromDeployerToDeposit(amount, utxos)
+	txHash, err = r.SendToTSSFromDeployerToDeposit(amount, utxos)
 	if err != nil {
 		panic(err)
 	}
-	runner.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
+	r.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
 
 	return txHash
 }

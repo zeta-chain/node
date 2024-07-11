@@ -44,21 +44,33 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	}
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf(
+			"failed to get btc client: %w",
+			err,
+		)
 	}
 	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, account)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf(
+			"failed to get evm client: %w",
+			err,
+		)
 	}
 	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf(
+			"failed to get zeta clients: %w",
+			err,
+		)
 	}
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, account)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf(
+			"failed to get zevm client: %w",
+			err,
+		)
 	}
 	return btcRPCClient,
 		solanaClient,

@@ -8,6 +8,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
@@ -39,15 +40,17 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Print("recent blockhash: %s", recent.Value.Blockhash)
 
-	programId := solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
+	programID := solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
 	seed := []byte("meta")
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programID)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Print("computed pda: %s, bump %d\n", pdaComputed, bump)
 
-	privkey := solana.MustPrivateKeyFromBase58("4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C")
+	privkey := solana.MustPrivateKeyFromBase58(
+		"4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C",
+	)
 	r.Logger.Print("user pubkey: %s", privkey.PublicKey().String())
 	bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
 	if err != nil {
@@ -60,21 +63,21 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(programId))
-	inst.ProgID = programId
+	accountSlice = append(accountSlice, solana.Meta(programID))
+	inst.ProgID = programID
 	inst.AccountValues = accountSlice
 
 	type InitializeParams struct {
 		Discriminator [8]byte
 		TssAddress    [20]byte
-		ChainId       uint64
+		ChainID       uint64
 	}
 	r.Logger.Print("TSS EthAddress: %s", r.TSSAddress)
 
 	inst.DataBytes, err = borsh.Serialize(InitializeParams{
 		Discriminator: [8]byte{175, 175, 109, 31, 13, 152, 155, 237},
 		TssAddress:    r.TSSAddress,
-		ChainId:       uint64(chains.SolanaLocalnet.ChainId),
+		ChainID:       uint64(chains.SolanaLocalnet.ChainId),
 	})
 	if err != nil {
 		panic(err)
@@ -120,17 +123,24 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("error getting PDA info: %v", err)
 		panic(err)
 	}
+
+	// deserialize the PDA info
 	var pda PdaInfo
-	borsh.Deserialize(&pda, pdaInfo.Bytes())
+	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
+	if err != nil {
+		r.Logger.Print("error deserializing PDA info: %v", err)
+		panic(err)
+	}
 
 	r.Logger.Print("PDA info Tss: %v", pda.TssAddress)
-
 }
 
-func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
+func TestSolanaDeposit(r *runner.E2ERunner, _ []string) {
 	client := r.SolanaClient
 
-	privkey := solana.MustPrivateKeyFromBase58("4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C")
+	privkey := solana.MustPrivateKeyFromBase58(
+		"4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C",
+	)
 
 	// build & bcast a Depsosit tx
 	bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
@@ -146,11 +156,11 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 		r.Logger.Error("Error getting recent blockhash: %v", err)
 		panic(err)
 	}
-	r.Logger.Print("recent blockhash:", recent.Value.Blockhash)
+	r.Logger.Print("recent blockhash: %s", recent.Value.Blockhash)
 
-	programId := solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
+	programID := solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
 	seed := []byte("meta")
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programID)
 	if err != nil {
 		r.Logger.Error("Error finding program address: %v", err)
 		panic(err)
@@ -163,8 +173,8 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(programId))
-	inst.ProgID = programId
+	accountSlice = append(accountSlice, solana.Meta(programID))
+	inst.ProgID = programID
 	inst.AccountValues = accountSlice
 
 	type DepositInstructionParams struct {
@@ -238,5 +248,4 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	//		cctx.CctxStatus.StatusMessage),
 	//	)
 	//}
-
 }

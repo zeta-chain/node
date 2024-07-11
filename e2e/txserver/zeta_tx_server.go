@@ -37,6 +37,7 @@ import (
 	"github.com/evmos/ethermint/crypto/hd"
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -229,7 +230,11 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 	for {
 		select {
 		case <-exitAfter:
-			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d; tx hash %s", zts.blockTimeout, res.TxHash)
+			return nil, fmt.Errorf(
+				"timed out after waiting for tx to get included in the block: %d; tx hash %s",
+				zts.blockTimeout,
+				res.TxHash,
+			)
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
 

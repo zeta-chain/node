@@ -67,12 +67,12 @@ func (r *E2ERunner) SetTSSAddresses() error {
 }
 
 // SetSolanaContracts set Solana contracts
-func (runner *E2ERunner) SetSolanaContracts() {
-	runner.Logger.Print("⚙️ setting up Solana contracts")
+func (r *E2ERunner) SetSolanaContracts() {
+	r.Logger.Print("⚙️ setting up Solana contracts")
 
 	// set Solana contracts
 	// TODO: remove this hardcoded stuff for localnet
-	runner.GatewayProgram = solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
+	r.GatewayProgram = solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
 }
 
 // SetZEVMContracts set contracts for the ZEVM

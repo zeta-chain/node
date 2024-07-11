@@ -274,7 +274,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
-		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, solanaTests...))
+		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, testHeader, solanaTests...))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
 	if testAdmin {

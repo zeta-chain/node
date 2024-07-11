@@ -70,6 +70,17 @@ func (a *AppContext) Config() config.Config {
 	return a.config
 }
 
+// GetEnabledBTCChains returns the enabled solana chains
+func (a *AppContext) GetSolanaChainAndConfig() (chains.Chain, config.SolanaConfig, bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	// FIXME_SOLANA: config this
+	chain := chains.SolanaLocalnet
+	config, enabled := a.Config().GetSolanaConfig()
+	return chain, config, enabled
+}
+
 // GetBTCChainAndConfig returns btc chain and config if enabled
 func (a *AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, bool) {
 	btcConfig, configEnabled := a.Config().GetBTCConfig()

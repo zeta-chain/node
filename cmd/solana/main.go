@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	PYTH_PROGRAM_DEVNET = "gSbePebfvPy7tRqimPoVecS2UsBvYv46ynrzWocc92s" // this program has many many txs
+	pythProgramDevnet = "gSbePebfvPy7tRqimPoVecS2UsBvYv46ynrzWocc92s" // this program has many many txs
 )
 
 //go:embed gateway.json
@@ -31,11 +31,15 @@ func main() {
 	limit := 10
 	out, err := client.GetSignaturesForAddressWithOpts(
 		context.TODO(),
-		solana.MustPublicKeyFromBase58(PYTH_PROGRAM_DEVNET),
+		solana.MustPublicKeyFromBase58(pythProgramDevnet),
 		&rpc.GetSignaturesForAddressOpts{
-			Limit:  &limit,
-			Before: solana.MustSignatureFromBase58("5pLBywq74Nc6jYrWUqn9KjnYXHbQEY2UPkhWefZF5u4NYaUvEwz1Cirqaym9wDeHNAjiQwuLBfrdhXo8uFQA45jL"),
-			Until:  solana.MustSignatureFromBase58("2coX9CckSmJWeHVqJNANeD7m4J7pctpSomxMon3h36droxCVB3JDbLyWQKMjnf85ntuFGxMLySykEMaRd5MDw35e"),
+			Limit: &limit,
+			Before: solana.MustSignatureFromBase58(
+				"5pLBywq74Nc6jYrWUqn9KjnYXHbQEY2UPkhWefZF5u4NYaUvEwz1Cirqaym9wDeHNAjiQwuLBfrdhXo8uFQA45jL",
+			),
+			Until: solana.MustSignatureFromBase58(
+				"2coX9CckSmJWeHVqJNANeD7m4J7pctpSomxMon3h36droxCVB3JDbLyWQKMjnf85ntuFGxMLySykEMaRd5MDw35e",
+			),
 		},
 	)
 
@@ -65,11 +69,11 @@ func main() {
 		// Parsing a Deposit Instruction
 		// devnet tx: deposit with memo
 		// https://solana.fm/tx/51746triQeve21zP1bcVEPvvsoXt94B57TU5exBvoy938bhGCfzBtsvKJbLpS1zRc2dmb3S3HBHnhTfbtKCBpmqg
-		const DEPOSIT_TX = "51746triQeve21zP1bcVEPvvsoXt94B57TU5exBvoy938bhGCfzBtsvKJbLpS1zRc2dmb3S3HBHnhTfbtKCBpmqg"
+		const depositTx = "51746triQeve21zP1bcVEPvvsoXt94B57TU5exBvoy938bhGCfzBtsvKJbLpS1zRc2dmb3S3HBHnhTfbtKCBpmqg"
 
 		tx, err := client.GetTransaction(
 			context.TODO(),
-			solana.MustSignatureFromBase58(DEPOSIT_TX),
+			solana.MustSignatureFromBase58(depositTx),
 			&rpc.GetTransactionOpts{})
 		if err != nil {
 			log.Fatalf("Error getting transaction: %v", err)
@@ -111,11 +115,13 @@ func main() {
 	{
 		// explore failed transaction
 		//https://explorer.solana.com/tx/2LbBdmCkuVyQhHAvsZhZ1HLdH12jQbHY7brwH6xUBsZKKPuV8fomyz1Qh9CaCZSqo8FNefaR8ir7ngo7H3H2VfWv
-		tx_sig := solana.MustSignatureFromBase58("2LbBdmCkuVyQhHAvsZhZ1HLdH12jQbHY7brwH6xUBsZKKPuV8fomyz1Qh9CaCZSqo8FNefaR8ir7ngo7H3H2VfWv")
+		txSig := solana.MustSignatureFromBase58(
+			"2LbBdmCkuVyQhHAvsZhZ1HLdH12jQbHY7brwH6xUBsZKKPuV8fomyz1Qh9CaCZSqo8FNefaR8ir7ngo7H3H2VfWv",
+		)
 		client2 := rpc.New("https://solana-mainnet.g.allthatnode.com/archive/json_rpc/842c667c947e42e2a9995ac2ec75026d")
 		tx, err := client2.GetTransaction(
 			context.TODO(),
-			tx_sig,
+			txSig,
 			&rpc.GetTransactionOpts{})
 		if err != nil {
 			log.Fatalf("Error getting transaction: %v", err)
@@ -163,9 +169,9 @@ func main() {
 		}
 		fmt.Println("recent blockhash:", recent.Value.Blockhash)
 
-		programId := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
+		programID := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
 		seed := []byte("meta")
-		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
+		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programID)
 		if err != nil {
 			panic(err)
 		}
@@ -177,8 +183,8 @@ func main() {
 		accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 		accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 		accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-		accountSlice = append(accountSlice, solana.Meta(programId))
-		inst.ProgID = programId
+		accountSlice = append(accountSlice, solana.Meta(programID))
+		inst.ProgID = programID
 		inst.AccountValues = accountSlice
 
 		type DepositInstructionParams struct {
@@ -255,9 +261,9 @@ func main() {
 			Nonce         uint64
 		}
 		// fetch PDA account
-		programId := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
+		programID := solana.MustPublicKeyFromBase58("4Nt8tsYWQj3qC1TbunmmmDbzRXE4UQuzcGcqqgwy9bvX")
 		seed := []byte("meta")
-		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programId)
+		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, programID)
 		if err != nil {
 			panic(err)
 		}
@@ -272,8 +278,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+
+		// deserialize PDA account
 		var pda PdaInfo
-		borsh.Deserialize(&pda, pdaInfo.Bytes())
+		err = borsh.Deserialize(&pda, pdaInfo.Bytes())
+		if err != nil {
+			panic(err)
+		}
 
 		//spew.Dump(pda)
 		// building the transaction
@@ -316,13 +327,16 @@ func main() {
 			MessageHash:   messageHash,
 			Nonce:         nonce,
 		})
+		if err != nil {
+			panic(err)
+		}
 
 		var accountSlice []*solana.AccountMeta
 		accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 		accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 		accountSlice = append(accountSlice, solana.Meta(to).WRITE())
-		accountSlice = append(accountSlice, solana.Meta(programId))
-		inst.ProgID = programId
+		accountSlice = append(accountSlice, solana.Meta(programID))
+		inst.ProgID = programID
 		inst.AccountValues = accountSlice
 		tx, err := solana.NewTransaction(
 			[]solana.Instruction{&inst},
@@ -355,7 +369,5 @@ func main() {
 			panic(err)
 		}
 		spew.Dump(txsig)
-
 	}
-
 }

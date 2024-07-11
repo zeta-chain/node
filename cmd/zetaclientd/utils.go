@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
@@ -193,18 +193,39 @@ func CreateChainObserverMap(
 		}
 	}
 
-	// FIXME: config this
+	// FIXME_SOLANA: config chain params
+	solChain, solConfig, enabled := appContext.GetSolanaChainAndConfig()
 	solChainParams := observertypes.ChainParams{
 		GatewayAddress: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
 		IsSupported:    true,
-		ChainId:        chains.SolanaLocalnet.ChainId,
+		ChainId:        solChain.ChainId,
+		InboundTicker:  10,
 	}
-	co, err := solanaobserver.NewObserver(appContext, zetacoreClient, solChainParams, tss, dbpath, ts)
-	if err != nil {
-		logger.Std.Error().Err(err).Msg("NewObserver error for solana chain")
-	} else {
-		// TODO: config this
-		observerMap[solChainParams.ChainId] = co
+
+	// create Solana chain observer if enabled
+	if enabled {
+		rpcClient := solrpc.New(solConfig.Endpoint)
+		if rpcClient == nil {
+			// should never happen
+			return nil, fmt.Errorf("solana create Solana client error")
+		}
+
+		// create Solana chain observer
+		co, err := solanaobserver.NewObserver(
+			solChain,
+			rpcClient,
+			solChainParams,
+			appContext,
+			zetacoreClient,
+			tss,
+			logger,
+			ts,
+		)
+		if err != nil {
+			logger.Std.Error().Err(err).Msg("NewObserver error for solana chain")
+		} else {
+			observerMap[solChainParams.ChainId] = co
+		}
 	}
 
 	return observerMap, nil
