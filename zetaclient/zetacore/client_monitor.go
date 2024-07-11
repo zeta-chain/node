@@ -31,7 +31,7 @@ func (c *Client) MonitorVoteOutboundResult(
 	}()
 
 	call := func() error {
-		return c.monitorVoteOutboundResult(ctx, zetaTxHash, retryGasLimit, msg)
+		return retry.Retry(c.monitorVoteOutboundResult(ctx, zetaTxHash, retryGasLimit, msg))
 	}
 
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval/2, monitorInterval)
@@ -106,7 +106,7 @@ func (c *Client) MonitorVoteInboundResult(
 	}()
 
 	call := func() error {
-		return c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg)
+		return retry.Retry(c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg))
 	}
 
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval/2, monitorInterval)

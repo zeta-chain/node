@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/retry"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
 // PostVoteBlockHeader posts a vote on an observed block header
@@ -171,9 +172,12 @@ func (c *Client) PostVoteOutbound(
 	}
 
 	go func() {
-		// Ideally we need to bump go to v1.21+ and use context.WithoutCancel(...)
-		anotherCtx := context.Background()
-		_ = c.MonitorVoteOutboundResult(anotherCtx, zetaTxHash, retryGasLimit, msg)
+		ctxForWorker := zctx.Copy(ctx, context.Background())
+
+		errMonitor := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		if errMonitor != nil {
+			c.logger.Error().Err(err).Msg("PostVoteOutbound: failed to monitor vote outbound result")
+		}
 	}()
 
 	return zetaTxHash, ballotIndex, nil
@@ -215,9 +219,12 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		// Ideally we need to bump go to v1.21+ and use context.WithoutCancel(...)
-		anotherCtx := context.Background()
-		_ = c.MonitorVoteInboundResult(anotherCtx, zetaTxHash, retryGasLimit, msg)
+		ctxForWorker := zctx.Copy(ctx, context.Background())
+
+		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		if errMonitor != nil {
+			c.logger.Error().Err(err).Msg("PostVoteInbound: failed to monitor vote inbound result")
+		}
 	}()
 
 	return zetaTxHash, ballotIndex, nil
