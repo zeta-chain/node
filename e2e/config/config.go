@@ -65,6 +65,7 @@ type AdditionalAccounts struct {
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
 	UserFungibleAdmin Account `yaml:"user_fungible_admin"`
+	UserIBCRelayer    Account `yaml:"user_ibc_relayer"`
 }
 
 // RPCs contains the configuration for the RPC endpoints

@@ -1,0 +1,25 @@
+[[chains]]
+id = "zetachain"
+rpc_addr = "http://localhost:26657"
+grpc_addr = "http://localhost:9090"
+websocket_addr = "ws://localhost:26657/websocket"
+rpc_timeout = "10s"
+account_prefix = "zeta"
+key_name = "relayer"
+store_prefix = "ibc"
+gas_price = { denom = "azeta", amount = 0.025 }
+gas_adjustment = 1.2
+max_gas = 2000000
+
+[[chains]]
+id = "mars"
+rpc_addr = "http://localhost:26658"
+grpc_addr = "http://localhost:9091"
+websocket_addr = "ws://localhost:26658/websocket"
+rpc_timeout = "10s"
+account_prefix = "cosmos"
+key_name = "relayer"
+store_prefix = "ibc"
+gas_price = { denom = "stake", amount = 0.025 }
+gas_adjustment = 1.2
+max_gas = 2000000
