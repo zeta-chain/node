@@ -36,18 +36,10 @@ func (k Keeper) VoteOnOutboundBallot(
 		return false, false, ballot, "", observertypes.ErrNotObserver
 	}
 
-	// fetch or create ballot
-	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, observationChain, observertypes.ObservationType_OutboundTx)
+	ballot, isFinalized, isNew, err = k.VoteOnBallot(ctx, observationChain, ballotIndex, observertypes.ObservationType_OutboundTx, voter, observertypes.ConvertReceiveStatusToVoteType(receiveStatus))
 	if err != nil {
 		return false, false, ballot, "", err
 	}
 
-	// add vote to ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, observertypes.ConvertReceiveStatusToVoteType(receiveStatus))
-	if err != nil {
-		return false, false, ballot, "", err
-	}
-
-	ballot, isFinalizedInThisBlock := k.CheckIfFinalizingVote(ctx, ballot)
-	return isFinalizedInThisBlock, isNew, ballot, observationChain.String(), nil
+	return isFinalized, isNew, ballot, observationChain.String(), nil
 }

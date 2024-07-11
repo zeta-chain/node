@@ -13,25 +13,25 @@ import (
 
 func (k msgServer) VoteBlame(
 	goCtx context.Context,
-	vote *types.MsgVoteBlame,
+	msg *types.MsgVoteBlame,
 ) (*types.MsgVoteBlameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := types.ObservationType_TSSKeySign
 
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
-	observationChain, found := k.GetSupportedChainFromChainID(ctx, vote.ChainId)
+	observationChain, found := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
 		return nil, cosmoserrors.Wrap(
 			crosschainTypes.ErrUnsupportedChain,
-			fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId),
+			fmt.Sprintf("ChainID %d, Blame vote", msg.ChainId),
 		)
 	}
 
-	if ok := k.IsNonTombstonedObserver(ctx, vote.Creator); !ok {
+	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, types.ErrNotObserver
 	}
 
-	index := vote.Digest()
+	index := msg.Digest()
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
 	ballot, isNew, err := k.FindBallot(ctx, index, observationChain, observationType)
@@ -40,11 +40,11 @@ func (k msgServer) VoteBlame(
 	}
 
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, vote.BlameInfo.Index, observationChain.String())
+		EmitEventBallotCreated(ctx, ballot, msg.BlameInfo.Index, observationChain.String())
 	}
 
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, vote.Creator, types.VoteType_SuccessObservation)
+	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, types.VoteType_SuccessObservation)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +59,6 @@ func (k msgServer) VoteBlame(
 	// below only happens when ballot is finalized: exactly when threshold vote is in
 	// ******************************************************************************
 
-	k.SetBlame(ctx, vote.BlameInfo)
+	k.SetBlame(ctx, msg.BlameInfo)
 	return &types.MsgVoteBlameResponse{}, nil
 }

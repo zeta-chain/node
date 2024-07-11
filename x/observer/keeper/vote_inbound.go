@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -64,22 +64,14 @@ func (k Keeper) VoteOnInboundBallot(
 		}
 	}
 
-	// checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InboundTx)
+	ballot, isFinalized, isNew, err := k.VoteOnBallot(ctx, senderChain, ballotIndex, types.ObservationType_InboundTx, voter, types.VoteType_SuccessObservation)
 	if err != nil {
 		return false, false, err
 	}
+
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, inboundHash, senderChain.String())
 	}
 
-	// adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, types.VoteType_SuccessObservation)
-	if err != nil {
-		return false, isNew, err
-	}
-
-	// checks if the ballot is finalized
-	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	return isFinalized, isNew, nil
 }
