@@ -145,6 +145,7 @@ type ZetacoreClient interface {
 	) (string, error)
 
 	Stop()
+	OnBeforeStop(callback func())
 }
 
 // BTCRPCClient is the interface for BTC RPC client

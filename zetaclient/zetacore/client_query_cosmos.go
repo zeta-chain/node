@@ -42,7 +42,8 @@ func (c *Client) GetGenesisSupply(ctx context.Context) (sdkmath.Int, error) {
 	return bankstate.Supply.AmountOf(config.BaseDenom), nil
 }
 
-// GetUpgradePlan returns the current upgrade plan
+// GetUpgradePlan returns the current upgrade plan.
+// if there is no active upgrade plan, plan will be nil, err will be nil as well.
 func (c *Client) GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error) {
 	in := &upgradetypes.QueryCurrentPlanRequest{}
 

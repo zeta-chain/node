@@ -593,6 +593,11 @@ func (_m *ZetacoreClient) ListPendingCCTXWithinRateLimit(ctx context.Context) (*
 	return r0, r1
 }
 
+// OnBeforeStop provides a mock function with given fields: callback
+func (_m *ZetacoreClient) OnBeforeStop(callback func()) {
+	_m.Called(callback)
+}
+
 // PostVoteBlameData provides a mock function with given fields: ctx, _a1, chainID, index
 func (_m *ZetacoreClient) PostVoteBlameData(ctx context.Context, _a1 *blame.Blame, chainID int64, index string) (string, error) {
 	ret := _m.Called(ctx, _a1, chainID, index)

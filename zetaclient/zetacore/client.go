@@ -48,11 +48,12 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg params.EncodingConfig
-	keys        keyinterfaces.ObserverKeys
-	chainID     string
-	chain       chains.Chain
-	stop        chan struct{}
+	encodingCfg          params.EncodingConfig
+	keys                 keyinterfaces.ObserverKeys
+	chainID              string
+	chain                chains.Chain
+	stop                 chan struct{}
+	onBeforeStopCallback []func()
 
 	mu sync.RWMutex
 }
@@ -274,9 +275,21 @@ func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
 }
 
+// OnBeforeStop adds a callback to be called before the client stops.
+func (c *Client) OnBeforeStop(callback func()) {
+	c.onBeforeStopCallback = append(c.onBeforeStopCallback, callback)
+}
+
+// Stop stops the client and optionally calls the onBeforeStop callbacks.
 func (c *Client) Stop() {
-	c.logger.Info().Msgf("zetacore client is stopping")
-	close(c.stop) // this notifies all configupdater to stop
+	c.logger.Info().Msgf("Stopping zetacore client")
+
+	for i := len(c.onBeforeStopCallback) - 1; i >= 0; i-- {
+		c.logger.Info().Int("callback.index", i).Msgf("calling onBeforeStopCallback")
+		c.onBeforeStopCallback[i]()
+	}
+
+	close(c.stop)
 }
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
@@ -341,15 +354,19 @@ func (c *Client) UpdateZetacoreContext(
 
 	plan, err := c.GetUpgradePlan(ctx)
 	if err != nil {
-		// if there is no active upgrade plan, plan will be nil, err will be nil as well.
 		return fmt.Errorf("failed to get upgrade plan: %w", err)
 	}
 
-	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		c.logger.Warn().
-			Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
-				"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		c.stop <- struct{}{} // notify Orchestrator to stop Observers, Signers, and Orchestrator itself
+	// Stop client and notify dependant services to stop (Orchestrator, Observers, and Signers)
+	if plan != nil && bn == plan.Height-1 {
+		c.logger.Warn().Msgf(
+			"Active upgrade plan detected and upgrade height reached: %s at height %d; Stopping ZetaClient;"+
+				" please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd",
+			plan.Name,
+			plan.Height,
+		)
+
+		c.Stop()
 	}
 
 	additionalChains, err := c.GetAdditionalChains(ctx)

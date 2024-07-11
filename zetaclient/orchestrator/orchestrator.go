@@ -113,17 +113,15 @@ func (oc *Orchestrator) MonitorCore(ctx context.Context) error {
 	// start cctx scheduler
 	bg.Work(ctx, oc.StartCctxScheduler, bg.WithName("StartCctxScheduler"), bg.WithLogger(oc.logger.Std))
 
-	// watch for upgrade plan from zetacore
-	go func() {
-		// wait for upgrade plan signal to arrive
-		oc.zetacoreClient.Stop()
-
+	shutdownOrchestrator := func() {
 		// now stop orchestrator and all observers
 		close(oc.stop)
 		for _, c := range oc.observerMap {
 			c.Stop()
 		}
-	}()
+	}
+
+	oc.zetacoreClient.OnBeforeStop(shutdownOrchestrator)
 
 	return nil
 }
