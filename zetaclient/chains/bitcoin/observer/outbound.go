@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 // GetTxID returns a unique id for outbound tx
@@ -191,11 +192,14 @@ func (ob *Observer) IsOutboundProcessed(
 
 	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
-	// not used with Bitcoin
 	const (
-		gasUsed  = 0
-		gasPrice = 0
-		gasLimit = 0
+		// not used with Bitcoin
+		outboundGasUsed  = 0
+		outboundGasPrice = 0
+		outboundGasLimit = 0
+
+		gasLimit      = zetacore.PostVoteOutboundGasLimit
+		gasRetryLimit = 0
 	)
 
 	msg := crosschaintypes.NewMsgVoteOutbound(
@@ -206,9 +210,10 @@ func (ob *Observer) IsOutboundProcessed(
 		// #nosec G701 always positive
 		uint64(blockHeight),
 
-		gasUsed,
-		math.NewInt(gasPrice),
-		gasLimit,
+		// not used with Bitcoin
+		outboundGasUsed,
+		math.NewInt(outboundGasPrice),
+		outboundGasLimit,
 
 		math.NewUintFromBigInt(amountInSat),
 		chains.ReceiveStatus_success,
@@ -217,7 +222,7 @@ func (ob *Observer) IsOutboundProcessed(
 		coin.CoinType_Gas,
 	)
 
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, 0, 0, msg)
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
 
 	lf := map[string]any{
 		"outbound.external_tx_hash": res.TxID,

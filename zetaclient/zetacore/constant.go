@@ -12,7 +12,7 @@ const (
 	// PostGasPriceGasLimit is the gas limit for voting new gas price
 	PostGasPriceGasLimit = 1_500_000
 
-	// PostVoteInboundGasLimit is the gas limit for voting on observed inbound tx
+	// PostVoteInboundGasLimit is the gas limit for voting on observed inbound tx (for zetachain itself)
 	PostVoteInboundGasLimit = 400_000
 
 	// PostVoteInboundExecutionGasLimit is the gas limit for voting on observed inbound tx and executing it
@@ -36,7 +36,7 @@ const (
 	// DefaultRetryInterval is the interval between retries in seconds
 	DefaultRetryInterval = 5
 
-	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx
+	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx (for zetachain itself)
 	PostVoteOutboundGasLimit = 400_000
 
 	// PostVoteOutboundRevertGasLimit is the gas limit for voting on observed outbound tx for revert (when outbound fails)

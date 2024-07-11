@@ -82,7 +82,7 @@ func (c *Client) Broadcast(
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to build unsigned tx")
 	}
 
 	builder.SetGasLimit(gasLimit)
@@ -107,7 +107,6 @@ func (c *Client) Broadcast(
 	// broadcast to a Tendermint node
 	commit, err := c.cosmosClientContext.BroadcastTxSync(txBytes)
 	if err != nil {
-		c.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
 		return "", errors.Wrap(err, "fail to broadcast tx sync")
 	}
 
