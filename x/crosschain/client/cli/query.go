@@ -36,6 +36,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdPendingCctx(),
 		CmdListInboundTrackerByChain(),
 		CmdListInboundTrackers(),
+		CmdShowInboundTracker(),
 		CmdGetZetaAccounting(),
 		CmdListPendingCCTXWithinRateLimit(),
 

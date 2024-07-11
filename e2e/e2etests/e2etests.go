@@ -100,6 +100,7 @@ const (
 	TestUpdateBytecodeZRC20Name      = "update_bytecode_zrc20"
 	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
 	TestRateLimiterName              = "rate_limiter"
+	TestAdminTransactionsName        = "admin_transactions"
 
 	/*
 	 Special tests
@@ -530,6 +531,12 @@ var AllE2ETests = []runner.E2ETest{
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
 		TestRateLimiter,
+	),
+	runner.NewE2ETest(
+		TestAdminTransactionsName,
+		"test admin critical admin transactions that have not been tested by any other test",
+		[]runner.ArgDefinition{},
+		TestAdminTransactions,
 	),
 	/*
 	 Special tests

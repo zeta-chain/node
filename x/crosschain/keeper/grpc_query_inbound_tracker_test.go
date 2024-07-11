@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -47,4 +47,37 @@ func TestKeeper_InboundTrackerAll(t *testing.T) {
 	res, err := k.InboundTrackerAll(ctx, &types.QueryAllInboundTrackersRequest{})
 	require.NoError(t, err)
 	require.Equal(t, 2, len(res.InboundTracker))
+}
+
+func TestKeeper_InboundTracker(t *testing.T) {
+	t.Run("successfully get inbound tracker", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		hash := sample.Hash().Hex()
+		chainID := chains.GoerliLocalnet.ChainId
+		k.SetInboundTracker(ctx, types.InboundTracker{
+			ChainId:  chainID,
+			TxHash:   hash,
+			CoinType: coin.CoinType_Gas,
+		})
+
+		res, err := k.InboundTracker(ctx, &types.QueryInboundTrackerRequest{
+			ChainID: chainID,
+			TxHash:  hash,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, res.InboundTracker)
+	})
+
+	t.Run("inbound tracker not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		hash := sample.Hash().Hex()
+		chainID := chains.GoerliLocalnet.ChainId
+
+		res, err := k.InboundTracker(ctx, &types.QueryInboundTrackerRequest{
+			ChainID: chainID,
+			TxHash:  hash,
+		})
+		require.ErrorContains(t, err, "not found")
+		require.Nil(t, res)
+	})
 }

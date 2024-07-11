@@ -11,6 +11,32 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+func CmdShowInboundTracker() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "show-inbound-tracker [chainId] [txHash]",
+		Short: "shows an inbound tracker by chainId and txHash",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			argChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			params := &types.QueryInboundTrackerRequest{
+				ChainID: argChain,
+				TxHash:  args[1],
+			}
+			res, err := queryClient.InboundTracker(context.Background(), params)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
 func CmdListInboundTrackerByChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-inbound-tracker [chainId]",
