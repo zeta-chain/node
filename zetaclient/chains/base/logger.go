@@ -58,20 +58,22 @@ func InitLogger(cfg config.Config) (Logger, error) {
 		return DefaultLogger(), err
 	}
 
+	level := zerolog.Level(cfg.LogLevel)
+
 	// create loggers based on configured level and format
 	var std zerolog.Logger
 	var compliance zerolog.Logger
 	switch cfg.LogFormat {
 	case "json":
-		std = zerolog.New(os.Stdout).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
-		compliance = zerolog.New(file).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
+		std = zerolog.New(os.Stdout).Level(level).With().Timestamp().Logger()
+		compliance = zerolog.New(file).Level(level).With().Timestamp().Logger()
 	case "text":
 		std = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
 			Level(zerolog.Level(cfg.LogLevel)).
 			With().
 			Timestamp().
 			Logger()
-		compliance = zerolog.New(file).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
+		compliance = zerolog.New(file).Level(level).With().Timestamp().Logger()
 	default:
 		std = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
 		compliance = zerolog.New(file).With().Timestamp().Logger()
