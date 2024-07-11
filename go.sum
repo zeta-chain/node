@@ -1734,8 +1734,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94 h1:M54ljayJvy+WlEVdUmX8pgo1nA+XguB3mLhm3wi2z9o=
 github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94/go.mod h1:s1zA6OpXv3Tb5I0M6M6j5fo/AssaZL/pgkc7G0W2kN8=
-github.com/zeta-chain/go-tss v0.1.1-0.20240430111318-1785e48eb127 h1:AGQepvsMIVHAHPlplzNcSCyMoGBY1DfO4WHG/QHUSIU=
-github.com/zeta-chain/go-tss v0.1.1-0.20240430111318-1785e48eb127/go.mod h1:bVpAoSlRYYCY/R34horVU3cheeHqhSVxygelc++emIU=
+github.com/zeta-chain/go-tss v0.1.1-0.20240711114423-d6125e8b3b69 h1:9OkWQkYWRyLWdaorf8ORhZk2f6hmR0IjXsC6w7PySAw=
+github.com/zeta-chain/go-tss v0.1.1-0.20240711114423-d6125e8b3b69/go.mod h1:bVpAoSlRYYCY/R34horVU3cheeHqhSVxygelc++emIU=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2 h1:gd2uE0X+ZbdFJ8DubxNqLbOVlCB12EgWdzSNRAR82tM=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2/go.mod h1:x7Bkwbzt2W2lQfjOirnff0Dj+tykdbTG1FMJPVPZsvE=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240418181724-c222fd3ae1f5 h1:ljM7xka3WZvth9k1uYxrG3/FKQQTkR96FZlIjUKOoYw=
