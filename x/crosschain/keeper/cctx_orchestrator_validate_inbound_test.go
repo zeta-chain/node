@@ -98,7 +98,6 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 
 		// Setup mock data
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
@@ -113,12 +112,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		receiverChain := chains.Goerli
 		senderChain := chains.Goerli
 		sender := sample.EthAddress()
-		tssList := sample.TssList(3)
 
-		// Set up mocks for CheckIfMigrationDeposit
-		observerMock.On("GetAllTSS", ctx).Return(tssList)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, true)
-		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
 		// setup Mocks for GetTSS
 		observerMock.On("GetTSS", mock.Anything).Return(tss, false)
 		// setup Mocks for IsInboundEnabled
@@ -379,6 +373,9 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		sender := sample.EthAddress()
 		tssList := sample.TssList(3)
 
+		// setup Mocks for GetTSS
+		observerMock.On("GetTSS", mock.Anything).Return(tssList[0], true)
+
 		// Set up mocks for CheckIfMigrationDeposit
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, false)
@@ -620,8 +617,9 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		chain := chains.Chain{
-			ChainId:   999,
-			Consensus: chains.Consensus_bitcoin,
+			ChainId:     999,
+			Consensus:   chains.Consensus_bitcoin,
+			CctxGateway: chains.CCTXGateway_observers,
 		}
 		tssList := sample.TssList(3)
 		sender := sample.AccAddress()
@@ -640,14 +638,15 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		require.ErrorContains(t, err, "no Bitcoin net params for chain ID: 999")
 	})
 
-	t.Run("returns early if sender chain is zeta chain", func(t *testing.T) {
+	t.Run("fails if gateway is not observer ", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t,
 			keepertest.CrosschainMockOptions{
 				UseAuthorityMock: true,
 			})
 
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		chain := chains.ZetaChainTestnet
+		chain := chains.GoerliLocalnet
+		chain.CctxGateway = chains.CCTXGateway_zevm
 		sender := sample.AccAddress()
 
 		// Set up mocks

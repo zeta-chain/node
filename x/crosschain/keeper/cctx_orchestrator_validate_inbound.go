@@ -17,14 +17,14 @@ func (k Keeper) ValidateInbound(
 	msg *types.MsgVoteInbound,
 	shouldPayGas bool,
 ) (*types.CrossChainTx, error) {
-	err := k.CheckIfMigrationDeposit(ctx, msg)
-	if err != nil {
-		return nil, err
-	}
-
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
+	}
+
+	err := k.CheckIfMigrationDeposit(ctx, msg)
+	if err != nil {
+		return nil, err
 	}
 
 	// Do not process if inbound is disabled
@@ -61,15 +61,15 @@ func (k Keeper) ValidateInbound(
 // If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit and process the CCTX
 func (k Keeper) CheckIfMigrationDeposit(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
-	// Ignore cctx originating from zeta chain/zevm for this check as there is no TSS in zeta chain
-	if chains.IsZetaChain(msg.SenderChainId, additionalChains) {
-		return nil
-	}
 
 	historicalTssList := k.zetaObserverKeeper.GetAllTSS(ctx)
 	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
 	if !found {
 		return observertypes.ErrSupportedChains.Wrapf("chain not found for chainID %d", msg.SenderChainId)
+	}
+
+	if chain.CctxGateway != chains.CCTXGateway_observers {
+		return nil
 	}
 
 	for _, tss := range historicalTssList {
