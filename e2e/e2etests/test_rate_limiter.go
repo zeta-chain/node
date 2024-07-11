@@ -71,8 +71,8 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	// https://github.com/zeta-chain/node/issues/2090
 	r.Logger.Print("rate limiter enabled")
 	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount))
-	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, ethAmount))
-	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, erc20Amount))
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeETH, ethAmount))
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeERC20, erc20Amount))
 
 	// Disable rate limiter
 	r.Logger.Info("disabling rate limiter")
