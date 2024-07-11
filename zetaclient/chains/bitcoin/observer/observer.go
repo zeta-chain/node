@@ -25,6 +25,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -340,44 +341,44 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 // PostGasPrice posts gas price to zetacore
 // TODO(revamp): move to gas price file
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	// hardcode gas price here since this RPC is not available on regtest
-	if chains.IsBitcoinRegnet(ob.Chain().ChainId) {
-		blockNumber, err := ob.btcClient.GetBlockCount()
+	var (
+		err              error
+		feeRateEstimated uint64
+	)
+
+	// special handle regnet and testnet gas rate
+	// regnet:  RPC 'EstimateSmartFee' is not available
+	// testnet: RPC 'EstimateSmartFee' returns unreasonable high gas rate
+	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
+		feeRateEstimated, err = ob.specialHandleFeeRate()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
 		}
-
-		// #nosec G701 always in range
-		_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), 1, "100", uint64(blockNumber))
+	} else {
+		// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
+		feeResult, err := ob.btcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
 		if err != nil {
-			ob.logger.GasPrice.Err(err).Msg("PostGasPrice:")
-			return err
+			return errors.Wrap(err, "unable to estimate smart fee")
 		}
-		return nil
+		if feeResult.Errors != nil || feeResult.FeeRate == nil {
+			return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
+		}
+		if *feeResult.FeeRate > math.MaxInt64 {
+			return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
+		}
+		feeRateEstimated = bitcoin.FeeRateToSatPerByte(*feeResult.FeeRate).Uint64()
 	}
 
-	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-	feeResult, err := ob.btcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
-	if err != nil {
-		return err
-	}
-	if feeResult.Errors != nil || feeResult.FeeRate == nil {
-		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
-	}
-	if *feeResult.FeeRate > math.MaxInt64 {
-		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
-	}
-	feeRatePerByte := bitcoin.FeeRateToSatPerByte(*feeResult.FeeRate)
-
+	// query the current block number
 	blockNumber, err := ob.btcClient.GetBlockCount()
 	if err != nil {
 		return err
 	}
 
 	// #nosec G701 always positive
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRatePerByte.Uint64(), "100", uint64(blockNumber))
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
 	if err != nil {
-		ob.logger.GasPrice.Err(err).Msg("PostGasPrice:")
+		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
 		return err
 	}
 
@@ -641,6 +642,23 @@ func (ob *Observer) LoadBroadcastedTxMap() error {
 		ob.broadcastedTx[entry.Key] = entry.Hash
 	}
 	return nil
+}
+
+// specialHandleFeeRate handles the fee rate for regnet and testnet
+func (ob *Observer) specialHandleFeeRate() (uint64, error) {
+	switch ob.Chain().NetworkType {
+	case chains.NetworkType_privnet:
+		// hardcode gas price for regnet
+		return 1, nil
+	case chains.NetworkType_testnet:
+		feeRateEstimated, err := rpc.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		if err != nil {
+			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
+		}
+		return feeRateEstimated, nil
+	default:
+		return 0, fmt.Errorf(" unsupported bitcoin network type %d", ob.Chain().NetworkType)
+	}
 }
 
 // isTssTransaction checks if a given transaction was sent by TSS itself.
