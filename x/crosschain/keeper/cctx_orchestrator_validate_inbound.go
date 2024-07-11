@@ -17,7 +17,7 @@ func (k Keeper) ValidateInbound(
 	msg *types.MsgVoteInbound,
 	shouldPayGas bool,
 ) (*types.CrossChainTx, error) {
-	err := k.CheckMigration(ctx, msg)
+	err := k.CheckIfMigrationDeposit(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,9 @@ func (k Keeper) ValidateInbound(
 	return &cctx, nil
 }
 
-// CheckMigration checks if the sender is a TSS address and returns an error if it is.
-// If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit.
-func (k Keeper) CheckMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error {
+// CheckIfMigrationDeposit checks if the sender is a TSS address and returns an error if it is.
+// If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit and process the CCTX
+func (k Keeper) CheckIfMigrationDeposit(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 	// Ignore cctx originating from zeta chain/zevm for this check as there is no TSS in zeta chain
 	if chains.IsZetaChain(msg.SenderChainId, additionalChains) {
