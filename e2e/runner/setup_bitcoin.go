@@ -24,9 +24,6 @@ func (r *E2ERunner) AddTSSToNode() {
 	// mine some blocks to get some BTC into the deployer address
 	_, err = r.GenerateToAddressIfLocalBitcoin(101, r.BTCDeployerAddress)
 	require.NoError(r, err)
-
-	_, err = r.GenerateToAddressIfLocalBitcoin(4, r.BTCDeployerAddress)
-	require.NoError(r, err)
 }
 
 func (r *E2ERunner) SetupBitcoinAccount(initNetwork bool) {

@@ -326,7 +326,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testMigration {
-
 		migrationStartTime := time.Now()
 		logger.Print("🏁 starting tss migration")
 
