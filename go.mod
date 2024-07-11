@@ -39,7 +39,7 @@ require (
 	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/go-tss v0.1.1-0.20240430111318-1785e48eb127
+	github.com/zeta-chain/go-tss v0.1.1-0.20240711114423-d6125e8b3b69
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240418181724-c222fd3ae1f5
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
@@ -349,7 +349,7 @@ require (
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.2.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

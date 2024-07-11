@@ -1,8 +1,8 @@
 config:
-  target: "http://localhost:9545"
+  target: "-=http_request_protocol=-://-=endpoint_to_test=-"
   phases:
-    - duration: 60
-      arrivalRate: 10
+    - duration: 300
+      arrivalRate: 400
   defaults:
     headers:
       content-type: "application/json"
@@ -19,7 +19,6 @@ config:
     - type: "html"
       filename: "artillery_report.html"
   logLevel: debug
-
 scenarios:
   - name: web3_clientVersion
     flow:

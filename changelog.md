@@ -76,6 +76,7 @@
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
 * [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
+* [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
 
 
 ### Fixes
@@ -89,6 +90,8 @@
 * [2327](https://github.com/zeta-chain/node/pull/2327) - partially cherry picked the fix to Bitcoin outbound dust amount
 * [2362](https://github.com/zeta-chain/node/pull/2362) - set 1000 satoshis as minimum BTC amount that can be withdrawn from zEVM
 * [2382](https://github.com/zeta-chain/node/pull/2382) - add tx input and gas in rpc methods for synthetic eth txs
+* [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
+* [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 
 ### CI
 * [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
@@ -102,6 +105,7 @@
 * [2335](https://github.com/zeta-chain/node/pull/2335) - ci: updated the artillery report to publish to artillery cloud
 * [2377](https://github.com/zeta-chain/node/pull/2377) - ci: adjusted sast-linters.yml to not scan itself, nor alert on removal of nosec.
 * [2400](https://github.com/zeta-chain/node/pull/2400) - ci: adjusted the performance test to pass or fail pipeline based on test results, alert slack, and launch network with state. Fixed connection issues as well.
+* [2425](https://github.com/zeta-chain/node/pull/2425) - Added verification to performance testing pipeline to ensure p99 aren't above 2000ms and p50 aren't above 40ms, Tweaked the config to 400 users requests per second. 425 is the current max before it starts failing.
 
 ### Documentation
 

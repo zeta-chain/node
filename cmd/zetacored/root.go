@@ -114,6 +114,8 @@ func initTmConfig() *tmcfg.Config {
 		cfg.Mempool.Version = tmcfg.MempoolV1
 	}
 
+	cfg.DBBackend = "pebbledb"
+
 	return cfg
 }
 
