@@ -273,11 +273,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestRateLimiterName,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
+
+			// TestRateLimiterName tests rate limiter functionality.
+			// Currently, there is a bug with the test and it is therefore disabled (see issue below)
+			// We disable the test as a workaround for the time being as it doesn't effectively test the functionality
+			// TODO: fix the error causing the test failure
+			// https://github.com/zeta-chain/node/issues/2424
+			// TODO: define proper threshold for test assertion
+			// https://github.com/zeta-chain/node/issues/2090
+			// e2etests.TestRateLimiterName,
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
