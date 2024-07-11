@@ -424,6 +424,7 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 	return err
 }
 
+// UpdateKeygen sets a new keygen height . The new height is the current height + 30
 func (zts ZetaTxServer) UpdateKeygen(height int64) error {
 	keygenHeight := height + 30
 	_, err := zts.BroadcastTx(zts.GetAccountName(0), observertypes.NewMsgUpdateKeygen(

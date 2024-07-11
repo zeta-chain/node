@@ -101,7 +101,7 @@ const (
 	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
 	TestRateLimiterName              = "rate_limiter"
 
-	TestMigrateTssEthName = "migrate_tss_eth"
+	TestMigrateTSSEthName = "migrate_tss_eth"
 
 	/*
 	 Special tests
@@ -545,7 +545,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestDeployContract,
 	),
 	runner.NewE2ETest(
-		TestMigrateTssEthName,
+		TestMigrateTSSEthName,
 		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTss,

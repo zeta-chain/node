@@ -51,5 +51,5 @@ var (
 	ErrInitiatitingOutbound          = errorsmod.Register(ModuleName, 1154, "cannot initiate outbound")
 	ErrInvalidWithdrawalAmount       = errorsmod.Register(ModuleName, 1155, "invalid withdrawal amount")
 
-	ErrTssAddress = errorsmod.Register(ModuleName, 1156, "sender cannot be a TSS address")
+	ErrMigrationFromOldTss = errorsmod.Register(ModuleName, 1156, "migration tx from an old tss address detected")
 )

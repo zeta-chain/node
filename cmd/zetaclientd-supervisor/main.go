@@ -49,6 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 	supervisor.Start(ctx)
+	// listen for SIGHUP to trigger a restart of zetaclientd
 	signal.Notify(supervisor.restartChan, syscall.SIGHUP)
 
 	shouldRestart := true

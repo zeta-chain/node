@@ -55,7 +55,8 @@ func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 	return utxos, nil
 }
 
-// GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address
+// GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address.
+// Top 20 utxos should be used for TSS migration, as we can only migrate at max 20 utxos at a time.
 func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
 	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(

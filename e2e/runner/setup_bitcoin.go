@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (r *E2ERunner) AddTssToNode() {
+func (r *E2ERunner) AddTSSToNode() {
 	r.Logger.Print("⚙️ add new tss to Bitcoin node")
 	startTime := time.Now()
 	defer func() {

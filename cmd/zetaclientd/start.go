@@ -214,7 +214,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = GenerateTss(appContext, masterLogger, zetacoreClient, server)
+	err = GenerateTSS(appContext, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}

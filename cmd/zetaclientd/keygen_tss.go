@@ -22,12 +22,12 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// GenerateTss generates a new TSS if keygen is set.
+// GenerateTSS generates a new TSS if keygen is set.
 // If a TSS was generated successfully in the past,and the keygen was successful, the function will return without doing anything.
 // If a keygen has been set the functions will wait for the correct block to arrive and generate a new TSS.
 // In case of a successful keygen a TSS success vote is broadcasted to zetacore and the newly generate TSS is tested. The generated keyshares are stored in the correct directory
 // In case of a failed keygen a TSS failed vote is broadcasted to zetacore.
-func GenerateTss(
+func GenerateTSS(
 	appContext *context.AppContext,
 	logger zerolog.Logger,
 	zetaCoreClient *zetacore.Client,
@@ -161,6 +161,7 @@ func keygenTss(
 	return res.PubKey, nil
 }
 
+// TestTSS tests the TSS keygen by signing a sample message with the TSS key.
 func TestTSS(pubkey string, tssServer tss.TssServer, logger zerolog.Logger) error {
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()
 	keygenLogger.Info().Msgf("KeyGen success ! Doing a Key-sign test")

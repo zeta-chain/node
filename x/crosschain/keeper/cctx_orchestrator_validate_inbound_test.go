@@ -177,7 +177,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		}
 
 		err = k.CheckMigration(ctx, &msg)
-		require.ErrorIs(t, err, types.ErrTssAddress)
+		require.ErrorIs(t, err, types.ErrMigrationFromOldTss)
 	})
 
 	t.Run("fails when sender is a TSS address for btc chain for btc chain", func(t *testing.T) {
@@ -207,7 +207,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		}
 
 		err = k.CheckMigration(ctx, &msg)
-		require.ErrorIs(t, err, types.ErrTssAddress)
+		require.ErrorIs(t, err, types.ErrMigrationFromOldTss)
 	})
 
 	t.Run("fails if bitcoin network params not found for BTC chain", func(t *testing.T) {

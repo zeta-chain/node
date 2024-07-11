@@ -79,7 +79,7 @@ func (k Keeper) CheckMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
 			}
 			if ethTssAddress.Hex() == msg.Sender {
-				return types.ErrTssAddress
+				return types.ErrMigrationFromOldTss
 			}
 		} else if chains.IsBitcoinChain(chain.ChainId, additionalChains) {
 			bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
@@ -91,7 +91,7 @@ func (k Keeper) CheckMigration(ctx sdk.Context, msg *types.MsgVoteInbound) error
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
 			}
 			if btcTssAddress == msg.Sender {
-				return types.ErrTssAddress
+				return types.ErrMigrationFromOldTss
 			}
 		}
 	}

@@ -326,14 +326,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testMigration {
-		migrationCtx, cancel := context.WithCancel(context.Background())
-		deployerRunner.CtxCancel = cancel
 
 		migrationStartTime := time.Now()
 		logger.Print("🏁 starting tss migration")
 
 		response, err := deployerRunner.CctxClient.LastZetaHeight(
-			migrationCtx,
+			deployerRunner.Ctx,
 			&crosschaintypes.QueryLastZetaHeightRequest{},
 		)
 		require.NoError(deployerRunner, err)
@@ -341,12 +339,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		require.NoError(deployerRunner, err)
 
 		// Generate new TSS
-		waitKeygenHeight(migrationCtx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+		waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
 
 		// migration test is a blocking thread, we cannot run other tests in parallel
 		// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
 		// The necessary restarts are done by the zetaclient supervisor
-		fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTssEthName)
+		fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSEthName)
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
@@ -361,10 +359,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestEtherWithdrawName,
 		}
-		eg.Go(postMigrationTestRoutine(conf, deployerRunner, verbose, tests...))
+		fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
 
-		if err := eg.Wait(); err != nil {
-			deployerRunner.CtxCancel()
+		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
 			logger.Print("❌ post migration tests failed")
 			os.Exit(1)

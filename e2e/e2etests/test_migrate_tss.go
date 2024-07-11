@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -43,11 +44,10 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 		btcBalance += utxo.Amount
 	}
 
-	// Use fixed fee for migration
 	btcTSSBalanceOld := btcBalance
-	fees := 0.01
-	btcBalance -= fees
-	btcChain := int64(18444)
+	// Use fixed fee of 0.01 for migration
+	btcBalance = btcBalance - 0.01
+	btcChain := chains.BitcoinRegtest.ChainId
 
 	//migrate btc funds
 	// #nosec G701 e2eTest - always in range
@@ -73,7 +73,7 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	ethTSSBalanceOld := tssBalance
 
 	tssBalanceUint := sdkmath.NewUintFromString(tssBalance.String())
-	evmChainID, err := r.EVMClient.ChainID(context.Background())
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 
 	// Migrate TSS funds for the eth chain
@@ -135,7 +135,7 @@ func TestMigrateTss(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	r.BTCTSSAddress = btcTssAddressNew
-	r.AddTssToNode()
+	r.AddTSSToNode()
 
 	utxos, err = r.GetTop20UTXOsForTssAddress()
 	require.NoError(r, err)

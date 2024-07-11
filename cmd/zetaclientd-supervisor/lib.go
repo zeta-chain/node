@@ -100,8 +100,8 @@ func (s *zetaclientdSupervisor) Start(ctx context.Context) {
 	go s.watchForVersionChanges(ctx)
 	go s.handleCoreUpgradePlan(ctx)
 	go s.handleNewKeygen(ctx)
-	go s.handleNewTssKeyGeneration(ctx)
-	go s.handleTssUpdate(ctx)
+	go s.handleNewTSSKeyGeneration(ctx)
+	go s.handleTSSUpdate(ctx)
 }
 
 func (s *zetaclientdSupervisor) WaitForReloadSignal(ctx context.Context) {
@@ -177,10 +177,11 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 	}
 }
 
-func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
+func (s *zetaclientdSupervisor) handleTSSUpdate(ctx context.Context) {
 	maxRetries := 11
 	retryInterval := 5 * time.Second
 
+	// TODO : use retry library under pkg/retry
 	for i := 0; i < maxRetries; i++ {
 		client := observertypes.NewQueryClient(s.zetacoredConn)
 		tss, err := client.TSS(ctx, &observertypes.QueryGetTSSRequest{})
@@ -214,13 +215,14 @@ func (s *zetaclientdSupervisor) handleTssUpdate(ctx context.Context) {
 			s.restartChan <- syscall.SIGHUP
 		}
 	}
-	s.logger.Warn().Msg("handleTssUpdate exiting without success")
+	s.logger.Warn().Msg("handleTSSUpdate exiting without success")
 }
 
-func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
+func (s *zetaclientdSupervisor) handleNewTSSKeyGeneration(ctx context.Context) {
 	maxRetries := 11
 	retryInterval := 5 * time.Second
 
+	// TODO : use retry library under pkg/retry
 	for i := 0; i < maxRetries; i++ {
 		client := observertypes.NewQueryClient(s.zetacoredConn)
 		alltss, err := client.TssHistory(ctx, &observertypes.QueryTssHistoryRequest{})
@@ -259,7 +261,7 @@ func (s *zetaclientdSupervisor) handleNewTssKeyGeneration(ctx context.Context) {
 			s.restartChan <- syscall.SIGHUP
 		}
 	}
-	s.logger.Warn().Msg("handleNewTssKeyGeneration exiting without success")
+	s.logger.Warn().Msg("handleNewTSSKeyGeneration exiting without success")
 }
 
 func (s *zetaclientdSupervisor) handleNewKeygen(ctx context.Context) {
