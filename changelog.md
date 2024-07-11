@@ -76,6 +76,7 @@
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
 * [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
+* [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
 
 
 ### Fixes

@@ -271,6 +271,7 @@ zetanode-upgrade: zetanode
 .PHONY: zetanode-upgrade
 endif
 
+
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
@@ -281,6 +282,14 @@ start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
+	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
+
+start-upgrade-test-admin: zetanode-upgrade
+	@echo "--> Starting admin upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
