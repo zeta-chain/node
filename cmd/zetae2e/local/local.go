@@ -344,7 +344,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// migration test is a blocking thread, we cannot run other tests in parallel
 		// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
 		// The necessary restarts are done by the zetaclient supervisor
-		fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSEthName)
+		fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
