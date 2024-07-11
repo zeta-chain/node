@@ -745,10 +745,6 @@ func (k Keeper) CallEVMWithData(
 		return nil, err
 	}
 
-	if res.Failed() {
-		return res, cosmoserrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
-	}
-
 	// Emit events and log for the transaction if it is committed
 	if commit {
 		msgBytes, err := json.Marshal(msg)
@@ -823,6 +819,10 @@ func (k Keeper) CallEVMWithData(
 			k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
 			k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
 		}
+	}
+
+	if res.Failed() {
+		return res, cosmoserrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
 	}
 
 	return res, nil

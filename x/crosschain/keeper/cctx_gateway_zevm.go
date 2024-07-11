@@ -33,7 +33,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	}
 
 	newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, err, isContractReverted)
-	if newCCTXStatus == types.CctxStatus_OutboundMined {
+	if newCCTXStatus != types.CctxStatus_Aborted {
 		commit()
 	}
 
