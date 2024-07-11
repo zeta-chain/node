@@ -35,13 +35,12 @@ func (ob *Observer) GetTxID(nonce uint64) string {
 func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		return nil
+		return errors.Wrap(err, "unable to get app from context")
 	}
 
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.GetChainParams().OutboundTicker)
 	if err != nil {
-		ob.logger.Outbound.Error().Err(err).Msg("error creating ticker ")
-		return nil
+		return errors.Wrap(err, "unable to create dynamic ticker")
 	}
 
 	defer ticker.Stop()
