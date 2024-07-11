@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/errors"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/retry"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -165,11 +165,16 @@ func (c *Client) monitorVoteInboundResult(
 }
 
 func retryWithBackoff(call func() error, attempts int, minInternal, maxInterval time.Duration) error {
+	if attempts < 1 {
+		return errors.New("attempts must be positive")
+	}
+
 	bo := backoff.WithMaxRetries(
 		backoff.NewExponentialBackOff(
 			backoff.WithInitialInterval(minInternal),
 			backoff.WithMaxInterval(maxInterval),
 		),
+		// #nosec G701 always positive
 		uint64(attempts),
 	)
 

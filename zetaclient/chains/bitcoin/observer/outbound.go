@@ -191,15 +191,24 @@ func (ob *Observer) IsOutboundProcessed(
 
 	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
+	// not used with Bitcoin
+	const (
+		gasUsed  = 0
+		gasPrice = 0
+		gasLimit = 0
+	)
+
 	msg := crosschaintypes.NewMsgVoteOutbound(
 		signer.String(),
 		cctx.Index,
 		res.TxID,
 
-		uint64(blockHeight), // #nosec G701 always positive
-		0,                   // gas used not used with Bitcoin
-		math.NewInt(0),      // gas price not used with Bitcoin
-		0,                   // gas limit not used with Bitcoin
+		// #nosec G701 always positive
+		uint64(blockHeight),
+
+		gasUsed,
+		math.NewInt(gasPrice),
+		gasLimit,
 
 		math.NewUintFromBigInt(amountInSat),
 		chains.ReceiveStatus_success,
