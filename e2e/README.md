@@ -76,3 +76,9 @@ You can also run an alias of `zetae2e run` like so:
 ```shell
   `./e2e/scripts/run.sh bitcoin_withdraw_restricted 0.001`
 ```
+
+To setup BTC suite, run
+
+```shell
+zetae2e setup-bitcoin cmd/zetae2e/config/local.yml
+```
