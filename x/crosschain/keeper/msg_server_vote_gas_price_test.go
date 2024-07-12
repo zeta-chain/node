@@ -148,7 +148,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, types.GasPrice{
 			Creator:     creator,
-			Index:       "",
+			Index:       "5",
 			ChainId:     5,
 			Signers:     []string{creator},
 			BlockNums:   []uint64{2},
@@ -193,7 +193,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, types.GasPrice{
 			Creator:     creator,
-			Index:       "",
+			Index:       "5",
 			ChainId:     5,
 			Signers:     []string{creator},
 			BlockNums:   []uint64{1, 2},

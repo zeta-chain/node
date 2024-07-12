@@ -13,8 +13,8 @@ import (
 // SetGasPrice set a specific gasPrice in the store from its index
 func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	b := k.cdc.MustMarshal(&gasPrice)
 	gasPrice.Index = strconv.FormatInt(gasPrice.ChainId, 10)
+	b := k.cdc.MustMarshal(&gasPrice)
 	store.Set(types.KeyPrefix(gasPrice.Index), b)
 }
 

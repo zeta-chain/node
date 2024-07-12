@@ -2,15 +2,15 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"sort"
-	"strconv"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -21,61 +21,74 @@ import (
 //
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteGasPrice(
-	goCtx context.Context,
+	cc context.Context,
 	msg *types.MsgVoteGasPrice,
 ) (*types.MsgVoteGasPriceResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(cc)
 
 	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, cosmoserrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
+		return nil, cosmoserrors.Wrapf(types.ErrUnsupportedChain, "chain id %d", msg.ChainId)
 	}
+
 	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, observertypes.ErrNotObserver
 	}
 
 	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)
 	if !isFound {
-		gasPrice = types.GasPrice{
+		return k.setGasPrice(ctx, chain, types.GasPrice{
 			Creator:     msg.Creator,
-			Index:       strconv.FormatInt(chain.ChainId, 10), // TODO : Not needed index set at keeper
 			ChainId:     chain.ChainId,
 			Prices:      []uint64{msg.Price},
 			BlockNums:   []uint64{msg.BlockNumber},
 			Signers:     []string{msg.Creator},
 			MedianIndex: 0,
-		}
-	} else {
-		signers := gasPrice.Signers
-		exist := false
-		for i, s := range signers {
-			if s == msg.Creator { // update existing entry
-				gasPrice.BlockNums[i] = msg.BlockNumber
-				gasPrice.Prices[i] = msg.Price
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			gasPrice.Signers = append(gasPrice.Signers, msg.Creator)
-			gasPrice.BlockNums = append(gasPrice.BlockNums, msg.BlockNumber)
-			gasPrice.Prices = append(gasPrice.Prices, msg.Price)
-		}
-		// recompute the median gas price
-		mi := medianOfArray(gasPrice.Prices)
-		// #nosec G701 always positive
-		gasPrice.MedianIndex = uint64(mi)
+			Index:       "", // will be set by the keeper
+		})
 	}
-	k.SetGasPrice(ctx, gasPrice)
-	chainIDBigINT := big.NewInt(chain.ChainId)
 
-	gasUsed, err := k.fungibleKeeper.SetGasPrice(
-		ctx,
-		chainIDBigINT,
-		math.NewUint(gasPrice.Prices[gasPrice.MedianIndex]).BigInt(),
+	// Now we either want to update the gas price or add a new entry
+	var exists bool
+	for i, s := range gasPrice.Signers {
+		if s == msg.Creator { // update existing entry
+			gasPrice.BlockNums[i] = msg.BlockNumber
+			gasPrice.Prices[i] = msg.Price
+			exists = true
+			break
+		}
+	}
+
+	if !exists {
+		gasPrice.Signers = append(gasPrice.Signers, msg.Creator)
+		gasPrice.BlockNums = append(gasPrice.BlockNums, msg.BlockNumber)
+		gasPrice.Prices = append(gasPrice.Prices, msg.Price)
+	}
+
+	// recompute the median gas price
+	mi := medianOfArray(gasPrice.Prices)
+
+	// #nosec G701 always positive
+	gasPrice.MedianIndex = uint64(mi)
+
+	return k.setGasPrice(ctx, chain, gasPrice)
+}
+
+func (k msgServer) setGasPrice(
+	ctx sdk.Context,
+	chain chains.Chain,
+	gasPrice types.GasPrice,
+) (*types.MsgVoteGasPriceResponse, error) {
+	var (
+		bigChainID  = big.NewInt(chain.ChainId)
+		bigGasPrice = math.NewUint(gasPrice.Prices[gasPrice.MedianIndex]).BigInt()
 	)
+
+	k.SetGasPrice(ctx, gasPrice)
+
+	gasUsed, err := k.fungibleKeeper.SetGasPrice(ctx, bigChainID, bigGasPrice)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to set gas price in fungible keeper")
 	}
 
 	// reset the gas count
