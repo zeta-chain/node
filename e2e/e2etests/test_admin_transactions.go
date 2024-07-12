@@ -10,10 +10,44 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestAdminTransactions(r *runner.E2ERunner, args []string) {
-	r.Logger.Info("Adding a inbound tracker ")
+	TestAddToInboundTracker(r)
+	TestUpdateGasPriceIncreaseFlags(r)
+}
+
+func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
+
+	defaultFlags := observertypes.DefaultGasPriceIncreaseFlags
+	msgGasPriceFlags := observertypes.NewMsgUpdateGasPriceIncreaseFlags(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		defaultFlags,
+	)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgGasPriceFlags)
+	require.NoError(r, err)
+
+	defaultFlagsUpdated := defaultFlags
+	defaultFlagsUpdated.EpochLength = defaultFlags.EpochLength + 1
+
+	msgGasPriceFlags = observertypes.NewMsgUpdateGasPriceIncreaseFlags(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		defaultFlagsUpdated,
+	)
+
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgGasPriceFlags)
+	require.NoError(r, err)
+
+	time.Sleep(8 * time.Second)
+
+	flags, err := r.ObserverClient.CrosschainFlags(r.Ctx, &observertypes.QueryGetCrosschainFlagsRequest{})
+	require.NoError(r, err)
+
+	require.Equal(r, defaultFlagsUpdated.EpochLength, flags.CrosschainFlags.GasPriceIncreaseFlags.EpochLength)
+}
+
+func TestAddToInboundTracker(r *runner.E2ERunner) {
 	chainEth := chains.GoerliLocalnet
 	chainBtc := chains.BitcoinRegtest
 	msgEth := crosschaintypes.NewMsgAddInboundTracker(
