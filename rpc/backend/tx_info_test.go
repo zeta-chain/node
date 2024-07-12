@@ -59,9 +59,9 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 	gas, _ := hexutil.DecodeUint64(res.Gas.String())
 	suite.Require().Equal(uint64(21000), gas)
 	suite.Require().Equal("0x1234", res.Input.String())
-	suite.Require().Nil(res.V)
-	suite.Require().Nil(res.R)
-	suite.Require().Nil(res.S)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.V)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.R)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.S)
 }
 
 func (suite *BackendTestSuite) TestGetSyntheticTransactionReceiptByHash() {
