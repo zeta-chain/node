@@ -127,6 +127,16 @@ func (ob *Observer) IsOutboundProcessed(
 	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
 ) (bool, bool, error) {
+	const (
+		// not used with Bitcoin
+		outboundGasUsed  = 0
+		outboundGasPrice = 0
+		outboundGasLimit = 0
+
+		gasLimit      = zetacore.PostVoteOutboundGasLimit
+		gasRetryLimit = 0
+	)
+
 	params := *cctx.GetCurrentOutboundParam()
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
@@ -191,16 +201,6 @@ func (ob *Observer) IsOutboundProcessed(
 
 	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
-	const (
-		// not used with Bitcoin
-		outboundGasUsed  = 0
-		outboundGasPrice = 0
-		outboundGasLimit = 0
-
-		gasLimit      = zetacore.PostVoteOutboundGasLimit
-		gasRetryLimit = 0
-	)
-
 	msg := crosschaintypes.NewMsgVoteOutbound(
 		signer.String(),
 		cctx.Index,
@@ -223,7 +223,7 @@ func (ob *Observer) IsOutboundProcessed(
 
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
 
-	lf := map[string]any{
+	logFields := map[string]any{
 		"outbound.external_tx_hash": res.TxID,
 		"outbound.nonce":            nonce,
 		"outbound.zeta_tx_hash":     zetaHash,
@@ -231,9 +231,9 @@ func (ob *Observer) IsOutboundProcessed(
 	}
 
 	if err != nil {
-		logger.Error().Err(err).Fields(lf).Msg("IsOutboundProcessed: error confirming bitcoin outbound")
+		logger.Error().Err(err).Fields(logFields).Msg("IsOutboundProcessed: error confirming bitcoin outbound")
 	} else if zetaHash != "" {
-		logger.Info().Fields(lf).Msgf("IsOutboundProcessed: confirmed Bitcoin outbound")
+		logger.Info().Fields(logFields).Msgf("IsOutboundProcessed: confirmed Bitcoin outbound")
 	}
 
 	return true, true, nil

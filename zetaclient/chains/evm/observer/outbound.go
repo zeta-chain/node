@@ -117,7 +117,7 @@ func (ob *Observer) PostVoteOutbound(
 	logger zerolog.Logger,
 ) {
 	chainID := ob.Chain().ChainId
-	lf := map[string]any{
+	logFields := map[string]any{
 		"outbound.chain_id":         chainID,
 		"outbound.external_tx_hash": receipt.TxHash.String(),
 		"outbound.nonce":            nonce,
@@ -149,7 +149,7 @@ func (ob *Observer) PostVoteOutbound(
 
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
-		logger.Error().Err(err).Fields(lf).Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
+		logger.Error().Err(err).Fields(logFields).Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
 		return
 	}
 
@@ -157,10 +157,10 @@ func (ob *Observer) PostVoteOutbound(
 		return
 	}
 
-	lf["outbound.zeta_tx_hash"] = zetaTxHash
-	lf["outbound.ballot"] = ballot
+	logFields["outbound.zeta_tx_hash"] = zetaTxHash
+	logFields["outbound.ballot"] = ballot
 
-	logger.Info().Fields(lf).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
+	logger.Info().Fields(logFields).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
 }
 
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isConfirmed, error)
