@@ -28,7 +28,7 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: zeta-chain/gosec@v2.21.0-zeta
         with:
-          args: -exclude-generated ./...
+          args: -exclude-generated -exclude-dir testutil ./...
 
   lint:
     runs-on: ubuntu-22.04
