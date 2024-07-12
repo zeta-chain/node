@@ -336,26 +336,26 @@ func request_Query_InboundTracker_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["chainID"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chainID")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
-	protoReq.ChainID, err = runtime.Int64(val)
+	protoReq.ChainId, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chainID", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
-	val, ok = pathParams["txHash"]
+	val, ok = pathParams["tx_hash"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "txHash")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tx_hash")
 	}
 
 	protoReq.TxHash, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "txHash", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tx_hash", err)
 	}
 
 	msg, err := client.InboundTracker(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -374,26 +374,26 @@ func local_request_Query_InboundTracker_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["chainID"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chainID")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
-	protoReq.ChainID, err = runtime.Int64(val)
+	protoReq.ChainId, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chainID", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
-	val, ok = pathParams["txHash"]
+	val, ok = pathParams["tx_hash"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "txHash")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tx_hash")
 	}
 
 	protoReq.TxHash, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "txHash", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tx_hash", err)
 	}
 
 	msg, err := server.InboundTracker(ctx, &protoReq)
@@ -2980,7 +2980,7 @@ var (
 
 	pattern_Query_InboundTrackerAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "inboundTrackers"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_InboundTracker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "crosschain", "inboundTracker", "chainID", "txHash"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_InboundTracker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "crosschain", "inboundTracker", "chain_id", "tx_hash"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_InboundHashToCctx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "inboundHashToCctx", "inboundHash"}, "", runtime.AssumeColonVerbOpt(false)))
 

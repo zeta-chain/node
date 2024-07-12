@@ -42,7 +42,7 @@ func (k Keeper) InboundTracker(
 ) (*types.QueryInboundTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	inTxTracker, found := k.GetInboundTracker(ctx, req.ChainID, req.TxHash)
+	inTxTracker, found := k.GetInboundTracker(ctx, req.ChainId, req.TxHash)
 	if !found {
 		return nil, status.Error(codes.Internal, "not found")
 	}

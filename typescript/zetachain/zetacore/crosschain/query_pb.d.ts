@@ -1214,3 +1214,56 @@ export declare class QueryRateLimiterFlagsResponse extends Message<QueryRateLimi
   static equals(a: QueryRateLimiterFlagsResponse | PlainMessage<QueryRateLimiterFlagsResponse> | undefined, b: QueryRateLimiterFlagsResponse | PlainMessage<QueryRateLimiterFlagsResponse> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryInboundTrackerRequest
+ */
+export declare class QueryInboundTrackerRequest extends Message<QueryInboundTrackerRequest> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string tx_hash = 2;
+   */
+  txHash: string;
+
+  constructor(data?: PartialMessage<QueryInboundTrackerRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryInboundTrackerRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryInboundTrackerRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryInboundTrackerRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryInboundTrackerRequest;
+
+  static equals(a: QueryInboundTrackerRequest | PlainMessage<QueryInboundTrackerRequest> | undefined, b: QueryInboundTrackerRequest | PlainMessage<QueryInboundTrackerRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryInboundTrackerResponse
+ */
+export declare class QueryInboundTrackerResponse extends Message<QueryInboundTrackerResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.InboundTracker inbound_tracker = 1;
+   */
+  inboundTracker?: InboundTracker;
+
+  constructor(data?: PartialMessage<QueryInboundTrackerResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryInboundTrackerResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryInboundTrackerResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryInboundTrackerResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryInboundTrackerResponse;
+
+  static equals(a: QueryInboundTrackerResponse | PlainMessage<QueryInboundTrackerResponse> | undefined, b: QueryInboundTrackerResponse | PlainMessage<QueryInboundTrackerResponse> | undefined): boolean;
+}
+

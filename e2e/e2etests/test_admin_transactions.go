@@ -69,7 +69,7 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 	WaitForNBlock(r, 1)
 
 	tracker, err := r.CctxClient.InboundTracker(r.Ctx, &crosschaintypes.QueryInboundTrackerRequest{
-		ChainID: msgEth.ChainId,
+		ChainId: msgEth.ChainId,
 		TxHash:  msgEth.TxHash,
 	})
 	require.NoError(r, err)
@@ -77,7 +77,7 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 	require.Equal(r, msgEth.TxHash, tracker.InboundTracker.TxHash)
 
 	tracker, err = r.CctxClient.InboundTracker(r.Ctx, &crosschaintypes.QueryInboundTrackerRequest{
-		ChainID: msgBtc.ChainId,
+		ChainId: msgBtc.ChainId,
 		TxHash:  msgBtc.TxHash,
 	})
 	require.NoError(r, err)

@@ -24,7 +24,7 @@ func CmdShowInboundTracker() *cobra.Command {
 				return err
 			}
 			params := &types.QueryInboundTrackerRequest{
-				ChainID: argChain,
+				ChainId: argChain,
 				TxHash:  args[1],
 			}
 			res, err := queryClient.InboundTracker(context.Background(), params)

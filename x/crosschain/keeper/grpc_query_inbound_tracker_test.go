@@ -61,7 +61,7 @@ func TestKeeper_InboundTracker(t *testing.T) {
 		})
 
 		res, err := k.InboundTracker(ctx, &types.QueryInboundTrackerRequest{
-			ChainID: chainID,
+			ChainId: chainID,
 			TxHash:  hash,
 		})
 		require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestKeeper_InboundTracker(t *testing.T) {
 		chainID := chains.GoerliLocalnet.ChainId
 
 		res, err := k.InboundTracker(ctx, &types.QueryInboundTrackerRequest{
-			ChainID: chainID,
+			ChainId: chainID,
 			TxHash:  hash,
 		})
 		require.ErrorContains(t, err, "not found")

@@ -534,7 +534,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestAdminTransactionsName,
-		"test admin critical admin transactions",
+		"test critical admin transactions",
 		[]runner.ArgDefinition{},
 		TestAdminTransactions,
 	),
