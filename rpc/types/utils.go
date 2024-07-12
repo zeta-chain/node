@@ -256,9 +256,9 @@ func NewRPCTransactionFromIncompleteMsg(
 		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from ethermint
 		To:       to,
 		Value:    (*hexutil.Big)(txAdditional.Value),
-		V:        nil,
-		R:        nil,
-		S:        nil,
+		V:        (*hexutil.Big)(big.NewInt(0)),
+		R:        (*hexutil.Big)(big.NewInt(0)),
+		S:        (*hexutil.Big)(big.NewInt(0)),
 		ChainID:  (*hexutil.Big)(chainID),
 	}
 	if blockHash != (common.Hash{}) {
