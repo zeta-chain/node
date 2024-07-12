@@ -43,7 +43,7 @@ func (k msgServer) VoteBlockHeader(
 		types.VoteType_SuccessObservation,
 	)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to vote on ballot")
+		return nil, sdkerrors.Wrap(err, errVoteOnBallot)
 	}
 
 	if !isFinalized {

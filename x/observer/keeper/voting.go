@@ -9,6 +9,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+const (
+	errVoteOnBallot = "error while voting on ballot"
+)
+
 func (k Keeper) AddVoteToBallot(
 	ctx sdk.Context,
 	ballot types.Ballot,

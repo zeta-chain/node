@@ -30,7 +30,7 @@
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
-* [2416g](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
+* [2416](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
 
 ### Refactor
 
@@ -95,6 +95,7 @@
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 
 ### CI
+
 * [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
 * [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilitze debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
 * [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners
@@ -214,7 +215,7 @@
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains
 * [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
-* * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM
+* [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 * [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags
@@ -237,11 +238,12 @@
 ## Version: v15.0.0
 
 ### Features
+
 * [1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
 
 ## Version: v14.0.1
 
-- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
+* [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Version: v13.0.0
 

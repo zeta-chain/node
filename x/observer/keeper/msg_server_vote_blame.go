@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,10 +19,9 @@ func (k msgServer) VoteBlame(
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
 	observationChain, found := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, sdkerrors.Wrap(
+		return nil, sdkerrors.Wrapf(
 			crosschainTypes.ErrUnsupportedChain,
-			fmt.Sprintf("ChainID %d, Blame vote", msg.ChainId),
-		)
+			"ChainID %d, Blame vote", msg.ChainId)
 	}
 
 	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
@@ -39,7 +37,7 @@ func (k msgServer) VoteBlame(
 		types.VoteType_SuccessObservation,
 	)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to vote on ballot")
+		return nil, sdkerrors.Wrap(err, errVoteOnBallot)
 	}
 
 	if isNew {

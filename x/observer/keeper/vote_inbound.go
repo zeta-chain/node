@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,11 +29,10 @@ func (k Keeper) VoteOnInboundBallot(
 	// this function returns nil
 	senderChain, found := k.GetSupportedChainFromChainID(ctx, senderChainID)
 	if !found {
-		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
+		return false, false, sdkerrors.Wrapf(types.ErrSupportedChains,
 			"ChainID %d, Observation %s",
 			senderChainID,
-			types.ObservationType_InboundTx.String()),
-		)
+			types.ObservationType_InboundTx.String())
 	}
 
 	// checks the voter is authorized to vote on the observation chain
@@ -46,11 +43,10 @@ func (k Keeper) VoteOnInboundBallot(
 	// makes sure we are getting only supported chains
 	receiverChain, found := k.GetSupportedChainFromChainID(ctx, receiverChainID)
 	if !found {
-		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
+		return false, false, sdkerrors.Wrapf(types.ErrSupportedChains,
 			"ChainID %d, Observation %s",
 			receiverChainID,
-			types.ObservationType_InboundTx.String()),
-		)
+			types.ObservationType_InboundTx.String())
 	}
 
 	// check if we want to send ZETA to external chain, but there is no ZETA token.
@@ -73,7 +69,7 @@ func (k Keeper) VoteOnInboundBallot(
 		types.VoteType_SuccessObservation,
 	)
 	if err != nil {
-		return false, false, sdkerrors.Wrap(err, "failed to vote on ballot")
+		return false, false, sdkerrors.Wrap(err, errVoteOnBallot)
 	}
 
 	if isNew {
