@@ -21,7 +21,7 @@ const folder string = "config"
 // Save saves ZetaClient config
 func Save(config *Config, path string) error {
 	folderPath := filepath.Join(path, folder)
-	err := os.MkdirAll(folderPath, os.ModePerm)
+	err := os.MkdirAll(folderPath, 0o750)
 	if err != nil {
 		return err
 	}
