@@ -116,6 +116,26 @@ export declare enum ChainName {
    * @generated from enum value: amoy_testnet = 16;
    */
   amoy_testnet = 16,
+
+  /**
+   * @generated from enum value: optimism_mainnet = 17;
+   */
+  optimism_mainnet = 17,
+
+  /**
+   * @generated from enum value: optimism_sepolia = 18;
+   */
+  optimism_sepolia = 18,
+
+  /**
+   * @generated from enum value: base_mainnet = 19;
+   */
+  base_mainnet = 19,
+
+  /**
+   * @generated from enum value: base_sepolia = 20;
+   */
+  base_sepolia = 20,
 }
 
 /**
