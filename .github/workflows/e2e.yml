@@ -28,6 +28,8 @@ jobs:
       UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
+      TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
+
     steps:
       # use cli rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
@@ -46,6 +48,9 @@ jobs:
             if [[ "$labels" == *"ADMIN_TESTS"* ]]; then
               echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
             fi
+            if [[ "$labels" == *"TSS_MIGRATION_TESTS"* ]]; then
+              echo "TSS_MIGRATION_TESTS=true" >> $GITHUB_OUTPUT
+            fi
           elif [[ ${{ github.event_name }} == 'merge_group' ]]; then
             echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
           elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref }} == 'refs/heads/develop' ]]; then
@@ -54,6 +59,7 @@ jobs:
             echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
             echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
             echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
+            echo "TSS_MIGRATION_TESTS=true" >> $GITHUB_OUTPUT
           fi
 
   e2e:
@@ -74,6 +80,9 @@ jobs:
           - make-target: "start-e2e-admin-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_TESTS == 'true' }}
+          - make-target: "start-tss-migration-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
