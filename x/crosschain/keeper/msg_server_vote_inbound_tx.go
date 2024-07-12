@@ -122,7 +122,7 @@ func (k Keeper) SaveObservedInboundInformation(ctx sdk.Context, cctx *types.Cros
 		cctx.GetInboundParams().ObservedHash,
 		cctx.GetInboundParams().SenderChainId,
 		eventIndex)
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	cctx.InboundParams.FinalizedZetaHeight = uint64(ctx.BlockHeight())
 	cctx.InboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	k.RemoveInboundTrackerIfExists(ctx, cctx.InboundParams.SenderChainId, cctx.InboundParams.ObservedHash)

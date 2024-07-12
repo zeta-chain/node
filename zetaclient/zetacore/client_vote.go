@@ -56,7 +56,7 @@ func (c *Client) PostVoteGasPrice(
 		return "", err
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := c.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, supply, blockNum)

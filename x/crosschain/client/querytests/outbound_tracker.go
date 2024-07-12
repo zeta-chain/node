@@ -33,7 +33,7 @@ func (s *CliTestSuite) TestListOutboundTracker() {
 	s.Run("ByOffset", func() {
 		step := 2
 		for i := 0; i < len(objs); i += step {
-			// #nosec G701 always in range
+			// #nosec G115 always in range
 			args := request(nil, uint64(i), uint64(step), false)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutboundTracker(), args)
 			s.Require().NoError(err)
@@ -49,7 +49,7 @@ func (s *CliTestSuite) TestListOutboundTracker() {
 		step := 2
 		var next []byte
 		for i := 0; i < len(objs); i += step {
-			// #nosec G701 always in range
+			// #nosec G115 always in range
 			args := request(next, 0, uint64(step), false)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutboundTracker(), args)
 			s.Require().NoError(err)
@@ -64,14 +64,14 @@ func (s *CliTestSuite) TestListOutboundTracker() {
 		}
 	})
 	s.Run("Total", func() {
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		args := request(nil, 0, uint64(len(objs)), true)
 		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutboundTracker(), args)
 		s.Require().NoError(err)
 		var resp types.QueryAllOutboundTrackerResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		s.Require().Equal(len(objs), int(resp.Pagination.Total))
 		s.Require().ElementsMatch(nullify.Fill(objs),
 			nullify.Fill(resp.OutboundTracker),

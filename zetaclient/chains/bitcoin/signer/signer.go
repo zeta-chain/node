@@ -220,7 +220,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// size checking
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	txSize, err := bitcoin.EstimateOutboundSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if err != nil {
 		return nil, err
@@ -241,7 +241,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// fee calculation
-	// #nosec G701 always in range (checked above)
+	// #nosec G115 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
 	signer.Logger().
 		Std.Info().

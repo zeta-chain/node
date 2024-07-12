@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7-labs
-FROM golang:1.20.14-bookworm AS base-build
+FROM golang:1.22.5-bookworm AS base-build
 
 ENV GOPATH /go
 ENV GOOS=linux
@@ -22,10 +22,10 @@ COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
 RUN --mount=type=cache,target="/root/.cache/go-build" make install
 RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
 
-FROM golang:1.20.14-bookworm AS cosmovisor-build
+FROM golang:1.22.5-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
-FROM golang:1.20.14-bookworm AS base-runtime
+FROM golang:1.22.5-bookworm AS base-runtime
 
 RUN apt update && \
     apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 bind9-host && \

@@ -206,7 +206,7 @@ func (ob *Observer) IsOutboundProcessed(
 		cctx.Index,
 		res.TxID,
 
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		uint64(blockHeight),
 
 		// not used with Bitcoin
@@ -354,7 +354,7 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	pendingNonce := ob.pendingNonce
 	ob.Mu().Unlock()
 
-	// #nosec G701 always non-negative
+	// #nosec G115 always non-negative
 	nonceLow := uint64(p.NonceLow)
 	if nonceLow > pendingNonce {
 		// get the last included outbound hash
@@ -632,7 +632,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 					params.Receiver,
 				)
 			}
-			// #nosec G701 always positive
+			// #nosec G115 always positive
 			if uint64(amount) != params.Amount.Uint64() {
 				return fmt.Errorf("checkTSSVout: output amount %d not match params amount %d", amount, params.Amount)
 			}

@@ -139,8 +139,8 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-lint-cosmos-gosec:
-	@bash ./scripts/cosmos-gosec.sh
+lint-gosec:
+	@bash ./scripts/gosec.sh
 
 gosec:
 	gosec  -exclude-dir=localnet ./...

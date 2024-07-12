@@ -84,7 +84,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	if cnt < 0 {
 		return fmt.Errorf("observeInboundBTC: block number is negative: %d", cnt)
 	}
-	// #nosec G701 checked positive
+	// #nosec G115 checked positive
 	lastBlock := uint64(cnt)
 	if lastBlock < ob.LastBlock() {
 		return fmt.Errorf(
@@ -108,7 +108,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// query incoming gas asset to TSS address
 	blockNumber := lastScanned + 1
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	res, err := ob.GetBlockByNumberCached(int64(blockNumber))
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error getting bitcoin block %d", blockNumber)
@@ -124,7 +124,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// https://github.com/zeta-chain/node/issues/2204
 	blockHeaderVerification, found := app.GetBlockHeaderEnabledChains(ob.Chain().ChainId)
 	if found && blockHeaderVerification.Enabled {
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		err = ob.postBlockHeader(ctx, int64(blockNumber))
 		if err != nil {
 			ob.logger.Inbound.Warn().Err(err).Msgf("observeInboundBTC: error posting block header %d", blockNumber)
@@ -138,7 +138,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		// filter incoming txs to TSS address
 		tssAddress := ob.TSS().BTCAddress()
 
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		inbounds, err := FilterAndParseIncomingTx(
 			ob.btcClient,
 			res.Block.Tx,
@@ -277,7 +277,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", err
 	}
 
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	event, err := GetBtcEvent(
 		ob.btcClient,
 		*tx,

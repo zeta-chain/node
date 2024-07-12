@@ -174,7 +174,7 @@ func getHashList(cfg *config.Config, tssAddress string) ([]Deposit, error) {
 			if strings.Compare("0014", scriptpubkey[:4]) == 0 && targetAddr == tssAddress {
 				entry := Deposit{
 					hash,
-					// #nosec G701 parsing json requires float64 type from blockstream
+					// #nosec G115 parsing json requires float64 type from blockstream
 					uint64(vout0["value"].(float64)),
 				}
 				list = append(list, entry)

@@ -105,7 +105,7 @@ func TestKeeper_ConvertGasToZeta(t *testing.T) {
 		require.Equal(t, &types.QueryConvertGasToZetaResponse{
 			OutboundGasInZeta: "5",
 			ProtocolFeeInZeta: types.GetProtocolFee().String(),
-			// #nosec G701 always positive
+			// #nosec G115 always positive
 			ZetaBlockHeight: uint64(ctx.BlockHeight()),
 		}, res)
 	})

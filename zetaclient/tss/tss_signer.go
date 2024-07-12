@@ -239,7 +239,7 @@ func (tss *TSS) Sign(
 		tssPubkey = optionalPubKey
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	keysignReq := keysign.NewRequest(
 		tssPubkey,
 		[]string{base64.StdEncoding.EncodeToString(H)},
@@ -326,7 +326,7 @@ func (tss *TSS) SignBatch(
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
 	tss.KeysignsTracker.StartMsgSign()

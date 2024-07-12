@@ -312,7 +312,7 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 				Height:       100,
 				CctxsMissed:  allCctxsMissed,
 				CctxsPending: allCctxsPending,
-				// #nosec G701 len always positive
+				// #nosec G115 len always positive
 				TotalPending:            uint64(len(allCctxsPending) + len(allCctxsMissed)),
 				PastCctxsValue:          sdk.NewInt(10).Mul(sdk.NewInt(1e18)).String(), // 10 ZETA
 				PendingCctxsValue:       sdk.NewInt(90).Mul(sdk.NewInt(1e18)).String(), // 90 ZETA

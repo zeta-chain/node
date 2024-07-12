@@ -36,9 +36,9 @@ func (k msgServer) ResetChainNonces(
 	chainNonce := types.ChainNonces{
 		Index:   chain.ChainName.String(),
 		ChainId: chain.ChainId,
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		Nonce: uint64(msg.ChainNonceHigh),
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		FinalizedHeight: uint64(ctx.BlockHeight()),
 	}
 	k.SetChainNonces(ctx, chainNonce)

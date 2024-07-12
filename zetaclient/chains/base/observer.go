@@ -275,7 +275,7 @@ func (ob *Observer) StopChannel() chan struct{} {
 func (ob *Observer) OpenDB(dbPath string, dbName string) error {
 	// create db path if not exist
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		err := os.MkdirAll(dbPath, os.ModePerm)
+		err := os.MkdirAll(dbPath, 0o750)
 		if err != nil {
 			return errors.Wrapf(err, "error creating db path: %s", dbPath)
 		}

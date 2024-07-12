@@ -91,7 +91,7 @@ func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
 			Index:   chain.ChainName.String(),
 			ChainId: chain.ChainId,
 			Nonce:   0,
-			// #nosec G701 always positive
+			// #nosec G115 always positive
 			FinalizedHeight: uint64(ctx.BlockHeight()),
 		}
 		k.SetChainNonces(ctx, chainNonce)

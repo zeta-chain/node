@@ -202,7 +202,7 @@ func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
-			// #nosec G701 always in range
+			// #nosec G115 always in range
 			blockTime := time.Unix(int64(header.Time), 0).UTC()
 			elapsedSeconds := time.Since(blockTime).Seconds()
 			if elapsedSeconds > 100 {
@@ -266,7 +266,7 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 			receipt.BlockNumber.Uint64(), tx.Hash(), tx.Nonce())
 	}
 
-	// #nosec G701 non negative value
+	// #nosec G115 non negative value
 	if receipt.TransactionIndex >= uint(len(block.Transactions)) {
 		return fmt.Errorf("transaction index %d out of range [0, %d), txHash %s nonce %d block %d",
 			receipt.TransactionIndex, len(block.Transactions), tx.Hash(), tx.Nonce(), receipt.BlockNumber.Uint64())
@@ -393,7 +393,7 @@ func (ob *Observer) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, e
 	if blockNumber > math.MaxInt32 {
 		return nil, fmt.Errorf("block number %d is too large", blockNumber)
 	}
-	// #nosec G701 always in range, checked above
+	// #nosec G115 always in range, checked above
 	block, err := ob.BlockByNumber(int(blockNumber))
 	if err != nil {
 		return nil, err
@@ -481,7 +481,7 @@ func (ob *Observer) postBlockHeader(ctx context.Context, tip uint64) error {
 
 	chainState, err := ob.ZetacoreClient().GetBlockHeaderChainState(ctx, ob.Chain().ChainId)
 	if err == nil && chainState != nil && chainState.EarliestHeight > 0 {
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		bn = uint64(chainState.LatestHeight) + 1 // the next header to post
 	}
 

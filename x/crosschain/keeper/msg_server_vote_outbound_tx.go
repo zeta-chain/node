@@ -195,7 +195,7 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIn
 	outTxTssNonce := cctx.GetCurrentOutboundParam().TssNonce
 
 	cctx.GetCurrentOutboundParam().BallotIndex = ballotIndex
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tssPubkey, receiverChain, int64(outTxTssNonce))
 	k.RemoveOutboundTrackerFromStore(ctx, receiverChain, outTxTssNonce)
 	ctx.Logger().

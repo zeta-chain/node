@@ -296,7 +296,7 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 		return BigValueConfirmationCount
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
@@ -375,7 +375,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return err
 	}
 
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
@@ -400,7 +400,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
 	}
 
-	// #nosec G701 - always in range
+	// #nosec G115 - always in range
 	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
 		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
 	}
@@ -618,7 +618,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "error GetBlockCount for chain %d", ob.Chain().ChainId)
 		}
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		ob.WithLastBlockScanned(uint64(blockNumber))
 	}
 
