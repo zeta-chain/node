@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"math/big"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	"cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -149,7 +150,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 
 	t.Run("post gas price success", func(t *testing.T) {
 		zetacoreBroadcast = MockBroadcast
-		hash, err := client.PostGasPrice(chains.BscMainnet, 1000000, "100", 1234)
+		hash, err := client.PostGasPrice(chains.BscMainnet, 1000000, 0, 1234)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})

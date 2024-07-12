@@ -87,7 +87,12 @@ func (c *Client) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer,
 
 // PostGasPrice posts a gas price vote
 // TODO(revamp): rename to PostVoteGasPrice
-func (c *Client) PostGasPrice(chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
+func (c *Client) PostGasPrice(
+	chain chains.Chain,
+	gasPrice uint64,
+	gasPriorityFee uint64,
+	blockNum uint64,
+) (string, error) {
 	// apply gas price multiplier for the chain
 	multiplier, err := GasPriceMultiplier(chain)
 	if err != nil {
@@ -96,7 +101,7 @@ func (c *Client) PostGasPrice(chain chains.Chain, gasPrice uint64, supply string
 	// #nosec G701 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := c.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
+	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, gasPriorityFee, blockNum)
 
 	authzMsg, authzSigner, err := c.WrapMessageWithAuthz(msg)
 	if err != nil {

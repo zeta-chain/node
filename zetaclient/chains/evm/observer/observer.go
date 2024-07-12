@@ -342,16 +342,21 @@ func (ob *Observer) PostGasPrice() error {
 		ob.Logger().GasPrice.Err(err).Msg("Err SuggestGasPrice:")
 		return err
 	}
+
+	priorityFee, err := ob.evmClient.SuggestGasTipCap(context.TODO())
+	if err != nil {
+		ob.Logger().GasPrice.Err(err).Msg("unable to load priority fee")
+		// we want fallback to zero if we can't get the priority fee
+		priorityFee = big.NewInt(0)
+	}
+
 	blockNum, err := ob.evmClient.BlockNumber(context.TODO())
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
 		return err
 	}
 
-	// SUPPLY
-	supply := "100" // lockedAmount on ETH, totalSupply on other chains
-
-	zetaHash, err := ob.ZetacoreClient().PostGasPrice(ob.Chain(), gasPrice.Uint64(), supply, blockNum)
+	zetaHash, err := ob.ZetacoreClient().PostGasPrice(ob.Chain(), gasPrice.Uint64(), priorityFee.Uint64(), blockNum)
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
 		return err

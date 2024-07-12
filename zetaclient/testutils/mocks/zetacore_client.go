@@ -77,7 +77,7 @@ func (m *MockZetacoreClient) PostVoteOutbound(
 	return sample.Hash().Hex(), "", nil
 }
 
-func (m *MockZetacoreClient) PostGasPrice(_ chains.Chain, _ uint64, _ string, _ uint64) (string, error) {
+func (m *MockZetacoreClient) PostGasPrice(_ chains.Chain, _, _, _ uint64) (string, error) {
 	if m.paused {
 		return "", errors.New(ErrMsgPaused)
 	}

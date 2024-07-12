@@ -79,7 +79,7 @@ type ZetacoreClient interface {
 		nonce uint64,
 		coinType coin.CoinType,
 	) (string, string, error)
-	PostGasPrice(chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
+	PostGasPrice(chain chains.Chain, gasPrice, gasPriorityFee, blockNum uint64) (string, error)
 	PostVoteBlockHeader(chainID int64, txhash []byte, height int64, header proofs.HeaderData) (string, error)
 	GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error)
 

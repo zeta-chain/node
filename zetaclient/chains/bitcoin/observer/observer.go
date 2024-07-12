@@ -377,7 +377,7 @@ func (ob *Observer) PostGasPrice() error {
 	}
 
 	// #nosec G701 always positive
-	_, err = ob.ZetacoreClient().PostGasPrice(ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
+	_, err = ob.ZetacoreClient().PostGasPrice(ob.Chain(), feeRateEstimated, 0, uint64(blockNumber))
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
 		return err
