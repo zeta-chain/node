@@ -174,7 +174,7 @@ func retryWithBackoff(call func() error, attempts int, minInternal, maxInterval 
 			backoff.WithInitialInterval(minInternal),
 			backoff.WithMaxInterval(maxInterval),
 		),
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		uint64(attempts),
 	)
 

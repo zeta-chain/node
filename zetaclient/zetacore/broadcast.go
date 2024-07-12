@@ -87,7 +87,7 @@ func (c *Client) Broadcast(
 
 	builder.SetGasLimit(gasLimit)
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	fee := sdktypes.NewCoins(sdktypes.NewCoin(
 		config.BaseDenom,
 		sdktypes.NewInt(int64(gasLimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt()),

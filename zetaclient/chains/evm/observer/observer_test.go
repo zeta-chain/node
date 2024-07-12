@@ -446,7 +446,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 	t.Run("should fail on tx index out of range", func(t *testing.T) {
 		// modify tx index to invalid number
 		copyReceipt := *receipt
-		// #nosec G701 non negative value
+		// #nosec G115 non negative value
 		copyReceipt.TransactionIndex = uint(len(block.Transactions))
 		err := ob.CheckTxInclusion(tx, &copyReceipt)
 		require.ErrorContains(t, err, "out of range")

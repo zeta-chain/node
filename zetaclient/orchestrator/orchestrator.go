@@ -324,7 +324,7 @@ func (oc *Orchestrator) StartCctxScheduler(ctx context.Context) error {
 							continue
 						}
 
-						// #nosec G701 range is verified
+						// #nosec G115 range is verified
 						zetaHeight := uint64(bn)
 						if chains.IsEVMChain(c.ChainId, app.GetAdditionalChains()) {
 							oc.ScheduleCctxEVM(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
@@ -364,9 +364,9 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		trackerMap[v.Nonce] = true
 	}
 	outboundScheduleLookahead := observer.GetChainParams().OutboundScheduleLookahead
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * evmOutboundLookbackFactor)
-	// #nosec G701 positive
+	// #nosec G115 positive
 	outboundScheduleInterval := uint64(observer.GetChainParams().OutboundScheduleInterval)
 
 	for idx, cctx := range cctxList {
@@ -437,7 +437,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			)
 		}
 
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		if int64(idx) >= outboundScheduleLookahead-1 { // only look at 'lookahead' cctxs per chain
 			break
 		}
@@ -461,7 +461,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		oc.logger.Std.Error().Msgf("ScheduleCctxBTC: chain observer is not a bitcoin observer")
 		return
 	}
-	// #nosec G701 positive
+	// #nosec G115 positive
 	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
 	lookahead := observer.GetChainParams().OutboundScheduleLookahead
 

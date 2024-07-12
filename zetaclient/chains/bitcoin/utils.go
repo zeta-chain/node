@@ -46,9 +46,9 @@ func GetSatoshis(btc float64) (int64, error) {
 // round rounds a float64 to the nearest integer
 func round(f float64) int64 {
 	if f < 0 {
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		return int64(f - 0.5)
 	}
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	return int64(f + 0.5)
 }
