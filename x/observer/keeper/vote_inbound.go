@@ -21,7 +21,7 @@ func (k Keeper) VoteOnInboundBallot(
 	voter string,
 	ballotIndex string,
 	inboundHash string,
-) (bool, bool, error) {
+) (isFinalized bool, isNew bool, err error) {
 	if !k.IsInboundEnabled(ctx) {
 		return false, false, types.ErrInboundDisabled
 	}
@@ -66,7 +66,7 @@ func (k Keeper) VoteOnInboundBallot(
 
 	ballot, isFinalized, isNew, err := k.VoteOnBallot(ctx, senderChain, ballotIndex, types.ObservationType_InboundTx, voter, types.VoteType_SuccessObservation)
 	if err != nil {
-		return false, false, err
+		return false, false, sdkerrors.Wrap(err, "failed to vote on ballot")
 	}
 
 	if isNew {

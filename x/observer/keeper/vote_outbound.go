@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -38,7 +39,7 @@ func (k Keeper) VoteOnOutboundBallot(
 
 	ballot, isFinalized, isNew, err = k.VoteOnBallot(ctx, observationChain, ballotIndex, observertypes.ObservationType_OutboundTx, voter, observertypes.ConvertReceiveStatusToVoteType(receiveStatus))
 	if err != nil {
-		return false, false, ballot, "", err
+		return false, false, ballot, "", sdkerrors.Wrap(err, "failed to vote on ballot")
 	}
 
 	return isFinalized, isNew, ballot, observationChain.String(), nil
