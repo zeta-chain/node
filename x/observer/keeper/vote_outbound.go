@@ -37,7 +37,14 @@ func (k Keeper) VoteOnOutboundBallot(
 		return false, false, ballot, "", observertypes.ErrNotObserver
 	}
 
-	ballot, isFinalized, isNew, err = k.VoteOnBallot(ctx, observationChain, ballotIndex, observertypes.ObservationType_OutboundTx, voter, observertypes.ConvertReceiveStatusToVoteType(receiveStatus))
+	ballot, isFinalized, isNew, err = k.VoteOnBallot(
+		ctx,
+		observationChain,
+		ballotIndex,
+		observertypes.ObservationType_OutboundTx,
+		voter,
+		observertypes.ConvertReceiveStatusToVoteType(receiveStatus),
+	)
 	if err != nil {
 		return false, false, ballot, "", sdkerrors.Wrap(err, "failed to vote on ballot")
 	}

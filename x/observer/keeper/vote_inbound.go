@@ -64,7 +64,14 @@ func (k Keeper) VoteOnInboundBallot(
 		}
 	}
 
-	ballot, isFinalized, isNew, err := k.VoteOnBallot(ctx, senderChain, ballotIndex, types.ObservationType_InboundTx, voter, types.VoteType_SuccessObservation)
+	ballot, isFinalized, isNew, err := k.VoteOnBallot(
+		ctx,
+		senderChain,
+		ballotIndex,
+		types.ObservationType_InboundTx,
+		voter,
+		types.VoteType_SuccessObservation,
+	)
 	if err != nil {
 		return false, false, sdkerrors.Wrap(err, "failed to vote on ballot")
 	}

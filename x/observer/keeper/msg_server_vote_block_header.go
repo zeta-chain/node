@@ -34,7 +34,14 @@ func (k msgServer) VoteBlockHeader(
 		return nil, sdkerrors.Wrap(lightclienttypes.ErrInvalidBlockHeader, err.Error())
 	}
 
-	_, isFinalized, isNew, err := k.VoteOnBallot(ctx, chain, msg.Digest(), types.ObservationType_InboundTx, msg.Creator, types.VoteType_SuccessObservation)
+	_, isFinalized, isNew, err := k.VoteOnBallot(
+		ctx,
+		chain,
+		msg.Digest(),
+		types.ObservationType_InboundTx,
+		msg.Creator,
+		types.VoteType_SuccessObservation,
+	)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to vote on ballot")
 	}

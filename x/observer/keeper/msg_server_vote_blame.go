@@ -30,7 +30,14 @@ func (k msgServer) VoteBlame(
 		return nil, types.ErrNotObserver
 	}
 
-	ballot, isFinalized, isNew, err := k.VoteOnBallot(ctx, observationChain, msg.Digest(), types.ObservationType_TSSKeySign, msg.Creator, types.VoteType_SuccessObservation)
+	ballot, isFinalized, isNew, err := k.VoteOnBallot(
+		ctx,
+		observationChain,
+		msg.Digest(),
+		types.ObservationType_TSSKeySign,
+		msg.Creator,
+		types.VoteType_SuccessObservation,
+	)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to vote on ballot")
 	}

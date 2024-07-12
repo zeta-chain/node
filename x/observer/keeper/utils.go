@@ -163,7 +163,7 @@ func (k Keeper) VoteOnBallot(
 	isFinalized bool,
 	isNew bool,
 	err error) {
-	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, chain, observationType, ballotThreshold...)
+	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, chain, observationType)
 	if err != nil {
 		return ballot, false, false, err
 	}
