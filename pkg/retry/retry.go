@@ -18,6 +18,7 @@
 package retry
 
 import (
+	"context"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -116,13 +117,17 @@ func DoTypedWithBackoffAndRetry[T any](cb TypedCallback[T], bo Backoff) (T, erro
 	return DoTypedWithBackoff(wrapper, bo)
 }
 
-// Retry wraps error to mark it as retryable
+// Retry wraps error to mark it as retryable. Skips retry for context errors.
 func Retry(err error) error {
-	if err == nil {
+	switch {
+	case err == nil:
 		return nil
+	case errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded):
+		// do not retry context errors
+		return err
+	default:
+		return errRetryable{error: err}
 	}
-
-	return errRetryable{error: err}
 }
 
 // RetryTyped wraps error to mark it as retryable

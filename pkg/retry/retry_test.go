@@ -1,6 +1,7 @@
 package retry
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -77,6 +78,26 @@ func TestDo(t *testing.T) {
 		assert.ErrorContains(t, err, "retry limit exceeded")
 	})
 
+	t.Run("context errors are non-retryable", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+		defer cancel()
+
+		var counter int
+		err := Do(func() error {
+			time.Sleep(100 * time.Millisecond)
+
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+
+			counter++
+
+			return nil
+		})
+
+		assert.Equal(t, 0, counter)
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+	})
 }
 
 func TestDoTyped(t *testing.T) {
