@@ -91,6 +91,7 @@ func IsZetaChain(chainID int64) bool {
 func IsEVMChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
 		chainID == AmoyChain().ChainId ||
+		chainID == PolygonChain().ChainId ||
 		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 80001 || // Polygon mumbai
 		chainID == 97 || // BSC testnet

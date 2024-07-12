@@ -44,11 +44,11 @@ func TestChainListFunctions(t *testing.T) {
 		function func() []*Chain
 		expected []Chain
 	}{
-		{"DefaultChainsList", DefaultChainsList, []Chain{BtcMainnetChain(), BscMainnetChain(), EthChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain(), BtcRegtestChain(), GoerliLocalnetChain(), ZetaChainMainnet(), ZetaTestnetChain(), ZetaMocknetChain(), ZetaPrivnetChain()}},
-		{"MainnetChainList", MainnetChainList, []Chain{ZetaChainMainnet(), BtcMainnetChain(), BscMainnetChain(), EthChain()}},
+		{"DefaultChainsList", DefaultChainsList, []Chain{BtcMainnetChain(), BscMainnetChain(), EthChain(), PolygonChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain(), BtcRegtestChain(), GoerliLocalnetChain(), ZetaChainMainnet(), ZetaTestnetChain(), ZetaMocknetChain(), ZetaPrivnetChain()}},
+		{"MainnetChainList", MainnetChainList, []Chain{ZetaChainMainnet(), BtcMainnetChain(), BscMainnetChain(), EthChain(), PolygonChain()}},
 		{"TestnetChainList", TestnetChainList, []Chain{ZetaTestnetChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain()}},
 		{"PrivnetChainList", PrivnetChainList, []Chain{ZetaPrivnetChain(), BtcRegtestChain(), GoerliLocalnetChain()}},
-		{"ExternalChainList", ExternalChainList, []Chain{BtcMainnetChain(), BscMainnetChain(), EthChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain(), BtcRegtestChain(), GoerliLocalnetChain()}},
+		{"ExternalChainList", ExternalChainList, []Chain{BtcMainnetChain(), BscMainnetChain(), EthChain(), PolygonChain(), BtcTestNetChain(), MumbaiChain(), AmoyChain(), BscTestnetChain(), GoerliChain(), SepoliaChain(), BtcRegtestChain(), GoerliLocalnetChain()}},
 		{"ZetaChainList", ZetaChainList, []Chain{ZetaChainMainnet(), ZetaTestnetChain(), ZetaMocknetChain(), ZetaPrivnetChain()}},
 	}
 

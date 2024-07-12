@@ -133,6 +133,7 @@ func DefaultChainsList() []*Chain {
 		BtcMainnetChain(),
 		BscMainnetChain(),
 		EthChain(),
+		PolygonChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
 		AmoyChain(),
@@ -155,6 +156,7 @@ func MainnetChainList() []*Chain {
 		BtcMainnetChain(),
 		BscMainnetChain(),
 		EthChain(),
+		PolygonChain(),
 	})
 }
 
@@ -186,6 +188,7 @@ func ExternalChainList() []*Chain {
 		BtcMainnetChain(),
 		BscMainnetChain(),
 		EthChain(),
+		PolygonChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
 		AmoyChain(),
