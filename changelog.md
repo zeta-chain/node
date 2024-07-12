@@ -58,6 +58,7 @@
 * [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
 * [2380](https://github.com/zeta-chain/node/pull/2380) - use `ChainInfo` in `authority` to allow dynamically support new chains
 * [2395](https://github.com/zeta-chain/node/pull/2395) - converge AppContext with ZetaCoreContext in zetaclient
+* [2428](https://github.com/zeta-chain/node/pull/2428) - propagate context across codebase & refactor zetacore client
 
 ### Tests
 

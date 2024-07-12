@@ -53,7 +53,7 @@ func Load(path string) (Config, error) {
 	file = filepath.Clean(file)
 
 	// read config
-	cfg := NewConfig()
+	cfg := New(false)
 	input, err := os.ReadFile(file)
 	if err != nil {
 		return Config{}, err

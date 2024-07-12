@@ -24,7 +24,7 @@ func TestFromContext(t *testing.T) {
 
 	// ARRANGE #2
 	// Given basic app
-	app := context.New(config.NewConfig(), zerolog.Nop())
+	app := context.New(config.New(false), zerolog.Nop())
 
 	// That is included in the ctx
 	ctx = context.WithAppContext(ctx, app)
@@ -37,4 +37,21 @@ func TestFromContext(t *testing.T) {
 	assert.NotNil(t, app2)
 	assert.Equal(t, app, app2)
 	assert.NotEmpty(t, app.Config())
+}
+
+func TestCopy(t *testing.T) {
+	// ARRANGE
+	var (
+		app  = context.New(config.New(false), zerolog.Nop())
+		ctx1 = context.WithAppContext(goctx.Background(), app)
+	)
+
+	// ACT
+	ctx2 := context.Copy(ctx1, goctx.Background())
+
+	// ASSERT
+	app2, err := context.FromContext(ctx2)
+	assert.NoError(t, err)
+	assert.NotNil(t, app2)
+	assert.Equal(t, app, app2)
 }

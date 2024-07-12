@@ -1,13 +1,18 @@
 package zetacore
 
+import "time"
+
 const (
+	// DefaultBaseGasPrice is the default base gas price
+	DefaultBaseGasPrice = 1_000_000
+
 	// DefaultGasLimit is the default gas limit used for broadcasting txs
 	DefaultGasLimit = 200_000
 
 	// PostGasPriceGasLimit is the gas limit for voting new gas price
 	PostGasPriceGasLimit = 1_500_000
 
-	// PostVoteInboundGasLimit is the gas limit for voting on observed inbound tx
+	// PostVoteInboundGasLimit is the gas limit for voting on observed inbound tx (for zetachain itself)
 	PostVoteInboundGasLimit = 400_000
 
 	// PostVoteInboundExecutionGasLimit is the gas limit for voting on observed inbound tx and executing it
@@ -31,22 +36,16 @@ const (
 	// DefaultRetryInterval is the interval between retries in seconds
 	DefaultRetryInterval = 5
 
-	// MonitorVoteInboundResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorVoteInboundResultInterval = 5
-
-	// MonitorVoteInboundResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorVoteInboundResultRetryCount = 20
-
-	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx
+	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx (for zetachain itself)
 	PostVoteOutboundGasLimit = 400_000
 
 	// PostVoteOutboundRevertGasLimit is the gas limit for voting on observed outbound tx for revert (when outbound fails)
 	// The value needs to be higher because reverting implies interacting with the EVM to perform swaps for the gas token
 	PostVoteOutboundRevertGasLimit = 1_500_000
+)
 
-	// MonitorVoteOutboundResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorVoteOutboundResultInterval = 5
-
-	// MonitorVoteOutboundResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorVoteOutboundResultRetryCount = 20
+// constants for monitoring tx results
+const (
+	monitorInterval   = 5 * time.Second
+	monitorRetryCount = 20
 )

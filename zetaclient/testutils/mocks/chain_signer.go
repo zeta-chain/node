@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"context"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -34,6 +36,7 @@ func NewEVMSigner(
 }
 
 func (s *EVMSigner) TryProcessOutbound(
+	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
 	_ *outboundprocessor.Processor,
 	_ string,
@@ -73,6 +76,7 @@ func NewBTCSigner() *BTCSigner {
 }
 
 func (s *BTCSigner) TryProcessOutbound(
+	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
 	_ *outboundprocessor.Processor,
 	_ string,
