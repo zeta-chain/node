@@ -311,6 +311,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		// sender and receiver (contract or EOA) addreses
 		"from": from,
 		"to":   to,
+		// #nosec G115 uint8 -> uint false positive
 		"type": hexutil.Uint(txType),
 	}
 

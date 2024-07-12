@@ -196,6 +196,7 @@ func NewRPCTransaction(
 	}
 	v, r, s := tx.RawSignatureValues()
 	result := &RPCTransaction{
+		// #nosec G115 uint8 -> uint64 false positive
 		Type:     hexutil.Uint64(tx.Type()),
 		From:     from,
 		Gas:      hexutil.Uint64(tx.Gas()),

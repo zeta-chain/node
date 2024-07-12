@@ -147,6 +147,7 @@ func (k Keeper) DeployZRC20Contract(
 	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol
+	// #nosec G115 uint8 -> uint32 false positive
 	coin.Decimals = uint32(decimals)
 	coin.Asset = erc20Contract
 	coin.Zrc20ContractAddress = contractAddr.Hex()
