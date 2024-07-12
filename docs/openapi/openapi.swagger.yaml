@@ -53612,6 +53612,10 @@ definitions:
       - goerli_localnet
       - btc_regtest
       - amoy_testnet
+      - optimism_mainnet
+      - optimism_sepolia
+      - base_mainnet
+      - base_sepolia
     default: empty
   chainsReceiveStatus:
     type: string
