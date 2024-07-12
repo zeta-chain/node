@@ -44,9 +44,7 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		return &types.MsgVoteTSSResponse{}, types.ErrKeygenCompleted
 	}
 
-	// add votes and set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
-	// TODO : https://github.com/zeta-chain/node/issues/896
 	ballotCreated := false
 	index := msg.Digest()
 	ballot, found := k.GetBallot(ctx, index)
