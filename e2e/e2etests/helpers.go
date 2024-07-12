@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 	"strconv"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -16,6 +17,18 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+func WaitForNBlock(r *runner.E2ERunner, n int64) {
+	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+	require.NoError(r, err)
+	for {
+		heightNew, err := r.CctxClient.LastZetaHeight(r.Ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+		require.NoError(r, err)
+		if heightNew.Height+n >= height.Height {
+			break
+		}
+		time.Sleep(4 * time.Second)
+	}
+}
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	tx, err := r.BTCZRC20.Approve(
 		r.ZEVMAuth,
