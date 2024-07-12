@@ -58,6 +58,7 @@
 * [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
 * [2380](https://github.com/zeta-chain/node/pull/2380) - use `ChainInfo` in `authority` to allow dynamically support new chains
 * [2395](https://github.com/zeta-chain/node/pull/2395) - converge AppContext with ZetaCoreContext in zetaclient
+* [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 
 ### Tests
 
