@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -38,18 +37,23 @@ const (
 
 // ChainObserver is the interface for chain observer
 type ChainObserver interface {
-	Start()
+	Start(ctx context.Context)
 	Stop()
-	IsOutboundProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
+	IsOutboundProcessed(
+		ctx context.Context,
+		cctx *crosschaintypes.CrossChainTx,
+		logger zerolog.Logger,
+	) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetTxID(nonce uint64) string
-	WatchInboundTracker()
+	WatchInboundTracker(ctx context.Context) error
 }
 
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
 	TryProcessOutbound(
+		ctx context.Context,
 		cctx *crosschaintypes.CrossChainTx,
 		outboundProc *outboundprocessor.Processor,
 		outboundID string,
@@ -63,28 +67,75 @@ type ChainSigner interface {
 	GetERC20CustodyAddress() ethcommon.Address
 }
 
-// ZetacoreClient is the client interface to interact with zetacore
-type ZetacoreClient interface {
-	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteInbound) (string, string, error)
-	PostVoteOutbound(
-		sendHash string,
-		outboundHash string,
-		outBlockHeight uint64,
-		outboundGasUsed uint64,
-		outboundEffectiveGasPrice *big.Int,
-		outboundEffectiveGasLimit uint64,
-		amount *big.Int,
-		status chains.ReceiveStatus,
+// ZetacoreVoter represents voter interface.
+type ZetacoreVoter interface {
+	PostVoteBlockHeader(
+		ctx context.Context,
+		chainID int64,
+		txhash []byte,
+		height int64,
+		header proofs.HeaderData,
+	) (string, error)
+	PostVoteGasPrice(
+		ctx context.Context,
 		chain chains.Chain,
-		nonce uint64,
-		coinType coin.CoinType,
+		gasPrice uint64,
+		supply string,
+		blockNum uint64,
+	) (string, error)
+	PostVoteInbound(
+		ctx context.Context,
+		gasLimit, retryGasLimit uint64,
+		msg *crosschaintypes.MsgVoteInbound,
 	) (string, string, error)
-	PostGasPrice(chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
-	PostVoteBlockHeader(chainID int64, txhash []byte, height int64, header proofs.HeaderData) (string, error)
-	GetBlockHeaderChainState(chainID int64) (lightclienttypes.QueryGetChainStateResponse, error)
+	PostVoteOutbound(
+		ctx context.Context,
+		gasLimit, retryGasLimit uint64,
+		msg *crosschaintypes.MsgVoteOutbound,
+	) (string, string, error)
+	PostVoteBlameData(ctx context.Context, blame *blame.Blame, chainID int64, index string) (string, error)
+}
 
-	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
+// ZetacoreClient is the client interface to interact with zetacore
+//
+//go:generate mockery --name ZetacoreClient --filename zetacore_client.go --case underscore --output ../../testutils/mocks
+type ZetacoreClient interface {
+	ZetacoreVoter
+
+	Chain() chains.Chain
+	GetLogger() *zerolog.Logger
+	GetKeys() keyinterfaces.ObserverKeys
+
+	GetKeyGen(ctx context.Context) (*observertypes.Keygen, error)
+
+	GetBlockHeight(ctx context.Context) (int64, error)
+	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)
+
+	ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
+	ListPendingCCTXWithinRateLimit(
+		ctx context.Context,
+	) (*crosschaintypes.QueryListPendingCctxWithinRateLimitResponse, error)
+
+	GetRateLimiterInput(ctx context.Context, window int64) (*crosschaintypes.QueryRateLimiterInputResponse, error)
+	GetPendingNoncesByChain(ctx context.Context, chainID int64) (observertypes.PendingNonces, error)
+
+	GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
+	GetOutboundTracker(ctx context.Context, chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
+	GetAllOutboundTrackerByChain(
+		ctx context.Context,
+		chainID int64,
+		order Order,
+	) ([]crosschaintypes.OutboundTracker, error)
+	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
+	GetRateLimiterFlags(ctx context.Context) (crosschaintypes.RateLimiterFlags, error)
+	GetObserverList(ctx context.Context) ([]string, error)
+	GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error)
+	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
+	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
+
+	// todo(revamp): refactor input to struct
 	AddOutboundTracker(
+		ctx context.Context,
 		chainID int64,
 		nonce uint64,
 		txHash string,
@@ -92,26 +143,9 @@ type ZetacoreClient interface {
 		blockHash string,
 		txIndex int64,
 	) (string, error)
-	Chain() chains.Chain
-	GetLogger() *zerolog.Logger
-	GetKeys() keyinterfaces.ObserverKeys
-	GetKeyGen() (*observertypes.Keygen, error)
-	GetBlockHeight() (int64, error)
-	ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
-	ListPendingCctxWithinRatelimit() ([]*crosschaintypes.CrossChainTx, uint64, int64, string, bool, error)
-	GetRateLimiterInput(window int64) (crosschaintypes.QueryRateLimiterInputResponse, error)
-	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
-	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutboundTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
-	GetAllOutboundTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutboundTracker, error)
-	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
-	GetRateLimiterFlags() (crosschaintypes.RateLimiterFlags, error)
-	GetObserverList() ([]string, error)
-	GetBtcTssAddress(chainID int64) (string, error)
-	GetZetaHotKeyBalance() (sdkmath.Int, error)
-	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InboundTracker, error)
-	Pause()
-	Unpause()
+
+	Stop()
+	OnBeforeStop(callback func())
 }
 
 // BTCRPCClient is the interface for BTC RPC client
@@ -167,10 +201,17 @@ type TSSSigner interface {
 	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
 	// TODO: check if optionalPubkey is needed
 	// https://github.com/zeta-chain/node/issues/2085
-	Sign(data []byte, height uint64, nonce uint64, chainID int64, optionalPubkey string) ([65]byte, error)
+	Sign(
+		ctx context.Context,
+		data []byte,
+		height uint64,
+		nonce uint64,
+		chainID int64,
+		optionalPubkey string,
+	) ([65]byte, error)
 
 	// SignBatch signs the data in batch
-	SignBatch(digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
+	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
 
 	EVMAddress() ethcommon.Address
 	BTCAddress() string

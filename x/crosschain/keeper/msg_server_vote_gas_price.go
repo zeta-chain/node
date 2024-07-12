@@ -63,7 +63,7 @@ func (k msgServer) VoteGasPrice(
 		}
 		// recompute the median gas price
 		mi := medianOfArray(gasPrice.Prices)
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		gasPrice.MedianIndex = uint64(mi)
 	}
 	k.SetGasPrice(ctx, gasPrice)

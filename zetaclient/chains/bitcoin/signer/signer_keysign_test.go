@@ -2,6 +2,7 @@ package signer
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -141,12 +142,14 @@ func getTSSTX(
 	subscript []byte,
 	hashType txscript.SigHashType,
 ) (string, error) {
+	ctx := context.Background()
+
 	witnessHash, err := txscript.CalcWitnessSigHash(subscript, sigHashes, txscript.SigHashAll, tx, idx, amt)
 	if err != nil {
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(witnessHash, 10, 10, 0, "")
+	sig65B, err := tss.Sign(ctx, witnessHash, 10, 10, 0, "")
 	R := big.NewInt(0).SetBytes(sig65B[:32])
 	S := big.NewInt(0).SetBytes(sig65B[32:64])
 	sig := btcec.Signature{

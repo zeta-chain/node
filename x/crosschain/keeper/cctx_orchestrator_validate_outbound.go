@@ -294,7 +294,7 @@ func (k Keeper) validateFailedOutboundObserversForZEVM(ctx sdk.Context, cctx *ty
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 		ethTxHash := ethcommon.BytesToHash(hash)
 		cctx.GetCurrentOutboundParam().Hash = ethTxHash.String()
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 	cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed

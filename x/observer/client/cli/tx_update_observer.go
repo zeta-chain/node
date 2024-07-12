@@ -27,7 +27,7 @@ func CmdUpdateObserver() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// #nosec G701 parsed in range
+			// #nosec G115 parsed in range
 			updateReason, err := parseUpdateReason(int32(updateReasonInt))
 			if err != nil {
 				return err

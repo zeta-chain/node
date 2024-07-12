@@ -50,7 +50,7 @@ func CmdWhitelistERC20() *cobra.Command {
 				chainID,
 				name,
 				symbol,
-				// #nosec G701 always in range
+				// #nosec G115 always in range
 				uint32(decimals),
 				gasLimit,
 			)

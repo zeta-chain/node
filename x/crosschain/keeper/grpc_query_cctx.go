@@ -88,7 +88,7 @@ func (k Keeper) CctxByNonce(
 	if !found {
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	cctx, err := getCctxByChainIDAndNonce(k, ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func (k Keeper) ListPendingCctx(
 
 	cctxs := make([]*types.CrossChainTx, 0)
 	maxCCTXsReached := func() bool {
-		// #nosec G701 len always positive
+		// #nosec G115 len always positive
 		return uint32(len(cctxs)) >= limit
 	}
 
@@ -155,7 +155,7 @@ func (k Keeper) ListPendingCctx(
 	}
 
 	// add the pending nonces to the total pending
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
 
 	// now query the pending nonces that we know are pending

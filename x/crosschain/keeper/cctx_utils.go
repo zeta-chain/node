@@ -50,7 +50,7 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 		)
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	if p.NonceHigh != int64(nonce.Nonce) {
 		return cosmoserrors.Wrap(
 			types.ErrNonceMismatch,

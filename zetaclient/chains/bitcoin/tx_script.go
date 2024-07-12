@@ -1,5 +1,6 @@
 package bitcoin
 
+// #nosec G507 ripemd160 required for bitcoin address encoding
 import (
 	"bytes"
 	"encoding/hex"

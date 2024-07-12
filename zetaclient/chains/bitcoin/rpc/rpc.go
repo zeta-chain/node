@@ -154,6 +154,6 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 		highestRate = defaultTestnetFeeRate
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	return uint64(highestRate), nil
 }

@@ -52,7 +52,7 @@ var (
 
 // FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func FeeRateToSatPerByte(rate float64) *big.Int {
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	satPerKB := new(big.Int).SetInt64(int64(rate * btcutil.SatoshiPerBitcoin))
 	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
 }
@@ -61,7 +61,7 @@ func FeeRateToSatPerByte(rate float64) *big.Int {
 func WiredTxSize(numInputs uint64, numOutputs uint64) uint64 {
 	// Version 4 bytes + LockTime 4 bytes + Serialized varint size for the
 	// number of transaction inputs and outputs.
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	return uint64(8 + wire.VarIntSerializeSize(numInputs) + wire.VarIntSerializeSize(numOutputs))
 }
 
@@ -70,7 +70,7 @@ func EstimateOutboundSize(numInputs uint64, payees []btcutil.Address) (uint64, e
 	if numInputs == 0 {
 		return 0, nil
 	}
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	numOutputs := 2 + uint64(len(payees))
 	bytesWiredTx := WiredTxSize(numInputs, numOutputs)
 	bytesInput := numInputs * bytesPerInput
@@ -189,7 +189,7 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 			btcEarned += out.Value
 		}
 	}
-	// #nosec G701 checked above
+	// #nosec G115 checked above
 	subsidy := blockchain.CalcBlockSubsidy(int32(blockVb.Height), netParams)
 	if btcEarned < subsidy {
 		return 0, fmt.Errorf("miner earned %d, less than subsidy %d", btcEarned, subsidy)
@@ -234,7 +234,7 @@ func CalcDepositorFee(
 		logger.Error().Err(err).Msgf("cannot calculate fee rate for block %d", blockVb.Height)
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate)

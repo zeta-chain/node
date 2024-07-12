@@ -50,7 +50,7 @@ func (k msgServer) DeployFungibleCoinZRC20(
 	}
 
 	if msg.CoinType == coin.CoinType_Gas {
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		address, err = k.SetupChainGasCoinAndPool(
 			ctx,
 			msg.ForeignChainId,
@@ -63,7 +63,7 @@ func (k msgServer) DeployFungibleCoinZRC20(
 			return nil, cosmoserrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}
 	} else {
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		address, err = k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChainId, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
 		if err != nil {
 			return nil, err
@@ -77,7 +77,7 @@ func (k msgServer) DeployFungibleCoinZRC20(
 			Contract:   address.String(),
 			Name:       msg.Name,
 			Symbol:     msg.Symbol,
-			// #nosec G701 always in range
+			// #nosec G115 always in range
 			Decimals: int64(msg.Decimals),
 			CoinType: msg.CoinType,
 			Erc20:    msg.ERC20,

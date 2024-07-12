@@ -18,7 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -44,9 +43,6 @@ type Observer struct {
 
 	// chainParams contains the dynamic chain parameters of the observed chain
 	chainParams observertypes.ChainParams
-
-	// appContext contains context data for zetaclient & zetacore (e.g. supported chains)
-	appContext *context.AppContext
 
 	// zetacoreClient is the client to interact with ZetaChain
 	zetacoreClient interfaces.ZetacoreClient
@@ -87,7 +83,6 @@ type Observer struct {
 func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
-	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
@@ -98,7 +93,6 @@ func NewObserver(
 	ob := Observer{
 		chain:            chain,
 		chainParams:      chainParams,
-		appContext:       appContext,
 		zetacoreClient:   zetacoreClient,
 		tss:              tss,
 		lastBlock:        0,
@@ -162,11 +156,6 @@ func (ob *Observer) ChainParams() observertypes.ChainParams {
 func (ob *Observer) WithChainParams(params observertypes.ChainParams) *Observer {
 	ob.chainParams = params
 	return ob
-}
-
-// AppContext returns the zetacore context for the observer.
-func (ob *Observer) AppContext() *context.AppContext {
-	return ob.appContext
 }
 
 // ZetacoreClient returns the zetacore client for the observer.
@@ -286,7 +275,7 @@ func (ob *Observer) StopChannel() chan struct{} {
 func (ob *Observer) OpenDB(dbPath string, dbName string) error {
 	// create db path if not exist
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		err := os.MkdirAll(dbPath, os.ModePerm)
+		err := os.MkdirAll(dbPath, 0o750)
 		if err != nil {
 			return errors.Wrapf(err, "error creating db path: %s", dbPath)
 		}

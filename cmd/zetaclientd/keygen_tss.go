@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -16,14 +17,14 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 func GenerateTss(
-	appContext *context.AppContext,
+	ctx context.Context,
 	logger zerolog.Logger,
 	client *zetacore.Client,
 	peers p2p.AddrList,
@@ -31,20 +32,27 @@ func GenerateTss(
 	ts *metrics.TelemetryServer,
 	tssHistoricalList []observertypes.TSS,
 	tssPassword string,
-	hotkeyPassword string) (*mc.TSS, error) {
+	hotkeyPassword string,
+) (*mc.TSS, error) {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 
 	// Bitcoin chain ID is currently used for using the correct signature format
 	// TODO: remove this once we have a better way to determine the signature format
 	// https://github.com/zeta-chain/node/issues/1397
 	bitcoinChainID := chains.BitcoinRegtest.ChainId
-	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
+	btcChain, _, btcEnabled := app.GetBTCChainAndConfig()
 	if btcEnabled {
 		bitcoinChainID = btcChain.ChainId
 	}
 
 	tss, err := mc.NewTSS(
-		appContext,
+		ctx,
+		app,
 		peers,
 		priKey,
 		preParams,
@@ -74,7 +82,7 @@ func GenerateTss(
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		keyGen := appContext.GetKeygen()
+		keyGen := app.GetKeygen()
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
@@ -86,7 +94,7 @@ func GenerateTss(
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
 		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
-			currentBlock, err := client.GetBlockHeight()
+			currentBlock, err := client.GetBlockHeight(ctx)
 			if err != nil {
 				keygenLogger.Error().Err(err).Msg("GetBlockHeight RPC  error")
 				continue
@@ -101,16 +109,21 @@ func GenerateTss(
 					if currentBlock > lastBlock {
 						lastBlock = currentBlock
 						keygenLogger.Info().
-							Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, appContext.Config().ChainID)
+							Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, app.Config().ChainID)
 					}
 					continue
 				}
 				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
 				triedKeygenAtBlock = true
-				err = keygenTss(keyGen, tss, keygenLogger)
+				err = keygenTss(ctx, keyGen, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
-					tssFailedVoteHash, err := client.SetTSS("", keyGen.BlockNumber, chains.ReceiveStatus_failed)
+					tssFailedVoteHash, err := client.PostVoteTSS(
+						ctx,
+						"",
+						keyGen.BlockNumber,
+						chains.ReceiveStatus_failed,
+					)
 					if err != nil {
 						keygenLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 						return nil, err
@@ -128,7 +141,8 @@ func GenerateTss(
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := client.SetTSS(
+				tssSuccessVoteHash, err := client.PostVoteTSS(
+					ctx,
 					newTss.CurrentPubkey,
 					keyGen.BlockNumber,
 					chains.ReceiveStatus_success,
@@ -155,7 +169,7 @@ func GenerateTss(
 	return nil, errors.New("unexpected state for TSS generation")
 }
 
-func keygenTss(keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Logger) error {
+func keygenTss(ctx context.Context, keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Logger) error {
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request
 	req = keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0")
@@ -168,7 +182,12 @@ func keygenTss(keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Lo
 			return err
 		}
 		index := fmt.Sprintf("keygen-%s-%d", digest, keyGen.BlockNumber)
-		zetaHash, err := tss.ZetacoreClient.PostBlameData(&res.Blame, tss.ZetacoreClient.Chain().ChainId, index)
+		zetaHash, err := tss.ZetacoreClient.PostVoteBlameData(
+			ctx,
+			&res.Blame,
+			tss.ZetacoreClient.Chain().ChainId,
+			index,
+		)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err

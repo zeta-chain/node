@@ -3,6 +3,7 @@ package observer
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -18,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -25,7 +27,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -113,7 +114,6 @@ func NewObserver(
 	chain chains.Chain,
 	btcClient interfaces.BTCRPCClient,
 	chainParams observertypes.ChainParams,
-	appContext *context.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -124,7 +124,6 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		appContext,
 		zetacoreClient,
 		tss,
 		btcBlocksPerDay,
@@ -194,32 +193,32 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 }
 
 // Start starts the Go routine processes to observe the Bitcoin chain
-func (ob *Observer) Start() {
+func (ob *Observer) Start(ctx context.Context) {
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	// watch bitcoin chain for incoming txs and post votes to zetacore
-	go ob.WatchInbound()
+	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
 
 	// watch bitcoin chain for outgoing txs status
-	go ob.WatchOutbound()
+	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
 
 	// watch bitcoin chain for UTXOs owned by the TSS address
-	go ob.WatchUTXOs()
+	bg.Work(ctx, ob.WatchUTXOs, bg.WithName("WatchUTXOs"), bg.WithLogger(ob.Logger().Outbound))
 
 	// watch bitcoin chain for gas rate and post to zetacore
-	go ob.WatchGasPrice()
+	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
 
 	// watch zetacore for bitcoin inbound trackers
-	go ob.WatchInboundTracker()
+	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
 
 	// watch the RPC status of the bitcoin chain
-	go ob.WatchRPCStatus()
+	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
 // TODO(revamp): move ticker related functions to a specific file
 // TODO(revamp): move inner logic in a separate function
-func (ob *Observer) WatchRPCStatus() {
+func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 	ob.logger.Chain.Info().Msgf("RPCStatus is starting")
 	ticker := time.NewTicker(60 * time.Second)
 
@@ -275,7 +274,7 @@ func (ob *Observer) WatchRPCStatus() {
 				Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
 
 		case <-ob.StopChannel():
-			return
+			return nil
 		}
 	}
 }
@@ -297,16 +296,16 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 		return BigValueConfirmationCount
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
 // TODO(revamp): move ticker related functions to a specific file
 // TODO(revamp): move inner logic in a separate function
-func (ob *Observer) WatchGasPrice() {
+func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	// report gas price right away as the ticker takes time to kick in
-	err := ob.PostGasPrice()
+	err := ob.PostGasPrice(ctx)
 	if err != nil {
 		ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 	}
@@ -315,7 +314,7 @@ func (ob *Observer) WatchGasPrice() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.GasPrice.Error().Err(err).Msg("error creating ticker")
-		return
+		return err
 	}
 	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
 		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
@@ -327,23 +326,25 @@ func (ob *Observer) WatchGasPrice() {
 			if !ob.GetChainParams().IsSupported {
 				continue
 			}
-			err := ob.PostGasPrice()
+			err := ob.PostGasPrice(ctx)
 			if err != nil {
 				ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 			}
 			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.GasPrice)
 		case <-ob.StopChannel():
 			ob.logger.GasPrice.Info().Msgf("WatchGasPrice stopped for chain %d", ob.Chain().ChainId)
-			return
+			return nil
 		}
 	}
 }
 
 // PostGasPrice posts gas price to zetacore
 // TODO(revamp): move to gas price file
-func (ob *Observer) PostGasPrice() error {
-	var err error
-	feeRateEstimated := uint64(0)
+func (ob *Observer) PostGasPrice(ctx context.Context) error {
+	var (
+		err              error
+		feeRateEstimated uint64
+	)
 
 	// special handle regnet and testnet gas rate
 	// regnet:  RPC 'EstimateSmartFee' is not available
@@ -351,15 +352,13 @@ func (ob *Observer) PostGasPrice() error {
 	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
 		feeRateEstimated, err = ob.specialHandleFeeRate()
 		if err != nil {
-			ob.logger.GasPrice.Err(err).Msg("error specialHandleFeeRate")
-			return err
+			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
 		}
 	} else {
 		// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
 		feeResult, err := ob.btcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
 		if err != nil {
-			ob.logger.GasPrice.Err(err).Msg("error EstimateSmartFee")
-			return err
+			return errors.Wrap(err, "unable to estimate smart fee")
 		}
 		if feeResult.Errors != nil || feeResult.FeeRate == nil {
 			return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
@@ -376,8 +375,8 @@ func (ob *Observer) PostGasPrice() error {
 		return err
 	}
 
-	// #nosec G701 always positive
-	_, err = ob.ZetacoreClient().PostGasPrice(ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
+	// #nosec G115 always positive
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
 		return err
@@ -401,7 +400,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
 	}
 
-	// #nosec G701 - always in range
+	// #nosec G115 - always in range
 	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
 		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
 	}
@@ -431,11 +430,11 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 
 // WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
 // TODO(revamp): move ticker related functions to a specific file
-func (ob *Observer) WatchUTXOs() {
+func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
 		ob.logger.UTXOs.Error().Err(err).Msg("error creating ticker")
-		return
+		return err
 	}
 
 	defer ticker.Stop()
@@ -445,21 +444,21 @@ func (ob *Observer) WatchUTXOs() {
 			if !ob.GetChainParams().IsSupported {
 				continue
 			}
-			err := ob.FetchUTXOs()
+			err := ob.FetchUTXOs(ctx)
 			if err != nil {
 				ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
 			}
 			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.StopChannel():
 			ob.logger.UTXOs.Info().Msgf("WatchUTXOs stopped for chain %d", ob.Chain().ChainId)
-			return
+			return nil
 		}
 	}
 }
 
 // FetchUTXOs fetches TSS-owned UTXOs from the Bitcoin node
 // TODO(revamp): move to UTXO file
-func (ob *Observer) FetchUTXOs() error {
+func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	defer func() {
 		if err := recover(); err != nil {
 			ob.logger.UTXOs.Error().Msgf("BTC FetchUTXOs: caught panic error: %v", err)
@@ -467,7 +466,7 @@ func (ob *Observer) FetchUTXOs() error {
 	}()
 
 	// This is useful when a zetaclient's pending nonce lagged behind for whatever reason.
-	ob.refreshPendingNonce()
+	ob.refreshPendingNonce(ctx)
 
 	// get the current block height.
 	bh, err := ob.btcClient.GetBlockCount()
@@ -619,7 +618,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "error GetBlockCount for chain %d", ob.Chain().ChainId)
 		}
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		ob.WithLastBlockScanned(uint64(blockNumber))
 	}
 
@@ -671,12 +670,12 @@ func (ob *Observer) isTssTransaction(txid string) bool {
 
 // postBlockHeader posts block header to zetacore
 // TODO(revamp): move to block header file
-func (ob *Observer) postBlockHeader(tip int64) error {
+func (ob *Observer) postBlockHeader(ctx context.Context, tip int64) error {
 	ob.logger.Inbound.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
-	res, err := ob.ZetacoreClient().GetBlockHeaderChainState(ob.Chain().ChainId)
-	if err == nil && res.ChainState != nil && res.ChainState.EarliestHeight > 0 {
-		bn = res.ChainState.LatestHeight + 1
+	chainState, err := ob.ZetacoreClient().GetBlockHeaderChainState(ctx, ob.Chain().ChainId)
+	if err == nil && chainState != nil && chainState.EarliestHeight > 0 {
+		bn = chainState.LatestHeight + 1
 	}
 	if bn > tip {
 		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
@@ -694,6 +693,7 @@ func (ob *Observer) postBlockHeader(tip int64) error {
 	}
 	blockHash := res2.Header.BlockHash()
 	_, err = ob.ZetacoreClient().PostVoteBlockHeader(
+		ctx,
 		ob.Chain().ChainId,
 		blockHash[:],
 		res2.Block.Height,
