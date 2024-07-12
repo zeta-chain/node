@@ -92,7 +92,9 @@ func IsEVMChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
 		chainID == AmoyChain().ChainId ||
 		chainID == PolygonChain().ChainId ||
-		chainID == SepoliaChain().ChainId || // Sepolia
+		chainID == SepoliaChain().ChainId ||
+		chainID == BaseMainnetChain().ChainId ||
+		chainID == BaseSepoliaChain().ChainId ||
 		chainID == 80001 || // Polygon mumbai
 		chainID == 97 || // BSC testnet
 		chainID == 1001 || // klaytn baobab
