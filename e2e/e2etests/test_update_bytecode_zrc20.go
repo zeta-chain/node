@@ -68,11 +68,11 @@ func TestUpdateBytecodeZRC20(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("Updating the bytecode of the ZRC20")
 	msg := fungibletypes.NewMsgUpdateContractBytecode(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		r.ETHZRC20Addr.Hex(),
 		codeHashRes.CodeHash,
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
 
 	r.Logger.Info("Update zrc20 bytecode tx hash: %s", res.TxHash)

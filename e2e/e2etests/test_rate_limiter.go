@@ -167,11 +167,11 @@ func waitForWithdrawMined(
 
 // setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
 func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimiterFlags) error {
-	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
+	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.OperationalPolicyName)
 	if err != nil {
 		return err
 	}
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgUpdateRateLimiterFlags(
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, crosschaintypes.NewMsgUpdateRateLimiterFlags(
 		adminAddr,
 		flags,
 	))

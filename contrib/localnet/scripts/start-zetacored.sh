@@ -219,12 +219,20 @@ then
 
 # set admin account
   zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
-  
-  address=$(yq -r '.additional_accounts.user_fungible_admin.bech32_address' /root/config.yml)
+
+  emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
+  admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
+  operational_policy=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
+
+
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$address" '.app_state["authority"]["policies"]["items"][0]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$address" '.app_state["authority"]["policies"]["items"][1]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$address" '.app_state["authority"]["policies"]["items"][2]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  zetacored add-genesis-account "$emergency_policy" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$admin_policy" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$operational_policy" 100000000000000000000000000azeta
+
+  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$emergency_policy" '.app_state["authority"]["policies"]["items"][0]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$operational_policy" '.app_state["authority"]["policies"]["items"][1]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$admin_policy" '.app_state["authority"]["policies"]["items"][2]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
 # give balance to runner accounts to deploy contracts directly on zEVM
 # default account
@@ -241,6 +249,15 @@ then
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # ethers tester
   address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# emergency policy account
+  address=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+#  admin policy account
+  address=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+#  operational policy account
+  address=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
