@@ -320,3 +320,234 @@ func TestKeeper_FindBallot(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestKeeper_VoteOnBallot(t *testing.T) {
+	t.Run("fails if chain is not supported", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: false,
+				},
+			},
+		})
+		chain, _ := k.GetSupportedChainFromChainID(ctx, 0)
+
+		_, _, _, err := k.VoteOnBallot(
+			ctx,
+			chain,
+			"index",
+			types.ObservationType_InboundTx,
+			sample.AccAddress(),
+			types.VoteType_SuccessObservation)
+
+		require.ErrorIs(t, err, types.ErrSupportedChains)
+	})
+
+	t.Run("fails if the user can not add a vote", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: true,
+				},
+			},
+		})
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+
+		_, _, _, err := k.VoteOnBallot(
+			ctx,
+			chain,
+			"index",
+			types.ObservationType_InboundTx,
+			sample.AccAddress(),
+			types.VoteType_SuccessObservation)
+
+		require.ErrorIs(t, err, types.ErrUnableToAddVote)
+	})
+
+	t.Run("user can create a ballow and add a vote", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: true,
+				},
+			},
+		})
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+
+		voter := sample.AccAddress()
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{voter},
+		})
+
+		ballot, isFinalized, isNew, err := k.VoteOnBallot(
+			ctx,
+			chain,
+			"index",
+			types.ObservationType_InboundTx,
+			voter,
+			types.VoteType_SuccessObservation)
+
+		require.NoError(t, err)
+		require.True(t, isFinalized)
+		require.True(t, isNew)
+		expectedBallot, found := k.GetBallot(ctx, "index")
+		require.True(t, found)
+		require.Equal(t, expectedBallot, ballot)
+	})
+
+	t.Run("user can create a ballot and add a vote, without finalizing ballot", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		threshold, err := sdk.NewDecFromStr("0.7")
+		require.NoError(t, err)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         getValidEthChainIDWithIndex(t, 0),
+					IsSupported:     true,
+					BallotThreshold: threshold,
+				},
+			},
+		})
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+
+		voter := sample.AccAddress()
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{
+				voter,
+				sample.AccAddress(),
+			},
+		})
+
+		ballot, isFinalized, isNew, err := k.VoteOnBallot(
+			ctx,
+			chain,
+			"index",
+			types.ObservationType_InboundTx,
+			voter,
+			types.VoteType_SuccessObservation)
+
+		require.NoError(t, err)
+		require.False(t, isFinalized)
+		require.True(t, isNew)
+		expectedBallot, found := k.GetBallot(ctx, "index")
+		require.True(t, found)
+		require.Equal(t, expectedBallot, ballot)
+	})
+
+	t.Run("user can add a vote to an existing ballot", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: true,
+				},
+			},
+		})
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+
+		voter := sample.AccAddress()
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{voter},
+		})
+
+		threshold, err := sdk.NewDecFromStr("0.7")
+		require.NoError(t, err)
+		ballot := types.Ballot{
+			Index:            "index",
+			BallotIdentifier: "index",
+			VoterList: []string{
+				sample.AccAddress(),
+				sample.AccAddress(),
+				voter,
+				sample.AccAddress(),
+				sample.AccAddress(),
+			},
+			Votes:           types.CreateVotes(5),
+			ObservationType: types.ObservationType_OutboundTx,
+			BallotThreshold: threshold,
+			BallotStatus:    types.BallotStatus_BallotInProgress,
+		}
+		k.SetBallot(ctx, &ballot)
+
+		ballot, isFinalized, isNew, err := k.VoteOnBallot(
+			ctx,
+			chain,
+			"index",
+			types.ObservationType_InboundTx,
+			voter,
+			types.VoteType_SuccessObservation)
+
+		require.NoError(t, err)
+		require.False(t, isFinalized)
+		require.False(t, isNew)
+		expectedBallot, found := k.GetBallot(ctx, "index")
+		require.True(t, found)
+		require.Equal(t, expectedBallot, ballot)
+	})
+
+	t.Run("user can add a vote to an existing ballot, and finalize it", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: true,
+				},
+			},
+		})
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+
+		voter := sample.AccAddress()
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{voter},
+		})
+
+		threshold, err := sdk.NewDecFromStr("0.1")
+		require.NoError(t, err)
+		ballot := types.Ballot{
+			Index:            "index",
+			BallotIdentifier: "index",
+			VoterList: []string{
+				sample.AccAddress(),
+				sample.AccAddress(),
+				voter,
+				sample.AccAddress(),
+				sample.AccAddress(),
+			},
+			Votes:           types.CreateVotes(5),
+			ObservationType: types.ObservationType_OutboundTx,
+			BallotThreshold: threshold,
+			BallotStatus:    types.BallotStatus_BallotInProgress,
+		}
+		k.SetBallot(ctx, &ballot)
+
+		ballot, isFinalized, isNew, err := k.VoteOnBallot(
+			ctx,
+			chain,
+			"index",
+			types.ObservationType_InboundTx,
+			voter,
+			types.VoteType_SuccessObservation)
+
+		require.NoError(t, err)
+		require.True(t, isFinalized)
+		require.False(t, isNew)
+		expectedBallot, found := k.GetBallot(ctx, "index")
+		require.True(t, found)
+		require.Equal(t, expectedBallot, ballot)
+	})
+}
