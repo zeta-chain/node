@@ -55,7 +55,7 @@ func logError(err error, cfg config) {
 
 	name := cfg.name
 	if name == "" {
-		name = "no task name specified"
+		name = "unknown"
 	}
 
 	cfg.logger.Error().Err(err).Str("worker.name", name).Msgf("Background task failed")
