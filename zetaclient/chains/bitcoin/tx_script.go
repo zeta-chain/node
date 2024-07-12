@@ -1,5 +1,6 @@
 package bitcoin
 
+// #nosec G507 ripemd160 required for bitcoin address encoding
 import (
 	"bytes"
 	"encoding/hex"
@@ -12,7 +13,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/btcutil/base58"
 	"github.com/pkg/errors"
-	// #nosec G507 required for bitcoin address encoding
 	"golang.org/x/crypto/ripemd160"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
