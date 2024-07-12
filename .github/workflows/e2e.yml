@@ -4,15 +4,45 @@ on:
   push:
     branches:
       - develop
+      - release/*
   pull_request:
     branches:
       - "*"
   merge_group:
-  workflow_dispatch:
   schedule:
     # run at 6AM UTC Daily
     # 6AM UTC -> 11PM PT
     - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      default-test:
+        type: boolean
+        required: false
+        default: false
+      upgrade-light-test:
+        type: boolean
+        required: false
+        default: false
+      upgrade-test:
+        type: boolean
+        required: false
+        default: false
+      admin-test:
+        type: boolean
+        required: false
+        default: false
+      stateful-upgrade-test:
+        type: boolean
+        required: false
+        default: false
+      performance-test:
+        type: boolean
+        required: false
+        default: false
+      stateful-data-test:
+        type: boolean
+        required: false
+        default: false
 
 concurrency: 
   group: e2e-${{ github.head_ref || github.sha }}
@@ -27,7 +57,10 @@ jobs:
       DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
       UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
+      UPGRADE_STATEFUL_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_STATEFUL_TESTS }}
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
+      PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
+      STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
     steps:
       # use cli rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
@@ -38,22 +71,50 @@ jobs:
             if [[ "$labels" == *"UPGRADE_TESTS"* ]]; then
               echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
             fi
-
             if [[ "$labels" == *"UPGRADE_LIGHT_TESTS"* ]]; then
               echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
             fi
-
+            if [[ "$labels" == *"UPGRADE_STATEFUL_TESTS"* ]]; then
+              echo "UPGRADE_STATEFUL_TESTS=true" >> $GITHUB_OUTPUT
+            fi
             if [[ "$labels" == *"ADMIN_TESTS"* ]]; then
               echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
             fi
+            if [[ "$labels" == *"PERFORMANCE_TESTS"* ]]; then
+              echo "PERFORMANCE_TESTS=true" >> $GITHUB_OUTPUT
+            fi
+            if [[ "$labels" == *"STATEFUL_DATA_TESTS"* ]]; then
+              echo "STATEFUL_DATA_TESTS=true" >> $GITHUB_OUTPUT
+            fi
+
           elif [[ ${{ github.event_name }} == 'merge_group' ]]; then
             echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
           elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref }} == 'refs/heads/develop' ]]; then
             echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.event_name }} == 'schedule' ]]; then
+          elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref }} == 'refs/heads/release/'* ]]; then
+            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
             echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
             echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
+            echo "UPGRADE_STATEFUL_TESTS=true" >> $GITHUB_OUTPUT
             echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
+            echo "PERFORMANCE_TESTS=true" >> $GITHUB_OUTPUT
+            echo "STATEFUL_DATA_TESTS=true" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.event_name }} == 'schedule' ]]; then
+            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
+            echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
+            echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
+            echo "UPGRADE_STATEFUL_TESTS=true" >> $GITHUB_OUTPUT
+            echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
+            echo "PERFORMANCE_TESTS=true" >> $GITHUB_OUTPUT
+            echo "STATEFUL_DATA_TESTS=true" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
+            echo "DEFAULT_TESTS=${{ github.event.inputs.default-test }}" >> $GITHUB_OUTPUT
+            echo "UPGRADE_TESTS=${{ github.event.inputs.upgrade-test }}" >> $GITHUB_OUTPUT
+            echo "UPGRADE_LIGHT_TESTS=${{ github.event.inputs.upgrade-light-test }}" >> $GITHUB_OUTPUT
+            echo "UPGRADE_STATEFUL_TESTS=${{ github.event.inputs.stateful-upgrade-test }}" >> $GITHUB_OUTPUT
+            echo "ADMIN_TESTS=${{ github.event.inputs.admin-test }}" >> $GITHUB_OUTPUT
+            echo "PERFORMANCE_TESTS=${{ github.event.inputs.performance-test }}" >> $GITHUB_OUTPUT
+            echo "STATEFUL_DATA_TESTS=${{ github.event.inputs.stateful-data-test }}" >> $GITHUB_OUTPUT
           fi
 
   e2e:
@@ -71,9 +132,18 @@ jobs:
           - make-target: "start-upgrade-test-light"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS == 'true' }}
+          - make-target: "start-e2e-stateful-upgrade-test"
+            runs-on: buildjet-16vcpu-ubuntu-2204
+            run: ${{ needs.matrix-conditionals.outputs.UPGRADE_STATEFUL_TESTS == 'true' }}
           - make-target: "start-e2e-admin-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_TESTS == 'true' }}
+          - make-target: "start-e2e-performance-test"
+            runs-on: buildjet-4vcpu-ubuntu-2204
+            run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS == 'true' }}
+          - make-target: "start-stateful-data-test"
+            runs-on: buildjet-16vcpu-ubuntu-2204
+            run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
