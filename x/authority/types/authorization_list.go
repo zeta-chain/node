@@ -6,8 +6,6 @@ import (
 	"cosmossdk.io/errors"
 )
 
-// MsgUpdateGasPriceIncreaseFlags
-// MsgAddToInTxTracker
 var (
 	// OperationPolicyMessages keeps track of the message URLs that can, by default, only be executed by operational policy address
 	OperationPolicyMessages = []string{

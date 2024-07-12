@@ -77,6 +77,7 @@
 * [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
 * [2549](https://github.com/zeta-chain/node/pull/2459) - add separate accounts for each policy in e2e tests
+* [2473](https://github.com/zeta-chain/node/pull/2473) - add e2e tests for most used admin transactions
 
 ### Fixes
 
