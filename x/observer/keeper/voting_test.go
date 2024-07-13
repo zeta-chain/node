@@ -333,12 +333,13 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 				},
 			},
 		})
-		chain, _ := k.GetSupportedChainFromChainID(ctx, 0)
 
+		chain, _ := k.GetSupportedChainFromChainID(ctx, 0)
+		index := sample.ZetaIndex(t)
 		_, _, _, err := k.VoteOnBallot(
 			ctx,
 			chain,
-			"index",
+			index,
 			types.ObservationType_InboundTx,
 			sample.AccAddress(),
 			types.VoteType_SuccessObservation)
@@ -357,12 +358,13 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 				},
 			},
 		})
-		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+		index := sample.ZetaIndex(t)
 		_, _, _, err := k.VoteOnBallot(
 			ctx,
 			chain,
-			"index",
+			index,
 			types.ObservationType_InboundTx,
 			sample.AccAddress(),
 			types.VoteType_SuccessObservation)
@@ -381,17 +383,18 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 				},
 			},
 		})
-		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 
 		voter := sample.AccAddress()
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{voter},
 		})
 
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+		index := sample.ZetaIndex(t)
 		ballot, isFinalized, isNew, err := k.VoteOnBallot(
 			ctx,
 			chain,
-			"index",
+			index,
 			types.ObservationType_InboundTx,
 			voter,
 			types.VoteType_SuccessObservation)
@@ -399,7 +402,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, isFinalized)
 		require.True(t, isNew)
-		expectedBallot, found := k.GetBallot(ctx, "index")
+		expectedBallot, found := k.GetBallot(ctx, index)
 		require.True(t, found)
 		require.Equal(t, expectedBallot, ballot)
 	})
@@ -419,7 +422,6 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 				},
 			},
 		})
-		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 
 		voter := sample.AccAddress()
 		k.SetObserverSet(ctx, types.ObserverSet{
@@ -429,10 +431,12 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 			},
 		})
 
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+		index := sample.ZetaIndex(t)
 		ballot, isFinalized, isNew, err := k.VoteOnBallot(
 			ctx,
 			chain,
-			"index",
+			index,
 			types.ObservationType_InboundTx,
 			voter,
 			types.VoteType_SuccessObservation)
@@ -440,7 +444,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, isFinalized)
 		require.True(t, isNew)
-		expectedBallot, found := k.GetBallot(ctx, "index")
+		expectedBallot, found := k.GetBallot(ctx, index)
 		require.True(t, found)
 		require.Equal(t, expectedBallot, ballot)
 	})
@@ -456,18 +460,20 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 				},
 			},
 		})
-		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 
 		voter := sample.AccAddress()
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{voter},
 		})
 
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
+		index := sample.ZetaIndex(t)
 		threshold, err := sdk.NewDecFromStr("0.7")
 		require.NoError(t, err)
+
 		ballot := types.Ballot{
-			Index:            "index",
-			BallotIdentifier: "index",
+			Index:            index,
+			BallotIdentifier: index,
 			VoterList: []string{
 				sample.AccAddress(),
 				sample.AccAddress(),
@@ -485,7 +491,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		ballot, isFinalized, isNew, err := k.VoteOnBallot(
 			ctx,
 			chain,
-			"index",
+			index,
 			types.ObservationType_InboundTx,
 			voter,
 			types.VoteType_SuccessObservation)
@@ -493,7 +499,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, isFinalized)
 		require.False(t, isNew)
-		expectedBallot, found := k.GetBallot(ctx, "index")
+		expectedBallot, found := k.GetBallot(ctx, index)
 		require.True(t, found)
 		require.Equal(t, expectedBallot, ballot)
 	})
@@ -509,18 +515,19 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 				},
 			},
 		})
-		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 
 		voter := sample.AccAddress()
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{voter},
 		})
 
+		index := sample.ZetaIndex(t)
 		threshold, err := sdk.NewDecFromStr("0.1")
 		require.NoError(t, err)
+
 		ballot := types.Ballot{
-			Index:            "index",
-			BallotIdentifier: "index",
+			Index:            index,
+			BallotIdentifier: index,
 			VoterList: []string{
 				sample.AccAddress(),
 				sample.AccAddress(),
@@ -535,10 +542,11 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		}
 		k.SetBallot(ctx, &ballot)
 
+		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 		ballot, isFinalized, isNew, err := k.VoteOnBallot(
 			ctx,
 			chain,
-			"index",
+			index,
 			types.ObservationType_InboundTx,
 			voter,
 			types.VoteType_SuccessObservation)
@@ -546,7 +554,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, isFinalized)
 		require.False(t, isNew)
-		expectedBallot, found := k.GetBallot(ctx, "index")
+		expectedBallot, found := k.GetBallot(ctx, index)
 		require.True(t, found)
 		require.Equal(t, expectedBallot, ballot)
 	})
