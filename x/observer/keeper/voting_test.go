@@ -370,7 +370,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrUnableToAddVote)
 	})
 
-	t.Run("user can create a ballow and add a vote", func(t *testing.T) {
+	t.Run("user can create a ballot and add a vote", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
