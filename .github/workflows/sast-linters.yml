@@ -25,33 +25,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.20'
-
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.19.0
+        uses: zeta-chain/gosec@v2.21.0-zeta
         with:
-          args: ./...
-
-  gosec-cosmos:
-    runs-on: ubuntu-22.04
-    env:
-      GO111MODULE: on
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.20'
-
-      - name: Run Cosmos Gosec Security Scanner
-        run: make lint-cosmos-gosec
+          args: -exclude-generated -exclude-dir testutil ./...
 
   lint:
     runs-on: ubuntu-22.04
@@ -67,7 +44,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6

@@ -57,8 +57,6 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	cfgLock *sync.RWMutex `json:"-"`
-
 	Peer                string         `json:"Peer"`
 	PublicIP            string         `json:"PublicIP"`
 	LogFormat           string         `json:"LogFormat"`
@@ -84,29 +82,22 @@ type Config struct {
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
-}
 
-// NewConfig returns a new Config with initialize EVM chain mapping and a new mutex
-// TODO(revamp): consolidate with New function
-func NewConfig() Config {
-	return Config{
-		cfgLock:         &sync.RWMutex{},
-		EVMChainConfigs: make(map[int64]EVMConfig),
-	}
+	mu *sync.RWMutex
 }
 
 // GetEVMConfig returns the EVM config for the given chain ID
 func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	evmCfg, found := c.EVMChainConfigs[chainID]
 	return evmCfg, found
 }
 
 // GetAllEVMConfigs returns a map of all EVM configs
 func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	// deep copy evm configs
 	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
@@ -118,8 +109,8 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 
 // GetBTCConfig returns the BTC config
 func (c Config) GetBTCConfig() (BTCConfig, bool) {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
 }
@@ -146,8 +137,8 @@ func (c Config) GetRestrictedAddressBook() map[string]bool {
 }
 
 // GetKeyringBackend returns the keyring backend
-func (c *Config) GetKeyringBackend() KeyringBackend {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
+func (c Config) GetKeyringBackend() KeyringBackend {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.KeyringBackend
 }

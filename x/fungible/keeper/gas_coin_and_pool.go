@@ -76,7 +76,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 		return ethcommon.Address{}, err
 	}
 	amount := big.NewInt(10)
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	amount.Exp(amount, big.NewInt(int64(decimals-1)), nil)
 	amountAZeta := big.NewInt(1e17)
 

@@ -194,7 +194,7 @@ func TestOutboundSize2In3Out(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, utxosTxids, [][]byte{payeeScript})
 
 	// Estimate the tx size in vByte
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	vError := uint64(1) // 1 vByte error tolerance
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated, err := EstimateOutboundSize(uint64(len(utxosTxids)), []btcutil.Address{payee})
@@ -218,7 +218,7 @@ func TestOutboundSize21In3Out(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids, [][]byte{payeeScript})
 
 	// Estimate the tx size in vByte
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	vError := uint64(21 / 4) // 5 vBytes error tolerance
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated, err := EstimateOutboundSize(uint64(len(exampleTxids)), []btcutil.Address{payee})
@@ -242,7 +242,7 @@ func TestOutboundSizeXIn3Out(t *testing.T) {
 		addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:x], [][]byte{payeeScript})
 
 		// Estimate the tx size
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		vError := uint64(
 			0.25 + float64(x)/4,
 		) // 1st witness incurs 0.25 more vByte error than others (which incurs 1/4 vByte per witness)
@@ -335,7 +335,7 @@ func TestOutputSizeP2TR(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
@@ -355,7 +355,7 @@ func TestOutputSizeP2WSH(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
@@ -375,7 +375,7 @@ func TestOutputSizeP2SH(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
@@ -395,7 +395,7 @@ func TestOutputSizeP2PKH(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
@@ -421,7 +421,7 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 	}
 
 	// calculate the average outbound size
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	txSizeAverage := uint64((float64(txSizeTotal))/float64(len(payees)) + 0.5)
 
 	// get deposit fee

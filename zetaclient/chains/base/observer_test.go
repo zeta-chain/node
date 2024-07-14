@@ -26,8 +26,7 @@ func createObserver(t *testing.T) *base.Observer {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
-	appContext := context.New(config.NewConfig(), zerolog.Nop())
-	zetacoreClient := mocks.NewMockZetacoreClient()
+	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSSMainnet()
 
 	// create observer
@@ -35,7 +34,6 @@ func createObserver(t *testing.T) *base.Observer {
 	ob, err := base.NewObserver(
 		chain,
 		chainParams,
-		appContext,
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
@@ -52,8 +50,8 @@ func TestNewObserver(t *testing.T) {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
-	appContext := context.New(config.NewConfig(), zerolog.Nop())
-	zetacoreClient := mocks.NewMockZetacoreClient()
+	appContext := context.New(config.New(false), zerolog.Nop())
+	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
 	headersCacheSize := base.DefaultHeaderCacheSize
@@ -114,7 +112,6 @@ func TestNewObserver(t *testing.T) {
 			ob, err := base.NewObserver(
 				tt.chain,
 				tt.chainParams,
-				tt.appContext,
 				tt.zetacoreClient,
 				tt.tss,
 				tt.blockCacheSize,
@@ -166,7 +163,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob := createObserver(t)
 
 		// update zetacore client
-		newZetacoreClient := mocks.NewMockZetacoreClient()
+		newZetacoreClient := mocks.NewZetacoreClient(t)
 		ob = ob.WithZetacoreClient(newZetacoreClient)
 		require.Equal(t, newZetacoreClient, ob.ZetacoreClient())
 	})

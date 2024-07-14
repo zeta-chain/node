@@ -45,7 +45,7 @@ func (k Keeper) ConvertGasToZeta(
 	return &types.QueryConvertGasToZetaResponse{
 		OutboundGasInZeta: outTxGasFeeInZeta.String(),
 		ProtocolFeeInZeta: types.GetProtocolFee().String(),
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		ZetaBlockHeight: uint64(ctx.BlockHeight()),
 	}, nil
 }

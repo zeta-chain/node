@@ -184,14 +184,14 @@ func (b *Backend) FeeHistory(
 		if blockNumber > math.MaxInt64 {
 			return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
 		}
-		// #nosec G701 range checked
+		// #nosec G115 range checked
 		blockEnd = int64(blockNumber)
 	}
 
 	if userBlockCount > math.MaxInt64 {
 		return nil, fmt.Errorf("not able to query block count greater than MaxInt64")
 	}
-	// #nosec G701 range checked
+	// #nosec G115 range checked
 	blocks := int64(userBlockCount)
 	maxBlockCount := int64(b.cfg.JSONRPC.FeeHistoryCap)
 	if blocks > maxBlockCount {
@@ -220,7 +220,7 @@ func (b *Backend) FeeHistory(
 
 	// fetch block
 	for blockID := blockStart; blockID <= blockEnd; blockID++ {
-		// #nosec G701 range checked
+		// #nosec G115 range checked
 		index := int32(blockID - blockStart)
 		// tendermint block
 		tendermintblock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(blockID))
@@ -297,7 +297,7 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 	// MaxDelta = BaseFee * (GasLimit - GasLimit / ElasticityMultiplier) / (GasLimit / ElasticityMultiplier) / Denominator
 	//          = BaseFee * (ElasticityMultiplier - 1) / Denominator
 	// ```
-	// #nosec G701 range checked
+	// #nosec G115 range checked
 	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(
 		params.Params.BaseFeeChangeDenominator,
 	)

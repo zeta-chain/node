@@ -79,7 +79,7 @@ func EthHeaderFromTendermint(header tmtypes.Header, bloom ethtypes.Bloom, baseFe
 		Number:      big.NewInt(header.Height),
 		GasLimit:    0,
 		GasUsed:     0,
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		Time:      uint64(header.Time.UTC().Unix()),
 		Extra:     []byte{},
 		MixDigest: common.Hash{},
@@ -96,7 +96,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 	}
 	resConsParams, err := tmrpcClient.ConsensusParams(goCtx, &blockHeight)
 	if err != nil {
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		return int64(^uint32(0)), err
 	}
 
@@ -105,7 +105,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 		// Sets gas limit to max uint32 to not error with javascript dev tooling
 		// This -1 value indicating no block gas limit is set to max uint64 with geth hexutils
 		// which errors certain javascript dev tooling which only supports up to 53 bits
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		gasLimit = int64(^uint32(0))
 	}
 
@@ -196,6 +196,7 @@ func NewRPCTransaction(
 	}
 	v, r, s := tx.RawSignatureValues()
 	result := &RPCTransaction{
+		// #nosec G115 uint8 -> uint64 false positive
 		Type:     hexutil.Uint64(tx.Type()),
 		From:     from,
 		Gas:      hexutil.Uint64(tx.Gas()),

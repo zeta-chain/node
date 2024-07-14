@@ -71,7 +71,7 @@ func setCctxsInKeeper(
 		k.SetCrossChainTx(ctx, *cctx)
 		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId: cctx.GetCurrentOutboundParam().ReceiverChainId,
-			// #nosec G701 always in range for tests
+			// #nosec G115 always in range for tests
 			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
 			CctxIndex: cctx.Index,
 			Tss:       tss.TssPubkey,

@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 
-* [List of the breaking changes can be found in this document](docs/releases/v17_breaking_changes.md)
+* [2460](https://github.com/zeta-chain/node/pull/2460) - Upgrade to go 1.22. This required us to temporarily remove the QUIC backend from [go-libp2p](https://github.com/libp2p/go-libp2p). If you are a zetaclient operator and have configured quic peers, you need to switch to tcp peers.
 
 ### Features
 
@@ -58,6 +58,7 @@
 * [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
 * [2380](https://github.com/zeta-chain/node/pull/2380) - use `ChainInfo` in `authority` to allow dynamically support new chains
 * [2395](https://github.com/zeta-chain/node/pull/2395) - converge AppContext with ZetaCoreContext in zetaclient
+* [2428](https://github.com/zeta-chain/node/pull/2428) - propagate context across codebase & refactor zetacore client
 
 ### Tests
 

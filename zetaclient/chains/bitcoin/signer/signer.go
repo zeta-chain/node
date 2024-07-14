@@ -3,6 +3,7 @@ package signer
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -26,7 +27,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
@@ -58,13 +59,12 @@ type Signer struct {
 // NewSigner creates a new Bitcoin signer
 func NewSigner(
 	chain chains.Chain,
-	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	cfg config.BTCConfig) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, appContext, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
 	// create the bitcoin rpc client using the provided config
 	connCfg := &rpcclient.ConnConfig{
@@ -171,6 +171,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 // TODO(revamp): simplify the function
 func (signer *Signer) SignWithdrawTx(
+	ctx context.Context,
 	to btcutil.Address,
 	amount float64,
 	gasPrice *big.Int,
@@ -185,7 +186,7 @@ func (signer *Signer) SignWithdrawTx(
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
-	err := observer.FetchUTXOs()
+	err := observer.FetchUTXOs(ctx)
 	if err != nil {
 		signer.Logger().
 			Std.Error().
@@ -195,6 +196,7 @@ func (signer *Signer) SignWithdrawTx(
 
 	// select N UTXOs to cover the total expense
 	prevOuts, total, consolidatedUtxo, consolidatedValue, err := observer.SelectUTXOs(
+		ctx,
 		amount+estimateFee+float64(nonceMark)*1e-8,
 		maxNoOfInputsPerTx,
 		nonce,
@@ -218,7 +220,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// size checking
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	txSize, err := bitcoin.EstimateOutboundSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if err != nil {
 		return nil, err
@@ -239,7 +241,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// fee calculation
-	// #nosec G701 always in range (checked above)
+	// #nosec G115 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
 	signer.Logger().
 		Std.Info().
@@ -270,7 +272,7 @@ func (signer *Signer) SignWithdrawTx(
 		}
 	}
 
-	sig65Bs, err := signer.TSS().SignBatch(witnessHashes, height, nonce, chain.ChainId)
+	sig65Bs, err := signer.TSS().SignBatch(ctx, witnessHashes, height, nonce, chain.ChainId)
 	if err != nil {
 		return nil, fmt.Errorf("SignBatch error: %v", err)
 	}
@@ -317,6 +319,7 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 // TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
 // TODO(revamp): simplify the function
 func (signer *Signer) TryProcessOutbound(
+	ctx context.Context,
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,
 	outboundID string,
@@ -324,6 +327,12 @@ func (signer *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, cannot get app context", cctx.Index)
+		return
+	}
+
 	defer func() {
 		outboundProcessor.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
@@ -350,7 +359,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Msgf("chain observer is not a bitcoin observer")
 		return
 	}
-	flags := signer.AppContext().GetCrossChainFlags()
+	flags := app.GetCrossChainFlags()
 	if !flags.IsOutboundEnabled {
 		logger.Info().Msgf("outbound is disabled")
 		return
@@ -403,6 +412,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	// sign withdraw tx
 	tx, err := signer.SignWithdrawTx(
+		ctx,
 		to,
 		amount,
 		gasprice,
@@ -421,7 +431,7 @@ func (signer *Signer) TryProcessOutbound(
 		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.ChainName, outboundTssNonce)
 
 	// FIXME: add prometheus metrics
-	_, err = zetacoreClient.GetObserverList()
+	_, err = zetacoreClient.GetObserverList(ctx)
 	if err != nil {
 		logger.Warn().
 			Err(err).
@@ -447,6 +457,7 @@ func (signer *Signer) TryProcessOutbound(
 			logger.Info().
 				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
 			zetaHash, err := zetacoreClient.AddOutboundTracker(
+				ctx,
 				chain.ChainId,
 				outboundTssNonce,
 				outboundHash,

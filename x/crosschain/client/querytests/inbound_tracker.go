@@ -50,7 +50,7 @@ func (s *CliTestSuite) TestListInboundTrackersByChain() {
 	s.Run("ByOffset", func() {
 		step := 2
 		for i := 0; i < len(objs); i += step {
-			// #nosec G701 always positive
+			// #nosec G115 always positive
 			args := request(nil, uint64(i), uint64(step), false, 5)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackerByChain(), args)
 			s.Require().NoError(err)
@@ -66,7 +66,7 @@ func (s *CliTestSuite) TestListInboundTrackersByChain() {
 		step := 2
 		var next []byte
 		for i := 0; i < len(objs); i += step {
-			// #nosec G701 always positive
+			// #nosec G115 always positive
 			args := request(next, 0, uint64(step), false, 5)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInboundTrackerByChain(), args)
 			s.Require().NoError(err)

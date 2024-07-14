@@ -46,7 +46,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argERC20,
 				argForeignChain,
-				// #nosec G701 parsed in range
+				// #nosec G115 parsed in range
 				uint32(argDecimals),
 				argName,
 				argSymbol,
