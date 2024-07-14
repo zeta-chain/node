@@ -326,45 +326,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testMigration {
-		migrationStartTime := time.Now()
-		logger.Print("🏁 starting tss migration")
-
-		response, err := deployerRunner.CctxClient.LastZetaHeight(
-			deployerRunner.Ctx,
-			&crosschaintypes.QueryLastZetaHeightRequest{},
-		)
-		require.NoError(deployerRunner, err)
-		err = zetaTxServer.UpdateKeygen(response.Height)
-		require.NoError(deployerRunner, err)
-
-		// Generate new TSS
-		waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
-
-		// migration test is a blocking thread, we cannot run other tests in parallel
-		// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
-		// The necessary restarts are done by the zetaclient supervisor
-		fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
-
-		if err := fn(); err != nil {
-			logger.Print("❌ %v", err)
-			logger.Print("❌ tss migration failed")
-			os.Exit(1)
-		}
-
-		logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
-		logger.Print("🏁 starting post migration tests")
-
-		tests := []string{
-			e2etests.TestBitcoinWithdrawSegWitName,
-			e2etests.TestEtherWithdrawName,
-		}
-		fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
-
-		if err := fn(); err != nil {
-			logger.Print("❌ %v", err)
-			logger.Print("❌ post migration tests failed")
-			os.Exit(1)
-		}
+		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
 	}
 
 	// print and validate report
@@ -416,6 +378,49 @@ func waitKeygenHeight(
 		}
 		logger.Info("Last ZetaHeight: %d", response.Height)
 	}
+}
+
+func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
+	migrationStartTime := time.Now()
+	logger.Print("🏁 starting tss migration")
+
+	response, err := deployerRunner.CctxClient.LastZetaHeight(
+		deployerRunner.Ctx,
+		&crosschaintypes.QueryLastZetaHeightRequest{},
+	)
+	require.NoError(deployerRunner, err)
+	err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
+	require.NoError(deployerRunner, err)
+
+	// Generate new TSS
+	waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+
+	// migration test is a blocking thread, we cannot run other tests in parallel
+	// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
+	// The necessary restarts are done by the zetaclient supervisor
+	fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
+
+	if err := fn(); err != nil {
+		logger.Print("❌ %v", err)
+		logger.Print("❌ tss migration failed")
+		os.Exit(1)
+	}
+
+	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
+	logger.Print("🏁 starting post migration tests")
+
+	tests := []string{
+		e2etests.TestBitcoinWithdrawSegWitName,
+		e2etests.TestEtherWithdrawName,
+	}
+	fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
+
+	if err := fn(); err != nil {
+		logger.Print("❌ %v", err)
+		logger.Print("❌ post migration tests failed")
+		os.Exit(1)
+	}
+
 }
 
 func must[T any](v T, err error) T {
