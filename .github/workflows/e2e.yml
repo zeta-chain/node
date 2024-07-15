@@ -53,14 +53,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ github.token }}
-    outputs:
-      DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.result.DEFAULT_TESTS }}
-      UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.result.UPGRADE_TESTS }}
-      UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.result.UPGRADE_LIGHT_TESTS }}
-      UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.result.UPGRADE_IMPORT_MAINNET_TESTS }}
-      ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.result.ADMIN_TESTS }}
-      PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.result.PERFORMANCE_TESTS }}
-      STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.result.STATEFUL_DATA_TESTS }}
+    outputs: ${{ fromJSON(steps.matrix-conditionals.outputs.result)}}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
