@@ -15,7 +15,7 @@ import (
 )
 
 // MaxOutboundTrackerHashes is the maximum number of hashes that can be stored in the outbound transaction tracker
-const MaxOutboundTrackerHashes = 2
+const MaxOutboundTrackerHashes = 5
 
 // AddOutboundTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.

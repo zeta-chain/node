@@ -115,6 +115,10 @@
 
 * [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
 
+### Performance
+
+* [2482](https://github.com/zeta-chain/node/pull/2482) - increase the outbound tracker buffer length from 2 to 5
+
 ## v17.0.0
 
 ### Fixes
