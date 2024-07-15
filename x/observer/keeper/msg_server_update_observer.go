@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,18 +24,16 @@ func (k msgServer) UpdateObserver(
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, err.Error())
 	}
 	if !ok {
-		return nil, errorsmod.Wrap(
+		return nil, errorsmod.Wrapf(
 			types.ErrUpdateObserver,
-			fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason),
-		)
+			"Unable to update observer with update reason : %s", msg.UpdateReason)
 	}
 
 	// We do not use IsNonTombstonedObserver here because we want to allow tombstoned observers to be updated
 	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
-		return nil, errorsmod.Wrap(
+		return nil, errorsmod.Wrapf(
 			types.ErrNotObserver,
-			fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress),
-		)
+			"Observer address is not authorized : %s", msg.OldObserverAddress)
 	}
 
 	err = k.IsValidator(ctx, msg.NewObserverAddress)
@@ -53,10 +50,9 @@ func (k msgServer) UpdateObserver(
 	// Update the node account with the new operator address
 	nodeAccount, found := k.GetNodeAccount(ctx, msg.OldObserverAddress)
 	if !found {
-		return nil, errorsmod.Wrap(
+		return nil, errorsmod.Wrapf(
 			types.ErrNodeAccountNotFound,
-			fmt.Sprintf("Observer node account not found : %s", msg.OldObserverAddress),
-		)
+			"Observer node account not found : %s", msg.OldObserverAddress)
 	}
 	newNodeAccount := nodeAccount
 	newNodeAccount.Operator = msg.NewObserverAddress
@@ -68,15 +64,15 @@ func (k msgServer) UpdateObserver(
 	// Check LastBlockObserver count just to be safe
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
-		return nil, errorsmod.Wrap(types.ErrObserverSetNotFound, fmt.Sprintf("Observer set not found"))
+		return nil, errorsmod.Wrap(types.ErrObserverSetNotFound, "Observer set not found")
 	}
 	totalObserverCountCurrentBlock := observerSet.LenUint()
 	lastBlockCount, found := k.GetLastObserverCount(ctx)
 	if !found {
-		return nil, errorsmod.Wrap(types.ErrLastObserverCountNotFound, fmt.Sprintf("Observer count not found"))
+		return nil, errorsmod.Wrap(types.ErrLastObserverCountNotFound, "Observer count not found")
 	}
 	if lastBlockCount.Count != totalObserverCountCurrentBlock {
-		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Observer count mismatch"))
+		return nil, errorsmod.Wrap(types.ErrUpdateObserver, "Observer count mismatch")
 	}
 	return &types.MsgUpdateObserverResponse{}, nil
 }
@@ -88,9 +84,7 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 			if msg.Creator != msg.OldObserverAddress {
 				return false, errorsmod.Wrap(
 					types.ErrUpdateObserver,
-					fmt.Sprintf(
-						"Creator address and old observer address need to be same for updating tombstoned observer",
-					),
+					"Creator address and old observer address need to be same for updating tombstoned observer",
 				)
 			}
 			return k.IsOperatorTombstoned(ctx, msg.Creator)

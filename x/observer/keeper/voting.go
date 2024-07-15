@@ -3,10 +3,15 @@ package keeper
 import (
 	"fmt"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/types"
+)
+
+const (
+	msgVoteOnBallot = "error while voting on ballot"
 )
 
 func (k Keeper) AddVoteToBallot(
@@ -146,4 +151,34 @@ func (k Keeper) CheckObserverSelfDelegation(ctx sdk.Context, accAddress string) 
 		k.RemoveObserverFromSet(ctx, accAddress)
 	}
 	return nil
+}
+
+// VoteOnBallot finds a ballot or creates a new one if not found,
+// and casts a vote on it. Then proceed to check if the vote has been finalized.
+// This function holds generic logic for all types of votes.
+func (k Keeper) VoteOnBallot(
+	ctx sdk.Context,
+	chain chains.Chain,
+	ballotIndex string,
+	observationType types.ObservationType,
+	voter string,
+	voteType types.VoteType,
+) (
+	ballot types.Ballot,
+	isFinalized bool,
+	isNew bool,
+	err error) {
+	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, chain, observationType)
+	if err != nil {
+		return ballot, false, false, sdkerrors.Wrap(err, msgVoteOnBallot)
+	}
+
+	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, voteType)
+	if err != nil {
+		return ballot, false, isNew, sdkerrors.Wrap(err, msgVoteOnBallot)
+	}
+
+	ballot, isFinalized = k.CheckIfFinalizingVote(ctx, ballot)
+
+	return ballot, isFinalized, isNew, nil
 }

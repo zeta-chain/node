@@ -1,10 +1,8 @@
 package keeper
 
 import (
-	"fmt"
-
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -21,7 +19,7 @@ func (k Keeper) VoteOnInboundBallot(
 	voter string,
 	ballotIndex string,
 	inboundHash string,
-) (bool, bool, error) {
+) (isFinalized bool, isNew bool, err error) {
 	if !k.IsInboundEnabled(ctx) {
 		return false, false, types.ErrInboundDisabled
 	}
@@ -31,11 +29,10 @@ func (k Keeper) VoteOnInboundBallot(
 	// this function returns nil
 	senderChain, found := k.GetSupportedChainFromChainID(ctx, senderChainID)
 	if !found {
-		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
+		return false, false, sdkerrors.Wrapf(types.ErrSupportedChains,
 			"ChainID %d, Observation %s",
 			senderChainID,
-			types.ObservationType_InboundTx.String()),
-		)
+			types.ObservationType_InboundTx.String())
 	}
 
 	// checks the voter is authorized to vote on the observation chain
@@ -46,11 +43,10 @@ func (k Keeper) VoteOnInboundBallot(
 	// makes sure we are getting only supported chains
 	receiverChain, found := k.GetSupportedChainFromChainID(ctx, receiverChainID)
 	if !found {
-		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
+		return false, false, sdkerrors.Wrapf(types.ErrSupportedChains,
 			"ChainID %d, Observation %s",
 			receiverChainID,
-			types.ObservationType_InboundTx.String()),
-		)
+			types.ObservationType_InboundTx.String())
 	}
 
 	// check if we want to send ZETA to external chain, but there is no ZETA token.
@@ -64,22 +60,21 @@ func (k Keeper) VoteOnInboundBallot(
 		}
 	}
 
-	// checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InboundTx)
+	ballot, isFinalized, isNew, err := k.VoteOnBallot(
+		ctx,
+		senderChain,
+		ballotIndex,
+		types.ObservationType_InboundTx,
+		voter,
+		types.VoteType_SuccessObservation,
+	)
 	if err != nil {
-		return false, false, err
+		return false, false, sdkerrors.Wrap(err, msgVoteOnBallot)
 	}
+
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, inboundHash, senderChain.String())
 	}
 
-	// adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, types.VoteType_SuccessObservation)
-	if err != nil {
-		return false, isNew, err
-	}
-
-	// checks if the ballot is finalized
-	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	return isFinalized, isNew, nil
 }
