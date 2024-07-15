@@ -366,6 +366,8 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 	}
 	if from != ob.TSS().EVMAddress() { // must be TSS address
 		// If from is not TSS address, check if it is one of the previous TSS addresses We can still try to confirm a tx which was broadcast by an old TSS
+		// This is to handle situations where the outbound has already been broad-casted by an older TSS address and the zetacore is waiting for the all the required block confirmations
+		// to go through before marking the cctx into a finalized state
 		log.Info().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not current TSS address %s",
 			from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
 		addressList := ob.TSS().EVMAddressList()
@@ -404,7 +406,7 @@ func (ob *Observer) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Rec
 		log.Error().Msgf("confirmTxByHash: receipt is nil for txHash %s nonce %d", txHash, nonce)
 		return nil, nil, false
 	}
-
+	ob.LastBlock()
 	// check confirmations
 	lastHeight, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {

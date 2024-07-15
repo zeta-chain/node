@@ -22,7 +22,7 @@ func (k Keeper) ValidateInbound(
 		return nil, types.ErrCannotFindTSSKeys
 	}
 
-	err := k.CheckIfMigrationDeposit(ctx, msg)
+	err := k.CheckIfMigrationTransfer(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,9 @@ func (k Keeper) ValidateInbound(
 	return &cctx, nil
 }
 
-// CheckIfMigrationDeposit checks if the sender is a TSS address and returns an error if it is.
+// CheckIfMigrationTransfer checks if the sender is a TSS address and returns an error if it is.
 // If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit and process the CCTX
-func (k Keeper) CheckIfMigrationDeposit(ctx sdk.Context, msg *types.MsgVoteInbound) error {
+func (k Keeper) CheckIfMigrationTransfer(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 
 	historicalTssList := k.zetaObserverKeeper.GetAllTSS(ctx)
@@ -68,12 +68,14 @@ func (k Keeper) CheckIfMigrationDeposit(ctx sdk.Context, msg *types.MsgVoteInbou
 		return observertypes.ErrSupportedChains.Wrapf("chain not found for chainID %d", msg.SenderChainId)
 	}
 
+	// the check is only necessary if the inbound is validated from observers from a connected chain
 	if chain.CctxGateway != chains.CCTXGateway_observers {
 		return nil
 	}
 
-	for _, tss := range historicalTssList {
-		if chains.IsEVMChain(chain.ChainId, additionalChains) {
+	switch {
+	case chains.IsEVMChain(chain.ChainId, additionalChains):
+		for _, tss := range historicalTssList {
 			ethTssAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
 			if err != nil {
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
@@ -81,11 +83,14 @@ func (k Keeper) CheckIfMigrationDeposit(ctx sdk.Context, msg *types.MsgVoteInbou
 			if ethTssAddress.Hex() == msg.Sender {
 				return types.ErrMigrationFromOldTss
 			}
-		} else if chains.IsBitcoinChain(chain.ChainId, additionalChains) {
-			bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
-			if err != nil {
-				return err
-			}
+
+		}
+	case chains.IsBitcoinChain(chain.ChainId, additionalChains):
+		bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
+		if err != nil {
+			return err
+		}
+		for _, tss := range historicalTssList {
 			btcTssAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
 			if err != nil {
 				return errors.Wrap(types.ErrInvalidAddress, err.Error())
@@ -95,5 +100,6 @@ func (k Keeper) CheckIfMigrationDeposit(ctx sdk.Context, msg *types.MsgVoteInbou
 			}
 		}
 	}
+
 	return nil
 }

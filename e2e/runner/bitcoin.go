@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -72,8 +73,8 @@ func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, e
 		return utxos[i].Amount < utxos[j].Amount
 	})
 
-	if len(utxos) > 20 {
-		utxos = utxos[:20]
+	if len(utxos) > signer.MaxNoOfInputsPerTx {
+		utxos = utxos[:signer.MaxNoOfInputsPerTx]
 	}
 	return utxos, nil
 }
