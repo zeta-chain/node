@@ -31,7 +31,7 @@ on:
         type: boolean
         required: false
         default: false
-      stateful-upgrade-test:
+      upgrade-import-mainnet-test:
         type: boolean
         required: false
         default: false
@@ -54,68 +54,76 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     outputs:
-      DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
-      UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
-      UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
-      UPGRADE_STATEFUL_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_STATEFUL_TESTS }}
-      ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
-      PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
-      STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
+      DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.result.DEFAULT_TESTS }}
+      UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.result.UPGRADE_TESTS }}
+      UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.result.UPGRADE_LIGHT_TESTS }}
+      UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.result.UPGRADE_IMPORT_MAINNET_TESTS }}
+      ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.result.ADMIN_TESTS }}
+      PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.result.PERFORMANCE_TESTS }}
+      STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.result.STATEFUL_DATA_TESTS }}
     steps:
-      # use cli rather than event context to avoid race conditions (label added after push)
+      # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
-        run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
-            labels=$(gh pr view -R ${{github.repository}} ${{github.event.pull_request.number}} --json labels -q '.labels[].name')
-            if [[ "$labels" == *"UPGRADE_TESTS"* ]]; then
-              echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
-            fi
-            if [[ "$labels" == *"UPGRADE_LIGHT_TESTS"* ]]; then
-              echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
-            fi
-            if [[ "$labels" == *"UPGRADE_STATEFUL_TESTS"* ]]; then
-              echo "UPGRADE_STATEFUL_TESTS=true" >> $GITHUB_OUTPUT
-            fi
-            if [[ "$labels" == *"ADMIN_TESTS"* ]]; then
-              echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
-            fi
-            if [[ "$labels" == *"PERFORMANCE_TESTS"* ]]; then
-              echo "PERFORMANCE_TESTS=true" >> $GITHUB_OUTPUT
-            fi
-            if [[ "$labels" == *"STATEFUL_DATA_TESTS"* ]]; then
-              echo "STATEFUL_DATA_TESTS=true" >> $GITHUB_OUTPUT
-            fi
-
-          elif [[ ${{ github.event_name }} == 'merge_group' ]]; then
-            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref }} == 'refs/heads/develop' ]]; then
-            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref }} == 'refs/heads/release/'* ]]; then
-            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
-            echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
-            echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
-            echo "UPGRADE_STATEFUL_TESTS=true" >> $GITHUB_OUTPUT
-            echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
-            echo "PERFORMANCE_TESTS=true" >> $GITHUB_OUTPUT
-            echo "STATEFUL_DATA_TESTS=true" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.event_name }} == 'schedule' ]]; then
-            echo "DEFAULT_TESTS=true" >> $GITHUB_OUTPUT
-            echo "UPGRADE_TESTS=true" >> $GITHUB_OUTPUT
-            echo "UPGRADE_LIGHT_TESTS=true" >> $GITHUB_OUTPUT
-            echo "UPGRADE_STATEFUL_TESTS=true" >> $GITHUB_OUTPUT
-            echo "ADMIN_TESTS=true" >> $GITHUB_OUTPUT
-            echo "PERFORMANCE_TESTS=true" >> $GITHUB_OUTPUT
-            echo "STATEFUL_DATA_TESTS=true" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
-            echo "DEFAULT_TESTS=${{ github.event.inputs.default-test }}" >> $GITHUB_OUTPUT
-            echo "UPGRADE_TESTS=${{ github.event.inputs.upgrade-test }}" >> $GITHUB_OUTPUT
-            echo "UPGRADE_LIGHT_TESTS=${{ github.event.inputs.upgrade-light-test }}" >> $GITHUB_OUTPUT
-            echo "UPGRADE_STATEFUL_TESTS=${{ github.event.inputs.stateful-upgrade-test }}" >> $GITHUB_OUTPUT
-            echo "ADMIN_TESTS=${{ github.event.inputs.admin-test }}" >> $GITHUB_OUTPUT
-            echo "PERFORMANCE_TESTS=${{ github.event.inputs.performance-test }}" >> $GITHUB_OUTPUT
-            echo "STATEFUL_DATA_TESTS=${{ github.event.inputs.stateful-data-test }}" >> $GITHUB_OUTPUT
-          fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(context);
+            if (context.eventName === 'pull_request') {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+              });
+              const labels = pr.labels.map(label => label.name);
+              console.log("labels:", labels);
+              return {
+                DEFAULT_TESTS: true,
+                UPGRADE_TESTS: labels.includes('UPGRADE_TESTS'),
+                UPGRADE_LIGHT_TESTS: labels.includes('UPGRADE_LIGHT_TESTS'),
+                UPGRADE_IMPORT_MAINNET_TESTS: labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'),
+                ADMIN_TESTS: labels.includes('ADMIN_TESTS'),
+                PERFORMANCE_TESTS: labels.includes('PERFORMANCE_TESTS'),
+                STATEFUL_DATA_TESTS: labels.includes('STATEFUL_DATA_TESTS'),
+              }
+            } else if (context.eventName === 'merge_group') {
+              return {
+                DEFAULT_TESTS: 'true',
+              }
+            } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
+              return {
+                DEFAULT_TESTS: 'true',
+              }
+            } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
+              return {
+                DEFAULT_TESTS: 'true',
+                UPGRADE_TESTS: 'true',
+                UPGRADE_LIGHT_TESTS: 'true',
+                UPGRADE_IMPORT_MAINNET_TESTS: 'true',
+                ADMIN_TESTS: 'true',
+                PERFORMANCE_TESTS: 'true',
+                STATEFUL_DATA_TESTS: 'true',
+              }
+            } else if (context.eventName === 'schedule') {
+              return {
+                DEFAULT_TESTS: 'true',
+                UPGRADE_TESTS: 'true',
+                UPGRADE_LIGHT_TESTS: 'true',
+                UPGRADE_IMPORT_MAINNET_TESTS: 'true',
+                ADMIN_TESTS: 'true',
+                PERFORMANCE_TESTS: 'true',
+                STATEFUL_DATA_TESTS: 'true',
+              }
+            } else if (context.eventName === 'workflow_dispatch') {
+              return {
+                DEFAULT_TESTS: context.payload.workflow_dispatch.inputs['default-test'],
+                UPGRADE_TESTS: context.payload.workflow_dispatch.inputs['upgrade-test'],
+                UPGRADE_LIGHT_TESTS: context.payload.workflow_dispatch.inputs['upgrade-light-test'],
+                UPGRADE_IMPORT_MAINNET_TESTS: context.payload.workflow_dispatch.inputs['upgrade-import-mainnet-test'],
+                ADMIN_TESTS: context.payload.workflow_dispatch.inputs['admin-test'],
+                PERFORMANCE_TESTS: context.payload.workflow_dispatch.inputs['performance-test'],
+                STATEFUL_DATA_TESTS: context.payload.workflow_dispatch.inputs['stateful-data-test'],
+              }
+            }
 
   e2e:
     needs: matrix-conditionals
@@ -132,16 +140,16 @@ jobs:
           - make-target: "start-upgrade-test-light"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS == 'true' }}
-          - make-target: "start-e2e-stateful-upgrade-test"
+          - make-target: "start-upgrade-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
-            run: ${{ needs.matrix-conditionals.outputs.UPGRADE_STATEFUL_TESTS == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS == 'true' }}
           - make-target: "start-e2e-admin-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_TESTS == 'true' }}
           - make-target: "start-e2e-performance-test"
             runs-on: buildjet-4vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS == 'true' }}
-          - make-target: "start-stateful-data-test"
+          - make-target: "start-e2e-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
