@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
-
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -37,32 +36,36 @@ func (k msgServer) VoteGasPrice(
 
 	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)
 	if !isFound {
-		return k.setGasPrice(ctx, chain, types.GasPrice{
-			Creator:     msg.Creator,
-			ChainId:     chain.ChainId,
-			Prices:      []uint64{msg.Price},
-			BlockNums:   []uint64{msg.BlockNumber},
-			Signers:     []string{msg.Creator},
-			MedianIndex: 0,
-			Index:       "", // will be set by the keeper
+		return k.voteGasPrice(ctx, chain, types.GasPrice{
+			Creator:      msg.Creator,
+			ChainId:      chain.ChainId,
+			Prices:       []uint64{msg.Price},
+			PriorityFees: []uint64{msg.PriorityFee},
+			BlockNums:    []uint64{msg.BlockNumber},
+			Signers:      []string{msg.Creator},
 		})
 	}
 
 	// Now we either want to update the gas price or add a new entry
 	var exists bool
 	for i, s := range gasPrice.Signers {
-		if s == msg.Creator { // update existing entry
-			gasPrice.BlockNums[i] = msg.BlockNumber
-			gasPrice.Prices[i] = msg.Price
-			exists = true
-			break
+		if s != msg.Creator {
+			continue
 		}
+
+		// update existing entry
+		gasPrice.BlockNums[i] = msg.BlockNumber
+		gasPrice.Prices[i] = msg.Price
+		gasPrice.PriorityFees[i] = msg.PriorityFee
+		exists = true
+		break
 	}
 
 	if !exists {
 		gasPrice.Signers = append(gasPrice.Signers, msg.Creator)
 		gasPrice.BlockNums = append(gasPrice.BlockNums, msg.BlockNumber)
 		gasPrice.Prices = append(gasPrice.Prices, msg.Price)
+		gasPrice.PriorityFees = append(gasPrice.PriorityFees, msg.PriorityFee)
 	}
 
 	// recompute the median gas price
@@ -71,22 +74,20 @@ func (k msgServer) VoteGasPrice(
 	// #nosec G701 always positive
 	gasPrice.MedianIndex = uint64(mi)
 
-	return k.setGasPrice(ctx, chain, gasPrice)
+	return k.voteGasPrice(ctx, chain, gasPrice)
 }
 
-func (k msgServer) setGasPrice(
-	ctx sdk.Context,
-	chain chains.Chain,
-	gasPrice types.GasPrice,
-) (*types.MsgVoteGasPriceResponse, error) {
+func (k msgServer) voteGasPrice(ctx sdk.Context, chain chains.Chain, entity types.GasPrice) (*types.MsgVoteGasPriceResponse, error) {
 	var (
-		bigChainID  = big.NewInt(chain.ChainId)
-		bigGasPrice = math.NewUint(gasPrice.Prices[gasPrice.MedianIndex]).BigInt()
+		chainID  = big.NewInt(chain.ChainId)
+		gasPrice = math.NewUint(entity.Prices[entity.MedianIndex]).BigInt()
 	)
 
-	k.SetGasPrice(ctx, gasPrice)
+	// set gas price in this module
+	k.SetGasPrice(ctx, entity)
 
-	gasUsed, err := k.fungibleKeeper.SetGasPrice(ctx, bigChainID, bigGasPrice)
+	// set gas price in fungible keeper (also calls EVM)
+	gasUsed, err := k.fungibleKeeper.SetGasPrice(ctx, chainID, gasPrice)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to set gas price in fungible keeper")
 	}
