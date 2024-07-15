@@ -13,8 +13,14 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+// fungibleModuleAddress is a constant representing the EVM address of the Fungible module account
+const fungibleModuleAddress = "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"
+
 func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
+
+	fungibleEthAddress := ethcommon.HexToAddress(fungibleModuleAddress)
+	require.True(r, fungibleEthAddress != ethcommon.Address{}, "invalid fungible module address")
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok)
@@ -44,6 +50,9 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	previousBalanceEVM, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EvmTestDAppAddr)
+	require.NoError(r, err)
+
+	previousFungibleBalance, err := r.WZeta.BalanceOf(&bind.CallOpts{}, fungibleEthAddress)
 	require.NoError(r, err)
 
 	// Call the SendHelloWorld function on the EVM dapp Contract which would in turn create a new send, to be picked up by the zeta-clients
@@ -104,5 +113,18 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 		previousBalanceEVM.String(),
 		previousBalanceAndAmountEVM.String(),
 		newBalanceEVM.String(),
+	)
+
+	// Check ZETA balance on Fungible Module and check new balance is previous balance
+	newFungibleBalance, err := r.WZeta.BalanceOf(&bind.CallOpts{}, fungibleEthAddress)
+	require.NoError(r, err)
+
+	require.Equal(
+		r,
+		0,
+		newFungibleBalance.Cmp(previousFungibleBalance),
+		"expected new balance to be %s, got %s",
+		previousFungibleBalance.String(),
+		newFungibleBalance.String(),
 	)
 }
