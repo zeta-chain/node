@@ -83,7 +83,7 @@ func (k msgServer) AddOutboundTracker(
 	// fetch the tracker
 	// if the tracker does not exist, initialize a new one
 	tracker, found := k.GetOutboundTracker(ctx, msg.ChainId, msg.Nonce)
-	hash := types.TxHashList{
+	hash := types.TxHash{
 		TxHash:   msg.TxHash,
 		TxSigner: msg.Creator,
 		Proved:   isProven,
@@ -93,7 +93,7 @@ func (k msgServer) AddOutboundTracker(
 			Index:    "",
 			ChainId:  msg.ChainId,
 			Nonce:    msg.Nonce,
-			HashList: []*types.TxHashList{&hash},
+			HashList: []*types.TxHash{&hash},
 		})
 		return &types.MsgAddOutboundTrackerResponse{}, nil
 	}
