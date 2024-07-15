@@ -19,7 +19,7 @@ type InboundEvent struct {
 	// TxOrigin is the origin of the transaction
 	TxOrigin string
 
-	// Value is the amount of SOL/SPL token
+	// Value is the amount of token
 	Amount uint64
 
 	// Memo is the memo attached to the inbound

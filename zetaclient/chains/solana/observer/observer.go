@@ -7,7 +7,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	solanachain "github.com/zeta-chain/zetacore/zetaclient/chains/solana"
+	contract "github.com/zeta-chain/zetacore/zetaclient/chains/solana/contract"
 	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -64,7 +64,7 @@ func NewObserver(
 	}
 
 	// compute gateway PDA
-	seed := []byte(solanachain.PDASeed)
+	seed := []byte(contract.PDASeed)
 	ob.pdaID, _, err = solana.FindProgramAddress([][]byte{seed}, ob.gatewayID)
 	if err != nil {
 		return nil, err

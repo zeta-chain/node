@@ -61,6 +61,7 @@ type AdditionalAccounts struct {
 	UserZetaTest      Account `yaml:"user_zeta_test"`
 	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
 	UserBitcoin       Account `yaml:"user_bitcoin"`
+	UserSolana        Account `yaml:"user_solana"`
 	UserEther         Account `yaml:"user_ether"`
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
@@ -72,9 +73,9 @@ type RPCs struct {
 	Zevm         string     `yaml:"zevm"`
 	EVM          string     `yaml:"evm"`
 	Bitcoin      BitcoinRPC `yaml:"bitcoin"`
+	Solana       string     `yaml:"solana"`
 	ZetaCoreGRPC string     `yaml:"zetacore_grpc"`
 	ZetaCoreRPC  string     `yaml:"zetacore_rpc"`
-	SolanaRPC    string     `yaml:"solana_rpc"`
 }
 
 // BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
@@ -139,7 +140,7 @@ func DefaultConfig() Config {
 			},
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
-			SolanaRPC:    "http://solana:8899",
+			Solana:       "http://solana:8899",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{
@@ -250,6 +251,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserBitcoin, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserSolana, err = generateAccount()
 	if err != nil {
 		return err
 	}

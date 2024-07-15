@@ -346,7 +346,6 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSolanaDeposit,
 	),
-
 	/*
 	 Bitcoin tests
 	*/

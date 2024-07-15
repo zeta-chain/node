@@ -35,10 +35,10 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	*bind.TransactOpts,
 	error,
 ) {
-	if conf.RPCs.SolanaRPC == "" {
+	if conf.RPCs.Solana == "" {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("solana rpc is empty")
 	}
-	solanaClient := rpc.New(conf.RPCs.SolanaRPC)
+	solanaClient := rpc.New(conf.RPCs.Solana)
 	if solanaClient == nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get solana client")
 	}

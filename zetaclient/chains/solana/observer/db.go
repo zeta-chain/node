@@ -25,7 +25,6 @@ func (ob *Observer) LoadDB(dbPath string) error {
 }
 
 // LoadLastTxScanned loads the last scanned tx from the database.
-// TODO(revamp): move to a db file
 func (ob *Observer) LoadLastTxScanned() error {
 	ob.Observer.LoadLastTxScanned(ob.Logger().Chain)
 

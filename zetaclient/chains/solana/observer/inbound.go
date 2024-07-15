@@ -16,11 +16,16 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	solanachain "github.com/zeta-chain/zetacore/zetaclient/chains/solana"
+	contract "github.com/zeta-chain/zetacore/zetaclient/chains/solana/contract"
 	solanarpc "github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+)
+
+const (
+	// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
+	MaxSignaturesPerTicker = 100
 )
 
 // WatchInbound watches Solana chain for inbounds on a ticker.
@@ -104,7 +109,7 @@ func (ob *Observer) ObserveInbound(sampledLogger zerolog.Logger) error {
 		sampledLogger.Info().Msgf("ObserveInbound: last scanned sig for chain %d is %s", chainID, sigString)
 
 		// take a rest if max signatures per ticker is reached
-		if len(signatures)-i >= solanachain.MaxSignaturesPerTicker {
+		if len(signatures)-i >= MaxSignaturesPerTicker {
 			break
 		}
 	}
@@ -219,14 +224,14 @@ func (ob *Observer) ParseInboundAsDeposit(
 	instruction := tx.Message.Instructions[instructionIndex]
 
 	// try deserializing instruction as a 'deposit'
-	var inst DepositInstructionParams
+	var inst contract.DepositInstructionParams
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
 		return nil, nil
 	}
 
 	// check if the instruction is a deposit or not
-	if !bytes.Equal(inst.Discriminator[:], solanachain.DiscriminatorDeposit()) {
+	if inst.Discriminator == contract.DiscriminatorDeposit() {
 		return nil, nil
 	}
 
@@ -258,8 +263,8 @@ func (ob *Observer) ParseInboundAsDeposit(
 // Note: solana-go is not able to parse the AccountMeta 'is_signer' ATM. This is a workaround.
 func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
 	// there should be 4 accounts for a deposit instruction
-	if len(inst.Accounts) != solanachain.AccountsNumDeposit {
-		return "", fmt.Errorf("want %d accounts, got %d", solanachain.AccountsNumDeposit, len(inst.Accounts))
+	if len(inst.Accounts) != contract.AccountsNumDeposit {
+		return "", fmt.Errorf("want %d accounts, got %d", contract.AccountsNumDeposit, len(inst.Accounts))
 	}
 
 	// the accounts are [signer, pda, system_program, gateway_program]

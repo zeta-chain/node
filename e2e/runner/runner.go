@@ -52,10 +52,11 @@ func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
 // It also provides some helper functions
 type E2ERunner struct {
 	// accounts
-	Account            config.Account
-	TSSAddress         ethcommon.Address
-	BTCTSSAddress      btcutil.Address
-	BTCDeployerAddress *btcutil.AddressWitnessPubKeyHash
+	Account               config.Account
+	TSSAddress            ethcommon.Address
+	BTCTSSAddress         btcutil.Address
+	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
+	SolanaDeployerAddress solana.PublicKey
 
 	// rpc clients
 	ZEVMClient   *ethclient.Client
