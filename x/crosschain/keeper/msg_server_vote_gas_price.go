@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -77,7 +78,11 @@ func (k msgServer) VoteGasPrice(
 	return k.voteGasPrice(ctx, chain, gasPrice)
 }
 
-func (k msgServer) voteGasPrice(ctx sdk.Context, chain chains.Chain, entity types.GasPrice) (*types.MsgVoteGasPriceResponse, error) {
+func (k msgServer) voteGasPrice(
+	ctx sdk.Context,
+	chain chains.Chain,
+	entity types.GasPrice,
+) (*types.MsgVoteGasPriceResponse, error) {
 	var (
 		chainID  = big.NewInt(chain.ChainId)
 		gasPrice = math.NewUint(entity.Prices[entity.MedianIndex]).BigInt()

@@ -346,7 +346,10 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return err
 	}
 
-	zetaHash, err := ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee.Uint64(), blockNum)
+	zetaHash, err := ob.
+		ZetacoreClient().
+		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee.Uint64(), blockNum)
+
 	if err != nil {
 		ob.Logger().GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
 		return err
