@@ -84,9 +84,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
             } else if (context.eventName === 'merge_group') {
-              return {
-                DEFAULT_TESTS: 'true',
-              }
+              core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
@@ -106,13 +104,13 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
-              core.setOutput('DEFAULT_TESTS', core.getBooleanInput('default-test'));
-              core.setOutput('UPGRADE_TESTS', core.getBooleanInput('upgrade-test'));
-              core.setOutput('UPGRADE_LIGHT_TESTS', core.getBooleanInput('upgrade-light-test'));
-              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', core.getBooleanInput('upgrade-import-mainnet-test'));
-              core.setOutput('ADMIN_TESTS', core.getBooleanInput('admin-test'));
-              core.setOutput('PERFORMANCE_TESTS', core.getBooleanInput('performance-test'));
-              core.setOutput('STATEFUL_DATA_TESTS', core.getBooleanInput('stateful-data-test'));
+              core.setOutput('DEFAULT_TESTS', context.payload.inputs['default-test']);
+              core.setOutput('UPGRADE_TESTS', context.payload.inputs['upgrade-test']);
+              core.setOutput('UPGRADE_LIGHT_TESTS', context.payload.inputs['upgrade-light-test']);
+              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', context.payload.inputs['upgrade-import-mainnet-test']);
+              core.setOutput('ADMIN_TESTS', context.payload.inputs['admin-test']);
+              core.setOutput('PERFORMANCE_TESTS', context.payload.inputs['performance-test']);
+              core.setOutput('STATEFUL_DATA_TESTS', context.payload.inputs['stateful-data-test']);
             }
 
   e2e:
@@ -152,7 +150,9 @@ jobs:
   # this allows you to set a required status check
   e2e-ok:
     runs-on: ubuntu-22.04
-    needs: e2e
+    needs: 
+      - matrix-conditionals
+      - e2e
     if: always()
     steps:
       - run: |
