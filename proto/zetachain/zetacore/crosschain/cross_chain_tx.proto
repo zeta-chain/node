@@ -65,6 +65,7 @@ message OutboundParams {
   uint64 tss_nonce = 5;
   uint64 gas_limit = 6;
   string gas_price = 7;
+  string gas_priority_fee = 13;
   // the above are commands for zetaclients
   // the following fields are used when the outbound tx is mined
   string hash = 8;

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -9,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -16,6 +16,19 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// ChainGasParams represents the parameters to calculate the fees for gas for a chain.
+type ChainGasParams struct {
+	GasZRC20 ethcommon.Address
+
+	GasLimit math.Uint
+	GasPrice math.Uint
+
+	// PriorityFee (optional for EIP-1559)
+	PriorityFee math.Uint
+
+	ProtocolFlatFee math.Uint
+}
 
 // PayGasAndUpdateCctx updates the outbound tx with the new amount after paying the gas fee
 // **Caller should feed temporary ctx into this function**
@@ -43,42 +56,43 @@ func (k Keeper) PayGasAndUpdateCctx(
 
 // ChainGasParams returns the params to calculates the fees for gas for a chain
 // tha gas address, the gas limit, gas price and protocol flat fee are returned
-func (k Keeper) ChainGasParams(
-	ctx sdk.Context,
-	chainID int64,
-) (gasZRC20 ethcommon.Address, gasLimit, gasPrice, protocolFee math.Uint, err error) {
-	gasZRC20, err = k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
+func (k Keeper) ChainGasParams(ctx sdk.Context, chainID int64) (ChainGasParams, error) {
+	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
-		return gasZRC20, gasLimit, gasPrice, protocolFee, err
+		return ChainGasParams{}, errors.Wrap(err, "unable to get system contract gas coin")
 	}
 
 	// get the gas limit
-	gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(ctx, gasZRC20)
-	if err != nil {
-		return gasZRC20, gasLimit, gasPrice, protocolFee, err
+	gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, gasZRC20)
+	switch {
+	case err != nil:
+		return ChainGasParams{}, errors.Wrap(err, "unable to get gas limit")
+	case gasLimit == nil:
+		return ChainGasParams{}, errors.New("gas limit is nil")
 	}
-	if gasLimitQueried == nil {
-		return gasZRC20, gasLimit, gasPrice, protocolFee, errors.New("gas limit is nil")
-	}
-	gasLimit = math.NewUintFromBigInt(gasLimitQueried)
 
 	// get the protocol flat fee
-	protocolFlatFeeQueried, err := k.fungibleKeeper.QueryProtocolFlatFee(ctx, gasZRC20)
-	if err != nil {
-		return gasZRC20, gasLimit, gasPrice, protocolFee, err
+	protocolFlatFee, err := k.fungibleKeeper.QueryProtocolFlatFee(ctx, gasZRC20)
+	switch {
+	case err != nil:
+		return ChainGasParams{}, errors.Wrap(err, "unable to get protocol flat fee")
+	case protocolFlatFee == nil:
+		return ChainGasParams{}, errors.New("protocol flat fee is nil")
 	}
-	if protocolFlatFeeQueried == nil {
-		return gasZRC20, gasLimit, gasPrice, protocolFee, errors.New("protocol flat fee is nil")
-	}
-	protocolFee = math.NewUintFromBigInt(protocolFlatFeeQueried)
 
 	// get the gas price
-	gasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	gasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
-		return gasZRC20, gasLimit, gasPrice, protocolFee, types.ErrUnableToGetGasPrice
+		return ChainGasParams{}, types.ErrUnableToGetGasPrice
 	}
 
-	return
+	return ChainGasParams{
+		GasZRC20:        gasZRC20,
+		GasLimit:        math.NewUintFromBigInt(gasLimit),
+		GasPrice:        gasPrice,
+		PriorityFee:     priorityFee,
+		ProtocolFlatFee: math.NewUintFromBigInt(protocolFlatFee),
+	}, nil
 }
 
 // PayGasNativeAndUpdateCctx updates the outbound tx with the new amount subtracting the gas fee
@@ -102,13 +116,13 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	}
 
 	// get gas params
-	_, gasLimit, gasPrice, protocolFlatFee, err := k.ChainGasParams(ctx, chainID)
+	gas, err := k.ChainGasParams(ctx, chainID)
 	if err != nil {
 		return cosmoserrors.Wrap(types.ErrCannotFindGasParams, err.Error())
 	}
 
 	// calculate the final gas fee
-	outTxGasFee := gasLimit.Mul(gasPrice).Add(protocolFlatFee)
+	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)
 
 	// subtract the withdraw fee from the input amount
 	if outTxGasFee.GT(inputAmount) {
@@ -125,8 +139,9 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().GasLimit = gasLimit.Uint64()
-	cctx.GetCurrentOutboundParam().GasPrice = gasPrice.String()
+	cctx.GetCurrentOutboundParam().GasLimit = gas.GasLimit.Uint64()
+	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
 	return nil
 }
@@ -155,11 +170,11 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		return observertypes.ErrSupportedChains
 	}
 	// get gas params
-	gasZRC20, gasLimit, gasPrice, protocolFlatFee, err := k.ChainGasParams(ctx, chainID)
+	gas, err := k.ChainGasParams(ctx, chainID)
 	if err != nil {
 		return cosmoserrors.Wrap(types.ErrCannotFindGasParams, err.Error())
 	}
-	outTxGasFee := gasLimit.Mul(gasPrice).Add(protocolFlatFee)
+	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)
 	// get address of the zrc20
 	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundParams.Asset, chainID)
 	if !found {
@@ -183,7 +198,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		ctx,
 		outTxGasFee.BigInt(),
 		zrc20,
-		gasZRC20,
+		gas.GasZRC20,
 	)
 	if err != nil {
 		// NOTE: this is the first method that fails when a liquidity pool is not set for the gas ZRC20, so we return a specific error
@@ -236,7 +251,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		types.ModuleAddressEVM,
 		feeInZRC20,
 		zrc20,
-		gasZRC20,
+		gas.GasZRC20,
 		noEthereumTxEvent,
 	)
 	if err != nil {
@@ -262,19 +277,20 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 
 	// burn the gas ZRC20
-	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, gasObtained, noEthereumTxEvent)
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gas.GasZRC20, gasObtained, noEthereumTxEvent)
 	if err != nil {
 		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
 	}
 	ctx.Logger().Info("Burning gas ZRC20",
-		"zrc20", gasZRC20.Hex(),
+		"zrc20", gas.GasZRC20.Hex(),
 		"amount", gasObtained,
 	)
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().GasLimit = gasLimit.Uint64()
-	cctx.GetCurrentOutboundParam().GasPrice = gasPrice.String()
+	cctx.GetCurrentOutboundParam().GasLimit = gas.GasLimit.Uint64()
+	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
 	return nil
 }
@@ -314,11 +330,12 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	}
 
 	// get the gas price
-	gasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	gasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
-		return cosmoserrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ",
+		return cosmoserrors.Wrapf(types.ErrUnableToGetGasPrice,
+			"chain %d; identifiers %q",
 			chainID,
-			cctx.LogIdentifierForCCTX()),
+			cctx.LogIdentifierForCCTX(),
 		)
 	}
 	gasPrice = gasPrice.MulUint64(2) // overpays gas price by 2x
@@ -389,6 +406,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 
 	// Update the cctx
 	cctx.GetCurrentOutboundParam().GasPrice = gasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPriorityFee = priorityFee.String()
 	cctx.GetCurrentOutboundParam().Amount = newAmount
 	if cctx.ZetaFees.IsNil() {
 		cctx.ZetaFees = feeInZeta

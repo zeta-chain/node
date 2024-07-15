@@ -105,7 +105,7 @@ func (k msgServer) WhitelistERC20(
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain params not found for chain id (%d)", msg.ChainId)
 	}
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, msg.ChainId)
+	medianGasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, msg.ChainId)
 	if !isFound {
 		return nil, errorsmod.Wrapf(
 			types.ErrUnableToGetGasPrice,
@@ -155,6 +155,7 @@ func (k msgServer) WhitelistERC20(
 				TssNonce:               0,
 				GasLimit:               100_000,
 				GasPrice:               medianGasPrice.String(),
+				GasPriorityFee:         priorityFee.String(),
 				Hash:                   "",
 				BallotIndex:            "",
 				ObservedExternalHeight: 0,

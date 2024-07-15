@@ -360,7 +360,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				})
 
 				// ensure median gas price is set
-				medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+				medianGasPrice, _, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 				require.True(t, isFound)
 				require.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
 			}

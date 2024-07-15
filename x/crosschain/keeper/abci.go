@@ -120,7 +120,7 @@ func CheckAndUpdateCctxGasPrice(
 
 	// compute gas price increase
 	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	medianGasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
 			types.ErrUnableToGetGasPrice,
@@ -158,6 +158,7 @@ func CheckAndUpdateCctxGasPrice(
 
 	// set new gas price and last update timestamp
 	cctx.GetCurrentOutboundParam().GasPrice = newGasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPriorityFee = priorityFee.String()
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 

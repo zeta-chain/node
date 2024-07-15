@@ -89,7 +89,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 ) error {
 	// Always migrate to the latest TSS if multiple TSS addresses have been generated
 	newTss := tssList[len(tssList)-1]
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	medianGasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
 	}
@@ -136,6 +136,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 			TssNonce:               0,
 			GasLimit:               1_000_000,
 			GasPrice:               medianGasPrice.MulUint64(2).String(),
+			GasPriorityFee:         priorityFee.String(),
 			Hash:                   "",
 			BallotIndex:            "",
 			ObservedExternalHeight: 0,
@@ -168,7 +169,6 @@ func (k Keeper) MigrateTSSFundsForChain(
 		if err != nil {
 			return err
 		}
-		cctx.GetCurrentOutboundParam().GasPrice = multipliedGasPrice.String()
 		evmFee := sdkmath.NewUint(cctx.GetCurrentOutboundParam().GasLimit).Mul(multipliedGasPrice)
 		if evmFee.GT(amount) {
 			return errorsmod.Wrap(
@@ -181,6 +181,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 				),
 			)
 		}
+		cctx.GetCurrentOutboundParam().GasPrice = multipliedGasPrice.String()
 		cctx.GetCurrentOutboundParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain

@@ -25,7 +25,7 @@ func (k Keeper) ConvertGasToZeta(
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
 
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+	medianGasPrice, _, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return nil, status.Error(codes.InvalidArgument, "invalid request: param chain")
 	}
