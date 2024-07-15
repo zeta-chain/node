@@ -10,6 +10,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+const voteBlameID = "Vote Blame"
+
 func (k msgServer) VoteBlame(
 	goCtx context.Context,
 	msg *types.MsgVoteBlame,
@@ -21,11 +23,12 @@ func (k msgServer) VoteBlame(
 	if !found {
 		return nil, sdkerrors.Wrapf(
 			crosschainTypes.ErrUnsupportedChain,
-			"ChainID %d, Blame vote", msg.ChainId)
+			"%s, ChainID %d", voteBlameID, msg.ChainId)
 	}
 
 	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
-		return nil, types.ErrNotObserver
+		return nil, sdkerrors.Wrap(
+			types.ErrNotObserver, voteBlameID)
 	}
 
 	ballot, isFinalized, isNew, err := k.VoteOnBallot(
@@ -37,7 +40,9 @@ func (k msgServer) VoteBlame(
 		types.VoteType_SuccessObservation,
 	)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, errVoteOnBallot)
+		return nil, sdkerrors.Wrapf(
+			err,
+			"%s, BallotIdentifier %v", voteBlameID, ballot.BallotIdentifier)
 	}
 
 	if isNew {

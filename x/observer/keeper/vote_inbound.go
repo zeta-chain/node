@@ -69,7 +69,7 @@ func (k Keeper) VoteOnInboundBallot(
 		types.VoteType_SuccessObservation,
 	)
 	if err != nil {
-		return false, false, sdkerrors.Wrap(err, errVoteOnBallot)
+		return false, false, sdkerrors.Wrap(err, msgVoteOnBallot)
 	}
 
 	if isNew {

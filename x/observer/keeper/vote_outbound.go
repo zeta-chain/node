@@ -46,7 +46,7 @@ func (k Keeper) VoteOnOutboundBallot(
 		observertypes.ConvertReceiveStatusToVoteType(receiveStatus),
 	)
 	if err != nil {
-		return false, false, ballot, "", sdkerrors.Wrap(err, errVoteOnBallot)
+		return false, false, ballot, "", sdkerrors.Wrap(err, msgVoteOnBallot)
 	}
 
 	return isFinalized, isNew, ballot, observationChain.String(), nil

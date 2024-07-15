@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
-	cosmoserrors "cosmossdk.io/errors"
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+const voteInboundID = "Vote Inbound"
 
 // FIXME: use more specific error types & codes
 
@@ -73,7 +74,7 @@ func (k msgServer) VoteInbound(
 		msg.InboundHash,
 	)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, voteInboundID)
 	}
 
 	// If it is a new ballot, check if an inbound with the same hash, sender chain and event index has already been finalized
@@ -81,14 +82,13 @@ func (k msgServer) VoteInbound(
 	// This check prevents double spending
 	if isNew {
 		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
-			return nil, cosmoserrors.Wrap(
+			return nil, sdkerrors.Wrapf(
 				types.ErrObservedTxAlreadyFinalized,
-				fmt.Sprintf(
-					"inboundHash:%s, SenderChainID:%d, EventIndex:%d",
-					msg.InboundHash,
-					msg.SenderChainId,
-					msg.EventIndex,
-				),
+				"%s, InboundHash:%s, SenderChainID:%d, EventIndex:%d",
+				voteInboundID,
+				msg.InboundHash,
+				msg.SenderChainId,
+				msg.EventIndex,
 			)
 		}
 	}
@@ -100,7 +100,7 @@ func (k msgServer) VoteInbound(
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, voteInboundID)
 	}
 
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.

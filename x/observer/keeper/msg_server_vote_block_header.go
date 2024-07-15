@@ -10,6 +10,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+const voteBlockHeaderID = "Vote BlockHeader"
+
 // VoteBlockHeader vote for a new block header to the storers
 func (k msgServer) VoteBlockHeader(
 	goCtx context.Context,
@@ -20,18 +22,22 @@ func (k msgServer) VoteBlockHeader(
 	// check if the chain is enabled
 	chain, found := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrSupportedChains, "chain id: %d", msg.ChainId)
+		return nil, sdkerrors.Wrapf(
+			types.ErrSupportedChains,
+			"%s, ChainID %d", voteBlockHeaderID, msg.ChainId)
 	}
 
 	// check if observer
 	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
-		return nil, types.ErrNotObserver
+		return nil, sdkerrors.Wrap(types.ErrNotObserver, voteBlockHeaderID)
 	}
 
 	// check the new block header is valid
 	parentHash, err := k.lightclientKeeper.CheckNewBlockHeader(ctx, msg.ChainId, msg.BlockHash, msg.Height, msg.Header)
 	if err != nil {
-		return nil, sdkerrors.Wrap(lightclienttypes.ErrInvalidBlockHeader, err.Error())
+		return nil, sdkerrors.Wrapf(
+			lightclienttypes.ErrInvalidBlockHeader,
+			"%s, parent hash %s", voteBlockHeaderID, parentHash)
 	}
 
 	_, isFinalized, isNew, err := k.VoteOnBallot(
@@ -43,7 +49,7 @@ func (k msgServer) VoteBlockHeader(
 		types.VoteType_SuccessObservation,
 	)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, errVoteOnBallot)
+		return nil, sdkerrors.Wrap(err, voteBlockHeaderID)
 	}
 
 	if !isFinalized {

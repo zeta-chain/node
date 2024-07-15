@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	errVoteOnBallot = "error while voting on ballot"
+	msgVoteOnBallot = "error while voting on ballot"
 )
 
 func (k Keeper) AddVoteToBallot(
@@ -169,12 +170,12 @@ func (k Keeper) VoteOnBallot(
 	err error) {
 	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, chain, observationType)
 	if err != nil {
-		return ballot, false, false, err
+		return ballot, false, false, sdkerrors.Wrap(err, msgVoteOnBallot)
 	}
 
 	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, voteType)
 	if err != nil {
-		return ballot, false, isNew, err
+		return ballot, false, isNew, sdkerrors.Wrap(err, msgVoteOnBallot)
 	}
 
 	ballot, isFinalized = k.CheckIfFinalizingVote(ctx, ballot)
