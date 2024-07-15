@@ -58,7 +58,7 @@ func main() {
 	if bn < 0 {
 		panic("Block number must be non-negative")
 	}
-	// #nosec G701 check as positive
+	// #nosec G115 check as positive
 	bnUint64 := uint64(bn)
 
 	if false {

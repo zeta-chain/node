@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 
-* [List of the breaking changes can be found in this document](docs/releases/v17_breaking_changes.md)
+* [2460](https://github.com/zeta-chain/node/pull/2460) - Upgrade to go 1.22. This required us to temporarily remove the QUIC backend from [go-libp2p](https://github.com/libp2p/go-libp2p). If you are a zetaclient operator and have configured quic peers, you need to switch to tcp peers.
 
 ### Features
 
@@ -30,7 +30,7 @@
 * [2339](https://github.com/zeta-chain/node/pull/2339) - add binaries related question to syncing issue form
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
-* [2416g](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
+* [2416](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
 
 ### Refactor
 
@@ -58,6 +58,8 @@
 * [2375](https://github.com/zeta-chain/node/pull/2375) - improve & speedup code formatting
 * [2380](https://github.com/zeta-chain/node/pull/2380) - use `ChainInfo` in `authority` to allow dynamically support new chains
 * [2395](https://github.com/zeta-chain/node/pull/2395) - converge AppContext with ZetaCoreContext in zetaclient
+* [2428](https://github.com/zeta-chain/node/pull/2428) - propagate context across codebase & refactor zetacore client
+* [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 
 ### Tests
 
@@ -76,8 +78,8 @@
 * [2349](https://github.com/zeta-chain/node/pull/2349) - add TestBitcoinDepositRefund and WithdrawBitcoinMultipleTimes E2E tests
 * [2368](https://github.com/zeta-chain/node/pull/2368) - eliminate panic usage across testing suite
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
+* [2549](https://github.com/zeta-chain/node/pull/2459) - add separate accounts for each policy in e2e tests
 * [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
-
 
 ### Fixes
 
@@ -92,8 +94,10 @@
 * [2382](https://github.com/zeta-chain/node/pull/2382) - add tx input and gas in rpc methods for synthetic eth txs
 * [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
+* [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
 
 ### CI
+
 * [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
 * [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilitze debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
 * [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners
@@ -110,6 +114,10 @@
 ### Documentation
 
 * [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
+
+### Performance
+
+* [2482](https://github.com/zeta-chain/node/pull/2482) - increase the outbound tracker buffer length from 2 to 5
 
 ## v17.0.0
 
@@ -213,7 +221,7 @@
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains
 * [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
-* * [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM
+* [2076](https://github.com/zeta-chain/node/pull/2076) - automatically deposit native zeta to an address if it doesn't exist on ZEVM
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 * [1888](https://github.com/zeta-chain/node/issues/1888) - zetaclient should stop inbound/outbound txs according to cross-chain flags
@@ -236,11 +244,12 @@
 ## Version: v15.0.0
 
 ### Features
+
 * [1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
 
 ## Version: v14.0.1
 
-- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
+* [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Version: v13.0.0
 

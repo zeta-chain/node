@@ -1,6 +1,8 @@
 package observer
 
 import (
+	"context"
+
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -12,7 +14,12 @@ func (ob *Observer) GetTxID(_ uint64) string {
 	panic("implement me")
 }
 
-func (ob *Observer) IsOutboundProcessed(_ *types.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+// IsOutboundProcessed checks outbound status and returns (isIncluded, isConfirmed, error)
+func (ob *Observer) IsOutboundProcessed(
+	_ context.Context,
+	_ *types.CrossChainTx,
+	_ zerolog.Logger,
+) (bool, bool, error) {
 	//TODO implement me
 	panic("implement me")
 }

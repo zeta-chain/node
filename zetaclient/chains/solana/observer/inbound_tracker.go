@@ -8,18 +8,24 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 // WatchInboundTracker watches zetacore for Solana inbound trackers
-func (ob *Observer) WatchInboundTracker() {
+func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("Solana_WatchInboundTracker_%d", ob.Chain().ChainId),
 		ob.GetChainParams().InboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error creating ticker")
-		return
+		return err
 	}
 	defer ticker.Stop()
 
@@ -27,10 +33,10 @@ func (ob *Observer) WatchInboundTracker() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
 				continue
 			}
-			err := ob.ProcessInboundTrackers()
+			err := ob.ProcessInboundTrackers(ctx)
 			if err != nil {
 				ob.Logger().Inbound.Error().
 					Err(err).
@@ -39,15 +45,15 @@ func (ob *Observer) WatchInboundTracker() {
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.Logger().Inbound)
 		case <-ob.StopChannel():
 			ob.Logger().Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
-			return
+			return nil
 		}
 	}
 }
 
 // ProcessInboundTrackers processes inbound trackers
-func (ob *Observer) ProcessInboundTrackers() error {
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(chainID)
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
 	if err != nil {
 		return err
 	}
@@ -63,7 +69,7 @@ func (ob *Observer) ProcessInboundTrackers() error {
 		}
 
 		// filter inbound event and vote
-		err = ob.FilterInboundEventAndVote(txResult)
+		err = ob.FilterInboundEventAndVote(ctx, txResult)
 		if err != nil {
 			return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, signature)
 		}

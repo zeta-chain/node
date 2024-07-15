@@ -24,3 +24,15 @@ func FromContext(ctx goctx.Context) (*AppContext, error) {
 
 	return app, nil
 }
+
+// Copy copies AppContext from one context to another (is present).
+// This is useful when you want to drop timeouts and deadlines from the context
+// (e.g. run something in another goroutine).
+func Copy(from, to goctx.Context) goctx.Context {
+	app, err := FromContext(from)
+	if err != nil {
+		return to
+	}
+
+	return WithAppContext(to, app)
+}

@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
 const (
@@ -112,7 +112,7 @@ func (txData *OutboundData) SetupGas(
 //     cctx will be skipped and false otherwise.
 //  3. error
 func NewOutboundData(
-	appontext *clientcontext.AppContext,
+	ctx context.Context,
 	cctx *types.CrossChainTx,
 	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
@@ -134,14 +134,19 @@ func NewOutboundData(
 		return nil, true, nil
 	}
 
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), appontext.GetAdditionalChains())
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+
+	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
 	if !found {
 		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	included, confirmed, err := evmObserver.IsOutboundProcessed(cctx, logger)
+	included, confirmed, err := evmObserver.IsOutboundProcessed(ctx, cctx, logger)
 	if err != nil {
 		return nil, true, errors.New("IsOutboundProcessed failed")
 	}

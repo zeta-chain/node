@@ -46,11 +46,11 @@ func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 			gasPriceIncreaseFlags := types.GasPriceIncreaseFlags{
 				EpochLength:   epochLength,
 				RetryInterval: time.Duration(retryInterval),
-				// #nosec G701 bitsize set to 32
+				// #nosec G115 bitsize set to 32
 				GasPriceIncreasePercent: uint32(gasPriceIncreasePercent),
-				// #nosec G701 bitsize set to 32
+				// #nosec G115 bitsize set to 32
 				GasPriceIncreaseMax: uint32(gasPriceIncreaseMax),
-				// #nosec G701 bitsize set to 32
+				// #nosec G115 bitsize set to 32
 				MaxPendingCctxs: uint32(maxPendingCctxs)}
 			msg := types.NewMsgUpdateGasPriceIncreaseFlags(clientCtx.GetFromAddress().String(), gasPriceIncreaseFlags)
 			err = msg.ValidateBasic()

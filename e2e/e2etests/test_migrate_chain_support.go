@@ -58,27 +58,28 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
-	adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
-	require.NoError(r, err)
 
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
-		adminAddr,
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		chainParams,
 	))
 	require.NoError(r, err)
 
 	// setup the gas token
 	require.NoError(r, err)
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		adminAddr,
-		"",
-		chainParams.ChainId,
-		18,
-		"Sepolia ETH",
-		"sETH",
-		coin.CoinType_Gas,
-		100000,
-	))
+	_, err = newRunner.ZetaTxServer.BroadcastTx(
+		utils.OperationalPolicyName,
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+			"",
+			chainParams.ChainId,
+			18,
+			"Sepolia ETH",
+			"sETH",
+			coin.CoinType_Gas,
+			100000,
+		),
+	)
 	require.NoError(r, err)
 
 	// set the gas token in the runner
@@ -95,8 +96,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.ETHZRC20 = ethZRC20
 
 	// set the chain nonces for the new chain
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgResetChainNonces(
-		adminAddr,
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgResetChainNonces(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		chainParams.ChainId,
 		0,
 		0,
@@ -106,8 +107,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deactivate the previous chain
 	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
 	chainParams.IsSupported = false
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
-		adminAddr,
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		chainParams,
 	))
 	require.NoError(r, err)
@@ -155,8 +156,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	newRunner.Logger.Info("whitelisting ERC20 on new network")
-	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
-		adminAddr,
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		newRunner.ERC20Addr.Hex(),
 		chains.Sepolia.ChainId,
 		"USDT",

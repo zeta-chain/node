@@ -1,6 +1,7 @@
 package observer_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -32,12 +33,12 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, zetacoreClient, nil, base.DefaultLogger(), nil)
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	t.Run("should filter inbound event vote", func(t *testing.T) {
-		err := ob.FilterInboundEventAndVote(txResult)
+		err := ob.FilterInboundEventAndVote(context.TODO(), txResult)
 		require.NoError(t, err)
 	})
 }
@@ -52,7 +53,7 @@ func Test_FilterInboundEvent(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, nil, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
@@ -85,8 +86,8 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	chain := chains.SolanaDevnet
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)
-	zetacoreClient := mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
-	ob, err := observer.NewObserver(chain, nil, *params, nil, zetacoreClient, nil, base.DefaultLogger(), nil)
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// create test compliance config
@@ -148,7 +149,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, nil, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result

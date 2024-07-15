@@ -1,14 +1,16 @@
 package observer
 
 import (
+	"context"
+
 	"github.com/gagliardetto/solana-go"
 
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	contract "github.com/zeta-chain/zetacore/zetaclient/chains/solana/contract"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -34,7 +36,6 @@ func NewObserver(
 	chain chains.Chain,
 	solClient interfaces.SolanaRPCClient,
 	chainParams observertypes.ChainParams,
-	appContext *clientcontext.AppContext,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
@@ -44,7 +45,6 @@ func NewObserver(
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		appContext,
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
@@ -100,9 +100,12 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 }
 
 // Start starts the Go routine processes to observe the Solana chain
-func (ob *Observer) Start() {
+func (ob *Observer) Start(ctx context.Context) {
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	// watch Solana chain for incoming txs and post votes to zetacore
-	go ob.WatchInbound()
+	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
+
+	// watch zetacore for Solana inbound trackers
+	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
 }

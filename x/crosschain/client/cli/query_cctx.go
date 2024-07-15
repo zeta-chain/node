@@ -65,7 +65,7 @@ func CmdPendingCctx() *cobra.Command {
 
 			params := &types.QueryListPendingCctxRequest{
 				ChainId: chainID,
-				// #nosec G701 bit size verified
+				// #nosec G115 bit size verified
 				Limit: uint32(limit),
 			}
 

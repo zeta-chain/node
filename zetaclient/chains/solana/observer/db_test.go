@@ -26,7 +26,7 @@ func MockSolanaObserver(
 ) *observer.Observer {
 	// use mock zetacore client if not provided
 	if zetacoreClient == nil {
-		zetacoreClient = mocks.NewMockZetacoreClient().WithKeys(&keys.Keys{})
+		zetacoreClient = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 	}
 	// use mock tss if not provided
 	if tss == nil {
@@ -38,7 +38,6 @@ func MockSolanaObserver(
 		chain,
 		solClient,
 		chainParams,
-		nil,
 		zetacoreClient,
 		tss,
 		base.DefaultLogger(),

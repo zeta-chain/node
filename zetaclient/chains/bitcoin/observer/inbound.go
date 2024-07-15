@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -20,6 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
@@ -27,11 +29,16 @@ import (
 // WatchInbound watches Bitcoin chain for inbounds on a ticker
 // It starts a ticker and run ObserveInbound
 // TODO(revamp): move all ticker related methods in the same file
-func (ob *Observer) WatchInbound() {
+func (ob *Observer) WatchInbound(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.GetChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msg("error creating ticker")
-		return
+		return err
 	}
 	defer ticker.Stop()
 
@@ -42,26 +49,33 @@ func (ob *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
 			}
-			err := ob.ObserveInbound()
+			err := ob.ObserveInbound(ctx)
 			if err != nil {
 				ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
 			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
-			return
+			return nil
 		}
 	}
 }
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 // TODO(revamp): simplify this function into smaller functions
-func (ob *Observer) ObserveInbound() error {
+func (ob *Observer) ObserveInbound(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	zetaCoreClient := ob.ZetacoreClient()
+
 	// get and update latest block height
 	cnt, err := ob.btcClient.GetBlockCount()
 	if err != nil {
@@ -70,7 +84,7 @@ func (ob *Observer) ObserveInbound() error {
 	if cnt < 0 {
 		return fmt.Errorf("observeInboundBTC: block number is negative: %d", cnt)
 	}
-	// #nosec G701 checked positive
+	// #nosec G115 checked positive
 	lastBlock := uint64(cnt)
 	if lastBlock < ob.LastBlock() {
 		return fmt.Errorf(
@@ -94,7 +108,7 @@ func (ob *Observer) ObserveInbound() error {
 
 	// query incoming gas asset to TSS address
 	blockNumber := lastScanned + 1
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	res, err := ob.GetBlockByNumberCached(int64(blockNumber))
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error getting bitcoin block %d", blockNumber)
@@ -108,10 +122,10 @@ func (ob *Observer) ObserveInbound() error {
 	// https://github.com/zeta-chain/node/issues/1847
 	// TODO: move this logic in its own routine
 	// https://github.com/zeta-chain/node/issues/2204
-	blockHeaderVerification, found := ob.AppContext().GetBlockHeaderEnabledChains(ob.Chain().ChainId)
+	blockHeaderVerification, found := app.GetBlockHeaderEnabledChains(ob.Chain().ChainId)
 	if found && blockHeaderVerification.Enabled {
-		// #nosec G701 always in range
-		err = ob.postBlockHeader(int64(blockNumber))
+		// #nosec G115 always in range
+		err = ob.postBlockHeader(ctx, int64(blockNumber))
 		if err != nil {
 			ob.logger.Inbound.Warn().Err(err).Msgf("observeInboundBTC: error posting block header %d", blockNumber)
 		}
@@ -124,7 +138,7 @@ func (ob *Observer) ObserveInbound() error {
 		// filter incoming txs to TSS address
 		tssAddress := ob.TSS().BTCAddress()
 
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		inbounds, err := FilterAndParseIncomingTx(
 			ob.btcClient,
 			res.Block.Tx,
@@ -145,7 +159,8 @@ func (ob *Observer) ObserveInbound() error {
 		for _, inbound := range inbounds {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inbound)
 			if msg != nil {
-				zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(
+				zetaHash, ballot, err := zetaCoreClient.PostVoteInbound(
+					ctx,
 					zetacore.PostVoteInboundGasLimit,
 					zetacore.PostVoteInboundExecutionGasLimit,
 					msg,
@@ -175,21 +190,26 @@ func (ob *Observer) ObserveInbound() error {
 
 // WatchInboundTracker watches zetacore for bitcoin inbound trackers
 // TODO(revamp): move all ticker related methods in the same file
-func (ob *Observer) WatchInboundTracker() {
+func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Err(err).Msg("error creating ticker")
-		return
+		return err
 	}
 
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
 				continue
 			}
-			err := ob.ProcessInboundTrackers()
+			err := ob.ProcessInboundTrackers(ctx)
 			if err != nil {
 				ob.logger.Inbound.Error().
 					Err(err).
@@ -198,15 +218,15 @@ func (ob *Observer) WatchInboundTracker() {
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
 			ob.logger.Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
-			return
+			return nil
 		}
 	}
 }
 
 // ProcessInboundTrackers processes inbound trackers
 // TODO(revamp): move inbound tracker logic in a specific file
-func (ob *Observer) ProcessInboundTrackers() error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ob.Chain().ChainId)
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return err
 	}
@@ -214,7 +234,7 @@ func (ob *Observer) ProcessInboundTrackers() error {
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
 			Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
-		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(tracker.TxHash, true)
+		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true)
 		if err != nil {
 			return err
 		}
@@ -226,7 +246,7 @@ func (ob *Observer) ProcessInboundTrackers() error {
 }
 
 // CheckReceiptForBtcTxHash checks the receipt for a btc tx hash
-func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
+func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", err
@@ -252,12 +272,12 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 	}
 
 	depositorFee := bitcoin.CalcDepositorFee(blockVb, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)
-	tss, err := ob.ZetacoreClient().GetBtcTssAddress(ob.Chain().ChainId)
+	tss, err := ob.ZetacoreClient().GetBTCTSSAddress(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return "", err
 	}
 
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	event, err := GetBtcEvent(
 		ob.btcClient,
 		*tx,
@@ -285,6 +305,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, 
 	}
 
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(
+		ctx,
 		zetacore.PostVoteInboundGasLimit,
 		zetacore.PostVoteInboundExecutionGasLimit,
 		msg,

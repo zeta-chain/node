@@ -19,6 +19,7 @@ import (
 	contract "github.com/zeta-chain/zetacore/zetaclient/chains/solana/contract"
 	solanarpc "github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
@@ -31,14 +32,19 @@ const (
 // WatchInbound watches Solana chain for inbounds on a ticker.
 // It starts a ticker and run ObserveInbound.
 // TODO(revamp): move all ticker related methods in the same file.
-func (ob *Observer) WatchInbound() {
+func (ob *Observer) WatchInbound(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("Solana_WatchInbound_%d", ob.Chain().ChainId),
 		ob.GetChainParams().InboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Inbound.Error().Err(err).Msg("error creating ticker")
-		return
+		return err
 	}
 	defer ticker.Stop()
 
@@ -48,24 +54,24 @@ func (ob *Observer) WatchInbound() {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.AppContext().IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
 			}
-			err := ob.ObserveInbound(sampledLogger)
+			err := ob.ObserveInbound(ctx, sampledLogger)
 			if err != nil {
 				ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 			}
 		case <-ob.StopChannel():
 			ob.Logger().Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
-			return
+			return nil
 		}
 	}
 }
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore.
-func (ob *Observer) ObserveInbound(sampledLogger zerolog.Logger) error {
+func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Logger) error {
 	chainID := ob.Chain().ChainId
 	pageLimit := solanarpc.DefaultPageLimit
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
@@ -92,7 +98,7 @@ func (ob *Observer) ObserveInbound(sampledLogger zerolog.Logger) error {
 			}
 
 			// filter inbound event and vote
-			err = ob.FilterInboundEventAndVote(txResult)
+			err = ob.FilterInboundEventAndVote(ctx, txResult)
 			if err != nil {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
@@ -118,7 +124,7 @@ func (ob *Observer) ObserveInbound(sampledLogger zerolog.Logger) error {
 }
 
 // FilterInboundEventAndVote filters inbound event from a txResult and post a vote.
-func (ob *Observer) FilterInboundEventAndVote(txResult *rpc.GetTransactionResult) error {
+func (ob *Observer) FilterInboundEventAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
 	// filter one single inbound event from txResult
 	event, err := ob.FilterInboundEvent(txResult)
 	if err != nil {
@@ -128,7 +134,7 @@ func (ob *Observer) FilterInboundEventAndVote(txResult *rpc.GetTransactionResult
 	// build inbound vote message from event and post to zetacore
 	msg := ob.BuildInboundVoteMsgFromEvent(event)
 	if msg != nil {
-		_, err = ob.PostVoteInbound(msg, zetacore.PostVoteInboundExecutionGasLimit)
+		_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 		if err != nil {
 			return errors.Wrapf(err, "error PostVoteInbound")
 		}
