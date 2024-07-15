@@ -31,6 +31,7 @@
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
 * [2416](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
+* [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 
 ### Refactor
 
