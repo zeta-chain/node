@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 	"time"
@@ -8,27 +9,40 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+	"github.com/cenkalti/backoff/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func WaitForNBlock(r *runner.E2ERunner, n int64) {
+func WaitNBlocks(r *runner.E2ERunner, n int64) {
 	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
-	require.NoError(r, err)
-	for {
-		heightNew, err := r.CctxClient.LastZetaHeight(r.Ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
-		require.NoError(r, err)
-		if heightNew.Height+n >= height.Height {
-			break
-		}
-		time.Sleep(4 * time.Second)
+	if err != nil {
+		return
 	}
+	call := func() error {
+		return retry.Retry(waitForBlock(r, height.Height+n))
+	}
+
+	bo := backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 10)
+	err = retry.DoWithBackoff(call, bo)
+	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
+func waitForBlock(r *runner.E2ERunner, n int64) error {
+	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+	if err != nil {
+		return err
+	}
+	if height.Height >= n {
+		return nil
+	}
+	return fmt.Errorf("waiting for %d blocks, current height %d", n, height.Height)
+}
+
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	tx, err := r.BTCZRC20.Approve(
 		r.ZEVMAuth,

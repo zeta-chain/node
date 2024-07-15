@@ -36,7 +36,7 @@ func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgGasPriceFlags)
 	require.NoError(r, err)
 
-	WaitForNBlock(r, 1)
+	WaitNBlocks(r, 1)
 
 	flags, err := r.ObserverClient.CrosschainFlags(r.Ctx, &observertypes.QueryGetCrosschainFlagsRequest{})
 	require.NoError(r, err)
@@ -66,7 +66,7 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msgBtc)
 	require.NoError(r, err)
 
-	WaitForNBlock(r, 1)
+	WaitNBlocks(r, 1)
 
 	tracker, err := r.CctxClient.InboundTracker(r.Ctx, &crosschaintypes.QueryInboundTrackerRequest{
 		ChainId: msgEth.ChainId,
