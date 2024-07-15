@@ -17,6 +17,10 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+var (
+	privkey = solana.MustPrivateKeyFromBase58("4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C")
+)
+
 func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	if len(args) != 0 {
 		panic("TestSolanaIntializeGateway requires exactly zero argument for the amount.")
@@ -52,7 +56,6 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Print("computed pda: %s, bump %d\n", pdaComputed, bump)
 
-	privkey := solana.MustPrivateKeyFromBase58("4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C")
 	r.Logger.Print("user pubkey: %s", privkey.PublicKey().String())
 	bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
 	if err != nil {
@@ -266,10 +269,10 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	toKey, err := solana.NewRandomPrivateKey()
-	require.NoError(r, err)
+	//toKey, err := solana.NewRandomPrivateKey()
+	//require.NoError(r, err)
 
-	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(toKey.PublicKey().String()), amount)
+	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privkey.PublicKey().String()), amount)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

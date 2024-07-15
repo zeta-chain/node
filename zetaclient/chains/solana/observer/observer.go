@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
@@ -109,9 +110,80 @@ func NewObserver(
 }
 
 // IsOutboundProcessed returns included, confirmed, error
+// NOTE: There is a critical difference from EVM/Bitcoin chains regarding nonce and transaction status
+// On EVM/Bitcoin chains, for each scheduled outbound nonce, there can be exactly 1 tx (successful or failed)
+// included in the blockchain.  On Solana, this is no longer the case: there can be AT MOST 1 SUCCESSFUL tx
+// corresponding to a scheduled outbound nonce. However, there can be multiple FAILED txs corresponding to
+// the same nonce. Therefore, we must distinguish between failed tx due to 1) nonce rejected; 2) tx reverted.
+// The first case, we should ignore it (in other chains, this tx should not be mined at all). The second case,
+// we should report it to zetacore as a real failed tx.
+// FIXME: implement the above logic that distinguishes between nonce-rejected and tx-reverted failed tx.
 func (o *Observer) IsOutboundProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
-	//TODO implement me
-	//panic("implement me")
+	outParams := cctx.GetCurrentOutboundParam()
+	if outParams == nil {
+		return false, false, fmt.Errorf("outbound param not found from cctx")
+	}
+	tracker, err := o.zetacoreClient.GetOutboundTracker(o.chain, outParams.TssNonce)
+	if err != nil {
+		return false, false, nil
+	}
+	for _, hash := range tracker.HashList {
+		sig, err := solana.SignatureFromBase58(hash.TxHash)
+		if err != nil {
+			logger.Warn().Err(err).Msgf("solana.SignatureFromBase58 error: %s", hash.TxHash)
+			continue
+		}
+		txRes, err := o.solanaClient.GetTransaction(context.TODO(), sig, &rpc.GetTransactionOpts{
+			Commitment: rpc.CommitmentFinalized, // must be finalized state so this tx will not be re-org'ed later
+		})
+		if err != nil {
+			logger.Warn().Err(err).Msgf("solana.GetTransaction error: %s", hash.TxHash)
+			continue
+		}
+		computeUnitsConsumed := uint64(0)
+		cuPrice := big.NewInt(0)
+		if txRes.Meta.ComputeUnitsConsumed == nil {
+			logger.Warn().Msgf("solana.GetTransaction: compute units consumed is nil")
+		} else {
+			computeUnitsConsumed = *txRes.Meta.ComputeUnitsConsumed
+			if computeUnitsConsumed <= 0 {
+				logger.Warn().Msgf("solana.GetTransaction: compute units consumed is %d", computeUnitsConsumed)
+				computeUnitsConsumed = 5001 // default to 5000, for a single signature tx; make it 5001 to distinguish
+			}
+			cuPrice.SetUint64(txRes.Meta.Fee / computeUnitsConsumed)
+		}
+		if txRes.Meta.Err == nil { // this indicates tx was successful
+			o.zetacoreClient.PostVoteOutbound(
+				cctx.Index,
+				sig.String(),
+				txRes.Slot, // TODO: check this; is slot equivalent to block height?
+				computeUnitsConsumed,
+				cuPrice,
+				200_000,                   // this is default compute unit budget;
+				outParams.Amount.BigInt(), // FIXME: parse this amount from txRes itself, not from cctx
+				chains.ReceiveStatus_success,
+				o.chain,
+				outParams.TssNonce, // FIXME: parse this from the txRes/tx ?
+				coin.CoinType_Gas,
+			)
+		} else { // tx was failed/reverted: FIXME: see the note in function comment
+			o.zetacoreClient.PostVoteOutbound(
+				cctx.Index,
+				sig.String(),
+				txRes.Slot, // TODO: check this; is slot equivalent to block height?
+				computeUnitsConsumed,
+				cuPrice,
+				200_000, // this is default compute unit budget;
+				outParams.Amount.BigInt(),
+				chains.ReceiveStatus_failed,
+				o.chain,
+				outParams.TssNonce,
+				coin.CoinType_Gas,
+			)
+		}
+		break // outbound tx confirmed on Solana and reported to zetacore; skip the rest of the list
+	}
+
 	return false, false, nil
 }
 

@@ -203,7 +203,7 @@ func (s *Signer) TryProcessOutbound(cctx *types.CrossChainTx, outboundProc *outb
 				// Setting a "processed" level will simulate tx against more recent state
 				// thus fails faster after a tx is already broadcasted and processed in a block.
 				// This reduces the number of "failed" txs due to repeated broadcast attempts.
-				PreflightCommitment: rpc.CommitmentProcessed,
+				PreflightCommitment: rpc.CommitmentConfirmed,
 			},
 		)
 		if err != nil {
@@ -233,7 +233,10 @@ func (s *Signer) TryProcessOutbound(cctx *types.CrossChainTx, outboundProc *outb
 								s.Logger().Std.Info().Msgf("added txsig %s to outbound tracker; zeta txhash %s", txsig, txhash)
 							}
 							return
-						} else { // it's included by failed (likely competing txs succeeded). exit goroutine.
+						} else {
+							// it's included by failed (likely competing txs succeeded). exit goroutine.
+							// FIXME: we should report this failed tx ONLY IF it failed not due to nonce mismatch error
+							// FIXME: add a check for nonce mismatch error
 							s.Logger().Std.Warn().Msgf("tx %s failed: %v", txsig, out.Meta.Err)
 							return
 						}
