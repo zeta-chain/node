@@ -822,7 +822,7 @@ func (k Keeper) CallEVMWithData(
 	}
 
 	if res.Failed() {
-		return res, cosmoserrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
+		return res, cosmoserrors.Wrapf(evmtypes.ErrVMExecution, "%s: ret 0x%x", res.VmError, res.Ret)
 	}
 
 	return res, nil
