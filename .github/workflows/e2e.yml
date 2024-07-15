@@ -53,7 +53,14 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ github.token }}
-    outputs: ${{ fromJSON(steps.matrix-conditionals.outputs.result)}}
+    outputs:
+      DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
+      UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
+      UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
+      UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS }}
+      ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
+      PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
+      STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
@@ -69,53 +76,43 @@ jobs:
               });
               const labels = pr.labels.map(label => label.name);
               console.log("labels:", labels);
-              return {
-                DEFAULT_TESTS: true,
-                UPGRADE_TESTS: labels.includes('UPGRADE_TESTS'),
-                UPGRADE_LIGHT_TESTS: labels.includes('UPGRADE_LIGHT_TESTS'),
-                UPGRADE_IMPORT_MAINNET_TESTS: labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'),
-                ADMIN_TESTS: labels.includes('ADMIN_TESTS'),
-                PERFORMANCE_TESTS: labels.includes('PERFORMANCE_TESTS'),
-                STATEFUL_DATA_TESTS: labels.includes('STATEFUL_DATA_TESTS'),
-              }
+              core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_TESTS', labels.includes('UPGRADE_TESTS'));
+              core.setOutput('UPGRADE_LIGHT_TESTS', labels.includes('UPGRADE_LIGHT_TESTS'));
+              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'));
+              core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
+              core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
+              core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
             } else if (context.eventName === 'merge_group') {
               return {
                 DEFAULT_TESTS: 'true',
               }
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
-              return {
-                DEFAULT_TESTS: 'true',
-              }
+              core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
-              return {
-                DEFAULT_TESTS: 'true',
-                UPGRADE_TESTS: 'true',
-                UPGRADE_LIGHT_TESTS: 'true',
-                UPGRADE_IMPORT_MAINNET_TESTS: 'true',
-                ADMIN_TESTS: 'true',
-                PERFORMANCE_TESTS: 'true',
-                STATEFUL_DATA_TESTS: 'true',
-              }
+              core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_TESTS', true);
+              core.setOutput('UPGRADE_LIGHT_TESTS', true);
+              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
+              core.setOutput('ADMIN_TESTS', true);
+              core.setOutput('PERFORMANCE_TESTS', true);
+              core.setOutput('STATEFUL_DATA_TESTS', true);
             } else if (context.eventName === 'schedule') {
-              return {
-                DEFAULT_TESTS: 'true',
-                UPGRADE_TESTS: 'true',
-                UPGRADE_LIGHT_TESTS: 'true',
-                UPGRADE_IMPORT_MAINNET_TESTS: 'true',
-                ADMIN_TESTS: 'true',
-                PERFORMANCE_TESTS: 'true',
-                STATEFUL_DATA_TESTS: 'true',
-              }
+              core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_TESTS', true);
+              core.setOutput('UPGRADE_LIGHT_TESTS', true);
+              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
+              core.setOutput('ADMIN_TESTS', true);
+              core.setOutput('PERFORMANCE_TESTS', true);
+              core.setOutput('STATEFUL_DATA_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
-              return {
-                DEFAULT_TESTS: context.payload.workflow_dispatch.inputs['default-test'],
-                UPGRADE_TESTS: context.payload.workflow_dispatch.inputs['upgrade-test'],
-                UPGRADE_LIGHT_TESTS: context.payload.workflow_dispatch.inputs['upgrade-light-test'],
-                UPGRADE_IMPORT_MAINNET_TESTS: context.payload.workflow_dispatch.inputs['upgrade-import-mainnet-test'],
-                ADMIN_TESTS: context.payload.workflow_dispatch.inputs['admin-test'],
-                PERFORMANCE_TESTS: context.payload.workflow_dispatch.inputs['performance-test'],
-                STATEFUL_DATA_TESTS: context.payload.workflow_dispatch.inputs['stateful-data-test'],
-              }
+              core.setOutput('DEFAULT_TESTS', core.getBooleanInput('default-test'));
+              core.setOutput('UPGRADE_TESTS', core.getBooleanInput('upgrade-test'));
+              core.setOutput('UPGRADE_LIGHT_TESTS', core.getBooleanInput('upgrade-light-test'));
+              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', core.getBooleanInput('upgrade-import-mainnet-test'));
+              core.setOutput('ADMIN_TESTS', core.getBooleanInput('admin-test'));
+              core.setOutput('PERFORMANCE_TESTS', core.getBooleanInput('performance-test'));
+              core.setOutput('STATEFUL_DATA_TESTS', core.getBooleanInput('stateful-data-test'));
             }
 
   e2e:
