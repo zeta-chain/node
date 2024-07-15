@@ -1,12 +1,15 @@
 package orchestrator
 
 import (
+	"context"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -16,7 +19,6 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -56,9 +58,9 @@ func MockOrchestrator(
 func CreateAppContext(
 	evmChain, btcChain chains.Chain,
 	evmChainParams, btcChainParams *observertypes.ChainParams,
-) *context.AppContext {
+) *zctx.AppContext {
 	// new config
-	cfg := config.NewConfig()
+	cfg := config.New(false)
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
 		Chain: evmChain,
 	}
@@ -66,7 +68,7 @@ func CreateAppContext(
 		RPCHost: "localhost",
 	}
 	// new zetacore context
-	appContext := context.New(cfg, zerolog.Nop())
+	appContext := zctx.New(cfg, zerolog.Nop())
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 	ccFlags := sample.CrosschainFlags()
@@ -204,7 +206,9 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	})
 }
 
-func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
+func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
+	ctx := context.Background()
+
 	// define test foreign chains
 	ethChain := chains.Ethereum
 	btcChain := chains.BitcoinMainnet
@@ -308,7 +312,7 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 				Height:       100,
 				CctxsMissed:  allCctxsMissed,
 				CctxsPending: allCctxsPending,
-				// #nosec G701 len always positive
+				// #nosec G115 len always positive
 				TotalPending:            uint64(len(allCctxsPending) + len(allCctxsMissed)),
 				PastCctxsValue:          sdk.NewInt(10).Mul(sdk.NewInt(1e18)).String(), // 10 ZETA
 				PendingCctxsValue:       sdk.NewInt(90).Mul(sdk.NewInt(1e18)).String(), // 90 ZETA
@@ -353,25 +357,25 @@ func Test_GetPendingCctxsWithinRatelimit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// create mock zetacore client
-			client := mocks.NewMockZetacoreClient()
+			client := mocks.NewZetacoreClient(t)
 
 			// load mock data
 			client.WithRateLimiterFlags(tt.rateLimiterFlags)
+			client.WithRateLimiterInput(tt.response)
 			client.WithPendingCctx(ethChain.ChainId, tt.ethCctxsFallback)
 			client.WithPendingCctx(btcChain.ChainId, tt.btcCctxsFallback)
-			client.WithRateLimiterInput(tt.response)
 
 			// create orchestrator
 			orchestrator := MockOrchestrator(t, client, ethChain, btcChain, ethChainParams, btcChainParams)
 
 			// run the test
-			cctxsMap, err := orchestrator.GetPendingCctxsWithinRatelimit(foreignChains)
+			cctxsMap, err := orchestrator.GetPendingCctxsWithinRateLimit(ctx, foreignChains)
 			if tt.fail {
-				require.Error(t, err)
-				require.Nil(t, cctxsMap)
+				assert.Error(t, err)
+				assert.Empty(t, cctxsMap)
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.expectedCctxsMap, cctxsMap)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedCctxsMap, cctxsMap)
 			}
 		})
 	}

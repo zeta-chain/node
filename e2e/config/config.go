@@ -43,6 +43,7 @@ type Config struct {
 	// Default account to use when running tests and running setup
 	DefaultAccount     Account            `yaml:"default_account"`
 	AdditionalAccounts AdditionalAccounts `yaml:"additional_accounts"`
+	PolicyAccounts     PolicyAccounts     `yaml:"policy_accounts"`
 	RPCs               RPCs               `yaml:"rpcs"`
 	Contracts          Contracts          `yaml:"contracts"`
 	ZetaChainID        string             `yaml:"zeta_chain_id"`
@@ -57,14 +58,19 @@ type Account struct {
 
 // AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
-	UserERC20         Account `yaml:"user_erc20"`
-	UserZetaTest      Account `yaml:"user_zeta_test"`
-	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
-	UserBitcoin       Account `yaml:"user_bitcoin"`
-	UserEther         Account `yaml:"user_ether"`
-	UserMisc          Account `yaml:"user_misc"`
-	UserAdmin         Account `yaml:"user_admin"`
-	UserFungibleAdmin Account `yaml:"user_fungible_admin"`
+	UserERC20      Account `yaml:"user_erc20"`
+	UserZetaTest   Account `yaml:"user_zeta_test"`
+	UserZEVMMPTest Account `yaml:"user_zevm_mp_test"`
+	UserBitcoin    Account `yaml:"user_bitcoin"`
+	UserEther      Account `yaml:"user_ether"`
+	UserMisc       Account `yaml:"user_misc"`
+	UserAdmin      Account `yaml:"user_admin"`
+}
+
+type PolicyAccounts struct {
+	EmergencyPolicyAccount   Account `yaml:"emergency_policy_account"`
+	OperationalPolicyAccount Account `yaml:"operational_policy_account"`
+	AdminPolicyAccount       Account `yaml:"admin_policy_account"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -192,7 +198,14 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserEther,
 		a.UserMisc,
 		a.UserAdmin,
-		a.UserFungibleAdmin,
+	}
+}
+
+func (a PolicyAccounts) AsSlice() []Account {
+	return []Account{
+		a.EmergencyPolicyAccount,
+		a.OperationalPolicyAccount,
+		a.AdminPolicyAccount,
 	}
 }
 
@@ -216,9 +229,21 @@ func (c Config) Validate() error {
 		}
 		err := account.Validate()
 		if err != nil {
-			return fmt.Errorf("validating account %d: %w", i, err)
+			return fmt.Errorf("validating additional account %d: %w", i, err)
 		}
 	}
+
+	policyAccounts := c.PolicyAccounts.AsSlice()
+	for i, account := range policyAccounts {
+		if account.RawEVMAddress == "" {
+			continue
+		}
+		err := account.Validate()
+		if err != nil {
+			return fmt.Errorf("validating policy account %d: %w", i, err)
+		}
+	}
+
 	return nil
 }
 
@@ -257,7 +282,15 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserFungibleAdmin, err = generateAccount()
+	c.PolicyAccounts.EmergencyPolicyAccount, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.PolicyAccounts.OperationalPolicyAccount, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.PolicyAccounts.AdminPolicyAccount, err = generateAccount()
 	if err != nil {
 		return err
 	}

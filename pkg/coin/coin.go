@@ -19,7 +19,7 @@ func GetCoinType(coin string) (CoinType, error) {
 	if coinInt < 0 || coinInt > 3 {
 		return CoinType_Cmd, fmt.Errorf("invalid coin type %d", coinInt)
 	}
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	return CoinType(coinInt), nil
 }
 

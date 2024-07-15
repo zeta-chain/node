@@ -46,11 +46,11 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("Updating the bytecode of the Connector")
 	msg := fungibletypes.NewMsgUpdateContractBytecode(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		r.ConnectorZEVMAddr.Hex(),
 		codeHashRes.CodeHash,
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
 	r.Logger.Info("Update connector bytecode tx hash: %s", res.TxHash)
 

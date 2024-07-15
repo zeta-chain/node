@@ -3,13 +3,10 @@ package base_test
 import (
 	"testing"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
@@ -18,12 +15,11 @@ import (
 func createSigner(_ *testing.T) *base.Signer {
 	// constructor parameters
 	chain := chains.Ethereum
-	appContext := context.New(config.NewConfig(), zerolog.Nop())
 	tss := mocks.NewTSSMainnet()
 	logger := base.DefaultLogger()
 
 	// create signer
-	return base.NewSigner(chain, appContext, tss, nil, logger)
+	return base.NewSigner(chain, tss, nil, logger)
 }
 
 func TestNewSigner(t *testing.T) {

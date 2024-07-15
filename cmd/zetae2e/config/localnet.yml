@@ -32,10 +32,19 @@ additional_accounts:
     bech32_address: "zeta17w0adeg64ky0daxwd2ugyuneellmjgnx4e483s"
     evm_address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     private_key: "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-  user_fungible_admin:
-    bech32_address: "zeta1svzuz982w09vf2y08xsh8qplj36phyz466krj3"
-    evm_address: "0x8305C114Ea73cAc4A88f39A173803F94741b9055"
-    private_key: "d88d09a7d6849c15a36eb6931f9dd616091a63e9849a2cc86f309ba11fb8fec5"
+policy_accounts:
+  emergency_policy_account:
+    bech32_address: "zeta16m2cnrdwtgweq4njc6t470vl325gw4kp6s7tap"
+    evm_address: "0xd6d5898dAE5A1D905672c6975F3d9f8aA88756C1"
+    private_key: "88BE93D11624B794F4BCC77BEA7385AF7EAD0B183B913485C74F0A803ABBC3F0"
+  operational_policy_account:
+    bech32_address: "zeta1pgx85vzx4fzh5zzyjqgs6a6cmaujd0xs8efrkc"
+    evm_address: "0x0A0c7a3046AA457A084490110d7758Df7926bcd0"
+    private_key: "59D1B982BD446545A1740ABD01F1ED9C162B72ACC1522B9B71B6DB5A9C37FA7D"
+  admin_policy_account:
+    bech32_address: "zeta142ds9x7raljv2qz9euys93e64gjmgdfnc47dwq"
+    evm_address: "0xAa9b029BC3EFe4c50045Cf0902c73aAa25b43533"
+    private_key: "0595CB0CD9BF5264A85A603EC8E43C30ADBB5FD2D9E2EF84C374EA4A65BB616C"
 rpcs:
   zevm: "http://zetacore0:8545"
   evm: "http://eth:8545"

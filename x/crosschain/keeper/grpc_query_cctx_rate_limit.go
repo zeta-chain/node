@@ -51,13 +51,13 @@ func (k Keeper) RateLimiterInput(
 
 	// the `limit` of pending result is reached or not
 	maxCCTXsReached := func(cctxs []*types.CrossChainTx) bool {
-		// #nosec G701 len always positive
+		// #nosec G115 len always positive
 		return uint32(len(cctxs)) > limit
 	}
 
 	// if a cctx falls within the rate limiter window
 	isCCTXInWindow := func(cctx *types.CrossChainTx) bool {
-		// #nosec G701 checked positive
+		// #nosec G115 checked positive
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
@@ -69,7 +69,7 @@ func (k Keeper) RateLimiterInput(
 
 	// it is a past cctx if its nonce < `nonceLow`,
 	isPastCctx := func(cctx *types.CrossChainTx, nonceLow int64) bool {
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		return cctx.GetCurrentOutboundParam().TssNonce < uint64(nonceLow)
 	}
 
@@ -97,7 +97,7 @@ func (k Keeper) RateLimiterInput(
 			if err != nil {
 				return nil, err
 			}
-			// #nosec G701 len always in range
+			// #nosec G115 len always in range
 			cctxHeight := int64(cctx.InboundParams.ObservedExternalHeight)
 			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
 				lowestPendingCctxHeight = cctxHeight
@@ -259,13 +259,13 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 
 	// the criteria to stop adding cctxs to the rpc response
 	maxCCTXsReached := func(cctxs []*types.CrossChainTx) bool {
-		// #nosec G701 len always positive
+		// #nosec G115 len always positive
 		return uint32(len(cctxs)) >= limit
 	}
 
 	// if a cctx falls within the rate limiter window
 	isCCTXInWindow := func(cctx *types.CrossChainTx) bool {
-		// #nosec G701 checked positive
+		// #nosec G115 checked positive
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
@@ -291,7 +291,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 			if err != nil {
 				return nil, err
 			}
-			// #nosec G701 len always in range
+			// #nosec G115 len always in range
 			cctxHeight := int64(cctx.InboundParams.ObservedExternalHeight)
 			if lowestPendingCctxHeight == 0 || cctxHeight < lowestPendingCctxHeight {
 				lowestPendingCctxHeight = cctxHeight
@@ -371,7 +371,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	for _, chain := range foreignChains {
 		pendingNonces := pendingNoncesMap[chain.ChainId]
 
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
 
 		// query the pending cctxs in range [NonceLow, NonceHigh)

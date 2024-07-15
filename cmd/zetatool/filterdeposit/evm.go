@@ -188,9 +188,9 @@ func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64, apiKe
 	client := etherscan.New(etherscan.Mainnet, apiKey)
 	deposits := make([]Deposit, 0)
 
-	// #nosec G701 these block numbers need to be *int for this particular client package
+	// #nosec G115 these block numbers need to be *int for this particular client package
 	startInt := int(startBlock)
-	// #nosec G701
+	// #nosec G115
 	endInt := int(endBlock)
 	txns, err := client.NormalTxByAddress(tssAddress, &startInt, &endInt, 0, 0, true)
 	if err != nil {
