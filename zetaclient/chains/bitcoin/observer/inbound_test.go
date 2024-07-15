@@ -161,7 +161,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"),
 	)
 	avgGasRate := float64(32.0)
-	// #nosec G701 test - always in range
+	// #nosec G115 test - always in range
 
 	gasRate := int64(avgGasRate * clientcommon.BTCOutboundGasPriceMultiplier)
 	dynamicFee828440 := bitcoin.DepositorFee(gasRate)

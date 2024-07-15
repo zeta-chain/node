@@ -48,7 +48,6 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	}
 	s.btcSigner, err = NewSigner(
 		chains.Chain{},
-		nil,
 		tss,
 		nil,
 		base.DefaultLogger(),
@@ -231,7 +230,6 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
 	signer, err := NewSigner(
 		chains.Chain{},
-		nil,
 		mocks.NewTSSMainnet(),
 		nil,
 		base.DefaultLogger(),
@@ -394,7 +392,6 @@ func TestNewBTCSigner(t *testing.T) {
 	}
 	btcSigner, err := NewSigner(
 		chains.Chain{},
-		nil,
 		tss,
 		nil,
 		base.DefaultLogger(),

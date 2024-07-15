@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -17,6 +18,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -48,7 +50,7 @@ func GenerateTSS(
 		// Break out of loop only when TSS is generated successfully, either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
-		keyGen := appContext.GetKeygen()
+		keyGen := app.GetKeygen()
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return nil
 		}
@@ -75,7 +77,7 @@ func GenerateTSS(
 					if currentBlock > lastBlock {
 						lastBlock = currentBlock
 						keygenLogger.Info().
-							Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, appContext.Config().ChainID)
+							Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, app.Config().ChainID)
 					}
 					continue
 				}
@@ -138,7 +140,12 @@ func keygenTss(
 			return "", err
 		}
 		index := fmt.Sprintf("keygen-%s-%d", digest, keyGen.BlockNumber)
-		zetaHash, err := zetacoreClient.PostBlameData(&res.Blame, zetacoreClient.Chain().ChainId, index)
+		zetaHash, err := tss.ZetacoreClient.PostVoteBlameData(
+			ctx,
+			&res.Blame,
+			tss.ZetacoreClient.Chain().ChainId,
+			index,
+		)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return "", err

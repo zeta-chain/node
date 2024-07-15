@@ -1,18 +1,18 @@
 package zetacore
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
 
@@ -22,54 +22,39 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
 
-// BroadcastInterface defines the signature of the broadcast function used by zetacore transactions
-type BroadcastInterface = func(client *Client, gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error)
+// paying 50% more than the current base gas price to buffer for potential block-by-block
+// gas price increase due to EIP1559 feemarket on ZetaChain
+var bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
 
-const (
-	// DefaultBaseGasPrice is the default base gas price
-	DefaultBaseGasPrice = 1_000_000
-)
-
-var (
-	// paying 50% more than the current base gas price to buffer for potential block-by-block
-	// gas price increase due to EIP1559 feemarket on ZetaChain
-	bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
-
-	// Variable function used by transactions to broadcast a message to zetacore. This will create enough flexibility
-	// in the implementation to allow for more comprehensive unit testing.
-	zetacoreBroadcast BroadcastInterface = BroadcastToZetaCore
-)
-
-// BroadcastToZetaCore is the default broadcast function used to send transactions to zetacore
-func BroadcastToZetaCore(
-	client *Client,
+// Broadcast Broadcasts tx to ZetaChain. Returns txHash and error
+func (c *Client) Broadcast(
+	ctx context.Context,
 	gasLimit uint64,
 	authzWrappedMsg sdktypes.Msg,
 	authzSigner authz.Signer,
 ) (string, error) {
-	return client.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
-}
-
-// Broadcast Broadcasts tx to ZetaChain. Returns txHash and error
-func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
-	c.broadcastLock.Lock()
-	defer c.broadcastLock.Unlock()
-	var err error
-
-	blockHeight, err := c.GetBlockHeight()
+	blockHeight, err := c.GetBlockHeight(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to get block height")
 	}
-	baseGasPrice, err := c.GetBaseGasPrice()
+
+	baseGasPrice, err := c.GetBaseGasPrice(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to get base gas price")
 	}
+
+	// shouldn't happen, but just in case
 	if baseGasPrice == 0 {
-		baseGasPrice = DefaultBaseGasPrice // shouldn't happen, but just in case
+		baseGasPrice = DefaultBaseGasPrice
 	}
+
 	reductionRate := sdktypes.MustNewDecFromStr(ante.GasPriceReductionRate)
+
 	// multiply gas price by the system tx reduction rate
 	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if blockHeight > c.blockHeight {
 		c.blockHeight = blockHeight
@@ -77,7 +62,9 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 		if err != nil {
 			return "", err
 		}
+
 		c.accountNumber[authzSigner.KeyType] = accountNumber
+
 		if c.seqNumber[authzSigner.KeyType] < seqNumber {
 			c.seqNumber[authzSigner.KeyType] = seqNumber
 		}
@@ -85,11 +72,7 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 
 	flags := flag.NewFlagSet("zetaclient", 0)
 
-	ctx, err := c.GetContext()
-	if err != nil {
-		return "", err
-	}
-	factory, err := clienttx.NewFactoryCLI(ctx, flags)
+	factory, err := clienttx.NewFactoryCLI(c.cosmosClientContext, flags)
 	if err != nil {
 		return "", err
 	}
@@ -99,29 +82,32 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to build unsigned tx")
 	}
 
-	builder.SetGasLimit(gaslimit)
+	builder.SetGasLimit(gasLimit)
 
-	// #nosec G701 always in range
-	fee := sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom,
-		sdktypes.NewInt(int64(gaslimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt())))
+	// #nosec G115 always in range
+	fee := sdktypes.NewCoins(sdktypes.NewCoin(
+		config.BaseDenom,
+		sdktypes.NewInt(int64(gasLimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt()),
+	))
 	builder.SetFeeAmount(fee)
-	err = c.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
+
+	err = c.SignTx(factory, c.cosmosClientContext.GetFromName(), builder, true, c.cosmosClientContext.TxConfig)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to sign tx")
 	}
-	txBytes, err := ctx.TxConfig.TxEncoder()(builder.GetTx())
+
+	txBytes, err := c.cosmosClientContext.TxConfig.TxEncoder()(builder.GetTx())
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "unable to encode tx")
 	}
 
 	// broadcast to a Tendermint node
-	commit, err := ctx.BroadcastTxSync(txBytes)
+	commit, err := c.cosmosClientContext.BroadcastTxSync(txBytes)
 	if err != nil {
-		c.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
-		return "", err
+		return "", errors.Wrap(err, "fail to broadcast tx sync")
 	}
 
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
@@ -156,54 +142,6 @@ func (c *Client) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzS
 	return commit.TxHash, nil
 }
 
-// GetContext return a valid context with all relevant values set
-func (c *Client) GetContext() (client.Context, error) {
-	ctx := client.Context{}
-	addr, err := c.keys.GetAddress()
-	if err != nil {
-		c.logger.Error().Err(err).Msg("fail to get address from key")
-		return ctx, err
-	}
-
-	// if password is needed, set it as input
-	password := c.keys.GetHotkeyPassword()
-	if password != "" {
-		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", password)))
-	}
-
-	ctx = ctx.WithKeyring(c.keys.GetKeybase())
-	ctx = ctx.WithChainID(c.chainID)
-	ctx = ctx.WithHomeDir(c.cfg.ChainHomeFolder)
-	ctx = ctx.WithFromName(c.cfg.SignerName)
-	ctx = ctx.WithFromAddress(addr)
-	ctx = ctx.WithBroadcastMode("sync")
-
-	ctx = ctx.WithCodec(c.encodingCfg.Codec)
-	ctx = ctx.WithInterfaceRegistry(c.encodingCfg.InterfaceRegistry)
-	ctx = ctx.WithTxConfig(c.encodingCfg.TxConfig)
-	ctx = ctx.WithLegacyAmino(c.encodingCfg.Amino)
-	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
-
-	if c.enableMockSDKClient {
-		ctx = ctx.WithClient(c.mockSDKClient)
-	} else {
-		remote := c.cfg.ChainRPC
-		if !strings.HasPrefix(c.cfg.ChainHost, "http") {
-			remote = fmt.Sprintf("tcp://%s", remote)
-		}
-
-		ctx = ctx.WithNodeURI(remote)
-		wsClient, err := rpchttp.New(remote, "/websocket")
-		if err != nil {
-			return ctx, err
-		}
-
-		ctx = ctx.WithClient(wsClient)
-	}
-
-	return ctx, nil
-}
-
 // SignTx signs a tx with the given name
 func (c *Client) SignTx(
 	txf clienttx.Factory,
@@ -212,42 +150,48 @@ func (c *Client) SignTx(
 	overwriteSig bool,
 	txConfig client.TxConfig,
 ) error {
-	if c.cfg.HsmMode {
+	if c.config.HsmMode {
 		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
 	}
+
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
 
 // QueryTxResult query the result of a tx
 func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
-	ctx, err := c.GetContext()
-	if err != nil {
-		return nil, err
-	}
-	return authtx.QueryTx(ctx, hash)
+	return authtx.QueryTx(c.cosmosClientContext, hash)
 }
 
 // HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddOutboundTracker
 // returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outboundHash string) (bool, bool) {
-	if strings.Contains(err.Error(), "nonce too low") {
-		log.Warn().
-			Err(err).
-			Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outbound confirmation")
+	if err == nil {
 		return false, false
-	}
-	if strings.Contains(err.Error(), "replacement transaction underpriced") {
-		log.Warn().
-			Err(err).
-			Msgf("Broadcast replacement: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
-		return false, false
-	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
-		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outboundHash %s", nonce, toChain, outboundHash)
-		return false, true // report to tracker, because there's possibilities a successful broadcast gets this error code
 	}
 
-	log.Error().
-		Err(err).
-		Msgf("Broadcast error: nonce %s chain %s outboundHash %s; retrying...", nonce, toChain, outboundHash)
-	return true, false
+	msg := err.Error()
+	evt := log.Warn().Err(err).
+		Str("broadcast.nonce", nonce).
+		Str("broadcast.to_chain", toChain).
+		Str("broadcast.outbound_hash", outboundHash)
+
+	switch {
+	case strings.Contains(msg, "nonce too low"):
+		const m = "nonce too low! this might be a unnecessary key-sign. increase retry interval and awaits outbound confirmation"
+		evt.Msg(m)
+		return false, false
+
+	case strings.Contains(msg, "replacement transaction underpriced"):
+		evt.Msg("Broadcast replacement")
+		return false, false
+
+	case strings.Contains(msg, "already known"):
+		// report to tracker, because there's possibilities a successful broadcast gets this error code
+		evt.Msg("Broadcast duplicates")
+		return false, true
+
+	default:
+		evt.Msg("Broadcast error. Retrying...")
+		return true, false
+	}
 }

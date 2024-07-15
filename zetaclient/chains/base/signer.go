@@ -5,7 +5,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -14,8 +13,6 @@ import (
 type Signer struct {
 	// chain contains static information about the external chain
 	chain chains.Chain
-
-	appContext *context.AppContext
 
 	// tss is the TSS signer
 	tss interfaces.TSSSigner
@@ -32,18 +29,11 @@ type Signer struct {
 }
 
 // NewSigner creates a new base signer
-func NewSigner(
-	chain chains.Chain,
-	appContext *context.AppContext,
-	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
-	logger Logger,
-) *Signer {
+func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, ts *metrics.TelemetryServer, logger Logger) *Signer {
 	return &Signer{
-		chain:      chain,
-		appContext: appContext,
-		tss:        tss,
-		ts:         ts,
+		chain: chain,
+		tss:   tss,
+		ts:    ts,
 		logger: Logger{
 			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
 			Compliance: logger.Compliance,
@@ -60,11 +50,6 @@ func (s *Signer) Chain() chains.Chain {
 func (s *Signer) WithChain(chain chains.Chain) *Signer {
 	s.chain = chain
 	return s
-}
-
-// AppContext returns the zetacore context for the signer
-func (s *Signer) AppContext() *context.AppContext {
-	return s.appContext
 }
 
 // Tss returns the tss signer for the signer

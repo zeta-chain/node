@@ -1,11 +1,13 @@
 package main
 
 import (
+	gocontext "context"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -26,11 +28,7 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	authz.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetacoreClient(
-	cfg config.Config,
-	telemetry *metrics.TelemetryServer,
-	hotkeyPassword string,
-) (*zetacore.Client, error) {
+func CreateZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerolog.Logger) (*zetacore.Client, error) {
 	hotKey := cfg.AuthzHotkey
 	if cfg.HsmMode {
 		hotKey = cfg.HsmHotKey
@@ -50,7 +48,7 @@ func CreateZetacoreClient(
 
 	k := keys.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, hotkeyPassword)
 
-	client, err := zetacore.NewClient(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, telemetry)
+	client, err := zetacore.NewClient(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +58,7 @@ func CreateZetacoreClient(
 
 // CreateSignerMap creates a map of ChainSigners for all chains in the config
 func CreateSignerMap(
+	ctx gocontext.Context,
 	appContext *context.AppContext,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
@@ -77,11 +76,14 @@ func CreateSignerMap(
 			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
+
+		chainName := evmConfig.Chain.ChainName.String()
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
+
 		signer, err := evmsigner.NewSigner(
+			ctx,
 			evmConfig.Chain,
-			appContext,
 			tss,
 			ts,
 			logger,
@@ -89,21 +91,28 @@ func CreateSignerMap(
 			config.GetConnectorABI(),
 			config.GetERC20CustodyABI(),
 			mpiAddress,
-			erc20CustodyAddress)
+			erc20CustodyAddress,
+		)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Err(err).Msgf("NewSigner error for EVM chain %q", chainName)
 			continue
 		}
+
 		signerMap[evmConfig.Chain.ChainId] = signer
+		logger.Std.Info().Msgf("NewSigner succeeded for EVM chain %q", chainName)
 	}
+
 	// BTC signer
-	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
-	if enabled {
-		signer, err := btcsigner.NewSigner(btcChain, appContext, tss, ts, logger, btcConfig)
+	btcChain, btcConfig, btcEnabled := appContext.GetBTCChainAndConfig()
+	if btcEnabled {
+		chainName := btcChain.ChainName.String()
+
+		signer, err := btcsigner.NewSigner(btcChain, tss, ts, logger, btcConfig)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
+			logger.Std.Error().Err(err).Msgf("NewSigner error for BTC chain %q", chainName)
 		} else {
 			signerMap[btcChain.ChainId] = signer
+			logger.Std.Info().Msgf("NewSigner succeeded for BTC chain %q", chainName)
 		}
 	}
 
@@ -112,6 +121,7 @@ func CreateSignerMap(
 
 // CreateChainObserverMap creates a map of ChainObservers for all chains in the config
 func CreateChainObserverMap(
+	ctx gocontext.Context,
 	appContext *context.AppContext,
 	zetacoreClient *zetacore.Client,
 	tss interfaces.TSSSigner,
@@ -134,16 +144,16 @@ func CreateChainObserverMap(
 		// create EVM client
 		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error dailing endpoint %s", evmConfig.Endpoint)
+			logger.Std.Error().Err(err).Msgf("error dailing endpoint %q", evmConfig.Endpoint)
 			continue
 		}
 
 		// create EVM chain observer
 		observer, err := evmobserver.NewObserver(
+			ctx,
 			evmConfig,
 			evmClient,
 			*chainParams,
-			appContext,
 			zetacoreClient,
 			tss,
 			dbpath,
@@ -175,7 +185,6 @@ func CreateChainObserverMap(
 				btcChain,
 				btcClient,
 				*chainParams,
-				appContext,
 				zetacoreClient,
 				tss,
 				dbpath,

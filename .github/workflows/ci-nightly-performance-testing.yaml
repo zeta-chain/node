@@ -2,6 +2,11 @@ name: "NIGHTLY:EVM:PERFORMANCE:TESTING"
 
 on:
   workflow_dispatch:
+    inputs:
+      endpoint:
+        description: 'The EVM endpoint you want to test.'
+        required: false
+        default: 'http://localhost:9545'
   schedule:
     - cron: '0 0 * * *' # Runs every day at midnight UTC
 
@@ -9,6 +14,8 @@ jobs:
   nightly_evm_api_performance_test:
     name: "NIGHTLY:EVM:API:PERFORMANCE:TEST"
     runs-on: "buildjet-16vcpu-ubuntu-2204"
+    env:
+      endpoint_to_test: "http://localhost:9545"
     steps:
       - uses: actions/checkout@v4
 
@@ -25,16 +32,62 @@ jobs:
         run: | 
           npm install -g artillery@latest
 
+      - name: "CONFIGURE:PERFORMANCE:TEMPLATE"
+        run: |
+          # Check if the inputs.endpoint starts with https:// or http://
+          if [[ "${{inputs.endpoint}}" =~ ^https:// ]]; then
+            # Set the http_request_protocol to https if the URL starts with https://
+            export http_request_protocol=https
+          elif [[ "${{inputs.endpoint}}" =~ ^http:// ]]; then
+            # Set the http_request_protocol to http if the URL starts with http://
+            export http_request_protocol=http
+          else
+            # If the URL doesn't start with either http:// or https://, print an error and exit
+            echo "Please input a url with either https:// or http://" && exit 1
+          fi
+          
+          # Check if inputs.endpoint is different from the default "http://localhost:9545"
+          if [ "${{inputs.endpoint}}" != "http://localhost:9545" ]; then
+            # Check if inputs.endpoint is not empty
+            if [ -n "${{inputs.endpoint}}" ]; then
+              # If inputs.endpoint isn't different from the default and is not empty, use inputs.endpoint
+              export endpoint_to_test=${{inputs.endpoint}}
+              # Remove the protocol (http:// or https://) from endpoint_to_test
+              endpoint_to_test=${endpoint_to_test#http://}
+              endpoint_to_test=${endpoint_to_test#https://}
+            else
+              # If inputs.endpoint is empty, strip the protocol from endpoint_to_test
+              endpoint_to_test=${endpoint_to_test#http://}
+              endpoint_to_test=${endpoint_to_test#https://}
+            fi
+          else
+            # If inputs.endpoint is "http://localhost:9545", strip the protocol from endpoint_to_test
+            endpoint_to_test=${endpoint_to_test#http://}
+            endpoint_to_test=${endpoint_to_test#https://}
+          fi
+          
+          # Replace -=endpoint_to_test=- placeholder in the art.yaml file with the endpoint_to_test value
+          sed -i "s/-=endpoint_to_test=-/${endpoint_to_test}/g" .github/actions/performance-tests/art.yaml
+          # Replace -=http_request_protocol=- placeholder in the art.yaml file with the http_request_protocol value
+          sed -i "s/-=http_request_protocol=-/${http_request_protocol}/g" .github/actions/performance-tests/art.yaml
+
       - name: "EXECUTE:PERFORMANCE:TESTS"
         run: | 
-          artillery run .github/actions/performance-tests/art.yaml --record --key ${{ secrets.ARTILLERY_KEY }} --output ./report.json
+          # Execute Artillery to run performance tests using the specified configuration file
+          artillery run .github/actions/performance-tests/art.yaml \
+          --record \
+          --key ${{ secrets.ARTILLERY_KEY }} \
+          --output ./report.json
+
+      - name: "CHECK:TEST:RESULTS"
+        run: |
           # Check Artillery exit status
           if [ $? -ne 0 ]; then
             echo "Artillery command failed to execute."
             exit 1
           fi
           
-          # Parse the results.json file to check for failed vusers and http response codes
+          # Parse the results.json file to check for failed vusers and HTTP response codes
           failed_vusers=$(jq '.aggregate.counters["vusers.failed"] // 0' ./report.json)
           http_codes_200=$(jq '.aggregate.counters["http.codes.200"] // 0' ./report.json)
           http_responses=$(jq '.aggregate.counters["http.responses"] // 0' ./report.json)
@@ -45,6 +98,26 @@ jobs:
           else
             echo "EVM Performance Testing Successful"
           fi
+      
+          # Read the JSON file and extract the required metrics
+          p99_values=$(jq -r '.aggregate.summaries["http.response_time"].p99, .aggregate.summaries["plugins.metrics-by-endpoint.response_time./"].p99, .aggregate.summaries["vusers.session_length"].p99' ./report.json)
+          p50_values=$(jq -r '.aggregate.summaries["http.response_time"].p50, .aggregate.summaries["plugins.metrics-by-endpoint.response_time./"].p50, .aggregate.summaries["vusers.session_length"].p50' ./report.json)
+          
+          # Check P99 values
+          for p99 in $p99_values; do
+            if (( $(echo "$p99 > 2000" | bc -l) )); then
+              echo "P99 value $p99 exceeds 2000ms"
+              exit 1
+            fi
+          done
+          
+          # Check P50 values
+          for p50 in $p50_values; do
+            if (( $(echo "$p50 > 40" | bc -l) )); then
+              echo "P50 value $p50 exceeds 40ms"
+              exit 1
+            fi
+          done
 
       - name: "GENERATE:REPORT"
         if: always()

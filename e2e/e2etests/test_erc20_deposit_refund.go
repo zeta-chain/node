@@ -36,9 +36,13 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	r.Logger.Info("Refunding the cctx via admin")
 
-	msg := types.NewMsgRefundAbortedCCTX(r.ZetaTxServer.GetAccountAddress(0), cctx.Index, r.EVMAddress().String())
+	msg := types.NewMsgRefundAbortedCCTX(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		cctx.Index,
+		r.EVMAddress().String(),
+	)
 
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msg)
 	require.NoError(r, err)
 
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain

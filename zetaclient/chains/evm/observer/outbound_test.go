@@ -1,6 +1,7 @@
 package observer_test
 
 import (
+	"context"
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
-
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -58,13 +58,15 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		testutils.EventZetaReceived,
 	)
 
+	ctx := context.Background()
+
 	t.Run("should post vote and return true if outbound is processed", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
 		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, chainParam)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(cctx, zerolog.Logger{})
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
 		require.NoError(t, err)
 		require.True(t, isIncluded)
 		require.True(t, isConfirmed)
@@ -88,7 +90,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		config.LoadComplianceConfig(cfg)
 
 		// post outbound vote
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(cctx, zerolog.Logger{})
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
 		require.NoError(t, err)
 		require.True(t, isIncluded)
 		require.True(t, isConfirmed)
@@ -96,7 +98,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
 		// create evm observer and DO NOT set outbound as confirmed
 		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, chainParam)
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(cctx, zerolog.Logger{})
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
 		require.NoError(t, err)
 		require.False(t, isIncluded)
 		require.False(t, isConfirmed)
@@ -110,7 +112,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		chainParamsNew := ob.GetChainParams()
 		chainParamsNew.ConnectorContractAddress = sample.EthAddress().Hex()
 		ob.SetChainParams(chainParamsNew)
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(cctx, zerolog.Logger{})
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
 		require.Error(t, err)
 		require.False(t, isIncluded)
 		require.False(t, isConfirmed)
@@ -149,6 +151,8 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 		testutils.EventZetaReceived,
 	)
 
+	ctx := context.Background()
+
 	t.Run("should fail if unable to get connector/custody contract", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
 		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, chainParam)
@@ -158,7 +162,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 		// set invalid connector ABI
 		zetaconnector.ZetaConnectorNonEthMetaData.ABI = "invalid abi"
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(cctx, zerolog.Logger{})
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
 		zetaconnector.ZetaConnectorNonEthMetaData.ABI = abiConnector // reset connector ABI
 		require.ErrorContains(t, err, "error getting zeta connector")
 		require.False(t, isIncluded)
@@ -166,7 +170,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 		// set invalid custody ABI
 		erc20custody.ERC20CustodyMetaData.ABI = "invalid abi"
-		isIncluded, isConfirmed, err = ob.IsOutboundProcessed(cctx, zerolog.Logger{})
+		isIncluded, isConfirmed, err = ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
 		require.ErrorContains(t, err, "error getting erc20 custody")
 		require.False(t, isIncluded)
 		require.False(t, isConfirmed)
@@ -189,15 +193,17 @@ func Test_PostVoteOutbound(t *testing.T) {
 		testutils.EventZetaReceived,
 	)
 
+	ctx := context.Background()
+
 	t.Run("post vote outbound successfully", func(t *testing.T) {
 		// the amount and status to be used for vote
 		receiveValue := cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetacore client and post outbound vote
-		zetacoreClient := mocks.NewMockZetacoreClient()
-		ob := MockEVMObserver(t, chain, nil, nil, zetacoreClient, nil, memDBPath, 1, observertypes.ChainParams{})
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, observertypes.ChainParams{})
 		ob.PostVoteOutbound(
+			ctx,
 			cctx.Index,
 			receipt,
 			outbound,
@@ -205,20 +211,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 			receiveStatus,
 			nonce,
 			coinType,
-			zerolog.Logger{},
-		)
-
-		// pause the mock zetacore client to simulate error posting vote
-		zetacoreClient.Pause()
-		ob.PostVoteOutbound(
-			cctx.Index,
-			receipt,
-			outbound,
-			receiveValue,
-			receiveStatus,
-			nonce,
-			coinType,
-			zerolog.Logger{},
+			zerolog.Nop(),
 		)
 	})
 }

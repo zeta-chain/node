@@ -88,11 +88,11 @@ cat > upgrade_plan_info.json <<EOF
 }
 EOF
 
-cat upgrade.json | jq --arg info "$(cat upgrade_plan_info.json)" '.messages[0].plan.info = $info' | tee upgrade.json
+cat upgrade.json | jq --arg info "$(cat upgrade_plan_info.json)" '.messages[0].plan.info = $info' | tee upgrade_full.json
 
 echo "Submitting upgrade proposal"
 
-zetacored tx gov submit-proposal upgrade.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta -o json | tee proposal.json
+zetacored tx gov submit-proposal upgrade_full.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta -o json | tee proposal.json
 PROPOSAL_TX_HASH=$(jq -r .txhash proposal.json)
 PROPOSAL_ID=""
 # WARN: this seems to be unstable

@@ -171,7 +171,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	// some old versions miss some events, fill it with tx result
 	// txs with type CosmosEVMTxType will always emit GasUsed in events so no need to override for those
 	if len(p.Txs) == 1 && p.Txs[0].Type != CosmosEVMTxType {
-		// #nosec G701 always positive
+		// #nosec G115 always positive
 		p.Txs[0].GasUsed = uint64(result.GasUsed)
 	}
 
@@ -228,7 +228,7 @@ func ParseTxIndexerResult(
 		return &ethermint.TxResult{
 				Height:  txResult.Height,
 				TxIndex: txResult.Index,
-				// #nosec G701 always in range
+				// #nosec G115 always in range
 				MsgIndex:          uint32(parsedTx.MsgIndex),
 				EthTxIndex:        parsedTx.EthTxIndex,
 				Failed:            parsedTx.Failed,
@@ -249,7 +249,7 @@ func ParseTxIndexerResult(
 	return &ethermint.TxResult{
 		Height:  txResult.Height,
 		TxIndex: txResult.Index,
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		MsgIndex:          uint32(parsedTx.MsgIndex),
 		EthTxIndex:        parsedTx.EthTxIndex,
 		Failed:            parsedTx.Failed,
@@ -277,9 +277,9 @@ func ParseTxBlockResult(
 	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height: height,
-				// #nosec G701 always in range
+				// #nosec G115 always in range
 				TxIndex: uint32(txIndex),
-				// #nosec G701 always in range
+				// #nosec G115 always in range
 				MsgIndex:          uint32(parsedTx.MsgIndex),
 				EthTxIndex:        parsedTx.EthTxIndex,
 				Failed:            parsedTx.Failed,
@@ -299,9 +299,9 @@ func ParseTxBlockResult(
 	}
 	return &ethermint.TxResult{
 		Height: height,
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		TxIndex: uint32(txIndex),
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		MsgIndex:          uint32(parsedTx.MsgIndex),
 		EthTxIndex:        parsedTx.EthTxIndex,
 		Failed:            parsedTx.Failed,
@@ -387,7 +387,7 @@ func fillTxAttribute(tx *ParsedTx, key, value string) error {
 		if err != nil {
 			return err
 		}
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		tx.EthTxIndex = int32(txIndex)
 	case evmtypes.AttributeKeyTxGasUsed:
 		gasUsed, err := strconv.ParseUint(value, 10, 64)

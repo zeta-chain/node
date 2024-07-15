@@ -130,7 +130,7 @@ func (k Keeper) DeployZRC20Contract(
 		symbol,                    // symbol
 		decimals,                  // decimals
 		big.NewInt(chain.ChainId), // chainID
-		// #nosec G701 always in range
+		// #nosec G115 always in range
 		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
 		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
 		common.HexToAddress(system.SystemContract),
@@ -147,6 +147,7 @@ func (k Keeper) DeployZRC20Contract(
 	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol
+	// #nosec G115 uint8 -> uint32 false positive
 	coin.Decimals = uint32(decimals)
 	coin.Asset = erc20Contract
 	coin.Zrc20ContractAddress = contractAddr.Hex()

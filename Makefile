@@ -139,8 +139,8 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-lint-cosmos-gosec:
-	@bash ./scripts/cosmos-gosec.sh
+lint-gosec:
+	@bash ./scripts/gosec.sh
 
 gosec:
 	gosec  -exclude-dir=localnet ./...
@@ -263,12 +263,19 @@ start-tss-migration-test: zetanode
 ###                         Upgrade Tests              						###
 ###############################################################################
 
-
+# build from source only if requested
+ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
-	@echo "Building zetanode-upgrade"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='release/v17' .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+	@echo "Building zetanode-upgrade from source"
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v17' .
 .PHONY: zetanode-upgrade
+else
+zetanode-upgrade: zetanode
+	@echo "Building zetanode-upgrade from binaries"
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal' .
+.PHONY: zetanode-upgrade
+endif
+
 
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
@@ -280,6 +287,14 @@ start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
+	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
+
+start-upgrade-test-admin: zetanode-upgrade
+	@echo "--> Starting admin upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade

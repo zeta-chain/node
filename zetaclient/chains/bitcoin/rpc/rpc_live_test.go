@@ -55,11 +55,11 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	btcClient := mocks.NewMockBTCRPCClient()
 
 	// create observer
-	ob, err := observer.NewObserver(chain, btcClient, params, nil, nil, tss, testutils.SQLiteMemory,
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, tss, testutils.SQLiteMemory,
 		base.DefaultLogger(), nil)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(ob)
-	suite.rpcClient, err = getRPCClient(18332)
+	suite.rpcClient, err = createRPCClient(18332)
 	suite.Require().NoError(err)
 	skBytes, err := hex.DecodeString(skHex)
 	suite.Require().NoError(err)
@@ -91,13 +91,14 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 func (suite *BitcoinObserverTestSuite) TearDownSuite() {
 }
 
-func getRPCClient(chainID int64) (*rpcclient.Client, error) {
+// createRPCClient creates a new Bitcoin RPC client for given chainID
+func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
 	rpcMainnet := os.Getenv("BTC_RPC_MAINNET")
 	rpcTestnet := os.Getenv("BTC_RPC_TESTNET")
 
 	// mainnet
-	if chainID == 8332 {
+	if chainID == chains.BitcoinMainnet.ChainId {
 		connCfg = &rpcclient.ConnConfig{
 			Host:         rpcMainnet, // mainnet endpoint goes here
 			User:         "user",
@@ -108,7 +109,7 @@ func getRPCClient(chainID int64) (*rpcclient.Client, error) {
 		}
 	}
 	// testnet3
-	if chainID == 18332 {
+	if chainID == chains.BitcoinTestnet.ChainId {
 		connCfg = &rpcclient.ConnConfig{
 			Host:         rpcTestnet, // testnet endpoint goes here
 			User:         "user",
@@ -218,6 +219,7 @@ func TestBitcoinObserverLive(t *testing.T) {
 	// LiveTestBitcoinFeeRate(t)
 	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
 	// LiveTestAvgFeeRateTestnetMempoolSpace(t)
+	// LiveTestGetRecentFeeRate(t)
 	// LiveTestGetSenderByVin(t)
 }
 
@@ -243,7 +245,7 @@ func LiveTestNewRPCClient(t *testing.T) {
 // LiveTestGetBlockHeightByHash queries Bitcoin block height by hash
 func LiveTestGetBlockHeightByHash(t *testing.T) {
 	// setup Bitcoin client
-	client, err := getRPCClient(8332)
+	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 
 	// the block hashes to test
@@ -265,7 +267,7 @@ func LiveTestGetBlockHeightByHash(t *testing.T) {
 // and compares Conservative and Economical fee rates for different block targets (1 and 2)
 func LiveTestBitcoinFeeRate(t *testing.T) {
 	// setup Bitcoin client
-	client, err := getRPCClient(8332)
+	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	bn, err := client.GetBlockCount()
 	if err != nil {
@@ -390,7 +392,7 @@ func compareAvgFeeRate(t *testing.T, client *rpcclient.Client, startBlock int, e
 // LiveTestAvgFeeRateMainnetMempoolSpace compares calculated fee rate with mempool.space fee rate for mainnet
 func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
 	// setup Bitcoin client
-	client, err := getRPCClient(8332)
+	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 
 	// test against mempool.space API for 10000 blocks
@@ -404,7 +406,7 @@ func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
 // LiveTestAvgFeeRateTestnetMempoolSpace compares calculated fee rate with mempool.space fee rate for testnet
 func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	// setup Bitcoin client
-	client, err := getRPCClient(18332)
+	client, err := createRPCClient(chains.BitcoinTestnet.ChainId)
 	require.NoError(t, err)
 
 	// test against mempool.space API for 10000 blocks
@@ -415,11 +417,23 @@ func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	compareAvgFeeRate(t, client, startBlock, endBlock, true)
 }
 
+// LiveTestGetRecentFeeRate gets the highest fee rate from recent blocks
+func LiveTestGetRecentFeeRate(t *testing.T) {
+	// setup Bitcoin testnet client
+	client, err := createRPCClient(chains.BitcoinTestnet.ChainId)
+	require.NoError(t, err)
+
+	// get fee rate from recent blocks
+	feeRate, err := rpc.GetRecentFeeRate(client, &chaincfg.TestNet3Params)
+	require.NoError(t, err)
+	require.Greater(t, feeRate, uint64(0))
+}
+
 // LiveTestGetSenderByVin gets sender address for each vin and compares with mempool.space sender address
 func LiveTestGetSenderByVin(t *testing.T) {
 	// setup Bitcoin client
-	chainID := int64(8332)
-	client, err := getRPCClient(chainID)
+	chainID := chains.BitcoinMainnet.ChainId
+	client, err := createRPCClient(chainID)
 	require.NoError(t, err)
 
 	// net params

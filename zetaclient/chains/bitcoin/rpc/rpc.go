@@ -4,12 +4,22 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+)
+
+const (
+	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
+	feeRateCountBackBlocks = 2
+
+	// defaultTestnetFeeRate is the default fee rate for testnet, 10 sat/byte
+	defaultTestnetFeeRate = 10
 )
 
 // NewRPCClient creates a new RPC client by the given config.
@@ -106,4 +116,44 @@ func GetRawTxResult(
 
 	// res.Confirmations < 0 (meaning not included)
 	return btcjson.TxRawResult{}, fmt.Errorf("GetRawTxResult: tx %s not included yet", hash)
+}
+
+// GetRecentFeeRate gets the highest fee rate from recent blocks
+// Note: this method is only used for testnet
+func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
+	blockNumber, err := rpcClient.GetBlockCount()
+	if err != nil {
+		return 0, err
+	}
+
+	// get the highest fee rate among recent 'countBack' blocks to avoid underestimation
+	highestRate := int64(0)
+	for i := int64(0); i < feeRateCountBackBlocks; i++ {
+		// get the block
+		hash, err := rpcClient.GetBlockHash(blockNumber - i)
+		if err != nil {
+			return 0, err
+		}
+		block, err := rpcClient.GetBlockVerboseTx(hash)
+		if err != nil {
+			return 0, err
+		}
+
+		// computes the average fee rate of the block and take the higher rate
+		avgFeeRate, err := bitcoin.CalcBlockAvgFeeRate(block, netParams)
+		if err != nil {
+			return 0, err
+		}
+		if avgFeeRate > highestRate {
+			highestRate = avgFeeRate
+		}
+	}
+
+	// use 10 sat/byte as default estimation if recent fee rate drops to 0
+	if highestRate == 0 {
+		highestRate = defaultTestnetFeeRate
+	}
+
+	// #nosec G115 always in range
+	return uint64(highestRate), nil
 }

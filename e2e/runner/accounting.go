@@ -111,7 +111,7 @@ func (r *E2ERunner) CheckBtcTSSBalance() error {
 			zrc20Supply.Int64()-10000000,
 		)
 	}
-	// #nosec G701 test - always in range
+	// #nosec G115 test - always in range
 	r.Logger.Info(
 		"BTC: Balance (%d) >= ZRC20 TotalSupply (%d)",
 		int64(tssTotalBalance*1e8),

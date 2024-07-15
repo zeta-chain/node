@@ -22,7 +22,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 	totalObserverCountCurrentBlock := allObservers.LenUint()
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	if totalObserverCountCurrentBlock == lastBlockObserverCount.Count {
 		return
 	}
@@ -31,11 +31,11 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	for _, observer := range allObservers.ObserverList {
 		ctx.Logger().Error("Observer :  ", observer)
 	}
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 
 	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
-	// #nosec G701 always positive
+	// #nosec G115 always positive
 	k.SetLastObserverCount(
 		ctx,
 		&types.LastObserverCount{Count: totalObserverCountCurrentBlock, LastChangeHeight: ctx.BlockHeight()},

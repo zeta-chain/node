@@ -3,6 +3,7 @@ package tss
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -90,6 +91,7 @@ type TSS struct {
 
 // NewTSS creates a new TSS instance which can be used to sign transactions
 func NewTSS(
+	ctx context.Context,
 	appContext *appcontext.AppContext,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
@@ -124,7 +126,7 @@ func NewTSS(
 		client.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
 
-	keygenRes, err := newTss.ZetacoreClient.GetKeyGen()
+	keygenRes, err := newTss.ZetacoreClient.GetKeyGen(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -218,6 +220,7 @@ func (tss *TSS) Pubkey() []byte {
 // digest should be Hashes of some data
 // NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
 func (tss *TSS) Sign(
+	ctx context.Context,
 	digest []byte,
 	height uint64,
 	nonce uint64,
@@ -232,7 +235,7 @@ func (tss *TSS) Sign(
 		tssPubkey = optionalPubKey
 	}
 
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	keysignReq := keysign.NewRequest(
 		tssPubkey,
 		[]string{base64.StdEncoding.EncodeToString(H)},
@@ -254,7 +257,7 @@ func (tss *TSS) Sign(
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := hex.EncodeToString(digest)
 			index := observertypes.GetBlameIndex(chainID, nonce, digest, height)
-			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chainID, index)
+			zetaHash, err := tss.ZetacoreClient.PostVoteBlameData(ctx, &ksRes.Blame, chainID, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [65]byte{}, err
@@ -309,13 +312,19 @@ func (tss *TSS) Sign(
 
 // SignBatch is hash of some data
 // digest should be batch of hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error) {
+func (tss *TSS) SignBatch(
+	ctx context.Context,
+	digests [][]byte,
+	height uint64,
+	nonce uint64,
+	chainID int64,
+) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
-	// #nosec G701 always in range
+	// #nosec G115 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
 	tss.KeysignsTracker.StartMsgSign()
@@ -332,7 +341,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chainID
 		if IsEnvFlagEnabled(envFlagPostBlame) {
 			digest := combineDigests(digestBase64)
 			index := observertypes.GetBlameIndex(chainID, nonce, hex.EncodeToString(digest), height)
-			zetaHash, err := tss.ZetacoreClient.PostBlameData(&ksRes.Blame, chainID, index)
+			zetaHash, err := tss.ZetacoreClient.PostVoteBlameData(ctx, &ksRes.Blame, chainID, index)
 			if err != nil {
 				log.Error().Err(err).Msg("error sending blame data to core")
 				return [][65]byte{}, err

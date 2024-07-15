@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"context"
+
 	"github.com/rs/zerolog"
 
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -24,13 +26,14 @@ func NewEVMObserver(chainParams *observertypes.ChainParams) *EVMObserver {
 	}
 }
 
-func (ob *EVMObserver) Start() {
-}
+func (ob *EVMObserver) Start(_ context.Context) {}
+func (ob *EVMObserver) Stop()                   {}
 
-func (ob *EVMObserver) Stop() {
-}
-
-func (ob *EVMObserver) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+func (ob *EVMObserver) IsOutboundProcessed(
+	_ context.Context,
+	_ *crosschaintypes.CrossChainTx,
+	_ zerolog.Logger,
+) (bool, bool, error) {
 	return false, false, nil
 }
 
@@ -46,7 +49,8 @@ func (ob *EVMObserver) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (ob *EVMObserver) WatchInboundTracker() {
+func (ob *EVMObserver) WatchInboundTracker(_ context.Context) error {
+	return nil
 }
 
 // ----------------------------------------------------------------------------
@@ -65,13 +69,15 @@ func NewBTCObserver(chainParams *observertypes.ChainParams) *BTCObserver {
 	}
 }
 
-func (ob *BTCObserver) Start() {
-}
+func (ob *BTCObserver) Start(_ context.Context) {}
 
-func (ob *BTCObserver) Stop() {
-}
+func (ob *BTCObserver) Stop() {}
 
-func (ob *BTCObserver) IsOutboundProcessed(_ *crosschaintypes.CrossChainTx, _ zerolog.Logger) (bool, bool, error) {
+func (ob *BTCObserver) IsOutboundProcessed(
+	_ context.Context,
+	_ *crosschaintypes.CrossChainTx,
+	_ zerolog.Logger,
+) (bool, bool, error) {
 	return false, false, nil
 }
 
@@ -87,5 +93,4 @@ func (ob *BTCObserver) GetTxID(_ uint64) string {
 	return ""
 }
 
-func (ob *BTCObserver) WatchInboundTracker() {
-}
+func (ob *BTCObserver) WatchInboundTracker(_ context.Context) error { return nil }

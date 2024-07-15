@@ -71,8 +71,8 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	// https://github.com/zeta-chain/node/issues/2090
 	r.Logger.Print("rate limiter enabled")
 	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, zetaAmount))
-	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, ethAmount))
-	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeZETA, erc20Amount))
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeETH, ethAmount))
+	require.NoError(r, createAndWaitWithdraws(r, withdrawTypeERC20, erc20Amount))
 
 	// Disable rate limiter
 	r.Logger.Info("disabling rate limiter")
@@ -167,11 +167,11 @@ func waitForWithdrawMined(
 
 // setupRateLimiterFlags sets up the rate limiter flags with flags defined in the test
 func setupRateLimiterFlags(r *runner.E2ERunner, flags crosschaintypes.RateLimiterFlags) error {
-	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
+	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.OperationalPolicyName)
 	if err != nil {
 		return err
 	}
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgUpdateRateLimiterFlags(
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, crosschaintypes.NewMsgUpdateRateLimiterFlags(
 		adminAddr,
 		flags,
 	))
