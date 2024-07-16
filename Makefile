@@ -256,7 +256,7 @@ start-stress-test: zetanode
 
 start-tss-migration-test: zetanode
 	@echo "--> Starting migration test"
-	export E2E_ARGS="--test-migration" && \
+	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
 ###############################################################################

@@ -80,7 +80,7 @@
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
 * [2549](https://github.com/zeta-chain/node/pull/2459) - add separate accounts for each policy in e2e tests
 * [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
-* [2440](https://github.com/zeta-chain/node/pull/2440) - Add e2e test for Tss migration
+* [2440](https://github.com/zeta-chain/node/pull/2440) - Add e2e test for TSS migration
 
 
 ### Fixes

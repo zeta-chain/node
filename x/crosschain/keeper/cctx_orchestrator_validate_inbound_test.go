@@ -43,7 +43,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		sender := sample.EthAddress()
 		tssList := sample.TssList(3)
 
-		// Set up mocks for CheckIfMigrationTransfer
+		// Set up mocks for CheckIfTSSMigrationTransfer
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, true)
 		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
@@ -174,7 +174,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		sender := sample.EthAddress()
 		tssList := sample.TssList(3)
 
-		// Set up mocks for CheckIfMigrationTransfer
+		// Set up mocks for CheckIfTSSMigrationTransfer
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, true)
 		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
@@ -241,7 +241,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		sender := sample.EthAddress()
 		tssList := sample.TssList(3)
 
-		// Set up mocks for CheckIfMigrationTransfer
+		// Set up mocks for CheckIfTSSMigrationTransfer
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, true)
 		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
@@ -315,7 +315,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		sender := sample.EthAddress()
 		tssList := sample.TssList(3)
 
-		// Set up mocks for CheckIfMigrationTransfer
+		// Set up mocks for CheckIfTSSMigrationTransfer
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, true)
 		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
@@ -352,7 +352,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		require.ErrorIs(t, err, observerTypes.ErrInboundDisabled)
 	})
 
-	t.Run("fails when CheckIfMigrationTransfer fails", func(t *testing.T) {
+	t.Run("fails when CheckIfTSSMigrationTransfer fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t,
 			keepertest.CrosschainMockOptions{
 				UseObserverMock:  true,
@@ -381,7 +381,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		// setup Mocks for GetTSS
 		observerMock.On("GetTSS", mock.Anything).Return(tssList[0], true)
 
-		// Set up mocks for CheckIfMigrationTransfer
+		// Set up mocks for CheckIfTSSMigrationTransfer
 		observerMock.On("GetAllTSS", ctx).Return(tssList)
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, false)
 		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
@@ -438,7 +438,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.NoError(t, err)
 	})
 
@@ -465,7 +465,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.NoError(t, err)
 	})
 
@@ -494,11 +494,11 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.ErrorIs(t, err, observerTypes.ErrSupportedChains)
 	})
 
-	t.Run("fails when tss address is invalid for bitcoin chain", func(t *testing.T) {
+	t.Run("skips check when an older tss address is invalid for bitcoin chain", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t,
 			keepertest.CrosschainMockOptions{
 				UseAuthorityMock: true,
@@ -522,11 +522,11 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
-		require.ErrorIs(t, err, types.ErrInvalidAddress)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
+		require.NoError(t, err)
 	})
 
-	t.Run("fails when tss address is invalid for evm chain", func(t *testing.T) {
+	t.Run("skips check when an older tss address is invalid for evm chain", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t,
 			keepertest.CrosschainMockOptions{
 				UseAuthorityMock: true,
@@ -550,8 +550,8 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
-		require.ErrorIs(t, err, types.ErrInvalidAddress)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
+		require.NoError(t, err)
 	})
 
 	t.Run("fails when sender is a TSS address for evm chain for evm chain", func(t *testing.T) {
@@ -578,7 +578,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender.String(),
 		}
 
-		err = k.CheckIfMigrationTransfer(ctx, &msg)
+		err = k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrMigrationFromOldTss)
 	})
 
@@ -608,7 +608,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err = k.CheckIfMigrationTransfer(ctx, &msg)
+		err = k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.ErrorIs(t, err, types.ErrMigrationFromOldTss)
 	})
 
@@ -639,7 +639,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.ErrorContains(t, err, "no Bitcoin net params for chain ID: 999")
 	})
 
@@ -662,7 +662,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 			Sender:        sender,
 		}
 
-		err := k.CheckIfMigrationTransfer(ctx, &msg)
+		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
 		require.NoError(t, err)
 	})
 }

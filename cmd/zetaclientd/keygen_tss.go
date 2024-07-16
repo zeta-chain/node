@@ -85,9 +85,9 @@ func GenerateTSS(
 				}
 				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
 				triedKeygenAtBlock = true
-				newPubkey, err := keygenTss(ctx, keyGen, *keygenTssServer, zetaCoreClient, keygenLogger)
+				newPubkey, err := keygenTSS(ctx, keyGen, *keygenTssServer, zetaCoreClient, keygenLogger)
 				if err != nil {
-					keygenLogger.Error().Err(err).Msg("keygenTss error")
+					keygenLogger.Error().Err(err).Msg("keygenTSS error")
 					tssFailedVoteHash, err := zetaCoreClient.PostVoteTSS(ctx,
 						"", keyGen.BlockNumber, chains.ReceiveStatus_failed)
 					if err != nil {
@@ -122,10 +122,10 @@ func GenerateTSS(
 	return errors.New("unexpected state for TSS generation")
 }
 
-// keygenTss generates a new TSS using the keygen request and the TSS server.
+// keygenTSS generates a new TSS using the keygen request and the TSS server.
 // If the keygen is successful, the function returns the new TSS pubkey.
 // If the keygen is unsuccessful, the function posts blame and returns an error.
-func keygenTss(
+func keygenTSS(
 	ctx context.Context,
 	keyGen observertypes.Keygen,
 	tssServer tss.TssServer,

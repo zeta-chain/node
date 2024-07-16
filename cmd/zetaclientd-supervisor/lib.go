@@ -182,6 +182,7 @@ func (s *zetaclientdSupervisor) handleTSSUpdate(ctx context.Context) {
 	retryInterval := 5 * time.Second
 
 	// TODO : use retry library under pkg/retry
+	// https://github.com/zeta-chain/node/issues/2492
 	for i := 0; i < maxRetries; i++ {
 		client := observertypes.NewQueryClient(s.zetacoredConn)
 		tss, err := client.TSS(ctx, &observertypes.QueryGetTSSRequest{})

@@ -36,7 +36,7 @@ const (
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
 	flagSkipSetup         = "skip-setup"
-	flagTestMigration     = "test-migration"
+	flagTestTSSMigration  = "test-tss-migration"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 )
@@ -69,7 +69,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
-	cmd.Flags().Bool(flagTestMigration, false, "set to true to include a migration test at the end")
+	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 
 	return cmd
 }
@@ -90,7 +90,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
 		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		testMigration     = must(cmd.Flags().GetBool(flagTestMigration))
+		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -329,7 +329,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	if testMigration {
+	if testTSSMigration {
 		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
 	}
 
