@@ -168,15 +168,11 @@ func retryWithBackoff(call func() error, attempts int, minInternal, maxInterval 
 	if attempts < 1 {
 		return errors.New("attempts must be positive")
 	}
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = minInternal
+	bo.MaxInterval = maxInterval
 
-	bo := backoff.WithMaxRetries(
-		backoff.NewExponentialBackOff(
-			backoff.WithInitialInterval(minInternal),
-			backoff.WithMaxInterval(maxInterval),
-		),
-		// #nosec G115 always positive
-		uint64(attempts),
-	)
+	backoffWithRetry := backoff.WithMaxRetries(bo, uint64(attempts))
 
-	return retry.DoWithBackoff(call, bo)
+	return retry.DoWithBackoff(call, backoffWithRetry)
 }

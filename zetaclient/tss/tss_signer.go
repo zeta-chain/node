@@ -33,7 +33,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -92,7 +92,6 @@ type TSS struct {
 // NewTSS creates a new TSS instance which can be used to sign transactions
 func NewTSS(
 	ctx context.Context,
-	appContext *appcontext.AppContext,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
 	bitcoinChainID int64,
@@ -100,23 +99,27 @@ func NewTSS(
 	tssServer *tss.TssServer,
 ) (*TSS, error) {
 	logger := log.With().Str("module", "tss_signer").Logger()
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	newTss := TSS{
 		Server:          tssServer,
 		Keys:            make(map[string]*Key),
-		CurrentPubkey:   appContext.GetCurrentTssPubKey(),
+		CurrentPubkey:   app.GetCurrentTssPubKey(),
 		logger:          logger,
 		ZetacoreClient:  client,
 		KeysignsTracker: NewKeysignsTracker(logger),
 		BitcoinChainID:  bitcoinChainID,
 	}
 
-	err := newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
+	err = newTss.LoadTssFilesFromDirectory(app.Config().TssPath)
 	if err != nil {
 		return nil, err
 	}
 
-	_, pubkeyInBech32, err := keys.GetKeyringKeybase(appContext.Config(), hotkeyPassword)
+	_, pubkeyInBech32, err := keys.GetKeyringKeybase(app.Config(), hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +140,7 @@ func NewTSS(
 	}
 	metrics.NumActiveMsgSigns.Set(0)
 
-	newTss.Signers = appContext.GetKeygen().GranteePubkeys
+	newTss.Signers = app.GetKeygen().GranteePubkeys
 
 	return &newTss, nil
 }
@@ -304,8 +307,6 @@ func (tss *TSS) Sign(
 		log.Error().Err(err).Msg("decoding signature RecoveryID")
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
-
-	fmt.Print("Successfully signed the digest")
 
 	return sigbyte, nil
 }

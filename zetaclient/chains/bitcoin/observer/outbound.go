@@ -184,11 +184,11 @@ func (ob *Observer) IsOutboundProcessed(
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutbound()
 	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
-		ob.logger.Outbound.Debug().Msgf(
-			"IsOutboundProcessed: outbound not confirmed yet %d: %d",
-			res.Confirmations,
-			ob.ConfirmationsThreshold(amountInSat),
-		)
+		ob.logger.Outbound.Debug().
+			Int64("currentConfirmations", res.Confirmations).
+			Int64("requiredConfirmations", ob.ConfirmationsThreshold(amountInSat)).
+			Msg("IsOutboundProcessed: outbound not confirmed yet")
+
 		return true, false, nil
 	}
 

@@ -424,7 +424,6 @@ func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger
 		logger.Print("❌ post migration tests failed")
 		os.Exit(1)
 	}
-
 }
 
 func must[T any](v T, err error) T {

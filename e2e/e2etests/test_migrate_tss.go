@@ -28,10 +28,10 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	// Pause inbound procoessing for tss migration
 	r.Logger.Info("Pause inbound  processing")
 	msg := observertypes.NewMsgDisableCCTX(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.EmergencyPolicyName),
 		false,
 		true)
-	_, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msg)
 	require.NoError(r, err)
 
 	// Migrate btc
@@ -53,11 +53,11 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	// #nosec G701 e2eTest - always in range
 	migrationAmountBTC := sdkmath.NewUint(uint64(btcBalance * 1e8))
 	msgMigrateFunds := crosschaintypes.NewMsgMigrateTssFunds(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		btcChain,
 		migrationAmountBTC,
 	)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgMigrateFunds)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateFunds)
 	require.NoError(r, err)
 
 	// Fetch migrator cctx for btc migration
@@ -78,11 +78,11 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 
 	// Migrate TSS funds for the eth chain
 	msgMigrateFunds = crosschaintypes.NewMsgMigrateTssFunds(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		evmChainID.Int64(),
 		tssBalanceUint,
 	)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgMigrateFunds)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateFunds)
 	require.NoError(r, err)
 
 	// Fetch migrator cctx for eth migration
@@ -110,10 +110,10 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 		return allTss.TssList[i].FinalizedZetaHeight < allTss.TssList[j].FinalizedZetaHeight
 	})
 	msgUpdateTss := crosschaintypes.NewMsgUpdateTssAddress(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		allTss.TssList[1].TssPubkey,
 	)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgUpdateTss)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgUpdateTss)
 	require.NoError(r, err)
 
 	// Wait for atleast one block for the TSS to be updated
@@ -174,9 +174,9 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	require.True(r, ethTSSBalanceNew.Cmp(ethTSSBalanceOld) < 0)
 
 	msgEnable := observertypes.NewMsgEnableCCTX(
-		r.ZetaTxServer.GetAccountAddress(0),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		true,
 		true)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msgEnable)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgEnable)
 	require.NoError(r, err)
 }

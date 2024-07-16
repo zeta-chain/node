@@ -83,7 +83,6 @@ func (k Keeper) CheckIfMigrationTransfer(ctx sdk.Context, msg *types.MsgVoteInbo
 			if ethTssAddress.Hex() == msg.Sender {
 				return types.ErrMigrationFromOldTss
 			}
-
 		}
 	case chains.IsBitcoinChain(chain.ChainId, additionalChains):
 		bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)

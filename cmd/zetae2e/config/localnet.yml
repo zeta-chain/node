@@ -34,7 +34,7 @@ additional_accounts:
     private_key: "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
   user_migration:
     bech32_address: "zeta1pvtxa708yvdmszn687nne6nl8qn704daf420xz"
-    evm_address: "0x0b166ef9e7231bb80a7a3fa73cea7f3827e7d5bd"
+    evm_address: "0x0B166ef9e7231Bb80A7A3FA73CEA7F3827E7D5BD"
     private_key: "0bcc2fa28b526f90e1d54648d612db901e860bf68248555593f91ea801c6b482"
 policy_accounts:
   emergency_policy_account:

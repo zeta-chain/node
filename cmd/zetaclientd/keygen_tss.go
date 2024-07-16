@@ -17,7 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
@@ -30,12 +29,15 @@ import (
 // In case of a successful keygen a TSS success vote is broadcasted to zetacore and the newly generate TSS is tested. The generated keyshares are stored in the correct directory
 // In case of a failed keygen a TSS failed vote is broadcasted to zetacore.
 func GenerateTSS(
-	appContext *context.AppContext,
+	ctx context.Context,
 	logger zerolog.Logger,
 	zetaCoreClient *zetacore.Client,
 	keygenTssServer *tss.TssServer) error {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
-
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
 	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
@@ -62,7 +64,7 @@ func GenerateTSS(
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
 		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
-			currentBlock, err := zetaCoreClient.GetBlockHeight()
+			currentBlock, err := zetaCoreClient.GetBlockHeight(ctx)
 			if err != nil {
 				keygenLogger.Error().Err(err).Msg("GetBlockHeight RPC  error")
 				continue
@@ -83,10 +85,11 @@ func GenerateTSS(
 				}
 				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
 				triedKeygenAtBlock = true
-				newPubkey, err := keygenTss(keyGen, *keygenTssServer, zetaCoreClient, keygenLogger)
+				newPubkey, err := keygenTss(ctx, keyGen, *keygenTssServer, zetaCoreClient, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
-					tssFailedVoteHash, err := zetaCoreClient.SetTSS("", keyGen.BlockNumber, chains.ReceiveStatus_failed)
+					tssFailedVoteHash, err := zetaCoreClient.PostVoteTSS(ctx,
+						"", keyGen.BlockNumber, chains.ReceiveStatus_failed)
 					if err != nil {
 						keygenLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 						return err
@@ -95,7 +98,7 @@ func GenerateTSS(
 					continue
 				}
 				// If TSS is successful , broadcast the vote to zetacore and also set the Pubkey
-				tssSuccessVoteHash, err := zetaCoreClient.SetTSS(
+				tssSuccessVoteHash, err := zetaCoreClient.PostVoteTSS(ctx,
 					newPubkey,
 					keyGen.BlockNumber,
 					chains.ReceiveStatus_success,
@@ -123,6 +126,7 @@ func GenerateTSS(
 // If the keygen is successful, the function returns the new TSS pubkey.
 // If the keygen is unsuccessful, the function posts blame and returns an error.
 func keygenTss(
+	ctx context.Context,
 	keyGen observertypes.Keygen,
 	tssServer tss.TssServer,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -140,10 +144,10 @@ func keygenTss(
 			return "", err
 		}
 		index := fmt.Sprintf("keygen-%s-%d", digest, keyGen.BlockNumber)
-		zetaHash, err := tss.ZetacoreClient.PostVoteBlameData(
+		zetaHash, err := zetacoreClient.PostVoteBlameData(
 			ctx,
 			&res.Blame,
-			tss.ZetacoreClient.Chain().ChainId,
+			zetacoreClient.Chain().ChainId,
 			index,
 		)
 		if err != nil {

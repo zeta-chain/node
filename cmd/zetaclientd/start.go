@@ -212,7 +212,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = GenerateTSS(appContext, masterLogger, zetacoreClient, server)
+	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func start(_ *cobra.Command, _ []string) error {
 		bitcoinChainID = btcChain.ChainId
 	}
 	tss, err := mc.NewTSS(
-		appContext,
+		ctx,
 		zetacoreClient,
 		tssHistoricalList,
 		bitcoinChainID,

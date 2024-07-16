@@ -1,10 +1,10 @@
 package local
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
@@ -40,11 +40,11 @@ func postMigrationTestRoutine(
 			testNames...,
 		)
 		if err != nil {
-			return fmt.Errorf("postMigrationRunner tests failed: %v", err)
+			return errors.Wrap(err, "postMigrationRunner tests failed")
 		}
 
 		if err := postMigrationRunner.RunE2ETests(testsToRun); err != nil {
-			return fmt.Errorf("postMigrationRunner tests failed: %v", err)
+			return errors.Wrap(err, "postMigrationRunner tests failed")
 		}
 
 		if err := postMigrationRunner.CheckBtcTSSBalance(); err != nil {
