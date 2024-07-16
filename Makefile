@@ -258,11 +258,6 @@ start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose --profile stress -f docker-compose.yml up -d
 
-start-solana-test: zetanode solana
-	@echo "--> Starting solana test"
-	export E2E_ARGS="--test-solana" && \
-	cd contrib/localnet/ && $(DOCKER) compose --profile solana -f docker-compose.yml up -d
-
 ###############################################################################
 ###                         Upgrade Tests              						###
 ###############################################################################
