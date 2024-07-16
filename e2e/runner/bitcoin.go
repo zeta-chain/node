@@ -15,7 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -26,6 +25,7 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute

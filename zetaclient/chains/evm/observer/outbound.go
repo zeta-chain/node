@@ -420,6 +420,9 @@ func (ob *Observer) checkConfirmedTx(
 		// If from is not TSS address, check if it is one of the previous TSS addresses We can still try to confirm a tx which was broadcast by an old TSS
 		// This is to handle situations where the outbound has already been broad-casted by an older TSS address and the zetacore is waiting for the all the required block confirmations
 		// to go through before marking the cctx into a finalized state
+
+		// TODO : improve this logic to verify that the correct TSS address is the from address.
+		// https://github.com/zeta-chain/node/issues/2487
 		log.Info().
 			Str("function", "confirmTxByHash").
 			Str("sender", from.Hex()).

@@ -50,6 +50,10 @@ var (
 	ErrMaxTxOutTrackerHashesReached  = errorsmod.Register(ModuleName, 1153, "max tx out tracker hashes reached")
 	ErrInitiatitingOutbound          = errorsmod.Register(ModuleName, 1154, "cannot initiate outbound")
 	ErrInvalidWithdrawalAmount       = errorsmod.Register(ModuleName, 1155, "invalid withdrawal amount")
-	ErrMigrationFromOldTss           = errorsmod.Register(ModuleName, 1156, "migration tx from an old tss address detected")
-	ErrValidatingInbound             = errorsmod.Register(ModuleName, 1157, "unable to validate inbound")
+	ErrMigrationFromOldTss           = errorsmod.Register(
+		ModuleName,
+		1156,
+		"migration tx from an old tss address detected",
+	)
+	ErrValidatingInbound = errorsmod.Register(ModuleName, 1157, "unable to validate inbound")
 )

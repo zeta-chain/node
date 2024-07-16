@@ -52,8 +52,10 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		// setup Mocks for IsInboundEnabled
 		observerMock.On("IsInboundEnabled", ctx).Return(true)
 		// setup mocks for Initiate Outbound
-		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observerTypes.ChainNonces{Nonce: 1}, true)
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).
+			Return(observerTypes.ChainNonces{Nonce: 1}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
+			Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
 		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Return(nil)
 		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Return(nil)
 		// setup Mocks for SetCctxAndNonceToCctxAndInboundHashToCctx
@@ -181,7 +183,8 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		// setup Mocks for IsInboundEnabled
 		observerMock.On("IsInboundEnabled", ctx).Return(true)
 		// setup mocks for Initiate Outbound
-		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observerTypes.ChainNonces{Nonce: 1}, false)
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).
+			Return(observerTypes.ChainNonces{Nonce: 1}, false)
 
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     senderChain.ChainId,
@@ -247,8 +250,10 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 		// setup Mocks for IsInboundEnabled
 		observerMock.On("IsInboundEnabled", ctx).Return(true)
 		// setup mocks for Initiate Outbound
-		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observerTypes.ChainNonces{Nonce: 1}, true)
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).
+			Return(observerTypes.ChainNonces{Nonce: 1}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
+			Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
 		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Return(nil)
 		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Return(nil)
 		// setup Mocks for SetCctxAndNonceToCctxAndInboundHashToCctx
