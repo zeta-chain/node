@@ -48,6 +48,7 @@ func solanaTestRoutine(
 			return fmt.Errorf("solana tests failed: %v", err)
 		}
 
+		// TODO: check Solana balance
 		// if err := solanaRunner.CheckSolanaTSSBalance(); err != nil {
 		// 	return err
 		// }

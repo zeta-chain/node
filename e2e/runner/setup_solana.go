@@ -10,7 +10,7 @@ func (r *E2ERunner) SetupSolanaAccount() {
 	r.Logger.Print("⚙️ setting up Solana account")
 	startTime := time.Now()
 	defer func() {
-		r.Logger.Print("✅ Solana account setup in %s\n", time.Since(startTime))
+		r.Logger.Print("✅ Solana account setup in %s", time.Since(startTime))
 	}()
 
 	r.SetSolanaAddress()

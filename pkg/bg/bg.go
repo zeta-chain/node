@@ -63,6 +63,7 @@ func logError(err error, cfg config) {
 	cfg.logger.Error().Err(err).Str("worker.name", name).Msgf("Background task failed")
 }
 
+// printStack prints the stack trace when a panic occurs
 func printStack() {
 	buf := make([]byte, 1024)
 	for {

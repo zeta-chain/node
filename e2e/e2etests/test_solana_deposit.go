@@ -42,7 +42,6 @@ func TestSolanaDeposit(r *runner.E2ERunner, _ []string) {
 
 	// broadcast the transaction and wait for finalization
 	sig, out := r.BroadcastTxSync(signedTx)
-	r.Logger.Print("deposit receiver address: %s", r.EVMAddress().String())
 	r.Logger.Print("deposit logs: %v", out.Meta.LogMessages)
 
 	// wait for the cctx to be mined

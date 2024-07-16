@@ -1,4 +1,4 @@
-package main
+package contract
 
 type IDL struct {
 	Address      string        `json:"address"`

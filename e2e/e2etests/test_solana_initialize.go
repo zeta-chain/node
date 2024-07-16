@@ -26,10 +26,9 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 
 	// get deployer account balance
 	privkey := solana.MustPrivateKeyFromBase58(r.Account.RawBase58PrivateKey.String())
-	r.Logger.Print("deployer pubkey: %s", privkey.PublicKey().String())
 	bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
 	require.NoError(r, err)
-	r.Logger.Print("deployer balance in SOL %f:", float64(bal.Value)/1e9)
+	r.Logger.Print("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)
 
 	// compute the gateway PDA address
 	pdaComputed := r.ComputePdaAddress()
@@ -44,7 +43,6 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	accountSlice = append(accountSlice, solana.Meta(programID))
 	inst.ProgID = programID
 	inst.AccountValues = accountSlice
-	r.Logger.Print("TSS EthAddress: %s", r.TSSAddress)
 
 	inst.DataBytes, err = borsh.Serialize(solanacontract.InitializeParams{
 		Discriminator: solanacontract.DiscriminatorInitialize(),
@@ -69,5 +67,7 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
 	require.NoError(r, err)
 	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])
-	r.Logger.Print("PDA info Tss: %v", tssAddress)
+
+	// check the TSS address
+	require.Equal(r, r.TSSAddress, tssAddress, "TSS address mismatch")
 }
