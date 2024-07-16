@@ -23,6 +23,7 @@ func MockSolanaObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	dbpath string,
 ) *observer.Observer {
 	// use mock zetacore client if not provided
 	if zetacoreClient == nil {
@@ -40,6 +41,7 @@ func MockSolanaObserver(
 		chainParams,
 		zetacoreClient,
 		tss,
+		dbpath,
 		base.DefaultLogger(),
 		nil,
 	)
@@ -56,8 +58,7 @@ func Test_LoadDB(t *testing.T) {
 	dbpath := sample.CreateTempDir(t)
 
 	// create observer
-	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil)
-	ob.OpenDB(dbpath, "")
+	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil, dbpath)
 
 	// write last tx to db
 	lastTx := sample.SolanaSignature(t).String()
@@ -87,8 +88,7 @@ func Test_LoadLastTxScanned(t *testing.T) {
 	dbpath := sample.CreateTempDir(t)
 
 	// create observer
-	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil)
-	ob.OpenDB(dbpath, "")
+	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil, dbpath)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// write sample last tx to db

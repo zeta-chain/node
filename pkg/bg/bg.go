@@ -4,6 +4,7 @@ package bg
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	"github.com/rs/zerolog"
 )
@@ -39,6 +40,7 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 			if r := recover(); r != nil {
 				err := fmt.Errorf("recovered from PANIC in background task: %v", r)
 				logError(err, cfg)
+				printStack()
 			}
 		}()
 
@@ -59,4 +61,17 @@ func logError(err error, cfg config) {
 	}
 
 	cfg.logger.Error().Err(err).Str("worker.name", name).Msgf("Background task failed")
+}
+
+func printStack() {
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, false)
+		if n < len(buf) {
+			buf = buf[:n]
+			break
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+	fmt.Printf("Stack trace:\n%s\n", string(buf))
 }

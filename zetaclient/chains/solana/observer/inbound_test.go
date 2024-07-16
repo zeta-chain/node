@@ -34,7 +34,8 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
 	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
-	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, base.DefaultLogger(), nil)
+	dbpath := sample.CreateTempDir(t)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	t.Run("should filter inbound event vote", func(t *testing.T) {
@@ -53,7 +54,8 @@ func Test_FilterInboundEvent(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, base.DefaultLogger(), nil)
+	dbpath := sample.CreateTempDir(t)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
@@ -87,7 +89,8 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)
 	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
-	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, base.DefaultLogger(), nil)
+	dbpath := sample.CreateTempDir(t)
+	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// create test compliance config
@@ -97,7 +100,8 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 	t.Run("should return vote msg for valid event", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
-		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, []byte("a good memo"))
+		memo := sample.EthAddress().Bytes()
+		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, []byte(memo))
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.NotNil(t, msg)
@@ -105,7 +109,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
 		receiver := sample.SolanaAddress(t)
-		event := sample.InboundEvent(chain.ChainId, sender, receiver, 1280, []byte("a good memo"))
+		event := sample.InboundEvent(chain.ChainId, sender, receiver, 1280, nil)
 
 		// restrict sender
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender}
@@ -117,7 +121,8 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
 		receiver := sample.SolanaAddress(t)
-		event := sample.InboundEvent(chain.ChainId, sender, receiver, 1280, []byte("a good memo"))
+		memo := sample.EthAddress().Bytes()
+		event := sample.InboundEvent(chain.ChainId, sender, receiver, 1280, []byte(memo))
 
 		// restrict receiver
 		cfg.ComplianceConfig.RestrictedAddresses = []string{receiver}
@@ -149,7 +154,8 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, base.DefaultLogger(), nil)
+	dbpath := sample.CreateTempDir(t)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result

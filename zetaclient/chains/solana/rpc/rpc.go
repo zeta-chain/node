@@ -51,6 +51,11 @@ func GetFirstSignatureForAddress(
 		lastSignature = fetchedSignatures[len(fetchedSignatures)-1].Signature
 	}
 
+	// there is no signature for the given address
+	if lastSignature.IsZero() {
+		return lastSignature, errors.Errorf("no signatures found for address %s", address)
+	}
+
 	return lastSignature, nil
 }
 

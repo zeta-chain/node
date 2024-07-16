@@ -38,6 +38,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	dbpath string,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -66,6 +67,12 @@ func NewObserver(
 	// compute gateway PDA
 	seed := []byte(contract.PDASeed)
 	ob.pdaID, _, err = solana.FindProgramAddress([][]byte{seed}, ob.gatewayID)
+	if err != nil {
+		return nil, err
+	}
+
+	// load btc chain observer DB
+	err = ob.LoadDB(dbpath)
 	if err != nil {
 		return nil, err
 	}

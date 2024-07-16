@@ -21,9 +21,10 @@ additional_accounts:
     evm_address: "0x283d810090EdF4043E75247eAeBcE848806237fD"
     private_key: "7bb523963ee2c78570fb6113d886a4184d42565e8847f1cb639f5f5e2ef5b37a"
   user_solana:
-    bech32_address: ""
-    evm_address: ""
-    private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
+    bech32_address: "zeta1zqlajgj0qr8rqylf2c572t0ux8vqt45d4zngpm"
+    evm_address: "0x103FD9224F00ce3013e95629e52DFc31D805D68d"
+    private_key: "dd53f191113d18e57bd4a5494a64a020ba7919c815d0a6d34a42ebb2839e9d95"
+    base58_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
   user_ether:
     bech32_address: "zeta134rakuus43xn63yucgxhn88ywj8ewcv6ezn2ga"
     evm_address: "0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A"

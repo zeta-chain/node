@@ -51,9 +51,10 @@ type Config struct {
 
 // Account contains configuration for an account
 type Account struct {
-	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
-	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
-	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
+	RawBech32Address    DoubleQuotedString `yaml:"bech32_address"`
+	RawEVMAddress       DoubleQuotedString `yaml:"evm_address"`
+	RawPrivateKey       DoubleQuotedString `yaml:"private_key"`
+	RawBase58PrivateKey DoubleQuotedString `yaml:"base58_private_key"`
 }
 
 // AdditionalAccounts are extra accounts required to run specific tests

@@ -226,6 +226,7 @@ func CreateChainObserverMap(
 			solChainParams,
 			zetacoreClient,
 			tss,
+			dbpath,
 			logger,
 			ts,
 		)

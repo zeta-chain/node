@@ -13,7 +13,7 @@ import (
 
 func TestSolanaDeposit(r *runner.E2ERunner, _ []string) {
 	// load deployer private key
-	privkey := solana.MustPrivateKeyFromBase58(r.Account.RawPrivateKey.String())
+	privkey := solana.MustPrivateKeyFromBase58(r.Account.RawBase58PrivateKey.String())
 
 	// compute the gateway PDA address
 	pdaComputed := r.ComputePdaAddress()
@@ -32,8 +32,8 @@ func TestSolanaDeposit(r *runner.E2ERunner, _ []string) {
 	var err error
 	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDeposit(),
-		Amount:        1338,
-		Memo:          []byte("hello this is a good memo for you to enjoy"),
+		Amount:        13370000,
+		Memo:          r.EVMAddress().Bytes(),
 	})
 	require.NoError(r, err)
 
@@ -42,6 +42,7 @@ func TestSolanaDeposit(r *runner.E2ERunner, _ []string) {
 
 	// broadcast the transaction and wait for finalization
 	sig, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Print("deposit receiver address: %s", r.EVMAddress().String())
 	r.Logger.Print("deposit logs: %v", out.Meta.LogMessages)
 
 	// wait for the cctx to be mined

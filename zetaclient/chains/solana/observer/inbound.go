@@ -30,8 +30,6 @@ const (
 )
 
 // WatchInbound watches Solana chain for inbounds on a ticker.
-// It starts a ticker and run ObserveInbound.
-// TODO(revamp): move all ticker related methods in the same file.
 func (ob *Observer) WatchInbound(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -59,7 +57,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
 			}
-			err := ob.ObserveInbound(ctx, sampledLogger)
+			err := ob.ObserveInbound(ctx)
 			if err != nil {
 				ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 			}
@@ -71,18 +69,30 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 }
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore.
-func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Logger) error {
+func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	pageLimit := solanarpc.DefaultPageLimit
-	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
+
+	// scan from gateway 1st signature if last scanned tx is absent in the database
+	// the 1st gateway signature is typically the program initialization
+	if ob.LastTxScanned() == "" {
+		lastSig, err := solanarpc.GetFirstSignatureForAddress(ob.solClient, ob.gatewayID, pageLimit)
+		if err != nil {
+			return errors.Wrapf(err, "error GetFirstSignatureForAddress for chain %d address %s", chainID, ob.gatewayID)
+		}
+		ob.WithLastTxScanned(lastSig.String())
+	}
 
 	// get all signatures for the gateway address since last scanned signature
+	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
 	signatures, err := solanarpc.GetSignaturesForAddressUntil(ob.solClient, ob.gatewayID, lastSig, pageLimit)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error GetSignaturesForAddressUntil")
 		return err
 	}
-	sampledLogger.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
+	if len(signatures) > 0 {
+		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
+	}
 
 	// loop signature from oldest to latest to filter inbound events
 	for i := len(signatures) - 1; i >= 0; i-- {
@@ -112,7 +122,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 				Err(err).
 				Msgf("ObserveInbound: error saving last sig %s for chain %d", sigString, chainID)
 		}
-		sampledLogger.Info().Msgf("ObserveInbound: last scanned sig for chain %d is %s", chainID, sigString)
+		ob.Logger().Inbound.Info().Msgf("ObserveInbound: last scanned sig for chain %d is %s", chainID, sigString)
 
 		// take a rest if max signatures per ticker is reached
 		if len(signatures)-i >= MaxSignaturesPerTicker {
@@ -132,11 +142,13 @@ func (ob *Observer) FilterInboundEventAndVote(ctx context.Context, txResult *rpc
 	}
 
 	// build inbound vote message from event and post to zetacore
-	msg := ob.BuildInboundVoteMsgFromEvent(event)
-	if msg != nil {
-		_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
-		if err != nil {
-			return errors.Wrapf(err, "error PostVoteInbound")
+	if event != nil {
+		msg := ob.BuildInboundVoteMsgFromEvent(event)
+		if msg != nil {
+			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			if err != nil {
+				return errors.Wrapf(err, "error PostVoteInbound")
+			}
 		}
 	}
 
@@ -237,7 +249,7 @@ func (ob *Observer) ParseInboundAsDeposit(
 	}
 
 	// check if the instruction is a deposit or not
-	if inst.Discriminator == contract.DiscriminatorDeposit() {
+	if inst.Discriminator != contract.DiscriminatorDeposit() {
 		return nil, nil
 	}
 

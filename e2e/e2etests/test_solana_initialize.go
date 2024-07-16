@@ -25,7 +25,7 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("solana version: %+v", res)
 
 	// get deployer account balance
-	privkey := solana.MustPrivateKeyFromBase58(r.Account.RawPrivateKey.String())
+	privkey := solana.MustPrivateKeyFromBase58(r.Account.RawBase58PrivateKey.String())
 	r.Logger.Print("deployer pubkey: %s", privkey.PublicKey().String())
 	bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
 	require.NoError(r, err)
