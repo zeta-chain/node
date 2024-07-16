@@ -7,9 +7,9 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
- * @generated from message zetachain.zetacore.crosschain.TxHashList
+ * @generated from message zetachain.zetacore.crosschain.TxHash
  */
-export declare class TxHashList extends Message<TxHashList> {
+export declare class TxHash extends Message<TxHash> {
   /**
    * @generated from field: string tx_hash = 1;
    */
@@ -25,19 +25,19 @@ export declare class TxHashList extends Message<TxHashList> {
    */
   proved: boolean;
 
-  constructor(data?: PartialMessage<TxHashList>);
+  constructor(data?: PartialMessage<TxHash>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.TxHashList";
+  static readonly typeName = "zetachain.zetacore.crosschain.TxHash";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TxHashList;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TxHash;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TxHashList;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TxHash;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TxHashList;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TxHash;
 
-  static equals(a: TxHashList | PlainMessage<TxHashList> | undefined, b: TxHashList | PlainMessage<TxHashList> | undefined): boolean;
+  static equals(a: TxHash | PlainMessage<TxHash> | undefined, b: TxHash | PlainMessage<TxHash> | undefined): boolean;
 }
 
 /**
@@ -62,9 +62,9 @@ export declare class OutboundTracker extends Message<OutboundTracker> {
   nonce: bigint;
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.TxHashList hash_list = 4;
+   * @generated from field: repeated zetachain.zetacore.crosschain.TxHash hash_list = 4;
    */
-  hashList: TxHashList[];
+  hashList: TxHash[];
 
   constructor(data?: PartialMessage<OutboundTracker>);
 

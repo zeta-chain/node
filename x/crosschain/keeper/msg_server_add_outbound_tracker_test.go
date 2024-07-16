@@ -117,7 +117,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
-			HashList: []*types.TxHashList{
+			HashList: []*types.TxHash{
 				{
 					TxHash: existinghHash,
 				},
@@ -249,9 +249,9 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
-		hashes := make([]*types.TxHashList, keeper.MaxOutboundTrackerHashes)
+		hashes := make([]*types.TxHash, keeper.MaxOutboundTrackerHashes)
 		for i := 0; i < keeper.MaxOutboundTrackerHashes; i++ {
-			hashes[i] = &types.TxHashList{
+			hashes[i] = &types.TxHash{
 				TxHash: sample.Hash().Hex(),
 			}
 		}
@@ -298,7 +298,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
-			HashList: []*types.TxHashList{
+			HashList: []*types.TxHash{
 				{
 					TxHash: existinghHash,
 				},
@@ -397,7 +397,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			ChainId: chainID,
 			Nonce:   42,
-			HashList: []*types.TxHashList{
+			HashList: []*types.TxHash{
 				{
 					TxHash: sample.Hash().Hex(),
 					Proved: false,
