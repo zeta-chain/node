@@ -1716,7 +1716,7 @@ func (suite *BackendTestSuite) TestEthAndSyntheticGetBlockByNumber() {
 	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", resSyntheticTx.To.Hex())
 	suite.Require().Equal("0x58", resSyntheticTx.Type.String())
 	suite.Require().Equal("0x1", resSyntheticTx.Nonce.String())
-	suite.Require().Nil(resSyntheticTx.V)
-	suite.Require().Nil(resSyntheticTx.R)
-	suite.Require().Nil(resSyntheticTx.S)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.V)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.R)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.S)
 }
