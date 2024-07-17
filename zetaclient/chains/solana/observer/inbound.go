@@ -116,13 +116,15 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// signature scanned; save last scanned signature to both memory and db, ignore db error
-		if err := ob.SaveLastTxScanned(sigString); err != nil {
+		if err := ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
 			ob.Logger().
 				Inbound.Error().
 				Err(err).
 				Msgf("ObserveInbound: error saving last sig %s for chain %d", sigString, chainID)
 		}
-		ob.Logger().Inbound.Info().Msgf("ObserveInbound: last scanned sig for chain %d is %s", chainID, sigString)
+		ob.Logger().
+			Inbound.Info().
+			Msgf("ObserveInbound: last scanned sig is %s for chain %d in slot %d", sigString, chainID, sig.Slot)
 
 		// take a rest if max signatures per ticker is reached
 		if len(signatures)-i >= MaxSignaturesPerTicker {

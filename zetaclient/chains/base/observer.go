@@ -421,8 +421,13 @@ func (ob *Observer) LoadLastTxScanned() {
 }
 
 // SaveLastTxScanned saves the last scanned tx hash to memory and database.
-func (ob *Observer) SaveLastTxScanned(txHash string) error {
+func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
+	// save last scanned tx to memory
 	ob.WithLastTxScanned(txHash)
+
+	// update last_scanned_block_number metrics
+	ob.WithLastBlockScanned(slot)
+
 	return ob.WriteLastTxScannedToDB(txHash)
 }
 
