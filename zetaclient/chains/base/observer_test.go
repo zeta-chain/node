@@ -478,12 +478,14 @@ func TestSaveLastTxScanned(t *testing.T) {
 		require.NoError(t, err)
 
 		// save random tx hash
+		lastSlot := uint64(100)
 		lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
-		err = ob.SaveLastTxScanned(lastTx)
+		err = ob.SaveLastTxScanned(lastTx, lastSlot)
 		require.NoError(t, err)
 
-		// check last tx scanned in memory
+		// check last tx and slot scanned in memory
 		require.EqualValues(t, lastTx, ob.LastTxScanned())
+		require.EqualValues(t, lastSlot, ob.LastBlockScanned())
 
 		// read last tx scanned from db
 		lastTxScanned, err := ob.ReadLastTxScannedFromDB()
