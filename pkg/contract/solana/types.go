@@ -15,7 +15,7 @@ type PdaInfo struct {
 	Authority [32]byte
 
 	// ChainId is the chain ID for the gateway program
-	// TODO: this field exists in latest version of gateway program, but not in the current e2e test program
+	// Note: this field exists in latest version of gateway program, but not in the current e2e test program
 	// ChainId uint64
 }
 

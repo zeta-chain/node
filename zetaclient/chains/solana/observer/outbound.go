@@ -10,8 +10,7 @@ import (
 
 // GetTxID returns a unique id for Solana outbound
 func (ob *Observer) GetTxID(_ uint64) string {
-	//TODO implement me
-	panic("implement me")
+	return ""
 }
 
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isConfirmed, error)
@@ -20,6 +19,5 @@ func (ob *Observer) IsOutboundProcessed(
 	_ *types.CrossChainTx,
 	_ zerolog.Logger,
 ) (bool, bool, error) {
-	//TODO implement me
-	panic("implement me")
+	return false, false, nil
 }
