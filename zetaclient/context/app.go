@@ -36,26 +36,15 @@ type AppContext struct {
 	mu sync.RWMutex
 }
 
-// New creates and returns new AppContext
+// New creates and returns new empty AppContext
 func New(cfg config.Config, logger zerolog.Logger) *AppContext {
-	evmChainParams := make(map[int64]*observertypes.ChainParams)
-	for _, e := range cfg.EVMChainConfigs {
-		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
-	}
-
-	var bitcoinChainParams *observertypes.ChainParams
-	_, found := cfg.GetBTCConfig()
-	if found {
-		bitcoinChainParams = &observertypes.ChainParams{}
-	}
-
 	return &AppContext{
 		config: cfg,
 		logger: logger.With().Str("module", "appcontext").Logger(),
 
 		chainsEnabled:            []chains.Chain{},
-		evmChainParams:           evmChainParams,
-		bitcoinChainParams:       bitcoinChainParams,
+		evmChainParams:           map[int64]*observertypes.ChainParams{},
+		bitcoinChainParams:       nil,
 		crosschainFlags:          observertypes.CrosschainFlags{},
 		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
 
@@ -72,14 +61,17 @@ func (a *AppContext) Config() config.Config {
 
 // GetBTCChainAndConfig returns btc chain and config if enabled
 func (a *AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, bool) {
-	btcConfig, configEnabled := a.Config().GetBTCConfig()
-	btcChain, _, paramsEnabled := a.GetBTCChainParams()
-
-	if !configEnabled || !paramsEnabled {
+	cfg, configEnabled := a.Config().GetBTCConfig()
+	if !configEnabled {
 		return chains.Chain{}, config.BTCConfig{}, false
 	}
 
-	return btcChain, btcConfig, true
+	chain, _, paramsEnabled := a.GetBTCChainParams()
+	if !paramsEnabled {
+		return chains.Chain{}, config.BTCConfig{}, false
+	}
+
+	return chain, cfg, true
 }
 
 // IsOutboundObservationEnabled returns true if the chain is supported and outbound flag is enabled
@@ -173,7 +165,8 @@ func (a *AppContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainPara
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	if a.bitcoinChainParams == nil { // bitcoin is not enabled
+	// bitcoin is not enabled
+	if a.bitcoinChainParams == nil {
 		return chains.Chain{}, nil, false
 	}
 
@@ -235,14 +228,14 @@ func (a *AppContext) Update(
 	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
 	init bool,
 ) {
+	if len(newChains) == 0 {
+		a.logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
+	}
+
 	// Ignore whatever order zetacore organizes chain list in state
 	sort.SliceStable(newChains, func(i, j int) bool {
 		return newChains[i].ChainId < newChains[j].ChainId
 	})
-
-	if len(newChains) == 0 {
-		a.logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
-	}
 
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -252,7 +245,7 @@ func (a *AppContext) Update(
 		a.logger.Warn().
 			Interface("chains.current", a.chainsEnabled).
 			Interface("chains.new", newChains).
-			Msg("UpdateChainParams: ChainsEnabled changed at runtime!")
+			Msg("ChainsEnabled changed at runtime!")
 	}
 
 	if keygen != nil {
@@ -264,18 +257,26 @@ func (a *AppContext) Update(
 	a.additionalChain = additionalChains
 	a.blockHeaderEnabledChains = blockHeaderEnabledChains
 
-	// update chain params for bitcoin if it has config in file
-	if a.bitcoinChainParams != nil && btcChainParams != nil {
-		a.bitcoinChainParams = btcChainParams
-	}
-
 	// update core params for evm chains we have configs in file
-	for _, params := range evmChainParams {
-		_, found := a.evmChainParams[params.ChainId]
+	freshEvmChainParams := make(map[int64]*observertypes.ChainParams)
+	for _, cp := range evmChainParams {
+		_, found := a.config.EVMChainConfigs[cp.ChainId]
 		if !found {
+			a.logger.Warn().
+				Int64("chain.id", cp.ChainId).
+				Msg("Encountered EVM ChainParams that are not present in the config file")
+
 			continue
 		}
-		a.evmChainParams[params.ChainId] = params
+
+		freshEvmChainParams[cp.ChainId] = cp
+	}
+
+	a.evmChainParams = freshEvmChainParams
+
+	// update chain params for bitcoin if it has config in file
+	if btcChainParams != nil {
+		a.bitcoinChainParams = btcChainParams
 	}
 
 	if tssPubKey != "" {

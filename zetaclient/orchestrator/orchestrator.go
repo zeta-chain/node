@@ -57,8 +57,8 @@ type Orchestrator struct {
 
 	// misc
 	logger multiLogger
-	stop   chan struct{}
 	ts     *metrics.TelemetryServer
+	stop   chan struct{}
 }
 
 type multiLogger struct {

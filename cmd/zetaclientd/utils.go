@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
@@ -13,9 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	btcrpc "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
-	btcsigner "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
@@ -54,69 +51,6 @@ func CreateZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerol
 	}
 
 	return client, nil
-}
-
-// CreateSignerMap creates a map of ChainSigners for all chains in the config
-func CreateSignerMap(
-	ctx gocontext.Context,
-	appContext *context.AppContext,
-	tss interfaces.TSSSigner,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
-) (map[int64]interfaces.ChainSigner, error) {
-	signerMap := make(map[int64]interfaces.ChainSigner)
-
-	// EVM signers
-	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
-		if evmConfig.Chain.IsZetaChain() {
-			continue
-		}
-		evmChainParams, found := appContext.GetEVMChainParams(evmConfig.Chain.ChainId)
-		if !found {
-			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
-			continue
-		}
-
-		chainName := evmConfig.Chain.ChainName.String()
-		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
-		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
-
-		signer, err := evmsigner.NewSigner(
-			ctx,
-			evmConfig.Chain,
-			tss,
-			ts,
-			logger,
-			evmConfig.Endpoint,
-			config.GetConnectorABI(),
-			config.GetERC20CustodyABI(),
-			mpiAddress,
-			erc20CustodyAddress,
-		)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewSigner error for EVM chain %q", chainName)
-			continue
-		}
-
-		signerMap[evmConfig.Chain.ChainId] = signer
-		logger.Std.Info().Msgf("NewSigner succeeded for EVM chain %q", chainName)
-	}
-
-	// BTC signer
-	btcChain, btcConfig, btcEnabled := appContext.GetBTCChainAndConfig()
-	if btcEnabled {
-		chainName := btcChain.ChainName.String()
-
-		signer, err := btcsigner.NewSigner(btcChain, tss, ts, logger, btcConfig)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewSigner error for BTC chain %q", chainName)
-		} else {
-			signerMap[btcChain.ChainId] = signer
-			logger.Std.Info().Msgf("NewSigner succeeded for BTC chain %q", chainName)
-		}
-	}
-
-	return signerMap, nil
 }
 
 // CreateChainObserverMap creates a map of ChainObservers for all chains in the config
