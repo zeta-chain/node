@@ -6,6 +6,7 @@ import (
 
 // InboundEvent represents an inbound event
 // TODO: we should consider using this generic struct when it applies (e.g. for Bitcoin, Solana, etc.)
+// https://github.com/zeta-chain/node/issues/2495
 type InboundEvent struct {
 	// SenderChainID is the chain ID of the sender
 	SenderChainID int64
