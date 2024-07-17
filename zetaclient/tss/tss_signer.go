@@ -33,7 +33,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -89,41 +89,37 @@ type TSS struct {
 	BitcoinChainID int64
 }
 
-// NewTSS creates a new TSS instance
+// NewTSS creates a new TSS instance which can be used to sign transactions
 func NewTSS(
 	ctx context.Context,
-	appContext *appcontext.AppContext,
-	peer p2p.AddrList,
-	privkey tmcrypto.PrivKey,
-	preParams *keygen.LocalPreParams,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
 	bitcoinChainID int64,
-	tssPassword string,
 	hotkeyPassword string,
+	tssServer *tss.TssServer,
 ) (*TSS, error) {
 	logger := log.With().Str("module", "tss_signer").Logger()
-	server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword)
+	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
+		return nil, err
 	}
 
 	newTss := TSS{
-		Server:          server,
+		Server:          tssServer,
 		Keys:            make(map[string]*Key),
-		CurrentPubkey:   appContext.GetCurrentTssPubKey(),
+		CurrentPubkey:   app.GetCurrentTssPubKey(),
 		logger:          logger,
 		ZetacoreClient:  client,
 		KeysignsTracker: NewKeysignsTracker(logger),
 		BitcoinChainID:  bitcoinChainID,
 	}
 
-	err = newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
+	err = newTss.LoadTssFilesFromDirectory(app.Config().TssPath)
 	if err != nil {
 		return nil, err
 	}
 
-	_, pubkeyInBech32, err := keys.GetKeyringKeybase(appContext.Config(), hotkeyPassword)
+	_, pubkeyInBech32, err := keys.GetKeyringKeybase(app.Config(), hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +140,8 @@ func NewTSS(
 	}
 	metrics.NumActiveMsgSigns.Set(0)
 
+	newTss.Signers = app.GetKeygen().GranteePubkeys
+
 	return &newTss, nil
 }
 
@@ -155,6 +153,7 @@ func SetupTSSServer(
 	preParams *keygen.LocalPreParams,
 	cfg config.Config,
 	tssPassword string,
+	enableMonitor bool,
 ) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
@@ -183,7 +182,7 @@ func SetupTSSServer(
 		"MetaMetaOpenTheDoor",
 		tsspath,
 		thorcommon.TssConfig{
-			EnableMonitor:   true,
+			EnableMonitor:   enableMonitor,
 			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
 			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
 			PartyTimeout:    30 * time.Second,
@@ -446,6 +445,19 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 	return addr
 }
 
+func (tss *TSS) EVMAddressList() []ethcommon.Address {
+	addresses := make([]ethcommon.Address, 0)
+	for _, key := range tss.Keys {
+		addr, err := GetTssAddrEVM(key.PubkeyInBech32)
+		if err != nil {
+			log.Error().Err(err).Msg("getKeyAddr error")
+			return nil
+		}
+		addresses = append(addresses, addr)
+	}
+	return addresses
+}
+
 // BTCAddress generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
 	addr, err := GetTssAddrBTC(tss.CurrentPubkey, tss.BitcoinChainID)
@@ -585,7 +597,8 @@ func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 // TestKeysign tests the keysign
 // it is called when a new TSS is generated to ensure the network works as expected
 // TODO(revamp): move to a test package
-func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
+
+func TestKeysign(tssPubkey string, tssServer tss.TssServer) error {
 	log.Info().Msg("trying keysign...")
 	data := []byte("hello meta")
 	H := crypto.Keccak256Hash(data)

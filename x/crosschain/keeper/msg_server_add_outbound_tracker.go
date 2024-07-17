@@ -15,7 +15,7 @@ import (
 )
 
 // MaxOutboundTrackerHashes is the maximum number of hashes that can be stored in the outbound transaction tracker
-const MaxOutboundTrackerHashes = 2
+const MaxOutboundTrackerHashes = 5
 
 // AddOutboundTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.
@@ -83,7 +83,7 @@ func (k msgServer) AddOutboundTracker(
 	// fetch the tracker
 	// if the tracker does not exist, initialize a new one
 	tracker, found := k.GetOutboundTracker(ctx, msg.ChainId, msg.Nonce)
-	hash := types.TxHashList{
+	hash := types.TxHash{
 		TxHash:   msg.TxHash,
 		TxSigner: msg.Creator,
 		Proved:   isProven,
@@ -93,7 +93,7 @@ func (k msgServer) AddOutboundTracker(
 			Index:    "",
 			ChainId:  msg.ChainId,
 			Nonce:    msg.Nonce,
-			HashList: []*types.TxHashList{&hash},
+			HashList: []*types.TxHash{&hash},
 		})
 		return &types.MsgAddOutboundTrackerResponse{}, nil
 	}

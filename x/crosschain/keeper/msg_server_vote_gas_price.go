@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"sort"
 	"strconv"
@@ -28,7 +27,7 @@ func (k msgServer) VoteGasPrice(
 
 	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, cosmoserrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
+		return nil, cosmoserrors.Wrapf(types.ErrUnsupportedChain, "ChainID: %d ", msg.ChainId)
 	}
 	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, observertypes.ErrNotObserver

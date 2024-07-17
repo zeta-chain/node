@@ -87,7 +87,7 @@ build-testnet-ubuntu: go.sum
 		docker rm temp-container
 
 install: go.sum
-		@echo "--> Installing zetacored & zetaclientd"
+		@echo "--> Installing zetacored, zetaclientd, and zetaclientd-supervisor"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd-supervisor
@@ -253,6 +253,11 @@ start-e2e-import-mainnet-test: zetanode
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose --profile stress -f docker-compose.yml up -d
+
+start-tss-migration-test: zetanode
+	@echo "--> Starting migration test"
+	export E2E_ARGS="--test-tss-migration" && \
+	cd contrib/localnet/ && $(DOCKER) compose up -d
 
 ###############################################################################
 ###                         Upgrade Tests              						###

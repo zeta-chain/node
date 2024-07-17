@@ -8,6 +8,10 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+
+	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type Amount struct {
@@ -31,30 +35,63 @@ func (r *E2ERunner) CheckZRC20ReserveAndSupply() error {
 }
 
 func (r *E2ERunner) checkEthTSSBalance() error {
-	tssBal, err := r.EVMClient.BalanceAt(r.Ctx, r.TSSAddress, nil)
+	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
 	}
+
+	tssTotalBalance := big.NewInt(0)
+
+	for _, tssAddress := range allTssAddress.TssList {
+		evmAddress, err := r.ObserverClient.GetTssAddressByFinalizedHeight(
+			r.Ctx,
+			&observertypes.QueryGetTssAddressByFinalizedHeightRequest{
+				FinalizedZetaHeight: tssAddress.FinalizedZetaHeight,
+			},
+		)
+		if err != nil {
+			continue
+		}
+
+		tssBal, err := r.EVMClient.BalanceAt(r.Ctx, common.HexToAddress(evmAddress.Eth), nil)
+		if err != nil {
+			continue
+		}
+		tssTotalBalance.Add(tssTotalBalance, tssBal)
+	}
+
 	zrc20Supply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
-	if tssBal.Cmp(zrc20Supply) < 0 {
-		return fmt.Errorf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply)
+	if tssTotalBalance.Cmp(zrc20Supply) < 0 {
+		return fmt.Errorf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssTotalBalance, zrc20Supply)
 	}
-	r.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssBal, zrc20Supply)
+	r.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssTotalBalance, zrc20Supply)
 	return nil
 }
 
 func (r *E2ERunner) CheckBtcTSSBalance() error {
-	utxos, err := r.BtcRPCClient.ListUnspent()
+	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
 	}
-	var btcBalance float64
-	for _, utxo := range utxos {
-		if utxo.Address == r.BTCTSSAddress.EncodeAddress() {
-			btcBalance += utxo.Amount
+
+	tssTotalBalance := float64(0)
+
+	for _, tssAddress := range allTssAddress.TssList {
+		btcTssAddress, err := zetacrypto.GetTssAddrBTC(tssAddress.TssPubkey, r.BitcoinParams)
+		if err != nil {
+			continue
+		}
+		utxos, err := r.BtcRPCClient.ListUnspent()
+		if err != nil {
+			continue
+		}
+		for _, utxo := range utxos {
+			if utxo.Address == btcTssAddress {
+				tssTotalBalance += utxo.Amount
+			}
 		}
 	}
 
@@ -65,19 +102,19 @@ func (r *E2ERunner) CheckBtcTSSBalance() error {
 
 	// check the balance in TSS is greater than the total supply on ZetaChain
 	// the amount minted to initialize the pool is subtracted from the total supply
-	// #nosec G115 test - always in range
-	if int64(btcBalance*1e8) < (zrc20Supply.Int64() - 10000000) {
-		// #nosec G115 test - always in range
+	// #nosec G701 test - always in range
+	if int64(tssTotalBalance*1e8) < (zrc20Supply.Int64() - 10000000) {
+		// #nosec G701 test - always in range
 		return fmt.Errorf(
 			"BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d)",
-			int64(btcBalance*1e8),
+			int64(tssTotalBalance*1e8),
 			zrc20Supply.Int64()-10000000,
 		)
 	}
 	// #nosec G115 test - always in range
 	r.Logger.Info(
 		"BTC: Balance (%d) >= ZRC20 TotalSupply (%d)",
-		int64(btcBalance*1e8),
+		int64(tssTotalBalance*1e8),
 		zrc20Supply.Int64()-10000000,
 	)
 

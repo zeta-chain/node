@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
@@ -19,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const (
@@ -34,6 +36,7 @@ const (
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
 	flagSkipSetup         = "skip-setup"
+	flagTestTSSMigration  = "test-tss-migration"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 )
@@ -66,6 +69,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
+	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 
 	return cmd
 }
@@ -86,6 +90,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
 		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -151,7 +156,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
 	if !skipSetup {
-		waitKeygenHeight(ctx, deployerRunner.CctxClient, logger)
+		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10)
 	}
 
 	// query and set the TSS
@@ -201,6 +206,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// run tests
 	var eg errgroup.Group
+
 	if !skipRegular {
 		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
@@ -275,6 +281,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
+
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestRateLimiterName,
@@ -313,7 +320,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
-	logger.Print("⏳ e2e tests passed, checking tx priority")
+	logger.Print("⏳ e2e tests passed,checking tx priority")
 	monitorPriorityCancel()
 	if err := <-txPriorityErrCh; err != nil {
 		logger.Print("❌ %v", err)
@@ -322,6 +329,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	if testTSSMigration {
+		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
+	}
 
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
@@ -341,10 +352,24 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 func waitKeygenHeight(
 	ctx context.Context,
 	cctxClient crosschaintypes.QueryClient,
+	observerClient observertypes.QueryClient,
 	logger *runner.Logger,
+	bufferBlocks int64,
 ) {
 	// wait for keygen to be completed
-	keygenHeight := int64(35)
+	resp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
+	if err != nil {
+		logger.Error("observerClient.Keygen error: %s", err)
+		return
+	}
+	if resp.Keygen == nil {
+		logger.Error("observerClient.Keygen keygen is nil")
+		return
+	}
+	if resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen {
+		return
+	}
+	keygenHeight := resp.Keygen.BlockNumber
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(2 * time.Second)
@@ -353,10 +378,52 @@ func waitKeygenHeight(
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			continue
 		}
-		if response.Height >= keygenHeight {
+		if response.Height >= keygenHeight+bufferBlocks {
 			break
 		}
 		logger.Info("Last ZetaHeight: %d", response.Height)
+	}
+}
+
+func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
+	migrationStartTime := time.Now()
+	logger.Print("🏁 starting tss migration")
+
+	response, err := deployerRunner.CctxClient.LastZetaHeight(
+		deployerRunner.Ctx,
+		&crosschaintypes.QueryLastZetaHeightRequest{},
+	)
+	require.NoError(deployerRunner, err)
+	err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
+	require.NoError(deployerRunner, err)
+
+	// Generate new TSS
+	waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+
+	// migration test is a blocking thread, we cannot run other tests in parallel
+	// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
+	// The necessary restarts are done by the zetaclient supervisor
+	fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
+
+	if err := fn(); err != nil {
+		logger.Print("❌ %v", err)
+		logger.Print("❌ tss migration failed")
+		os.Exit(1)
+	}
+
+	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
+	logger.Print("🏁 starting post migration tests")
+
+	tests := []string{
+		e2etests.TestBitcoinWithdrawSegWitName,
+		e2etests.TestEtherWithdrawName,
+	}
+	fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
+
+	if err := fn(); err != nil {
+		logger.Print("❌ %v", err)
+		logger.Print("❌ post migration tests failed")
+		os.Exit(1)
 	}
 }
 
