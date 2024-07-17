@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -390,11 +389,18 @@ func (ob *Observer) checkConfirmedTx(
 	if err != nil {
 		log.Error().
 			Err(err).
-			Msgf("confirmTxByHash: error getting transaction for outbound %s chain %d", txHash, ob.Chain().ChainId)
+			Str("function", "confirmTxByHash").
+			Str("outboundTxHash", txHash).
+			Int64("chainID", ob.Chain().ChainId).
+			Msg("error getting transaction for outbound")
 		return nil, nil, false
 	}
 	if transaction == nil { // should not happen
-		log.Error().Msgf("confirmTxByHash: transaction is nil for txHash %s nonce %d", txHash, nonce)
+		log.Error().
+			Str("function", "confirmTxByHash").
+			Str("outboundTxHash", txHash).
+			Uint64("nonce", nonce).
+			Msg("transaction is nil for txHash")
 		return nil, nil, false
 	}
 
@@ -404,17 +410,51 @@ func (ob *Observer) checkConfirmedTx(
 	if err != nil {
 		log.Error().
 			Err(err).
-			Msgf("confirmTxByHash: local recovery of sender address failed for outbound %s chain %d", transaction.Hash().Hex(), ob.Chain().ChainId)
+			Str("function", "confirmTxByHash").
+			Str("outboundTxHash", transaction.Hash().Hex()).
+			Int64("chainID", ob.Chain().ChainId).
+			Msg("local recovery of sender address failed for outbound")
 		return nil, nil, false
 	}
 	if from != ob.TSS().EVMAddress() { // must be TSS address
-		log.Error().Msgf("confirmTxByHash: sender %s for outbound %s chain %d is not TSS address %s",
-			from.Hex(), transaction.Hash().Hex(), ob.Chain().ChainId, ob.TSS().EVMAddress().Hex())
-		return nil, nil, false
+		// If from is not TSS address, check if it is one of the previous TSS addresses We can still try to confirm a tx which was broadcast by an old TSS
+		// This is to handle situations where the outbound has already been broad-casted by an older TSS address and the zetacore is waiting for the all the required block confirmations
+		// to go through before marking the cctx into a finalized state
+
+		// TODO : improve this logic to verify that the correct TSS address is the from address.
+		// https://github.com/zeta-chain/node/issues/2487
+		log.Info().
+			Str("function", "confirmTxByHash").
+			Str("sender", from.Hex()).
+			Str("outboundTxHash", transaction.Hash().Hex()).
+			Int64("chainID", ob.Chain().ChainId).
+			Str("currentTSSAddress", ob.TSS().EVMAddress().Hex()).
+			Msg("sender is not current TSS address")
+		addressList := ob.TSS().EVMAddressList()
+		isOldTssAddress := false
+		for _, addr := range addressList {
+			if from == addr {
+				isOldTssAddress = true
+			}
+		}
+		if !isOldTssAddress {
+			log.Error().
+				Str("function", "confirmTxByHash").
+				Str("sender", from.Hex()).
+				Str("outboundTxHash", transaction.Hash().Hex()).
+				Int64("chainID", ob.Chain().ChainId).
+				Str("currentTSSAddress", ob.TSS().EVMAddress().Hex()).
+				Msg("sender is not current or old TSS address")
+			return nil, nil, false
+		}
 	}
 	if transaction.Nonce() != nonce { // must match cctx nonce
 		log.Error().
-			Msgf("confirmTxByHash: outbound %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
+			Str("function", "confirmTxByHash").
+			Str("outboundTxHash", txHash).
+			Uint64("wantedNonce", nonce).
+			Uint64("gotTxNonce", transaction.Nonce()).
+			Msg("outbound nonce mismatch")
 		return nil, nil, false
 	}
 
@@ -427,21 +467,41 @@ func (ob *Observer) checkConfirmedTx(
 	// query receipt
 	receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(txHash))
 	if err != nil {
-		if err != ethereum.NotFound {
-			log.Warn().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)
-		}
+		log.Error().
+			Err(err).
+			Str("function", "confirmTxByHash").
+			Str("outboundTxHash", txHash).
+			Uint64("nonce", nonce).
+			Msg("transactionReceipt error")
 		return nil, nil, false
 	}
 	if receipt == nil { // should not happen
-		log.Error().Msgf("confirmTxByHash: receipt is nil for txHash %s nonce %d", txHash, nonce)
+		log.Error().
+			Str("function", "confirmTxByHash").
+			Str("outboundTxHash", txHash).
+			Uint64("nonce", nonce).
+			Msg("receipt is nil")
 		return nil, nil, false
 	}
-
+	ob.LastBlock()
 	// check confirmations
-	if !ob.HasEnoughConfirmations(receipt, ob.LastBlock()) {
+	lastHeight, err := ob.evmClient.BlockNumber(ctx)
+	if err != nil {
+		log.Error().
+			Str("function", "confirmTxByHash").
+			Err(err).
+			Int64("chainID", ob.GetChainParams().ChainId).
+			Msg("error getting block number for chain")
+		return nil, nil, false
+	}
+	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
 		log.Debug().
-			Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
-				txHash, nonce, receipt.BlockNumber, ob.LastBlock())
+			Str("function", "confirmTxByHash").
+			Str("txHash", txHash).
+			Uint64("nonce", nonce).
+			Uint64("receiptBlock", receipt.BlockNumber.Uint64()).
+			Uint64("currentBlock", lastHeight).
+			Msg("txHash included but not confirmed")
 		return nil, nil, false
 	}
 
@@ -449,7 +509,13 @@ func (ob *Observer) checkConfirmedTx(
 	// Note: a guard for false BlockNumber in receipt. The blob-carrying tx won't come here
 	err = ob.CheckTxInclusion(transaction, receipt)
 	if err != nil {
-		log.Error().Err(err).Msgf("confirmTxByHash: checkTxInclusion error for txHash %s nonce %d", txHash, nonce)
+		log.Error().
+			Err(err).
+			Str("function", "confirmTxByHash").
+			Str("errorContext", "checkTxInclusion").
+			Str("txHash", txHash).
+			Uint64("nonce", nonce).
+			Msg("checkTxInclusion error")
 		return nil, nil, false
 	}
 

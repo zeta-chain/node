@@ -781,7 +781,6 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
 	}
-
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
 		if ethcommon.HexToAddress(tx.To) == ob.TSS().EVMAddress() {

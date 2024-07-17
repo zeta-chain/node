@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -24,6 +25,7 @@ import (
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
@@ -51,6 +53,29 @@ func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
 		return utxosFiltered, nil
 	}
 
+	return utxos, nil
+}
+
+// GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address.
+// Top 20 utxos should be used for TSS migration, as we can only migrate at max 20 utxos at a time.
+func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, error) {
+	// query UTXOs from node
+	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(
+		0,
+		9999999,
+		[]btcutil.Address{r.BTCTSSAddress},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	sort.SliceStable(utxos, func(i, j int) bool {
+		return utxos[i].Amount < utxos[j].Amount
+	})
+
+	if len(utxos) > signer.MaxNoOfInputsPerTx {
+		utxos = utxos[:signer.MaxNoOfInputsPerTx]
+	}
 	return utxos, nil
 }
 
@@ -185,7 +210,7 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		scriptPubkeys[i] = utxo.ScriptPubKey
 	}
 
-	feeSats := btcutil.Amount(0.0001 * btcutil.SatoshiPerBitcoin)
+	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
 	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
 	change := inputSats - feeSats - amountSats
 
