@@ -54,8 +54,7 @@ const (
 	/*
 	 Solana tests
 	*/
-	TestSolanaIntializeGatewayName = "solana_initialize_gateway"
-	TestSolanaDepositName          = "solana_deposit"
+	TestSolanaDepositName = "solana_deposit"
 
 	/*
 	 Bitcoin tests
@@ -333,14 +332,8 @@ var AllE2ETests = []runner.E2ETest{
 	 Solana tests
 	*/
 	runner.NewE2ETest(
-		TestSolanaIntializeGatewayName,
-		"initialize Solana gateway",
-		[]runner.ArgDefinition{},
-		TestSolanaInitializeGateway,
-	),
-	runner.NewE2ETest(
 		TestSolanaDepositName,
-		"deposit Sol into ZEVM",
+		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "amount in SOL", DefaultValue: "0.1"},
 		},

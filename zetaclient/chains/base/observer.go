@@ -213,15 +213,11 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 
 // LastTxScanned get last transaction scanned.
 func (ob *Observer) LastTxScanned() string {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
 	return ob.lastTxScanned
 }
 
 // WithLastTxScanned set last transaction scanned.
 func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
 	ob.lastTxScanned = txHash
 	return ob
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
@@ -22,7 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -65,14 +63,6 @@ func (r *E2ERunner) SetTSSAddresses() error {
 	r.BTCTSSAddress = btcTSSAddress
 
 	return nil
-}
-
-// SetSolanaContracts set Solana contracts
-func (r *E2ERunner) SetSolanaContracts() {
-	r.Logger.Print("⚙️ setting up Solana contracts")
-
-	// set Solana contracts
-	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
 }
 
 // SetZEVMContracts set contracts for the ZEVM

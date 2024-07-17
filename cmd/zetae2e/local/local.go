@@ -171,7 +171,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
-		deployerRunner.SetSolanaContracts()
+		deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 		noError(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(10000)
@@ -234,7 +234,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 		solanaTests := []string{
-			e2etests.TestSolanaIntializeGatewayName,
 			e2etests.TestSolanaDepositName,
 		}
 

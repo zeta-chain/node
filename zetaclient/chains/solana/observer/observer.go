@@ -14,7 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-var _ interfaces.ChainObserver = &Observer{}
+var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Observer is the observer for the Solana chain
 type Observer struct {
