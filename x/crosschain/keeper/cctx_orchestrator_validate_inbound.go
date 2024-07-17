@@ -3,6 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -17,6 +19,11 @@ func (k Keeper) ValidateInbound(
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
+	}
+
+	err := k.CheckIfTSSMigrationTransfer(ctx, msg)
+	if err != nil {
+		return nil, err
 	}
 
 	// Do not process if inbound is disabled
@@ -47,4 +54,50 @@ func (k Keeper) ValidateInbound(
 	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 
 	return &cctx, nil
+}
+
+// CheckIfTSSMigrationTransfer checks if the sender is a TSS address and returns an error if it is.
+// If the sender is an older TSS address, this means that it is a migration transfer, and we do not need to treat this as a deposit and process the CCTX
+func (k Keeper) CheckIfTSSMigrationTransfer(ctx sdk.Context, msg *types.MsgVoteInbound) error {
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
+
+	historicalTSSList := k.zetaObserverKeeper.GetAllTSS(ctx)
+	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
+	if !found {
+		return observertypes.ErrSupportedChains.Wrapf("chain not found for chainID %d", msg.SenderChainId)
+	}
+
+	// the check is only necessary if the inbound is validated from observers from a connected chain
+	if chain.CctxGateway != chains.CCTXGateway_observers {
+		return nil
+	}
+
+	switch {
+	case chains.IsEVMChain(chain.ChainId, additionalChains):
+		for _, tss := range historicalTSSList {
+			ethTssAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
+			if err != nil {
+				continue
+			}
+			if ethTssAddress.Hex() == msg.Sender {
+				return types.ErrMigrationFromOldTss
+			}
+		}
+	case chains.IsBitcoinChain(chain.ChainId, additionalChains):
+		bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
+		if err != nil {
+			return err
+		}
+		for _, tss := range historicalTSSList {
+			btcTssAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+			if err != nil {
+				continue
+			}
+			if btcTssAddress == msg.Sender {
+				return types.ErrMigrationFromOldTss
+			}
+		}
+	}
+
+	return nil
 }

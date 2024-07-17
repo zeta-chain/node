@@ -184,6 +184,11 @@ func (ob *Observer) IsOutboundProcessed(
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutbound()
 	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
+		ob.logger.Outbound.Debug().
+			Int64("currentConfirmations", res.Confirmations).
+			Int64("requiredConfirmations", ob.ConfirmationsThreshold(amountInSat)).
+			Msg("IsOutboundProcessed: outbound not confirmed yet")
+
 		return true, false, nil
 	}
 
@@ -467,7 +472,6 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	res, found := ob.includedTxResults[outboundID]
-
 	if !found { // not found.
 		ob.includedTxHashes[txHash] = true
 		ob.includedTxResults[outboundID] = getTxResult // include new outbound and enforce rigid 1-to-1 mapping: nonce <===> txHash
@@ -476,7 +480,7 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		}
 		ob.logger.Outbound.Info().
 			Msgf("setIncludedTx: included new bitcoin outbound %s outboundID %s pending nonce %d", txHash, outboundID, ob.pendingNonce)
-	} else if txHash == res.TxID { // found same hash.
+	} else if txHash == res.TxID { // found same hash
 		ob.includedTxResults[outboundID] = getTxResult // update tx result as confirmations may increase
 		if getTxResult.Confirmations > res.Confirmations {
 			ob.logger.Outbound.Info().Msgf("setIncludedTx: bitcoin outbound %s got confirmations %d", txHash, getTxResult.Confirmations)

@@ -214,7 +214,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 
 		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
 		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZRC20WithdrawToBTC(t).Logs[3])
@@ -239,7 +240,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
 		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
@@ -378,7 +380,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		k.RemoveGasPrice(ctx, strconv.FormatInt(chainID, 10))
 
@@ -400,7 +403,8 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
 			Index:   chain.ChainName.String(),
@@ -472,7 +476,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
@@ -604,7 +609,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
@@ -633,7 +639,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
@@ -673,7 +680,8 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 
 		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
 		block := sample.GetValidZRC20WithdrawToBTC(t)
@@ -699,7 +707,8 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 
 		chain := chains.Ethereum
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		admin := keepertest.SetAdminPolicies(ctx, zk.AuthorityKeeper)
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
@@ -799,7 +808,8 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 
 		chain := chains.BitcoinMainnet
 		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
 		block := sample.GetValidZRC20WithdrawToBTC(t)

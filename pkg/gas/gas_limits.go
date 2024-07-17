@@ -7,7 +7,8 @@ import (
 
 const (
 	// EVMSend is the gas limit required to transfer tokens on an EVM based chain
-	EVMSend = 21000
+	EVMSend = 21_000
+
 	// TODO: Move gas limits from zeta-client to this file
 	// https://github.com/zeta-chain/node/issues/1606
 )

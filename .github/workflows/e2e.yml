@@ -43,6 +43,10 @@ on:
         type: boolean
         required: false
         default: false
+      tss-migration-test:
+        type: boolean
+        required: false
+        default: false
 
 concurrency: 
   group: e2e-${{ github.head_ref || github.sha }}
@@ -61,13 +65,14 @@ jobs:
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
       PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
+      TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
+
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
         uses: actions/github-script@v7
         with:
           script: |
-            console.log(context);
             if (context.eventName === 'pull_request') {
               const { data: pr } = await github.rest.pulls.get({
                 owner: context.repo.owner,
@@ -83,6 +88,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
+              core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
             } else if (context.eventName === 'merge_group') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
@@ -111,6 +117,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', context.payload.inputs['admin-test']);
               core.setOutput('PERFORMANCE_TESTS', context.payload.inputs['performance-test']);
               core.setOutput('STATEFUL_DATA_TESTS', context.payload.inputs['stateful-data-test']);
+              core.setOutput('TSS_MIGRATION_TESTS', context.payload.inputs['tss-migration-test']);
             }
 
   e2e:
@@ -140,6 +147,9 @@ jobs:
           - make-target: "start-e2e-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
+          - make-target: "start-tss-migration-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
@@ -150,7 +160,7 @@ jobs:
   # this allows you to set a required status check
   e2e-ok:
     runs-on: ubuntu-22.04
-    needs: 
+    needs:
       - matrix-conditionals
       - e2e
     if: always()
