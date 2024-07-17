@@ -263,6 +263,11 @@ start-tss-migration-test: zetanode
 	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-solana-test: zetanode solana
+	@echo "--> Starting solana test"
+	export E2E_ARGS="--skip-regular --test-solana" && \
+	cd contrib/localnet/ && $(DOCKER) compose --profile solana -f docker-compose.yml up -d
+
 ###############################################################################
 ###                         Upgrade Tests              						###
 ###############################################################################
