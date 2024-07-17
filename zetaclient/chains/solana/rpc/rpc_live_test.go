@@ -14,7 +14,7 @@ import (
 // Test_SolanaRPCLive is a phony test to run all live tests
 func Test_SolanaRPCLive(t *testing.T) {
 	// LiveTest_GetFirstSignatureForAddress(t)
-	LiveTest_GetSignaturesForAddressUntil(t)
+	// LiveTest_GetSignaturesForAddressUntil(t)
 }
 
 func LiveTest_GetFirstSignatureForAddress(t *testing.T) {

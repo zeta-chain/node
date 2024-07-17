@@ -22,6 +22,9 @@ var (
 
 	// local btc chain ID
 	btcChainID = getValidBtcChainID()
+
+	// local solana chain ID
+	solanaChainID = getValidSolanaChainID()
 )
 
 // createTestRateLimiterFlags creates a custom rate limiter flags
@@ -457,6 +460,12 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			setCctxsInKeeper(ctx, *k, zk, tss, tt.btcMinedCctxs)
 			setCctxsInKeeper(ctx, *k, zk, tss, tt.btcPendingCctxs)
 			zk.ObserverKeeper.SetPendingNonces(ctx, tt.btcPendingNonces)
+
+			// Set Solana chain pending nonce as zeros (to avoid error on ListPendingCctxWithinRateLimit)
+			zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+				ChainId: solanaChainID,
+				Tss:     tss.TssPubkey,
+			})
 
 			// Set current block height
 			ctx = ctx.WithBlockHeight(tt.currentHeight)
@@ -1014,6 +1023,12 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			setCctxsInKeeper(ctx, *k, zk, tss, tt.btcMinedCctxs)
 			setCctxsInKeeper(ctx, *k, zk, tss, tt.btcPendingCctxs)
 			zk.ObserverKeeper.SetPendingNonces(ctx, tt.btcPendingNonces)
+
+			// Set Solana chain pending nonce as zeros (to avoid error on ListPendingCctxWithinRateLimit)
+			zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+				ChainId: solanaChainID,
+				Tss:     tss.TssPubkey,
+			})
 
 			// Set current block height
 			ctx = ctx.WithBlockHeight(tt.currentHeight)

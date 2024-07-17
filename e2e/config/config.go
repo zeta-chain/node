@@ -207,6 +207,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserZetaTest,
 		a.UserZEVMMPTest,
 		a.UserBitcoin,
+		a.UserSolana,
 		a.UserEther,
 		a.UserMisc,
 		a.UserAdmin,
