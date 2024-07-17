@@ -107,8 +107,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, sigString)
 			}
 
-			// filter inbound event and vote
-			err = ob.FilterInboundEventAndVote(ctx, txResult)
+			// filter inbound events and vote
+			err = ob.FilterInboundEventsAndVote(ctx, txResult)
 			if err != nil {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
@@ -135,16 +135,16 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
-// FilterInboundEventAndVote filters inbound event from a txResult and post a vote.
-func (ob *Observer) FilterInboundEventAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
-	// filter one single inbound event from txResult
-	event, err := ob.FilterInboundEvent(txResult)
+// FilterInboundEventsAndVote filters inbound events from a txResult and post a vote.
+func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
+	// filter inbound events from txResult
+	events, err := ob.FilterInboundEvents(txResult)
 	if err != nil {
 		return errors.Wrapf(err, "error FilterInboundEvent")
 	}
 
-	// build inbound vote message from event and post to zetacore
-	if event != nil {
+	// build inbound vote message from events and post to zetacore
+	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
 			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
@@ -157,9 +157,12 @@ func (ob *Observer) FilterInboundEventAndVote(ctx context.Context, txResult *rpc
 	return nil
 }
 
-// FilterInboundEvent filters one single inbound event from a tx result.
-// The event can be one of [withdraw, withdraw_spl_token].
-func (ob *Observer) FilterInboundEvent(txResult *rpc.GetTransactionResult) (*clienttypes.InboundEvent, error) {
+// FilterInboundEvents filters inbound events from a tx result.
+// Note: for consistency with EVM chains, this method
+//   - takes at one event (the first) per token (SOL or SPL) per transaction.
+//   - takes at most two events (one SOL + one SPL) per transaction.
+//   - ignores exceeding events.
+func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*clienttypes.InboundEvent, error) {
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -170,6 +173,11 @@ func (ob *Observer) FilterInboundEvent(txResult *rpc.GetTransactionResult) (*cli
 	if len(tx.Message.Instructions) <= 0 {
 		return nil, nil
 	}
+
+	// create event array to collect all events in the transaction
+	seenDeposit := false
+	seenDepositSPL := false
+	events := make([]*clienttypes.InboundEvent, 0)
 
 	// loop through instruction list to filter the 1st valid event
 	for i, instruction := range tx.Message.Instructions {
@@ -187,18 +195,40 @@ func (ob *Observer) FilterInboundEvent(txResult *rpc.GetTransactionResult) (*cli
 			continue
 		}
 
-		// try parsing the instruction as a 'deposit'
-		event, err := ob.ParseInboundAsDeposit(tx, i, txResult.Slot)
-		if err != nil {
-			return nil, errors.Wrap(err, "error ParseInboundAsDeposit")
+		// try parsing the instruction as a 'deposit' if not seen yet
+		if !seenDeposit {
+			event, err := ob.ParseInboundAsDeposit(tx, i, txResult.Slot)
+			if err != nil {
+				return nil, errors.Wrap(err, "error ParseInboundAsDeposit")
+			} else if event != nil {
+				seenDeposit = true
+				events = append(events, event)
+				ob.Logger().Inbound.Info().
+					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+			}
+		} else {
+			ob.Logger().Inbound.Warn().
+				Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
 		}
 
-		// TODO: try parsing the instruction as 'deposit_spl_token'
-		return event, nil
+		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
+		if !seenDepositSPL {
+			event, err := ob.ParseInboundAsDepositSPL(tx, i, txResult.Slot)
+			if err != nil {
+				return nil, errors.Wrap(err, "error ParseInboundAsDepositSPL")
+			} else if event != nil {
+				seenDepositSPL = true
+				events = append(events, event)
+				ob.Logger().Inbound.Info().
+					Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+			}
+		} else {
+			ob.Logger().Inbound.Warn().
+				Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+		}
 	}
 
-	// no event found for this signature
-	return nil, nil
+	return events, nil
 }
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
@@ -233,8 +263,8 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 	)
 }
 
-// ParseInboundAsDeposit tries to parse an instruction as a deposit.
-// It returns nil if the instruction can't be parsed as a deposit.
+// ParseInboundAsDeposit tries to parse an instruction as a 'deposit'.
+// It returns nil if the instruction can't be parsed as a 'deposit'.
 func (ob *Observer) ParseInboundAsDeposit(
 	tx *solana.Transaction,
 	instructionIndex int,
@@ -269,7 +299,7 @@ func (ob *Observer) ParseInboundAsDeposit(
 		TxOrigin:      sender,
 		Amount:        inst.Amount,
 		Memo:          inst.Memo,
-		BlockNumber:   slot, // instead of using block, we use slot for Solana for better indexing
+		BlockNumber:   slot, // instead of using block, Solana explorer uses slot for indexing
 		TxHash:        tx.Signatures[0].String(),
 		Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
 		CoinType:      coin.CoinType_Gas,
@@ -277,6 +307,17 @@ func (ob *Observer) ParseInboundAsDeposit(
 	}
 
 	return event, nil
+}
+
+// ParseInboundAsDepositSPL tries to parse an instruction as a 'deposit_spl_token'.
+// It returns nil if the instruction can't be parsed as a 'deposit_spl_token'.
+func (ob *Observer) ParseInboundAsDepositSPL(
+	_ *solana.Transaction,
+	_ int,
+	_ uint64,
+) (*clienttypes.InboundEvent, error) {
+	// not implemented yet
+	return nil, nil
 }
 
 // GetSignerDeposit returns the signer address of the deposit instruction

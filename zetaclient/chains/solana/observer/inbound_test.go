@@ -40,13 +40,13 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
-	t.Run("should filter inbound event vote", func(t *testing.T) {
-		err := ob.FilterInboundEventAndVote(context.TODO(), txResult)
+	t.Run("should filter inbound events and vote", func(t *testing.T) {
+		err := ob.FilterInboundEventsAndVote(context.TODO(), txResult)
 		require.NoError(t, err)
 	})
 }
 
-func Test_FilterInboundEvent(t *testing.T) {
+func Test_FilterInboundEvents(t *testing.T) {
 	// load archived inbound deposit tx result
 	// https://explorer.solana.com/tx/5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk?cluster=devnet
 	txHash := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
@@ -77,11 +77,12 @@ func Test_FilterInboundEvent(t *testing.T) {
 	}
 
 	t.Run("should filter inbound event deposit SOL", func(t *testing.T) {
-		event, err := ob.FilterInboundEvent(txResult)
+		events, err := ob.FilterInboundEvents(txResult)
 		require.NoError(t, err)
 
 		// check result
-		require.EqualValues(t, eventExpected, event)
+		require.Len(t, events, 1)
+		require.EqualValues(t, eventExpected, events[0])
 	})
 }
 

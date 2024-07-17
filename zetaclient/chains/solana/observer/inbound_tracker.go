@@ -68,8 +68,8 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
 		}
 
-		// filter inbound event and vote
-		err = ob.FilterInboundEventAndVote(ctx, txResult)
+		// filter inbound events and vote
+		err = ob.FilterInboundEventsAndVote(ctx, txResult)
 		if err != nil {
 			return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, signature)
 		}
