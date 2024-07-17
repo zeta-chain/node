@@ -73,7 +73,7 @@ message MsgDeployFungibleCoinZRC20Response { string address = 1; }
 
 message MsgRemoveForeignCoin {
   string creator = 1;
-  string name = 2;
+  string zrc20_address = 2;
 }
 
 message MsgRemoveForeignCoinResponse {}
