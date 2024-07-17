@@ -100,15 +100,6 @@ jobs:
           name: ${{ inputs.make-target }}-docker-logs
           path: /tmp/logs.txt
 
-      - name: Notify Slack on Failure
-        if: failure() && (github.event_name == 'push' || github.event_name == 'schedule')
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
-
       - name: Stop Private Network
         if: always()
         run: |
