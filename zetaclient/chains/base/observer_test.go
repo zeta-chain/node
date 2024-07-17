@@ -431,7 +431,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 		ob.WriteLastTxScannedToDB(lastTx)
 
 		// read last tx scanned
-		ob.LoadLastTxScanned(log.Logger)
+		ob.LoadLastTxScanned()
 		require.NoError(t, err)
 		require.EqualValues(t, lastTx, ob.LastTxScanned())
 	})
@@ -443,7 +443,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 		require.NoError(t, err)
 
 		// read last tx scanned
-		ob.LoadLastTxScanned(log.Logger)
+		ob.LoadLastTxScanned()
 		require.NoError(t, err)
 		require.Empty(t, ob.LastTxScanned())
 	})
@@ -462,7 +462,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 		os.Setenv(envvar, otherTx)
 
 		// read last block scanned
-		ob.LoadLastTxScanned(log.Logger)
+		ob.LoadLastTxScanned()
 		require.NoError(t, err)
 		require.EqualValues(t, otherTx, ob.LastTxScanned())
 	})
@@ -530,11 +530,13 @@ func TestPostVoteInbound(t *testing.T) {
 
 		// create mock zetacore client
 		zetacoreClient := mocks.NewZetacoreClient(t)
+		zetacoreClient.WithPostVoteInbound("", "sampleBallotIndex")
 		ob = ob.WithZetacoreClient(zetacoreClient)
 
 		// post vote inbound
 		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
-		_, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
+		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
+		require.Equal(t, "sampleBallotIndex", ballot)
 	})
 }

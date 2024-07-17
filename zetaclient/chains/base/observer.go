@@ -402,15 +402,14 @@ func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 
 // LoadLastTxScanned loads last scanned tx from environment variable or from database.
 // The last scanned tx is the tx hash from which the observer should continue scanning.
-func (ob *Observer) LoadLastTxScanned(logger zerolog.Logger) {
+func (ob *Observer) LoadLastTxScanned() {
 	// get environment variable
 	envvar := EnvVarLatestTxByChain(ob.chain)
 	scanFromTx := os.Getenv(envvar)
 
 	// load from environment variable if set
 	if scanFromTx != "" {
-		logger.Info().
-			Msgf("LoadLastTxScanned: envvar %s is set; scan from  tx %s", envvar, scanFromTx)
+		ob.logger.Chain.Info().Msgf("LoadLastTxScanned: envvar %s is set; scan from  tx %s", envvar, scanFromTx)
 		ob.WithLastTxScanned(scanFromTx)
 		return
 	}
@@ -419,7 +418,7 @@ func (ob *Observer) LoadLastTxScanned(logger zerolog.Logger) {
 	txHash, err := ob.ReadLastTxScannedFromDB()
 	if err != nil {
 		// If not found, let the concrete chain observer decide where to start
-		logger.Info().Msgf("LoadLastTxScanned: last scanned tx not found in db for chain %d", ob.chain.ChainId)
+		ob.logger.Chain.Info().Msgf("LoadLastTxScanned: last scanned tx not found in db for chain %d", ob.chain.ChainId)
 		return
 	}
 	ob.WithLastTxScanned(txHash)

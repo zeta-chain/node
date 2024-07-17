@@ -18,7 +18,7 @@ func (r *E2ERunner) SetupSolanaAccount() {
 
 // SetSolanaAddress imports the deployer's private key
 func (r *E2ERunner) SetSolanaAddress() {
-	privateKey := solana.MustPrivateKeyFromBase58(r.Account.RawBase58PrivateKey.String())
+	privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 	r.SolanaDeployerAddress = privateKey.PublicKey()
 
 	r.Logger.Info("SolanaDeployerAddress: %s", r.SolanaDeployerAddress)

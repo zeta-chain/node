@@ -102,6 +102,8 @@ type E2ERunner struct {
 	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
 	BTCZRC20             *zrc20.ZRC20
+	SOLZRC20Addr         ethcommon.Address
+	SOLZRC20             *zrc20.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
@@ -197,6 +199,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.ERC20ZRC20Addr = other.ERC20ZRC20Addr
 	r.ETHZRC20Addr = other.ETHZRC20Addr
 	r.BTCZRC20Addr = other.BTCZRC20Addr
+	r.SOLZRC20Addr = other.SOLZRC20Addr
 	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
@@ -235,6 +238,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 	r.BTCZRC20, err = zrc20.NewZRC20(r.BTCZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.SOLZRC20, err = zrc20.NewZRC20(r.SOLZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -292,6 +299,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ETHZRC20:       %s", r.ETHZRC20Addr.Hex())
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
+	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())
@@ -299,15 +307,15 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
 	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
-	r.Logger.Print("TestDappZEVM:       %s", r.ZevmTestDAppAddr.Hex())
+	r.Logger.Print("TestDappZEVM:   %s", r.ZevmTestDAppAddr.Hex())
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
 	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
 	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
-	r.Logger.Print("ERC20:      %s", r.ERC20Addr.Hex())
-	r.Logger.Print("TestDappEVM:       %s", r.EvmTestDAppAddr.Hex())
+	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
+	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf

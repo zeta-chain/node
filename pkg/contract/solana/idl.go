@@ -1,4 +1,4 @@
-package contract
+package solana
 
 type IDL struct {
 	Address      string        `json:"address"`

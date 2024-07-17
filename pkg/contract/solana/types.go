@@ -1,4 +1,4 @@
-package contract
+package solana
 
 // PdaInfo represents the PDA for the gateway program
 type PdaInfo struct {

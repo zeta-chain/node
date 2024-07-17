@@ -381,6 +381,7 @@ func (c *Client) UpdateZetacoreContext(
 
 	newEVMParams := make(map[int64]*observertypes.ChainParams)
 	var newBTCParams *observertypes.ChainParams
+	var newSolanaParams *observertypes.ChainParams
 
 	// check and update chain params for each chain
 	for _, chainParam := range chainParams {
@@ -391,6 +392,8 @@ func (c *Client) UpdateZetacoreContext(
 		}
 		if chains.IsBitcoinChain(chainParam.ChainId, additionalChains) {
 			newBTCParams = chainParam
+		} else if chains.IsSolanaChain(chainParam.ChainId, additionalChains) {
+			newSolanaParams = chainParam
 		} else if chains.IsEVMChain(chainParam.ChainId, additionalChains) {
 			newEVMParams[chainParam.ChainId] = chainParam
 		}
@@ -436,6 +439,7 @@ func (c *Client) UpdateZetacoreContext(
 		newChains,
 		newEVMParams,
 		newBTCParams,
+		newSolanaParams,
 		tssPubKey,
 		crosschainFlags,
 		additionalChains,

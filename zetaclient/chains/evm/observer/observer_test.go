@@ -62,6 +62,7 @@ func getZetacoreContext(
 		[]chains.Chain{evmChain},
 		evmChainParamsMap,
 		nil,
+		nil,
 		"",
 		*sample.CrosschainFlags(),
 		[]chains.Chain{},

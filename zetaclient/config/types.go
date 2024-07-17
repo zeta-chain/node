@@ -82,6 +82,7 @@ type Config struct {
 	HsmMode             bool           `json:"HsmMode"`
 	HsmHotKey           string         `json:"HsmHotKey"`
 
+	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   BTCConfig           `json:"BitcoinConfig"`
 	SolanaConfig    SolanaConfig        `json:"SolanaConfig"`
@@ -123,11 +124,10 @@ func (c Config) GetBTCConfig() (BTCConfig, bool) {
 
 // GetSolanaConfig returns the Solana config
 func (c Config) GetSolanaConfig() (SolanaConfig, bool) {
-	// FIXME_SOLANA: config this
-	solConfig := SolanaConfig{
-		Endpoint: "http://solana:8899",
-	}
-	return solConfig, solConfig != (SolanaConfig{})
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.SolanaConfig, c.SolanaConfig != (SolanaConfig{})
 }
 
 // String returns the string representation of the config

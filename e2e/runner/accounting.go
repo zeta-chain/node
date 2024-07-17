@@ -8,6 +8,16 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/stretchr/testify/require"
+)
+
+const (
+	// ZRC20InitialSupply is the initial supply of the ZRC20 token
+	ZRC20SOLInitialSupply = 100000000
+
+	// SolanaPDAInitialBalance is the initial balance (in lamports) of the gateway PDA account
+	SolanaPDAInitialBalance = 1447680
 )
 
 type Amount struct {
@@ -75,10 +85,44 @@ func (r *E2ERunner) CheckBtcTSSBalance() error {
 		)
 	}
 	// #nosec G115 test - always in range
-	r.Logger.Info(
+	r.Logger.Print(
 		"BTC: Balance (%d) >= ZRC20 TotalSupply (%d)",
 		int64(btcBalance*1e8),
 		zrc20Supply.Int64()-10000000,
+	)
+
+	return nil
+}
+
+// CheckSolanaTSSBalance compares the gateway PDA balance with the total supply of the SOL ZRC20 on ZetaChain
+func (r *E2ERunner) CheckSolanaTSSBalance() error {
+	zrc20Supply, err := r.SOLZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		return err
+	}
+
+	// get PDA received amount
+	pda := r.ComputePdaAddress()
+	balance, err := r.SolanaClient.GetBalance(r.Ctx, pda, rpc.CommitmentConfirmed)
+	require.NoError(r, err)
+	pdaReceivedAmount := balance.Value - SolanaPDAInitialBalance
+
+	// the SOL balance in gateway PDA must not be less than the total supply on ZetaChain
+	// the amount minted to initialize the pool is subtracted from the total supply
+	// #nosec G115 test - always in range
+	if pdaReceivedAmount < (zrc20Supply.Uint64() - ZRC20SOLInitialSupply) {
+		// #nosec G115 test - always in range
+		return fmt.Errorf(
+			"SOL: Gateway PDA Received (%d) < ZRC20 TotalSupply (%d)",
+			pdaReceivedAmount,
+			zrc20Supply.Uint64()-ZRC20SOLInitialSupply,
+		)
+	}
+	// #nosec G115 test - always in range
+	r.Logger.Info(
+		"SOL: Gateway PDA Received (%d) >= ZRC20 TotalSupply (%d)",
+		pdaReceivedAmount,
+		zrc20Supply.Int64()-ZRC20SOLInitialSupply,
 	)
 
 	return nil

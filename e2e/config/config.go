@@ -51,10 +51,10 @@ type Config struct {
 
 // Account contains configuration for an account
 type Account struct {
-	RawBech32Address    DoubleQuotedString `yaml:"bech32_address"`
-	RawEVMAddress       DoubleQuotedString `yaml:"evm_address"`
-	RawPrivateKey       DoubleQuotedString `yaml:"private_key"`
-	RawBase58PrivateKey DoubleQuotedString `yaml:"base58_private_key"`
+	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
+	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
+	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
+	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
 }
 
 // AdditionalAccounts are extra accounts required to run specific tests
@@ -122,6 +122,7 @@ type ZEVM struct {
 	ETHZRC20Addr       DoubleQuotedString `yaml:"eth_zrc20"`
 	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
+	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
 	ConnectorZEVMAddr  DoubleQuotedString `yaml:"connector_zevm"`

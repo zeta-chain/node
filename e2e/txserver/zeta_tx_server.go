@@ -237,17 +237,11 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 	for {
 		select {
 		case <-exitAfter:
-			return nil, fmt.Errorf(
-				"timed out after waiting for tx to get included in the block: %d; tx hash %s",
-				zts.blockTimeout,
-				res.TxHash,
-			)
+			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", zts.blockTimeout)
 		case <-time.After(time.Millisecond * 100):
 			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
-
 			if err == nil {
-				txr, err := mkTxResult(zts.clientCtx, resTx)
-				return txr, err
+				return mkTxResult(zts.clientCtx, resTx)
 			}
 		}
 	}
@@ -387,35 +381,6 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
-
-	// FIXME: config this
-	chainParams := observertypes.ChainParams{
-		ChainId:                   chains.SolanaLocalnet.ChainId,
-		IsSupported:               true,
-		GatewayAddress:            "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
-		BallotThreshold:           sdktypes.MustNewDecFromStr("0.66"),
-		ConfirmationCount:         32,
-		GasPriceTicker:            100,
-		InboundTicker:             5,
-		OutboundTicker:            5,
-		OutboundScheduleInterval:  10,
-		OutboundScheduleLookahead: 10,
-		MinObserverDelegation:     sdktypes.MustNewDecFromStr("1"),
-	}
-	msg := observertypes.NewMsgUpdateChainParams(
-		addr.String(),
-		&chainParams,
-	)
-	err = msg.ValidateBasic()
-	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to validate chain params: %s", err.Error())
-	}
-	_, err = zts.BroadcastTx(account, msg)
-	if err != nil {
-		fmt.Printf("failed to update chain params: %s\n", err.Error())
-		return "", "", "", "", "", fmt.Errorf("failed to update chain params (FungibleAdminName): %s", err.Error())
-	}
-	//require.NoError(r, err)
 
 	// deploy sol zrc20
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(

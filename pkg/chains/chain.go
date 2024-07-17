@@ -116,7 +116,7 @@ func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 
 // IsSolanaChain returns true if the chain is a Solana chain
 func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_solana_consensus, additionalChains))
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain

@@ -1,8 +1,8 @@
-package contract
+package solana
 
 const (
-	// GatewayProgramID is the program ID of the Solana gateway program
-	GatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+	// SolanaGatewayProgramID is the program ID of the Solana gateway program
+	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
 
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"

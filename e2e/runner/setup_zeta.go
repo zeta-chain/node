@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -71,8 +72,7 @@ func (r *E2ERunner) SetSolanaContracts() {
 	r.Logger.Print("⚙️ setting up Solana contracts")
 
 	// set Solana contracts
-	// TODO: remove this hardcoded stuff for localnet
-	r.GatewayProgram = solana.MustPublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
+	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
 }
 
 // SetZEVMContracts set contracts for the ZEVM
@@ -135,6 +135,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 	// set ZRC20 contracts
 	r.SetupETHZRC20()
 	r.SetupBTCZRC20()
+	r.SetupSOLZRC20()
 
 	// deploy TestDApp contract on zEVM
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
@@ -213,6 +214,25 @@ func (r *E2ERunner) SetupBTCZRC20() {
 	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 	r.BTCZRC20 = BTCZRC20
+}
+
+// SetupSOLZRC20 sets up the SOL ZRC20 in the runner from the values queried from the chain
+func (r *E2ERunner) SetupSOLZRC20() {
+	// set SOLZRC20 address by chain ID
+	SOLZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chains.SolanaLocalnet.ChainId),
+	)
+	require.NoError(r, err)
+
+	// set SOLZRC20 address
+	r.SOLZRC20Addr = SOLZRC20Addr
+	r.Logger.Info("SOLZRC20Addr: %s", SOLZRC20Addr.Hex())
+
+	// set SOLZRC20 contract
+	SOLZRC20, err := zrc20.NewZRC20(SOLZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+	r.SOLZRC20 = SOLZRC20
 }
 
 // EnableHeaderVerification enables the header verification for the given chain IDs

@@ -16,14 +16,14 @@ func (ob *Observer) LoadDB(dbPath string) error {
 		return errors.Wrapf(err, "error OpenDB for chain %d", ob.Chain().ChainId)
 	}
 
-	ob.Observer.LoadLastTxScanned(ob.Logger().Chain)
+	ob.Observer.LoadLastTxScanned()
 
 	return nil
 }
 
 // LoadLastTxScanned loads the last scanned tx from the database.
 func (ob *Observer) LoadLastTxScanned() error {
-	ob.Observer.LoadLastTxScanned(ob.Logger().Chain)
+	ob.Observer.LoadLastTxScanned()
 	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from tx %s", ob.Chain().ChainId, ob.LastTxScanned())
 
 	return nil

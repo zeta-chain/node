@@ -11,7 +11,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/zetaclient/chains/solana/contract"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 )
 
 func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
@@ -22,17 +22,17 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 	client := r.SolanaClient
 	res, err := client.GetVersion(context.Background())
 	require.NoError(r, err)
-	r.Logger.Print("solana version: %+v", res)
+	r.Logger.Info("solana version: %+v", res)
 
 	// get deployer account balance
-	privkey := solana.MustPrivateKeyFromBase58(r.Account.RawBase58PrivateKey.String())
-	bal, err := client.GetBalance(context.TODO(), privkey.PublicKey(), rpc.CommitmentFinalized)
+	privkey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	bal, err := client.GetBalance(r.Ctx, privkey.PublicKey(), rpc.CommitmentFinalized)
 	require.NoError(r, err)
-	r.Logger.Print("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)
+	r.Logger.Info("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)
 
 	// compute the gateway PDA address
 	pdaComputed := r.ComputePdaAddress()
-	programID := r.GatewayProgramID()
+	programID := r.GatewayProgram
 
 	// create 'initialize' instruction
 	var inst solana.GenericInstruction
@@ -56,10 +56,10 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 
 	// broadcast the transaction and wait for finalization
 	_, out := r.BroadcastTxSync(signedTx)
-	r.Logger.Print("initialize logs: %v", out.Meta.LogMessages)
+	r.Logger.Info("initialize logs: %v", out.Meta.LogMessages)
 
 	// retrieve the PDA account info
-	pdaInfo, err := client.GetAccountInfo(context.TODO(), pdaComputed)
+	pdaInfo, err := client.GetAccountInfo(r.Ctx, pdaComputed)
 	require.NoError(r, err)
 
 	// deserialize the PDA info
@@ -70,4 +70,9 @@ func TestSolanaInitializeGateway(r *runner.E2ERunner, args []string) {
 
 	// check the TSS address
 	require.Equal(r, r.TSSAddress, tssAddress, "TSS address mismatch")
+
+	// show the PDA balance
+	balance, err := client.GetBalance(r.Ctx, pdaComputed, rpc.CommitmentConfirmed)
+	require.NoError(r, err)
+	r.Logger.Info("initial PDA balance: %d lamports", balance.Value)
 }

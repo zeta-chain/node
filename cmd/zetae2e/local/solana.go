@@ -48,10 +48,10 @@ func solanaTestRoutine(
 			return fmt.Errorf("solana tests failed: %v", err)
 		}
 
-		// TODO: check Solana balance
-		// if err := solanaRunner.CheckSolanaTSSBalance(); err != nil {
-		// 	return err
-		// }
+		// check gateway SOL balance against ZRC20 total supply
+		if err := solanaRunner.CheckSolanaTSSBalance(); err != nil {
+			return err
+		}
 
 		solanaRunner.Logger.Print("🍾 solana tests completed in %s", time.Since(startTime).String())
 

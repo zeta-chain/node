@@ -84,8 +84,10 @@ func maskCfg(cfg config.Config) string {
 		chain.Endpoint = endpointURL.Hostname()
 	}
 
+	// mask endpoints
 	maskedCfg.BitcoinConfig.RPCUsername = ""
 	maskedCfg.BitcoinConfig.RPCPassword = ""
+	maskedCfg.SolanaConfig.Endpoint = ""
 
 	return maskedCfg.String()
 }

@@ -15,8 +15,8 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	contract "github.com/zeta-chain/zetacore/zetaclient/chains/solana/contract"
 	solanarpc "github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -242,14 +242,14 @@ func (ob *Observer) ParseInboundAsDeposit(
 	instruction := tx.Message.Instructions[instructionIndex]
 
 	// try deserializing instruction as a 'deposit'
-	var inst contract.DepositInstructionParams
+	var inst solanacontract.DepositInstructionParams
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
 		return nil, nil
 	}
 
 	// check if the instruction is a deposit or not
-	if inst.Discriminator != contract.DiscriminatorDeposit() {
+	if inst.Discriminator != solanacontract.DiscriminatorDeposit() {
 		return nil, nil
 	}
 
@@ -281,8 +281,8 @@ func (ob *Observer) ParseInboundAsDeposit(
 // Note: solana-go is not able to parse the AccountMeta 'is_signer' ATM. This is a workaround.
 func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
 	// there should be 4 accounts for a deposit instruction
-	if len(inst.Accounts) != contract.AccountsNumDeposit {
-		return "", fmt.Errorf("want %d accounts, got %d", contract.AccountsNumDeposit, len(inst.Accounts))
+	if len(inst.Accounts) != solanacontract.AccountsNumDeposit {
+		return "", fmt.Errorf("want %d accounts, got %d", solanacontract.AccountsNumDeposit, len(inst.Accounts))
 	}
 
 	// the accounts are [signer, pda, system_program, gateway_program]

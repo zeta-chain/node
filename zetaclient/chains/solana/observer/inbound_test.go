@@ -33,7 +33,9 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+	zetacoreClient := mocks.NewZetacoreClient(t)
+	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+
 	dbpath := sample.CreateTempDir(t)
 	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)
@@ -88,7 +90,9 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	chain := chains.SolanaDevnet
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+	zetacoreClient := mocks.NewZetacoreClient(t)
+	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+
 	dbpath := sample.CreateTempDir(t)
 	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
 	require.NoError(t, err)

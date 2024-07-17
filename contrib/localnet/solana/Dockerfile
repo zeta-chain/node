@@ -6,7 +6,5 @@ RUN chmod +x /usr/bin/start-solana.sh
 COPY ./gateway.so .
 COPY ./gateway-keypair.json .
 
-
-
 ENTRYPOINT [ "bash" ]
 CMD [ "/usr/bin/start-solana.sh" ]
