@@ -18,6 +18,7 @@ const (
 // GetFirstSignatureForAddress searches the first signature for the given address.
 // Note: make sure that the rpc provider used has enough transaction history.
 func GetFirstSignatureForAddress(
+	ctx context.Context,
 	client interfaces.SolanaRPCClient,
 	address solana.PublicKey,
 	pageLimit int,
@@ -26,7 +27,7 @@ func GetFirstSignatureForAddress(
 	var lastSignature solana.Signature
 	for {
 		fetchedSignatures, err := client.GetSignaturesForAddressWithOpts(
-			context.TODO(),
+			ctx,
 			address,
 			&rpc.GetSignaturesForAddressOpts{
 				Limit:      &pageLimit,
@@ -62,6 +63,7 @@ func GetFirstSignatureForAddress(
 // GetSignaturesForAddressUntil searches for signatures for the given address until the given signature (exclusive).
 // Note: make sure that the rpc provider used has enough transaction history.
 func GetSignaturesForAddressUntil(
+	ctx context.Context,
 	client interfaces.SolanaRPCClient,
 	address solana.PublicKey,
 	untilSig solana.Signature,
@@ -72,7 +74,7 @@ func GetSignaturesForAddressUntil(
 
 	// make sure that the 'untilSig' exists to prevent undefined behavior on GetSignaturesForAddressWithOpts
 	_, err := client.GetTransaction(
-		context.TODO(),
+		ctx,
 		untilSig,
 		&rpc.GetTransactionOpts{Commitment: rpc.CommitmentFinalized},
 	)
@@ -83,7 +85,7 @@ func GetSignaturesForAddressUntil(
 	// search backwards until we hit the 'untilSig' signature
 	for {
 		fetchedSignatures, err := client.GetSignaturesForAddressWithOpts(
-			context.TODO(),
+			ctx,
 			address,
 			&rpc.GetSignaturesForAddressOpts{
 				Limit:      &pageLimit,

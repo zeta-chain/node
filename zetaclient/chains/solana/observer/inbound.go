@@ -76,7 +76,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// scan from gateway 1st signature if last scanned tx is absent in the database
 	// the 1st gateway signature is typically the program initialization
 	if ob.LastTxScanned() == "" {
-		lastSig, err := solanarpc.GetFirstSignatureForAddress(ob.solClient, ob.gatewayID, pageLimit)
+		lastSig, err := solanarpc.GetFirstSignatureForAddress(ctx, ob.solClient, ob.gatewayID, pageLimit)
 		if err != nil {
 			return errors.Wrapf(err, "error GetFirstSignatureForAddress for chain %d address %s", chainID, ob.gatewayID)
 		}
@@ -85,7 +85,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// get all signatures for the gateway address since last scanned signature
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
-	signatures, err := solanarpc.GetSignaturesForAddressUntil(ob.solClient, ob.gatewayID, lastSig, pageLimit)
+	signatures, err := solanarpc.GetSignaturesForAddressUntil(ctx, ob.solClient, ob.gatewayID, lastSig, pageLimit)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error GetSignaturesForAddressUntil")
 		return err

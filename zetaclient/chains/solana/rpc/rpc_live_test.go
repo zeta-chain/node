@@ -1,6 +1,7 @@
 package rpc_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -25,7 +26,7 @@ func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
 	address := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
 
 	// get the first signature for the address (one by one)
-	sig, err := rpc.GetFirstSignatureForAddress(client, address, 1)
+	sig, err := rpc.GetFirstSignatureForAddress(context.TODO(), client, address, 1)
 	require.NoError(t, err)
 
 	// assert
@@ -45,7 +46,7 @@ func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 	)
 
 	// get all signatures for the address until the first signature (one by one)
-	sigs, err := rpc.GetSignaturesForAddressUntil(client, address, untilSig, 1)
+	sigs, err := rpc.GetSignaturesForAddressUntil(context.TODO(), client, address, untilSig, 1)
 	require.NoError(t, err)
 
 	// assert

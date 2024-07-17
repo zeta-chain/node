@@ -87,5 +87,5 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	// show the PDA balance
 	balance, err := r.SolanaClient.GetBalance(r.Ctx, pdaComputed, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
-	r.Logger.Print("initial PDA balance: %d lamports", balance.Value)
+	r.Logger.Info("initial PDA balance: %d lamports", balance.Value)
 }

@@ -18,20 +18,8 @@ func RunnerFromConfig(
 	logger *runner.Logger,
 	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
-	// initialize clients
-	btcRPCClient,
-		solanaClient,
-		evmClient,
-		evmAuth,
-		cctxClient,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		lightClient,
-		zevmClient,
-		zevmAuth,
-		err := getClientsFromConfig(ctx, conf, account)
+	// initialize all clients for E2E tests
+	e2eClients, err := getClientsFromConfig(ctx, conf, account)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clients from config: %w", err)
 	}
@@ -42,18 +30,18 @@ func RunnerFromConfig(
 		name,
 		ctxCancel,
 		account,
-		evmClient,
-		zevmClient,
-		cctxClient,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		lightClient,
-		evmAuth,
-		zevmAuth,
-		btcRPCClient,
-		solanaClient,
+		e2eClients.EvmClient,
+		e2eClients.ZevmClient,
+		e2eClients.CctxClient,
+		e2eClients.FungibleClient,
+		e2eClients.AuthClient,
+		e2eClients.BankClient,
+		e2eClients.ObserverClient,
+		e2eClients.LightClient,
+		e2eClients.EvmAuth,
+		e2eClients.ZevmAuth,
+		e2eClients.BtcRPCClient,
+		e2eClients.SolanaClient,
 
 		logger,
 		opts...,
