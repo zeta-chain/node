@@ -1,9 +1,9 @@
 # query crosschain show-inbound-tracker
 
-shows an inbound tracker by chainId and txHash
+shows an inbound tracker by chainID and txHash
 
 ```
-zetacored query crosschain show-inbound-tracker [chainId] [txHash] [flags]
+zetacored query crosschain show-inbound-tracker [chainID] [txHash] [flags]
 ```
 
 ### Options

@@ -94,13 +94,13 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestDepositEtherLiquidityCapName = "deposit_eth_liquidity_cap"
-	TestMigrateChainSupportName      = "migrate_chain_support"
-	TestPauseZRC20Name               = "pause_zrc20"
-	TestUpdateBytecodeZRC20Name      = "update_bytecode_zrc20"
-	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
-	TestRateLimiterName              = "rate_limiter"
-	TestAdminTransactionsName        = "admin_transactions"
+	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
+	TestMigrateChainSupportName       = "migrate_chain_support"
+	TestPauseZRC20Name                = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name       = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
+	TestRateLimiterName               = "rate_limiter"
+	TestCriticalAdminTransactionsName = "critical_admin_transactions"
 
 	TestMigrateTSSName = "migrate_TSS"
 
@@ -535,7 +535,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestRateLimiter,
 	),
 	runner.NewE2ETest(
-		TestAdminTransactionsName,
+		TestCriticalAdminTransactionsName,
 		"test critical admin transactions",
 		[]runner.ArgDefinition{},
 		TestAdminTransactions,

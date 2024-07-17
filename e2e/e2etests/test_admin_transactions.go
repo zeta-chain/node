@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -36,7 +37,7 @@ func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgGasPriceFlags)
 	require.NoError(r, err)
 
-	WaitNBlocks(r, 1)
+	WaitForBlocks(r, 1)
 
 	flags, err := r.ObserverClient.CrosschainFlags(r.Ctx, &observertypes.QueryGetCrosschainFlagsRequest{})
 	require.NoError(r, err)
@@ -66,7 +67,7 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msgBtc)
 	require.NoError(r, err)
 
-	WaitNBlocks(r, 1)
+	WaitForBlocks(r, 1)
 
 	tracker, err := r.CctxClient.InboundTracker(r.Ctx, &crosschaintypes.QueryInboundTrackerRequest{
 		ChainId: msgEth.ChainId,

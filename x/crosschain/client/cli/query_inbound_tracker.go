@@ -13,8 +13,8 @@ import (
 
 func CmdShowInboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-inbound-tracker [chainId] [txHash]",
-		Short: "shows an inbound tracker by chainId and txHash",
+		Use:   "show-inbound-tracker [chainID] [txHash]",
+		Short: "shows an inbound tracker by chainID and txHash",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
