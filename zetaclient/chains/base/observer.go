@@ -70,7 +70,8 @@ type Observer struct {
 
 	// mu protects fields from concurrent access
 	// Note: base observer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
-	mu *sync.Mutex
+	mu      *sync.Mutex
+	started bool
 
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
@@ -120,17 +121,36 @@ func NewObserver(
 	return &ob, nil
 }
 
+// Start starts the observer. Returns true if the observer was already started (noop).
+func (ob *Observer) Start() bool {
+	ob.mu.Lock()
+	defer ob.Mu().Unlock()
+
+	// noop
+	if ob.started {
+		return true
+	}
+
+	ob.started = true
+
+	return false
+}
+
 // Stop notifies all goroutines to stop and closes the database.
 func (ob *Observer) Stop() {
 	ob.logger.Chain.Info().Msgf("observer is stopping for chain %d", ob.Chain().ChainId)
 	close(ob.stop)
 
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	ob.started = false
+
 	// close database
-	if ob.db != nil {
-		if err := ob.db.Close(); err != nil {
-			ob.Logger().Chain.Error().Err(err).Msgf("unable to close db for chain %d", ob.Chain().ChainId)
-		}
+	if err := ob.db.Close(); err != nil {
+		ob.Logger().Chain.Error().Err(err).Msgf("unable to close db for chain %d", ob.Chain().ChainId)
 	}
+
 	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
 }
 

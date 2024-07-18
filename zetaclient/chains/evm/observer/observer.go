@@ -167,6 +167,11 @@ func FetchZetaTokenContract(
 
 // Start all observation routines for the evm chain
 func (ob *Observer) Start(ctx context.Context) {
+	if noop := ob.Observer.Start(); noop {
+		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
+		return
+	}
+
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))

@@ -2,19 +2,29 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	btcsigner "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
+	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
+
+// backwards compatibility
+const btcDatabaseFilename = "btc_chain_client"
 
 // CreateSignerMap creates a map of interfaces.ChainSigner (by chainID) for all chains in the config.
 // Note that signer construction failure for a chain does not prevent the creation of signers for other chains.
@@ -167,4 +177,105 @@ func (m *signerMap) unsetMissing(enabledChains []int64, logger zerolog.Logger) i
 	}
 
 	return removed
+}
+
+// CreateChainObserverMap creates a map of ChainObservers for all chains in the config
+func CreateChainObserverMap(
+	ctx context.Context,
+	client *zetacore.Client,
+	tss interfaces.TSSSigner,
+	dbpath string,
+	logger base.Logger,
+	ts *metrics.TelemetryServer,
+) (map[int64]interfaces.ChainObserver, error) {
+	observerMap := make(map[int64]interfaces.ChainObserver)
+
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get app context")
+	}
+
+	// EVM observers
+	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
+		if evmConfig.Chain.IsZetaChain() {
+			continue
+		}
+
+		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
+		if !found {
+			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
+			continue
+		}
+
+		// create EVM client
+		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("error dailing endpoint %q", evmConfig.Endpoint)
+			continue
+		}
+
+		chainName := evmConfig.Chain.ChainName.String()
+
+		database, err := db.NewFromSqlite(dbpath, chainName, true)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
+		}
+
+		// create EVM chain observer
+		observer, err := evmobserver.NewObserver(
+			ctx,
+			evmConfig,
+			evmClient,
+			*chainParams,
+			client,
+			tss,
+			database,
+			logger,
+			ts,
+		)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %s", evmConfig.Chain.String())
+			continue
+		}
+		observerMap[evmConfig.Chain.ChainId] = observer
+	}
+
+	// create BTC chain observer
+	btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig()
+	if !btcEnabled {
+		return observerMap, nil
+	}
+
+	_, btcChainParams, found := app.GetBTCChainParams()
+	if !found {
+		return nil, fmt.Errorf("BTC is enabled, but chains params not found")
+	}
+
+	btcClient, err := rpc.NewRPCClient(btcConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create rpc client for BTC chain")
+	}
+
+	btcDatabase, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to open a database for BTC chain")
+	}
+
+	btcObserver, err := btcobserver.NewObserver(
+		btcChain,
+		btcClient,
+		*btcChainParams,
+		client,
+		tss,
+		btcDatabase,
+		logger,
+		ts,
+	)
+	if err != nil {
+		logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %s", btcChain.ChainName.String())
+	} else {
+		observerMap[btcChain.ChainId] = btcObserver
+	}
+
+	return observerMap, nil
 }

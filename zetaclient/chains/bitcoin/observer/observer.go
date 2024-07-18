@@ -200,6 +200,14 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 
 // Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start(ctx context.Context) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
+	if noop := ob.Observer.Start(); noop {
+		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
+		return
+	}
+
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	// watch bitcoin chain for incoming txs and post votes to zetacore
