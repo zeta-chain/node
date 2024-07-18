@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+	"github.com/cenkalti/backoff/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -27,7 +29,7 @@ func WaitForBlocks(r *runner.E2ERunner, n int64) {
 		return retry.Retry(waitForBlock(r, height.Height+n))
 	}
 
-	bo := retry.DefaultBackoff()
+	bo := backoff.NewConstantBackOff(time.Second * 5)
 	err = retry.DoWithBackoff(call, bo)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
@@ -36,10 +38,10 @@ func waitForBlock(r *runner.E2ERunner, n int64) error {
 	if err != nil {
 		return err
 	}
-	if height.Height >= n {
-		return nil
+	if height.Height < n {
+		return fmt.Errorf("waiting for %d blocks, current height %d", n, height.Height)
 	}
-	return fmt.Errorf("waiting for %d blocks, current height %d", n, height.Height)
+	return nil
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {

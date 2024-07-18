@@ -44,7 +44,7 @@ func (k Keeper) InboundTracker(
 
 	inTxTracker, found := k.GetInboundTracker(ctx, req.ChainId, req.TxHash)
 	if !found {
-		return nil, status.Error(codes.Internal, "not found")
+		return nil, status.Errorf(codes.NotFound, "Inbound tracker not found for ChainID: %d, TxHash: %s", req.ChainId, req.TxHash)
 	}
 
 	return &types.QueryInboundTrackerResponse{InboundTracker: inTxTracker}, nil
