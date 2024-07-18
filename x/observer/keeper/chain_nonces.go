@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
 
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -14,14 +15,14 @@ import (
 func (k Keeper) SetChainNonces(ctx sdk.Context, chainNonces types.ChainNonces) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
 	b := k.cdc.MustMarshal(&chainNonces)
-	store.Set(types.KeyPrefix(chainNonces.Index), b)
+	store.Set(types.KeyPrefix(strconv.FormatInt(chainNonces.ChainId, 10)), b)
 }
 
 // GetChainNonces returns a chainNonces from its index
-func (k Keeper) GetChainNonces(ctx sdk.Context, index string) (val types.ChainNonces, found bool) {
+func (k Keeper) GetChainNonces(ctx sdk.Context, chainID int64) (val types.ChainNonces, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
 
-	b := store.Get(types.KeyPrefix(index))
+	b := store.Get(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
 	if b == nil {
 		return val, false
 	}

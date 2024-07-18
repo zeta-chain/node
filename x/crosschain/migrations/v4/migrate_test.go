@@ -59,13 +59,13 @@ func TestMigrateStore(t *testing.T) {
 	})
 	t.Run("test migrate store move nonce from cross chain to observer", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		chainNonces := sample.ChainNoncesList(t, 10)
+		chainNonces := sample.ChainNoncesList(10)
 		pendingNonces := sample.PendingNoncesList(t, "sample", 10)
 		nonceToCctxList := sample.NonceToCctxList(t, "sample", 10)
 		store := prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.ChainNoncesKey))
-		for _, nonce := range chainNonces {
-			store.Set([]byte(nonce.Index), k.GetCodec().MustMarshal(&nonce))
-		}
+		//for _, nonce := range chainNonces {
+		//	store.Set([]byte(nonce.Index), k.GetCodec().MustMarshal(&nonce))
+		//}
 		store = prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.PendingNoncesKeyPrefix))
 		for _, nonce := range pendingNonces {
 			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d", nonce.Tss, nonce.ChainId)), k.GetCodec().MustMarshal(&nonce))
