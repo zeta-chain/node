@@ -61,7 +61,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	// process inbound trackers
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
-		txResult, err := ob.solClient.GetTransaction(context.TODO(), signature, &rpc.GetTransactionOpts{
+		txResult, err := ob.solClient.GetTransaction(ctx, signature, &rpc.GetTransactionOpts{
 			Commitment: rpc.CommitmentFinalized,
 		})
 		if err != nil {

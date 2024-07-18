@@ -101,7 +101,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// process successfully signature only
 		if sig.Err == nil {
-			txResult, err := ob.solClient.GetTransaction(context.TODO(), sig.Signature, &rpc.GetTransactionOpts{})
+			txResult, err := ob.solClient.GetTransaction(ctx, sig.Signature, &rpc.GetTransactionOpts{})
 			if err != nil {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, sigString)
