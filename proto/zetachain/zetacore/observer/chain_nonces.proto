@@ -7,7 +7,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message ChainNonces {
   string creator = 1;
-  string index = 2;
+  reserved 2;
   int64 chain_id = 3;
   uint64 nonce = 4;
   repeated string signers = 5;
