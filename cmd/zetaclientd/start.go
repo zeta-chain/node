@@ -16,11 +16,11 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/libp2p/go-libp2p/core"
+	"github.com/multiformats/go-multiaddr"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/go-tss/p2p"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -361,14 +361,14 @@ func start(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func initPeers(peer string) (p2p.AddrList, error) {
-	var peers p2p.AddrList
+func initPeers(peer string) ([]multiaddr.Multiaddr, error) {
+	var peers []multiaddr.Multiaddr
 
 	if peer != "" {
 		address, err := maddr.NewMultiaddr(peer)
 		if err != nil {
 			log.Error().Err(err).Msg("NewMultiaddr error")
-			return p2p.AddrList{}, err
+			return []multiaddr.Multiaddr{}, err
 		}
 		peers = append(peers, address)
 	}

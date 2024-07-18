@@ -17,9 +17,9 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/multiformats/go-multiaddr"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/go-tss/p2p"
 
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -28,7 +28,7 @@ import (
 
 func RunDiagnostics(
 	startLogger zerolog.Logger,
-	peers p2p.AddrList,
+	peers []multiaddr.Multiaddr,
 	hotkeyPk cryptotypes.PrivKey,
 	cfg config.Config,
 ) error {
