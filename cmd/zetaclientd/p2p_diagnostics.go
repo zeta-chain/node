@@ -17,7 +17,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
-	"github.com/multiformats/go-multiaddr"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 
@@ -28,7 +27,7 @@ import (
 
 func RunDiagnostics(
 	startLogger zerolog.Logger,
-	peers []multiaddr.Multiaddr,
+	peers []maddr.Multiaddr,
 	hotkeyPk cryptotypes.PrivKey,
 	cfg config.Config,
 ) error {
@@ -60,7 +59,7 @@ func RunDiagnostics(
 	if len(IP) == 0 {
 		startLogger.Warn().Msg("empty env MYIP")
 	}
-	var externalAddr Multiaddr
+	var externalAddr maddr.Multiaddr
 	if len(IP) != 0 {
 		externalAddr, err = maddr.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", IP, 6668))
 		if err != nil {
@@ -72,9 +71,9 @@ func RunDiagnostics(
 	host, err := libp2p.New(
 		libp2p.ListenAddrs(listenAddress),
 		libp2p.Identity(p2pPriKey),
-		libp2p.AddrsFactory(func(addrs []Multiaddr) []Multiaddr {
+		libp2p.AddrsFactory(func(addrs []maddr.Multiaddr) []maddr.Multiaddr {
 			if externalAddr != nil {
-				return []Multiaddr{externalAddr}
+				return []maddr.Multiaddr{externalAddr}
 			}
 			return addrs
 		}),
