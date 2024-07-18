@@ -12,7 +12,23 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestAdminTransactions(r *runner.E2ERunner, _ []string) {
+// TestCriticalAdminTransactions tests critical admin transactions that are the most used on mainnet .
+// The complete list is
+// MsgUpdateChainParams
+// MsgRefundAbortedCCTX
+// MsgEnableCCTX
+// MsgDisableCCTX
+// MsgUpdateGasPriceIncreaseFlags
+// MsgAddInboundTracker
+// MsgUpdateZRC20LiquidityCap
+// MsgDeploySystemContracts
+// MsgWhitelistERC20
+// MsgPauseZRC20
+// MsgMigrateTssFunds
+// MsgUpdateTssAddress
+//
+//	However, the transactions other than `AddToInboundTracker` and `UpdateGasPriceIncreaseFlags` have already been used in other tests.
+func TestCriticalAdminTransactions(r *runner.E2ERunner, _ []string) {
 	TestAddToInboundTracker(r)
 	TestUpdateGasPriceIncreaseFlags(r)
 }
