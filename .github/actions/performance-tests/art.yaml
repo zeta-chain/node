@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:9545"
+  target: "-=endpoint_to_test=-"
   phases:
     - duration: 300
       arrivalRate: 400
@@ -16,7 +16,7 @@ config:
         threshold: 1
     publish-metrics:
       - type: prometheus
-        pushgateway: 'https://pushgateway.dev-zetachain-internal.com'
+        pushgateway: 'https://pushgateway-testnet.rpc.zetachain.com/-=CLOUDFLARE_UUID=-'
         tags:
           - 'type:loadtest'
   summary: true
@@ -252,11 +252,11 @@ scenarios:
             method: "eth_newFilter"
             params:
               - {
-                  fromBlock: "latest",
-                  toBlock: "latest",
-                  address: "0x0",
-                  topics: []
-                }
+                fromBlock: "latest",
+                toBlock: "latest",
+                address: "0x0",
+                topics: []
+              }
           capture:
             - json: "$"
               as: "response"
