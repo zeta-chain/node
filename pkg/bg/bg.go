@@ -40,7 +40,6 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 			if r := recover(); r != nil {
 				err := fmt.Errorf("recovered from PANIC in background task: %v", r)
 				logError(err, cfg)
-				printStack(err, cfg)
 			}
 		}()
 
@@ -55,16 +54,7 @@ func logError(err error, cfg config) {
 		return
 	}
 
-	name := cfg.name
-	if name == "" {
-		name = "unknown"
-	}
-
-	cfg.logger.Error().Err(err).Str("worker.name", name).Msgf("Background task failed")
-}
-
-// printStack prints the stack trace when a panic occurs
-func printStack(err error, cfg config) {
+	// print stack trace when a panic occurs
 	buf := make([]byte, 1024)
 	for {
 		n := runtime.Stack(buf, false)
