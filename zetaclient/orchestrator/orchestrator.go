@@ -113,6 +113,10 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 
 	oc.logger.Info().Str("signer", signerAddress.String()).Msg("Starting orchestrator")
 
+	for _, observer := range oc.observerMap {
+		observer.Start(ctx)
+	}
+
 	// start cctx scheduler
 	bg.Work(ctx, oc.StartCctxScheduler, bg.WithName("StartCctxScheduler"), bg.WithLogger(oc.logger.Logger))
 
