@@ -30,6 +30,8 @@ var (
 		&types.LastBlockSQLType{},
 		&types.TransactionSQLType{},
 		&types.ReceiptSQLType{},
+		&types.TransactionResultSQLType{},
+		&types.OutboundHashSQLType{},
 	}
 )
 
@@ -46,6 +48,11 @@ func NewFromSqlite(directory, dbName string, migrate bool) (*DB, error) {
 	}
 
 	return New(sqlite.Open(path), migrate)
+}
+
+// NewFromSqliteInMemory creates a new instance of DB based on SQLite in-memory database.
+func NewFromSqliteInMemory(migrate bool) (*DB, error) {
+	return NewFromSqlite(SqliteInMemory, "", migrate)
 }
 
 // New creates a new instance of DB.

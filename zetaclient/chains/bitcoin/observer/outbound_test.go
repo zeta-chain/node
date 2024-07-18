@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -27,8 +28,11 @@ func MockBTCObserverMainnet(t *testing.T) *Observer {
 	params := mocks.MockChainParams(chain.ChainId, 10)
 	tss := mocks.NewTSSMainnet()
 
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
 	// create Bitcoin observer
-	ob, err := NewObserver(chain, btcClient, params, nil, tss, testutils.SQLiteMemory, base.Logger{}, nil)
+	ob, err := NewObserver(chain, btcClient, params, nil, tss, database, base.Logger{}, nil)
 	require.NoError(t, err)
 
 	return ob

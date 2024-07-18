@@ -26,6 +26,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -61,7 +62,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
+	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -74,10 +75,11 @@ func NewObserver(
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
 		ts,
+		database,
 		logger,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
 	// create evm observer
@@ -90,10 +92,9 @@ func NewObserver(
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
 	}
 
-	// open database and load data
-	err = ob.LoadDB(ctx, dbpath)
-	if err != nil {
-		return nil, err
+	// load last block scanned
+	if err = ob.LoadLastBlockScanned(ctx); err != nil {
+		return nil, errors.Wrap(err, "unable to load last block scanned")
 	}
 
 	return ob, nil
@@ -420,35 +421,6 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 		}
 	}
 	return block, nil
-}
-
-// LoadDB open sql database and load data into EVM observer
-// TODO(revamp): move to a db file
-func (ob *Observer) LoadDB(ctx context.Context, dbPath string) error {
-	if dbPath == "" {
-		return errors.New("empty db path")
-	}
-
-	// open database
-	err := ob.OpenDB(dbPath, "")
-	if err != nil {
-		return errors.Wrapf(err, "error OpenDB for chain %d", ob.Chain().ChainId)
-	}
-
-	// run auto migration
-	// transaction and receipt tables are used nowhere but we still run migration in case they are needed in future
-	err = ob.DB().AutoMigrate(
-		&clienttypes.ReceiptSQLType{},
-		&clienttypes.TransactionSQLType{},
-	)
-	if err != nil {
-		return errors.Wrapf(err, "error AutoMigrate for chain %d", ob.Chain().ChainId)
-	}
-
-	// load last block scanned
-	err = ob.LoadLastBlockScanned(ctx)
-
-	return err
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database

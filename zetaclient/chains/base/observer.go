@@ -4,20 +4,17 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -63,7 +60,7 @@ type Observer struct {
 	headerCache *lru.Cache
 
 	// db is the database to persist data
-	db *gorm.DB
+	db *db.DB
 
 	// ts is the telemetry server for metrics
 	ts *metrics.TelemetryServer
@@ -88,6 +85,7 @@ func NewObserver(
 	blockCacheSize int,
 	headerCacheSize int,
 	ts *metrics.TelemetryServer,
+	database *db.DB,
 	logger Logger,
 ) (*Observer, error) {
 	ob := Observer{
@@ -98,6 +96,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		ts:               ts,
+		db:               database,
 		mu:               &sync.Mutex{},
 		stop:             make(chan struct{}),
 	}
@@ -128,9 +127,8 @@ func (ob *Observer) Stop() {
 
 	// close database
 	if ob.db != nil {
-		err := ob.CloseDB()
-		if err != nil {
-			ob.Logger().Chain.Error().Err(err).Msgf("CloseDB failed for chain %d", ob.Chain().ChainId)
+		if err := ob.db.Close(); err != nil {
+			ob.Logger().Chain.Error().Err(err).Msgf("unable to close db for chain %d", ob.Chain().ChainId)
 		}
 	}
 	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
@@ -227,7 +225,7 @@ func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 }
 
 // DB returns the database for the observer.
-func (ob *Observer) DB() *gorm.DB {
+func (ob *Observer) DB() *db.DB {
 	return ob.db
 }
 
@@ -271,56 +269,6 @@ func (ob *Observer) StopChannel() chan struct{} {
 	return ob.stop
 }
 
-// OpenDB open sql database in the given path.
-func (ob *Observer) OpenDB(dbPath string, dbName string) error {
-	// create db path if not exist
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		err := os.MkdirAll(dbPath, 0o750)
-		if err != nil {
-			return errors.Wrapf(err, "error creating db path: %s", dbPath)
-		}
-	}
-
-	// use custom dbName or chain name if not provided
-	if dbName == "" {
-		dbName = ob.chain.ChainName.String()
-	}
-	path := fmt.Sprintf("%s/%s", dbPath, dbName)
-
-	// use memory db if specified
-	if strings.Contains(dbPath, ":memory:") {
-		path = dbPath
-	}
-
-	// open db
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
-	if err != nil {
-		return errors.Wrap(err, "error opening db")
-	}
-
-	// migrate db
-	err = db.AutoMigrate(&clienttypes.LastBlockSQLType{})
-	if err != nil {
-		return errors.Wrap(err, "error migrating db")
-	}
-	ob.db = db
-
-	return nil
-}
-
-// CloseDB close the database.
-func (ob *Observer) CloseDB() error {
-	dbInst, err := ob.db.DB()
-	if err != nil {
-		return fmt.Errorf("error getting database instance: %w", err)
-	}
-	err = dbInst.Close()
-	if err != nil {
-		return fmt.Errorf("error closing database: %w", err)
-	}
-	return nil
-}
-
 // LoadLastBlockScanned loads last scanned block from environment variable or from database.
 // The last scanned block is the height from which the observer should continue scanning.
 func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
@@ -337,7 +285,7 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
 		}
 		blockNumber, err := strconv.ParseUint(scanFromBlock, 10, 64)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "unable to parse block number from ENV %s=%s", envvar, scanFromBlock)
 		}
 		ob.WithLastBlockScanned(blockNumber)
 		return nil
@@ -364,13 +312,13 @@ func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
 
 // WriteLastBlockScannedToDB saves the last scanned block to the database.
 func (ob *Observer) WriteLastBlockScannedToDB(lastScannedBlock uint64) error {
-	return ob.db.Save(clienttypes.ToLastBlockSQLType(lastScannedBlock)).Error
+	return ob.db.Client().Save(clienttypes.ToLastBlockSQLType(lastScannedBlock)).Error
 }
 
 // ReadLastBlockScannedFromDB reads the last scanned block from the database.
 func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 	var lastBlock clienttypes.LastBlockSQLType
-	if err := ob.db.First(&lastBlock, clienttypes.LastBlockNumID).Error; err != nil {
+	if err := ob.db.Client().First(&lastBlock, clienttypes.LastBlockNumID).Error; err != nil {
 		// record not found
 		return 0, err
 	}

@@ -4,10 +4,13 @@ import (
 	gocontext "context"
 	"fmt"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
@@ -16,10 +19,14 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
+
+// backwards compatibility
+const btcDatabaseFilename = "btc_chain_client"
 
 func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	authz.SetupAuthZSignerList(granter, grantee)
@@ -82,6 +89,13 @@ func CreateChainObserverMap(
 			continue
 		}
 
+		chainName := evmConfig.Chain.ChainName.String()
+
+		database, err := db.NewFromSqlite(dbpath, chainName, true)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
+		}
+
 		// create EVM chain observer
 		observer, err := evmobserver.NewObserver(
 			ctx,
@@ -90,48 +104,79 @@ func CreateChainObserverMap(
 			*chainParams,
 			zetacoreClient,
 			tss,
-			dbpath,
+			database,
 			logger,
 			ts,
 		)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewObserver error for evm chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %s", evmConfig.Chain.String())
 			continue
 		}
 		observerMap[evmConfig.Chain.ChainId] = observer
 	}
 
-	// BTC observer
-	_, chainParams, found := appContext.GetBTCChainParams()
-	if !found {
-		return nil, fmt.Errorf("bitcoin chains params not found")
-	}
-
 	// create BTC chain observer
-	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
-	if enabled {
-		btcClient, err := btcrpc.NewRPCClient(btcConfig)
+	btcChain, btcConfig, btcEnabled := appContext.GetBTCChainAndConfig()
+	if btcEnabled {
+		_, chainParams, found := appContext.GetBTCChainParams()
+		if !found {
+			return nil, fmt.Errorf("BTC is enabled, but chains params not found")
+		}
+
+		btcObserver, err := createBTCObserver(
+			dbpath,
+			btcConfig,
+			btcChain,
+			*chainParams,
+			zetacoreClient,
+			tss,
+			logger,
+			ts,
+		)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error creating rpc client for bitcoin chain %s", btcChain.String())
+			logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %s", btcChain.ChainName.String())
 		} else {
-			// create BTC chain observer
-			observer, err := btcobserver.NewObserver(
-				btcChain,
-				btcClient,
-				*chainParams,
-				zetacoreClient,
-				tss,
-				dbpath,
-				logger,
-				ts,
-			)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("NewObserver error for bitcoin chain %s", btcChain.String())
-			} else {
-				observerMap[btcChain.ChainId] = observer
-			}
+			observerMap[btcChain.ChainId] = btcObserver
 		}
 	}
 
 	return observerMap, nil
+}
+
+func createBTCObserver(
+	dbPath string,
+	cfg config.BTCConfig,
+	chain chains.Chain,
+	chainParams observertypes.ChainParams,
+	client *zetacore.Client,
+	tss interfaces.TSSSigner,
+	logger base.Logger,
+	ts *metrics.TelemetryServer,
+) (*btcobserver.Observer, error) {
+	btcClient, err := btcrpc.NewRPCClient(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create rpc client for BTC chain")
+	}
+
+	database, err := db.NewFromSqlite(dbPath, btcDatabaseFilename, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to open a database for BTC chain")
+	}
+
+	// create BTC chain observer
+	observer, err := btcobserver.NewObserver(
+		chain,
+		btcClient,
+		chainParams,
+		client,
+		tss,
+		database,
+		logger,
+		ts,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create observer for BTC chain")
+	}
+
+	return observer, nil
 }
