@@ -21,8 +21,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
-
 	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -210,6 +210,12 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
+	notifyCtx, cancel := context.WithCancelCause(ctx)
+	defer cancel(errors.New("cancelling context on zeta-client exit"))
+	bg.Work(ctx, zetacoreClient.HandleTSSUpdate, bg.WithName("HandleTSSUpdate"), bg.WithLogger(masterLogger), bg.WithCancel(cancel))
+	bg.Work(ctx, zetacoreClient.HandleNewKeygen, bg.WithName("HandleNewKeygen"), bg.WithLogger(masterLogger), bg.WithCancel(cancel))
+	bg.Work(ctx, zetacoreClient.HandleNewTSSKeyGeneration, bg.WithName("HandleNewTSSKeyGeneration"), bg.WithLogger(masterLogger), bg.WithCancel(cancel))
+
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
 	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
@@ -326,6 +332,7 @@ func start(_ *cobra.Command, _ []string) error {
 		masterLogger,
 		telemetryServer,
 	)
+
 	err = orchestrator.MonitorCore(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Orchestrator failed to start")
@@ -346,18 +353,23 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-ch
-	startLogger.Info().Msgf("stop signal received: %s", sig)
 
-	// stop chain observers
+	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
+	select {
+	case <-notifyCtx.Done():
+		cause := context.Cause(notifyCtx)
+		startLogger.Info().Msgf("shutdown signal received , cause : %s", cause)
+	case sig := <-ch:
+		startLogger.Info().Msgf("stop signal received: %s", sig)
+	}
+
+	//stop chain observers
 	for _, observer := range observerMap {
 		observer.Stop()
 	}
 	zetacoreClient.Stop()
-
 	return nil
 }
 

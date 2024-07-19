@@ -3,6 +3,7 @@ package bg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog"
@@ -11,12 +12,17 @@ import (
 type config struct {
 	name   string
 	logger zerolog.Logger
+	cancel context.CancelCauseFunc
 }
 
 type Opt func(*config)
 
 func WithName(name string) Opt {
 	return func(cfg *config) { cfg.name = name }
+}
+
+func WithCancel(cancel context.CancelCauseFunc) Opt {
+	return func(cfg *config) { cfg.cancel = cancel }
 }
 
 func WithLogger(logger zerolog.Logger) Opt {
@@ -28,6 +34,7 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 	cfg := config{
 		name:   "",
 		logger: zerolog.Nop(),
+		cancel: nil,
 	}
 
 	for _, opt := range opts {
@@ -42,8 +49,12 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 			}
 		}()
 
-		if err := f(ctx); err != nil {
+		err := f(ctx)
+		if err != nil {
 			logError(err, cfg)
+		}
+		if cfg.cancel != nil && err == nil {
+			cfg.cancel(errors.New(fmt.Sprintf("function : %s triggered restart", cfg.name)))
 		}
 	}()
 }

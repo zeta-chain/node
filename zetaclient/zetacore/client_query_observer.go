@@ -167,6 +167,15 @@ func (c *Client) GetBTCTSSAddress(ctx context.Context, chainID int64) (string, e
 	return resp.Btc, nil
 }
 
+func (c *Client) GetTSS(ctx context.Context) (types.TSS, error) {
+	resp, err := c.client.observer.TSS(ctx, &types.QueryGetTSSRequest{})
+	if err != nil {
+		return types.TSS{}, errors.Wrap(err, "failed to get tss")
+	}
+
+	return resp.TSS, nil
+}
+
 // GetTSSHistory returns the TSS history
 func (c *Client) GetTSSHistory(ctx context.Context) ([]types.TSS, error) {
 	resp, err := c.client.observer.TssHistory(ctx, &types.QueryTssHistoryRequest{})

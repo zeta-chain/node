@@ -69,10 +69,20 @@ func main() {
 		cmd.Stdin = &passwordInputBuffer
 
 		eg, ctx := errgroup.WithContext(ctx)
-		eg.Go(cmd.Run)
+		//eg.Go(cmd.Run)
+		eg.Go(func() error {
+			err := cmd.Run()
+			if err != nil {
+				logger.Error().Err(err).Msg("zetaclient process exited with error")
+			} else {
+				logger.Info().Msg("zetaclient process exited")
+			}
+			cancel() // Signal other goroutines to exit
+			return err
+		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
-			cancel()
+			//cancel()
 			return nil
 		})
 		eg.Go(func() error {
