@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+	"strconv"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -63,9 +64,9 @@ func TestMigrateStore(t *testing.T) {
 		pendingNonces := sample.PendingNoncesList(t, "sample", 10)
 		nonceToCctxList := sample.NonceToCctxList(t, "sample", 10)
 		store := prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.ChainNoncesKey))
-		//for _, nonce := range chainNonces {
-		//	store.Set([]byte(nonce.Index), k.GetCodec().MustMarshal(&nonce))
-		//}
+		for _, nonce := range chainNonces {
+			store.Set([]byte(strconv.FormatInt(nonce.ChainId, 10)), k.GetCodec().MustMarshal(&nonce))
+		}
 		store = prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.PendingNoncesKeyPrefix))
 		for _, nonce := range pendingNonces {
 			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d", nonce.Tss, nonce.ChainId)), k.GetCodec().MustMarshal(&nonce))
