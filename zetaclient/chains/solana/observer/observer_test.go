@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -23,7 +24,6 @@ func MockSolanaObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
 ) *observer.Observer {
 	// use mock zetacore client if not provided
 	if zetacoreClient == nil {
@@ -34,6 +34,9 @@ func MockSolanaObserver(
 		tss = mocks.NewTSSMainnet()
 	}
 
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
 	// create observer
 	ob, err := observer.NewObserver(
 		chain,
@@ -41,7 +44,7 @@ func MockSolanaObserver(
 		chainParams,
 		zetacoreClient,
 		tss,
-		dbpath,
+		database,
 		base.DefaultLogger(),
 		nil,
 	)
@@ -50,45 +53,14 @@ func MockSolanaObserver(
 	return ob
 }
 
-func Test_LoadDB(t *testing.T) {
-	// parepare params
-	chain := chains.SolanaDevnet
-	params := sample.ChainParams(chain.ChainId)
-	params.GatewayAddress = sample.SolanaAddress(t)
-	dbpath := sample.CreateTempDir(t)
-
-	// create observer
-	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil, dbpath)
-
-	// write last tx to db
-	lastTx := sample.SolanaSignature(t).String()
-	ob.WriteLastTxScannedToDB(lastTx)
-
-	t.Run("should load db successfully", func(t *testing.T) {
-		err := ob.LoadDB(dbpath)
-		require.NoError(t, err)
-		require.Equal(t, lastTx, ob.LastTxScanned())
-	})
-	t.Run("should fail on invalid dbpath", func(t *testing.T) {
-		// load db with empty dbpath
-		err := ob.LoadDB("")
-		require.ErrorContains(t, err, "empty db path")
-
-		// load db with invalid dbpath
-		err = ob.LoadDB("/invalid/dbpath")
-		require.ErrorContains(t, err, "error OpenDB")
-	})
-}
-
 func Test_LoadLastTxScanned(t *testing.T) {
 	// parepare params
 	chain := chains.SolanaDevnet
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)
-	dbpath := sample.CreateTempDir(t)
 
 	// create observer
-	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil, dbpath)
+	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// write sample last tx to db

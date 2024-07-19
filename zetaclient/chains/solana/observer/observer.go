@@ -11,6 +11,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -38,7 +39,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
+	db *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -51,6 +52,7 @@ func NewObserver(
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
 		ts,
+		db,
 		logger,
 	)
 	if err != nil {
@@ -71,11 +73,7 @@ func NewObserver(
 		return nil, err
 	}
 
-	// load btc chain observer DB
-	err = ob.LoadDB(dbpath)
-	if err != nil {
-		return nil, err
-	}
+	ob.Observer.LoadLastTxScanned()
 
 	return &ob, nil
 }
@@ -108,6 +106,11 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 
 // Start starts the Go routine processes to observe the Solana chain
 func (ob *Observer) Start(ctx context.Context) {
+	if noop := ob.Observer.Start(); noop {
+		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
+		return
+	}
+
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	// watch Solana chain for incoming txs and post votes to zetacore
@@ -115,4 +118,12 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
+}
+
+// LoadLastTxScanned loads the last scanned tx from the database.
+func (ob *Observer) LoadLastTxScanned() error {
+	ob.Observer.LoadLastTxScanned()
+	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from tx %s", ob.Chain().ChainId, ob.LastTxScanned())
+
+	return nil
 }

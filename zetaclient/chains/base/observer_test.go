@@ -16,12 +16,11 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
-
-// TODO FIX AFTER MERGE
 
 // createObserver creates a new observer for testing
 func createObserver(t *testing.T, chain chains.Chain) *base.Observer {
@@ -255,7 +254,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t)
+		ob := createObserver(t, chain)
 
 		// create db and write 100 as last block scanned
 		err := ob.WriteLastBlockScannedToDB(100)
@@ -268,7 +267,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("latest block scanned should be 0 if not found in db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t)
+		ob := createObserver(t, chain)
 
 		// read last block scanned
 		err := ob.LoadLastBlockScanned(log.Logger)
@@ -277,7 +276,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t)
+		ob := createObserver(t, chain)
 
 		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
@@ -292,7 +291,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("last block scanned should remain 0 if env var is set to latest", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t)
+		ob := createObserver(t, chain)
 
 		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
@@ -307,7 +306,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should return error on invalid env var", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t)
+		ob := createObserver(t, chain)
 
 		// set invalid env var
 		os.Setenv(envvar, "invalid")
@@ -367,37 +366,26 @@ func TestLoadLastTxScanned(t *testing.T) {
 
 	t.Run("should be able to load last tx scanned", func(t *testing.T) {
 		// create observer and open db
-		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, chain)
-		err := ob.OpenDB(dbPath, "")
-		require.NoError(t, err)
 
 		// create db and write sample hash as last tx scanned
 		ob.WriteLastTxScannedToDB(lastTx)
 
 		// read last tx scanned
 		ob.LoadLastTxScanned()
-		require.NoError(t, err)
 		require.EqualValues(t, lastTx, ob.LastTxScanned())
 	})
 	t.Run("latest tx scanned should be empty if not found in db", func(t *testing.T) {
 		// create observer and open db
-		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, chain)
-		err := ob.OpenDB(dbPath, "")
-		require.NoError(t, err)
 
 		// read last tx scanned
 		ob.LoadLastTxScanned()
-		require.NoError(t, err)
 		require.Empty(t, ob.LastTxScanned())
 	})
 	t.Run("should overwrite last tx scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, chain)
-		err := ob.OpenDB(dbPath, "")
-		require.NoError(t, err)
 
 		// create db and write sample hash as last tx scanned
 		ob.WriteLastTxScannedToDB(lastTx)
@@ -408,7 +396,6 @@ func TestLoadLastTxScanned(t *testing.T) {
 
 		// read last block scanned
 		ob.LoadLastTxScanned()
-		require.NoError(t, err)
 		require.EqualValues(t, otherTx, ob.LastTxScanned())
 	})
 }
@@ -417,15 +404,12 @@ func TestSaveLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
 	t.Run("should be able to save last tx scanned", func(t *testing.T) {
 		// create observer and open db
-		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, chain)
-		err := ob.OpenDB(dbPath, "")
-		require.NoError(t, err)
 
 		// save random tx hash
 		lastSlot := uint64(100)
 		lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
-		err = ob.SaveLastTxScanned(lastTx, lastSlot)
+		err := ob.SaveLastTxScanned(lastTx, lastSlot)
 		require.NoError(t, err)
 
 		// check last tx and slot scanned in memory
@@ -443,14 +427,11 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
 	t.Run("should be able to write and read last tx scanned to db", func(t *testing.T) {
 		// create observer and open db
-		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, chain)
-		err := ob.OpenDB(dbPath, "")
-		require.NoError(t, err)
 
 		// write last tx scanned
 		lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
-		err = ob.WriteLastTxScannedToDB(lastTx)
+		err := ob.WriteLastTxScannedToDB(lastTx)
 		require.NoError(t, err)
 
 		lastTxScanned, err := ob.ReadLastTxScannedFromDB()
@@ -459,10 +440,7 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 	})
 	t.Run("should return error when last tx scanned not found in db", func(t *testing.T) {
 		// create empty db
-		dbPath := sample.CreateTempDir(t)
 		ob := createObserver(t, chain)
-		err := ob.OpenDB(dbPath, "")
-		require.NoError(t, err)
 
 		lastTxScanned, err := ob.ReadLastTxScannedFromDB()
 		require.Error(t, err)

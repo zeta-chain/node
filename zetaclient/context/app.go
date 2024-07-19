@@ -47,7 +47,7 @@ func New(cfg config.Config, logger zerolog.Logger) *AppContext {
 		chainsEnabled:            []chains.Chain{},
 		evmChainParams:           map[int64]*observertypes.ChainParams{},
 		bitcoinChainParams:       nil,
-		solanaChainParams:       nil,
+		solanaChainParams:        nil,
 		crosschainFlags:          observertypes.CrosschainFlags{},
 		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
 

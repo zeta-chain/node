@@ -97,7 +97,7 @@ func TestNew(t *testing.T) {
 		appContext := context.New(testCfg, logger)
 
 		// That was updated with chain params
-		appContext.Update(nil, nil, chainParams, nil, "", observertypes.CrosschainFlags{}, nil, nil, false)
+		appContext.Update(nil, nil, chainParams, nil, nil, "", observertypes.CrosschainFlags{}, nil, nil, false)
 
 		// assert evm chain params
 		allEVMChainParams := appContext.GetAllEVMChainParams()

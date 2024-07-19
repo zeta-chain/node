@@ -398,13 +398,13 @@ func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
 
 // WriteLastTxScannedToDB saves the last scanned tx hash to the database.
 func (ob *Observer) WriteLastTxScannedToDB(txHash string) error {
-	return ob.db.Save(clienttypes.ToLastTxHashSQLType(txHash)).Error
+	return ob.db.Client().Save(clienttypes.ToLastTxHashSQLType(txHash)).Error
 }
 
 // ReadLastTxScannedFromDB reads the last scanned tx hash from the database.
 func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 	var lastTx clienttypes.LastTransactionSQLType
-	if err := ob.db.First(&lastTx, clienttypes.LastTxHashID).Error; err != nil {
+	if err := ob.db.Client().First(&lastTx, clienttypes.LastTxHashID).Error; err != nil {
 		// record not found
 		return "", err
 	}

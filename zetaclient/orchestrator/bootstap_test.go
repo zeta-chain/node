@@ -173,7 +173,7 @@ func TestCreateSignerMap(t *testing.T) {
 		t.Run("Polygon is there but not supported, should be disabled", func(t *testing.T) {
 			// ARRANGE
 			// Given updated data from zetacore containing polygon chain
-			supportedChain, evmParams, btcParams := chainParams([]chains.Chain{
+			supportedChain, evmParams, btcParams, solParams := chainParams([]chains.Chain{
 				chains.Ethereum,
 				chains.Polygon,
 				chains.BitcoinMainnet,
@@ -182,7 +182,7 @@ func TestCreateSignerMap(t *testing.T) {
 			// BUT (!) it's disabled via zetacore
 			evmParams[chains.Polygon.ChainId].IsSupported = false
 
-			mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams)
+			mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams, solParams)
 
 			// Should have signer BEFORE disabling
 			hasSigner(t, signers, chains.Polygon.ChainId)
@@ -373,7 +373,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 		t.Run("Polygon is there but not supported, should be disabled", func(t *testing.T) {
 			// ARRANGE
 			// Given updated data from zetacore containing polygon chain
-			supportedChain, evmParams, btcParams := chainParams([]chains.Chain{
+			supportedChain, evmParams, btcParams, solParams := chainParams([]chains.Chain{
 				chains.Ethereum,
 				chains.Polygon,
 				chains.BitcoinMainnet,
@@ -382,7 +382,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 			// BUT (!) it's disabled via zetacore
 			evmParams[chains.Polygon.ChainId].IsSupported = false
 
-			mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams)
+			mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams, solParams)
 
 			// Should have signer BEFORE disabling
 			hasObserver(t, observers, chains.Polygon.ChainId)
@@ -420,10 +420,12 @@ func chainParams(supportedChains []chains.Chain) (
 	[]chains.Chain,
 	map[int64]*observertypes.ChainParams,
 	*observertypes.ChainParams,
+	*observertypes.ChainParams,
 ) {
 	var (
 		evmParams = make(map[int64]*observertypes.ChainParams)
 		btcParams = &observertypes.ChainParams{}
+		solParams = &observertypes.ChainParams{}
 	)
 
 	for _, chain := range supportedChains {
@@ -436,17 +438,24 @@ func chainParams(supportedChains []chains.Chain) (
 			continue
 		}
 
+		if chains.IsSolanaChain(chain.ChainId, nil) {
+			solParams = &observertypes.ChainParams{
+				ChainId: chain.ChainId, IsSupported: true,
+			}
+		}
+
 		if chains.IsEVMChain(chain.ChainId, nil) {
 			evmParams[chain.ChainId] = ptr.Ptr(mocks.MockChainParams(chain.ChainId, 100))
 		}
+
 	}
 
-	return supportedChains, evmParams, btcParams
+	return supportedChains, evmParams, btcParams, solParams
 }
 
 func mustUpdateAppContextChainParams(t *testing.T, app *zctx.AppContext, chains []chains.Chain) {
-	supportedChain, evmParams, btcParams := chainParams(chains)
-	mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams)
+	supportedChain, evmParams, btcParams, solParams := chainParams(chains)
+	mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams, solParams)
 }
 
 func mustUpdateAppContext(
@@ -455,12 +464,14 @@ func mustUpdateAppContext(
 	chains []chains.Chain,
 	evmParams map[int64]*observertypes.ChainParams,
 	utxoParams *observertypes.ChainParams,
+	solParams *observertypes.ChainParams,
 ) {
 	app.Update(
 		ptr.Ptr(app.GetKeygen()),
 		chains,
 		evmParams,
 		utxoParams,
+		solParams,
 		app.GetCurrentTssPubKey(),
 		app.GetCrossChainFlags(),
 		app.GetAdditionalChains(),
