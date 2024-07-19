@@ -1,12 +1,13 @@
 package chains
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
+	"github.com/pkg/errors"
 )
 
 type Address string
@@ -83,6 +84,22 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	ok := address.IsForNet(chainParams)
 	if !ok {
 		return nil, fmt.Errorf("address %s is not for network %s", inputAddress, chainParams.Name)
+	}
+	return
+}
+
+// DecodeSolanaWalletAddress decodes a Solana wallet address from a given string
+func DecodeSolanaWalletAddress(inputAddress string) (pk solana.PublicKey, err error) {
+	// decode the Base58 encoded address
+	pk, err = solana.PublicKeyFromBase58(inputAddress)
+	if err != nil {
+		return solana.PublicKey{}, errors.Wrapf(err, "error decoding solana wallet address %s", inputAddress)
+	}
+
+	// accept address that is generated from keypair
+	// reject off-curve address such as program derived address from 'findProgramAddress'
+	if !pk.IsOnCurve() {
+		return solana.PublicKey{}, fmt.Errorf("address %s is not on ed25519 curve", inputAddress)
 	}
 	return
 }

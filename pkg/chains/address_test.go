@@ -98,6 +98,58 @@ func TestDecodeBtcAddress(t *testing.T) {
 	})
 }
 
+func Test_DecodeSolanaWalletAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		address string
+		want    string
+		fail    bool
+		message string
+	}{
+		{
+			name:    "should decode a valid Solana wallet address",
+			address: "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw",
+			want:    "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw",
+			fail:    false,
+		},
+		{
+			name:    "should fail to decode an address with invalid length",
+			address: "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveK",
+			want:    "",
+			fail:    true,
+			message: "error decoding solana wallet address",
+		},
+		{
+			name:    "should fail to decode an invalid Base58 address",
+			address: "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFl", // contains invalid character 'l'
+			want:    "",
+			fail:    true,
+			message: "error decoding solana wallet address",
+		},
+		{
+			name:    "should fail to decode a program derived address (not on ed25519 curve)",
+			address: "9dcAyYG4bawApZocwZSyJBi9Mynf5EuKAJfifXdfkqik",
+			want:    "",
+			fail:    true,
+			message: "is not on ed25519 curve",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pk, err := DecodeSolanaWalletAddress(tt.address)
+			if tt.fail {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.message)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.want, pk.String())
+		})
+	}
+}
+
 func Test_IsBtcAddressSupported_P2TR(t *testing.T) {
 	tests := []struct {
 		name      string

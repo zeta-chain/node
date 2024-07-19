@@ -52,13 +52,14 @@ func (chain Chain) IsExternalChain() bool {
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
 func (chain Chain) EncodeAddress(b []byte) (string, error) {
-	if chain.Consensus == Consensus_ethereum {
+	switch chain.Consensus {
+	case Consensus_ethereum:
 		addr := ethcommon.BytesToAddress(b)
 		if addr == (ethcommon.Address{}) {
 			return "", fmt.Errorf("invalid EVM address")
 		}
 		return addr.Hex(), nil
-	} else if chain.Consensus == Consensus_bitcoin {
+	case Consensus_bitcoin:
 		addrStr := string(b)
 		chainParams, err := GetBTCChainParams(chain.ChainId)
 		if err != nil {
@@ -72,8 +73,15 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", fmt.Errorf("address is not for network %s", chainParams.Name)
 		}
 		return addrStr, nil
+	case Consensus_solana_consensus:
+		pk, err := DecodeSolanaWalletAddress(string(b))
+		if err != nil {
+			return "", err
+		}
+		return pk.String(), nil
+	default:
+		return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
 	}
-	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
 
 func (chain Chain) IsEVMChain() bool {
@@ -111,7 +119,7 @@ func IsEVMChain(chainID int64, additionalChains []Chain) bool {
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin, additionalChains))
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_btc, additionalChains))
 }
 
 // IsSolanaChain returns true if the chain is a Solana chain
