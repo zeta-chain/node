@@ -43,29 +43,3 @@ func CreateZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerol
 }
 
 // TODO
-// 	// create Solana chain observer
-//	solChain, solConfig, enabled := appContext.GetSolanaChainAndConfig()
-//	if enabled {
-//		rpcClient := solrpc.New(solConfig.Endpoint)
-//		if rpcClient == nil {
-//			// should never happen
-//			logger.Std.Error().Msg("solana create Solana client error")
-//			return observerMap, nil
-//		}
-//
-//		observer, err := solanaobserver.NewObserver(
-//			solChain,
-//			rpcClient,
-//			*solChainParams,
-//			zetacoreClient,
-//			tss,
-//			dbpath,
-//			logger,
-//			ts,
-//		)
-//		if err != nil {
-//			logger.Std.Error().Err(err).Msg("NewObserver error for solana chain")
-//		} else {
-//			observerMap[solChainParams.ChainId] = observer
-//		}
-//	}

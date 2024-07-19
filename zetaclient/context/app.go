@@ -315,7 +315,7 @@ func (a *AppContext) Update(
 	}
 
 	// update chain params for solana if it has config in file
-	if a.solanaChainParams != nil && solChainParams != nil {
+	if solChainParams != nil {
 		a.solanaChainParams = solChainParams
 	}
 

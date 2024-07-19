@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -59,11 +60,16 @@ func NewObserver(
 		return nil, err
 	}
 
+	pubKey, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to derive public key")
+	}
+
 	// create solana observer
 	ob := Observer{
 		Observer:  *baseObserver,
 		solClient: solClient,
-		gatewayID: solana.MustPublicKeyFromBase58(chainParams.GatewayAddress),
+		gatewayID: pubKey,
 	}
 
 	// compute gateway PDA

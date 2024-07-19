@@ -19,6 +19,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/testrpc"
 )
 
+const solanaGatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+
 func TestCreateSignerMap(t *testing.T) {
 	var (
 		ts         = metrics.NewTelemetryServer()
@@ -237,6 +239,9 @@ func TestCreateChainObserverMap(t *testing.T) {
 		evmServer := testrpc.NewEVMServer(t)
 		evmServer.SetBlockNumber(100)
 
+		// Given generic SOL RPC
+		_, solConfig := testrpc.NewSolanaServer(t)
+
 		// Given a zetaclient config with ETH, MATIC, and BTC chains
 		cfg := config.New(false)
 
@@ -251,13 +256,14 @@ func TestCreateChainObserverMap(t *testing.T) {
 		}
 
 		cfg.BitcoinConfig = btcConfig
+		cfg.SolanaConfig = solConfig
 
 		// Given AppContext
 		app := zctx.New(cfg, log)
 		ctx := zctx.WithAppContext(context.Background(), app)
 
 		// Given chain & chainParams "fetched" from zetacore
-		// (note that slice LACKS polygon chain on purpose)
+		// (note that slice LACKS polygon & SOL chains on purpose)
 		mustUpdateAppContextChainParams(t, app, []chains.Chain{
 			chains.Ethereum,
 			chains.BitcoinMainnet,
@@ -294,10 +300,34 @@ func TestCreateChainObserverMap(t *testing.T) {
 			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 		})
 
-		t.Run("Disable ethereum in the runtime", func(t *testing.T) {
+		t.Run("Add solana in the runtime", func(t *testing.T) {
 			// ARRANGE
 			mustUpdateAppContextChainParams(t, app, []chains.Chain{
-				chains.BitcoinMainnet, chains.Polygon,
+				chains.Ethereum,
+				chains.BitcoinMainnet,
+				chains.Polygon,
+				chains.SolanaMainnet,
+			})
+
+			// ACT
+			added, removed, err := syncObserverMap(ctx, client, tss, dbPath, baseLogger, ts, &observers)
+
+			// ASSERT
+			assert.NoError(t, err)
+			assert.Equal(t, 1, added)
+			assert.Equal(t, 0, removed)
+
+			hasObserver(t, observers, chains.Ethereum.ChainId)
+			hasObserver(t, observers, chains.Polygon.ChainId)
+			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
+			hasObserver(t, observers, chains.SolanaMainnet.ChainId)
+		})
+
+		t.Run("Disable ethereum and solana in the runtime", func(t *testing.T) {
+			// ARRANGE
+			mustUpdateAppContextChainParams(t, app, []chains.Chain{
+				chains.BitcoinMainnet,
+				chains.Polygon,
 			})
 
 			// ACT
@@ -306,11 +336,12 @@ func TestCreateChainObserverMap(t *testing.T) {
 			// ASSERT
 			assert.NoError(t, err)
 			assert.Equal(t, 0, added)
-			assert.Equal(t, 1, removed)
+			assert.Equal(t, 2, removed)
 
 			missesObserver(t, observers, chains.Ethereum.ChainId)
 			hasObserver(t, observers, chains.Polygon.ChainId)
 			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
+			missesObserver(t, observers, chains.SolanaMainnet.ChainId)
 		})
 
 		t.Run("Re-enable ethereum in the runtime", func(t *testing.T) {
@@ -440,14 +471,15 @@ func chainParams(supportedChains []chains.Chain) (
 
 		if chains.IsSolanaChain(chain.ChainId, nil) {
 			solParams = &observertypes.ChainParams{
-				ChainId: chain.ChainId, IsSupported: true,
+				ChainId:        chain.ChainId,
+				IsSupported:    true,
+				GatewayAddress: solanaGatewayAddress,
 			}
 		}
 
 		if chains.IsEVMChain(chain.ChainId, nil) {
 			evmParams[chain.ChainId] = ptr.Ptr(mocks.MockChainParams(chain.ChainId, 100))
 		}
-
 	}
 
 	return supportedChains, evmParams, btcParams, solParams

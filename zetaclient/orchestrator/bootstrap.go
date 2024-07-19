@@ -2,10 +2,10 @@ package orchestrator
 
 import (
 	"context"
-	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -15,6 +15,7 @@ import (
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	solbserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
@@ -212,7 +213,6 @@ func syncObserverMap(
 		}
 
 		onBeforeUnset = func(_ int64, ob interfaces.ChainObserver) {
-			fmt.Print("STOP OBSERVER for", ob.GetChainParams().ChainId)
 			ob.Stop()
 			removed++
 		}
@@ -334,6 +334,67 @@ func syncObserverMap(
 		}
 
 		mapSet[int64, interfaces.ChainObserver](observerMap, btcChain.ChainId, btcObserver, onAfterSet)
+	}
+
+	// Emulate same loop semantics as for EVM chains
+	// create SOL chain observer
+	for i := 0; i < 1; i++ {
+		solChain, solConfig, solEnabled := app.GetSolanaChainAndConfig()
+		if !solEnabled {
+			continue
+		}
+
+		var (
+			chainID   = solChain.ChainId
+			chainName = solChain.ChainName.String()
+		)
+
+		_, solanaChainParams, found := app.GetSolanaChainParams()
+		switch {
+		case !found:
+			logger.Std.Warn().Msgf("Unable to find chain params for SOL chain %d", chainID)
+			continue
+		case !solanaChainParams.IsSupported:
+			logger.Std.Warn().Msgf("SOL chain %d is not supported", chainID)
+			continue
+		}
+
+		presentChainIDs = append(presentChainIDs, chainID)
+
+		// noop
+		if mapHas(observerMap, chainID) {
+			continue
+		}
+
+		rpcClient := solrpc.New(solConfig.Endpoint)
+		if rpcClient == nil {
+			// should never happen
+			logger.Std.Error().Msg("solana create Solana client error")
+			continue
+		}
+
+		database, err := db.NewFromSqlite(dbpath, chainName, true)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("unable to open database for SOL chain %d", chainID)
+			continue
+		}
+
+		solObserver, err := solbserver.NewObserver(
+			solChain,
+			rpcClient,
+			*solanaChainParams,
+			client,
+			tss,
+			database,
+			logger,
+			ts,
+		)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("NewObserver error for SOL chain %d", chainID)
+			continue
+		}
+
+		mapSet[int64, interfaces.ChainObserver](observerMap, chainID, solObserver, onAfterSet)
 	}
 
 	// Remove all disabled observers
