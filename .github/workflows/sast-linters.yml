@@ -1,13 +1,15 @@
 name: Linters and SAST
 on:
   push:
+    branches:
+      - develop
+      - release/*
     tags:
       - "*"
   merge_group:
   pull_request:
     types:
       - opened
-      - edited
       - synchronize
 
 concurrency:

@@ -2,6 +2,7 @@
 package context
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 
@@ -22,6 +23,7 @@ type AppContext struct {
 	chainsEnabled      []chains.Chain
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
+	solanaChainParams  *observertypes.ChainParams
 	currentTssPubkey   string
 	crosschainFlags    observertypes.CrosschainFlags
 
@@ -45,6 +47,7 @@ func New(cfg config.Config, logger zerolog.Logger) *AppContext {
 		chainsEnabled:            []chains.Chain{},
 		evmChainParams:           map[int64]*observertypes.ChainParams{},
 		bitcoinChainParams:       nil,
+		solanaChainParams:       nil,
 		crosschainFlags:          observertypes.CrosschainFlags{},
 		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
 
@@ -72,6 +75,18 @@ func (a *AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, boo
 	}
 
 	return chain, cfg, true
+}
+
+// GetSolanaChainAndConfig returns solana chain and config if enabled
+func (a *AppContext) GetSolanaChainAndConfig() (chains.Chain, config.SolanaConfig, bool) {
+	solConfig, configEnabled := a.Config().GetSolanaConfig()
+	solChain, _, paramsEnabled := a.GetSolanaChainParams()
+
+	if !configEnabled || !paramsEnabled {
+		return chains.Chain{}, config.SolanaConfig{}, false
+	}
+
+	return solChain, solConfig, true
 }
 
 // IsOutboundObservationEnabled returns true if the chain is supported and outbound flag is enabled
@@ -178,6 +193,25 @@ func (a *AppContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainPara
 	return chain, a.bitcoinChainParams, true
 }
 
+// GetSolanaChainParams returns (chain, chain params, found) for solana chain
+func (a *AppContext) GetSolanaChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	// solana is not enabled
+	if a.solanaChainParams == nil {
+		return chains.Chain{}, nil, false
+	}
+
+	chain, found := chains.GetChainFromChainID(a.solanaChainParams.ChainId, a.additionalChain)
+	if !found {
+		fmt.Printf("solana Chain %d not found", a.solanaChainParams.ChainId)
+		return chains.Chain{}, nil, false
+	}
+
+	return chain, a.solanaChainParams, true
+}
+
 // GetCrossChainFlags returns crosschain flags
 func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	a.mu.RLock()
@@ -222,6 +256,7 @@ func (a *AppContext) Update(
 	newChains []chains.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,
 	btcChainParams *observertypes.ChainParams,
+	solChainParams *observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
 	additionalChains []chains.Chain,
@@ -277,6 +312,11 @@ func (a *AppContext) Update(
 	// update chain params for bitcoin if it has config in file
 	if btcChainParams != nil {
 		a.bitcoinChainParams = btcChainParams
+	}
+
+	// update chain params for solana if it has config in file
+	if a.solanaChainParams != nil && solChainParams != nil {
+		a.solanaChainParams = solChainParams
 	}
 
 	if tssPubKey != "" {

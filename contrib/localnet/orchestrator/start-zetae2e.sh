@@ -77,6 +77,11 @@ address=$(yq -r '.additional_accounts.user_admin.evm_address' config.yml)
 echo "funding admin tester address ${address} with 10000 Ether"
 geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
+# unlock migration tests accounts
+address=$(yq -r '.additional_accounts.user_migration.evm_address' config.yml)
+echo "funding migration tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+
 ### Run zetae2e command depending on the option passed
 
 if [ "$LOCALNET_MODE" == "upgrade" ]; then
@@ -176,7 +181,7 @@ else
     exit 0
   fi
 
-  echo "running e2e tests..."
+  echo "running e2e tests with arguments: $E2E_ARGS"
 
   zetae2e local $E2E_ARGS --skip-setup --config deployed.yml
   ZETAE2E_EXIT_CODE=$?

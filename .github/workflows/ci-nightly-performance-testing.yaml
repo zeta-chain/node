@@ -25,54 +25,26 @@ jobs:
           node-version: 16
 
       - name: "START:LOCAL:NET:WITH:STATE"
-        run: | 
+        run: |
           make start-e2e-import-mainnet-test
 
       - name: "INSTALL:ARTILLERY"
-        run: | 
+        run: |
           npm install -g artillery@latest
 
       - name: "CONFIGURE:PERFORMANCE:TEMPLATE"
+        env:
+          CLOUDFLARE_UUID: ${{ secrets.CLOUDFLARE_UUID }}
         run: |
-          # Check if the inputs.endpoint starts with https:// or http://
-          if [[ "${{inputs.endpoint}}" =~ ^https:// ]]; then
-            # Set the http_request_protocol to https if the URL starts with https://
-            export http_request_protocol=https
-          elif [[ "${{inputs.endpoint}}" =~ ^http:// ]]; then
-            # Set the http_request_protocol to http if the URL starts with http://
-            export http_request_protocol=http
-          else
-            # If the URL doesn't start with either http:// or https://, print an error and exit
-            echo "Please input a url with either https:// or http://" && exit 1
-          fi
-          
-          # Check if inputs.endpoint is different from the default "http://localhost:9545"
-          if [ "${{inputs.endpoint}}" != "http://localhost:9545" ]; then
-            # Check if inputs.endpoint is not empty
-            if [ -n "${{inputs.endpoint}}" ]; then
-              # If inputs.endpoint isn't different from the default and is not empty, use inputs.endpoint
-              export endpoint_to_test=${{inputs.endpoint}}
-              # Remove the protocol (http:// or https://) from endpoint_to_test
-              endpoint_to_test=${endpoint_to_test#http://}
-              endpoint_to_test=${endpoint_to_test#https://}
-            else
-              # If inputs.endpoint is empty, strip the protocol from endpoint_to_test
-              endpoint_to_test=${endpoint_to_test#http://}
-              endpoint_to_test=${endpoint_to_test#https://}
-            fi
-          else
-            # If inputs.endpoint is "http://localhost:9545", strip the protocol from endpoint_to_test
-            endpoint_to_test=${endpoint_to_test#http://}
-            endpoint_to_test=${endpoint_to_test#https://}
-          fi
-          
           # Replace -=endpoint_to_test=- placeholder in the art.yaml file with the endpoint_to_test value
-          sed -i "s/-=endpoint_to_test=-/${endpoint_to_test}/g" .github/actions/performance-tests/art.yaml
-          # Replace -=http_request_protocol=- placeholder in the art.yaml file with the http_request_protocol value
-          sed -i "s/-=http_request_protocol=-/${http_request_protocol}/g" .github/actions/performance-tests/art.yaml
+          sed -i "s|-=endpoint_to_test=-|${{inputs.endpoint}}|g" .github/actions/performance-tests/art.yaml
+          echo "CLOUDFLARE_UUID=${{ secrets.CLOUDFLARE_UUID }}" >> ${GITHUB_ENV}
+          # Replace -=CLOUDFLARE_UUID=- placeholder in the art.yaml file with the correct value
+          sed -i "s|-=CLOUDFLARE_UUID=-|${CLOUDFLARE_UUID}|g" .github/actions/performance-tests/art.yaml
+          cat .github/actions/performance-tests/art.yaml
 
       - name: "EXECUTE:PERFORMANCE:TESTS"
-        run: | 
+        run: |
           # Execute Artillery to run performance tests using the specified configuration file
           artillery run .github/actions/performance-tests/art.yaml \
           --record \
@@ -98,7 +70,7 @@ jobs:
           else
             echo "EVM Performance Testing Successful"
           fi
-      
+          
           # Read the JSON file and extract the required metrics
           p99_values=$(jq -r '.aggregate.summaries["http.response_time"].p99, .aggregate.summaries["plugins.metrics-by-endpoint.response_time./"].p99, .aggregate.summaries["vusers.session_length"].p99' ./report.json)
           p50_values=$(jq -r '.aggregate.summaries["http.response_time"].p50, .aggregate.summaries["plugins.metrics-by-endpoint.response_time./"].p50, .aggregate.summaries["vusers.session_length"].p50' ./report.json)
@@ -121,7 +93,7 @@ jobs:
 
       - name: "GENERATE:REPORT"
         if: always()
-        run: | 
+        run: |
           artillery report report.json --output artillery_report.html
 
       - name: "UPLOAD:REPORT"

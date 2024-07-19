@@ -35,7 +35,7 @@ import (
 
 const (
 	// the maximum number of inputs per outbound
-	maxNoOfInputsPerTx = 20
+	MaxNoOfInputsPerTx = 20
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
@@ -199,7 +199,7 @@ func (signer *Signer) SignWithdrawTx(
 	prevOuts, total, consolidatedUtxo, consolidatedValue, err := observer.SelectUTXOs(
 		ctx,
 		amount+estimateFee+float64(nonceMark)*1e-8,
-		maxNoOfInputsPerTx,
+		MaxNoOfInputsPerTx,
 		nonce,
 		consolidationRank,
 		false,

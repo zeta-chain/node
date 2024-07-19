@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
@@ -23,6 +24,11 @@ import (
 // setContractsFromConfig get EVM contracts from config
 func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	var err error
+
+	// set Solana contracts
+	if c := conf.Contracts.Solana.GatewayProgramID; c != "" {
+		r.GatewayProgram = solana.MustPublicKeyFromBase58(c)
+	}
 
 	// set EVM contracts
 	if c := conf.Contracts.EVM.ZetaEthAddr; c != "" {
@@ -109,6 +115,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid BTCZRC20Addr: %w", err)
 		}
 		r.BTCZRC20, err = zrc20.NewZRC20(r.BTCZRC20Addr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.SOLZRC20Addr; c != "" {
+		r.SOLZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid SOLZRC20Addr: %w", err)
+		}
+		r.SOLZRC20, err = zrc20.NewZRC20(r.SOLZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

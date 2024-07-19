@@ -46,7 +46,7 @@ const (
 	BigValueConfirmationCount = 6
 )
 
-var _ interfaces.ChainObserver = &Observer{}
+var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Logger contains list of loggers used by Bitcoin chain observer
 type Logger struct {

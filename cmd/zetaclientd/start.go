@@ -15,14 +15,13 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/go-tss/p2p"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -30,10 +29,9 @@ import (
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
+	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
-
-type Multiaddr = core.Multiaddr
 
 var StartCmd = &cobra.Command{
 	Use:   "start",
@@ -201,22 +199,40 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(
-		ctx,
-		masterLogger,
-		zetacoreClient,
-		peers,
-		priKey,
-		telemetryServer,
-		tssHistoricalList,
-		tssKeyPass,
-		hotkeyPass,
-	)
+	// Create TSS server
+	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
+	if err != nil {
+		return fmt.Errorf("SetupTSSServer error: %w", err)
+	}
+	// Set P2P ID for telemetry
+	telemetryServer.SetP2PID(server.GetLocalPeerID())
+
+	// Generate a new TSS if keygen is set and add it into the tss server
+	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
+	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}
+
+	bitcoinChainID := chains.BitcoinRegtest.ChainId
+	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
+	if btcEnabled {
+		bitcoinChainID = btcChain.ChainId
+	}
+	tss, err := mc.NewTSS(
+		ctx,
+		zetacoreClient,
+		tssHistoricalList,
+		bitcoinChainID,
+		hotkeyPass,
+		server,
+	)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("NewTSS error")
+		return err
+	}
 	if cfg.TestTssKeysign {
-		err = TestTSS(tss, masterLogger)
+		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
 		if err != nil {
 			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
 		}
@@ -336,14 +352,14 @@ func start(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func initPeers(peer string) (p2p.AddrList, error) {
-	var peers p2p.AddrList
+func initPeers(peer string) ([]maddr.Multiaddr, error) {
+	var peers []maddr.Multiaddr
 
 	if peer != "" {
 		address, err := maddr.NewMultiaddr(peer)
 		if err != nil {
 			log.Error().Err(err).Msg("NewMultiaddr error")
-			return p2p.AddrList{}, err
+			return []maddr.Multiaddr{}, err
 		}
 		peers = append(peers, address)
 	}

@@ -1,6 +1,7 @@
 package base
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -12,11 +13,13 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 const (
@@ -52,6 +55,9 @@ type Observer struct {
 
 	// lastBlockScanned is the last block height scanned by the observer
 	lastBlockScanned uint64
+
+	// lastTxScanned is the last transaction hash scanned by the observer
+	lastTxScanned string
 
 	// blockCache is the cache for blocks
 	blockCache *lru.Cache
@@ -96,6 +102,7 @@ func NewObserver(
 		tss:              tss,
 		lastBlock:        0,
 		lastBlockScanned: 0,
+		lastTxScanned:    "",
 		ts:               ts,
 		db:               database,
 		mu:               &sync.Mutex{},
@@ -222,6 +229,17 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 	return ob
 }
 
+// LastTxScanned get last transaction scanned.
+func (ob *Observer) LastTxScanned() string {
+	return ob.lastTxScanned
+}
+
+// WithLastTxScanned set last transaction scanned.
+func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
+	ob.lastTxScanned = txHash
+	return ob
+}
+
 // BlockCache returns the block cache for the observer.
 func (ob *Observer) BlockCache() *lru.Cache {
 	return ob.blockCache
@@ -318,8 +336,6 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
 		return nil
 	}
 	ob.WithLastBlockScanned(blockNumber)
-	logger.Info().
-		Msgf("LoadLastBlockScanned: chain %d starts scanning from block %d", ob.chain.ChainId, ob.LastBlockScanned())
 
 	return nil
 }
@@ -345,7 +361,86 @@ func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 	return lastBlock.Num, nil
 }
 
-// EnvVarLatestBlock returns the environment variable for the latest block by chain.
+// LoadLastTxScanned loads last scanned tx from environment variable or from database.
+// The last scanned tx is the tx hash from which the observer should continue scanning.
+func (ob *Observer) LoadLastTxScanned() {
+	// get environment variable
+	envvar := EnvVarLatestTxByChain(ob.chain)
+	scanFromTx := os.Getenv(envvar)
+
+	// load from environment variable if set
+	if scanFromTx != "" {
+		ob.logger.Chain.Info().Msgf("LoadLastTxScanned: envvar %s is set; scan from  tx %s", envvar, scanFromTx)
+		ob.WithLastTxScanned(scanFromTx)
+		return
+	}
+
+	// load from DB otherwise.
+	txHash, err := ob.ReadLastTxScannedFromDB()
+	if err != nil {
+		// If not found, let the concrete chain observer decide where to start
+		ob.logger.Chain.Info().Msgf("LoadLastTxScanned: last scanned tx not found in db for chain %d", ob.chain.ChainId)
+		return
+	}
+	ob.WithLastTxScanned(txHash)
+}
+
+// SaveLastTxScanned saves the last scanned tx hash to memory and database.
+func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
+	// save last scanned tx to memory
+	ob.WithLastTxScanned(txHash)
+
+	// update last_scanned_block_number metrics
+	ob.WithLastBlockScanned(slot)
+
+	return ob.WriteLastTxScannedToDB(txHash)
+}
+
+// WriteLastTxScannedToDB saves the last scanned tx hash to the database.
+func (ob *Observer) WriteLastTxScannedToDB(txHash string) error {
+	return ob.db.Save(clienttypes.ToLastTxHashSQLType(txHash)).Error
+}
+
+// ReadLastTxScannedFromDB reads the last scanned tx hash from the database.
+func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
+	var lastTx clienttypes.LastTransactionSQLType
+	if err := ob.db.First(&lastTx, clienttypes.LastTxHashID).Error; err != nil {
+		// record not found
+		return "", err
+	}
+	return lastTx.Hash, nil
+}
+
+// PostVoteInbound posts a vote for the given vote message
+func (ob *Observer) PostVoteInbound(
+	ctx context.Context,
+	msg *crosschaintypes.MsgVoteInbound,
+	retryGasLimit uint64,
+) (string, error) {
+	txHash := msg.InboundHash
+	coinType := msg.CoinType
+	chainID := ob.Chain().ChainId
+	zetaHash, ballot, err := ob.ZetacoreClient().
+		PostVoteInbound(ctx, zetacore.PostVoteInboundGasLimit, retryGasLimit, msg)
+	if err != nil {
+		ob.logger.Inbound.Err(err).
+			Msgf("inbound detected: error posting vote for chain %d token %s inbound %s", chainID, coinType, txHash)
+		return "", err
+	} else if zetaHash != "" {
+		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
+	} else {
+		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s already voted on ballot %s", chainID, coinType, txHash, ballot)
+	}
+
+	return ballot, err
+}
+
+// EnvVarLatestBlockByChain returns the environment variable for the last block by chain.
 func EnvVarLatestBlockByChain(chain chains.Chain) string {
-	return fmt.Sprintf("CHAIN_%d_SCAN_FROM", chain.ChainId)
+	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_BLOCK", chain.ChainId)
+}
+
+// EnvVarLatestTxByChain returns the environment variable for the last tx by chain.
+func EnvVarLatestTxByChain(chain chains.Chain) string {
+	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_TX", chain.ChainId)
 }

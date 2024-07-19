@@ -86,6 +86,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 	// #nosec G115 checked positive
 	lastBlock := uint64(cnt)
+
 	if lastBlock < ob.LastBlock() {
 		return fmt.Errorf(
 			"observeInboundBTC: block number should not decrease: current %d last %d",
@@ -130,7 +131,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			ob.logger.Inbound.Warn().Err(err).Msgf("observeInboundBTC: error posting block header %d", blockNumber)
 		}
 	}
-
 	if len(res.Block.Tx) > 1 {
 		// get depositor fee
 		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)

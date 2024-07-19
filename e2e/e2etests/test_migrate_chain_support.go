@@ -212,6 +212,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,
+		r.SolanaClient,
 		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
 		runner.WithZetaTxServer(r.ZetaTxServer),
 	)

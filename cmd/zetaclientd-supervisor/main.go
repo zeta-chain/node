@@ -36,10 +36,6 @@ func main() {
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// these signals will result in the supervisor process only restarting zetaclientd
-	restartChan := make(chan os.Signal, 1)
-	signal.Notify(restartChan, syscall.SIGHUP)
-
 	hotkeyPassword, tssPassword, err := promptPasswords()
 	if err != nil {
 		logger.Error().Err(err).Msg("unable to get passwords")
@@ -53,6 +49,8 @@ func main() {
 		os.Exit(1)
 	}
 	supervisor.Start(ctx)
+	// listen for SIGHUP to trigger a restart of zetaclientd
+	signal.Notify(supervisor.restartChan, syscall.SIGHUP)
 
 	shouldRestart := true
 	for shouldRestart {
@@ -82,7 +80,7 @@ func main() {
 				select {
 				case <-ctx.Done():
 					return nil
-				case sig := <-restartChan:
+				case sig := <-supervisor.restartChan:
 					logger.Info().Msgf("got signal %d, sending SIGINT to zetaclientd", sig)
 				case sig := <-shutdownChan:
 					logger.Info().Msgf("got signal %d, shutting down", sig)

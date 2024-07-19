@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/spf13/cobra"
+	"gitlab.com/thorchain/tss/tss-lib/ecdsa/keygen"
 )
 
 func init() {

@@ -80,6 +80,7 @@ func CreateAppContext(
 		[]chains.Chain{evmChain, btcChain},
 		evmChainParamsMap,
 		btcChainParams,
+		nil,
 		"",
 		*ccFlags,
 		[]chains.Chain{},
