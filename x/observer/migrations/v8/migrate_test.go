@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-var chainNonces = []types.ChainNonces{
+var chainNoncesArray = []types.ChainNonces{
 	{
 		Index:   chains.BitcoinMainnet.ChainName.String(),
 		ChainId: chains.BitcoinMainnet.ChainId,
@@ -70,17 +70,17 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// set chain nonces
-		for _, chainNonce := range chainNonces {
+		for _, chainNonce := range chainNoncesArray {
 			setChainNoncesLegacy(ctx, *k, chainNonce)
 		}
 
 		// there are 10 chain nonces in the store
-		chainNonces := k.GetAllChainNonces(ctx)
-		require.Len(t, chainNonces, 10)
+		allChainNonces := k.GetAllChainNonces(ctx)
+		require.Len(t, allChainNonces, 10)
 
 		// no chain nonces can be found in the store
-		for _, chainNonce := range chainNonces {
-			_, found := k.GetChainNonces(ctx, chainNonce.ChainId)
+		for _, chainNonces := range allChainNonces {
+			_, found := k.GetChainNonces(ctx, chainNonces.ChainId)
 			require.False(t, found)
 		}
 
@@ -89,13 +89,22 @@ func TestMigrateStore(t *testing.T) {
 		require.NoError(t, err)
 
 		// there are 10 chain nonces in the store
-		chainNonces = k.GetAllChainNonces(ctx)
-		require.Len(t, chainNonces, 10)
+		allChainNonces = k.GetAllChainNonces(ctx)
+		require.Len(t, allChainNonces, 10)
+
+		chainIDMap := make(map[int64]bool)
 
 		// all chain nonces can be found in the store
-		for _, chainNonce := range chainNonces {
-			_, found := k.GetChainNonces(ctx, chainNonce.ChainId)
+		for _, chainNonces := range allChainNonces {
+			// chain all chain IDs are different
+			_, found := chainIDMap[chainNonces.ChainId]
+			require.False(t, found)
+			chainIDMap[chainNonces.ChainId] = true
+
+			// check value
+			retrievedChainNonces, found := k.GetChainNonces(ctx, chainNonces.ChainId)
 			require.True(t, found)
+			require.Contains(t, chainNoncesArray, retrievedChainNonces)
 		}
 	})
 
