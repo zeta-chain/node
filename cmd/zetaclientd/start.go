@@ -77,7 +77,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	masterLogger := logger.Std
-	startLogger := masterLogger.With().Str("module", "startup").Logger()
+	startLogger := logger.Std.With().Str("module", "startup").Logger()
 
 	appContext := zctx.New(cfg, masterLogger)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
@@ -295,7 +295,9 @@ func start(_ *cobra.Command, _ []string) error {
 		zetacoreClient,
 		signerMap,
 		observerMap,
-		masterLogger,
+		tss,
+		dbpath,
+		logger,
 		telemetryServer,
 	)
 	if err != nil {

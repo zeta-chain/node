@@ -111,14 +111,14 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		context := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC signer should not be found
-		_, err := orchestrator.GetUpdatedSigner(context, chains.BscMainnet.ChainId)
+		_, err := orchestrator.resolveSigner(context, chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		context := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// update signer with new connector and erc20 custody address
-		signer, err := orchestrator.GetUpdatedSigner(context, evmChain.ChainId)
+		signer, err := orchestrator.resolveSigner(context, evmChain.ChainId)
 		require.NoError(t, err)
 		require.Equal(t, testutils.OtherAddress1, signer.GetZetaConnectorAddress().Hex())
 		require.Equal(t, testutils.OtherAddress2, signer.GetERC20CustodyAddress().Hex())
@@ -176,14 +176,14 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// BSC chain observer should not be found
-		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BscMainnet.ChainId)
-		require.ErrorContains(t, err, "chain observer not found")
+		_, err := orchestrator.resolveObserver(coreContext, chains.BscMainnet.ChainId)
+		require.ErrorContains(t, err, "observer not found")
 	})
 	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateAppContext(evmChain, btcChain, evmChainParamsNew, btcChainParams)
 		// update evm chain observer with new chain params
-		chainOb, err := orchestrator.GetUpdatedChainObserver(coreContext, evmChain.ChainId)
+		chainOb, err := orchestrator.resolveObserver(coreContext, evmChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.GetChainParams()))
@@ -192,14 +192,14 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
 		// BTC testnet chain observer should not be found
-		_, err := orchestrator.GetUpdatedChainObserver(coreContext, chains.BitcoinTestnet.ChainId)
-		require.ErrorContains(t, err, "chain observer not found")
+		_, err := orchestrator.resolveObserver(coreContext, chains.BitcoinTestnet.ChainId)
+		require.ErrorContains(t, err, "observer not found")
 	})
 	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
 		coreContext := CreateAppContext(btcChain, btcChain, evmChainParams, btcChainParamsNew)
 		// update btc chain observer with new chain params
-		chainOb, err := orchestrator.GetUpdatedChainObserver(coreContext, btcChain.ChainId)
+		chainOb, err := orchestrator.resolveObserver(coreContext, btcChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.GetChainParams()))
