@@ -28,7 +28,7 @@ type Observer struct {
 	gatewayID solana.PublicKey
 
 	// pda is the program derived address of the gateway program
-	pdaID solana.PublicKey
+	pda solana.PublicKey
 }
 
 // NewObserver returns a new Solana chain observer
@@ -66,7 +66,7 @@ func NewObserver(
 
 	// compute gateway PDA
 	seed := []byte(solanacontract.PDASeed)
-	ob.pdaID, _, err = solana.FindProgramAddress([][]byte{seed}, ob.gatewayID)
+	ob.pda, _, err = solana.FindProgramAddress([][]byte{seed}, ob.gatewayID)
 	if err != nil {
 		return nil, err
 	}

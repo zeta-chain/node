@@ -338,7 +338,7 @@ func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.Compil
 		accKey := tx.Message.AccountKeys[accIndexInt]
 
 		switch accKey {
-		case ob.pdaID:
+		case ob.pda:
 			pdaIndex = accIndexInt
 		case ob.gatewayID:
 			gatewayIndex = accIndexInt
