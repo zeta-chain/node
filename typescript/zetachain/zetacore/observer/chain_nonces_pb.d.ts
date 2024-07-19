@@ -16,6 +16,13 @@ export declare class ChainNonces extends Message<ChainNonces> {
   creator: string;
 
   /**
+   * deprecated(v19): index has been replaced by chain_id for unique identifier
+   *
+   * @generated from field: string index = 2;
+   */
+  index: string;
+
+  /**
    * @generated from field: int64 chain_id = 3;
    */
   chainId: bigint;

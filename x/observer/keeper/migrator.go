@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v8 "github.com/zeta-chain/zetacore/x/observer/migrations/v8"
 )
 

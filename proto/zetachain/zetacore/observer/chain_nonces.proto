@@ -7,7 +7,10 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message ChainNonces {
   string creator = 1;
-  reserved 2;
+
+  // deprecated(v19): index has been replaced by chain_id for unique identifier
+  string index = 2;
+
   int64 chain_id = 3;
   uint64 nonce = 4;
   repeated string signers = 5;
