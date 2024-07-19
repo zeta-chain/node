@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
@@ -17,6 +18,7 @@ import (
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -168,7 +170,7 @@ func CreateChainObserverMap(
 	}
 
 	// BTC observer
-	_, chainParams, found := appContext.GetBTCChainParams()
+	_, btcChainParams, found := appContext.GetBTCChainParams()
 	if !found {
 		return nil, fmt.Errorf("bitcoin chains params not found")
 	}
@@ -184,7 +186,7 @@ func CreateChainObserverMap(
 			observer, err := btcobserver.NewObserver(
 				btcChain,
 				btcClient,
-				*chainParams,
+				*btcChainParams,
 				zetacoreClient,
 				tss,
 				dbpath,
@@ -196,6 +198,40 @@ func CreateChainObserverMap(
 			} else {
 				observerMap[btcChain.ChainId] = observer
 			}
+		}
+	}
+
+	// Solana chain params
+	_, solChainParams, found := appContext.GetSolanaChainParams()
+	if !found {
+		logger.Std.Error().Msg("solana chain params not found")
+		return observerMap, nil
+	}
+
+	// create Solana chain observer
+	solChain, solConfig, enabled := appContext.GetSolanaChainAndConfig()
+	if enabled {
+		rpcClient := solrpc.New(solConfig.Endpoint)
+		if rpcClient == nil {
+			// should never happen
+			logger.Std.Error().Msg("solana create Solana client error")
+			return observerMap, nil
+		}
+
+		observer, err := solanaobserver.NewObserver(
+			solChain,
+			rpcClient,
+			*solChainParams,
+			zetacoreClient,
+			tss,
+			dbpath,
+			logger,
+			ts,
+		)
+		if err != nil {
+			logger.Std.Error().Err(err).Msg("NewObserver error for solana chain")
+		} else {
+			observerMap[solChainParams.ChainId] = observer
 		}
 	}
 

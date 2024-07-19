@@ -230,6 +230,10 @@ install-zetae2e: go.sum
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
+solana:
+	@echo "Building solana docker image"
+	$(DOCKER) build -t solana-local -f contrib/localnet/solana/Dockerfile contrib/localnet/solana/
+
 start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
@@ -258,6 +262,11 @@ start-tss-migration-test: zetanode
 	@echo "--> Starting migration test"
 	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER) compose up -d
+
+start-solana-test: zetanode solana
+	@echo "--> Starting solana test"
+	export E2E_ARGS="--skip-regular --test-solana" && \
+	cd contrib/localnet/ && $(DOCKER) compose --profile solana -f docker-compose.yml up -d
 
 ###############################################################################
 ###                         Upgrade Tests              						###

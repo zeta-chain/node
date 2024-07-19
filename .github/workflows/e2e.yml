@@ -47,6 +47,10 @@ on:
         type: boolean
         required: false
         default: false
+      solana-test:
+        type: boolean
+        required: false
+        default: false
 
 concurrency: 
   group: e2e-${{ github.head_ref || github.sha }}
@@ -66,7 +70,7 @@ jobs:
       PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
-
+      SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
@@ -89,6 +93,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
+              core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
             } else if (context.eventName === 'merge_group') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
@@ -109,6 +114,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
+              core.setOutput('SOLANA_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               core.setOutput('DEFAULT_TESTS', context.payload.inputs['default-test']);
               core.setOutput('UPGRADE_TESTS', context.payload.inputs['upgrade-test']);
@@ -118,6 +124,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', context.payload.inputs['performance-test']);
               core.setOutput('STATEFUL_DATA_TESTS', context.payload.inputs['stateful-data-test']);
               core.setOutput('TSS_MIGRATION_TESTS', context.payload.inputs['tss-migration-test']);
+              core.setOutput('SOLANA_TESTS', context.payload.inputs['solana-test']);
             }
 
   e2e:
@@ -150,6 +157,9 @@ jobs:
           - make-target: "start-tss-migration-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+          - make-target: "start-solana-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:

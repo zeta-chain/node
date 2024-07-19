@@ -52,6 +52,11 @@ const (
 	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
+	 Solana tests
+	*/
+	TestSolanaDepositName = "solana_deposit"
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -324,6 +329,17 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{},
 		TestERC20DepositAndCallRefund,
+	),
+	/*
+	 Solana tests
+	*/
+	runner.NewE2ETest(
+		TestSolanaDepositName,
+		"deposit SOL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in SOL", DefaultValue: "0.1"},
+		},
+		TestSolanaDeposit,
 	),
 	/*
 	 Bitcoin tests

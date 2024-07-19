@@ -32,6 +32,7 @@ const (
 	flagTestAdmin         = "test-admin"
 	flagTestPerformance   = "test-performance"
 	flagTestCustom        = "test-custom"
+	flagTestSolana        = "test-solana"
 	flagSkipRegular       = "skip-regular"
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
@@ -62,6 +63,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
+	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
@@ -84,6 +86,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
 		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
+		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
 		light             = must(cmd.Flags().GetBool(flagLight))
 		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
@@ -176,6 +179,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
+		if testSolana {
+			deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+		}
 		noError(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(10000)
@@ -238,6 +244,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
+
 		bitcoinTests := []string{
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositRefundName,
@@ -303,6 +310,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testCustom {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
+	}
+	if testSolana {
+		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, e2etests.TestSolanaDepositName))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
