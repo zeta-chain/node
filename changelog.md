@@ -121,6 +121,10 @@
 
 * [2482](https://github.com/zeta-chain/node/pull/2482) - increase the outbound tracker buffer length from 2 to 5
 
+## v18.0.0
+
+* [2470](https://github.com/zeta-chain/node/pull/2470) - add Polygon, Base and Base Sepolia in static chain info
+
 ## v17.0.0
 
 ### Fixes
