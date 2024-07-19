@@ -18,7 +18,7 @@ import (
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/go-tss/blame"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"

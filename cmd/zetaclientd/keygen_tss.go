@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	tsscommon "github.com/zeta-chain/go-tss/common"
-	"github.com/zeta-chain/go-tss/keygen"
-	"github.com/zeta-chain/go-tss/tss"
+	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+	"gitlab.com/thorchain/tss/go-tss/keygen"
+	"gitlab.com/thorchain/tss/go-tss/tss"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"

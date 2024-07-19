@@ -19,7 +19,6 @@ import (
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/go-tss/p2p"
 
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -28,7 +27,7 @@ import (
 
 func RunDiagnostics(
 	startLogger zerolog.Logger,
-	peers p2p.AddrList,
+	peers []maddr.Multiaddr,
 	hotkeyPk cryptotypes.PrivKey,
 	cfg config.Config,
 ) error {
@@ -60,7 +59,7 @@ func RunDiagnostics(
 	if len(IP) == 0 {
 		startLogger.Warn().Msg("empty env MYIP")
 	}
-	var externalAddr Multiaddr
+	var externalAddr maddr.Multiaddr
 	if len(IP) != 0 {
 		externalAddr, err = maddr.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", IP, 6668))
 		if err != nil {
@@ -72,9 +71,9 @@ func RunDiagnostics(
 	host, err := libp2p.New(
 		libp2p.ListenAddrs(listenAddress),
 		libp2p.Identity(p2pPriKey),
-		libp2p.AddrsFactory(func(addrs []Multiaddr) []Multiaddr {
+		libp2p.AddrsFactory(func(addrs []maddr.Multiaddr) []maddr.Multiaddr {
 			if externalAddr != nil {
-				return []Multiaddr{externalAddr}
+				return []maddr.Multiaddr{externalAddr}
 			}
 			return addrs
 		}),

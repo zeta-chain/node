@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	blame "github.com/zeta-chain/go-tss/blame"
+	blame "gitlab.com/thorchain/tss/go-tss/blame"
 	chains "github.com/zeta-chain/zetacore/pkg/chains"
 
 	context "context"

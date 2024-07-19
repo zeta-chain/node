@@ -14,19 +14,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	gopeer "github.com/libp2p/go-libp2p/core/peer"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	thorcommon "github.com/zeta-chain/go-tss/common"
-	"github.com/zeta-chain/go-tss/keysign"
-	"github.com/zeta-chain/go-tss/p2p"
-	"github.com/zeta-chain/go-tss/tss"
+	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
+	"gitlab.com/thorchain/tss/go-tss/keysign"
+	"gitlab.com/thorchain/tss/go-tss/tss"
+	"gitlab.com/thorchain/tss/tss-lib/ecdsa/keygen"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
@@ -148,7 +148,7 @@ func NewTSS(
 // SetupTSSServer creates a new TSS server
 // TODO(revamp): move to TSS server file
 func SetupTSSServer(
-	peer p2p.AddrList,
+	peer []multiaddr.Multiaddr,
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
 	cfg config.Config,

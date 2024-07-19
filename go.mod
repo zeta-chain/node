@@ -20,6 +20,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
+	gitlab.com/thorchain/tss/go-tss v1.6.5
 	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917 // indirect
 	google.golang.org/grpc v1.60.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -39,7 +40,6 @@ require (
 	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/go-tss v0.1.1-0.20240711225655-6ab1e42a0dee
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240418181724-c222fd3ae1f5
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
@@ -57,7 +57,6 @@ require (
 require (
 	cosmossdk.io/simapp v0.0.0-20230608160436-666c345ad23d
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
 	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/cockroachdb/errors v1.10.0
 	github.com/cometbft/cometbft v0.37.4
@@ -67,6 +66,7 @@ require (
 	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/near/borsh-go v0.3.1
 	github.com/onrik/ethrpc v1.2.0
+	gitlab.com/thorchain/tss/tss-lib v0.2.0
 	go.nhat.io/grpcmock v0.25.0
 )
 
@@ -120,6 +120,7 @@ require (
 	github.com/streamingfast/logging v0.0.0-20230608130331-f22c91403091 // indirect
 	github.com/swaggest/assertjson v1.9.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
+	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/thales-e-security/pool v0.0.2 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -347,7 +348,6 @@ require (
 
 replace (
 	github.com/agl/ed25519 => github.com/binance-chain/edwards25519 v0.0.0-20200305024217-f36fc4b53d43
-	github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.1.5
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
@@ -363,3 +363,5 @@ replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db 
 replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94
 
 replace github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
+
+replace gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240718213003-31767e0c90ba
