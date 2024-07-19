@@ -115,9 +115,9 @@ export declare class QueryTssFundsMigratorInfoResponse extends Message<QueryTssF
  */
 export declare class QueryGetChainNoncesRequest extends Message<QueryGetChainNoncesRequest> {
   /**
-   * @generated from field: string index = 1;
+   * @generated from field: int64 chain_id = 1;
    */
-  index: string;
+  chainId: bigint;
 
   constructor(data?: PartialMessage<QueryGetChainNoncesRequest>);
 

@@ -16,11 +16,6 @@ export declare class ChainNonces extends Message<ChainNonces> {
   creator: string;
 
   /**
-   * @generated from field: string index = 2;
-   */
-  index: string;
-
-  /**
    * @generated from field: int64 chain_id = 3;
    */
   chainId: bigint;

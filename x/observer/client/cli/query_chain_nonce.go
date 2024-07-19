@@ -55,6 +55,9 @@ func CmdShowChainNonces() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			params := &types.QueryGetChainNoncesRequest{
 				ChainId: chainID,

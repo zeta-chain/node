@@ -3,7 +3,7 @@
 shows a chainNonces
 
 ```
-zetacored query observer show-chain-nonces [index] [flags]
+zetacored query observer show-chain-nonces [chain-id] [flags]
 ```
 
 ### Options

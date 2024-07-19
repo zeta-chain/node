@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
