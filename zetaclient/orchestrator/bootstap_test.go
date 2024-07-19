@@ -170,6 +170,36 @@ func TestCreateSignerMap(t *testing.T) {
 			hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
 		})
 
+		t.Run("Polygon is there but not supported, should be disabled", func(t *testing.T) {
+			// ARRANGE
+			// Given updated data from zetacore containing polygon chain
+			supportedChain, evmParams, btcParams := chainParams([]chains.Chain{
+				chains.Ethereum,
+				chains.Polygon,
+				chains.BitcoinMainnet,
+			})
+
+			// BUT (!) it's disabled via zetacore
+			evmParams[chains.Polygon.ChainId].IsSupported = false
+
+			mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams)
+
+			// Should have signer BEFORE disabling
+			hasSigner(t, signers, chains.Polygon.ChainId)
+
+			// ACT
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+
+			// ASSERT
+			assert.NoError(t, err)
+			assert.Equal(t, 0, added)
+			assert.Equal(t, 1, removed)
+
+			hasSigner(t, signers, chains.Ethereum.ChainId)
+			missesSigner(t, signers, chains.Polygon.ChainId)
+			hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
+		})
+
 		t.Run("No changes", func(t *testing.T) {
 			// ARRANGE
 			before := len(signers)
@@ -340,6 +370,36 @@ func TestCreateChainObserverMap(t *testing.T) {
 			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 		})
 
+		t.Run("Polygon is there but not supported, should be disabled", func(t *testing.T) {
+			// ARRANGE
+			// Given updated data from zetacore containing polygon chain
+			supportedChain, evmParams, btcParams := chainParams([]chains.Chain{
+				chains.Ethereum,
+				chains.Polygon,
+				chains.BitcoinMainnet,
+			})
+
+			// BUT (!) it's disabled via zetacore
+			evmParams[chains.Polygon.ChainId].IsSupported = false
+
+			mustUpdateAppContext(t, app, supportedChain, evmParams, btcParams)
+
+			// Should have signer BEFORE disabling
+			hasObserver(t, observers, chains.Polygon.ChainId)
+
+			// ACT
+			added, removed, err := syncObserverMap(ctx, client, tss, dbPath, baseLogger, ts, &observers)
+
+			// ASSERT
+			assert.NoError(t, err)
+			assert.Equal(t, 0, added)
+			assert.Equal(t, 1, removed)
+
+			hasObserver(t, observers, chains.Ethereum.ChainId)
+			missesObserver(t, observers, chains.Polygon.ChainId)
+			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
+		})
+
 		t.Run("No changes", func(t *testing.T) {
 			// ARRANGE
 			before := len(observers)
@@ -369,7 +429,8 @@ func chainParams(supportedChains []chains.Chain) (
 	for _, chain := range supportedChains {
 		if chains.IsBitcoinChain(chain.ChainId, nil) {
 			btcParams = &observertypes.ChainParams{
-				ChainId: chain.ChainId,
+				ChainId:     chain.ChainId,
+				IsSupported: true,
 			}
 
 			continue

@@ -84,8 +84,12 @@ func syncSignerMap(
 		}
 
 		evmChainParams, found := app.GetEVMChainParams(chainID)
-		if !found {
+		switch {
+		case !found:
 			logger.Std.Warn().Msgf("Unable to find chain params for EVM chain %d", chainID)
+			continue
+		case !evmChainParams.IsSupported:
+			logger.Std.Warn().Msgf("EVM chain %d is not supported", chainID)
 			continue
 		}
 
@@ -122,20 +126,36 @@ func syncSignerMap(
 	}
 
 	// BTC signer
-	btcChain, btcConfig, btcFound := app.GetBTCChainAndConfig()
-	if btcFound {
-		chainID := btcChain.ChainId
+	// Emulate same loop semantics as for EVM chains
+	for i := 0; i < 1; i++ {
+		btcChain, btcChainParams, btcChainParamsFound := app.GetBTCChainParams()
+		switch {
+		case !btcChainParamsFound:
+			logger.Std.Warn().Msgf("Unable to find chain params for BTC chain")
+			continue
+		case !btcChainParams.IsSupported:
+			logger.Std.Warn().Msgf("BTC chain is not supported")
+			continue
+		}
+
+		chainID := btcChainParams.ChainId
 
 		presentChainIDs = append(presentChainIDs, chainID)
 
-		if !mapHas(signers, chainID) {
-			utxoSigner, err := btcsigner.NewSigner(btcChain, tss, ts, logger, btcConfig)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
-			} else {
-				mapSet[int64, interfaces.ChainSigner](signers, chainID, utxoSigner, onAfterSet)
-			}
+		// noop
+		if mapHas(signers, chainID) {
+			continue
 		}
+
+		cfg, _ := app.Config().GetBTCConfig()
+
+		utxoSigner, err := btcsigner.NewSigner(btcChain, tss, ts, logger, cfg)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
+			continue
+		}
+
+		mapSet[int64, interfaces.ChainSigner](signers, chainID, utxoSigner, onAfterSet)
 	}
 
 	// Remove all disabled signers
@@ -210,8 +230,12 @@ func syncObserverMap(
 		}
 
 		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
-		if !found {
+		switch {
+		case !found:
 			logger.Std.Error().Msgf("Unable to find chain params for EVM chain %d", chainID)
+			continue
+		case !chainParams.IsSupported:
+			logger.Std.Error().Msgf("EVM chain %d is not supported", chainID)
 			continue
 		}
 
@@ -232,6 +256,7 @@ func syncObserverMap(
 		database, err := db.NewFromSqlite(dbpath, chainName, true)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
+			continue
 		}
 
 		// create EVM chain observer
@@ -250,46 +275,65 @@ func syncObserverMap(
 			logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %s", evmConfig.Chain.String())
 			continue
 		}
+
 		mapSet[int64, interfaces.ChainObserver](observerMap, chainID, observer, onAfterSet)
 	}
 
+	// Emulate same loop semantics as for EVM chains
 	// create BTC chain observer
-	if btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig(); btcEnabled {
+	for i := 0; i < 1; i++ {
+		btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig()
+		if !btcEnabled {
+			continue
+		}
+
+		chainID := btcChain.ChainId
+
 		_, btcChainParams, found := app.GetBTCChainParams()
-		if !found {
-			mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeUnset)
-			return added, removed, fmt.Errorf("BTC is enabled, but chains params not found")
+		switch {
+		case !found:
+			logger.Std.Warn().Msgf("Unable to find chain params for BTC chain %d", chainID)
+			continue
+		case !btcChainParams.IsSupported:
+			logger.Std.Warn().Msgf("BTC chain %d is not supported", chainID)
+			continue
 		}
 
-		presentChainIDs = append(presentChainIDs, btcChain.ChainId)
+		presentChainIDs = append(presentChainIDs, chainID)
 
-		if !mapHas(observerMap, btcChain.ChainId) {
-			btcRPC, err := rpc.NewRPCClient(btcConfig)
-			if err != nil {
-				return added, removed, errors.Wrap(err, "unable to create rpc client for BTC chain")
-			}
-
-			database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
-			if err != nil {
-				return added, removed, errors.Wrap(err, "unable to open a database for BTC chain")
-			}
-
-			btcObserver, err := btcobserver.NewObserver(
-				btcChain,
-				btcRPC,
-				*btcChainParams,
-				client,
-				tss,
-				database,
-				logger,
-				ts,
-			)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %s", btcChain.ChainName.String())
-			} else {
-				mapSet[int64, interfaces.ChainObserver](observerMap, btcChain.ChainId, btcObserver, onAfterSet)
-			}
+		// noop
+		if mapHas(observerMap, chainID) {
+			continue
 		}
+
+		btcRPC, err := rpc.NewRPCClient(btcConfig)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("unable to create rpc client for BTC chain %d", chainID)
+			continue
+		}
+
+		database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
+			continue
+		}
+
+		btcObserver, err := btcobserver.NewObserver(
+			btcChain,
+			btcRPC,
+			*btcChainParams,
+			client,
+			tss,
+			database,
+			logger,
+			ts,
+		)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %d", chainID)
+			continue
+		}
+
+		mapSet[int64, interfaces.ChainObserver](observerMap, btcChain.ChainId, btcObserver, onAfterSet)
 	}
 
 	// Remove all disabled observers
