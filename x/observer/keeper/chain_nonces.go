@@ -32,9 +32,9 @@ func (k Keeper) GetChainNonces(ctx sdk.Context, chainID int64) (val types.ChainN
 }
 
 // RemoveChainNonces removes a chainNonces from the store
-func (k Keeper) RemoveChainNonces(ctx sdk.Context, index string) {
+func (k Keeper) RemoveChainNonces(ctx sdk.Context, chainID int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
-	store.Delete(types.KeyPrefix(index))
+	store.Delete(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
 }
 
 // GetAllChainNonces returns all chainNonces

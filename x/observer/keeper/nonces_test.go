@@ -16,7 +16,7 @@ func TestChainNoncesGet(t *testing.T) {
 		k.SetChainNonces(ctx, item)
 	}
 	for _, item := range items {
-		rst, found := k.GetChainNonces(ctx, item.Index)
+		rst, found := k.GetChainNonces(ctx, item.ChainId)
 		require.True(t, found)
 		require.Equal(t, item, rst)
 	}
@@ -28,8 +28,8 @@ func TestChainNoncesRemove(t *testing.T) {
 		k.SetChainNonces(ctx, item)
 	}
 	for _, item := range items {
-		k.RemoveChainNonces(ctx, item.Index)
-		_, found := k.GetChainNonces(ctx, item.Index)
+		k.RemoveChainNonces(ctx, item.ChainId)
+		_, found := k.GetChainNonces(ctx, item.ChainId)
 		require.False(t, found)
 	}
 }

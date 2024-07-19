@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -27,15 +26,9 @@ func (k msgServer) ResetChainNonces(
 		return nil, types.ErrTssNotFound
 	}
 
-	chain, found := chains.GetChainFromChainID(msg.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
-	if !found {
-		return nil, types.ErrSupportedChains
-	}
-
 	// set chain nonces
 	chainNonce := types.ChainNonces{
-		Index:   chain.ChainName.String(),
-		ChainId: chain.ChainId,
+		ChainId: msg.ChainId,
 		// #nosec G115 always positive
 		Nonce: uint64(msg.ChainNonceHigh),
 		// #nosec G115 always positive
@@ -47,8 +40,8 @@ func (k msgServer) ResetChainNonces(
 	p := types.PendingNonces{
 		NonceLow:  msg.ChainNonceLow,
 		NonceHigh: msg.ChainNonceHigh,
-		ChainId:   chain.ChainId,
 		Tss:       tss.TssPubkey,
+		ChainId:   msg.ChainId,
 	}
 	k.SetPendingNonces(ctx, p)
 

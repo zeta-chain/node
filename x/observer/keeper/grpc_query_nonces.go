@@ -55,7 +55,7 @@ func (k Keeper) ChainNonces(
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetChainNonces(ctx, req.Index)
+	val, found := k.GetChainNonces(ctx, req.ChainId)
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}

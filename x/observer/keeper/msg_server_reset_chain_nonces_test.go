@@ -56,30 +56,6 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrTssNotFound)
 	})
 
-	t.Run("cannot reset chain nonces if chain not supported", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
-			UseAuthorityMock: true,
-		})
-		srv := keeper.NewMsgServerImpl(*k)
-		tss := sample.Tss()
-		k.SetTSS(ctx, tss)
-
-		admin := sample.AccAddress()
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-
-		msg := types.MsgResetChainNonces{
-			Creator:        admin,
-			ChainId:        999,
-			ChainNonceLow:  1,
-			ChainNonceHigh: 5,
-		}
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
-
-		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
-		require.ErrorIs(t, err, types.ErrSupportedChains)
-	})
-
 	t.Run("can reset chain nonces", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
@@ -93,10 +69,9 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		nonceLow := 1
 		nonceHigh := 5
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		index := chains.GoerliLocalnet.ChainName.String()
 
 		// check existing chain nonces
-		_, found := k.GetChainNonces(ctx, index)
+		_, found := k.GetChainNonces(ctx, chainId)
 		require.False(t, found)
 		_, found = k.GetPendingNonces(ctx, tss.TssPubkey, chainId)
 		require.False(t, found)
@@ -110,15 +85,14 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			ChainNonceHigh: int64(nonceHigh),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
+		//keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &msg)
 		require.NoError(t, err)
 
 		// check updated chain nonces
-		chainNonces, found := k.GetChainNonces(ctx, index)
+		chainNonces, found := k.GetChainNonces(ctx, chainId)
 		require.True(t, found)
 		require.Equal(t, chainId, chainNonces.ChainId)
-		require.Equal(t, index, chainNonces.Index)
 		require.Equal(t, uint64(nonceHigh), chainNonces.Nonce)
 
 		pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, chainId)
@@ -141,10 +115,9 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		require.NoError(t, err)
 
 		// check updated chain nonces
-		chainNonces, found = k.GetChainNonces(ctx, index)
+		chainNonces, found = k.GetChainNonces(ctx, chainId)
 		require.True(t, found)
 		require.Equal(t, chainId, chainNonces.ChainId)
-		require.Equal(t, index, chainNonces.Index)
 		require.Equal(t, uint64(0), chainNonces.Nonce)
 
 		pendingNonces, found = k.GetPendingNonces(ctx, tss.TssPubkey, chainId)

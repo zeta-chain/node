@@ -24,7 +24,7 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 		return zetaObserverTypes.ErrSupportedChains
 	}
 
-	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, chain.ChainName.String())
+	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, receiveChainID)
 	if !found {
 		return cosmoserrors.Wrap(
 			types.ErrCannotFindReceiverNonce,
