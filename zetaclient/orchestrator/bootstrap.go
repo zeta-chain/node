@@ -44,6 +44,7 @@ func CreateSignerMap(
 
 // syncSignerMap synchronizes the given signers map with the signers for all chains in the config.
 // This semantic is used to allow dynamic updates to the signers map.
+// Note that data race handling is the responsibility of the caller.
 func syncSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
@@ -65,12 +66,16 @@ func syncSignerMap(
 
 		presentChainIDs = make([]int64, 0)
 
-		onAfterSet = func(chainID int64, _ interfaces.ChainSigner) {
+		onAfterAdd = func(chainID int64, _ interfaces.ChainSigner) {
 			logger.Std.Info().Msgf("Added signer for chain %d", chainID)
 			added++
 		}
 
-		onBeforeUnset = func(chainID int64, _ interfaces.ChainSigner) {
+		addSigner = func(chainID int64, signer interfaces.ChainSigner) {
+			mapSet[int64, interfaces.ChainSigner](signers, chainID, signer, onAfterAdd)
+		}
+
+		onBeforeRemove = func(chainID int64, _ interfaces.ChainSigner) {
 			logger.Std.Info().Msgf("Removing signer for chain %d", chainID)
 			removed++
 		}
@@ -123,7 +128,7 @@ func syncSignerMap(
 			continue
 		}
 
-		mapSet[int64, interfaces.ChainSigner](signers, chainID, signer, onAfterSet)
+		addSigner(chainID, signer)
 	}
 
 	// BTC signer
@@ -156,17 +161,18 @@ func syncSignerMap(
 			continue
 		}
 
-		mapSet[int64, interfaces.ChainSigner](signers, chainID, utxoSigner, onAfterSet)
+		addSigner(chainID, utxoSigner)
 	}
 
 	// Remove all disabled signers
-	mapDeleteMissingKeys(signers, presentChainIDs, onBeforeUnset)
+	mapDeleteMissingKeys(signers, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
 }
 
 // CreateChainObserverMap creates a map of interfaces.ChainObserver (by chainID) for all chains in the config.
-// Note (!) that it calls observer.Start() on creation
+// - Note (!) that it calls observer.Start() on creation
+// - Note that data race handling is the responsibility of the caller.
 func CreateChainObserverMap(
 	ctx context.Context,
 	client interfaces.ZetacoreClient,
@@ -207,12 +213,16 @@ func syncObserverMap(
 
 		presentChainIDs = make([]int64, 0)
 
-		onAfterSet = func(_ int64, ob interfaces.ChainObserver) {
+		onAfterAdd = func(_ int64, ob interfaces.ChainObserver) {
 			ob.Start(ctx)
 			added++
 		}
 
-		onBeforeUnset = func(_ int64, ob interfaces.ChainObserver) {
+		addObserver = func(chainID int64, ob interfaces.ChainObserver) {
+			mapSet[int64, interfaces.ChainObserver](observerMap, chainID, ob, onAfterAdd)
+		}
+
+		onBeforeRemove = func(_ int64, ob interfaces.ChainObserver) {
 			ob.Stop()
 			removed++
 		}
@@ -276,7 +286,7 @@ func syncObserverMap(
 			continue
 		}
 
-		mapSet[int64, interfaces.ChainObserver](observerMap, chainID, observer, onAfterSet)
+		addObserver(chainID, observer)
 	}
 
 	// Emulate same loop semantics as for EVM chains
@@ -333,7 +343,7 @@ func syncObserverMap(
 			continue
 		}
 
-		mapSet[int64, interfaces.ChainObserver](observerMap, btcChain.ChainId, btcObserver, onAfterSet)
+		addObserver(chainID, btcObserver)
 	}
 
 	// Emulate same loop semantics as for EVM chains
@@ -394,11 +404,11 @@ func syncObserverMap(
 			continue
 		}
 
-		mapSet[int64, interfaces.ChainObserver](observerMap, chainID, solObserver, onAfterSet)
+		addObserver(chainID, solObserver)
 	}
 
 	// Remove all disabled observers
-	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeUnset)
+	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
 }

@@ -566,6 +566,8 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 	}
 }
 
+// runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
+// and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
 	const cadence = 5 * time.Second
 
