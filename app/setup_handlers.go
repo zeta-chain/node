@@ -1,7 +1,6 @@
 package app
 
 import (
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -28,6 +27,7 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func SetupHandlers(app *App) {
