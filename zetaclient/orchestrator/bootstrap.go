@@ -7,7 +7,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
@@ -20,7 +19,6 @@ import (
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 // backwards compatibility
@@ -34,7 +32,7 @@ func CreateSignerMap(
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
-	signers := make(signerMap)
+	signers := make(map[int64]interfaces.ChainSigner)
 	_, _, err := syncSignerMap(ctx, tss, logger, ts, &signers)
 	if err != nil {
 		return nil, err
@@ -50,7 +48,7 @@ func syncSignerMap(
 	tss interfaces.TSSSigner,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
-	signers *signerMap,
+	signers *map[int64]interfaces.ChainSigner,
 ) (int, int, error) {
 	if signers == nil {
 		return 0, 0, errors.New("signers map is nil")
@@ -61,9 +59,21 @@ func syncSignerMap(
 		return 0, 0, errors.Wrapf(err, "failed to get app context")
 	}
 
-	var added int
+	var (
+		added, removed int
 
-	presentChainIDs := make([]int64, 0)
+		presentChainIDs = make([]int64, 0)
+
+		onAfterSet = func(chainID int64, _ interfaces.ChainSigner) {
+			logger.Std.Info().Msgf("Added signer for chain %d", chainID)
+			added++
+		}
+
+		onBeforeUnset = func(chainID int64, _ interfaces.ChainSigner) {
+			logger.Std.Info().Msgf("Removing signer for chain %d", chainID)
+			removed++
+		}
+	)
 
 	// EVM signers
 	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
@@ -82,7 +92,7 @@ func syncSignerMap(
 		presentChainIDs = append(presentChainIDs, chainID)
 
 		// noop for existing signers
-		if signers.has(chainID) {
+		if mapHas(signers, chainID) {
 			continue
 		}
 
@@ -108,81 +118,37 @@ func syncSignerMap(
 			continue
 		}
 
-		signers.set(chainID, signer)
-		logger.Std.Info().Msgf("Added signer for EVM chain %d", chainID)
-		added++
+		mapSet[int64, interfaces.ChainSigner](signers, chainID, signer, onAfterSet)
 	}
 
 	// BTC signer
-	btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig()
-	if btcEnabled {
+	btcChain, btcConfig, btcFound := app.GetBTCChainAndConfig()
+	if btcFound {
 		chainID := btcChain.ChainId
 
 		presentChainIDs = append(presentChainIDs, chainID)
 
-		if !signers.has(chainID) {
+		if !mapHas(signers, chainID) {
 			utxoSigner, err := btcsigner.NewSigner(btcChain, tss, ts, logger, btcConfig)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
 			} else {
-				signers.set(chainID, utxoSigner)
-				logger.Std.Info().Msgf("Added signer for UTXO chain %d", chainID)
-				added++
+				mapSet[int64, interfaces.ChainSigner](signers, chainID, utxoSigner, onAfterSet)
 			}
 		}
 	}
 
 	// Remove all disabled signers
-	removed := signers.unsetMissing(presentChainIDs, logger.Std)
+	mapDeleteMissingKeys(signers, presentChainIDs, onBeforeUnset)
 
 	return added, removed, nil
 }
 
-type signerMap map[int64]interfaces.ChainSigner
-
-func (m *signerMap) has(chainID int64) bool {
-	_, ok := (*m)[chainID]
-	return ok
-}
-
-func (m *signerMap) set(chainID int64, signer interfaces.ChainSigner) {
-	(*m)[chainID] = signer
-}
-
-func (m *signerMap) unset(chainID int64, logger zerolog.Logger) bool {
-	if _, ok := (*m)[chainID]; !ok {
-		return false
-	}
-
-	logger.Info().Msgf("Removing signer for chain %d", chainID)
-	delete(*m, chainID)
-
-	return true
-}
-
-// unsetMissing removes signers from the map IF they are not in the enabledChains list.
-func (m *signerMap) unsetMissing(enabledChains []int64, logger zerolog.Logger) int {
-	enabledMap := make(map[int64]struct{}, len(enabledChains))
-	for _, id := range enabledChains {
-		enabledMap[id] = struct{}{}
-	}
-
-	var removed int
-
-	for id := range *m {
-		if _, ok := enabledMap[id]; !ok {
-			m.unset(id, logger)
-			removed++
-		}
-	}
-
-	return removed
-}
-
-// CreateChainObserverMap creates a map of ChainObservers for all chains in the config
+// CreateChainObserverMap creates a map of interfaces.ChainObserver (by chainID) for all chains in the config.
+// Note (!) that it calls observer.Start() on creation
 func CreateChainObserverMap(
 	ctx context.Context,
-	client *zetacore.Client,
+	client interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	logger base.Logger,
@@ -190,31 +156,78 @@ func CreateChainObserverMap(
 ) (map[int64]interfaces.ChainObserver, error) {
 	observerMap := make(map[int64]interfaces.ChainObserver)
 
+	_, _, err := syncObserverMap(ctx, client, tss, dbpath, logger, ts, &observerMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return observerMap, nil
+}
+
+// syncObserverMap synchronizes the given observer map with the observers for all chains in the config.
+// This semantic is used to allow dynamic updates to the map.
+// Note (!) that it calls observer.Start() on creation and observer.Stop() on deletion.
+func syncObserverMap(
+	ctx context.Context,
+	client interfaces.ZetacoreClient,
+	tss interfaces.TSSSigner,
+	dbpath string,
+	logger base.Logger,
+	ts *metrics.TelemetryServer,
+	observerMap *map[int64]interfaces.ChainObserver,
+) (int, int, error) {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get app context")
+		return 0, 0, errors.Wrapf(err, "failed to get app context")
 	}
+
+	var (
+		added, removed int
+
+		presentChainIDs = make([]int64, 0)
+
+		onAfterSet = func(_ int64, ob interfaces.ChainObserver) {
+			ob.Start(ctx)
+			added++
+		}
+
+		onBeforeUnset = func(_ int64, ob interfaces.ChainObserver) {
+			fmt.Print("STOP OBSERVER for", ob.GetChainParams().ChainId)
+			ob.Stop()
+			removed++
+		}
+	)
 
 	// EVM observers
 	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
+		var (
+			chainID   = evmConfig.Chain.ChainId
+			chainName = evmConfig.Chain.ChainName.String()
+		)
+
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
 
 		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
-			logger.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
+			logger.Std.Error().Msgf("Unable to find chain params for EVM chain %d", chainID)
+			continue
+		}
+
+		presentChainIDs = append(presentChainIDs, chainID)
+
+		// noop
+		if mapHas(observerMap, chainID) {
 			continue
 		}
 
 		// create EVM client
-		evmClient, err := ethclient.Dial(evmConfig.Endpoint)
+		evmClient, err := ethclient.DialContext(ctx, evmConfig.Endpoint)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("error dailing endpoint %q", evmConfig.Endpoint)
+			logger.Std.Error().Err(err).Str("rpc.endpoint", evmConfig.Endpoint).Msgf("Unable to dial EVM RPC")
 			continue
 		}
-
-		chainName := evmConfig.Chain.ChainName.String()
 
 		database, err := db.NewFromSqlite(dbpath, chainName, true)
 		if err != nil {
@@ -237,45 +250,50 @@ func CreateChainObserverMap(
 			logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %s", evmConfig.Chain.String())
 			continue
 		}
-		observerMap[evmConfig.Chain.ChainId] = observer
+		mapSet[int64, interfaces.ChainObserver](observerMap, chainID, observer, onAfterSet)
 	}
 
 	// create BTC chain observer
-	btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig()
-	if !btcEnabled {
-		return observerMap, nil
+	if btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig(); btcEnabled {
+		_, btcChainParams, found := app.GetBTCChainParams()
+		if !found {
+			mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeUnset)
+			return added, removed, fmt.Errorf("BTC is enabled, but chains params not found")
+		}
+
+		presentChainIDs = append(presentChainIDs, btcChain.ChainId)
+
+		if !mapHas(observerMap, btcChain.ChainId) {
+			btcRPC, err := rpc.NewRPCClient(btcConfig)
+			if err != nil {
+				return added, removed, errors.Wrap(err, "unable to create rpc client for BTC chain")
+			}
+
+			database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+			if err != nil {
+				return added, removed, errors.Wrap(err, "unable to open a database for BTC chain")
+			}
+
+			btcObserver, err := btcobserver.NewObserver(
+				btcChain,
+				btcRPC,
+				*btcChainParams,
+				client,
+				tss,
+				database,
+				logger,
+				ts,
+			)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %s", btcChain.ChainName.String())
+			} else {
+				mapSet[int64, interfaces.ChainObserver](observerMap, btcChain.ChainId, btcObserver, onAfterSet)
+			}
+		}
 	}
 
-	_, btcChainParams, found := app.GetBTCChainParams()
-	if !found {
-		return nil, fmt.Errorf("BTC is enabled, but chains params not found")
-	}
+	// Remove all disabled observers
+	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeUnset)
 
-	btcClient, err := rpc.NewRPCClient(btcConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create rpc client for BTC chain")
-	}
-
-	btcDatabase, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to open a database for BTC chain")
-	}
-
-	btcObserver, err := btcobserver.NewObserver(
-		btcChain,
-		btcClient,
-		*btcChainParams,
-		client,
-		tss,
-		btcDatabase,
-		logger,
-		ts,
-	)
-	if err != nil {
-		logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %s", btcChain.ChainName.String())
-	} else {
-		observerMap[btcChain.ChainId] = btcObserver
-	}
-
-	return observerMap, nil
+	return added, removed, nil
 }
