@@ -1,6 +1,7 @@
 package app
 
 import (
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -68,6 +69,7 @@ func SetupHandlers(app *App) {
 		crisistypes.ModuleName,
 		emissionstypes.ModuleName,
 		authoritytypes.ModuleName,
+		observertypes.ModuleName,
 	}
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{

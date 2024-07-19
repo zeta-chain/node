@@ -18,7 +18,6 @@ type obsserverKeeper interface {
 // It updates the indexing for chain nonces object to use chain ID instead of chain name
 func MigrateStore(ctx sdk.Context, observerKeeper obsserverKeeper) error {
 	updateChainNonceIndexing(ctx, observerKeeper)
-
 	return nil
 }
 
