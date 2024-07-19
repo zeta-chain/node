@@ -9,6 +9,20 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Run("in memory alias", func(t *testing.T) {
+		// ARRANGE
+		// Given a database
+		db, err := NewFromSqliteInMemory(true)
+		require.NoError(t, err)
+		require.NotNil(t, db)
+
+		// ACT
+		runSampleSetGetTest(t, db)
+
+		// Close the database
+		assert.NoError(t, db.Close())
+	})
+
 	t.Run("in memory", func(t *testing.T) {
 		// ARRANGE
 		// Given a database
@@ -41,6 +55,21 @@ func TestNew(t *testing.T) {
 
 		// Close the database
 		assert.NoError(t, db.Close())
+
+		t.Run("close twice", func(t *testing.T) {
+			require.NoError(t, db.Close())
+		})
+	})
+
+	t.Run("invalid file path", func(t *testing.T) {
+		// ARRANGE
+		// Given a tmp path
+		directory, dbName := "///hello", "test.db"
+
+		// Given a database
+		db, err := NewFromSqlite(directory, dbName, true)
+		require.ErrorContains(t, err, "unable to ensure database path")
+		require.Nil(t, db)
 	})
 }
 
