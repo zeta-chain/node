@@ -145,12 +145,17 @@ func (ob *Observer) Start() bool {
 
 // Stop notifies all goroutines to stop and closes the database.
 func (ob *Observer) Stop() {
-	ob.logger.Chain.Info().Msgf("Stopping observer for chain %d", ob.Chain().ChainId)
-	close(ob.stop)
-
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
+	if !ob.started {
+		ob.logger.Chain.Info().Msgf("Observer already stopped for chain %d", ob.Chain().ChainId)
+		return
+	}
+
+	ob.logger.Chain.Info().Msgf("Stopping observer for chain %d", ob.Chain().ChainId)
+
+	close(ob.stop)
 	ob.started = false
 
 	// close database
