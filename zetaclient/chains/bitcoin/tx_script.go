@@ -201,6 +201,19 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 
 // DecodeScript decodes memo wrapped in a inscription like script in witness
 // returns (memo, found, error)
+//
+// Note: the format of the script is following that of "inscription" defined in ordinal theory.
+// However, to separate from inscription (as this use case is not an NFT), simplifications are made.
+// The bitcoin envelope script is as follows:
+// OP_DATA_32 <32 byte of public key> OP_CHECKSIG
+// OP_FALSE
+// OP_IF
+//
+//	OP_PUSH 0x...
+//	OP_PUSH 0x...
+//
+// OP_ENDIF
+// There are no content-type or any other attributes, it's just raw bytes.
 func DecodeScript(script []byte) ([]byte, bool, error) {
 	t := makeScriptTokenizer(script)
 
