@@ -3,6 +3,7 @@ package bitcoin
 // #nosec G507 ripemd160 required for bitcoin address encoding
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -34,6 +35,12 @@ const (
 
 	// LengthScriptP2PKH is the length of P2PKH script [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
 	LengthScriptP2PKH = 25
+
+	// LengthInscriptionEnvelope is the length of the witness tapscript envelope for holding pushed data
+	LengthInscriptionEnvelope = 34
+
+	// LengthInscriptionWrapper is the length of the witness tapscript envelope for holding pushed data
+	LengthInscriptionWrapper = 34
 )
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
@@ -192,6 +199,23 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 	return nil, false, nil
 }
 
+// DecodeScript decodes memo wrapped in a inscription like script in witness
+// returns (memo, found, error)
+func DecodeScript(script []byte) ([]byte, bool, error) {
+	t := makeScriptTokenizer(script)
+
+	if err := checkInscriptionEnvelope(&t); err != nil {
+		return nil, false, err
+	}
+
+	memoBytes, err := decodeInscriptionPayload(&t)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return memoBytes, true, nil
+}
+
 // EncodeAddress returns a human-readable payment address given a ripemd160 hash
 // and netID which encodes the bitcoin network and address type.  It is used
 // in both pay-to-pubkey-hash (P2PKH) and pay-to-script-hash (P2SH) address
@@ -244,4 +268,210 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	}
 
 	return receiverVout, amount, nil
+}
+
+// decodeInscriptionPayload checks the envelope for the script monitoring. The format is
+// OP_FALSE
+// OP_IF
+//
+//	OP_PUSHDATA_N ...
+//
+// OP_ENDIF
+//
+// Note: the data pushed in OP_PUSHDATA_N will always be more than 80 bytes and not greater than 520 bytes.
+func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
+	if !t.Next() || t.Opcode() != txscript.OP_FALSE {
+		return nil, fmt.Errorf("OP_FALSE not found")
+	}
+
+	if !t.Next() || t.Opcode() != txscript.OP_IF {
+		return nil, fmt.Errorf("OP_IF not found")
+	}
+
+	memo := make([]byte, 0)
+	next := byte(txscript.OP_IF)
+	for {
+		if !t.Next() {
+			if t.Err() != nil {
+				return nil, t.Err()
+			}
+			return nil, fmt.Errorf("should contain more data, but script ended")
+		}
+
+		next = t.Opcode()
+
+		if next == txscript.OP_ENDIF {
+			break
+		}
+
+		if next < txscript.OP_DATA_1 || next > txscript.OP_PUSHDATA4 {
+			return nil, fmt.Errorf("expecting data push, found %d", next)
+		}
+
+		memo = append(memo, t.Data()...)
+	}
+
+	return memo, nil
+}
+
+// checkInscriptionEnvelope decodes the envelope for the script monitoring. The format is
+// OP_PUSHBYTES_32 <32 bytes> OP_CHECKSIG <Content>
+func checkInscriptionEnvelope(t *scriptTokenizer) error {
+	if !t.Next() || t.Opcode() != txscript.OP_DATA_32 {
+		return fmt.Errorf("cannot obtain public key bytes")
+	}
+
+	if !t.Next() || t.Opcode() != txscript.OP_CHECKSIG {
+		return fmt.Errorf("cannot parse OP_CHECKSIG")
+	}
+
+	return nil
+}
+
+func makeScriptTokenizer(script []byte) scriptTokenizer {
+	return scriptTokenizer{
+		script: script,
+		offset: 0,
+	}
+}
+
+// scriptTokenizer is supposed to be replaced by txscript.ScriptTokenizer. However,
+// it seems currently the btcsuite version does not have ScriptTokenizer. A simplified
+// version of that is implemented here. This is fully compatible with txscript.ScriptTokenizer
+// one should consider upgrading txscript and remove this implementation
+type scriptTokenizer struct {
+	script []byte
+	offset int32
+	op     byte
+	data   []byte
+	err    error
+}
+
+// Done returns true when either all opcodes have been exhausted or a parse
+// failure was encountered and therefore the state has an associated error.
+func (t *scriptTokenizer) Done() bool {
+	return t.err != nil || t.offset >= int32(len(t.script))
+}
+
+// Data returns the data associated with the most recently successfully parsed
+// opcode.
+func (t *scriptTokenizer) Data() []byte {
+	return t.data
+}
+
+// Err returns any errors currently associated with the tokenizer.  This will
+// only be non-nil in the case a parsing error was encountered.
+func (t *scriptTokenizer) Err() error {
+	return t.err
+}
+
+// Opcode returns the current opcode associated with the tokenizer.
+func (t *scriptTokenizer) Opcode() byte {
+	return t.op
+}
+
+// Next attempts to parse the next opcode and returns whether or not it was
+// successful.  It will not be successful if invoked when already at the end of
+// the script, a parse failure is encountered, or an associated error already
+// exists due to a previous parse failure.
+//
+// In the case of a true return, the parsed opcode and data can be obtained with
+// the associated functions and the offset into the script will either point to
+// the next opcode or the end of the script if the final opcode was parsed.
+//
+// In the case of a false return, the parsed opcode and data will be the last
+// successfully parsed values (if any) and the offset into the script will
+// either point to the failing opcode or the end of the script if the function
+// was invoked when already at the end of the script.
+//
+// Invoking this function when already at the end of the script is not
+// considered an error and will simply return false.
+func (t *scriptTokenizer) Next() bool {
+	if t.Done() {
+		return false
+	}
+
+	op := t.script[t.offset]
+
+	// Only the following op_code will be encountered:
+	// OP_PUSHDATA*, OP_DATA_*, OP_CHECKSIG, OP_IF, OP_ENDIF, OP_FALSE
+	switch {
+	// No additional data.  Note that some of the opcodes, notably OP_1NEGATE,
+	// OP_0, and OP_[1-16] represent the data themselves.
+	case op == txscript.OP_FALSE || op == txscript.OP_IF || op == txscript.OP_CHECKSIG || op == txscript.OP_ENDIF:
+		t.offset++
+		t.op = op
+		t.data = nil
+		return true
+
+	// Data pushes of specific lengths -- OP_DATA_[1-75].
+	case op >= txscript.OP_DATA_1 && op <= txscript.OP_DATA_75:
+		script := t.script[t.offset:]
+
+		// add 2 instead of 1 because script includes the opcode as well
+		length := int32(op) - txscript.OP_DATA_1 + 2
+		if int32(len(script)) < length {
+			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
+				"has %d remaining", op, length, len(script))
+			return false
+		}
+
+		// Move the offset forward and set the opcode and data accordingly.
+		t.offset += length
+		t.op = op
+		t.data = script[1:length]
+
+		return true
+	case op > txscript.OP_PUSHDATA4:
+		t.err = fmt.Errorf("unexpected op code")
+		return false
+	// Data pushes with parsed lengths -- OP_PUSHDATA{1,2,4}.
+	default:
+		var length int32
+		switch op {
+		case txscript.OP_PUSHDATA1:
+			length = 1
+		case txscript.OP_PUSHDATA2:
+			length = 2
+		default:
+			length = 4
+		}
+
+		script := t.script[t.offset+1:]
+		if int32(len(script)) < length {
+			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
+				"has %d remaining", op, length, len(script))
+			return false
+		}
+
+		// Next -length bytes are little endian length of data.
+		var dataLen int32
+		switch length {
+		case 1:
+			dataLen = int32(script[0])
+		case 2:
+			dataLen = int32(binary.LittleEndian.Uint16(script[:2]))
+		case 4:
+			dataLen = int32(binary.LittleEndian.Uint32(script[:4]))
+		default:
+			t.err = fmt.Errorf("invalid opcode length %d", length)
+			return false
+		}
+
+		// Move to the beginning of the data.
+		script = script[length:]
+
+		// Disallow entries that do not fit script or were sign extended.
+		if dataLen > int32(len(script)) || dataLen < 0 {
+			t.err = fmt.Errorf("opcode %d pushes %d bytes, but script only "+
+				"has %d remaining", op, dataLen, len(script))
+			return false
+		}
+
+		// Move the offset forward and set the opcode and data accordingly.
+		t.offset += 1 + int32(length) + dataLen
+		t.op = op
+		t.data = script[:dataLen]
+		return true
+	}
 }
