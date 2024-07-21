@@ -35,12 +35,6 @@ const (
 
 	// LengthScriptP2PKH is the length of P2PKH script [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
 	LengthScriptP2PKH = 25
-
-	// LengthInscriptionEnvelope is the length of the witness tapscript envelope for holding pushed data
-	LengthInscriptionEnvelope = 34
-
-	// LengthInscriptionWrapper is the length of the witness tapscript envelope for holding pushed data
-	LengthInscriptionWrapper = 34
 )
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
@@ -199,7 +193,7 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 	return nil, false, nil
 }
 
-// DecodeScript decodes memo wrapped in a inscription like script in witness
+// DecodeScript decodes memo wrapped in an inscription like script in witness
 // returns (memo, found, error)
 //
 // Note: the format of the script is following that of "inscription" defined in ordinal theory.
@@ -287,11 +281,13 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 // OP_FALSE
 // OP_IF
 //
-//	OP_PUSHDATA_N ...
+//		OP_PUSHDATA_N ...
+//	 ...
+//		OP_PUSHDATA_N ...
 //
 // OP_ENDIF
 //
-// Note: the data pushed in OP_PUSHDATA_N will always be more than 80 bytes and not greater than 520 bytes.
+// Note: the total data pushed will always be more than 80 bytes and within the btc transaction size limit.
 func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
 	if !t.Next() || t.Opcode() != txscript.OP_FALSE {
 		return nil, fmt.Errorf("OP_FALSE not found")
@@ -302,7 +298,7 @@ func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
 	}
 
 	memo := make([]byte, 0)
-	next := byte(txscript.OP_IF)
+	var next byte
 	for {
 		if !t.Next() {
 			if t.Err() != nil {
