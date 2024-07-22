@@ -16,7 +16,7 @@ type observerKeeper interface {
 
 // MigrateStore migrates the x/observer module state from the consensus version 7 to 8
 // It updates the indexing for chain nonces object to use chain ID instead of chain name
-func MigrateStore(ctx sdk.Context, observerKeeper obsserverKeeper) error {
+func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	updateChainNonceIndexing(ctx, observerKeeper)
 	return nil
 }
@@ -24,7 +24,7 @@ func MigrateStore(ctx sdk.Context, observerKeeper obsserverKeeper) error {
 // updateChainNonceIndexing updates the chain nonces object to use chain ID instead of chain name
 func updateChainNonceIndexing(
 	ctx sdk.Context,
-	observerKeeper obsserverKeeper,
+	observerKeeper observerKeeper,
 ) {
 	// Iterate all chain nonces object in the store
 	chainNonces := observerKeeper.GetAllChainNonces(ctx)
@@ -38,7 +38,7 @@ func updateChainNonceIndexing(
 }
 
 // removeChainNoncesLegacy removes a chainNonces from the store from index
-func removeChainNoncesLegacy(ctx sdk.Context, observerKeeper obsserverKeeper, index string) {
+func removeChainNoncesLegacy(ctx sdk.Context, observerKeeper observerKeeper, index string) {
 	store := prefix.NewStore(ctx.KVStore(observerKeeper.StoreKey()), types.KeyPrefix(types.ChainNoncesKey))
 	store.Delete(types.KeyPrefix(index))
 }

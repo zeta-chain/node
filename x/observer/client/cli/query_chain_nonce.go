@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -56,7 +57,7 @@ func CmdShowChainNonces() *cobra.Command {
 
 			chainID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
-				return errors.Wrap(err, "unable to parse chain id from %q", args[0])
+				return errors.Wrapf(err, "unable to parse chain id from %s", args[0])
 			}
 
 			params := &types.QueryGetChainNoncesRequest{
