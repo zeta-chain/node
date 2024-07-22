@@ -93,6 +93,8 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		return ethcommon.HexToAddress(addr).Bytes(), nil
 	case IsBitcoinChain(chainID, additionalChains):
 		return []byte(addr), nil
+	case IsSolanaChain(chainID, additionalChains):
+		return []byte(addr), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
@@ -110,6 +112,11 @@ func IsEVMChain(chainID int64, additionalChains []Chain) bool {
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin, additionalChains))
+}
+
+// IsSolanaChain returns true if the chain is a Solana chain
+func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain

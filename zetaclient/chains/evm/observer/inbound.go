@@ -315,7 +315,6 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 			_, err = ob.PostVoteInbound(
 				ctx,
 				msg,
-				coin.CoinType_Zeta,
 				zetacore.PostVoteInboundMessagePassingExecutionGasLimit,
 			)
 			if err != nil {
@@ -402,7 +401,7 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(ctx, msg, coin.CoinType_ERC20, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 			if err != nil {
 				return beingScanned - 1 // we have to re-scan from this block next time
 			}
@@ -510,7 +509,7 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, coin.CoinType_Zeta, zetacore.PostVoteInboundMessagePassingExecutionGasLimit)
+		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundMessagePassingExecutionGasLimit)
 	}
 
 	return msg.Digest(), nil
@@ -561,7 +560,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, coin.CoinType_ERC20, zetacore.PostVoteInboundExecutionGasLimit)
+		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 	}
 
 	return msg.Digest(), nil
@@ -600,34 +599,10 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, coin.CoinType_Gas, zetacore.PostVoteInboundExecutionGasLimit)
+		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 	}
 
 	return msg.Digest(), nil
-}
-
-// PostVoteInbound posts a vote for the given vote message
-func (ob *Observer) PostVoteInbound(
-	ctx context.Context,
-	msg *types.MsgVoteInbound,
-	coinType coin.CoinType,
-	retryGasLimit uint64,
-) (string, error) {
-	txHash := msg.InboundHash
-	chainID := ob.Chain().ChainId
-	zetaHash, ballot, err := ob.ZetacoreClient().
-		PostVoteInbound(ctx, zetacore.PostVoteInboundGasLimit, retryGasLimit, msg)
-	if err != nil {
-		ob.Logger().Inbound.Err(err).
-			Msgf("inbound detected: error posting vote for chain %d token %s inbound %s", chainID, coinType, txHash)
-		return "", err
-	} else if zetaHash != "" {
-		ob.Logger().Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
-	} else {
-		ob.Logger().Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s already voted on ballot %s", chainID, coinType, txHash, ballot)
-	}
-
-	return ballot, err
 }
 
 // HasEnoughConfirmations checks if the given receipt has enough confirmations
@@ -806,7 +781,6 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
 	}
-
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
 		if ethcommon.HexToAddress(tx.To) == ob.TSS().EVMAddress() {

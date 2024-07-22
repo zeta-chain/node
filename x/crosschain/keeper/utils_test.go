@@ -41,6 +41,10 @@ func getValidBtcChainID() int64 {
 	return getValidBTCChain().ChainId
 }
 
+func getValidSolanaChainID() int64 {
+	return chains.SolanaLocalnet.ChainId
+}
+
 // getValidEthChainIDWithIndex get a valid eth chain id with index
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 
@@ -21,6 +22,7 @@ import (
 const (
 	TestDataPathEVM          = "testdata/evm"
 	TestDataPathBTC          = "testdata/btc"
+	TestDataPathSolana       = "testdata/solana"
 	TestDataPathCctx         = "testdata/cctx"
 	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
 	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
@@ -289,6 +291,26 @@ func LoadEVMCctxNOutboundNReceipt(
 
 	return cctx, outbound, receipt
 }
+
+//==============================================================================
+// Solana chain
+
+// LoadSolanaInboundTxResult loads archived Solana inbound tx result from file
+func LoadSolanaInboundTxResult(
+	t *testing.T,
+	dir string,
+	chainID int64,
+	txHash string,
+	donation bool,
+) *rpc.GetTransactionResult {
+	name := path.Join(dir, TestDataPathSolana, FileNameSolanaInbound(chainID, txHash, donation))
+	txResult := &rpc.GetTransactionResult{}
+	LoadObjectFromJSONFile(t, txResult, name)
+	return txResult
+}
+
+//==============================================================================
+// other helpers methods
 
 // SaveObjectToJSONFile saves an object to a file in JSON format
 // NOTE: this function is not used in the tests but used when creating test data

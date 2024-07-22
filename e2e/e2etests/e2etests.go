@@ -52,6 +52,11 @@ const (
 	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
+	 Solana tests
+	*/
+	TestSolanaDepositName = "solana_deposit"
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -100,6 +105,8 @@ const (
 	TestUpdateBytecodeZRC20Name      = "update_bytecode_zrc20"
 	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
 	TestRateLimiterName              = "rate_limiter"
+
+	TestMigrateTSSName = "migrate_TSS"
 
 	/*
 	 Special tests
@@ -324,6 +331,17 @@ var AllE2ETests = []runner.E2ETest{
 		TestERC20DepositAndCallRefund,
 	),
 	/*
+	 Solana tests
+	*/
+	runner.NewE2ETest(
+		TestSolanaDepositName,
+		"deposit SOL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in SOL", DefaultValue: "0.1"},
+		},
+		TestSolanaDeposit,
+	),
+	/*
 	 Bitcoin tests
 	*/
 	runner.NewE2ETest(
@@ -541,5 +559,11 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "contract name", DefaultValue: ""},
 		},
 		TestDeployContract,
+	),
+	runner.NewE2ETest(
+		TestMigrateTSSName,
+		"migrate TSS funds",
+		[]runner.ArgDefinition{},
+		TestMigrateTSS,
 	),
 }

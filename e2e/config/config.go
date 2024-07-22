@@ -54,6 +54,7 @@ type Account struct {
 	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
 	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
 	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
+	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
 }
 
 // AdditionalAccounts are extra accounts required to run specific tests
@@ -62,9 +63,11 @@ type AdditionalAccounts struct {
 	UserZetaTest   Account `yaml:"user_zeta_test"`
 	UserZEVMMPTest Account `yaml:"user_zevm_mp_test"`
 	UserBitcoin    Account `yaml:"user_bitcoin"`
+	UserSolana     Account `yaml:"user_solana"`
 	UserEther      Account `yaml:"user_ether"`
 	UserMisc       Account `yaml:"user_misc"`
 	UserAdmin      Account `yaml:"user_admin"`
+	UserMigration  Account `yaml:"user_migration"`
 }
 
 type PolicyAccounts struct {
@@ -78,6 +81,7 @@ type RPCs struct {
 	Zevm         string     `yaml:"zevm"`
 	EVM          string     `yaml:"evm"`
 	Bitcoin      BitcoinRPC `yaml:"bitcoin"`
+	Solana       string     `yaml:"solana"`
 	ZetaCoreGRPC string     `yaml:"zetacore_grpc"`
 	ZetaCoreRPC  string     `yaml:"zetacore_rpc"`
 }
@@ -94,8 +98,14 @@ type BitcoinRPC struct {
 
 // Contracts contains the addresses of predeployed contracts
 type Contracts struct {
-	EVM  EVM  `yaml:"evm"`
-	ZEVM ZEVM `yaml:"zevm"`
+	EVM    EVM    `yaml:"evm"`
+	ZEVM   ZEVM   `yaml:"zevm"`
+	Solana Solana `yaml:"solana"`
+}
+
+// Solana contains the addresses of predeployed contracts on the Solana chain
+type Solana struct {
+	GatewayProgramID string `yaml:"gateway_program_id"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -113,6 +123,7 @@ type ZEVM struct {
 	ETHZRC20Addr       DoubleQuotedString `yaml:"eth_zrc20"`
 	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
+	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
 	ConnectorZEVMAddr  DoubleQuotedString `yaml:"connector_zevm"`
@@ -138,6 +149,7 @@ func DefaultConfig() Config {
 			},
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
+			Solana:       "http://solana:8899",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{
@@ -195,9 +207,11 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserZetaTest,
 		a.UserZEVMMPTest,
 		a.UserBitcoin,
+		a.UserSolana,
 		a.UserEther,
 		a.UserMisc,
 		a.UserAdmin,
+		a.UserMigration,
 	}
 }
 
@@ -270,6 +284,10 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
+	c.AdditionalAccounts.UserSolana, err = generateAccount()
+	if err != nil {
+		return err
+	}
 	c.AdditionalAccounts.UserEther, err = generateAccount()
 	if err != nil {
 		return err
@@ -282,6 +300,11 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
+	c.AdditionalAccounts.UserMigration, err = generateAccount()
+	if err != nil {
+		return err
+	}
+
 	c.PolicyAccounts.EmergencyPolicyAccount, err = generateAccount()
 	if err != nil {
 		return err

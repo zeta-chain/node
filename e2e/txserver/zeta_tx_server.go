@@ -382,6 +382,21 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
+	// deploy sol zrc20
+	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addr.String(),
+		"",
+		chains.SolanaLocalnet.ChainId,
+		9,
+		"Solana",
+		"SOL",
+		coin.CoinType_Gas,
+		100000,
+	))
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+	}
+
 	// deploy erc20 zrc20
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
@@ -434,6 +449,16 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 		addr,
 		emissionPoolAccAddr,
 		sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom, amountInt)),
+	))
+	return err
+}
+
+// UpdateKeygen sets a new keygen height . The new height is the current height + 30
+func (zts ZetaTxServer) UpdateKeygen(height int64) error {
+	keygenHeight := height + 30
+	_, err := zts.BroadcastTx(zts.GetAccountName(0), observertypes.NewMsgUpdateKeygen(
+		zts.GetAccountAddress(0),
+		keygenHeight,
 	))
 	return err
 }

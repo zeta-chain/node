@@ -30,7 +30,7 @@ import (
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
-var _ interfaces.ChainObserver = &Observer{}
+var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Observer is the observer for evm chains
 type Observer struct {

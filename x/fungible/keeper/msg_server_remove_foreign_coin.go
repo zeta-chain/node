@@ -24,7 +24,7 @@ func (k msgServer) RemoveForeignCoin(
 	if err != nil {
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
-	index := msg.Name
+	index := msg.Zrc20Address
 	_, found := k.GetForeignCoins(ctx, index)
 	if !found {
 		return nil, cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "foreign coin not found")

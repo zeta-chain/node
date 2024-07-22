@@ -57282,7 +57282,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainTxHashList'
+          $ref: '#/definitions/crosschainTxHash'
   crosschainQueryAllCctxResponse:
     type: object
     properties:
@@ -57511,7 +57511,7 @@ definitions:
       - NotFinalized: the corresponding tx is not finalized
        - Finalized: the corresponding tx is finalized but not executed yet
        - Executed: the corresponding tx is executed
-  crosschainTxHashList:
+  crosschainTxHash:
     type: object
     properties:
       tx_hash:

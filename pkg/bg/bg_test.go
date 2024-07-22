@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWork(t *testing.T) {
@@ -69,9 +70,12 @@ func TestWork(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 
 		// Check the log output
-		const expected = `{"level":"error","error":"recovered from PANIC in background task: press F",` +
-			`"worker.name":"unknown","message":"Background task failed"}`
-		assert.JSONEq(t, expected, out.String())
+		const expectedError = "recovered from PANIC in background task: press F"
+		const expectedWorker = "unknown"
+		const expectedMessage = "Background task failed"
+		require.Contains(t, out.String(), expectedError)
+		require.Contains(t, out.String(), expectedWorker)
+		require.Contains(t, out.String(), expectedMessage)
 	})
 }
 

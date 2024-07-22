@@ -31,6 +31,7 @@
 * [2366](https://github.com/zeta-chain/node/pull/2366) - add migration script for adding authorizations table
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
 * [2416](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
+* [2465](https://github.com/zeta-chain/node/pull/2465) - add Solana inbound SOL token observation
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 
 ### Refactor
@@ -81,6 +82,8 @@
 * [2369](https://github.com/zeta-chain/node/pull/2369) - fix random cross-chain swap failure caused by using tiny UTXO
 * [2549](https://github.com/zeta-chain/node/pull/2459) - add separate accounts for each policy in e2e tests
 * [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
+* [2440](https://github.com/zeta-chain/node/pull/2440) - Add e2e test for TSS migration
+
 
 ### Fixes
 
@@ -95,6 +98,7 @@
 * [2382](https://github.com/zeta-chain/node/pull/2382) - add tx input and gas in rpc methods for synthetic eth txs
 * [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
+* [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
 
 ### CI
 
@@ -114,6 +118,20 @@
 ### Documentation
 
 * [2321](https://github.com/zeta-chain/node/pull/2321) - improve documentation for ZetaClient functions and packages
+
+### Performance
+
+* [2482](https://github.com/zeta-chain/node/pull/2482) - increase the outbound tracker buffer length from 2 to 5
+
+## v18.0.0
+
+* [2470](https://github.com/zeta-chain/node/pull/2470) - add Polygon, Base and Base Sepolia in static chain info
+
+## v17.0.1
+
+### Fixes
+
+* hotfix/v17.0.1 - modify the amount field in CCTXs that carry dust BTC amounts to avoid dust output error
 
 ## v17.0.0
 

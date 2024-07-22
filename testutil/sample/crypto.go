@@ -15,6 +15,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
@@ -54,6 +55,31 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
+}
+
+// SolanaAddress returns a sample solana address
+func SolanaAddress(t *testing.T) string {
+	keypair, err := solana.NewRandomPrivateKey()
+	require.NoError(t, err)
+	return keypair.PublicKey().String()
+}
+
+// SolanaSignature returns a sample solana signature
+func SolanaSignature(t *testing.T) solana.Signature {
+	// Generate a random keypair
+	keypair, err := solana.NewRandomPrivateKey()
+	require.NoError(t, err)
+
+	// Generate a random message to sign
+	// #nosec G404 test purpose - weak randomness is not an issue here
+	r := rand.New(rand.NewSource(900))
+	message := StringRandom(r, 64)
+
+	// Sign the message with the private key
+	signature, err := keypair.Sign([]byte(message))
+	require.NoError(t, err)
+
+	return signature
 }
 
 // Hash returns a sample hash

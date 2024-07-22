@@ -5,7 +5,7 @@ smart contracts and messaging between any blockchain.
 
 ## Prerequisites
 
-- [Go](https://golang.org/doc/install) 1.20
+- [Go](https://golang.org/doc/install) 1.22
 - [Docker](https://docs.docker.com/install/) and
   [Docker Compose](https://docs.docker.com/compose/install/) (optional, for
   running tests locally)

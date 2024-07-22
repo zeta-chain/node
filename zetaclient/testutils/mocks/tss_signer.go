@@ -108,6 +108,10 @@ func (s *TSS) EVMAddress() ethcommon.Address {
 	return crypto.PubkeyToAddress(s.PrivKey.PublicKey)
 }
 
+func (s *TSS) EVMAddressList() []ethcommon.Address {
+	return []ethcommon.Address{s.EVMAddress()}
+}
+
 func (s *TSS) BTCAddress() string {
 	// force use btcAddress if set
 	if s.btcAddress != "" {

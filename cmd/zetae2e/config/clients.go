@@ -9,6 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/gagliardetto/solana-go/rpc"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
@@ -18,51 +19,72 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// E2EClients contains all the RPC clients and gRPC clients for E2E tests
+type E2EClients struct {
+	// the RPC clients for external chains in the localnet
+	BtcRPCClient *rpcclient.Client
+	SolanaClient *rpc.Client
+	EvmClient    *ethclient.Client
+	EvmAuth      *bind.TransactOpts
+
+	// the gRPC clients for ZetaChain
+	CctxClient     crosschaintypes.QueryClient
+	FungibleClient fungibletypes.QueryClient
+	AuthClient     authtypes.QueryClient
+	BankClient     banktypes.QueryClient
+	ObserverClient observertypes.QueryClient
+	LightClient    lightclienttypes.QueryClient
+
+	// the RPC clients for ZetaChain
+	ZevmClient *ethclient.Client
+	ZevmAuth   *bind.TransactOpts
+}
+
 // getClientsFromConfig get clients from config
 func getClientsFromConfig(ctx context.Context, conf config.Config, account config.Account) (
-	*rpcclient.Client,
-	*ethclient.Client,
-	*bind.TransactOpts,
-	crosschaintypes.QueryClient,
-	fungibletypes.QueryClient,
-	authtypes.QueryClient,
-	banktypes.QueryClient,
-	observertypes.QueryClient,
-	lightclienttypes.QueryClient,
-	*ethclient.Client,
-	*bind.TransactOpts,
+	E2EClients,
 	error,
 ) {
+	if conf.RPCs.Solana == "" {
+		return E2EClients{}, fmt.Errorf("solana rpc is empty")
+	}
+	solanaClient := rpc.New(conf.RPCs.Solana)
+	if solanaClient == nil {
+		return E2EClients{}, fmt.Errorf("failed to get solana client")
+	}
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get btc client: %w", err)
 	}
 	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, account)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get evm client: %w", err)
 	}
 	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, account)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get zevm client: %w", err)
 	}
-	return btcRPCClient,
-		evmClient,
-		evmAuth,
-		cctxClient,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		lightclientClient,
-		zevmClient,
-		zevmAuth,
-		nil
+
+	return E2EClients{
+		BtcRPCClient:   btcRPCClient,
+		SolanaClient:   solanaClient,
+		EvmClient:      evmClient,
+		EvmAuth:        evmAuth,
+		CctxClient:     cctxClient,
+		FungibleClient: fungibleClient,
+		AuthClient:     authClient,
+		BankClient:     bankClient,
+		ObserverClient: observerClient,
+		LightClient:    lightclientClient,
+		ZevmClient:     zevmClient,
+		ZevmAuth:       zevmAuth,
+	}, nil
 }
 
 // getBtcClient get btc client

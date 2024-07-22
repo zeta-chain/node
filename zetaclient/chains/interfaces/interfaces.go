@@ -14,9 +14,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/gagliardetto/solana-go"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/go-tss/blame"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -185,6 +187,23 @@ type EVMRPCClient interface {
 	) (ethcommon.Address, error)
 }
 
+// SolanaRPCClient is the interface for Solana RPC client
+type SolanaRPCClient interface {
+	GetVersion(ctx context.Context) (out *solrpc.GetVersionResult, err error)
+	GetHealth(ctx context.Context) (out string, err error)
+	GetAccountInfo(ctx context.Context, account solana.PublicKey) (out *solrpc.GetAccountInfoResult, err error)
+	GetTransaction(
+		ctx context.Context,
+		txSig solana.Signature, // transaction signature
+		opts *solrpc.GetTransactionOpts,
+	) (out *solrpc.GetTransactionResult, err error)
+	GetSignaturesForAddressWithOpts(
+		ctx context.Context,
+		account solana.PublicKey,
+		opts *solrpc.GetSignaturesForAddressOpts,
+	) (out []*solrpc.TransactionSignature, err error)
+}
+
 // EVMJSONRPCClient is the interface for EVM JSON RPC client
 type EVMJSONRPCClient interface {
 	EthGetBlockByNumber(number int, withTransactions bool) (*ethrpc.Block, error)
@@ -212,6 +231,8 @@ type TSSSigner interface {
 	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
 
 	EVMAddress() ethcommon.Address
+
+	EVMAddressList() []ethcommon.Address
 	BTCAddress() string
 	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
 	PubKeyCompressedBytes() []byte

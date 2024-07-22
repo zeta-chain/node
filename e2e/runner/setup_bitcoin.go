@@ -10,11 +10,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func (r *E2ERunner) AddTSSToNode() {
+	r.Logger.Print("⚙️ add new tss to Bitcoin node")
+	startTime := time.Now()
+	defer func() {
+		r.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
+	}()
+
+	// import the TSS address
+	err := r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
+	require.NoError(r, err)
+
+	// mine some blocks to get some BTC into the deployer address
+	_, err = r.GenerateToAddressIfLocalBitcoin(101, r.BTCDeployerAddress)
+	require.NoError(r, err)
+}
+
 func (r *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
 	r.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
-		r.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
+		r.Logger.Print("✅ Bitcoin account setup in %s", time.Since(startTime))
 	}()
 
 	_, err := r.BtcRPCClient.CreateWallet(r.Name, rpcclient.WithCreateWalletBlank())

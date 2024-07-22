@@ -65,7 +65,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
+		for _, chain := range k.GetObserverKeeper().GetSupportedForeignChains(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -78,7 +78,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(
 			t,
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
-			len(k.GetObserverKeeper().GetSupportedChains(ctx)),
+			len(k.GetObserverKeeper().GetSupportedForeignChains(ctx)),
 		)
 
 		msg := crosschaintypes.MsgUpdateTssAddress{
@@ -224,7 +224,11 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.UpdateTssAddress(ctx, &msg)
-		require.ErrorContains(t, err, "cannot update tss address not enough migrations have been created and completed")
+		require.ErrorContains(
+			t,
+			err,
+			"cannot update tss address incorrect number of migrations have been created and completed: unable to update TSS address",
+		)
 		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		require.True(t, found)

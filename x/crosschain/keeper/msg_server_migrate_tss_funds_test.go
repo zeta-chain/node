@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/gas"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -389,7 +388,8 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
 		feeCalculated := sdk.NewUint(cctx.GetCurrentOutboundParam().GasLimit).
-			Mul(sdkmath.NewUintFromString(cctx.GetCurrentOutboundParam().GasPrice))
+			Mul(sdkmath.NewUintFromString(cctx.GetCurrentOutboundParam().GasPrice)).
+			Add(sdkmath.NewUintFromString(crosschaintypes.TSSMigrationBufferAmountEVM))
 		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.String(), amount.Sub(feeCalculated).String())
 	})
 

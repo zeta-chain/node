@@ -19,8 +19,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/go-tss/blame"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
