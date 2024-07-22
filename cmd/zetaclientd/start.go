@@ -30,6 +30,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 var StartCmd = &cobra.Command{
@@ -74,7 +75,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	masterLogger := logger.Std
-	startLogger := masterLogger.With().Str("module", "startup").Logger()
+	startLogger := logger.Std.With().Str("module", "startup").Logger()
 
 	appContext := zctx.New(cfg, masterLogger)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
@@ -269,23 +270,22 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
-	observerList, err := zetacoreClient.GetObserverList(ctx)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("GetObserverList error")
+	isObserver, err := isObserverNode(ctx, zetacoreClient)
+	switch {
+	case err != nil:
+		startLogger.Error().Msgf("Unable to determine if node is an observer")
 		return err
-	}
-	isNodeActive := false
-	for _, observer := range observerList {
-		if observer == zetacoreClient.GetKeys().GetOperatorAddress().String() {
-			isNodeActive = true
-			break
-		}
+	case !isObserver:
+		addr := zetacoreClient.GetKeys().GetOperatorAddress().String()
+		startLogger.Info().Str("operator_address", addr).Msg("This node is not an observer. Exit 0")
+		return nil
 	}
 
-	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(ctx, appContext, tss, logger, telemetryServer)
+	// CreateSignerMap: This creates a map of all signers for each chain.
+	// Each signer is responsible for signing transactions for a particular chain
+	signerMap, err := orchestrator.CreateSignerMap(ctx, tss, logger, telemetryServer)
 	if err != nil {
-		log.Error().Err(err).Msg("CreateSignerMap")
+		log.Error().Err(err).Msg("Unable to create signer map")
 		return err
 	}
 
@@ -296,35 +296,34 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
-	// Creates a map of all chain observers for each chain. Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := CreateChainObserverMap(ctx, appContext, zetacoreClient, tss, dbpath, logger, telemetryServer)
+	// Creates a map of all chain observers for each chain.
+	// Each chain observer is responsible for observing events on the chain and processing them.
+	observerMap, err := orchestrator.CreateChainObserverMap(ctx, zetacoreClient, tss, dbpath, logger, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateChainObserverMap")
 		return err
 	}
 
-	if !isNodeActive {
-		startLogger.Error().
-			Msgf("Node %s is not an active observer external chain observers will not be started", zetacoreClient.GetKeys().GetOperatorAddress().String())
-	} else {
-		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetacoreClient.GetKeys().GetOperatorAddress().String())
-		for _, observer := range observerMap {
-			observer.Start(ctx)
-		}
-	}
-
-	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	orchestrator := orchestrator.NewOrchestrator(
+	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it.
+	// This is the high level object used for CCTX interactions
+	maestro, err := orchestrator.New(
 		ctx,
 		zetacoreClient,
 		signerMap,
 		observerMap,
-		masterLogger,
+		tss,
+		dbpath,
+		logger,
 		telemetryServer,
 	)
-	err = orchestrator.MonitorCore(ctx)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("Orchestrator failed to start")
+		startLogger.Error().Err(err).Msg("Unable to create orchestrator")
+		return err
+	}
+
+	// Start orchestrator with all observers and signers
+	if err := maestro.Start(ctx); err != nil {
+		startLogger.Error().Err(err).Msg("Unable to start orchestrator")
 		return err
 	}
 
@@ -348,10 +347,6 @@ func start(_ *cobra.Command, _ []string) error {
 	sig := <-ch
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
-	// stop chain observers
-	for _, observer := range observerMap {
-		observer.Stop()
-	}
 	zetacoreClient.Stop()
 
 	return nil
@@ -414,4 +409,22 @@ func promptPasswords() (string, string, error) {
 	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
 
 	return hotKeyPass, TSSKeyPass, err
+}
+
+// isObserverNode checks whether THIS node is an observer node.
+func isObserverNode(ctx context.Context, client *zetacore.Client) (bool, error) {
+	observers, err := client.GetObserverList(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "unable to get observers list")
+	}
+
+	operatorAddress := client.GetKeys().GetOperatorAddress().String()
+
+	for _, observer := range observers {
+		if observer == operatorAddress {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
