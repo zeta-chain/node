@@ -12,14 +12,11 @@ import (
 func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	approvedAmount := big.NewInt(1e18)
-
 	withdrawalAmount, ok := new(big.Int).SetString(args[0], 10)
 	require.True(r, ok, "Invalid withdrawal amount specified for TestERC20Withdraw.")
-	require.Equal(r, -1, withdrawalAmount.Cmp(approvedAmount))
 
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ERC20ZRC20Addr, approvedAmount)
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ERC20ZRC20Addr, withdrawalAmount)
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
