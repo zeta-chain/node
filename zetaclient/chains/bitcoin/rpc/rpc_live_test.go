@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -54,9 +55,12 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	params := mocks.MockChainParams(chain.ChainId, 10)
 	btcClient := mocks.NewMockBTCRPCClient()
 
+	database, err := db.NewFromSqliteInMemory(true)
+	suite.Require().NoError(err)
+
 	// create observer
-	ob, err := observer.NewObserver(chain, btcClient, params, nil, tss, testutils.SQLiteMemory,
-		base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, tss, database, base.DefaultLogger(), nil)
+
 	suite.Require().NoError(err)
 	suite.Require().NotNil(ob)
 	suite.rpcClient, err = createRPCClient(18332)

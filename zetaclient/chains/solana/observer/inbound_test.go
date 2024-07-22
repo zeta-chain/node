@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -30,14 +31,16 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
 
-	dbpath := sample.CreateTempDir(t)
-	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
@@ -53,11 +56,14 @@ func Test_FilterInboundEvents(t *testing.T) {
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	dbpath := sample.CreateTempDir(t)
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, dbpath, base.DefaultLogger(), nil)
+
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
@@ -94,8 +100,10 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
 
-	dbpath := sample.CreateTempDir(t)
-	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, dbpath, base.DefaultLogger(), nil)
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
+	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// create test compliance config
@@ -156,11 +164,13 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	tx, err := txResult.Transaction.GetTransaction()
 	require.NoError(t, err)
 
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
-	dbpath := sample.CreateTempDir(t)
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, dbpath, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result

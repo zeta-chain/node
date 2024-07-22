@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -69,37 +70,48 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("should create new zetacore context with config containing evm chain params", func(t *testing.T) {
-		testCfg := config.New(false)
+		// ARRANGE
+		var (
+			eth   = chains.Ethereum.ChainId
+			matic = chains.Polygon.ChainId
+
+			testCfg = config.New(false)
+
+			ethChainParams   = mocks.MockChainParams(eth, 200)
+			maticChainParams = mocks.MockChainParams(matic, 333)
+		)
+
+		// Given config with evm chain params (e.g. from a file)
 		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
-			1: {
-				Chain: chains.Chain{
-					ChainName: 1,
-					ChainId:   1,
-				},
-			},
-			2: {
-				Chain: chains.Chain{
-					ChainName: 2,
-					ChainId:   2,
-				},
-			},
+			eth:   {Chain: chains.Ethereum},
+			matic: {Chain: chains.Polygon},
 		}
+
+		// And chain params from zetacore
+		chainParams := map[int64]*observertypes.ChainParams{
+			eth:   &ethChainParams,
+			matic: &maticChainParams,
+		}
+
+		// Given app context
 		appContext := context.New(testCfg, logger)
-		require.NotNil(t, appContext)
+
+		// That was updated with chain params
+		appContext.Update(nil, nil, chainParams, nil, nil, "", observertypes.CrosschainFlags{}, nil, nil, false)
 
 		// assert evm chain params
 		allEVMChainParams := appContext.GetAllEVMChainParams()
 		require.Equal(t, 2, len(allEVMChainParams))
-		require.Equal(t, &observertypes.ChainParams{}, allEVMChainParams[1])
-		require.Equal(t, &observertypes.ChainParams{}, allEVMChainParams[2])
+		require.Equal(t, &ethChainParams, allEVMChainParams[eth])
+		require.Equal(t, &maticChainParams, allEVMChainParams[matic])
 
-		evmChainParams1, found := appContext.GetEVMChainParams(1)
+		evmChainParams1, found := appContext.GetEVMChainParams(eth)
 		require.True(t, found)
-		require.Equal(t, &observertypes.ChainParams{}, evmChainParams1)
+		require.Equal(t, &ethChainParams, evmChainParams1)
 
-		evmChainParams2, found := appContext.GetEVMChainParams(2)
+		evmChainParams2, found := appContext.GetEVMChainParams(matic)
 		require.True(t, found)
-		require.Equal(t, &observertypes.ChainParams{}, evmChainParams2)
+		require.Equal(t, &maticChainParams, evmChainParams2)
 	})
 
 	t.Run("should create new zetacore context with config containing btc config", func(t *testing.T) {

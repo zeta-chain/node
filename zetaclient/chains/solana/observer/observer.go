@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -11,6 +12,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -38,7 +40,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
+	db *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -51,17 +53,23 @@ func NewObserver(
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
 		ts,
+		db,
 		logger,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	pubKey, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to derive public key")
+	}
+
 	// create solana observer
 	ob := Observer{
 		Observer:  *baseObserver,
 		solClient: solClient,
-		gatewayID: solana.MustPublicKeyFromBase58(chainParams.GatewayAddress),
+		gatewayID: pubKey,
 	}
 
 	// compute gateway PDA
@@ -71,11 +79,7 @@ func NewObserver(
 		return nil, err
 	}
 
-	// load btc chain observer DB
-	err = ob.LoadDB(dbpath)
-	if err != nil {
-		return nil, err
-	}
+	ob.Observer.LoadLastTxScanned()
 
 	return &ob, nil
 }
@@ -108,6 +112,11 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 
 // Start starts the Go routine processes to observe the Solana chain
 func (ob *Observer) Start(ctx context.Context) {
+	if noop := ob.Observer.Start(); noop {
+		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
+		return
+	}
+
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	// watch Solana chain for incoming txs and post votes to zetacore
@@ -115,4 +124,12 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
+}
+
+// LoadLastTxScanned loads the last scanned tx from the database.
+func (ob *Observer) LoadLastTxScanned() error {
+	ob.Observer.LoadLastTxScanned()
+	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from tx %s", ob.Chain().ChainId, ob.LastTxScanned())
+
+	return nil
 }
