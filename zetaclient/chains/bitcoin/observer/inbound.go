@@ -498,7 +498,7 @@ func GetBtcEventWithWitness(
 	)
 
 	if err != nil { // should never happen
-		return nil, err
+		return nil, errors.Wrap(err, "unable to get btc event")
 	}
 	if event != nil {
 		return event, nil
