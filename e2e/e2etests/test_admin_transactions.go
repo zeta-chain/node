@@ -34,6 +34,7 @@ func TestCriticalAdminTransactions(r *runner.E2ERunner, _ []string) {
 }
 
 func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
+	// Set default flags on zetacore
 	defaultFlags := observertypes.DefaultGasPriceIncreaseFlags
 	msgGasPriceFlags := observertypes.NewMsgUpdateGasPriceIncreaseFlags(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
@@ -42,22 +43,23 @@ func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
 	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgGasPriceFlags)
 	require.NoError(r, err)
 
+	// create a new set of flag values by incrementing the epoch length by 1
 	defaultFlagsUpdated := defaultFlags
 	defaultFlagsUpdated.EpochLength = defaultFlags.EpochLength + 1
 
+	// Update the flags on zetacore with the new values
 	msgGasPriceFlags = observertypes.NewMsgUpdateGasPriceIncreaseFlags(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		defaultFlagsUpdated,
 	)
-
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgGasPriceFlags)
 	require.NoError(r, err)
 
-	WaitForBlocks(r, 1)
+	r.WaitForBlocks(1)
 
+	// Verify that the flags have been updated
 	flags, err := r.ObserverClient.CrosschainFlags(r.Ctx, &observertypes.QueryGetCrosschainFlagsRequest{})
 	require.NoError(r, err)
-
 	require.Equal(r, defaultFlagsUpdated.EpochLength, flags.CrosschainFlags.GasPriceIncreaseFlags.EpochLength)
 }
 
@@ -83,7 +85,7 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msgBtc)
 	require.NoError(r, err)
 
-	WaitForBlocks(r, 1)
+	r.WaitForBlocks(1)
 
 	tracker, err := r.CctxClient.InboundTracker(r.Ctx, &crosschaintypes.QueryInboundTrackerRequest{
 		ChainId: msgEth.ChainId,

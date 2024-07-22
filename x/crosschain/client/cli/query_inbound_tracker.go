@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
@@ -21,7 +22,7 @@ func CmdShowInboundTracker() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			argChain, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "unable to parse chain id from %q", args[0])
 			}
 			params := &types.QueryInboundTrackerRequest{
 				ChainId: argChain,
@@ -29,7 +30,7 @@ func CmdShowInboundTracker() *cobra.Command {
 			}
 			res, err := queryClient.InboundTracker(context.Background(), params)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "failed to fetch inbound tracker for chain %d and tx hash %s", argChain, args[1])
 			}
 			return clientCtx.PrintProto(res)
 		},

@@ -1,17 +1,46 @@
 package runner
 
 import (
+	"fmt"
 	"math/big"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/zetacore/pkg/retry"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+func (r *E2ERunner) WaitForBlocks(n int64) {
+	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
+	if err != nil {
+		return
+	}
+	call := func() error {
+		return retry.Retry(r.waitForBlock(height.Height + n))
+	}
+
+	bo := backoff.NewConstantBackOff(time.Second * 5)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	err = retry.DoWithBackoff(call, boWithMaxRetries)
+	require.NoError(r, err, "failed to wait for %d blocks", n)
+}
+func (r *E2ERunner) waitForBlock(n int64) error {
+	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
+	if err != nil {
+		return err
+	}
+	if height.Height < n {
+		return fmt.Errorf("waiting for %d blocks, current height %d", n, height.Height)
+	}
+	return nil
+}
 
 // WaitForTxReceiptOnZEVM waits for a tx receipt on ZEVM
 func (r *E2ERunner) WaitForTxReceiptOnZEVM(tx *ethtypes.Transaction) {
