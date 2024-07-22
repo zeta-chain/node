@@ -476,7 +476,6 @@ func GetBtcEvent(
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
-// The format of the tapscript is
 func GetBtcEventWithWitness(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
@@ -486,25 +485,158 @@ func GetBtcEventWithWitness(
 	netParams *chaincfg.Params,
 	depositorFee float64,
 ) (*BTCInboundEvent, error) {
-	// first check for OP_RETURN data
-	event, err := GetBtcEvent(
-		rpcClient,
-		tx,
-		tssAddress,
-		blockNumber,
-		logger,
-		netParams,
-		depositorFee,
-	)
+	if len(tx.Vout) < 1 {
+		logger.Debug().Msgf("GetBtcEventWithWitness: no output")
+		return nil, nil
+	}
+	if len(tx.Vin) == 0 { // should never happen
+		return nil, fmt.Errorf("GetBtcEventWithWitness: no input found for inbound: %s", tx.Txid)
+	}
 
+	if !isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams, logger) {
+		return nil, nil
+	}
+
+	isAmountValid, amount := isValidAmount(tx.Vout[0].Value, depositorFee)
+	if !isAmountValid {
+		logger.Info().
+			Msgf("GetBtcEventWithWitness: btc deposit amount %v in txid %s is less than depositor fee %v", tx.Vout[0].Value, tx.Txid, depositorFee)
+		return nil, nil
+	}
+
+	var memo []byte
+	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
+		logger.Debug().Msgf("GetBtcEventWithWitness: found OP_RETURN memo in tx %s", tx.Txid)
+		memo = candidate
+	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
+		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo in tx %s", tx.Txid)
+		memo = candidate
+	} else {
+		return nil, nil
+	}
+
+	// event found, get sender address
+	fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
+	}
+
+	return &BTCInboundEvent{
+		FromAddress: fromAddress,
+		ToAddress:   tssAddress,
+		Value:       amount,
+		MemoBytes:   memo,
+		BlockNumber: blockNumber,
+		TxHash:      tx.Txid,
+	}, nil
+}
+
+func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
+	if len(tx.Vout) < 2 {
+		logger.Debug().Msgf("txn %s has fewer than 2 outputs, not target OP_RETURN txn", tx.Txid)
+		return nil
+	}
+
+	vout1 := tx.Vout[1]
+	memo, found, err := bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
+	if err != nil {
+		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+		return nil
+	}
+
+	if found {
+		return memo
+	}
+	return nil
+}
+
+// ParseScriptFromWitness attempts to parse the script from the witness data. Ideally it should be handled by
+// bitcoin library, however, it's not found in existing library version. Replace this with actual library implementation
+// if libraries are updated.
+func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
+	length := len(witness)
+
+	if length == 0 {
+		return nil
+	}
+
+	lastElement, err := hex.DecodeString(witness[length-1])
+	if err != nil {
+		logger.Debug().Msgf("invalid witness element")
+		return nil
+	}
+
+	// From BIP341:
+	// If there are at least two witness elements, and the first byte of
+	// the last element is 0x50, this last element is called annex a
+	// and is removed from the witness stack.
+	if length >= 2 && len(lastElement) > 0 && lastElement[0] == 0x50 {
+		// account for the extra item removed from the end
+		witness = witness[:length-1]
+	}
+
+	if len(witness) < 2 {
+		logger.Debug().Msgf("not script path spending detected, ignore")
+		return nil
+	}
+
+	// only the script is the focus here, ignore checking control block or whatever else
+	script, err := hex.DecodeString(witness[len(witness)-2])
+	if err != nil {
+		logger.Debug().Msgf("witness script cannot be decoded from hex, ignore")
+		return nil
+	}
+	return script
+}
+
+func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
+	for i, input := range tx.Vin {
+		script := ParseScriptFromWitness(input.Witness, logger)
+		if script == nil {
+			continue
+		}
+
+		logger.Debug().Msgf("potential witness script, tx %s, input idx %d", tx.Txid, i)
+
+		memo, found, err := bitcoin.DecodeScript(script)
+		if err != nil || !found {
+			logger.Debug().Msgf("invalid witness script, tx %s, input idx %d", tx.Txid, i)
+			continue
+		}
+
+		logger.Debug().Msgf("found memo in inscription, tx %s, input idx %d", tx.Txid, i)
+		return memo
+	}
+
+	return nil
+}
+
+func isValidAmount(
+	incoming float64,
+	minimal float64,
+) (bool, float64) {
+	if incoming < minimal {
+		return false, 0
+	}
+	return true, incoming - minimal
+}
+
+func isValidRecipient(
+	script string,
+	tssAddress string,
+	netParams *chaincfg.Params,
+	logger zerolog.Logger,
+) bool {
+	receiver, err := bitcoin.DecodeScriptP2WPKH(script, netParams)
 	if err != nil { // should never happen
-		return nil, err
-	}
-	if event != nil {
-		return event, nil
+		logger.Debug().Msgf("invalid p2wpkh script detected, %s", err)
+		return false
 	}
 
-	// TODO: integrate parsing script
-
-	return nil, nil
+	// skip irrelevant tx to us
+	if receiver != tssAddress {
+		logger.Debug().Msgf("irrelevant recipient, %s", receiver)
+		return false
+	}
+	return true
 }
