@@ -18,7 +18,8 @@ export declare class ChainNonces extends Message<ChainNonces> {
   /**
    * deprecated(v19): index has been replaced by chain_id for unique identifier
    *
-   * @generated from field: string index = 2;
+   * @generated from field: string index = 2 [deprecated = true];
+   * @deprecated
    */
   index: string;
 

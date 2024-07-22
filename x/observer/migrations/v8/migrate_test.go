@@ -92,14 +92,14 @@ func TestMigrateStore(t *testing.T) {
 		allChainNonces = k.GetAllChainNonces(ctx)
 		require.Len(t, allChainNonces, 10)
 
-		chainIDMap := make(map[int64]bool)
+		chainIDMap := make(map[int64]struct{})
 
 		// all chain nonces can be found in the store
 		for _, chainNonces := range allChainNonces {
 			// chain all chain IDs are different
 			_, found := chainIDMap[chainNonces.ChainId]
 			require.False(t, found)
-			chainIDMap[chainNonces.ChainId] = true
+			chainIDMap[chainNonces.ChainId] = struct{}{}
 
 			// check value
 			retrievedChainNonces, found := k.GetChainNonces(ctx, chainNonces.ChainId)
