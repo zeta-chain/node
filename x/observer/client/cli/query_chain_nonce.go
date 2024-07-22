@@ -56,7 +56,7 @@ func CmdShowChainNonces() *cobra.Command {
 
 			chainID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "unable to parse chain id from %q", args[0])
 			}
 
 			params := &types.QueryGetChainNoncesRequest{
