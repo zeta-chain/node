@@ -125,7 +125,6 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 func (ob *Observer) IsOutboundProcessed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-	logger zerolog.Logger,
 ) (bool, bool, error) {
 	const (
 		// not used with Bitcoin
@@ -142,7 +141,7 @@ func (ob *Observer) IsOutboundProcessed(
 
 	// get broadcasted outbound and tx result
 	outboundID := ob.GetTxID(nonce)
-	logger.Info().Msgf("IsOutboundProcessed %s", outboundID)
+	ob.Logger().Outbound.Info().Msgf("IsOutboundProcessed %s", outboundID)
 
 	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
@@ -202,7 +201,9 @@ func (ob *Observer) IsOutboundProcessed(
 		)
 	}
 
-	logger.Debug().Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
+	ob.Logger().
+		Outbound.Debug().
+		Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
 
 	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
@@ -236,9 +237,13 @@ func (ob *Observer) IsOutboundProcessed(
 	}
 
 	if err != nil {
-		logger.Error().Err(err).Fields(logFields).Msg("IsOutboundProcessed: error confirming bitcoin outbound")
+		ob.Logger().
+			Outbound.Error().
+			Err(err).
+			Fields(logFields).
+			Msg("IsOutboundProcessed: error confirming bitcoin outbound")
 	} else if zetaHash != "" {
-		logger.Info().Fields(logFields).Msgf("IsOutboundProcessed: confirmed Bitcoin outbound")
+		ob.Logger().Outbound.Info().Fields(logFields).Msgf("IsOutboundProcessed: confirmed Bitcoin outbound")
 	}
 
 	return true, true, nil

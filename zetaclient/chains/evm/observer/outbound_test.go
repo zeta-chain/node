@@ -64,7 +64,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
 		require.NoError(t, err)
 		require.True(t, isIncluded)
 		require.True(t, isConfirmed)
@@ -88,7 +88,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		config.LoadComplianceConfig(cfg)
 
 		// post outbound vote
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
 		require.NoError(t, err)
 		require.True(t, isIncluded)
 		require.True(t, isConfirmed)
@@ -96,7 +96,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
 		// create evm observer and DO NOT set outbound as confirmed
 		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
 		require.NoError(t, err)
 		require.False(t, isIncluded)
 		require.False(t, isConfirmed)
@@ -110,7 +110,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		chainParamsNew := ob.GetChainParams()
 		chainParamsNew.ConnectorContractAddress = sample.EthAddress().Hex()
 		ob.SetChainParams(chainParamsNew)
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
 		require.Error(t, err)
 		require.False(t, isIncluded)
 		require.False(t, isConfirmed)
@@ -160,7 +160,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 		// set invalid connector ABI
 		zetaconnector.ZetaConnectorNonEthMetaData.ABI = "invalid abi"
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
+		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
 		zetaconnector.ZetaConnectorNonEthMetaData.ABI = abiConnector // reset connector ABI
 		require.ErrorContains(t, err, "error getting zeta connector")
 		require.False(t, isIncluded)
@@ -168,7 +168,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 		// set invalid custody ABI
 		erc20custody.ERC20CustodyMetaData.ABI = "invalid abi"
-		isIncluded, isConfirmed, err = ob.IsOutboundProcessed(ctx, cctx, zerolog.Nop())
+		isIncluded, isConfirmed, err = ob.IsOutboundProcessed(ctx, cctx)
 		require.ErrorContains(t, err, "error getting erc20 custody")
 		require.False(t, isIncluded)
 		require.False(t, isConfirmed)

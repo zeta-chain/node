@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
@@ -31,6 +32,9 @@ type Observer struct {
 
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
+
+	// finalizedTxResults indexes tx results with the outbound hash
+	finalizedTxResults map[string]*rpc.GetTransactionResult
 }
 
 // NewObserver returns a new Solana chain observer
@@ -62,7 +66,7 @@ func NewObserver(
 
 	pubKey, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to derive public key")
+		return nil, errors.Wrapf(err, "invalid gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// create solana observer
@@ -132,4 +136,25 @@ func (ob *Observer) LoadLastTxScanned() error {
 	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from tx %s", ob.Chain().ChainId, ob.LastTxScanned())
 
 	return nil
+}
+
+// SetTxResult sets the tx result for the given nonce
+func (ob *Observer) SetTxResult(nonce uint64, result *rpc.GetTransactionResult) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	ob.finalizedTxResults[ob.GetTxID(nonce)] = result
+}
+
+// GetTxResult returns the tx result for the given nonce
+func (ob *Observer) GetTxResult(nonce uint64) *rpc.GetTransactionResult {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	return ob.finalizedTxResults[ob.GetTxID(nonce)]
+}
+
+// IsTxFinalized returns true if there is a finalized tx for nonce
+func (ob *Observer) IsTxFinalized(nonce uint64) bool {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	return ob.finalizedTxResults[ob.GetTxID(nonce)] != nil
 }

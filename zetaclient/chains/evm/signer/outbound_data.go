@@ -146,7 +146,7 @@ func NewOutboundData(
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	included, confirmed, err := evmObserver.IsOutboundProcessed(ctx, cctx, logger)
+	included, confirmed, err := evmObserver.IsOutboundProcessed(ctx, cctx)
 	if err != nil {
 		return nil, true, errors.New("IsOutboundProcessed failed")
 	}

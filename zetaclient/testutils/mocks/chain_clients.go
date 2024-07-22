@@ -3,8 +3,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/rs/zerolog"
-
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -32,7 +30,6 @@ func (ob *EVMObserver) Stop()                   {}
 func (ob *EVMObserver) IsOutboundProcessed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-	_ zerolog.Logger,
 ) (bool, bool, error) {
 	return false, false, nil
 }
@@ -76,7 +73,6 @@ func (ob *BTCObserver) Stop() {}
 func (ob *BTCObserver) IsOutboundProcessed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-	_ zerolog.Logger,
 ) (bool, bool, error) {
 	return false, false, nil
 }

@@ -1,14 +1,17 @@
 package runner
 
 import (
+	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 )
 
@@ -104,4 +107,38 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	}
 
 	return sig, out
+}
+
+// WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
+func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int) {
+	// load deployer private key
+	privkey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s to %s", r.SOLZRC20Addr.String(), to.String())
+
+	solZRC20 := r.SOLZRC20
+	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	if err != nil {
+		r.Logger.Error("Error getting total supply of sol zrc20: %v", err)
+		panic(err)
+	}
+	r.Logger.Print(" supply of %s sol zrc20: %d", r.EVMAddress(), supply)
+
+	// approve SOL token (approve big amount to cover withdraw fee)
+	approveAmount := big.NewInt(1e9 * 100) // 100 SOL
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
+	require.NoError(r, err)
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	// withdraw 'amount' of SOL (lamports) from zEVM to Solana chain address
+	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privkey.PublicKey().String()), amount)
+	require.NoError(r, err)
+
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+	r.Logger.Print("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "withdraw")
 }

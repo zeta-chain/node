@@ -16,6 +16,7 @@ import (
 	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	solbserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
+	solanasigner "github.com/zeta-chain/zetacore/zetaclient/chains/solana/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
@@ -150,15 +151,66 @@ func syncSignerMap(
 			continue
 		}
 
-		cfg, _ := app.Config().GetBTCConfig()
-
-		utxoSigner, err := btcsigner.NewSigner(btcChain, tss, ts, logger, cfg)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
+		// get BTC config
+		cfg, found := app.Config().GetBTCConfig()
+		if !found {
+			logger.Std.Error().Msgf("Unable to find BTC config")
 			continue
 		}
 
-		addSigner(chainID, utxoSigner)
+		signer, err := btcsigner.NewSigner(btcChain, tss, ts, logger, cfg)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
+			continue
+		}
+
+		addSigner(chainID, signer)
+	}
+
+	// Solana signer
+	// Emulate same loop semantics as for EVM chains
+	for i := 0; i < 1; i++ {
+		solChain, solChainParams, solChainParamsFound := app.GetSolanaChainParams()
+		switch {
+		case !solChainParamsFound:
+			logger.Std.Warn().Msgf("Unable to find chain params for Solana chain")
+			continue
+		case !solChainParams.IsSupported:
+			logger.Std.Warn().Msgf("Solana chain is not supported")
+			continue
+		}
+
+		chainID := solChainParams.ChainId
+		presentChainIDs = append(presentChainIDs, chainID)
+
+		// noop
+		if mapHas(signers, chainID) {
+			continue
+		}
+
+		// get Solana config
+		cfg, found := app.Config().GetSolanaConfig()
+		if !found {
+			logger.Std.Error().Msgf("Unable to find Solana config")
+			continue
+		}
+
+		// create Solana client
+		rpcClient := solrpc.New(cfg.Endpoint)
+		if rpcClient == nil {
+			// should never happen
+			logger.Std.Error().Msgf("Unable to create Solana client from endpoint %s", cfg.Endpoint)
+			continue
+		}
+
+		// create Solana signer
+		signer, err := solanasigner.NewSigner(solChain, *solChainParams, rpcClient, tss, ts, logger)
+		if err != nil {
+			logger.Std.Error().Err(err).Msgf("Unable to construct signer for Solana chain %d", chainID)
+			continue
+		}
+
+		addSigner(chainID, signer)
 	}
 
 	// Remove all disabled signers
@@ -372,7 +424,7 @@ func syncObserverMap(
 		rpcClient := solrpc.New(solConfig.Endpoint)
 		if rpcClient == nil {
 			// should never happen
-			logger.Std.Error().Msg("solana create Solana client error")
+			logger.Std.Error().Msgf("Unable to create Solana client from endpoint %s", solConfig.Endpoint)
 			continue
 		}
 

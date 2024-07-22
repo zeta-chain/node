@@ -46,73 +46,61 @@ func Test_GasPriceMultiplier(t *testing.T) {
 		name       string
 		chain      chains.Chain
 		multiplier float64
-		fail       bool
 	}{
 		{
 			name:       "get Ethereum multiplier",
 			chain:      chains.Ethereum,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Goerli multiplier",
 			chain:      chains.Goerli,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get BSC multiplier",
 			chain:      chains.BscMainnet,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get BSC Testnet multiplier",
 			chain:      chains.BscTestnet,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Polygon multiplier",
 			chain:      chains.Polygon,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Mumbai Testnet multiplier",
 			chain:      chains.Mumbai,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Bitcoin multiplier",
 			chain:      chains.BitcoinMainnet,
 			multiplier: 2.0,
-			fail:       false,
 		},
 		{
 			name:       "get Bitcoin Testnet multiplier",
 			chain:      chains.BitcoinTestnet,
 			multiplier: 2.0,
-			fail:       false,
 		},
 		{
-			name: "get unknown chain gas price multiplier",
-			chain: chains.Chain{
-				Consensus: chains.Consensus_tendermint,
-			},
+			name:       "get Solana multiplier",
+			chain:      chains.SolanaMainnet,
 			multiplier: 1.0,
-			fail:       true,
+		},
+		{
+			name:       "get Solana devnet multiplier",
+			chain:      chains.SolanaDevnet,
+			multiplier: 1.0,
 		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			multiplier, err := GasPriceMultiplier(tc.chain)
-			if tc.fail {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
+			multiplier := GasPriceMultiplier(tc.chain)
 			require.Equal(t, tc.multiplier, multiplier)
 		})
 	}

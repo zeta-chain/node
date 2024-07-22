@@ -48,7 +48,7 @@ const (
 )
 
 var (
-	_ interfaces.ChainSigner = &Signer{}
+	_ interfaces.ChainSigner = (*Signer)(nil)
 
 	// zeroValue is for outbounds that carry no ETH (gas token) value
 	zeroValue = big.NewInt(0)

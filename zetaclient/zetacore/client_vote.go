@@ -50,11 +50,8 @@ func (c *Client) PostVoteGasPrice(
 	supply string,
 	blockNum uint64,
 ) (string, error) {
-	// apply gas price multiplier for the chain
-	multiplier, err := GasPriceMultiplier(chain)
-	if err != nil {
-		return "", err
-	}
+	// get gas price multiplier for the chain
+	multiplier := GasPriceMultiplier(chain)
 
 	// #nosec G115 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)

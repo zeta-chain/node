@@ -116,11 +116,6 @@ func (ob *Observer) PostVoteOutbound(
 	logger zerolog.Logger,
 ) {
 	chainID := ob.Chain().ChainId
-	logFields := map[string]any{
-		"outbound.chain_id":         chainID,
-		"outbound.external_tx_hash": receipt.TxHash.String(),
-		"outbound.nonce":            nonce,
-	}
 
 	signerAddress := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
@@ -146,20 +141,27 @@ func (ob *Observer) PostVoteOutbound(
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
+	// post vote to zetacore
+	logFields := map[string]any{
+		"chain":    chainID,
+		"nonce":    nonce,
+		"outbound": receipt.TxHash.String(),
+	}
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
-		logger.Error().Err(err).Fields(logFields).Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
+		logger.Error().
+			Err(err).
+			Fields(logFields).
+			Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
 		return
 	}
 
-	if zetaTxHash == "" {
-		return
+	// print vote tx hash and ballot
+	if zetaTxHash != "" {
+		logFields["vote"] = zetaTxHash
+		logFields["ballot"] = ballot
+		logger.Info().Fields(logFields).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
 	}
-
-	logFields["outbound.zeta_tx_hash"] = zetaTxHash
-	logFields["outbound.ballot"] = ballot
-
-	logger.Info().Fields(logFields).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
 }
 
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isConfirmed, error)
@@ -168,7 +170,6 @@ func (ob *Observer) PostVoteOutbound(
 func (ob *Observer) IsOutboundProcessed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-	logger zerolog.Logger,
 ) (bool, bool, error) {
 	// skip if outbound is not confirmed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
@@ -177,7 +178,7 @@ func (ob *Observer) IsOutboundProcessed(
 	}
 	receipt, transaction := ob.GetTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
-	logger = logger.With().Str("sendID", sendID).Logger()
+	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
 
 	// get connector and erce20Custody contracts
 	connectorAddr, connector, err := ob.GetConnectorContract()

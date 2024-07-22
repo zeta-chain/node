@@ -44,7 +44,6 @@ type ChainObserver interface {
 	IsOutboundProcessed(
 		ctx context.Context,
 		cctx *crosschaintypes.CrossChainTx,
-		logger zerolog.Logger,
 	) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
@@ -191,19 +190,31 @@ type EVMRPCClient interface {
 
 // SolanaRPCClient is the interface for Solana RPC client
 type SolanaRPCClient interface {
-	GetVersion(ctx context.Context) (out *solrpc.GetVersionResult, err error)
-	GetHealth(ctx context.Context) (out string, err error)
-	GetAccountInfo(ctx context.Context, account solana.PublicKey) (out *solrpc.GetAccountInfoResult, err error)
+	GetVersion(ctx context.Context) (*solrpc.GetVersionResult, error)
+	GetHealth(ctx context.Context) (string, error)
+	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
+	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
+	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
 	GetTransaction(
 		ctx context.Context,
 		txSig solana.Signature, // transaction signature
 		opts *solrpc.GetTransactionOpts,
-	) (out *solrpc.GetTransactionResult, err error)
+	) (*solrpc.GetTransactionResult, error)
+	GetConfirmedTransactionWithOpts(
+		ctx context.Context,
+		signature solana.Signature,
+		opts *solrpc.GetTransactionOpts,
+	) (*solrpc.TransactionWithMeta, error)
 	GetSignaturesForAddressWithOpts(
 		ctx context.Context,
 		account solana.PublicKey,
 		opts *solrpc.GetSignaturesForAddressOpts,
-	) (out []*solrpc.TransactionSignature, err error)
+	) ([]*solrpc.TransactionSignature, error)
+	SendTransactionWithOpts(
+		ctx context.Context,
+		transaction *solana.Transaction,
+		opts solrpc.TransactionOpts,
+	) (solana.Signature, error)
 }
 
 // EVMJSONRPCClient is the interface for EVM JSON RPC client

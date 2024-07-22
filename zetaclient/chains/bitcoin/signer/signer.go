@@ -47,7 +47,7 @@ const (
 	broadcastRetries = 5
 )
 
-var _ interfaces.ChainSigner = &Signer{}
+var _ interfaces.ChainSigner = (*Signer)(nil)
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
@@ -63,7 +63,8 @@ func NewSigner(
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
-	cfg config.BTCConfig) (*Signer, error) {
+	cfg config.BTCConfig,
+) (*Signer, error) {
 	// create base signer
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
