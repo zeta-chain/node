@@ -88,7 +88,7 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	return
 }
 
-// DecodeSolanaWalletAddress decodes a Solana wallet address from a given string
+// DecodeSolanaWalletAddress decodes a Solana wallet address from a given string.
 func DecodeSolanaWalletAddress(inputAddress string) (pk solana.PublicKey, err error) {
 	// decode the Base58 encoded address
 	pk, err = solana.PublicKeyFromBase58(inputAddress)
@@ -96,8 +96,9 @@ func DecodeSolanaWalletAddress(inputAddress string) (pk solana.PublicKey, err er
 		return solana.PublicKey{}, errors.Wrapf(err, "error decoding solana wallet address %s", inputAddress)
 	}
 
-	// accept address that is generated from keypair
-	// reject off-curve address such as program derived address from 'findProgramAddress'
+	// there are two types of Solana addresses.
+	// accept address that is generated from keypair.
+	// reject off-curve address such as program derived address from 'findProgramAddress'.
 	if !pk.IsOnCurve() {
 		return solana.PublicKey{}, fmt.Errorf("address %s is not on ed25519 curve", inputAddress)
 	}
