@@ -56,4 +56,5 @@ var (
 		"migration tx from an old tss address detected",
 	)
 	ErrValidatingInbound = errorsmod.Register(ModuleName, 1157, "unable to validate inbound")
+	ErrInvalidGasLimit   = errorsmod.Register(ModuleName, 1157, "invalid gas limit")
 )

@@ -68,7 +68,7 @@ func (k Keeper) ChainGasParams(ctx sdk.Context, chainID int64) (ChainGasParams, 
 	case err != nil:
 		return ChainGasParams{}, errors.Wrap(err, "unable to get gas limit")
 	case gasLimit == nil:
-		return ChainGasParams{}, errors.New("gas limit is nil")
+		return ChainGasParams{}, types.ErrInvalidGasLimit
 	}
 
 	// get the protocol flat fee
@@ -77,7 +77,7 @@ func (k Keeper) ChainGasParams(ctx sdk.Context, chainID int64) (ChainGasParams, 
 	case err != nil:
 		return ChainGasParams{}, errors.Wrap(err, "unable to get protocol flat fee")
 	case protocolFlatFee == nil:
-		return ChainGasParams{}, errors.New("protocol flat fee is nil")
+		return ChainGasParams{}, cosmoserrors.Wrap(types.ErrInvalidGasAmount, "protocol flat fee is nil")
 	}
 
 	// get the gas price
