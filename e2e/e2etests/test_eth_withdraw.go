@@ -17,8 +17,11 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	withdrawalAmount, ok := new(big.Int).SetString(args[0], 10)
 	require.True(r, ok, "Invalid withdrawal amount specified for TestEtherWithdraw.")
 
+	// add one unit to the withdrawal amount to account for the approval because withdrawal fees are automatically deducted
+	approvalAmount := new(big.Int).Add(withdrawalAmount, big.NewInt(1e18))
+
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, withdrawalAmount)
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approvalAmount)
 	require.NoError(r, err)
 
 	r.Logger.EVMTransaction(*tx, "approve")
