@@ -32,6 +32,7 @@
 * [2372](https://github.com/zeta-chain/node/pull/2372) - add queries for tss fund migration info
 * [2416](https://github.com/zeta-chain/node/pull/2416) - add Solana chain information
 * [2465](https://github.com/zeta-chain/node/pull/2465) - add Solana inbound SOL token observation
+* [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 
 ### Refactor
 
