@@ -17,7 +17,7 @@ enum CctxStatus {
   Reverted = 5;        // inbound reverted.
   Aborted =
       6; // inbound tx error or invalid paramters and cannot revert; just abort.
-         // But the amount can be refunded to zetachain using and admin proposal
+  // But the amount can be refunded to zetachain using and admin proposal
 }
 
 enum TxFinalizationStatus {
@@ -28,7 +28,7 @@ enum TxFinalizationStatus {
 }
 message InboundParams {
   string sender = 1; // this address is the immediate contract/EOA that calls
-                     // the Connector.send()
+  // the Connector.send()
   int64 sender_chain_id = 2;
   string tx_origin = 3; // this address is the EOA that signs the inbound tx
   pkg.coin.CoinType coin_type = 4;
@@ -65,7 +65,7 @@ message OutboundParams {
   uint64 tss_nonce = 5;
   uint64 gas_limit = 6;
   string gas_price = 7;
-  string gas_priority_fee = 13;
+  string gas_priority_fee = 23;
   // the above are commands for zetaclients
   // the following fields are used when the outbound tx is mined
   string hash = 8;
@@ -79,6 +79,9 @@ message OutboundParams {
   uint64 effective_gas_limit = 22;
   string tss_pubkey = 11;
   TxFinalizationStatus tx_finalization_status = 12;
+
+  // not used. do not edit.
+  reserved 13 to 19;
 }
 
 message Status {
