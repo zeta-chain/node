@@ -217,7 +217,7 @@ func DecodeScript(script []byte) ([]byte, bool, error) {
 
 	memoBytes, err := decodeInscriptionPayload(&t)
 	if err != nil {
-		return nil, false, err
+		return nil, false, errors.Wrap(err, "unable to decode the payload")
 	}
 
 	return memoBytes, true, nil
