@@ -623,6 +623,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		chain := chains.Chain{
 			ChainId:     999,
+			Network:     chains.Network_btc,
 			Consensus:   chains.Consensus_bitcoin,
 			CctxGateway: chains.CCTXGateway_observers,
 		}

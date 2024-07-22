@@ -1,8 +1,9 @@
 package chains_test
 
 import (
-	"github.com/zeta-chain/zetacore/testutil/sample"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -146,43 +147,43 @@ func TestChain_EncodeAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "should error if b is not a valid address on the bitcoin network",
-			chain: chains.Chain{
-				ChainName: chains.ChainName_btc_testnet,
-				ChainId:   18332,
-				Consensus: chains.Consensus_bitcoin,
-			},
+			name:    "should error if b is not a valid address on the bitcoin network",
+			chain:   chains.BitcoinTestnet,
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "",
 			wantErr: true,
 		},
 		{
-			name: "should pass if b is a valid address on the network",
-			chain: chains.Chain{
-				ChainName: chains.ChainName_btc_mainnet,
-				ChainId:   8332,
-				Consensus: chains.Consensus_bitcoin,
-			},
+			name:    "should pass if b is a valid address on the network",
+			chain:   chains.BitcoinMainnet,
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
 			wantErr: false,
 		},
 		{
-			name: "should error if b is not a valid address on the evm network",
-			chain: chains.Chain{
-				ChainName: chains.ChainName_goerli_testnet,
-				ChainId:   5,
-			},
+			name:    "should pass if b is a valid wallet address on the solana network",
+			chain:   chains.SolanaMainnet,
+			b:       []byte("DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw"),
+			want:    "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw",
+			wantErr: false,
+		},
+		{
+			name:    "should error if b is not a valid Base58 address",
+			chain:   chains.SolanaMainnet,
+			b:       []byte("9G0P8HkKqegZ7B6cE2hGvkZjHjSH14WZXDNZQmwYLokAc"), // contains invalid digit '0'
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "should error if b is not a valid address on the evm network",
+			chain:   chains.Ethereum,
 			b:       ethcommon.Hex2Bytes("0x321"),
 			want:    "",
 			wantErr: true,
 		},
 		{
-			name: "should pass if b is a valid address on the evm network",
-			chain: chains.Chain{
-				ChainName: chains.ChainName_goerli_testnet,
-				ChainId:   5,
-			},
+			name:    "should pass if b is a valid address on the evm network",
+			chain:   chains.Ethereum,
 			b:       []byte("0x321"),
 			want:    "0x0000000000000000000000000000003078333231",
 			wantErr: false,
@@ -293,6 +294,12 @@ func TestDecodeAddressFromChainID(t *testing.T) {
 			chainID: chains.BitcoinMainnet.ChainId,
 			addr:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
 			want:    []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+		},
+		{
+			name:    "Solana",
+			chainID: chains.SolanaMainnet.ChainId,
+			addr:    "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw",
+			want:    []byte("DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw"),
 		},
 		{
 			name:    "Non-supported chain",
