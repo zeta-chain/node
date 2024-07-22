@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-type obsserverKeeper interface {
+type observerKeeper interface {
 	SetChainNonces(ctx sdk.Context, chainNonces types.ChainNonces)
 	GetAllChainNonces(ctx sdk.Context) []types.ChainNonces
 	StoreKey() storetypes.StoreKey
