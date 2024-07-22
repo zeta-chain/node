@@ -116,6 +116,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 		flags                                  observertypes.GasPriceIncreaseFlags
 		blockTimestamp                         time.Time
 		medianGasPrice                         uint64
+		medianPriorityFee                      uint64
 		withdrawFromGasStabilityPoolReturn     error
 		expectWithdrawFromGasStabilityPoolCall bool
 		expectedGasPriceIncrease               math.Uint
@@ -140,6 +141,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         50,
+			medianPriorityFee:                      60,
 			withdrawFromGasStabilityPoolReturn:     nil,
 			expectWithdrawFromGasStabilityPoolCall: true,
 			expectedGasPriceIncrease:               math.NewUint(50),    // 100% medianGasPrice
@@ -354,15 +356,17 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			// set median gas price if not zero
 			if tc.medianGasPrice != 0 {
 				k.SetGasPrice(ctx, types.GasPrice{
-					ChainId:     chainID,
-					Prices:      []uint64{tc.medianGasPrice},
-					MedianIndex: 0,
+					ChainId:      chainID,
+					Prices:       []uint64{tc.medianGasPrice},
+					PriorityFees: []uint64{tc.medianPriorityFee},
+					MedianIndex:  0,
 				})
 
 				// ensure median gas price is set
-				medianGasPrice, _, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+				medianGasPrice, medianPriorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 				require.True(t, isFound)
 				require.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
+				require.True(t, medianPriorityFee.Equal(math.NewUint(tc.medianPriorityFee)))
 			}
 
 			// set block timestamp

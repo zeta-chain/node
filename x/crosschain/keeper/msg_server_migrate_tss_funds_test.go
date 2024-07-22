@@ -100,7 +100,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
-		gp, priorityFee, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+		gp, priorityFee, found := k.GetMedianGasValues(ctx, chain.ChainId)
 		require.True(t, found)
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -134,7 +134,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
-		gp, priorityFee, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+		gp, priorityFee, found := k.GetMedianGasValues(ctx, chain.ChainId)
 		require.True(t, found)
 
 		msg := crosschaintypes.MsgMigrateTssFunds{

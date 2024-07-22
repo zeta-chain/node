@@ -89,7 +89,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 ) error {
 	// Always migrate to the latest TSS if multiple TSS addresses have been generated
 	newTss := tssList[len(tssList)-1]
-	medianGasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	medianGasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
 	}

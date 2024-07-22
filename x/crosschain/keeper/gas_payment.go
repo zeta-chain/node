@@ -81,7 +81,7 @@ func (k Keeper) ChainGasParams(ctx sdk.Context, chainID int64) (ChainGasParams, 
 	}
 
 	// get the gas price
-	gasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	gasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return ChainGasParams{}, types.ErrUnableToGetGasPrice
 	}
@@ -330,7 +330,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	}
 
 	// get the gas price
-	gasPrice, priorityFee, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	gasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return cosmoserrors.Wrapf(types.ErrUnableToGetGasPrice,
 			"chain %d; identifiers %q",

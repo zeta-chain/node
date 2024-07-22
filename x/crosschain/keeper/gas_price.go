@@ -34,9 +34,8 @@ func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (types.GasPrice, boo
 	return val, true
 }
 
-// GetMedianGasPriceInUint returns the median gas price (and median priority fee) from the store
-// or false if it doesn't exist.
-func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainID int64) (math.Uint, math.Uint, bool) {
+// GetMedianGasValues returns *median* gas price and priority fee (for EIP-1559) from the store or false if it doesn't exist.
+func (k Keeper) GetMedianGasValues(ctx sdk.Context, chainID int64) (math.Uint, math.Uint, bool) {
 	entity, found := k.GetGasPrice(ctx, chainID)
 	if !found {
 		return math.ZeroUint(), math.ZeroUint(), false
