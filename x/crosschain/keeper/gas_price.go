@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"golang.org/x/exp/slices"
 
+	slicemath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -44,34 +44,10 @@ func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainID int64) (math.Ui
 
 	var (
 		gasPrice    = math.NewUint(entity.Prices[entity.MedianIndex])
-		priorityFee = math.NewUint(medianValue(entity.PriorityFees))
+		priorityFee = math.NewUint(slicemath.SliceMedianValue(entity.PriorityFees, false))
 	)
 
 	return gasPrice, priorityFee, true
-}
-
-// medianValue returns the median value of a slice
-// example: [ 1 7 5 2 3 6 4 ] => [ 1 2 3 4 5 6 7 ] => 4
-func medianValue(items []uint64) uint64 {
-	switch len(items) {
-	case 0:
-		return 0
-	case 1:
-		return items[0]
-	}
-
-	// We don't want to modify the original slice
-	copiedItems := make([]uint64, len(items))
-	copy(copiedItems, items)
-
-	slices.Sort(copiedItems)
-	mv := copiedItems[len(copiedItems)/2]
-
-	// We don't need the copy anymore
-	//nolint:ineffassign // let's help garbage collector :)
-	copiedItems = nil
-
-	return mv
 }
 
 // RemoveGasPrice removes a gasPrice from the store
