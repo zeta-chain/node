@@ -80,7 +80,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		}
 		return pk.String(), nil
 	default:
-		return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
+		return "", fmt.Errorf("chain id %d not supported", chain.ChainId)
 	}
 }
 
