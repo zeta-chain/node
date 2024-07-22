@@ -66,7 +66,7 @@ var chainNoncesArray = []types.ChainNonces{
 }
 
 func TestMigrateStore(t *testing.T) {
-	t.Run("MigrateStore", func(t *testing.T) {
+	t.Run("can migrate chain nonces", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// set chain nonces
@@ -108,6 +108,19 @@ func TestMigrateStore(t *testing.T) {
 		}
 	})
 
+	t.Run("migrate nothing with empty array", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		allChainNonces := k.GetAllChainNonces(ctx)
+		require.Len(t, allChainNonces, 0)
+
+		// migrate the store
+		err := v8.MigrateStore(ctx, *k)
+		require.NoError(t, err)
+
+		allChainNonces = k.GetAllChainNonces(ctx)
+		require.Len(t, allChainNonces, 0)
+	})
 }
 
 // setChainNoncesLegacy set a specific chainNonces in the store from its index
