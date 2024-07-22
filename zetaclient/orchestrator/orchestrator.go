@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -569,7 +570,8 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	const cadence = 5 * time.Second
+	// check every other zeta block
+	const cadence = 2 * evm.ZetaBlockTime
 
 	ticker := time.NewTicker(cadence)
 	defer ticker.Stop()
