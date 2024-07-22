@@ -304,6 +304,10 @@ func (a *AppContext) Update(
 			continue
 		}
 
+		if chains.IsZetaChain(cp.ChainId, nil) {
+			continue
+		}
+
 		freshEvmChainParams[cp.ChainId] = cp
 	}
 

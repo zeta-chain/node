@@ -22,7 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-// backwards compatibility
+// btcDatabaseFilename is the Bitcoin database file name now used in mainnet,
+// so we keep using it here for backward compatibility
 const btcDatabaseFilename = "btc_chain_client"
 
 // CreateSignerMap creates a map of interfaces.ChainSigner (by chainID) for all chains in the config.
@@ -84,10 +85,6 @@ func syncSignerMap(
 	// EVM signers
 	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
 		chainID := evmConfig.Chain.ChainId
-
-		if evmConfig.Chain.IsZetaChain() {
-			continue
-		}
 
 		evmChainParams, found := app.GetEVMChainParams(chainID)
 		switch {
@@ -234,10 +231,6 @@ func syncObserverMap(
 			chainID   = evmConfig.Chain.ChainId
 			chainName = evmConfig.Chain.ChainName.String()
 		)
-
-		if evmConfig.Chain.IsZetaChain() {
-			continue
-		}
 
 		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
 		switch {

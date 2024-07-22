@@ -38,15 +38,15 @@ func mapUnset[K cmp.Ordered, V any](m *map[K]V, key K, beforeUnset func(K, V)) b
 	return true
 }
 
-// mapDeleteMissingKeys removes signers from the map IF they are not in the presentKeys.
+// mapDeleteMissingKeys removes elements from the map IF they are not in the presentKeys.
 func mapDeleteMissingKeys[K cmp.Ordered, V any](m *map[K]V, presentKeys []K, beforeUnset func(K, V)) {
-	presentKeysSet := make(map[K]struct{}, len(presentKeys))
+	set := make(map[K]struct{}, len(presentKeys))
 	for _, id := range presentKeys {
-		presentKeysSet[id] = struct{}{}
+		set[id] = struct{}{}
 	}
 
 	for key := range *m {
-		if _, isPresent := presentKeysSet[key]; !isPresent {
+		if _, found := set[key]; !found {
 			mapUnset(m, key, beforeUnset)
 		}
 	}
