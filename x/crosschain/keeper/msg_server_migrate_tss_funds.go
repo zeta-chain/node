@@ -136,7 +136,7 @@ func (k Keeper) MigrateTSSFundsForChain(
 			TssNonce:               0,
 			GasLimit:               1_000_000,
 			GasPrice:               medianGasPrice.MulUint64(2).String(),
-			GasPriorityFee:         priorityFee.String(),
+			GasPriorityFee:         priorityFee.MulUint64(2).String(),
 			Hash:                   "",
 			BallotIndex:            "",
 			ObservedExternalHeight: 0,
