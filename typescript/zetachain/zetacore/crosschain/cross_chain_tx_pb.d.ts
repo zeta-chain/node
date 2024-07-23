@@ -229,7 +229,7 @@ export declare class OutboundParams extends Message<OutboundParams> {
   gasPrice: string;
 
   /**
-   * @generated from field: string gas_priority_fee = 13;
+   * @generated from field: string gas_priority_fee = 23;
    */
   gasPriorityFee: string;
 
