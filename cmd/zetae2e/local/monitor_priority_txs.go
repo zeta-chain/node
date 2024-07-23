@@ -13,6 +13,8 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 )
 
+var errWrongTxPriority = errors.New("wrong tx priority, system tx not on top")
+
 // monitorTxPriorityInBlocks checks for transaction priorities in blocks and reports errors
 func monitorTxPriorityInBlocks(ctx context.Context, conf config.Config, errCh chan error) {
 	rpcClient, err := rpchttp.New(conf.RPCs.ZetaCoreRPC, "/websocket")
@@ -71,7 +73,7 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 				if isMsgTypeURLSystemTx(attr) {
 					// a non system tx has been found in the block before a system tx
 					if *nonSystemTxFound {
-						errCh <- errors.New("wrong tx priority, system tx not on top")
+						errCh <- errWrongTxPriority
 						return
 					}
 				} else {
