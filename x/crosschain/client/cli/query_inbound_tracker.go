@@ -30,7 +30,12 @@ func CmdShowInboundTracker() *cobra.Command {
 			}
 			res, err := queryClient.InboundTracker(context.Background(), params)
 			if err != nil {
-				return errors.Wrapf(err, "failed to fetch inbound tracker for chain %d and tx hash %s", argChain, args[1])
+				return errors.Wrapf(
+					err,
+					"failed to fetch inbound tracker for chain %d and tx hash %s",
+					argChain,
+					args[1],
+				)
 			}
 			return clientCtx.PrintProto(res)
 		},

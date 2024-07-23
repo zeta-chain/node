@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/zetacore/pkg/retry"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/retry"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
