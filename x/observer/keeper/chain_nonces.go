@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,14 +14,14 @@ import (
 func (k Keeper) SetChainNonces(ctx sdk.Context, chainNonces types.ChainNonces) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
 	b := k.cdc.MustMarshal(&chainNonces)
-	store.Set(types.KeyPrefix(strconv.FormatInt(chainNonces.ChainId, 10)), b)
+	store.Set(types.ChainNoncesKeyPrefix(chainNonces.ChainId), b)
 }
 
 // GetChainNonces returns a chainNonces from its index
 func (k Keeper) GetChainNonces(ctx sdk.Context, chainID int64) (val types.ChainNonces, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
 
-	b := store.Get(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
+	b := store.Get(types.ChainNoncesKeyPrefix(chainID))
 	if b == nil {
 		return val, false
 	}
@@ -35,7 +33,7 @@ func (k Keeper) GetChainNonces(ctx sdk.Context, chainID int64) (val types.ChainN
 // RemoveChainNonces removes a chainNonces from the store
 func (k Keeper) RemoveChainNonces(ctx sdk.Context, chainID int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
-	store.Delete(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
+	store.Delete(types.ChainNoncesKeyPrefix(chainID))
 }
 
 // GetAllChainNonces returns all chainNonces
