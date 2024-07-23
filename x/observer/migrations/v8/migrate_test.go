@@ -78,7 +78,7 @@ func TestMigrateStore(t *testing.T) {
 		allChainNonces := k.GetAllChainNonces(ctx)
 		require.Len(t, allChainNonces, 10)
 
-		// no chain nonces can be found in the store
+		// no chain nonces can be found in the store using the new indexing
 		for _, chainNonces := range allChainNonces {
 			_, found := k.GetChainNonces(ctx, chainNonces.ChainId)
 			require.False(t, found)
