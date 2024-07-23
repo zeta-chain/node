@@ -492,7 +492,7 @@ func GetBtcEventWithWitness(
 ) (*BTCInboundEvent, error) {
 	// first check for OP_RETURN data
 	event, err := GetBtcEvent(
-		rpcClient,
+		client,
 		tx,
 		tssAddress,
 		blockNumber,
