@@ -483,7 +483,7 @@ func GetBtcEvent(
 // It will first prioritize OP_RETURN over tapscript.
 // The format of the tapscript is
 func GetBtcEventWithWitness(
-	rpcClient interfaces.BTCRPCClient,
+	client interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
