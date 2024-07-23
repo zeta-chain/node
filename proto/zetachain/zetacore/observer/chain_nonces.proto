@@ -10,7 +10,7 @@ message ChainNonces {
 
   // deprecated(v19): index has been replaced by chain_id for unique identifier
   string index = 2 [ deprecated = true ];
-  ;
+  
 
   int64 chain_id = 3;
   uint64 nonce = 4;
