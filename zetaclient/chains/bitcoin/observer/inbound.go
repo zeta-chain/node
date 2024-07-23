@@ -481,7 +481,6 @@ func GetBtcEvent(
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
-// The format of the tapscript is
 func GetBtcEventWithWitness(
 	client interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
