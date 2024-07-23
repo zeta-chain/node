@@ -477,7 +477,7 @@ func GetBtcEvent(
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
 func GetBtcEventWithWitness(
-	rpcClient interfaces.BTCRPCClient,
+	client interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
