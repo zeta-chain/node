@@ -18,12 +18,9 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	withdrawalAmount, ok := new(big.Int).SetString(args[0], 10)
 	require.True(r, ok)
-
-	// add one unit to the withdrawal amount to account for the approval because withdrawal fees are automatically deducted
-	approvalAmount := new(big.Int).Add(withdrawalAmount, big.NewInt(1e18))
-
-	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approvalAmount)
+	
+	// approve 1 unit of the gas token to cover the gas fee transfer
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	require.NoError(r, err)
 
 	r.Logger.EVMTransaction(*tx, "approve")
