@@ -27,6 +27,7 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func SetupHandlers(app *App) {
@@ -68,6 +69,7 @@ func SetupHandlers(app *App) {
 		crisistypes.ModuleName,
 		emissionstypes.ModuleName,
 		authoritytypes.ModuleName,
+		observertypes.ModuleName,
 	}
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{

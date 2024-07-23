@@ -15,7 +15,6 @@ func MigrateStore(
 	ctx sdk.Context,
 	keeper authorityKeeper,
 ) error {
-	ctx.Logger().Info("Migrating authority store from version 1 to 2")
 	keeper.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 	return nil
 }

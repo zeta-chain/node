@@ -143,7 +143,8 @@ service Query {
   // Queries a chainNonces by index.
   rpc ChainNonces(QueryGetChainNoncesRequest)
       returns (QueryGetChainNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/chainNonces/{index}";
+    option (google.api.http).get =
+        "/zeta-chain/observer/chainNonces/{chain_id}";
   }
 
   // Queries a list of chainNonces items.
@@ -177,7 +178,7 @@ message QueryTssFundsMigratorInfoResponse {
   TssFundMigratorInfo tss_funds_migrator = 1 [ (gogoproto.nullable) = false ];
 }
 
-message QueryGetChainNoncesRequest { string index = 1; }
+message QueryGetChainNoncesRequest { int64 chain_id = 1; }
 
 message QueryGetChainNoncesResponse {
   ChainNonces ChainNonces = 1 [ (gogoproto.nullable) = false ];

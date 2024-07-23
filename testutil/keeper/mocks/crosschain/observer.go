@@ -302,9 +302,9 @@ func (_m *CrosschainObserverKeeper) GetBallot(ctx types.Context, index string) (
 	return r0, r1
 }
 
-// GetChainNonces provides a mock function with given fields: ctx, index
-func (_m *CrosschainObserverKeeper) GetChainNonces(ctx types.Context, index string) (observertypes.ChainNonces, bool) {
-	ret := _m.Called(ctx, index)
+// GetChainNonces provides a mock function with given fields: ctx, chainID
+func (_m *CrosschainObserverKeeper) GetChainNonces(ctx types.Context, chainID int64) (observertypes.ChainNonces, bool) {
+	ret := _m.Called(ctx, chainID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetChainNonces")
@@ -312,17 +312,17 @@ func (_m *CrosschainObserverKeeper) GetChainNonces(ctx types.Context, index stri
 
 	var r0 observertypes.ChainNonces
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string) (observertypes.ChainNonces, bool)); ok {
-		return rf(ctx, index)
+	if rf, ok := ret.Get(0).(func(types.Context, int64) (observertypes.ChainNonces, bool)); ok {
+		return rf(ctx, chainID)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, string) observertypes.ChainNonces); ok {
-		r0 = rf(ctx, index)
+	if rf, ok := ret.Get(0).(func(types.Context, int64) observertypes.ChainNonces); ok {
+		r0 = rf(ctx, chainID)
 	} else {
 		r0 = ret.Get(0).(observertypes.ChainNonces)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, string) bool); ok {
-		r1 = rf(ctx, index)
+	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
+		r1 = rf(ctx, chainID)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}

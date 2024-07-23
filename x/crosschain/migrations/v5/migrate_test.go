@@ -85,7 +85,6 @@ func TestResetTestnetNonce(t *testing.T) {
 		zk.ObserverKeeper.SetTSS(ctx, tss)
 		for _, chain := range mainnetChains {
 			zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-				Index:   chain.ChainName.String(),
 				ChainId: chain.ChainId,
 				Nonce:   uint64(nonceHigh),
 			})
@@ -104,7 +103,6 @@ func TestResetTestnetNonce(t *testing.T) {
 				NonceHigh: nonceHigh,
 			})
 			zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-				Index:   chain.ChainName.String(),
 				ChainId: chain.ChainId,
 				Nonce:   uint64(nonceHigh),
 			})
@@ -123,7 +121,7 @@ func TestResetTestnetNonce(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, assertValues[chain], pn.NonceHigh)
 			require.Equal(t, assertValues[chain], pn.NonceLow)
-			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainId)
 			require.True(t, found)
 			require.Equal(t, uint64(assertValues[chain]), cn.Nonce)
 		}
@@ -132,7 +130,7 @@ func TestResetTestnetNonce(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, nonceHigh, pn.NonceHigh)
 			require.Equal(t, nonceLow, pn.NonceLow)
-			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainId)
 			require.True(t, found)
 			require.Equal(t, uint64(nonceHigh), cn.Nonce)
 		}
@@ -153,7 +151,6 @@ func TestResetTestnetNonce(t *testing.T) {
 				NonceHigh: nonceHigh,
 			})
 			zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-				Index:   chain.ChainName.String(),
 				ChainId: chain.ChainId,
 				Nonce:   uint64(nonceHigh),
 			})
@@ -170,14 +167,14 @@ func TestResetTestnetNonce(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, assertValuesSet[chain], pn.NonceHigh)
 			require.Equal(t, assertValuesSet[chain], pn.NonceLow)
-			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainId)
 			require.True(t, found)
 			require.Equal(t, uint64(assertValuesSet[chain]), cn.Nonce)
 		}
 		for _, chain := range assertValuesNotSet {
 			_, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 			require.False(t, found)
-			_, found = zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			_, found = zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainId)
 			require.False(t, found)
 		}
 	})

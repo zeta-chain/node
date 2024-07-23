@@ -30101,7 +30101,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/observer/chainNonces/{index}:
+  /zeta-chain/observer/chainNonces/{chain_id}:
     get:
       summary: Queries a chainNonces by index.
       operationId: Query_ChainNonces
@@ -30115,10 +30115,11 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: index
+        - name: chain_id
           in: path
           required: true
           type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/observer/crosschain_flags:
@@ -57815,6 +57816,7 @@ definitions:
         type: string
       index:
         type: string
+        title: 'deprecated(v19): index has been replaced by chain_id for unique identifier'
       chain_id:
         type: string
         format: int64

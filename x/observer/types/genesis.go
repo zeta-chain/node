@@ -38,13 +38,13 @@ func (gs GenesisState) Validate() error {
 	}
 
 	// Check for duplicated index in chainNonces
-	chainNoncesIndexMap := make(map[string]bool)
+	chainNoncesIndexMap := make(map[int64]bool)
 
 	for _, elem := range gs.ChainNonces {
-		if _, ok := chainNoncesIndexMap[elem.Index]; ok {
+		if _, ok := chainNoncesIndexMap[elem.ChainId]; ok {
 			return fmt.Errorf("duplicated index for chainNonces")
 		}
-		chainNoncesIndexMap[elem.Index] = true
+		chainNoncesIndexMap[elem.ChainId] = true
 	}
 
 	return gs.Observers.Validate()
