@@ -277,17 +277,6 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	return receiverVout, amount, nil
 }
 
-// decodeInscriptionPayload checks the envelope for the script monitoring. The format is
-// OP_FALSE
-// OP_IF
-//
-//		OP_PUSHDATA_N ...
-//	 ...
-//		OP_PUSHDATA_N ...
-//
-// OP_ENDIF
-//
-// Note: the total data pushed will always be more than 80 bytes and within the btc transaction size limit.
 func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
 	if !t.Next() || t.Opcode() != txscript.OP_FALSE {
 		return nil, fmt.Errorf("OP_FALSE not found")
@@ -299,28 +288,20 @@ func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
 
 	memo := make([]byte, 0)
 	var next byte
-	for {
-		if !t.Next() {
-			if t.Err() != nil {
-				return nil, t.Err()
-			}
-			return nil, fmt.Errorf("should contain more data, but script ended")
-		}
-
+	for t.Next() {
 		next = t.Opcode()
-
 		if next == txscript.OP_ENDIF {
-			break
+			return memo, nil
 		}
-
 		if next < txscript.OP_DATA_1 || next > txscript.OP_PUSHDATA4 {
 			return nil, fmt.Errorf("expecting data push, found %d", next)
 		}
-
 		memo = append(memo, t.Data()...)
 	}
-
-	return memo, nil
+	if t.Err() != nil {
+		return nil, t.Err()
+	}
+	return nil, fmt.Errorf("should contain more data, but script ended")
 }
 
 // checkInscriptionEnvelope decodes the envelope for the script monitoring. The format is
