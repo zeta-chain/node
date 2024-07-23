@@ -212,12 +212,12 @@ func DecodeScript(script []byte) ([]byte, bool, error) {
 	t := makeScriptTokenizer(script)
 
 	if err := checkInscriptionEnvelope(&t); err != nil {
-		return nil, false, errors.Wrap(err, "unable to check the envelope")
+		return nil, false, errors.Wrap(err, "checkInscriptionEnvelope: unable to check the envelope")
 	}
 
 	memoBytes, err := decodeInscriptionPayload(&t)
 	if err != nil {
-		return nil, false, errors.Wrap(err, "unable to decode the payload")
+		return nil, false, errors.Wrap(err, "decodeInscriptionPayload: unable to decode the payload")
 	}
 
 	return memoBytes, true, nil
