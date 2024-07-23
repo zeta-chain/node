@@ -33,7 +33,7 @@ func (r *E2ERunner) SetSolanaAddress() {
 
 // SetSolanaContracts set Solana contracts
 func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
-	r.Logger.Print("⚙️ setting up Solana contracts")
+	r.Logger.Print("⚙️ deploying gateway program on Solana")
 
 	// set Solana contracts
 	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)

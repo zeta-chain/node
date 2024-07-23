@@ -126,6 +126,9 @@ func (ob *Observer) Start(ctx context.Context) {
 	// watch Solana chain for incoming txs and post votes to zetacore
 	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
 
+	// watch Solana chain for fee rate and post to zetacore
+	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
+
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
 }

@@ -324,8 +324,7 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
-		ob.logger.GasPrice.Error().Err(err).Msg("error creating ticker")
-		return err
+		return errors.Wrapf(err, "NewDynamicTicker error")
 	}
 	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
 		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
@@ -383,14 +382,13 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// query the current block number
 	blockNumber, err := ob.btcClient.GetBlockCount()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "GetBlockCount error")
 	}
 
 	// #nosec G115 always positive
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
 	if err != nil {
-		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
-		return err
+		return errors.Wrap(err, "PostVoteGasPrice error")
 	}
 
 	return nil

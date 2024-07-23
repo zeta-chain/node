@@ -28,7 +28,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
@@ -329,12 +328,7 @@ func (signer *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, cannot get app context", cctx.Index)
-		return
-	}
-
+	// end outbound process on panic
 	defer func() {
 		outboundProcessor.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
@@ -342,30 +336,30 @@ func (signer *Signer) TryProcessOutbound(
 		}
 	}()
 
+	// prepare logger
 	logger := signer.Logger().Std.With().
 		Str("OutboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()
 
 	params := cctx.GetCurrentOutboundParam()
+	logger.Info().
+		Msgf("BTC TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+
+	// support gas token only for Bitcoin outbound
 	coinType := cctx.InboundParams.CoinType
 	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutbound: can only send BTC to a BTC network")
 		return
 	}
 
-	logger.Info().
-		Msgf("BTC TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+	// convert chain observer to BTC observer
 	btcObserver, ok := chainObserver.(*observer.Observer)
 	if !ok {
 		logger.Error().Msgf("chain observer is not a bitcoin observer")
 		return
 	}
-	flags := app.GetCrossChainFlags()
-	if !flags.IsOutboundEnabled {
-		logger.Info().Msgf("outbound is disabled")
-		return
-	}
+
 	chain := btcObserver.Chain()
 	outboundTssNonce := params.TssNonce
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()

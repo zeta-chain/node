@@ -483,7 +483,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			!oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
 			oc.logger.Debug().
-				Msgf("ScheduleCctxEVM: sign outbound %s with value %d\n", outboundID, cctx.GetCurrentOutboundParam().Amount)
+				Msgf("ScheduleCctxEVM: sign outbound %s with value %d", outboundID, cctx.GetCurrentOutboundParam().Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,
@@ -563,7 +563,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		// try confirming the outbound or scheduling a keysign
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d\n", outboundID, params.Amount)
+			oc.logger.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d", outboundID, params.Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,
@@ -586,8 +586,6 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	observer interfaces.ChainObserver,
 	signer interfaces.ChainSigner,
 ) {
-	oc.logger.Info().
-		Msgf("ScheduleCctxSolana: zetaHeight %d, chainID %d, cctxList %d", zetaHeight, chainID, len(cctxList))
 	solObserver, ok := observer.(*solanaobserver.Observer)
 	if !ok { // should never happen
 		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
@@ -595,11 +593,9 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	}
 	// #nosec G701 positive
 	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
-	//lookahead := observer.GetChainParams().OutboundScheduleLookahead
 
-	// schedule at most one keysign per ticker
-	for idx, cctx := range cctxList {
-		_ = idx
+	// schedule keysign for each pending cctx
+	for _, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
 		nonce := params.TssNonce
 		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
@@ -609,6 +605,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 				Msgf("ScheduleCctxSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
+
 		// try confirming the outbound
 		included, confirmed, err := solObserver.IsOutboundProcessed(ctx, cctx)
 		if err != nil {
@@ -622,20 +619,11 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 				Msgf("ScheduleCctxSolana: outbound %s already included; do not schedule keysign", outboundID)
 			continue
 		}
-		oc.logger.Info().Msgf("ScheduleCctxSolana: idx: %d; interval %d", idx, interval)
 
-		// stop if lookahead is reached
-		//if int64(
-		//	idx,
-		//) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-		//	oc.logger.Std.Warn().
-		//		Msgf("ScheduleCctxSolana: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
-		//	break
-		//}
 		// try confirming the outbound or scheduling a keysign
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d\n", outboundID, params.Amount)
+			oc.logger.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d", outboundID, params.Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,

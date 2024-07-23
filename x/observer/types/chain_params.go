@@ -321,7 +321,7 @@ func GetDefaultSolanaLocalnetChainParams() *ChainParams {
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		GasPriceTicker:              100,
+		GasPriceTicker:              5,
 		WatchUtxoTicker:             0,
 		InboundTicker:               5,
 		OutboundTicker:              5,

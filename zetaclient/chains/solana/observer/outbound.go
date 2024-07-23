@@ -52,15 +52,14 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 		select {
 		case <-ticker.C():
 			if !app.IsOutboundObservationEnabled(ob.GetChainParams()) {
-				sampledLogger.Info().
-					Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
+				sampledLogger.Info().Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
 				continue
 			}
-			trackers, err := ob.ZetacoreClient().
-				GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
 			if err != nil {
 				continue
 			}
+
 			for _, tracker := range trackers {
 				// go to next tracker if this one already has a finalized tx
 				nonce := tracker.Nonce
@@ -82,7 +81,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 						}
 					}
 				}
-				// should be only one SUCCESSFUL finalized txHash for each nonce
+				// should be only one finalized txHash for each nonce
 				if txCount == 1 {
 					ob.SetTxResult(nonce, txResult)
 				} else if txCount > 1 {

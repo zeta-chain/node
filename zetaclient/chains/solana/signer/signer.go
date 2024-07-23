@@ -16,6 +16,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -73,6 +74,7 @@ func (s *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	// end outbound process on panic
 	defer func() {
 		outboundProc.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
@@ -80,26 +82,28 @@ func (s *Signer) TryProcessOutbound(
 		}
 	}()
 
+	// prepare logger
 	logger := s.Logger().Std.With().
 		Str("OutboundID", outboundID).
 		Str("SendHash", cctx.Index).
 		Logger()
 
 	params := cctx.GetCurrentOutboundParam()
-	coinType := cctx.InboundParams.CoinType
-	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
-		logger.Error().Msgf("Solana TryProcessOutbound: can only send SOL to a Solana network")
-		return
-	}
 	logger.Info().
 		Msgf("Solana TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+
+	// support gas token only ATM for Solana outbound
+	coinType := cctx.InboundParams.CoinType
+	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
+		logger.Error().Msgf("Solana TryProcessOutbound: can only send SOL to the Solana network")
+		return
+	}
 
 	chain := s.Chain()
 	outboundTssNonce := params.TssNonce
 	// get size limit and gas price
 	// fee := 5000 // FIXME: this is the fixed fee (for signatures), explore priority fee for compute units
 
-	//to, err := chains.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	// NOTE: withrawal event hook must validate the receiver address format
 	to := solana.MustPublicKeyFromBase58(params.Receiver)
 	amount := params.Amount.Uint64()
@@ -109,14 +113,7 @@ func (s *Signer) TryProcessOutbound(
 		privkey := solana.MustPrivateKeyFromBase58(
 			"4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C",
 		)
-		type WithdrawInstructionParams struct {
-			Discriminator [8]byte
-			Amount        uint64
-			Signature     [64]byte
-			RecoveryID    uint8
-			MessageHash   [32]byte
-			Nonce         uint64
-		}
+
 		seed := []byte("meta")
 		pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, s.gatewayID)
 		if err != nil {
@@ -182,7 +179,7 @@ func (s *Signer) TryProcessOutbound(
 		var sig [64]byte
 		copy(sig[:], signature[:64])
 
-		inst.DataBytes, err = borsh.Serialize(WithdrawInstructionParams{
+		inst.DataBytes, err = borsh.Serialize(solanacontract.WithdrawInstructionParams{
 			Discriminator: [8]byte{183, 18, 70, 156, 148, 109, 161, 34},
 			Amount:        amount,
 			Signature:     sig,

@@ -304,8 +304,7 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 		ob.GetChainParams().GasPriceTicker,
 	)
 	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
-		return err
+		return errors.Wrapf(err, "NewDynamicTicker error")
 	}
 	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
 		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
@@ -335,24 +334,20 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("Err SuggestGasPrice:")
-		return err
+		return errors.Wrap(err, "SuggestGasPrice err")
 	}
 	blockNum, err := ob.evmClient.BlockNumber(ctx)
 	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
-		return err
+		return errors.Wrapf(err, "BlockNumber err for block %d", blockNum)
 	}
 
 	// SUPPLY
 	supply := "100" // lockedAmount on ETH, totalSupply on other chains
 
-	zetaHash, err := ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), supply, blockNum)
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
-		return err
+		return errors.Wrap(err, "PostGasPrice err")
 	}
-	_ = zetaHash
 
 	return nil
 }

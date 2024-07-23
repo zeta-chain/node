@@ -42,3 +42,24 @@ type DepositInstructionParams struct {
 	// Memo is the memo for the deposit
 	Memo []byte
 }
+
+// WithdrawInstructionParams contains the parameters for a gateway withdraw instruction
+type WithdrawInstructionParams struct {
+	// Discriminator is the unique identifier for the withdraw instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the withdraw
+	Amount uint64
+
+	// Signature is the ECDSA signature (by TSS) for the withdraw
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the withdraw
+	Nonce uint64
+}
