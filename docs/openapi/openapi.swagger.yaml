@@ -28846,6 +28846,30 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/crosschain/inboundTracker/{chain_id}/{tx_hash}:
+    get:
+      operationId: Query_InboundTracker
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryInboundTrackerResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: tx_hash
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/crosschain/inboundTrackerByChain/{chain_id}:
     get:
       operationId: Query_InboundTrackerAllByChain
@@ -57397,6 +57421,11 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainCrossChainTx'
+  crosschainQueryInboundTrackerResponse:
+    type: object
+    properties:
+      inbound_tracker:
+        $ref: '#/definitions/crosschainInboundTracker'
   crosschainQueryLastZetaHeightResponse:
     type: object
     properties:
