@@ -477,7 +477,7 @@ func GetBtcEvent(
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
 func GetBtcEventWithWitness(
-	rpcClient interfaces.BTCRPCClient,
+	client interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -486,14 +486,16 @@ func GetBtcEventWithWitness(
 	depositorFee float64,
 ) (*BTCInboundEvent, error) {
 	if len(tx.Vout) < 1 {
-		logger.Debug().Msgf("GetBtcEventWithWitness: no output")
+		logger.Debug().Msgf("no output %s", tx.Txid)
 		return nil, nil
 	}
 	if len(tx.Vin) == 0 { // should never happen
-		return nil, fmt.Errorf("GetBtcEventWithWitness: no input found for inbound: %s", tx.Txid)
+		logger.Debug().Msgf("no input found for inbound: %s", tx.Txid)
+		return nil, nil
 	}
 
 	if !isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams, logger) {
+		logger.Debug().Msgf("irrelevant recipient %s for inbound: %s", tx.Vout[0].ScriptPubKey.Hex, tx.Txid)
 		return nil, nil
 	}
 
@@ -506,17 +508,17 @@ func GetBtcEventWithWitness(
 
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
-		logger.Debug().Msgf("GetBtcEventWithWitness: found OP_RETURN memo in tx %s", tx.Txid)
 		memo = candidate
+		logger.Debug().Msgf("GetBtcEventWithWitness: found OP_RETURN memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
-		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo in tx %s", tx.Txid)
 		memo = candidate
+		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else {
 		return nil, nil
 	}
 
 	// event found, get sender address
-	fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
+	fromAddress, err := GetSenderAddressByVin(client, tx.Vin[0], netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}

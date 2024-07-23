@@ -571,7 +571,34 @@ func TestGetBtcEventFromInscription(t *testing.T) {
 	// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
 	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
 
-	t.Run("decode ok", func(t *testing.T) {
+	t.Run("decode OP_RETURN ok", func(t *testing.T) {
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		eventExpected := &observer.BTCInboundEvent{
+			FromAddress: "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+			ToAddress:   tssAddress,
+			Value:       tx.Vout[0].Value - depositorFee,
+			MemoBytes:   memo,
+			BlockNumber: blockNumber,
+			TxHash:      tx.Txid,
+		}
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+
+		// get BTC event
+		event, err := observer.GetBtcEventWithWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		require.NoError(t, err)
+		require.Equal(t, eventExpected, event)
+	})
+
+	t.Run("decode inscription ok", func(t *testing.T) {
 		txHash2 := "37777defed8717c581b4c0509329550e344bdc14ac38f71fc050096887e535c8"
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash2, false)
 
