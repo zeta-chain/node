@@ -620,6 +620,32 @@ func TestGetBtcEventFromInscription(t *testing.T) {
 		require.Equal(t, event, eventExpected)
 	})
 
+	t.Run("decode inscription ok - mainnet", func(t *testing.T) {
+		// The input data is from the below mainnet, but output is modified for test case
+		txHash2 := "7a57f987a3cb605896a5909d9ef2bf7afbf0c78f21e4118b85d00d9e4cce0c2c"
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash2, false)
+
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Sequence = 2
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+
+		memo, _ := hex.DecodeString("72f080c854647755d0d9e6f6821f6931f855b9acffd53d87433395672756d58822fd143360762109ab898626556b1c3b8d3096d2361f1297df4a41c1b429471a9aa2fc9be5f27c13b3863d6ac269e4b587d8389f8fd9649859935b0d48dea88cdb40f20c")
+		eventExpected := &observer.BTCInboundEvent{
+			FromAddress: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
+			ToAddress:   tssAddress,
+			Value:       tx.Vout[0].Value - depositorFee,
+			MemoBytes:   memo,
+			BlockNumber: blockNumber,
+			TxHash:      tx.Txid,
+		}
+
+		// get BTC event
+		event, err := observer.GetBtcEventWithWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		require.NoError(t, err)
+		require.Equal(t, event, eventExpected)
+	})
+
 	t.Run("should skip tx if receiver address is not TSS address", func(t *testing.T) {
 		// load tx and modify receiver address to any non-tss address: bc1qw8wrek2m7nlqldll66ajnwr9mh64syvkt67zlu
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
