@@ -118,7 +118,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		multipliedValue, err := gas.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
 		require.NoError(t, err)
 		require.Equal(t, multipliedValue.String(), cctx.GetCurrentOutboundParam().GasPrice)
-		require.Equal(t, priorityFee.String(), cctx.GetCurrentOutboundParam().GasPriorityFee)
+		require.Equal(t, priorityFee.MulUint64(2).String(), cctx.GetCurrentOutboundParam().GasPriorityFee)
 	})
 
 	t.Run("test btc chain", func(t *testing.T) {
@@ -151,7 +151,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
 		require.Equal(t, gp.MulUint64(2).String(), cctx.GetCurrentOutboundParam().GasPrice)
-		require.Equal(t, priorityFee.String(), cctx.GetCurrentOutboundParam().GasPriorityFee)
+		require.Equal(t, priorityFee.MulUint64(2).String(), cctx.GetCurrentOutboundParam().GasPriorityFee)
 	})
 }
 
