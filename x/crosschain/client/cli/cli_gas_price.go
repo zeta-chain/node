@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -77,34 +78,40 @@ func CmdShowGasPrice() *cobra.Command {
 
 func CmdVoteGasPrice() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote-gas-price [chain] [price] [supply] [blockNumber]",
+		Use:   "vote-gas-price [chain] [price] [priorityFee] [blockNumber]",
 		Short: "Broadcast message to vote gas price",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsChain, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "invalid chain id %q", args[0])
 			}
+
 			argsPrice, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "invalid price %q", args[1])
 			}
-			argsSupply := args[2]
+
+			argsPriorityFee, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return errors.Wrapf(err, "invalid priorityFee %q", args[2])
+			}
 
 			argsBlockNumber, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "invalid blockNumber %q", args[3])
 			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to get client context")
 			}
 
 			msg := types.NewMsgVoteGasPrice(
 				clientCtx.GetFromAddress().String(),
 				argsChain,
 				argsPrice,
-				argsSupply,
+				argsPriorityFee,
 				argsBlockNumber,
 			)
 

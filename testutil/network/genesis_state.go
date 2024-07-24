@@ -220,12 +220,13 @@ func AddCrosschainData(
 		state.GasPriceList = append(
 			state.GasPriceList,
 			&types.GasPrice{
-				Creator:   "ANY",
-				ChainId:   int64(i),
-				Index:     strconv.Itoa(i),
-				Prices:    []uint64{},
-				BlockNums: []uint64{},
-				Signers:   []string{},
+				Creator:      "ANY",
+				ChainId:      int64(i),
+				Index:        strconv.Itoa(i),
+				Prices:       []uint64{},
+				PriorityFees: []uint64{},
+				BlockNums:    []uint64{},
+				Signers:      []string{},
 			},
 		)
 	}

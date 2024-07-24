@@ -34,6 +34,8 @@ type MockEvmClient struct {
 	err         error
 	blockNumber uint64
 	header      *ethtypes.Header
+	gasPrice    *big.Int
+	priorityFee *big.Int
 	Receipts    []*ethtypes.Receipt
 }
 
@@ -92,6 +94,11 @@ func (e *MockEvmClient) SuggestGasPrice(_ context.Context) (*big.Int, error) {
 	if e.err != nil {
 		return nil, e.err
 	}
+
+	if e.gasPrice != nil {
+		return e.gasPrice, nil
+	}
+
 	return big.NewInt(0), nil
 }
 
@@ -99,6 +106,11 @@ func (e *MockEvmClient) SuggestGasTipCap(_ context.Context) (*big.Int, error) {
 	if e.err != nil {
 		return nil, e.err
 	}
+
+	if e.priorityFee != nil {
+		return e.priorityFee, nil
+	}
+
 	return big.NewInt(0), nil
 }
 
@@ -202,5 +214,15 @@ func (e *MockEvmClient) WithReceipt(receipt *ethtypes.Receipt) *MockEvmClient {
 
 func (e *MockEvmClient) WithReceipts(receipts []*ethtypes.Receipt) *MockEvmClient {
 	e.Receipts = append(e.Receipts, receipts...)
+	return e
+}
+
+func (e *MockEvmClient) WithSuggestGasPrice(price *big.Int) *MockEvmClient {
+	e.gasPrice = price
+	return e
+}
+
+func (e *MockEvmClient) WithSuggestGasTipCap(price *big.Int) *MockEvmClient {
+	e.priorityFee = price
 	return e
 }

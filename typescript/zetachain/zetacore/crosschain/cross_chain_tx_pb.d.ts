@@ -229,6 +229,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
   gasPrice: string;
 
   /**
+   * @generated from field: string gas_priority_fee = 23;
+   */
+  gasPriorityFee: string;
+
+  /**
    * the above are commands for zetaclients
    * the following fields are used when the outbound tx is mined
    *
