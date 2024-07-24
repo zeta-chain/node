@@ -119,7 +119,8 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 		Msg("Fetched base fee for chain")
 
 	// EIP-1559 is supported if base fee is not zero.
-	isSupported := baseFee.Uint64() > 0
+	// Not that, for example, BSC supports EIP-1559 but base fee is zero.
+	isSupported := baseFee != nil
 
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
