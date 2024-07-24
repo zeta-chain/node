@@ -386,8 +386,11 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return err
 	}
 
+	// UTXO has no concept of priority fee (like eth)
+	const priorityFee = 0
+
 	// #nosec G115 always positive
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, priorityFee, uint64(blockNumber))
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
 		return err

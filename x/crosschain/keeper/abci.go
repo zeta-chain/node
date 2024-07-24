@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	zetachains "github.com/zeta-chain/zetacore/pkg/chains"
+	mathpkg "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -120,7 +121,7 @@ func CheckAndUpdateCctxGasPrice(
 
 	// compute gas price increase
 	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
+	medianGasPrice, medianPriorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
 			types.ErrUnableToGetGasPrice,
@@ -146,6 +147,17 @@ func CheckAndUpdateCctxGasPrice(
 		return math.ZeroUint(), math.ZeroUint(), nil
 	}
 
+	newPriorityFee, _ := mathpkg.IncreaseUintByPercent(medianPriorityFee, uint64(flags.GasPriceIncreasePercent))
+
+	// should not happen
+	if newPriorityFee.GT(newGasPrice) {
+		return math.ZeroUint(), math.ZeroUint(), fmt.Errorf(
+			"priorityFee %s is greater than new gasPrice %s",
+			newPriorityFee.String(),
+			newGasPrice.String(),
+		)
+	}
+
 	// withdraw additional fees from the gas stability pool
 	gasLimit := math.NewUint(cctx.GetCurrentOutboundParam().GasLimit)
 	additionalFees := gasLimit.Mul(gasPriceIncrease)
@@ -158,6 +170,7 @@ func CheckAndUpdateCctxGasPrice(
 
 	// set new gas price and last update timestamp
 	cctx.GetCurrentOutboundParam().GasPrice = newGasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPriorityFee = newPriorityFee.String()
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 

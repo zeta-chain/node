@@ -61,8 +61,8 @@ message MsgVoteGasPrice {
 	string creator = 1;
 	int64 chain_id = 2;
 	uint64 price = 3;
+	uint64 priority_fee = 6;
 	uint64 block_number = 4;
-	string supply = 5;
 }
 ```
 

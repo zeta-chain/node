@@ -10,13 +10,17 @@ import (
 
 var _ sdk.Msg = &MsgVoteGasPrice{}
 
-func NewMsgVoteGasPrice(creator string, chain int64, price uint64, supply string, blockNumber uint64) *MsgVoteGasPrice {
+// NewMsgVoteGasPrice creates a new MsgVoteGasPrice instance.
+// Notes:
+//   - Price is in `wei` for EVM and `satoshi per byte` for UTXO.
+//   - PriorityFeePrice is only for EVM that supports EIP-1559 ("London" hard fork).
+func NewMsgVoteGasPrice(creator string, chain int64, price, priorityFee, blockNumber uint64) *MsgVoteGasPrice {
 	return &MsgVoteGasPrice{
 		Creator:     creator,
 		ChainId:     chain,
 		Price:       price,
+		PriorityFee: priorityFee,
 		BlockNumber: blockNumber,
-		Supply:      supply,
 	}
 }
 

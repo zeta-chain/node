@@ -147,7 +147,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	)
 
 	t.Run("post gas price success", func(t *testing.T) {
-		hash, err := client.PostVoteGasPrice(ctx, chains.BscMainnet, 1000000, "100", 1234)
+		hash, err := client.PostVoteGasPrice(ctx, chains.BscMainnet, 1000000, 0, 1234)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
@@ -232,7 +232,7 @@ func TestZetacore_SetTSS(t *testing.T) {
 	})
 }
 
-func TestZetacore_UpdateZetacoreContext(t *testing.T) {
+func TestZetacore_UpdateAppContext(t *testing.T) {
 	ctx := context.Background()
 
 	//Setup server for multiple grpc calls
@@ -384,7 +384,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.New(false)
 		appContext := zctx.New(cfg, zerolog.Nop())
-		err := client.UpdateZetacoreContext(ctx, appContext, false, zerolog.Logger{})
+		err := client.UpdateAppContext(ctx, appContext, false, zerolog.Logger{})
 		require.NoError(t, err)
 	})
 }

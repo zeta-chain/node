@@ -57141,6 +57141,13 @@ definitions:
       median_index:
         type: string
         format: uint64
+        title: index of the median gas price in the prices array
+      priority_fees:
+        type: array
+        items:
+          type: string
+          format: uint64
+        title: priority fees for EIP-1559
   crosschainInboundHashToCctx:
     type: object
     properties:
@@ -57259,6 +57266,8 @@ definitions:
         type: string
         format: uint64
       gas_price:
+        type: string
+      gas_priority_fee:
         type: string
       hash:
         type: string

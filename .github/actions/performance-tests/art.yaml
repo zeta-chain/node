@@ -19,6 +19,8 @@ config:
         pushgateway: 'https://pushgateway-testnet.rpc.zetachain.com/-=CLOUDFLARE_UUID=-'
         tags:
           - 'type:loadtest'
+          - 'testId:-=GITHUB_ACTION=-'
+          - 'jobName:evm-performance-test'
   summary: true
   reports:
     - type: "html"

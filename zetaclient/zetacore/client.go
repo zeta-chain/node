@@ -339,9 +339,9 @@ func (c *Client) WaitForZetacoreToCreateBlocks(ctx context.Context) error {
 	return nil
 }
 
-// UpdateZetacoreContext updates zetacore context
-// zetacore stores zetacore context for all clients
-func (c *Client) UpdateZetacoreContext(
+// UpdateAppContext updates zctx.AppContext
+// zetacore stores AppContext for all clients
+func (c *Client) UpdateAppContext(
 	ctx context.Context,
 	appContext *zctx.AppContext,
 	init bool,
