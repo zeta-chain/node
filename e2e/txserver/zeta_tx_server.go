@@ -49,6 +49,11 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// SystemContractAddresses contains the addresses of the system contracts deployed
+type SystemContractAddresses struct {
+	UniswapV2FactoryAddr, UniswapV2RouterAddr, ZEVMConnectorAddr, WZETAAddr, ERC20zrc20Addr string
+}
+
 // EmissionsPoolAddress is the address of the emissions pool
 // This address is constant for all networks because it is derived from emissions name
 const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
@@ -290,34 +295,34 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 // returns the addresses of uniswap factory, router and erc20 zrc20
 func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	accountOperational, accountAdmin, erc20Addr string,
-) (string, string, string, string, string, error) {
+) (SystemContractAddresses, error) {
 	// retrieve account
 	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
 	if err != nil {
-		return "", "", "", "", "", err
+		return SystemContractAddresses{}, err
 	}
 	addrOperational, err := accOperational.GetAddress()
 	if err != nil {
-		return "", "", "", "", "", err
+		return SystemContractAddresses{}, err
 	}
 	accAdmin, err := zts.clientCtx.Keyring.Key(accountAdmin)
 	if err != nil {
-		return "", "", "", "", "", err
+		return SystemContractAddresses{}, err
 	}
 	addrAdmin, err := accAdmin.GetAddress()
 	if err != nil {
-		return "", "", "", "", "", err
+		return SystemContractAddresses{}, err
 	}
 
 	// deploy new system contracts
 	res, err := zts.BroadcastTx(accountOperational, fungibletypes.NewMsgDeploySystemContracts(addrOperational.String()))
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to deploy system contracts: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
 
 	systemContractAddress, err := FetchAttributeFromTxResponse(res, "system_contract")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf(
+		return SystemContractAddresses{}, fmt.Errorf(
 			"failed to fetch system contract address: %s; rawlog %s",
 			err.Error(),
 			res.RawLog,
@@ -330,23 +335,23 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		fungibletypes.NewMsgUpdateSystemContract(addrAdmin.String(), systemContractAddress),
 	)
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to set system contract: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to set system contract: %s", err.Error())
 	}
 
 	// get uniswap contract addresses
 	uniswapV2FactoryAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_factory")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
 	}
 	uniswapV2RouterAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_router")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
 	}
 
 	// get zevm connector address
 	zevmConnectorAddr, err := FetchAttributeFromTxResponse(res, "connector_zevm")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf(
+		return SystemContractAddresses{}, fmt.Errorf(
 			"failed to fetch zevm connector address: %s, txResponse: %s",
 			err.Error(),
 			res.String(),
@@ -356,7 +361,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	// get wzeta address
 	wzetaAddr, err := FetchAttributeFromTxResponse(res, "wzeta")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf(
+		return SystemContractAddresses{}, fmt.Errorf(
 			"failed to fetch wzeta address: %s, txResponse: %s",
 			err.Error(),
 			res.String(),
@@ -375,7 +380,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
 	}
 
 	// deploy btc zrc20
@@ -390,7 +395,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
 	// deploy sol zrc20
@@ -405,7 +410,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
 	// deploy erc20 zrc20
@@ -420,18 +425,25 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to deploy erc20 zrc20: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to deploy erc20 zrc20: %s", err.Error())
 	}
 
 	// fetch the erc20 zrc20 contract address and remove the quotes
 	erc20zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s", err.Error())
 	}
 	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
-		return "", "", "", "", "", fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)
+		return SystemContractAddresses{}, fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)
 	}
-	return uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, nil
+
+	return SystemContractAddresses{
+		uniswapV2FactoryAddr,
+		uniswapV2RouterAddr,
+		zevmConnectorAddr,
+		wzetaAddr,
+		erc20zrc20Addr,
+	}, nil
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount
