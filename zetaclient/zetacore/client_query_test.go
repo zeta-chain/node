@@ -866,7 +866,6 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []chains.Chain{
 			{
-				ChainName:   chains.BitcoinMainnet.ChainName,
 				ChainId:     chains.BitcoinMainnet.ChainId,
 				Network:     chains.BscMainnet.Network,
 				NetworkType: chains.BscMainnet.NetworkType,
@@ -876,7 +875,6 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 				Name:        chains.BscMainnet.Name,
 			},
 			{
-				ChainName:   chains.Ethereum.ChainName,
 				ChainId:     chains.Ethereum.ChainId,
 				Network:     chains.Ethereum.Network,
 				NetworkType: chains.Ethereum.NetworkType,

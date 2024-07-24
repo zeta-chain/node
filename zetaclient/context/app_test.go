@@ -143,12 +143,10 @@ func TestAppContextUpdate(t *testing.T) {
 		}
 		enabledChainsToUpdate := []chains.Chain{
 			{
-				ChainName:  1,
 				ChainId:    1,
 				IsExternal: true,
 			},
 			{
-				ChainName:  2,
 				ChainId:    2,
 				IsExternal: true,
 			},
@@ -220,14 +218,12 @@ func TestAppContextUpdate(t *testing.T) {
 			testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 				1: {
 					Chain: chains.Chain{
-						ChainName: 1,
-						ChainId:   1,
+						ChainId: 1,
 					},
 				},
 				2: {
 					Chain: chains.Chain{
-						ChainName: 2,
-						ChainId:   2,
+						ChainId: 2,
 					},
 				},
 			}
@@ -247,12 +243,10 @@ func TestAppContextUpdate(t *testing.T) {
 			}
 			enabledChainsToUpdate := []chains.Chain{
 				{
-					ChainName: 1,
-					ChainId:   1,
+					ChainId: 1,
 				},
 				{
-					ChainName: 2,
-					ChainId:   2,
+					ChainId: 2,
 				},
 			}
 			evmChainParamsToUpdate := map[int64]*observertypes.ChainParams{
