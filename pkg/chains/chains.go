@@ -17,6 +17,7 @@ var (
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
 		CctxGateway: CCTXGateway_zevm,
+		Name:        "zeta_mainnet",
 	}
 
 	// Ethereum is Ethereum mainnet
@@ -29,6 +30,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "eth_mainnet",
 	}
 
 	// BscMainnet is Binance Smart Chain mainnet
@@ -41,6 +43,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "bsc_mainnet",
 	}
 
 	// BitcoinMainnet is Bitcoin mainnet
@@ -53,6 +56,7 @@ var (
 		Consensus:   Consensus_bitcoin,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "btc_mainnet",
 	}
 
 	// Polygon is Polygon mainnet
@@ -65,6 +69,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "polygon_mainnet",
 	}
 
 	// OptimismMainnet is Optimism mainnet
@@ -77,6 +82,7 @@ var (
 		Consensus:   Consensus_op_stack,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "optimism_mainnet",
 	}
 
 	// BaseMainnet is Base mainnet
@@ -89,6 +95,7 @@ var (
 		Consensus:   Consensus_op_stack,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "base_mainnet",
 	}
 
 	// SolanaMainnet is Solana mainnet
@@ -103,6 +110,7 @@ var (
 		Consensus:   Consensus_solana_consensus,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "solana_mainnet",
 	}
 
 	/**
@@ -119,6 +127,7 @@ var (
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
 		CctxGateway: CCTXGateway_zevm,
+		Name:        "zeta_testnet",
 	}
 
 	// Sepolia is Ethereum sepolia testnet
@@ -131,6 +140,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "sepolia_testnet",
 	}
 
 	// BscTestnet is Binance Smart Chain testnet
@@ -143,6 +153,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "bsc_testnet",
 	}
 
 	// BitcoinTestnet is Bitcoin testnet3
@@ -155,6 +166,7 @@ var (
 		Consensus:   Consensus_bitcoin,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "btc_testnet",
 	}
 
 	// Amoy is Polygon amoy testnet
@@ -167,6 +179,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "amoy_testnet",
 	}
 
 	// OptimismSepolia is Optimism sepolia testnet
@@ -179,6 +192,7 @@ var (
 		Consensus:   Consensus_op_stack,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "optimism_sepolia",
 	}
 
 	// BaseSepolia is Base sepolia testnet
@@ -191,6 +205,7 @@ var (
 		Consensus:   Consensus_op_stack,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "base_sepolia",
 	}
 
 	// SolanaDevnet is Solana devnet
@@ -207,6 +222,7 @@ var (
 		Consensus:   Consensus_solana_consensus,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "solana_devnet",
 	}
 
 	/**
@@ -224,6 +240,7 @@ var (
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
 		CctxGateway: CCTXGateway_zevm,
+		Name:        "zeta_mainnet",
 	}
 
 	/**
@@ -240,6 +257,7 @@ var (
 		Consensus:   Consensus_tendermint,
 		IsExternal:  false,
 		CctxGateway: CCTXGateway_zevm,
+		Name:        "zeta_mainnet",
 	}
 
 	// BitcoinRegtest is Bitcoin regtest (localnet)
@@ -252,6 +270,7 @@ var (
 		Consensus:   Consensus_bitcoin,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "btc_regtest",
 	}
 
 	// GoerliLocalnet is Ethereum local goerli (localnet)
@@ -264,6 +283,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "goerli_localnet",
 	}
 
 	// SolanaLocalnet is Solana localnet
@@ -278,6 +298,7 @@ var (
 		Consensus:   Consensus_solana_consensus,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "solana_localnet",
 	}
 
 	/**
@@ -294,6 +315,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "goerli_testnet",
 	}
 
 	// Mumbai is Polygon mumbai testnet (deprecated for amoy)
@@ -306,6 +328,7 @@ var (
 		Consensus:   Consensus_ethereum,
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
+		Name:        "mumbai_testnet",
 	}
 )
 
