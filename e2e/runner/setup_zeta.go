@@ -75,6 +75,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
 	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
+		e2eutils.OperationalPolicyName,
 		e2eutils.AdminPolicyName,
 		r.ERC20Addr.Hex(),
 	)

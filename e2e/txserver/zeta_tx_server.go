@@ -289,20 +289,28 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
 // returns the addresses of uniswap factory, router and erc20 zrc20
 func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
-	account, erc20Addr string,
+	accountOperational, accountAdmin, erc20Addr string,
 ) (string, string, string, string, string, error) {
 	// retrieve account
-	acc, err := zts.clientCtx.Keyring.Key(account)
+	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
 	if err != nil {
 		return "", "", "", "", "", err
 	}
-	addr, err := acc.GetAddress()
+	addrOperational, err := accOperational.GetAddress()
+	if err != nil {
+		return "", "", "", "", "", err
+	}
+	accAdmin, err := zts.clientCtx.Keyring.Key(accountAdmin)
+	if err != nil {
+		return "", "", "", "", "", err
+	}
+	addrAdmin, err := accAdmin.GetAddress()
 	if err != nil {
 		return "", "", "", "", "", err
 	}
 
 	// deploy new system contracts
-	res, err := zts.BroadcastTx(account, fungibletypes.NewMsgDeploySystemContracts(addr.String()))
+	res, err := zts.BroadcastTx(accountOperational, fungibletypes.NewMsgDeploySystemContracts(addrOperational.String()))
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
@@ -317,7 +325,10 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// get system contract
-	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgUpdateSystemContract(addr.String(), systemContractAddress))
+	_, err = zts.BroadcastTx(
+		accountAdmin,
+		fungibletypes.NewMsgUpdateSystemContract(addrAdmin.String(), systemContractAddress),
+	)
 	if err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to set system contract: %s", err.Error())
 	}
@@ -353,8 +364,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy eth zrc20
-	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addr.String(),
+	_, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addrAdmin.String(),
 		"",
 		chains.GoerliLocalnet.ChainId,
 		18,
@@ -368,8 +379,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy btc zrc20
-	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addr.String(),
+	_, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addrAdmin.String(),
 		"",
 		chains.BitcoinRegtest.ChainId,
 		8,
@@ -383,8 +394,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy sol zrc20
-	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addr.String(),
+	_, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addrAdmin.String(),
 		"",
 		chains.SolanaLocalnet.ChainId,
 		9,
@@ -398,8 +409,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy erc20 zrc20
-	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addr.String(),
+	res, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addrAdmin.String(),
 		erc20Addr,
 		chains.GoerliLocalnet.ChainId,
 		6,
