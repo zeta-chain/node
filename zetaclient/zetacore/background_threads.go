@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
-	"github.com/cenkalti/backoff/v4"
 	"github.com/zeta-chain/zetacore/pkg/retry"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -20,13 +19,10 @@ func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 
 	logger := app.Logger().With().Str("module", "HandleTSSUpdate").Logger()
 
-	bo := backoff.NewConstantBackOff(5 * time.Second)
-	backoff.WithMaxRetries(bo, 10)
-
 	// Initial TSS retrieval
 	tss, err := retry.DoTypedWithBackoffAndRetry[observertypes.TSS](func() (observertypes.TSS, error) {
 		return c.GetTSS(ctx)
-	}, bo)
+	}, retry.DefaultConstantBackoff())
 	if err != nil {
 		logger.Warn().Err(err).Msg("unable to get initial tss")
 		return err
@@ -71,13 +67,10 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 
 	logger := app.Logger().With().Str("module", "HandleNewTSSKeyGeneration").Logger()
 
-	bo := backoff.NewConstantBackOff(5 * time.Second)
-	backoff.WithMaxRetries(bo, 10)
-
 	// Initial TSS history retrieval
 	tssHistoricalList, err := retry.DoTypedWithBackoffAndRetry[[]observertypes.TSS](func() ([]observertypes.TSS, error) {
 		return c.GetTSSHistory(ctx)
-	}, bo)
+	}, retry.DefaultConstantBackoff())
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial tss history")
 	}
@@ -120,13 +113,10 @@ func (c *Client) HandleNewKeygen(ctx context.Context) error {
 	}
 	logger := app.Logger().With().Str("module", "HandleNewKeygen").Logger()
 
-	bo := backoff.NewConstantBackOff(5 * time.Second)
-	backoff.WithMaxRetries(bo, 10)
-
 	// Initial Keygen retrieval
 	keygen, err := retry.DoTypedWithBackoffAndRetry[*observertypes.Keygen](func() (*observertypes.Keygen, error) {
 		return c.GetKeyGen(ctx)
-	}, bo)
+	}, retry.DefaultConstantBackoff())
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial tss history")
 	}
