@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"cosmossdk.io/errors"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/app"
@@ -72,8 +73,7 @@ func main() {
 		eg.Go(func() error {
 			defer cancel()
 			if err := cmd.Run(); err != nil {
-				logger.Error().Err(err).Msg("zetaclient process exited with error")
-				return err
+				return errors.Wrap(err, "zetaclient process failed")
 			}
 
 			logger.Info().Msg("zetaclient process exited")
