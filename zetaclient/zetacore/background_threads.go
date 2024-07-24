@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
+
 	"github.com/zeta-chain/zetacore/pkg/retry"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -68,9 +69,12 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 	logger := app.Logger().With().Str("module", "HandleNewTSSKeyGeneration").Logger()
 
 	// Initial TSS history retrieval
-	tssHistoricalList, err := retry.DoTypedWithBackoffAndRetry[[]observertypes.TSS](func() ([]observertypes.TSS, error) {
-		return c.GetTSSHistory(ctx)
-	}, retry.DefaultConstantBackoff())
+	tssHistoricalList, err := retry.DoTypedWithBackoffAndRetry[[]observertypes.TSS](
+		func() ([]observertypes.TSS, error) {
+			return c.GetTSSHistory(ctx)
+		},
+		retry.DefaultConstantBackoff(),
+	)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial tss history")
 	}

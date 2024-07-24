@@ -22,6 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
+
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -438,10 +439,33 @@ func promptPasswords() (string, string, error) {
 // startBackgroundThreads: This function will start background threads.
 // These threads are responsible for handling TSS updates, new keygen, and new TSS key generation.
 // These threads are provided with a cancel function which is used to restart the main thread based on the outcome of the background task.
-func startBackgroundThreads(ctx context.Context, cancelFunc context.CancelCauseFunc, client *zetacore.Client, masterLogger zerolog.Logger) context.CancelFunc {
+func startBackgroundThreads(
+	ctx context.Context,
+	cancelFunc context.CancelCauseFunc,
+	client *zetacore.Client,
+	masterLogger zerolog.Logger,
+) context.CancelFunc {
 	backgroundContext, cancel := context.WithCancel(ctx)
-	bg.Work(backgroundContext, client.HandleTSSUpdate, bg.WithName("HandleTSSUpdate"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))
-	bg.Work(backgroundContext, client.HandleNewKeygen, bg.WithName("HandleNewKeygen"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))
-	bg.Work(backgroundContext, client.HandleNewTSSKeyGeneration, bg.WithName("HandleNewTSSKeyGeneration"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))
+	bg.Work(
+		backgroundContext,
+		client.HandleTSSUpdate,
+		bg.WithName("HandleTSSUpdate"),
+		bg.WithLogger(masterLogger),
+		bg.WithCancel(cancelFunc),
+	)
+	bg.Work(
+		backgroundContext,
+		client.HandleNewKeygen,
+		bg.WithName("HandleNewKeygen"),
+		bg.WithLogger(masterLogger),
+		bg.WithCancel(cancelFunc),
+	)
+	bg.Work(
+		backgroundContext,
+		client.HandleNewTSSKeyGeneration,
+		bg.WithName("HandleNewTSSKeyGeneration"),
+		bg.WithLogger(masterLogger),
+		bg.WithCancel(cancelFunc),
+	)
 	return cancel
 }
