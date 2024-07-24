@@ -212,7 +212,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Create a notification context for background threads.
 	// These threads are responsible for sending shutdown signals to the main thread.
-	notifyCtx, cancel := context.WithCancelCause(ctx)
+	notifyCtx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 
 	// Start background threads which monitors zeta core for state changes related to TSS migration
 	cancelBackgroundThreads := zetacoreClient.StartTssMigrationRoutines(notifyCtx, cancel, masterLogger)
@@ -355,24 +355,18 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	startLogger.Info().Msgf("zetaclientd is running")
 
-	startLogger.Info().Msgf("awaiting shutdown signals")
-	select {
-	case <-notifyCtx.Done():
-		cause := context.Cause(notifyCtx)
-		startLogger.Info().Msgf("shutdown signal received , cause : %s", cause)
+	<-notifyCtx.Done()
 
-	case sig := <-ch:
-		startLogger.Info().Msgf("stop signal received: %s", sig)
-	}
+	startLogger.Info().Msgf("initiating zetaclientd shut down")
 
 	//stop chain observers
 	for _, observer := range observerMap {
 		observer.Stop()
 	}
 	zetacoreClient.Stop()
+	startLogger.Info().Msgf("zetaclientd stopped")
 	return nil
 }
 

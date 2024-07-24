@@ -11,7 +11,7 @@ import (
 type config struct {
 	name     string
 	logger   zerolog.Logger
-	callback context.CancelCauseFunc
+	callback context.CancelFunc
 }
 
 type Opt func(*config)
@@ -20,7 +20,7 @@ func WithName(name string) Opt {
 	return func(cfg *config) { cfg.name = name }
 }
 
-func WithCallback(cancel context.CancelCauseFunc) Opt {
+func WithCallback(cancel context.CancelFunc) Opt {
 	return func(cfg *config) { cfg.callback = cancel }
 }
 
@@ -55,7 +55,8 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 		// Use cancel function if it is provided.
 		// This is used for stopping the main thread based on the outcome of the background task.
 		if cfg.callback != nil {
-			cfg.callback(fmt.Errorf("callback function triggered for %s", cfg.name))
+			cfg.logger.Info().Msgf("background task completed for %s", cfg.name)
+			cfg.callback()
 		}
 	}()
 }

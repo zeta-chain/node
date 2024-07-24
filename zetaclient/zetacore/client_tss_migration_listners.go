@@ -17,7 +17,7 @@ import (
 // These threads are provided with a cancel function which is used to restart the main thread based on the outcome of the background task.
 func (c *Client) StartTssMigrationRoutines(
 	ctx context.Context,
-	cancelFunc context.CancelCauseFunc,
+	cancelFunc context.CancelFunc,
 	masterLogger zerolog.Logger,
 ) context.CancelFunc {
 	migrationRoutinesContext, cancel := context.WithCancel(ctx)
