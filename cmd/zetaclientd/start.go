@@ -18,6 +18,7 @@ import (
 	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
@@ -32,6 +33,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
+	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 type Multiaddr = core.Multiaddr
@@ -210,11 +212,11 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
+	// Create a notification context for background threads.These threads are responsible for sending shutdown signals to the main thread.
 	notifyCtx, cancel := context.WithCancelCause(ctx)
-	defer cancel(errors.New("cancelling context on zeta-client exit"))
-	bg.Work(ctx, zetacoreClient.HandleTSSUpdate, bg.WithName("HandleTSSUpdate"), bg.WithLogger(masterLogger), bg.WithCancel(cancel))
-	bg.Work(ctx, zetacoreClient.HandleNewKeygen, bg.WithName("HandleNewKeygen"), bg.WithLogger(masterLogger), bg.WithCancel(cancel))
-	bg.Work(ctx, zetacoreClient.HandleNewTSSKeyGeneration, bg.WithName("HandleNewTSSKeyGeneration"), bg.WithLogger(masterLogger), bg.WithCancel(cancel))
+
+	// Start background threads
+	defer startBackgroundThreads(notifyCtx, cancel, zetacoreClient, masterLogger)
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
@@ -361,10 +363,11 @@ func start(_ *cobra.Command, _ []string) error {
 	case <-notifyCtx.Done():
 		cause := context.Cause(notifyCtx)
 		startLogger.Info().Msgf("shutdown signal received , cause : %s", cause)
+
 	case sig := <-ch:
 		startLogger.Info().Msgf("stop signal received: %s", sig)
 	}
-
+	//cancelBackgroundThreads()
 	//stop chain observers
 	for _, observer := range observerMap {
 		observer.Stop()
@@ -430,4 +433,12 @@ func promptPasswords() (string, string, error) {
 	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
 
 	return hotKeyPass, TSSKeyPass, err
+}
+
+func startBackgroundThreads(ctx context.Context, cancelFunc context.CancelCauseFunc, client *zetacore.Client, masterLogger zerolog.Logger) context.CancelFunc {
+	backgroundContext, cancel := context.WithCancel(ctx)
+	bg.Work(backgroundContext, client.HandleTSSUpdate, bg.WithName("HandleTSSUpdate"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))
+	bg.Work(backgroundContext, client.HandleNewKeygen, bg.WithName("HandleNewKeygen"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))
+	bg.Work(backgroundContext, client.HandleNewTSSKeyGeneration, bg.WithName("HandleNewTSSKeyGeneration"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))
+	return cancel
 }

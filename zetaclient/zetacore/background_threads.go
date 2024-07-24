@@ -2,7 +2,6 @@ package zetacore
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/errors"
@@ -39,9 +38,7 @@ func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 		select {
 		case <-ticker.C:
 			{
-				tssNew, err := retry.DoTypedWithBackoffAndRetry[observertypes.TSS](func() (observertypes.TSS, error) {
-					return c.GetTSS(ctx)
-				}, bo)
+				tssNew, err := c.GetTSS(ctx)
 				if err != nil {
 					logger.Warn().Err(err).Msg("unable to get new tss")
 					continue
@@ -50,14 +47,14 @@ func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 				if tssNew.TssPubkey == tss.TssPubkey {
 					continue
 				}
-				tss = tssNew
 				logger.Info().Msgf("tss address is updated from %s to %s", tss.TssPubkey, tssNew.TssPubkey)
-				logger.Info().Msg("restarting zetaclient to update tss address")
+				tss = tssNew
 				return nil
 			}
 		case <-ctx.Done():
 			{
-				return errors.Wrap(ctx.Err(), "context done")
+				logger.Info().Msg("HandleTSSUpdate stopped")
+				return nil
 			}
 		}
 	}
@@ -83,8 +80,6 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 	}
 	tssLen := len(tssHistoricalList)
 
-	fmt.Println("tssLen old: ", tssLen)
-
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
@@ -92,14 +87,11 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 		select {
 		case <-ticker.C:
 			{
-				tssHistoricalListNew, err := retry.DoTypedWithBackoffAndRetry[[]observertypes.TSS](func() ([]observertypes.TSS, error) {
-					return c.GetTSSHistory(ctx)
-				}, bo)
+				tssHistoricalListNew, err := c.GetTSSHistory(ctx)
 				if err != nil {
 					continue
 				}
 				tssLenUpdated := len(tssHistoricalListNew)
-				fmt.Println("tssLen updated: ", tssLenUpdated)
 
 				if tssLenUpdated == tssLen {
 					continue
@@ -110,12 +102,12 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 				}
 				logger.Info().Msgf("tss list updated from %d to %d", tssLen, tssLenUpdated)
 				tssLen = tssLenUpdated
-				logger.Info().Msg("restarting zetaclient to update tss list")
 				return nil
 			}
 		case <-ctx.Done():
 			{
-				return errors.Wrap(ctx.Err(), "context done")
+				logger.Info().Msg("HandleNewTSSKeyGeneration stopped")
+				return nil
 			}
 		}
 	}
@@ -167,7 +159,8 @@ func (c *Client) HandleNewKeygen(ctx context.Context) error {
 			}
 		case <-ctx.Done():
 			{
-				return errors.Wrap(ctx.Err(), "context done")
+				logger.Info().Msg("HandleNewKeygen stopped")
+				return nil
 			}
 		}
 	}
