@@ -2,13 +2,13 @@ package orchestrator
 
 import (
 	"context"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
