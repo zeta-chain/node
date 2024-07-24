@@ -20,27 +20,27 @@ func (c *Client) StartTssMigrationRoutines(
 	cancelFunc context.CancelCauseFunc,
 	masterLogger zerolog.Logger,
 ) context.CancelFunc {
-	backgroundContext, cancel := context.WithCancel(ctx)
+	migrationRoutinesContext, cancel := context.WithCancel(ctx)
 	bg.Work(
-		backgroundContext,
+		migrationRoutinesContext,
 		c.HandleTSSUpdate,
 		bg.WithName("HandleTSSUpdate"),
 		bg.WithLogger(masterLogger),
-		bg.WithCancel(cancelFunc),
+		bg.WithCallback(cancelFunc),
 	)
 	bg.Work(
-		backgroundContext,
+		migrationRoutinesContext,
 		c.HandleNewKeygen,
 		bg.WithName("HandleNewKeygen"),
 		bg.WithLogger(masterLogger),
-		bg.WithCancel(cancelFunc),
+		bg.WithCallback(cancelFunc),
 	)
 	bg.Work(
-		backgroundContext,
+		migrationRoutinesContext,
 		c.HandleNewTSSKeyGeneration,
 		bg.WithName("HandleNewTSSKeyGeneration"),
 		bg.WithLogger(masterLogger),
-		bg.WithCancel(cancelFunc),
+		bg.WithCallback(cancelFunc),
 	)
 	return cancel
 }
