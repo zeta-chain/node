@@ -75,7 +75,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
 	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
-		e2eutils.OperationalPolicyName,
+		e2eutils.AdminPolicyName,
 		r.ERC20Addr.Hex(),
 	)
 	require.NoError(r, err)
@@ -229,7 +229,7 @@ func (r *E2ERunner) SetupSOLZRC20() {
 func (r *E2ERunner) EnableHeaderVerification(chainIDList []int64) error {
 	r.Logger.Print("⚙️ enabling verification flags for block headers")
 
-	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.OperationalPolicyName, chainIDList)
+	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.AdminPolicyName, chainIDList)
 }
 
 // FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)
