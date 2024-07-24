@@ -326,7 +326,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it . This is the high level object used for CCTX interactions
-	orchestrator := orchestrator.NewOrchestrator(
+	cctxOrchestrator := orchestrator.NewOrchestrator(
 		ctx,
 		zetacoreClient,
 		signerMap,
@@ -335,7 +335,7 @@ func start(_ *cobra.Command, _ []string) error {
 		telemetryServer,
 	)
 
-	err = orchestrator.MonitorCore(ctx)
+	err = cctxOrchestrator.MonitorCore(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Orchestrator failed to start")
 		return err
@@ -435,6 +435,9 @@ func promptPasswords() (string, string, error) {
 	return hotKeyPass, TSSKeyPass, err
 }
 
+// startBackgroundThreads: This function will start background threads.
+// These threads are responsible for handling TSS updates, new keygen, and new TSS key generation.
+// These threads are provided with a cancel function which is used to restart the main thread based on the outcome of the background task.
 func startBackgroundThreads(ctx context.Context, cancelFunc context.CancelCauseFunc, client *zetacore.Client, masterLogger zerolog.Logger) context.CancelFunc {
 	backgroundContext, cancel := context.WithCancel(ctx)
 	bg.Work(backgroundContext, client.HandleTSSUpdate, bg.WithName("HandleTSSUpdate"), bg.WithLogger(masterLogger), bg.WithCancel(cancelFunc))

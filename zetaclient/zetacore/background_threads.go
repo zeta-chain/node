@@ -11,6 +11,7 @@ import (
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
+// HandleTSSUpdate is a background thread that listens for TSS updates; it returns when the TSS address is updated
 func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -60,6 +61,8 @@ func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 	}
 }
 
+// HandleNewTSSKeyGeneration is a background thread that listens for new TSS key generation; it returns when a new key is generated
+// It uses the length of the TSS list to determine if a new key is generated
 func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -93,11 +96,7 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 				}
 				tssLenUpdated := len(tssHistoricalListNew)
 
-				if tssLenUpdated == tssLen {
-					continue
-				}
-				if tssLenUpdated < tssLen {
-					tssLen = tssLenUpdated
+				if tssLenUpdated <= tssLen {
 					continue
 				}
 				logger.Info().Msgf("tss list updated from %d to %d", tssLen, tssLenUpdated)
@@ -112,6 +111,8 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 		}
 	}
 }
+
+// HandleNewKeygen is a background thread that listens for new keygen; it returns when a new keygen is set
 func (c *Client) HandleNewKeygen(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {

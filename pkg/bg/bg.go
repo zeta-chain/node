@@ -3,7 +3,6 @@ package bg
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog"
@@ -53,8 +52,11 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 		if err != nil {
 			logError(err, cfg)
 		}
+
+		// Use cancel function if it is provided.
+		// This is used for restarting the main thread based on the outcome of the background task
 		if cfg.cancel != nil && err == nil {
-			cfg.cancel(errors.New(fmt.Sprintf("function : %s triggered restart", cfg.name)))
+			cfg.cancel(fmt.Errorf("function : %s triggered restart", cfg.name))
 		}
 	}()
 }
