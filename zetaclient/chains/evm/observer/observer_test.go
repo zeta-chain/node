@@ -34,8 +34,8 @@ import (
 // the relative path to the testdata directory
 var TestDataDir = "../../../"
 
-// getZetacoreContext creates a zetacore context for unit tests
-func getZetacoreContext(
+// getAppContext creates an AppContext for unit tests
+func getAppContext(
 	evmChain chains.Chain,
 	endpoint string,
 	evmChainParams *observertypes.ChainParams,
@@ -52,7 +52,7 @@ func getZetacoreContext(
 		Endpoint: endpoint,
 	}
 
-	// create zetacore context
+	// create AppContext
 	appContext := zctx.New(cfg, zerolog.Nop())
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
@@ -70,7 +70,7 @@ func getZetacoreContext(
 		sample.HeaderSupportedChains(),
 		true,
 	)
-	// create app context
+	// create AppContext
 	return appContext, cfg.EVMChainConfigs[evmChain.ChainId]
 }
 
@@ -104,8 +104,8 @@ func MockEVMObserver(
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
-	// create zetacore context
-	_, evmCfg := getZetacoreContext(chain, "", &params)
+	// create AppContext
+	_, evmCfg := getAppContext(chain, "", &params)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
@@ -194,8 +194,8 @@ func Test_NewObserver(t *testing.T) {
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// create zetacore context, client and tss
-			//zetacoreCtx, _ := getZetacoreContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
+			// create AppContext, client and tss
+			//zetacoreCtx, _ := getAppContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
 			zetacoreClient := mocks.NewZetacoreClient(t)
 
 			database, err := db.NewFromSqliteInMemory(true)

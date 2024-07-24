@@ -143,14 +143,14 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	err = zetacoreClient.UpdateZetacoreContext(ctx, appContext, true, startLogger)
+	err = zetacoreClient.UpdateAppContext(ctx, appContext, true, startLogger)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
-	go zetacoreClient.UpdateZetacoreContextWorker(ctx, appContext)
+	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
