@@ -18,13 +18,11 @@ import (
 	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/go-tss/p2p"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -34,7 +32,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
 type Multiaddr = core.Multiaddr
@@ -213,11 +210,12 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
-	// Create a notification context for background threads.These threads are responsible for sending shutdown signals to the main thread.
+	// Create a notification context for background threads.
+	// These threads are responsible for sending shutdown signals to the main thread.
 	notifyCtx, cancel := context.WithCancelCause(ctx)
 
-	// Start background threads
-	defer startBackgroundThreads(notifyCtx, cancel, zetacoreClient, masterLogger)
+	// Start background threads which monitors zeta core for state changes related to TSS migration
+	defer zetacoreClient.StartTssMigrationRoutines(notifyCtx, cancel, masterLogger)
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
@@ -434,38 +432,4 @@ func promptPasswords() (string, string, error) {
 	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
 
 	return hotKeyPass, TSSKeyPass, err
-}
-
-// startBackgroundThreads: This function will start background threads.
-// These threads are responsible for handling TSS updates, new keygen, and new TSS key generation.
-// These threads are provided with a cancel function which is used to restart the main thread based on the outcome of the background task.
-func startBackgroundThreads(
-	ctx context.Context,
-	cancelFunc context.CancelCauseFunc,
-	client *zetacore.Client,
-	masterLogger zerolog.Logger,
-) context.CancelFunc {
-	backgroundContext, cancel := context.WithCancel(ctx)
-	bg.Work(
-		backgroundContext,
-		client.HandleTSSUpdate,
-		bg.WithName("HandleTSSUpdate"),
-		bg.WithLogger(masterLogger),
-		bg.WithCancel(cancelFunc),
-	)
-	bg.Work(
-		backgroundContext,
-		client.HandleNewKeygen,
-		bg.WithName("HandleNewKeygen"),
-		bg.WithLogger(masterLogger),
-		bg.WithCancel(cancelFunc),
-	)
-	bg.Work(
-		backgroundContext,
-		client.HandleNewTSSKeyGeneration,
-		bg.WithName("HandleNewTSSKeyGeneration"),
-		bg.WithLogger(masterLogger),
-		bg.WithCancel(cancelFunc),
-	)
-	return cancel
 }

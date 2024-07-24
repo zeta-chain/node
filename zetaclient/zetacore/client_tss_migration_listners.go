@@ -5,20 +5,54 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
-
+	"github.com/rs/zerolog"
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/retry"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
+// startBackgroundRoutines: This function will start background threads.
+// These threads are responsible for handling TSS updates, new keygen, and new TSS key generation.
+// These threads are provided with a cancel function which is used to restart the main thread based on the outcome of the background task.
+func (c *Client) StartTssMigrationRoutines(
+	ctx context.Context,
+	cancelFunc context.CancelCauseFunc,
+	masterLogger zerolog.Logger,
+) context.CancelFunc {
+	backgroundContext, cancel := context.WithCancel(ctx)
+	bg.Work(
+		backgroundContext,
+		c.HandleTSSUpdate,
+		bg.WithName("HandleTSSUpdate"),
+		bg.WithLogger(masterLogger),
+		bg.WithCancel(cancelFunc),
+	)
+	bg.Work(
+		backgroundContext,
+		c.HandleNewKeygen,
+		bg.WithName("HandleNewKeygen"),
+		bg.WithLogger(masterLogger),
+		bg.WithCancel(cancelFunc),
+	)
+	bg.Work(
+		backgroundContext,
+		c.HandleNewTSSKeyGeneration,
+		bg.WithName("HandleNewTSSKeyGeneration"),
+		bg.WithLogger(masterLogger),
+		bg.WithCancel(cancelFunc),
+	)
+	return cancel
+}
+
 // HandleTSSUpdate is a background thread that listens for TSS updates; it returns when the TSS address is updated
 func (c *Client) HandleTSSUpdate(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
+	appCtx, err := zctx.FromContext(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get app context")
 	}
 
-	logger := app.Logger().With().Str("module", "HandleTSSUpdate").Logger()
+	logger := appCtx.Logger().With().Str("module", "HandleTSSUpdate").Logger()
 
 	// Initial TSS retrieval
 	tss, err := retry.DoTypedWithBackoffAndRetry[observertypes.TSS](func() (observertypes.TSS, error) {
@@ -46,7 +80,6 @@ func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 					continue
 				}
 				logger.Info().Msgf("tss address is updated from %s to %s", tss.TssPubkey, tssNew.TssPubkey)
-				tss = tssNew
 				return nil
 			}
 		case <-ctx.Done():
@@ -61,12 +94,12 @@ func (c *Client) HandleTSSUpdate(ctx context.Context) error {
 // HandleNewTSSKeyGeneration is a background thread that listens for new TSS key generation; it returns when a new key is generated
 // It uses the length of the TSS list to determine if a new key is generated
 func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
+	appCtx, err := zctx.FromContext(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get app context")
 	}
 
-	logger := app.Logger().With().Str("module", "HandleNewTSSKeyGeneration").Logger()
+	logger := appCtx.Logger().With().Str("module", "HandleNewTSSKeyGeneration").Logger()
 
 	// Initial TSS history retrieval
 	tssHistoricalList, err := retry.DoTypedWithBackoffAndRetry[[]observertypes.TSS](
@@ -97,7 +130,6 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 					continue
 				}
 				logger.Info().Msgf("tss list updated from %d to %d", tssLen, tssLenUpdated)
-				tssLen = tssLenUpdated
 				return nil
 			}
 		case <-ctx.Done():
@@ -111,11 +143,11 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 
 // HandleNewKeygen is a background thread that listens for new keygen; it returns when a new keygen is set
 func (c *Client) HandleNewKeygen(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
+	appCtx, err := zctx.FromContext(ctx)
 	if err != nil {
 		return err
 	}
-	logger := app.Logger().With().Str("module", "HandleNewKeygen").Logger()
+	logger := appCtx.Logger().With().Str("module", "HandleNewKeygen").Logger()
 
 	// Initial Keygen retrieval
 	keygen, err := retry.DoTypedWithBackoffAndRetry[*observertypes.Keygen](func() (*observertypes.Keygen, error) {
@@ -148,7 +180,6 @@ func (c *Client) HandleNewKeygen(ctx context.Context) error {
 					continue
 				}
 
-				keygen = keygenUpdated
 				logger.Info().Msgf("got new keygen at block %d", keygen.BlockNumber)
 				return nil
 			}

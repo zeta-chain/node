@@ -52,11 +52,10 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 		if err != nil {
 			logError(err, cfg)
 		}
-
 		// Use cancel function if it is provided.
-		// This is used for restarting the main thread based on the outcome of the background task
-		if cfg.cancel != nil && err == nil {
-			cfg.cancel(fmt.Errorf("function : %s triggered restart", cfg.name))
+		// This is used for stopping the main thread based on the outcome of the background task.
+		if cfg.cancel != nil {
+			cfg.cancel(fmt.Errorf("cancel function triggered by %s", cfg.name))
 		}
 	}()
 }

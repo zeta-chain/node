@@ -70,14 +70,14 @@ func main() {
 
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(func() error {
-			err := cmd.Run()
-			if err != nil {
+			defer cancel()
+			if err := cmd.Run(); err != nil {
 				logger.Error().Err(err).Msg("zetaclient process exited with error")
-			} else {
-				logger.Info().Msg("zetaclient process exited")
+				return err
 			}
-			cancel() // Signal other goroutines to exit
-			return err
+
+			logger.Info().Msg("zetaclient process exited")
+			return nil
 		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
