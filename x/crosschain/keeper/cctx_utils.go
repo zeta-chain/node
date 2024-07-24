@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"sort"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -26,9 +25,9 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 
 	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, receiveChainID)
 	if !found {
-		return cosmoserrors.Wrap(
+		return cosmoserrors.Wrapf(
 			types.ErrCannotFindReceiverNonce,
-			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.Name, cctx.LogIdentifierForCCTX()),
+			"identifiers: %s (chain %q)", cctx.LogIdentifierForCCTX(), chain.Name,
 		)
 	}
 
@@ -36,25 +35,25 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 	cctx.GetCurrentOutboundParam().TssNonce = nonce.Nonce
 	tss, found := k.GetObserverKeeper().GetTSS(ctx)
 	if !found {
-		return cosmoserrors.Wrap(
+		return cosmoserrors.Wrapf(
 			types.ErrCannotFindTSSKeys,
-			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.Name, cctx.LogIdentifierForCCTX()),
+			"identifiers: %s (chain %q)", cctx.LogIdentifierForCCTX(), chain.Name,
 		)
 	}
 
 	p, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, receiveChainID)
 	if !found {
-		return cosmoserrors.Wrap(
+		return cosmoserrors.Wrapf(
 			types.ErrCannotFindPendingNonces,
-			fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce),
+			"chain_id %d, nonce %d", receiveChainID, nonce.Nonce,
 		)
 	}
 
 	// #nosec G115 always in range
 	if p.NonceHigh != int64(nonce.Nonce) {
-		return cosmoserrors.Wrap(
+		return cosmoserrors.Wrapf(
 			types.ErrNonceMismatch,
-			fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce),
+			"chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce,
 		)
 	}
 

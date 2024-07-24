@@ -233,13 +233,18 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
-			Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
+			Str("tracker.hash", tracker.TxHash).
+			Str("tracker.coin-type", tracker.CoinType.String()).
+			Msgf("checking tracker")
 		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true)
 		if err != nil {
 			return err
 		}
 		ob.logger.Inbound.Info().
-			Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.Chain().Name, ballotIdentifier, coin.CoinType_Gas.String())
+			Str("inbound.chain", ob.Chain().Name).
+			Str("inbound.ballot", ballotIdentifier).
+			Str("inbound.coin-type", coin.CoinType_Gas.String()).
+			Msgf("Vote submitted for inbound Tracker")
 	}
 
 	return nil
