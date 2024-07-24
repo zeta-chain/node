@@ -215,7 +215,8 @@ func start(_ *cobra.Command, _ []string) error {
 	notifyCtx, cancel := context.WithCancelCause(ctx)
 
 	// Start background threads which monitors zeta core for state changes related to TSS migration
-	defer zetacoreClient.StartTssMigrationRoutines(notifyCtx, cancel, masterLogger)
+	cancelBackgroundThreads := zetacoreClient.StartTssMigrationRoutines(notifyCtx, cancel, masterLogger)
+	defer cancelBackgroundThreads()
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
