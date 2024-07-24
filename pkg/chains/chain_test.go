@@ -66,7 +66,7 @@ func TestChain_Validate(t *testing.T) {
 				Consensus:   chains.Consensus_op_stack,
 				IsExternal:  true,
 			},
-			errStr: "invalid chain name",
+			errStr: "chain name cannot be empty",
 		},
 		{
 			name: "should error if network invalid",

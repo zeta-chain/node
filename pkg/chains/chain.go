@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,6 +30,10 @@ func (chain Chain) Validate() error {
 
 	if _, ok := Consensus_name[int32(chain.Consensus)]; !ok {
 		return fmt.Errorf("invalid consensus %d", int32(chain.Consensus))
+	}
+
+	if chain.Name == "" {
+		return errors.New("chain name cannot be empty")
 	}
 
 	return nil
