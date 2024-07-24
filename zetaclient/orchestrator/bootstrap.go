@@ -229,7 +229,7 @@ func syncObserverMap(
 	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
 		var (
 			chainID   = evmConfig.Chain.ChainId
-			chainName = evmConfig.Chain.ChainName.String()
+			chainName = evmConfig.Chain.Name
 		)
 
 		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
@@ -349,7 +349,7 @@ func syncObserverMap(
 
 		var (
 			chainID   = solChain.ChainId
-			chainName = solChain.ChainName.String()
+			chainName = solChain.Name
 		)
 
 		_, solanaChainParams, found := app.GetSolanaChainParams()

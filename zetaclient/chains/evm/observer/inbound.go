@@ -182,7 +182,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	ob.WithLastBlock(blockNumber)
 
 	// increment prom counter
-	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().ChainName.String()).Inc()
+	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// skip if current height is too low
 	if blockNumber < ob.GetChainParams().ConfirmationCount {
@@ -292,7 +292,7 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 	})
 
 	// increment prom counter
-	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().ChainName.String()).Inc()
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// post to zetacore
 	beingScanned := uint64(0)
@@ -373,7 +373,7 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 	})
 
 	// increment prom counter
-	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().ChainName.String()).Inc()
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// post to zeatcore
 	guard := make(map[string]bool)

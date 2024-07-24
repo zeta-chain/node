@@ -66,7 +66,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		for _, chain := range k.GetObserverKeeper().GetSupportedForeignChains(ctx) {
-			index := chain.ChainName.String() + "_migration_tx_index"
+			index := chain.Name + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
@@ -110,7 +110,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
-			index := chain.ChainName.String() + "_migration_tx_index"
+			index := chain.Name + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
@@ -157,7 +157,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
-			index := chain.ChainName.String() + "_migration_tx_index"
+			index := chain.Name + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
@@ -208,7 +208,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 
 		// set a single migrator while there are 2 supported chains
 		chain := k.GetObserverKeeper().GetSupportedChains(ctx)[0]
-		index := chain.ChainName.String() + "_migration_tx_index"
+		index := chain.Name + "_migration_tx_index"
 		k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 			ChainId:            chain.ChainId,
 			MigrationCctxIndex: sample.GetCctxIndexFromString(index),
@@ -255,7 +255,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
 
 		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
-			index := chain.ChainName.String() + "_migration_tx_index"
+			index := chain.Name + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
@@ -302,7 +302,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
 
 		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
-			index := chain.ChainName.String() + "_migration_tx_index"
+			index := chain.Name + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: sample.GetCctxIndexFromString(index),

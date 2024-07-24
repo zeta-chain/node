@@ -873,6 +873,7 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 				Vm:          chains.BscMainnet.Vm,
 				Consensus:   chains.BscMainnet.Consensus,
 				IsExternal:  chains.BscMainnet.IsExternal,
+				Name:        chains.BscMainnet.Name,
 			},
 			{
 				ChainName:   chains.Ethereum.ChainName,
@@ -882,6 +883,7 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 				Vm:          chains.Ethereum.Vm,
 				Consensus:   chains.Ethereum.Consensus,
 				IsExternal:  chains.Ethereum.IsExternal,
+				Name:        chains.Ethereum.Name,
 			},
 		},
 	}

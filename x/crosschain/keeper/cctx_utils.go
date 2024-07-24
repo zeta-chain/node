@@ -28,7 +28,7 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 	if !found {
 		return cosmoserrors.Wrap(
 			types.ErrCannotFindReceiverNonce,
-			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()),
+			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.Name, cctx.LogIdentifierForCCTX()),
 		)
 	}
 
@@ -38,7 +38,7 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 	if !found {
 		return cosmoserrors.Wrap(
 			types.ErrCannotFindTSSKeys,
-			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()),
+			fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.Name, cctx.LogIdentifierForCCTX()),
 		)
 	}
 

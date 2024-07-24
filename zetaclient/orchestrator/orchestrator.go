@@ -350,7 +350,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					for _, c := range externalChains {
 						// get cctxs from map and set pending transactions prometheus gauge
 						cctxList := cctxMap[c.ChainId]
-						metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(len(cctxList)))
+						metrics.PendingTxsPerChain.WithLabelValues(c.Name).Set(float64(len(cctxList)))
 						if len(cctxList) == 0 {
 							continue
 						}

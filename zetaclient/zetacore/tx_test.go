@@ -292,6 +292,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.BscMainnet.Consensus,
 							chains.BscMainnet.IsExternal,
 							chains.BscMainnet.CctxGateway,
+							chains.BscMainnet.Name,
 						},
 						{
 							chains.Ethereum.ChainId,
@@ -302,6 +303,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 							chains.Ethereum.Consensus,
 							chains.Ethereum.IsExternal,
 							chains.Ethereum.CctxGateway,
+							chains.Ethereum.Name,
 						},
 					},
 				})

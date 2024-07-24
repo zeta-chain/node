@@ -336,7 +336,7 @@ func chainsEqual(a []chains.Chain, b []chains.Chain) bool {
 	for i, left := range a {
 		right := b[i]
 
-		if left.ChainId != right.ChainId || left.ChainName != right.ChainName {
+		if left.ChainId != right.ChainId {
 			return false
 		}
 	}

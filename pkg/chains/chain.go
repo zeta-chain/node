@@ -15,10 +15,6 @@ func (chain Chain) Validate() error {
 		return fmt.Errorf("chain ID must be positive")
 	}
 
-	if _, ok := ChainName_name[int32(chain.ChainName)]; !ok {
-		return fmt.Errorf("invalid chain name %d", int32(chain.ChainName))
-	}
-
 	if _, ok := Network_name[int32(chain.Network)]; !ok {
 		return fmt.Errorf("invalid network %d", int32(chain.Network))
 	}

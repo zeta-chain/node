@@ -239,7 +239,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			return err
 		}
 		ob.logger.Inbound.Info().
-			Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.Chain().ChainName, ballotIdentifier, coin.CoinType_Gas.String())
+			Msgf("Vote submitted for inbound Tracker, Chain : %s,Ballot Identifier : %s, coin-type %s", ob.Chain().Name, ballotIdentifier, coin.CoinType_Gas.String())
 	}
 
 	return nil
