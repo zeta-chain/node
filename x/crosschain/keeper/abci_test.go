@@ -141,7 +141,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         50,
-			medianPriorityFee:                      60,
+			medianPriorityFee:                      20,
 			withdrawFromGasStabilityPoolReturn:     nil,
 			expectWithdrawFromGasStabilityPoolCall: true,
 			expectedGasPriceIncrease:               math.NewUint(50),    // 100% medianGasPrice

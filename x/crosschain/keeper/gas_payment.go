@@ -338,7 +338,20 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 			cctx.LogIdentifierForCCTX(),
 		)
 	}
-	gasPrice = gasPrice.MulUint64(2) // overpays gas price by 2x
+	// overpays gas price
+	const multiplier = 2
+	gasPrice = gasPrice.MulUint64(multiplier)
+	priorityFee = priorityFee.MulUint64(multiplier)
+
+	// should not happen
+	if priorityFee.GT(gasPrice) {
+		return cosmoserrors.Wrapf(
+			types.ErrInvalidGasAmount,
+			"priorityFee %s is greater than gasPrice %s",
+			priorityFee.String(),
+			gasPrice.String(),
+		)
+	}
 
 	// get the gas fee in gas token
 	gasLimit := sdk.NewUint(cctx.GetCurrentOutboundParam().GasLimit)

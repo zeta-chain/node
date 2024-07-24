@@ -15,6 +15,8 @@ func TestIncreaseUintByPercent(t *testing.T) {
 		expected math.Uint
 	}{
 		{in: math.NewUint(444), percent: 0, expected: math.NewUint(444)},
+		{in: math.NewUint(100), percent: 4, expected: math.NewUint(104)},
+		{in: math.NewUint(100), percent: 100, expected: math.NewUint(200)},
 		{in: math.NewUint(4000), percent: 50, expected: math.NewUint(6000)},
 		{in: math.NewUint(2500), percent: 100, expected: math.NewUint(5000)},
 		{in: math.NewUint(10000), percent: 33, expected: math.NewUint(13300)},
