@@ -70,7 +70,6 @@ func SetupZetaGenesisState(
 		chainNonceList := make([]observertypes.ChainNonces, len(privatenetChains))
 		for i, chain := range privatenetChains {
 			chainNonceList[i] = observertypes.ChainNonces{
-				Index:   chain.ChainName.String(),
 				ChainId: chain.ChainId,
 				Nonce:   0,
 			}
@@ -179,7 +178,7 @@ func AddObserverData(
 	for i := 0; i < n; i++ {
 		state.ChainNonces = append(
 			state.ChainNonces,
-			observertypes.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}},
+			observertypes.ChainNonces{Creator: "ANY", ChainId: int64(i), Signers: []string{}},
 		)
 	}
 
@@ -221,12 +220,13 @@ func AddCrosschainData(
 		state.GasPriceList = append(
 			state.GasPriceList,
 			&types.GasPrice{
-				Creator:   "ANY",
-				ChainId:   int64(i),
-				Index:     strconv.Itoa(i),
-				Prices:    []uint64{},
-				BlockNums: []uint64{},
-				Signers:   []string{},
+				Creator:      "ANY",
+				ChainId:      int64(i),
+				Index:        strconv.Itoa(i),
+				Prices:       []uint64{},
+				PriorityFees: []uint64{},
+				BlockNums:    []uint64{},
+				Signers:      []string{},
 			},
 		)
 	}

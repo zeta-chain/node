@@ -274,7 +274,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
 
 		// Mock unsuccessful UpdateNonce
-		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainId).
 			Return(observertypes.ChainNonces{}, false)
 
 		// call InitiateOutbound
@@ -388,7 +388,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		// mock successful UpdateNonce
 		nonce := uint64(1)
 		tss := sample.Tss()
-		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainName.String()).
+		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainId).
 			Return(observertypes.ChainNonces{Nonce: nonce}, true)
 		observerMock.On("GetTSS", mock.Anything).
 			Return(tss, true)
@@ -447,7 +447,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, receiverChain, "")
 
 		// mock unsuccessful UpdateNonce
-		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainName.String()).
+		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainId).
 			Return(observertypes.ChainNonces{}, false)
 
 		// call InitiateOutbound

@@ -40,6 +40,7 @@ zetacored query crosschain [flags]
 * [zetacored query crosschain show-cctx](zetacored_query_crosschain_show-cctx.md)	 - shows a CCTX
 * [zetacored query crosschain show-gas-price](zetacored_query_crosschain_show-gas-price.md)	 - shows a gasPrice
 * [zetacored query crosschain show-inbound-hash-to-cctx](zetacored_query_crosschain_show-inbound-hash-to-cctx.md)	 - shows a inboundHashToCctx
+* [zetacored query crosschain show-inbound-tracker](zetacored_query_crosschain_show-inbound-tracker.md)	 - shows an inbound tracker by chainID and txHash
 * [zetacored query crosschain show-outbound-tracker](zetacored_query_crosschain_show-outbound-tracker.md)	 - shows an outbound tracker
 * [zetacored query crosschain show-rate-limiter-flags](zetacored_query_crosschain_show-rate-limiter-flags.md)	 - shows the rate limiter flags
 

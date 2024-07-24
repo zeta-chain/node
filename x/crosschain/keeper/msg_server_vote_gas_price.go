@@ -4,12 +4,13 @@ import (
 	"context"
 	"math/big"
 	"sort"
-	"strconv"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -20,61 +21,80 @@ import (
 //
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteGasPrice(
-	goCtx context.Context,
+	cc context.Context,
 	msg *types.MsgVoteGasPrice,
 ) (*types.MsgVoteGasPriceResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(cc)
 
 	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, cosmoserrors.Wrapf(types.ErrUnsupportedChain, "ChainID: %d ", msg.ChainId)
+		return nil, cosmoserrors.Wrapf(types.ErrUnsupportedChain, "chain id %d", msg.ChainId)
 	}
+
 	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, observertypes.ErrNotObserver
 	}
 
 	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)
 	if !isFound {
-		gasPrice = types.GasPrice{
-			Creator:     msg.Creator,
-			Index:       strconv.FormatInt(chain.ChainId, 10), // TODO : Not needed index set at keeper
-			ChainId:     chain.ChainId,
-			Prices:      []uint64{msg.Price},
-			BlockNums:   []uint64{msg.BlockNumber},
-			Signers:     []string{msg.Creator},
-			MedianIndex: 0,
-		}
-	} else {
-		signers := gasPrice.Signers
-		exist := false
-		for i, s := range signers {
-			if s == msg.Creator { // update existing entry
-				gasPrice.BlockNums[i] = msg.BlockNumber
-				gasPrice.Prices[i] = msg.Price
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			gasPrice.Signers = append(gasPrice.Signers, msg.Creator)
-			gasPrice.BlockNums = append(gasPrice.BlockNums, msg.BlockNumber)
-			gasPrice.Prices = append(gasPrice.Prices, msg.Price)
-		}
-		// recompute the median gas price
-		mi := medianOfArray(gasPrice.Prices)
-		// #nosec G115 always positive
-		gasPrice.MedianIndex = uint64(mi)
+		return k.voteGasPrice(ctx, chain, types.GasPrice{
+			Creator:      msg.Creator,
+			ChainId:      chain.ChainId,
+			Prices:       []uint64{msg.Price},
+			PriorityFees: []uint64{msg.PriorityFee},
+			BlockNums:    []uint64{msg.BlockNumber},
+			Signers:      []string{msg.Creator},
+		})
 	}
-	k.SetGasPrice(ctx, gasPrice)
-	chainIDBigINT := big.NewInt(chain.ChainId)
 
-	gasUsed, err := k.fungibleKeeper.SetGasPrice(
-		ctx,
-		chainIDBigINT,
-		math.NewUint(gasPrice.Prices[gasPrice.MedianIndex]).BigInt(),
+	// Now we either want to update the gas price or add a new entry
+	var exists bool
+	for i, s := range gasPrice.Signers {
+		if s != msg.Creator {
+			continue
+		}
+
+		// update existing entry
+		gasPrice.BlockNums[i] = msg.BlockNumber
+		gasPrice.Prices[i] = msg.Price
+		gasPrice.PriorityFees[i] = msg.PriorityFee
+		exists = true
+		break
+	}
+
+	if !exists {
+		gasPrice.Signers = append(gasPrice.Signers, msg.Creator)
+		gasPrice.BlockNums = append(gasPrice.BlockNums, msg.BlockNumber)
+		gasPrice.Prices = append(gasPrice.Prices, msg.Price)
+		gasPrice.PriorityFees = append(gasPrice.PriorityFees, msg.PriorityFee)
+	}
+
+	// recompute the median gas price
+	mi := medianOfArray(gasPrice.Prices)
+
+	// #nosec G115 always positive
+	gasPrice.MedianIndex = uint64(mi)
+
+	return k.voteGasPrice(ctx, chain, gasPrice)
+}
+
+func (k msgServer) voteGasPrice(
+	ctx sdk.Context,
+	chain chains.Chain,
+	entity types.GasPrice,
+) (*types.MsgVoteGasPriceResponse, error) {
+	var (
+		chainID  = big.NewInt(chain.ChainId)
+		gasPrice = math.NewUint(entity.Prices[entity.MedianIndex]).BigInt()
 	)
+
+	// set gas price in this module
+	k.SetGasPrice(ctx, entity)
+
+	// set gas price in fungible keeper (also calls EVM)
+	gasUsed, err := k.fungibleKeeper.SetGasPrice(ctx, chainID, gasPrice)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to set gas price in fungible keeper")
 	}
 
 	// reset the gas count

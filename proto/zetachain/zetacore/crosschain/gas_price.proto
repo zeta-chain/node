@@ -9,6 +9,12 @@ message GasPrice {
   int64 chain_id = 3;
   repeated string signers = 4;
   repeated uint64 block_nums = 5;
+
   repeated uint64 prices = 6;
+
+  // index of the median gas price in the prices array
   uint64 median_index = 7;
+
+  // priority fees for EIP-1559
+  repeated uint64 priority_fees = 8;
 }

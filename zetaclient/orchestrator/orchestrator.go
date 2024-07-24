@@ -661,7 +661,7 @@ func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
 
 // syncs and provisions observers & signers.
 // Note that zctx.AppContext Update is a responsibility of another component
-// See zetacore.Client{}.UpdateZetacoreContextWorker
+// See zetacore.Client{}.UpdateAppContextWorker
 func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 	oc.mu.Lock()
 	defer oc.mu.Unlock()
