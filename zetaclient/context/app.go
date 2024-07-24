@@ -249,8 +249,8 @@ func (a *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttype
 	return lightclienttypes.HeaderSupportedChain{}, false
 }
 
-// Update updates zetacore context and params for all chains
-// this must be the ONLY function that writes to zetacore context
+// Update updates AppContext and params for all chains
+// this must be the ONLY function that writes to AppContext
 func (a *AppContext) Update(
 	keygen *observertypes.Keygen,
 	newChains []chains.Chain,

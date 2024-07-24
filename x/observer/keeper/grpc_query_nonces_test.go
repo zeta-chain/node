@@ -17,7 +17,7 @@ import (
 func TestChainNoncesQuerySingle(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	chainNonces := sample.ChainNoncesList(t, 2)
+	chainNonces := sample.ChainNoncesList(2)
 	for _, nonce := range chainNonces {
 		k.SetChainNonces(ctx, nonce)
 	}
@@ -29,17 +29,17 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 	}{
 		{
 			desc:     "First",
-			request:  &types.QueryGetChainNoncesRequest{Index: chainNonces[0].Index},
+			request:  &types.QueryGetChainNoncesRequest{ChainId: chainNonces[0].ChainId},
 			response: &types.QueryGetChainNoncesResponse{ChainNonces: chainNonces[0]},
 		},
 		{
 			desc:     "Second",
-			request:  &types.QueryGetChainNoncesRequest{Index: chainNonces[1].Index},
+			request:  &types.QueryGetChainNoncesRequest{ChainId: chainNonces[1].ChainId},
 			response: &types.QueryGetChainNoncesResponse{ChainNonces: chainNonces[1]},
 		},
 		{
 			desc:    "KeyNotFound",
-			request: &types.QueryGetChainNoncesRequest{Index: "missing"},
+			request: &types.QueryGetChainNoncesRequest{ChainId: 1000},
 			err:     status.Error(codes.InvalidArgument, "not found"),
 		},
 		{
@@ -62,7 +62,7 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 func TestChainNoncesQueryPaginated(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	chainNonces := sample.ChainNoncesList(t, 5)
+	chainNonces := sample.ChainNoncesList(5)
 	for _, nonce := range chainNonces {
 		k.SetChainNonces(ctx, nonce)
 	}

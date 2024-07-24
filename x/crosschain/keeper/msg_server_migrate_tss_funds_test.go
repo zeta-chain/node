@@ -71,7 +71,6 @@ func setupTssMigrationParams(
 		MedianIndex:  1,
 	})
 	k.GetObserverKeeper().SetChainNonces(ctx, observertypes.ChainNonces{
-		Index:   chain.ChainName.String(),
 		ChainId: chain.ChainId,
 		Nonce:   1,
 	})

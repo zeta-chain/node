@@ -276,12 +276,12 @@ start-solana-test: zetanode solana
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v17' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v18' .
 .PHONY: zetanode-upgrade
 else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v18.0.0' .
 .PHONY: zetanode-upgrade
 endif
 

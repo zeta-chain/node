@@ -35,3 +35,22 @@ func (k Keeper) InboundTrackerAll(
 	}
 	return &types.QueryAllInboundTrackersResponse{InboundTracker: inTxTrackers, Pagination: pageRes}, nil
 }
+
+func (k Keeper) InboundTracker(
+	goCtx context.Context,
+	req *types.QueryInboundTrackerRequest,
+) (*types.QueryInboundTrackerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	inTxTracker, found := k.GetInboundTracker(ctx, req.ChainId, req.TxHash)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"Inbound tracker not found for ChainID: %d, TxHash: %s",
+			req.ChainId,
+			req.TxHash,
+		)
+	}
+
+	return &types.QueryInboundTrackerResponse{InboundTracker: inTxTracker}, nil
+}

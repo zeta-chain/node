@@ -88,7 +88,6 @@ func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
 	supportedChains := k.GetSupportedChains(ctx)
 	for _, chain := range supportedChains {
 		chainNonce := types.ChainNonces{
-			Index:   chain.ChainName.String(),
 			ChainId: chain.ChainId,
 			Nonce:   0,
 			// #nosec G115 always positive

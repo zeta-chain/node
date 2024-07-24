@@ -19,7 +19,7 @@ func TestGenesisState_Validate(t *testing.T) {
 	gsWithDuplicateNodeAccountList.NodeAccountList = []*types.NodeAccount{nodeAccount, nodeAccount}
 
 	gsWithDuplicateChainNonces := types.DefaultGenesis()
-	chainNonce := sample.ChainNonces(t, "0")
+	chainNonce := sample.ChainNonces(0)
 	gsWithDuplicateChainNonces.ChainNonces = []types.ChainNonces{chainNonce, chainNonce}
 
 	for _, tc := range []struct {
