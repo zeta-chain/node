@@ -147,7 +147,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	)
 
 	t.Run("post gas price success", func(t *testing.T) {
-		hash, err := client.PostVoteGasPrice(ctx, chains.BscMainnet, 1000000, "100", 1234)
+		hash, err := client.PostVoteGasPrice(ctx, chains.BscMainnet, 1000000, 0, 1234)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})

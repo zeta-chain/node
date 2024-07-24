@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -101,13 +102,14 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		gp, found := k.GetGasPrice(ctx, 5)
 		require.True(t, found)
 		require.Equal(t, types.GasPrice{
-			Creator:     creator,
-			Index:       "5",
-			ChainId:     5,
-			Signers:     []string{creator},
-			BlockNums:   []uint64{1},
-			Prices:      []uint64{1},
-			MedianIndex: 0,
+			Creator:      creator,
+			Index:        "5",
+			ChainId:      5,
+			Signers:      []string{creator},
+			BlockNums:    []uint64{1},
+			Prices:       []uint64{1},
+			PriorityFees: []uint64{0},
+			MedianIndex:  0,
 		}, gp)
 	})
 
@@ -129,11 +131,12 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 
 		creator := sample.AccAddress()
 		k.SetGasPrice(ctx, types.GasPrice{
-			Creator:   creator,
-			ChainId:   5,
-			Signers:   []string{creator},
-			BlockNums: []uint64{1},
-			Prices:    []uint64{1},
+			Creator:      creator,
+			ChainId:      5,
+			Signers:      []string{creator},
+			BlockNums:    []uint64{1},
+			Prices:       []uint64{1},
+			PriorityFees: []uint64{0},
 		})
 
 		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
@@ -147,13 +150,14 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		gp, found := k.GetGasPrice(ctx, 5)
 		require.True(t, found)
 		require.Equal(t, types.GasPrice{
-			Creator:     creator,
-			Index:       "",
-			ChainId:     5,
-			Signers:     []string{creator},
-			BlockNums:   []uint64{2},
-			Prices:      []uint64{2},
-			MedianIndex: 0,
+			Creator:      creator,
+			Index:        "5",
+			ChainId:      5,
+			Signers:      []string{creator},
+			BlockNums:    []uint64{2},
+			Prices:       []uint64{2},
+			PriorityFees: []uint64{0},
+			MedianIndex:  0,
 		}, gp)
 	})
 
@@ -175,10 +179,11 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 
 		creator := sample.AccAddress()
 		k.SetGasPrice(ctx, types.GasPrice{
-			Creator:   creator,
-			ChainId:   5,
-			BlockNums: []uint64{1},
-			Prices:    []uint64{1},
+			Creator:      creator,
+			ChainId:      5,
+			BlockNums:    []uint64{1},
+			Prices:       []uint64{1},
+			PriorityFees: []uint64{0},
 		})
 
 		res, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
@@ -192,13 +197,69 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		gp, found := k.GetGasPrice(ctx, 5)
 		require.True(t, found)
 		require.Equal(t, types.GasPrice{
-			Creator:     creator,
-			Index:       "",
-			ChainId:     5,
-			Signers:     []string{creator},
-			BlockNums:   []uint64{1, 2},
-			Prices:      []uint64{1, 2},
-			MedianIndex: 1,
+			Creator:      creator,
+			Index:        "5",
+			ChainId:      5,
+			Signers:      []string{creator},
+			BlockNums:    []uint64{1, 2},
+			Prices:       []uint64{1, 2},
+			PriorityFees: []uint64{0, 0},
+			MedianIndex:  1,
 		}, gp)
+	})
+
+	t.Run("works with a priority fee", func(t *testing.T) {
+		// ARRANGE
+		// Given a keeper with grpc server and some mocks
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+			UseFungibleMock: true,
+		})
+
+		// Given a chain
+		chain := chains.Chain{ChainId: 5}
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, chain.ChainId).
+			Return(chain, true)
+
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		creator := sample.AccAddress()
+
+		// Given an existing gas price
+		_, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
+			Creator:     creator,
+			ChainId:     chain.ChainId,
+			BlockNumber: 2,
+			Price:       2,
+		})
+		require.NoError(t, err)
+
+		// ACT
+		// When a new gas price is voted with a priority fee
+		_, err = msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
+			Creator:     creator,
+			ChainId:     5,
+			BlockNumber: 3,
+			Price:       3,
+			PriorityFee: 2,
+		})
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Then gas prices should be updated as well as priority fee
+		gp, found := k.GetGasPrice(ctx, 5)
+
+		assert.True(t, found)
+		assert.Equal(t, []string{creator}, gp.Signers)
+		assert.Equal(t, []uint64{3}, gp.BlockNums)
+		assert.Equal(t, []uint64{3}, gp.Prices)
+		assert.Equal(t, []uint64{2}, gp.PriorityFees)
 	})
 }

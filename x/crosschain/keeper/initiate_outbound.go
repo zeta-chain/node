@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -26,21 +24,17 @@ func (k Keeper) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig)
 	receiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
 	chainInfo, found := chains.GetChainFromChainID(receiverChainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	if !found {
-		return config.CCTX.CctxStatus.Status, cosmoserrors.Wrap(
+		return config.CCTX.CctxStatus.Status, cosmoserrors.Wrapf(
 			types.ErrInitiatitingOutbound,
-			fmt.Sprintf(
-				"chain info not found for %d", receiverChainID,
-			),
+			"chain info not found for %d", receiverChainID,
 		)
 	}
 
 	cctxGateway, found := ResolveCCTXGateway(chainInfo.CctxGateway, k)
 	if !found {
-		return config.CCTX.CctxStatus.Status, cosmoserrors.Wrap(
+		return config.CCTX.CctxStatus.Status, cosmoserrors.Wrapf(
 			types.ErrInitiatitingOutbound,
-			fmt.Sprintf(
-				"CCTXGateway not defined for receiver chain %d", receiverChainID,
-			),
+			"CCTXGateway not defined for receiver chain %d", receiverChainID,
 		)
 	}
 

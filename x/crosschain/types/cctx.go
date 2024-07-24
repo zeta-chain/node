@@ -196,6 +196,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		TssNonce:               0,
 		GasLimit:               msg.GasLimit,
 		GasPrice:               "",
+		GasPriorityFee:         "",
 		BallotIndex:            "",
 		ObservedExternalHeight: 0,
 		Amount:                 sdkmath.ZeroUint(),

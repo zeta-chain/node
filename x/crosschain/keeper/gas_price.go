@@ -7,35 +7,46 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	slicemath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // SetGasPrice set a specific gasPrice in the store from its index
 func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	b := k.cdc.MustMarshal(&gasPrice)
 	gasPrice.Index = strconv.FormatInt(gasPrice.ChainId, 10)
+	b := k.cdc.MustMarshal(&gasPrice)
 	store.Set(types.KeyPrefix(gasPrice.Index), b)
 }
 
-// GetGasPrice returns a gasPrice from its index
-func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (val types.GasPrice, found bool) {
+// GetGasPrice returns a gasPrice from its index or false if it doesn't exist.
+func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (types.GasPrice, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
+
 	b := store.Get(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
 	if b == nil {
-		return val, false
+		return types.GasPrice{}, false
 	}
+
+	var val types.GasPrice
 	k.cdc.MustUnmarshal(b, &val)
+
 	return val, true
 }
 
-func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainID int64) (sdk.Uint, bool) {
-	gasPrice, isFound := k.GetGasPrice(ctx, chainID)
-	if !isFound {
-		return math.ZeroUint(), isFound
+// GetMedianGasValues returns *median* gas price and priority fee (for EIP-1559) from the store or false if it doesn't exist.
+func (k Keeper) GetMedianGasValues(ctx sdk.Context, chainID int64) (math.Uint, math.Uint, bool) {
+	entity, found := k.GetGasPrice(ctx, chainID)
+	if !found {
+		return math.ZeroUint(), math.ZeroUint(), false
 	}
-	mi := gasPrice.MedianIndex
-	return sdk.NewUint(gasPrice.Prices[mi]), true
+
+	var (
+		gasPrice    = math.NewUint(entity.Prices[entity.MedianIndex])
+		priorityFee = math.NewUint(slicemath.SliceMedianValue(entity.PriorityFees, false))
+	)
+
+	return gasPrice, priorityFee, true
 }
 
 // RemoveGasPrice removes a gasPrice from the store

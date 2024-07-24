@@ -3,7 +3,7 @@
 Broadcast message to vote gas price
 
 ```
-zetacored tx crosschain vote-gas-price [chain] [price] [supply] [blockNumber] [flags]
+zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumber] [flags]
 ```
 
 ### Options

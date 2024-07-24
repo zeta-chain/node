@@ -28,7 +28,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
@@ -37,6 +36,8 @@ var _ interfaces.ChainObserver = (*Observer)(nil)
 type Observer struct {
 	// base.Observer implements the base chain observer
 	base.Observer
+
+	priorityFeeConfig
 
 	// evmClient is the EVM client for the observed chain
 	evmClient interfaces.EVMRPCClient
@@ -52,6 +53,12 @@ type Observer struct {
 
 	// outboundConfirmedTransactions is the map to index confirmed transactions by hash
 	outboundConfirmedTransactions map[string]*ethtypes.Transaction
+}
+
+// priorityFeeConfig is the configuration for priority fee
+type priorityFeeConfig struct {
+	checked   bool
+	supported bool
 }
 
 // NewObserver returns a new EVM chain observer
@@ -90,6 +97,7 @@ func NewObserver(
 		outboundPendingTransactions:   make(map[string]*ethtypes.Transaction),
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
+		priorityFeeConfig:             priorityFeeConfig{},
 	}
 
 	// load last block scanned
@@ -284,75 +292,6 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 		return fmt.Errorf("transaction at index %d has different hash %s, txHash %s nonce %d block %d",
 			receipt.TransactionIndex, txAtIndex.Hash, tx.Hash(), tx.Nonce(), receipt.BlockNumber.Uint64())
 	}
-
-	return nil
-}
-
-// WatchGasPrice watches evm chain for gas prices and post to zetacore
-// TODO(revamp): move ticker to ticker file
-// TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchGasPrice(ctx context.Context) error {
-	// report gas price right away as the ticker takes time to kick in
-	err := ob.PostGasPrice(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-	}
-
-	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchGasPrice_%d", ob.Chain().ChainId),
-		ob.GetChainParams().GasPriceTicker,
-	)
-	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
-		return err
-	}
-	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
-				continue
-			}
-			err = ob.PostGasPrice(ctx)
-			if err != nil {
-				ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-			}
-			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.Logger().GasPrice)
-		case <-ob.StopChannel():
-			ob.Logger().GasPrice.Info().Msg("WatchGasPrice stopped")
-			return nil
-		}
-	}
-}
-
-// PostGasPrice posts gas price to zetacore
-// TODO(revamp): move to gas price file
-func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	// GAS PRICE
-	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("Err SuggestGasPrice:")
-		return err
-	}
-	blockNum, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
-		return err
-	}
-
-	// SUPPLY
-	supply := "100" // lockedAmount on ETH, totalSupply on other chains
-
-	zetaHash, err := ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), supply, blockNum)
-	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
-		return err
-	}
-	_ = zetaHash
 
 	return nil
 }

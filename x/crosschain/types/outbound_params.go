@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 func (m OutboundParams) GetGasPriceUInt64() (uint64, error) {
@@ -12,6 +14,20 @@ func (m OutboundParams) GetGasPriceUInt64() (uint64, error) {
 	}
 
 	return gasPrice, nil
+}
+
+func (m OutboundParams) GetGasPriorityFeeUInt64() (uint64, error) {
+	// noop
+	if m.GasPriorityFee == "" {
+		return 0, nil
+	}
+
+	fee, err := strconv.ParseUint(m.GasPriorityFee, 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to parse priority fee from %q", m.GasPriorityFee)
+	}
+
+	return fee, nil
 }
 
 func (m OutboundParams) Validate() error {

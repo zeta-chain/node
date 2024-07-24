@@ -81,9 +81,7 @@ type ZetacoreVoter interface {
 	PostVoteGasPrice(
 		ctx context.Context,
 		chain chains.Chain,
-		gasPrice uint64,
-		supply string,
-		blockNum uint64,
+		gasPrice, priorityFee, blockNum uint64,
 	) (string, error)
 	PostVoteInbound(
 		ctx context.Context,
