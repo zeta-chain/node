@@ -172,7 +172,6 @@ func (c *Client) GetTSS(ctx context.Context) (types.TSS, error) {
 	if err != nil {
 		return types.TSS{}, errors.Wrap(err, "failed to get tss")
 	}
-
 	return resp.TSS, nil
 }
 

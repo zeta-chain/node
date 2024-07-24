@@ -69,7 +69,6 @@ func main() {
 		cmd.Stdin = &passwordInputBuffer
 
 		eg, ctx := errgroup.WithContext(ctx)
-		//eg.Go(cmd.Run)
 		eg.Go(func() error {
 			err := cmd.Run()
 			if err != nil {
@@ -82,7 +81,6 @@ func main() {
 		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
-			//cancel()
 			return nil
 		})
 		eg.Go(func() error {

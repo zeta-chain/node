@@ -74,7 +74,7 @@ func (c *Client) HandleNewTSSKeyGeneration(ctx context.Context) error {
 	bo := backoff.NewConstantBackOff(5 * time.Second)
 	backoff.WithMaxRetries(bo, 10)
 
-	// Initial TSS retrieval
+	// Initial TSS history retrieval
 	tssHistoricalList, err := retry.DoTypedWithBackoffAndRetry[[]observertypes.TSS](func() ([]observertypes.TSS, error) {
 		return c.GetTSSHistory(ctx)
 	}, bo)
@@ -123,7 +123,7 @@ func (c *Client) HandleNewKeygen(ctx context.Context) error {
 	bo := backoff.NewConstantBackOff(5 * time.Second)
 	backoff.WithMaxRetries(bo, 10)
 
-	// Initial TSS retrieval
+	// Initial Keygen retrieval
 	keygen, err := retry.DoTypedWithBackoffAndRetry[*observertypes.Keygen](func() (*observertypes.Keygen, error) {
 		return c.GetKeyGen(ctx)
 	}, bo)

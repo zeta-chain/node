@@ -358,7 +358,7 @@ func start(_ *cobra.Command, _ []string) error {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
-	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
+	startLogger.Info().Msgf("awaiting shutdown signals")
 	select {
 	case <-notifyCtx.Done():
 		cause := context.Cause(notifyCtx)
@@ -367,7 +367,7 @@ func start(_ *cobra.Command, _ []string) error {
 	case sig := <-ch:
 		startLogger.Info().Msgf("stop signal received: %s", sig)
 	}
-	//cancelBackgroundThreads()
+
 	//stop chain observers
 	for _, observer := range observerMap {
 		observer.Stop()

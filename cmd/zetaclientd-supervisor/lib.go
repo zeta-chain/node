@@ -98,9 +98,6 @@ func newZetaclientdSupervisor(
 func (s *zetaclientdSupervisor) Start(ctx context.Context) {
 	go s.watchForVersionChanges(ctx)
 	go s.handleCoreUpgradePlan(ctx)
-	//go s.handleNewKeygen(ctx)
-	//go s.handleNewTSSKeyGeneration(ctx)
-	//go s.handleTSSUpdate(ctx)
 }
 
 func (s *zetaclientdSupervisor) WaitForReloadSignal(ctx context.Context) {
