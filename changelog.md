@@ -66,6 +66,7 @@
 * [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 * [2515](https://github.com/zeta-chain/node/pull/2515) - replace chainName by chainID for ChainNonces indexing
 * [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
+* [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
 
 ### Tests
 

@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -37,8 +38,9 @@ func (k msgServer) UpdateTssAddress(
 	}
 
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
+
 	// Each connected chain should have its own tss migrator
-	if len(k.zetaObserverKeeper.GetSupportedForeignChains(ctx)) != len(tssMigrators) {
+	if len(k.GetChainsSupportingMigration(ctx)) != len(tssMigrators) {
 		return nil, errorsmod.Wrap(
 			types.ErrUnableToUpdateTss,
 			"cannot update tss address incorrect number of migrations have been created and completed",
@@ -69,4 +71,10 @@ func (k msgServer) UpdateTssAddress(
 	k.zetaObserverKeeper.RemoveAllExistingMigrators(ctx)
 
 	return &types.MsgUpdateTssAddressResponse{}, nil
+}
+
+// GetChainsSupportingMigration returns the chains that support migration.
+func (k *Keeper) GetChainsSupportingMigration(ctx sdk.Context) []chains.Chain {
+	return append(k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum),
+		k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_bitcoin)...)
 }
