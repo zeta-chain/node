@@ -1,5 +1,9 @@
 package solana
 
+import (
+	solanago "github.com/gagliardetto/solana-go"
+)
+
 const (
 	// SolanaGatewayProgramID is the program ID of the Solana gateway program
 	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
@@ -35,4 +39,19 @@ func DiscriminatorWithdraw() [8]byte {
 // DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 func DiscriminatorWithdrawSPL() [8]byte {
 	return [8]byte{156, 234, 11, 89, 235, 246, 32}
+}
+
+// ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
+func ParseGatewayIDAndPda(address string) (gatewayID solanago.PublicKey, pda solanago.PublicKey, err error) {
+	// decode gateway address
+	gatewayID, err = solanago.PublicKeyFromBase58(address)
+	if err != nil {
+		return
+	}
+
+	// compute gateway PDA
+	seed := []byte(PDASeed)
+	pda, _, err = solanago.FindProgramAddress([][]byte{seed}, gatewayID)
+
+	return
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -64,16 +64,10 @@ func NewObserver(
 		return nil, err
 	}
 
-	gatewayID, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
+	// parse gateway ID and PDA
+	gatewayID, pda, err := contract.ParseGatewayIDAndPda(chainParams.GatewayAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid gateway address %s", chainParams.GatewayAddress)
-	}
-
-	// compute gateway PDA
-	seed := []byte(solanacontract.PDASeed)
-	pda, _, err := solana.FindProgramAddress([][]byte{seed}, gatewayID)
-	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// create solana observer

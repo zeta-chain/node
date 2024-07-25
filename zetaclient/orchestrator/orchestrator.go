@@ -148,39 +148,47 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 }
 
 // returns signer with updated chain parameters.
-func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (interfaces.ChainSigner, error) {
+func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chain chains.Chain) (interfaces.ChainSigner, error) {
+	chainID := chain.ChainId
 	signer, err := oc.getSigner(chainID)
 	if err != nil {
 		return nil, err
 	}
 
-	// noop for non-EVM chains
-	if !chains.IsEVMChain(chainID, app.GetAdditionalChains()) {
-		return signer, nil
-	}
+	// update chain parameters for signer according to chain consensus
+	switch chain.Consensus {
+	case chains.Consensus_ethereum:
+		evmParams, found := app.GetEVMChainParams(chainID)
+		if found {
+			// update zeta connector and ERC20 custody addresses
+			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
+			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
+				signer.SetZetaConnectorAddress(zetaConnectorAddress)
+				oc.logger.Info().
+					Str("signer.connector_address", zetaConnectorAddress.String()).
+					Msgf("updated zeta connector address for chain %d", chainID)
+			}
 
-	evmParams, found := app.GetEVMChainParams(chainID)
-	if !found {
-		return signer, nil
+			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
+			if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
+				signer.SetERC20CustodyAddress(erc20CustodyAddress)
+				oc.logger.Info().
+					Str("signer.erc20_custody", erc20CustodyAddress.String()).
+					Msgf("updated zeta connector address for chain %d", chainID)
+			}
+		}
+	case chains.Consensus_solana_consensus:
+		_, solParams, found := app.GetSolanaChainParams()
+		if found {
+			// update solana gateway address
+			if solParams.GatewayAddress != signer.GetGatewayAddress() {
+				signer.SetGatewayAddress(solParams.GatewayAddress)
+				oc.logger.Info().
+					Str("signer.gateway_address", solParams.GatewayAddress).
+					Msgf("updated gateway address for chain %d", chainID)
+			}
+		}
 	}
-
-	// update zeta connector and ERC20 custody addresses
-	zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
-	if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
-		signer.SetZetaConnectorAddress(zetaConnectorAddress)
-		oc.logger.Info().
-			Str("signer.connector_address", zetaConnectorAddress.String()).
-			Msgf("updated zeta connector address for chain %d", chainID)
-	}
-
-	erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
-	if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
-		signer.SetERC20CustodyAddress(erc20CustodyAddress)
-		oc.logger.Info().
-			Str("signer.erc20_custody", erc20CustodyAddress.String()).
-			Msgf("updated zeta connector address for chain %d", chainID)
-	}
-
 	return signer, nil
 }
 
@@ -197,7 +205,8 @@ func (oc *Orchestrator) getSigner(chainID int64) (interfaces.ChainSigner, error)
 }
 
 // returns chain observer with updated chain parameters
-func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (interfaces.ChainObserver, error) {
+func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chain chains.Chain) (interfaces.ChainObserver, error) {
+	chainID := chain.ChainId
 	observer, err := oc.getObserver(chainID)
 	if err != nil {
 		return nil, err
@@ -364,13 +373,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						}
 
 						// update chain parameters for signer and chain observer
-						signer, err := oc.resolveSigner(app, c.ChainId)
+						signer, err := oc.resolveSigner(app, c)
 						if err != nil {
 							oc.logger.Error().Err(err).
 								Msgf("runScheduler: unable to resolve signer for chain %d", c.ChainId)
 							continue
 						}
-						ob, err := oc.resolveObserver(app, c.ChainId)
+						ob, err := oc.resolveObserver(app, c)
 						if err != nil {
 							oc.logger.Error().Err(err).
 								Msgf("runScheduler: resolveObserver failed for chain %d", c.ChainId)

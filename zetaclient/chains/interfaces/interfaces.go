@@ -66,6 +66,8 @@ type ChainSigner interface {
 	SetERC20CustodyAddress(address ethcommon.Address)
 	GetZetaConnectorAddress() ethcommon.Address
 	GetERC20CustodyAddress() ethcommon.Address
+	SetGatewayAddress(address string)
+	GetGatewayAddress() string
 }
 
 // ZetacoreVoter represents voter interface.

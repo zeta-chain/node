@@ -95,6 +95,10 @@ func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
 func (signer *Signer) SetERC20CustodyAddress(_ ethcommon.Address) {
 }
 
+// SetGatewayAddress does nothing for BTC
+func (signer *Signer) SetGatewayAddress(_ string) {
+}
+
 // GetZetaConnectorAddress returns dummy address
 func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
 	return ethcommon.Address{}
@@ -103,6 +107,11 @@ func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
 // GetERC20CustodyAddress returns dummy address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.Address{}
+}
+
+// GetGatewayAddress returns empty address
+func (signer *Signer) GetGatewayAddress() string {
+	return ""
 }
 
 // AddWithdrawTxOutputs adds the 3 outputs to the withdraw tx

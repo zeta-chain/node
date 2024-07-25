@@ -53,27 +53,19 @@ func NewSigner(
 	// create base signer
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
-	gatewayID, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
+	// parse gateway ID and PDA
+	gatewayID, pda, err := contract.ParseGatewayIDAndPda(chainParams.GatewayAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid gateway address %s", chainParams.GatewayAddress)
-	}
-
-	// compute gateway PDA
-	seed := []byte(contract.PDASeed)
-	pda, _, err := solana.FindProgramAddress([][]byte{seed}, gatewayID)
-	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// create solana observer
-	signer := &Signer{
+	return &Signer{
 		Signer:    baseSigner,
 		client:    solClient,
 		gatewayID: gatewayID,
 		pda:       pda,
-	}
-
-	return signer, nil
+	}, nil
 }
 
 // SignWithdrawTx signs a message for Solana gateway 'withdraw' transaction
@@ -377,6 +369,29 @@ func (signer *Signer) TryProcessOutbound(
 			}()
 		}
 	}
+}
+
+// SetGatewayAddress sets the gateway address
+func (signer *Signer) SetGatewayAddress(address string) {
+	// parse gateway ID and PDA
+	gatewayID, pda, err := contract.ParseGatewayIDAndPda(address)
+	if err != nil {
+		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address %s", address)
+	}
+
+	// update gateway ID and PDA
+	signer.Lock()
+	defer signer.Unlock()
+
+	signer.gatewayID = gatewayID
+	signer.pda = pda
+}
+
+// GetGatewayAddress returns the gateway address
+func (signer *Signer) GetGatewayAddress() string {
+	signer.Lock()
+	defer signer.Unlock()
+	return signer.gatewayID.String()
 }
 
 // TODO: get rid of below four functions for Solana and Bitcoin

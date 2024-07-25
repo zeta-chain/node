@@ -90,3 +90,44 @@ func (ob *BTCObserver) GetTxID(_ uint64) string {
 }
 
 func (ob *BTCObserver) WatchInboundTracker(_ context.Context) error { return nil }
+
+// ----------------------------------------------------------------------------
+// SolanaObserver
+// ----------------------------------------------------------------------------
+var _ interfaces.ChainObserver = (*SolanaObserver)(nil)
+
+// SolanaObserver is a mock of solana chain observer for testing
+type SolanaObserver struct {
+	ChainParams observertypes.ChainParams
+}
+
+func NewSolanaObserver(chainParams *observertypes.ChainParams) *SolanaObserver {
+	return &SolanaObserver{
+		ChainParams: *chainParams,
+	}
+}
+
+func (ob *SolanaObserver) Start(_ context.Context) {}
+
+func (ob *SolanaObserver) Stop() {}
+
+func (ob *SolanaObserver) IsOutboundProcessed(
+	_ context.Context,
+	_ *crosschaintypes.CrossChainTx,
+) (bool, bool, error) {
+	return false, false, nil
+}
+
+func (ob *SolanaObserver) SetChainParams(chainParams observertypes.ChainParams) {
+	ob.ChainParams = chainParams
+}
+
+func (ob *SolanaObserver) GetChainParams() observertypes.ChainParams {
+	return ob.ChainParams
+}
+
+func (ob *SolanaObserver) GetTxID(_ uint64) string {
+	return ""
+}
+
+func (ob *SolanaObserver) WatchInboundTracker(_ context.Context) error { return nil }

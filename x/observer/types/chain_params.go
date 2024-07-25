@@ -163,6 +163,7 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultMumbaiTestnetChainParams(),
 			GetDefaultBtcTestnetChainParams(),
 			GetDefaultBtcRegtestChainParams(),
+			GetDefaultSolanaLocalnetChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
 			GetDefaultZetaPrivnetChainParams(),
 		},
@@ -385,5 +386,6 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.OutboundScheduleLookahead == params2.OutboundScheduleLookahead &&
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
-		params1.IsSupported == params2.IsSupported
+		params1.IsSupported == params2.IsSupported &&
+		params1.GatewayAddress == params2.GatewayAddress
 }
