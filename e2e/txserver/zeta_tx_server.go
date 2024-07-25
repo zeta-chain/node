@@ -255,7 +255,11 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 	}
 }
 
-func mkTxResult(ctx context.Context, clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.TxResponse, error) {
+func mkTxResult(
+	ctx context.Context,
+	clientCtx client.Context,
+	resTx *coretypes.ResultTx,
+) (*sdktypes.TxResponse, error) {
 	txb, err := clientCtx.TxConfig.TxDecoder()(resTx.Tx)
 	if err != nil {
 		return nil, err

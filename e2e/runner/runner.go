@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"os"
 	"sync"
 	"time"
@@ -34,6 +33,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"

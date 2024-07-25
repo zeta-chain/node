@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"fmt"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -14,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
