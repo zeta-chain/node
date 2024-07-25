@@ -162,7 +162,32 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 		require.NotEmpty(t, supportedChainsList)
 		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
 	})
+}
 
+func TestKeeper_GetSupportedForeignChains(t *testing.T) {
+	t.Run("return empty list if not chans are supported", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		require.Empty(t, k.GetSupportedForeignChains(ctx))
+	})
+
+	t.Run("return list of supported chains", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+
+		supportedChainsList := k.GetSupportedForeignChains(ctx)
+		require.NotEmpty(t, supportedChainsList)
+
+		require.ElementsMatch(t, getAllForeignChains(), supportedChainsList)
+	})
+}
+
+func getAllForeignChains() []chains.Chain {
+	return chains.ExternalChainList([]chains.Chain{})
 }
 
 func getForeignChains(consensus chains.Consensus) []chains.Chain {
