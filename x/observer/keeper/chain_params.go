@@ -76,6 +76,19 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) []chains.Chain {
 	return c
 }
 
+// GetSupportedChainsByConsensus returns the list of supported chains by consensus
+func (k Keeper) GetSupportedForeignChainsByConsensus(ctx sdk.Context, consensus chains.Consensus) []chains.Chain {
+	allChains := k.GetSupportedChains(ctx)
+
+	foreignChains := make([]chains.Chain, 0)
+	for _, chain := range allChains {
+		if !chain.IsZetaChain() && chain.GetConsensus() == consensus {
+			foreignChains = append(foreignChains, chain)
+		}
+	}
+	return foreignChains
+}
+
 // GetSupportedForeignChains returns the list of supported foreign chains
 func (k Keeper) GetSupportedForeignChains(ctx sdk.Context) []chains.Chain {
 	allChains := k.GetSupportedChains(ctx)
