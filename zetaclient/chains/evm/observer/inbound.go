@@ -229,7 +229,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
 	if lastScannedLowest > lastScanned {
 		sampledLogger.Info().
-			Msgf("observeInbound: lasstScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
+			Msgf("observeInbound: lastScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
 				ob.Chain().ChainId, lastScannedZetaSent, lastScannedDeposited, lastScannedTssRecvd)
 		if err := ob.SaveLastBlockScanned(lastScannedLowest); err != nil {
 			ob.Logger().Inbound.Error().
