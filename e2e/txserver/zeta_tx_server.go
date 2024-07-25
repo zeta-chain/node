@@ -525,9 +525,8 @@ func (zts ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytype
 	if err != nil {
 		if strings.Contains(err.Error(), "unknown method") {
 			return authoritytypes.PolicyType_groupOperational, true, nil
-		} else {
-			return authoritytypes.PolicyType_groupOperational, false, err
 		}
+		return authoritytypes.PolicyType_groupOperational, false, err
 	}
 
 	return res.Authorization.AuthorizedPolicy, false, nil
