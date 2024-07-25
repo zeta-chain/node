@@ -203,6 +203,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.Account,
 		r.EVMClient,
 		r.ZEVMClient,
+		r.AutorithyClient,
 		r.CctxClient,
 		r.FungibleClient,
 		r.AuthClient,

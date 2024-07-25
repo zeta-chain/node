@@ -60,12 +60,14 @@ const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
 
 // ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
-	clientCtx    client.Context
-	txFactory    tx.Factory
-	name         []string
-	mnemonic     []string
-	address      []string
-	blockTimeout time.Duration
+	ctx             context.Context
+	clientCtx       client.Context
+	txFactory       tx.Factory
+	name            []string
+	mnemonic        []string
+	address         []string
+	blockTimeout    time.Duration
+	authorityClient authoritytypes.QueryClient
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -119,6 +121,7 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 	txf := newFactory(clientCtx)
 
 	return &ZetaTxServer{
+		ctx:          ctx,
 		clientCtx:    clientCtx,
 		txFactory:    txf,
 		name:         names,
@@ -244,15 +247,15 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 		case <-exitAfter:
 			return nil, fmt.Errorf("timed out after waiting for tx to get included in the block: %d", zts.blockTimeout)
 		case <-time.After(time.Millisecond * 100):
-			resTx, err := zts.clientCtx.Client.Tx(context.TODO(), hash, false)
+			resTx, err := zts.clientCtx.Client.Tx(zts.ctx, hash, false)
 			if err == nil {
-				return mkTxResult(zts.clientCtx, resTx)
+				return mkTxResult(zts.ctx, zts.clientCtx, resTx)
 			}
 		}
 	}
 }
 
-func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.TxResponse, error) {
+func mkTxResult(ctx context.Context, clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.TxResponse, error) {
 	txb, err := clientCtx.TxConfig.TxDecoder()(resTx.Tx)
 	if err != nil {
 		return nil, err
@@ -261,7 +264,7 @@ func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx) (*sdktypes.
 	if !ok {
 		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
 	}
-	resBlock, err := clientCtx.Client.Block(context.TODO(), &resTx.Height)
+	resBlock, err := clientCtx.Client.Block(ctx, &resTx.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -368,9 +371,23 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		)
 	}
 
+	// authorization for deploying new ZRC20 has changed from accountOperational to accountAdmin in v19
+	// we use this query to check the current authorization for the message
+	// if pre v19 the query is not implement and authorization is operational
+	deployerAccount := accountAdmin
+	deployerAddr := addrAdmin.String()
+	authorization, preV19, err := zts.fetchMessagePermissions(&fungibletypes.MsgDeployFungibleCoinZRC20{})
+	if err != nil {
+		return SystemContractAddresses{}, fmt.Errorf("failed to fetch message permissions: %s", err.Error())
+	}
+	if preV19 || authorization == authoritytypes.PolicyType_groupOperational {
+		deployerAccount = accountOperational
+		deployerAddr = addrOperational.String()
+	}
+
 	// deploy eth zrc20
-	_, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addrAdmin.String(),
+	_, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		deployerAddr,
 		"",
 		chains.GoerliLocalnet.ChainId,
 		18,
@@ -384,8 +401,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy btc zrc20
-	_, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addrAdmin.String(),
+	_, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		deployerAddr,
 		"",
 		chains.BitcoinRegtest.ChainId,
 		8,
@@ -399,8 +416,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy sol zrc20
-	_, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addrAdmin.String(),
+	_, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		deployerAddr,
 		"",
 		chains.SolanaLocalnet.ChainId,
 		9,
@@ -414,8 +431,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	}
 
 	// deploy erc20 zrc20
-	res, err = zts.BroadcastTx(accountAdmin, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		addrAdmin.String(),
+	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		deployerAddr,
 		erc20Addr,
 		chains.GoerliLocalnet.ChainId,
 		6,
@@ -484,6 +501,32 @@ func (zts ZetaTxServer) UpdateKeygen(height int64) error {
 		keygenHeight,
 	))
 	return err
+}
+
+// SetAuthorityClient sets the authority client
+func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.QueryClient) {
+	zts.authorityClient = authorityClient
+}
+
+// fetchMessagePermissions fetches the message permissions for a given message
+// return a bool preV19 to indicate the node is preV19 and the query doesn't exist
+func (zts ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytypes.PolicyType, bool, error) {
+	msgURL := sdktypes.MsgTypeURL(msg)
+
+	res, err := zts.authorityClient.Authorization(zts.ctx, &authoritytypes.QueryAuthorizationRequest{
+		MsgUrl: msgURL,
+	})
+
+	// check if error is unknown method
+	if err != nil {
+		if strings.Contains(err.Error(), "unknown method") {
+			return authoritytypes.PolicyType_groupOperational, true, nil
+		} else {
+			return authoritytypes.PolicyType_groupOperational, false, err
+		}
+	}
+
+	return res.Authorization.AuthorizedPolicy, false, nil
 }
 
 // newCodec returns the codec for msg server
@@ -573,7 +616,7 @@ func FetchAttributeFromTxResponse(res *sdktypes.TxResponse, key string) (string,
 	var logs []messageLog
 	err := json.Unmarshal([]byte(res.RawLog), &logs)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to unmarshal logs: %s, logs content: %s", err.Error(), res.RawLog)
 	}
 
 	var attributes []string

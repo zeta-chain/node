@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -28,16 +29,28 @@ type E2EClients struct {
 	EvmAuth      *bind.TransactOpts
 
 	// the gRPC clients for ZetaChain
-	CctxClient     crosschaintypes.QueryClient
-	FungibleClient fungibletypes.QueryClient
-	AuthClient     authtypes.QueryClient
-	BankClient     banktypes.QueryClient
-	ObserverClient observertypes.QueryClient
-	LightClient    lightclienttypes.QueryClient
+	AuthorityClient authoritytypes.QueryClient
+	CctxClient      crosschaintypes.QueryClient
+	FungibleClient  fungibletypes.QueryClient
+	AuthClient      authtypes.QueryClient
+	BankClient      banktypes.QueryClient
+	ObserverClient  observertypes.QueryClient
+	LightClient     lightclienttypes.QueryClient
 
 	// the RPC clients for ZetaChain
 	ZevmClient *ethclient.Client
 	ZevmAuth   *bind.TransactOpts
+}
+
+// zetaChainClients contains all the RPC clients and gRPC clients for ZetaChain
+type zetaChainClients struct {
+	AuthorityClient authoritytypes.QueryClient
+	CctxClient      crosschaintypes.QueryClient
+	FungibleClient  fungibletypes.QueryClient
+	AuthClient      authtypes.QueryClient
+	BankClient      banktypes.QueryClient
+	ObserverClient  observertypes.QueryClient
+	LightClient     lightclienttypes.QueryClient
 }
 
 // getClientsFromConfig get clients from config
@@ -60,7 +73,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	if err != nil {
 		return E2EClients{}, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
+	zetaChainClients, err := getZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
@@ -72,18 +85,19 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	}
 
 	return E2EClients{
-		BtcRPCClient:   btcRPCClient,
-		SolanaClient:   solanaClient,
-		EvmClient:      evmClient,
-		EvmAuth:        evmAuth,
-		CctxClient:     cctxClient,
-		FungibleClient: fungibleClient,
-		AuthClient:     authClient,
-		BankClient:     bankClient,
-		ObserverClient: observerClient,
-		LightClient:    lightclientClient,
-		ZevmClient:     zevmClient,
-		ZevmAuth:       zevmAuth,
+		BtcRPCClient:    btcRPCClient,
+		SolanaClient:    solanaClient,
+		EvmClient:       evmClient,
+		EvmAuth:         evmAuth,
+		AuthorityClient: zetaChainClients.AuthorityClient,
+		CctxClient:      zetaChainClients.CctxClient,
+		FungibleClient:  zetaChainClients.FungibleClient,
+		AuthClient:      zetaChainClients.AuthClient,
+		BankClient:      zetaChainClients.BankClient,
+		ObserverClient:  zetaChainClients.ObserverClient,
+		LightClient:     zetaChainClients.LightClient,
+		ZevmClient:      zevmClient,
+		ZevmAuth:        zevmAuth,
 	}, nil
 }
 
@@ -140,19 +154,15 @@ func getEVMClient(
 
 // getZetaClients get zeta clients
 func getZetaClients(rpc string) (
-	crosschaintypes.QueryClient,
-	fungibletypes.QueryClient,
-	authtypes.QueryClient,
-	banktypes.QueryClient,
-	observertypes.QueryClient,
-	lightclienttypes.QueryClient,
+	zetaChainClients,
 	error,
 ) {
 	grpcConn, err := grpc.Dial(rpc, grpc.WithInsecure())
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, err
+		return zetaChainClients{}, err
 	}
 
+	authorityClient := authoritytypes.NewQueryClient(grpcConn)
 	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
@@ -160,5 +170,13 @@ func getZetaClients(rpc string) (
 	observerClient := observertypes.NewQueryClient(grpcConn)
 	lightclientClient := lightclienttypes.NewQueryClient(grpcConn)
 
-	return cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, nil
+	return zetaChainClients{
+		AuthorityClient: authorityClient,
+		CctxClient:      cctxClient,
+		FungibleClient:  fungibleClient,
+		AuthClient:      authClient,
+		BankClient:      bankClient,
+		ObserverClient:  observerClient,
+		LightClient:     lightclientClient,
+	}, nil
 }
