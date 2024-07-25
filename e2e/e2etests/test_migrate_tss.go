@@ -113,9 +113,10 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		allTss.TssList[1].TssPubkey,
 	)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgUpdateTss)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgUpdateTss)
 	require.NoError(r, err)
 
+	r.Logger.Print("Brodacast tx : ", res.TxHash)
 	// Wait for atleast one block for the TSS to be updated
 	time.Sleep(8 * time.Second)
 
