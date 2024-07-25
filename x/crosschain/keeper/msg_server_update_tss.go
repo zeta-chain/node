@@ -73,6 +73,7 @@ func (k msgServer) UpdateTssAddress(
 	return &types.MsgUpdateTssAddressResponse{}, nil
 }
 
+// GetChainsSupportingMigration returns the chains that support migration.
 func (k *Keeper) GetChainsSupportingMigration(ctx sdk.Context) []chains.Chain {
 	return append(k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum),
 		k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_bitcoin)...)

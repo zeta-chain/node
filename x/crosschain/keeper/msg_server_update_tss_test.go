@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -327,5 +328,24 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(t, tssOld, tss)
 		migrators := k.GetObserverKeeper().GetAllTssFundMigrators(ctx)
 		require.Equal(t, len(k.GetObserverKeeper().GetSupportedChains(ctx)), len(migrators))
+	})
+}
+
+func TestKeeper_GetChainsSupportingMigration(t *testing.T) {
+	t.Run("should return supported chains", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+		}
+		zk.ObserverKeeper.SetChainParamsList(ctx, chainParamsList)
+
+		chainsSupportingMigration := k.GetChainsSupportingMigration(ctx)
+		for _, chain := range chainsSupportingMigration {
+			require.NotEqual(t, chain.Consensus, chains.Consensus_solana_consensus)
+			require.NotEqual(t, chain.Consensus, chains.Consensus_op_stack)
+			require.NotEqual(t, chain.Consensus, chains.Consensus_tendermint)
+		}
 	})
 }
