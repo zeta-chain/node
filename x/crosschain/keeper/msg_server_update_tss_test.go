@@ -332,7 +332,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 }
 
 func TestKeeper_GetChainsSupportingMigration(t *testing.T) {
-	t.Run("should return supported chains", func(t *testing.T) {
+	t.Run("should return only ethereum and bitcoin chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
@@ -346,6 +346,7 @@ func TestKeeper_GetChainsSupportingMigration(t *testing.T) {
 			require.NotEqual(t, chain.Consensus, chains.Consensus_solana_consensus)
 			require.NotEqual(t, chain.Consensus, chains.Consensus_op_stack)
 			require.NotEqual(t, chain.Consensus, chains.Consensus_tendermint)
+			require.Equal(t, chain.IsExternal, true)
 		}
 	})
 }

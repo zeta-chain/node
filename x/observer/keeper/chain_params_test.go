@@ -122,7 +122,10 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
-			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
 		consensus := chains.Consensus_ethereum
@@ -138,7 +141,10 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
-			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
 		consensus := chains.Consensus_bitcoin
@@ -153,7 +159,10 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
-			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
 		consensus := chains.Consensus_solana_consensus
@@ -175,7 +184,10 @@ func TestKeeper_GetSupportedForeignChains(t *testing.T) {
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
-			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
 
