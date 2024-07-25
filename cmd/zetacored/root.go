@@ -246,8 +246,12 @@ func (ac appCreator) newApp(
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
+	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
+	if maxTxs <= 0 {
+		maxTxs = zetamempool.DefaultMaxTxs
+	}
 	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
-		app.SetMempool(zetamempool.DefaultPriorityMempool())
+		app.SetMempool(zetamempool.NewPriorityMempool(zetamempool.PriorityNonceWithMaxTx(maxTxs)))
 	})
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {

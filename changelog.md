@@ -102,6 +102,7 @@
 * [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
+* [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
 
 ### CI
 
