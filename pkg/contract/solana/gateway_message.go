@@ -46,7 +46,7 @@ func (msg *MsgWithdraw) Hash() [32]byte {
 	binary.BigEndian.PutUint64(buff, msg.Nonce)
 	message = append(message, buff...)
 
-	binary.BigEndian.PutUint64(buff, msg.Nonce)
+	binary.BigEndian.PutUint64(buff, msg.Amount)
 	message = append(message, buff...)
 
 	message = append(message, msg.To.Bytes()...)

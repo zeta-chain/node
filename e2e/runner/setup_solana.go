@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"fmt"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -69,7 +67,6 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	pda := solanacontract.PdaInfo{}
 	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
 	require.NoError(r, err)
-	fmt.Printf("pda parsed: %+v\n", pda)
 	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])
 
 	// check the TSS address

@@ -153,7 +153,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		context := CreateAppContext(evmChain, btcChain, solChain, evmChainParamsNew, btcChainParams, solChainParams)
 
 		// BSC signer should not be found
-		_, err := orchestrator.resolveSigner(context, chains.BscMainnet)
+		_, err := orchestrator.resolveSigner(context, chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "signer not found")
 	})
 	t.Run("should be able to update evm connector and erc20 custody address", func(t *testing.T) {
@@ -170,7 +170,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		context := CreateAppContext(evmChain, btcChain, solChain, evmChainParamsNew, btcChainParams, solChainParams)
 
 		// update signer with new connector and erc20 custody address
-		signer, err := orchestrator.resolveSigner(context, evmChain)
+		signer, err := orchestrator.resolveSigner(context, evmChain.ChainId)
 		require.NoError(t, err)
 		require.Equal(t, testutils.OtherAddress1, signer.GetZetaConnectorAddress().Hex())
 		require.Equal(t, testutils.OtherAddress2, signer.GetERC20CustodyAddress().Hex())
@@ -189,7 +189,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		context := CreateAppContext(evmChain, btcChain, solChain, evmChainParams, btcChainParams, solChainParamsNew)
 
 		// update signer with new gateway address
-		signer, err := orchestrator.resolveSigner(context, solChain)
+		signer, err := orchestrator.resolveSigner(context, solChain.ChainId)
 		require.NoError(t, err)
 		require.Equal(t, solChainParamsNew.GatewayAddress, signer.GetGatewayAddress())
 	})
@@ -276,7 +276,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		)
 		appContext := CreateAppContext(evmChain, btcChain, solChain, evmChainParamsNew, btcChainParams, solChainParams)
 		// BSC chain observer should not be found
-		_, err := orchestrator.resolveObserver(appContext, chains.BscMainnet)
+		_, err := orchestrator.resolveObserver(appContext, chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "observer not found")
 	})
 	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
@@ -292,7 +292,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		)
 		appContext := CreateAppContext(evmChain, btcChain, solChain, evmChainParamsNew, btcChainParams, solChainParams)
 		// update evm chain observer with new chain params
-		chainOb, err := orchestrator.resolveObserver(appContext, evmChain)
+		chainOb, err := orchestrator.resolveObserver(appContext, evmChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.GetChainParams()))
@@ -310,7 +310,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		)
 		appContext := CreateAppContext(btcChain, btcChain, solChain, evmChainParams, btcChainParamsNew, solChainParams)
 		// BTC testnet chain observer should not be found
-		_, err := orchestrator.resolveObserver(appContext, chains.BitcoinTestnet)
+		_, err := orchestrator.resolveObserver(appContext, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "observer not found")
 	})
 	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
@@ -326,7 +326,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		)
 		appContext := CreateAppContext(btcChain, btcChain, solChain, evmChainParams, btcChainParamsNew, solChainParams)
 		// update btc chain observer with new chain params
-		chainOb, err := orchestrator.resolveObserver(appContext, btcChain)
+		chainOb, err := orchestrator.resolveObserver(appContext, btcChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.GetChainParams()))
@@ -344,7 +344,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		)
 		appContext := CreateAppContext(solChain, btcChain, solChain, evmChainParams, btcChainParams, solChainParamsNew)
 		// Solana Devnet chain observer should not be found
-		_, err := orchestrator.resolveObserver(appContext, chains.SolanaDevnet)
+		_, err := orchestrator.resolveObserver(appContext, chains.SolanaDevnet.ChainId)
 		require.ErrorContains(t, err, "observer not found")
 	})
 	t.Run("chain params in solana chain observer should be updated successfully", func(t *testing.T) {
@@ -360,7 +360,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		)
 		appContext := CreateAppContext(solChain, btcChain, solChain, evmChainParams, btcChainParams, solChainParamsNew)
 		// update solana chain observer with new chain params
-		chainOb, err := orchestrator.resolveObserver(appContext, solChain)
+		chainOb, err := orchestrator.resolveObserver(appContext, solChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*solChainParamsNew, chainOb.GetChainParams()))

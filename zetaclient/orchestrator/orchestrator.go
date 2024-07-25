@@ -148,16 +148,14 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 }
 
 // returns signer with updated chain parameters.
-func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chain chains.Chain) (interfaces.ChainSigner, error) {
-	chainID := chain.ChainId
+func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (interfaces.ChainSigner, error) {
 	signer, err := oc.getSigner(chainID)
 	if err != nil {
 		return nil, err
 	}
 
-	// update chain parameters for signer according to chain consensus
-	switch chain.Consensus {
-	case chains.Consensus_ethereum:
+	// update signer chain parameters
+	if chains.IsEVMChain(chainID, app.GetAdditionalChains()) {
 		evmParams, found := app.GetEVMChainParams(chainID)
 		if found {
 			// update zeta connector and ERC20 custody addresses
@@ -177,7 +175,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chain chains.Chain) 
 					Msgf("updated zeta connector address for chain %d", chainID)
 			}
 		}
-	case chains.Consensus_solana_consensus:
+	} else if chains.IsSolanaChain(chainID, app.GetAdditionalChains()) {
 		_, solParams, found := app.GetSolanaChainParams()
 		if found {
 			// update solana gateway address
@@ -189,6 +187,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chain chains.Chain) 
 			}
 		}
 	}
+
 	return signer, nil
 }
 
@@ -205,8 +204,7 @@ func (oc *Orchestrator) getSigner(chainID int64) (interfaces.ChainSigner, error)
 }
 
 // returns chain observer with updated chain parameters
-func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chain chains.Chain) (interfaces.ChainObserver, error) {
-	chainID := chain.ChainId
+func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (interfaces.ChainObserver, error) {
 	observer, err := oc.getObserver(chainID)
 	if err != nil {
 		return nil, err
@@ -373,13 +371,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						}
 
 						// update chain parameters for signer and chain observer
-						signer, err := oc.resolveSigner(app, c)
+						signer, err := oc.resolveSigner(app, c.ChainId)
 						if err != nil {
 							oc.logger.Error().Err(err).
 								Msgf("runScheduler: unable to resolve signer for chain %d", c.ChainId)
 							continue
 						}
-						ob, err := oc.resolveObserver(app, c)
+						ob, err := oc.resolveObserver(app, c.ChainId)
 						if err != nil {
 							oc.logger.Error().Err(err).
 								Msgf("runScheduler: resolveObserver failed for chain %d", c.ChainId)
