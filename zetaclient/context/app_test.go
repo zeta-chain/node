@@ -22,7 +22,7 @@ func TestNew(t *testing.T) {
 		logger  = zerolog.Nop()
 	)
 
-	t.Run("should create new zetacore context with empty config", func(t *testing.T) {
+	t.Run("should create new AppContext with empty config", func(t *testing.T) {
 		appContext := context.New(testCfg, logger)
 		require.NotNil(t, appContext)
 
@@ -58,7 +58,7 @@ func TestNew(t *testing.T) {
 			RPCPassword: "test_password",
 		}
 
-		// create zetacore context with 0 chain id
+		// create AppContext with 0 chain id
 		appContext := context.New(testCfg, logger)
 		require.NotNil(t, appContext)
 
@@ -69,7 +69,7 @@ func TestNew(t *testing.T) {
 		require.Nil(t, btcChainParams)
 	})
 
-	t.Run("should create new zetacore context with config containing evm chain params", func(t *testing.T) {
+	t.Run("should create new AppContext with config containing evm chain params", func(t *testing.T) {
 		// ARRANGE
 		var (
 			eth   = chains.Ethereum.ChainId
@@ -114,7 +114,7 @@ func TestNew(t *testing.T) {
 		require.Equal(t, &maticChainParams, evmChainParams2)
 	})
 
-	t.Run("should create new zetacore context with config containing btc config", func(t *testing.T) {
+	t.Run("should create new AppContext with config containing btc config", func(t *testing.T) {
 		testCfg := config.New(false)
 		testCfg.BitcoinConfig = config.BTCConfig{
 			RPCUsername: "test username",
@@ -133,7 +133,7 @@ func TestAppContextUpdate(t *testing.T) {
 		logger  = zerolog.Nop()
 	)
 
-	t.Run("should update zetacore context after being created from empty config", func(t *testing.T) {
+	t.Run("should update AppContext after being created from empty config", func(t *testing.T) {
 		appContext := context.New(testCfg, logger)
 		require.NotNil(t, appContext)
 
@@ -212,7 +212,7 @@ func TestAppContextUpdate(t *testing.T) {
 	})
 
 	t.Run(
-		"should update zetacore context after being created from config with evm and btc chain params",
+		"should update AppContext after being created from config with evm and btc chain params",
 		func(t *testing.T) {
 			testCfg := config.New(false)
 			testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
@@ -340,9 +340,9 @@ func TestIsOutboundObservationEnabled(t *testing.T) {
 	t.Run("should return false if outbound flag is disabled", func(t *testing.T) {
 		flagsDisabled := ccFlags
 		flagsDisabled.IsOutboundEnabled = false
-		coreContextDisabled := makeAppContext(evmChain, chainParams, flagsDisabled, verificationFlags)
+		appContextDisabled := makeAppContext(evmChain, chainParams, flagsDisabled, verificationFlags)
 
-		require.False(t, coreContextDisabled.IsOutboundObservationEnabled(*chainParams))
+		require.False(t, appContextDisabled.IsOutboundObservationEnabled(*chainParams))
 	})
 }
 
@@ -554,13 +554,13 @@ func makeAppContext(
 		Chain: evmChain,
 	}
 
-	// create zetacore context
-	coreContext := context.New(cfg, logger)
+	// create AppContext
+	appContext := context.New(cfg, logger)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 
 	// feed chain params
-	coreContext.Update(
+	appContext.Update(
 		&observertypes.Keygen{},
 		[]chains.Chain{evmChain},
 		evmChainParamsMap,
@@ -573,5 +573,5 @@ func makeAppContext(
 		true,
 	)
 
-	return coreContext
+	return appContext
 }

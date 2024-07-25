@@ -9,10 +9,14 @@ get_zetacored_version() {
   retries=10
   node_info=""
   for ((attempt=1; attempt<=$retries; attempt++)); do
-    node_info=$(curl -s zetacore0:1317/cosmos/base/tendermint/v1beta1/node_info)
+    node_info=$(curl -s -f zetacore0:1317/cosmos/base/tendermint/v1beta1/node_info)
     if [[ $? == 0 ]]; then
-      echo "$node_info" | jq -r '.application_version.version'
-      return
+      version=$(echo "$node_info" | jq -r '.application_version.version')
+      # only return versions containing dots to avoid empty strings and "null"
+      if [[ "$version" == *.* ]]; then
+        echo "$version"
+        return
+      fi
     fi
     sleep 1
   done
@@ -132,12 +136,12 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   NEW_VERSION=$(get_zetacored_version)
 
+  echo "upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
+
   if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
     echo "version did not change after upgrade height, maybe the upgrade did not run?"
     exit 2
   fi
-
-  echo "upgrade complete: ${OLD_VERSION} -> ${NEW_VERSION}"
 
   # wait for zevm endpoint to come up
   sleep 10

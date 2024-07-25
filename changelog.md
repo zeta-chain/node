@@ -34,6 +34,7 @@
 * [2465](https://github.com/zeta-chain/node/pull/2465) - add Solana inbound SOL token observation
 * [2497](https://github.com/zeta-chain/node/pull/2416) - support for runtime chain (de)provisioning
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
+* [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 
 ### Refactor
 
@@ -65,6 +66,7 @@
 * [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 * [2515](https://github.com/zeta-chain/node/pull/2515) - replace chainName by chainID for ChainNonces indexing
 * [2541](https://github.com/zeta-chain/node/pull/2541) - deprecate ChainName field in Chain object
+* [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
 
 ### Tests
 
@@ -102,6 +104,8 @@
 * [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
+* [2545](https://github.com/zeta-chain/node/pull/2545) - check solana minimum rent exempt to avoid outbound failure
+* [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
 
 ### CI
 
