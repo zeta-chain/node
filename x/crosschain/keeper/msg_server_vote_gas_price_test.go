@@ -263,7 +263,64 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		assert.Equal(t, []uint64{2}, gp.PriorityFees)
 	})
 
-	t.Run("tolerates lack of priorityFee", func(t *testing.T) {
+	t.Run("tolerates lack of priorityFee of the same signer", func(t *testing.T) {
+		// ARRANGE
+		// Given a keeper with grpc server and some mocks
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+			UseFungibleMock: true,
+		})
+
+		// Given a chain
+		chain := chains.Chain{ChainId: 5}
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.
+			On("GetSupportedChainFromChainID", mock.Anything, chain.ChainId).
+			Return(chain, true)
+
+		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		creator := sample.AccAddress()
+
+		// Given an existing gas price
+		// Note that it MISSES priorityFee
+		k.SetGasPrice(ctx, types.GasPrice{
+			Creator:   creator,
+			ChainId:   5,
+			Signers:   []string{creator},
+			BlockNums: []uint64{100},
+			Prices:    []uint64{3},
+		})
+
+		// ACT
+		// When a new gas price is voted with a priority fee
+		_, err := msgServer.VoteGasPrice(ctx, &types.MsgVoteGasPrice{
+			Creator:     creator,
+			ChainId:     5,
+			BlockNumber: 101,
+			Price:       4,
+			PriorityFee: 2,
+		})
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Then gas prices should be updated as well as priority fee
+		gp, found := k.GetGasPrice(ctx, 5)
+
+		assert.True(t, found)
+		assert.Equal(t, []string{creator}, gp.Signers)
+		assert.Equal(t, []uint64{101}, gp.BlockNums)
+		assert.Equal(t, []uint64{4}, gp.Prices)
+		assert.Equal(t, []uint64{2}, gp.PriorityFees)
+	})
+
+	t.Run("tolerates lack of priorityFee of another signer", func(t *testing.T) {
 		// ARRANGE
 		// Given a keeper with grpc server and some mocks
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
