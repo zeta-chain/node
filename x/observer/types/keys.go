@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,6 +43,10 @@ func KeyPrefix(p string) []byte {
 
 func BallotListKeyPrefix(p int64) []byte {
 	return []byte(fmt.Sprintf("%d", p))
+}
+
+func ChainNoncesKeyPrefix(chainID int64) []byte {
+	return []byte(strconv.FormatInt(chainID, 10))
 }
 
 const (

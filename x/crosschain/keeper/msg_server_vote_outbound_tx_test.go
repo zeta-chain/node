@@ -262,7 +262,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Mock Failed ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, senderChain, asset)
-		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainId).
 			Return(observertypes.ChainNonces{}, false)
 		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 

@@ -331,7 +331,7 @@ func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain ch
 	tss := sample.Tss()
 	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(senderChain, true).Once()
-	m.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+	m.On("GetChainNonces", mock.Anything, senderChain.ChainId).
 		Return(observertypes.ChainNonces{Nonce: nonce}, true)
 	m.On("GetTSS", mock.Anything).
 		Return(tss, true)

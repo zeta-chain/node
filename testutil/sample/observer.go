@@ -170,22 +170,21 @@ func BlameRecordsList(t *testing.T, n int) []types.Blame {
 	return blameList
 }
 
-func ChainNonces(t *testing.T, index string) types.ChainNonces {
-	r := newRandFromStringSeed(t, index)
+func ChainNonces(chainID int64) types.ChainNonces {
+	r := newRandFromSeed(chainID)
 	return types.ChainNonces{
 		Creator:         AccAddress(),
-		Index:           index,
-		ChainId:         r.Int63(),
+		ChainId:         chainID,
 		Nonce:           r.Uint64(),
 		Signers:         []string{AccAddress(), AccAddress()},
 		FinalizedHeight: r.Uint64(),
 	}
 }
 
-func ChainNoncesList(t *testing.T, n int) []types.ChainNonces {
+func ChainNoncesList(n int) []types.ChainNonces {
 	chainNoncesList := make([]types.ChainNonces, n)
 	for i := 0; i < n; i++ {
-		chainNoncesList[i] = ChainNonces(t, fmt.Sprintf("%d", i))
+		chainNoncesList[i] = ChainNonces(int64(i))
 	}
 	return chainNoncesList
 }

@@ -45,7 +45,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
@@ -61,7 +61,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		_, err := ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -77,7 +77,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -101,7 +101,6 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			memDBPath,
 			lastBlock,
 			mocks.MockChainParams(chainID, confirmation),
 		)
@@ -132,7 +131,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
@@ -148,7 +147,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		_, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -164,7 +163,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -188,7 +187,6 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			memDBPath,
 			lastBlock,
 			mocks.MockChainParams(chainID, confirmation),
 		)
@@ -219,7 +217,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
@@ -229,7 +227,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		_, err := ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -239,7 +237,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not TSS address")
 		require.Equal(t, "", ballot)
@@ -250,7 +248,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not a successful tx")
 		require.Equal(t, "", ballot)
@@ -261,7 +259,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
 		ballot, err := ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -278,7 +276,7 @@ func Test_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	cctx := testutils.LoadCctxByInbound(t, chainID, coin.CoinType_Zeta, inboundHash)
 
 	// parse ZetaSent event
-	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, mocks.MockChainParams(1, 1))
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
 	connector := mocks.MockConnectorNonEth(t, chainID)
 	event := testutils.ParseReceiptZetaSent(receipt, connector)
 
@@ -327,7 +325,7 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	cctx := testutils.LoadCctxByInbound(t, chainID, coin.CoinType_ERC20, inboundHash)
 
 	// parse Deposited event
-	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, mocks.MockChainParams(1, 1))
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
 	custody := mocks.MockERC20Custody(t, chainID)
 	event := testutils.ParseReceiptERC20Deposited(receipt, custody)
 	sender := ethcommon.HexToAddress(tx.From)
@@ -385,7 +383,7 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	require.NoError(t, evm.ValidateEvmTransaction(txDonation))
 
 	// create test compliance config
-	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, memDBPath, 1, mocks.MockChainParams(1, 1))
+	ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
 	cfg := config.Config{
 		ComplianceConfig: config.ComplianceConfig{},
 	}
@@ -462,7 +460,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should observe TSS receive in block", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 
 		// feed archived block and receipt
 		evmJSONRPC.WithBlock(block)
@@ -471,13 +469,13 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("should not observe on error getting block", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 		err := ob.ObserveTSSReceiveInBlock(ctx, blockNumber)
 		// error getting block is expected because the mock JSONRPC contains no block
 		require.ErrorContains(t, err, "error getting block")
 	})
 	t.Run("should not observe on error getting receipt", func(t *testing.T) {
-		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, memDBPath, lastBlock, chainParam)
+		ob := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 		evmJSONRPC.WithBlock(block)
 		err := ob.ObserveTSSReceiveInBlock(ctx, blockNumber)
 		// error getting block is expected because the mock evmClient contains no receipt

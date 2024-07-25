@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/go-tss/blame"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -46,9 +46,7 @@ func (c *Client) PostVoteBlockHeader(
 func (c *Client) PostVoteGasPrice(
 	ctx context.Context,
 	chain chains.Chain,
-	gasPrice uint64,
-	supply string,
-	blockNum uint64,
+	gasPrice uint64, priorityFee, blockNum uint64,
 ) (string, error) {
 	// apply gas price multiplier for the chain
 	multiplier, err := GasPriceMultiplier(chain)
@@ -59,7 +57,7 @@ func (c *Client) PostVoteGasPrice(
 	// #nosec G115 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := c.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
+	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, priorityFee, blockNum)
 
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {

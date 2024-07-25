@@ -89,7 +89,6 @@ func SetupStateForProcessLogs(
 	})
 
 	zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-		Index:   chain.ChainName.String(),
 		ChainId: chain.ChainId,
 		Nonce:   0,
 	})
@@ -407,7 +406,6 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-			Index:   chain.ChainName.String(),
 			ChainId: chain.ChainId,
 			Nonce:   1,
 		})
@@ -647,7 +645,6 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-			Index:   chain.ChainName.String(),
 			ChainId: chain.ChainId,
 			Nonce:   1,
 		})

@@ -27,9 +27,6 @@ const (
 	EventZetaReverted  = "ZetaReverted"
 	EventERC20Deposit  = "Deposited"
 	EventERC20Withdraw = "Withdrawn"
-
-	// SQLiteMemory is a SQLite in-memory database connection string.
-	SQLiteMemory = "file::memory:?cache=shared"
 )
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

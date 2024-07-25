@@ -230,6 +230,10 @@ install-zetae2e: go.sum
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
+solana:
+	@echo "Building solana docker image"
+	$(DOCKER) build -t solana-local -f contrib/localnet/solana/Dockerfile contrib/localnet/solana/
+
 start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
@@ -259,6 +263,11 @@ start-tss-migration-test: zetanode
 	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-solana-test: zetanode solana
+	@echo "--> Starting solana test"
+	export E2E_ARGS="--skip-regular --test-solana" && \
+	cd contrib/localnet/ && $(DOCKER) compose --profile solana -f docker-compose.yml up -d
+
 ###############################################################################
 ###                         Upgrade Tests              						###
 ###############################################################################
@@ -267,12 +276,12 @@ start-tss-migration-test: zetanode
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v17' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v18' .
 .PHONY: zetanode-upgrade
 else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/ci-testing-node/releases/download/v17.0.1-internal' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v18.0.0' .
 .PHONY: zetanode-upgrade
 endif
 

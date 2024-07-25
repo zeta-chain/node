@@ -41,9 +41,18 @@ export declare class GasPrice extends Message<GasPrice> {
   prices: bigint[];
 
   /**
+   * index of the median gas price in the prices array
+   *
    * @generated from field: uint64 median_index = 7;
    */
   medianIndex: bigint;
+
+  /**
+   * priority fees for EIP-1559
+   *
+   * @generated from field: repeated uint64 priority_fees = 8;
+   */
+  priorityFees: bigint[];
 
   constructor(data?: PartialMessage<GasPrice>);
 

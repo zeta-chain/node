@@ -26,16 +26,18 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
-var _ interfaces.ChainObserver = &Observer{}
+var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Observer is the observer for evm chains
 type Observer struct {
 	// base.Observer implements the base chain observer
 	base.Observer
+
+	priorityFeeConfig
 
 	// evmClient is the EVM client for the observed chain
 	evmClient interfaces.EVMRPCClient
@@ -53,6 +55,12 @@ type Observer struct {
 	outboundConfirmedTransactions map[string]*ethtypes.Transaction
 }
 
+// priorityFeeConfig is the configuration for priority fee
+type priorityFeeConfig struct {
+	checked   bool
+	supported bool
+}
+
 // NewObserver returns a new EVM chain observer
 func NewObserver(
 	ctx context.Context,
@@ -61,7 +69,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
+	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -74,10 +82,11 @@ func NewObserver(
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
 		ts,
+		database,
 		logger,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
 	// create evm observer
@@ -88,12 +97,12 @@ func NewObserver(
 		outboundPendingTransactions:   make(map[string]*ethtypes.Transaction),
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
+		priorityFeeConfig:             priorityFeeConfig{},
 	}
 
-	// open database and load data
-	err = ob.LoadDB(ctx, dbpath)
-	if err != nil {
-		return nil, err
+	// load last block scanned
+	if err = ob.LoadLastBlockScanned(ctx); err != nil {
+		return nil, errors.Wrap(err, "unable to load last block scanned")
 	}
 
 	return ob, nil
@@ -166,6 +175,11 @@ func FetchZetaTokenContract(
 
 // Start all observation routines for the evm chain
 func (ob *Observer) Start(ctx context.Context) {
+	if noop := ob.Observer.Start(); noop {
+		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
+		return
+	}
+
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
@@ -282,75 +296,6 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 	return nil
 }
 
-// WatchGasPrice watches evm chain for gas prices and post to zetacore
-// TODO(revamp): move ticker to ticker file
-// TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchGasPrice(ctx context.Context) error {
-	// report gas price right away as the ticker takes time to kick in
-	err := ob.PostGasPrice(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-	}
-
-	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchGasPrice_%d", ob.Chain().ChainId),
-		ob.GetChainParams().GasPriceTicker,
-	)
-	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
-		return err
-	}
-	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
-				continue
-			}
-			err = ob.PostGasPrice(ctx)
-			if err != nil {
-				ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-			}
-			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.Logger().GasPrice)
-		case <-ob.StopChannel():
-			ob.Logger().GasPrice.Info().Msg("WatchGasPrice stopped")
-			return nil
-		}
-	}
-}
-
-// PostGasPrice posts gas price to zetacore
-// TODO(revamp): move to gas price file
-func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	// GAS PRICE
-	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("Err SuggestGasPrice:")
-		return err
-	}
-	blockNum, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
-		return err
-	}
-
-	// SUPPLY
-	supply := "100" // lockedAmount on ETH, totalSupply on other chains
-
-	zetaHash, err := ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), supply, blockNum)
-	if err != nil {
-		ob.Logger().GasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
-		return err
-	}
-	_ = zetaHash
-
-	return nil
-}
-
 // TransactionByHash query transaction by hash via JSON-RPC
 // TODO(revamp): update this method as a pure RPC method that takes two parameters (jsonRPC, and txHash) and move to upper package to file rpc.go
 func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
@@ -420,35 +365,6 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 		}
 	}
 	return block, nil
-}
-
-// LoadDB open sql database and load data into EVM observer
-// TODO(revamp): move to a db file
-func (ob *Observer) LoadDB(ctx context.Context, dbPath string) error {
-	if dbPath == "" {
-		return errors.New("empty db path")
-	}
-
-	// open database
-	err := ob.OpenDB(dbPath, "")
-	if err != nil {
-		return errors.Wrapf(err, "error OpenDB for chain %d", ob.Chain().ChainId)
-	}
-
-	// run auto migration
-	// transaction and receipt tables are used nowhere but we still run migration in case they are needed in future
-	err = ob.DB().AutoMigrate(
-		&clienttypes.ReceiptSQLType{},
-		&clienttypes.TransactionSQLType{},
-	)
-	if err != nil {
-		return errors.Wrapf(err, "error AutoMigrate for chain %d", ob.Chain().ChainId)
-	}
-
-	// load last block scanned
-	err = ob.LoadLastBlockScanned(ctx)
-
-	return err
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database

@@ -382,6 +382,21 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
+	// deploy sol zrc20
+	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		addr.String(),
+		"",
+		chains.SolanaLocalnet.ChainId,
+		9,
+		"Solana",
+		"SOL",
+		coin.CoinType_Gas,
+		100000,
+	))
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+	}
+
 	// deploy erc20 zrc20
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),

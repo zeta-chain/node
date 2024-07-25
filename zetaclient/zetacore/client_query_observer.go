@@ -84,7 +84,7 @@ func (c *Client) GetBallotByID(ctx context.Context, id string) (*types.QueryBall
 
 // GetNonceByChain returns the nonce by chain
 func (c *Client) GetNonceByChain(ctx context.Context, chain chains.Chain) (types.ChainNonces, error) {
-	in := &types.QueryGetChainNoncesRequest{Index: chain.ChainName.String()}
+	in := &types.QueryGetChainNoncesRequest{ChainId: chain.ChainId}
 
 	resp, err := c.client.observer.ChainNonces(ctx, in)
 	if err != nil {

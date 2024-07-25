@@ -331,7 +331,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
 		// mock failed UpdateNonce
-		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainId).
 			Return(observertypes.ChainNonces{}, false)
 
 		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)

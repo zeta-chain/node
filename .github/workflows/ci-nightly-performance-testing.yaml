@@ -8,7 +8,9 @@ on:
         required: false
         default: 'http://localhost:9545'
   schedule:
-    - cron: '0 0 * * *' # Runs every day at midnight UTC
+    # run at 6AM UTC Daily
+    # 6AM UTC -> 11PM PT
+    - cron: "0 6 * * *"
 
 jobs:
   nightly_evm_api_performance_test:
@@ -35,12 +37,15 @@ jobs:
       - name: "CONFIGURE:PERFORMANCE:TEMPLATE"
         env:
           CLOUDFLARE_UUID: ${{ secrets.CLOUDFLARE_UUID }}
+          ENDPOINT: ${{ inputs.endpoint || 'http://localhost:9545' }}
+          GITHUB_ACTION: ${{ github.action }}
         run: |
           # Replace -=endpoint_to_test=- placeholder in the art.yaml file with the endpoint_to_test value
-          sed -i "s|-=endpoint_to_test=-|${{inputs.endpoint}}|g" .github/actions/performance-tests/art.yaml
-          echo "CLOUDFLARE_UUID=${{ secrets.CLOUDFLARE_UUID }}" >> ${GITHUB_ENV}
+          sed -i "s|-=endpoint_to_test=-|${ENDPOINT}|g" .github/actions/performance-tests/art.yaml
           # Replace -=CLOUDFLARE_UUID=- placeholder in the art.yaml file with the correct value
           sed -i "s|-=CLOUDFLARE_UUID=-|${CLOUDFLARE_UUID}|g" .github/actions/performance-tests/art.yaml
+          # Replace -=GITHUB_ACTION=- placeholder in the art.yaml file with the correct value
+          sed -i "s|-=GITHUB_ACTION=-|${GITHUB_ACTION}|g" .github/actions/performance-tests/art.yaml
           cat .github/actions/performance-tests/art.yaml
 
       - name: "EXECUTE:PERFORMANCE:TESTS"
@@ -109,5 +114,6 @@ jobs:
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          job_name: "NIGHTLY:EVM:API:PERFORMANCE:TEST"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}

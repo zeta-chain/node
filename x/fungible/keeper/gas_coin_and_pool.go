@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -35,7 +34,6 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	if !found {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
-	name := fmt.Sprintf("%s-%s", gasAssetName, chain.ChainName)
 
 	transferGasLimit := gasLimit
 
@@ -55,7 +53,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 
 	zrc20Addr, err := k.DeployZRC20Contract(
 		ctx,
-		name,
+		gasAssetName,
 		symbol,
 		decimals,
 		chain.ChainId,
@@ -68,7 +66,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute(name, zrc20Addr.String()),
+			sdk.NewAttribute(gasAssetName, zrc20Addr.String()),
 		),
 	)
 	err = k.SetGasCoin(ctx, big.NewInt(chain.ChainId), zrc20Addr)

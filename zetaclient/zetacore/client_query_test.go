@@ -568,14 +568,13 @@ func TestZetacore_GetNonceByChain(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainNoncesResponse{
 		ChainNonces: observertypes.ChainNonces{
 			Creator:         "",
-			Index:           "",
 			ChainId:         chain.ChainId,
 			Nonce:           8446,
 			Signers:         nil,
 			FinalizedHeight: 0,
 		},
 	}
-	input := observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()}
+	input := observertypes.QueryGetChainNoncesRequest{ChainId: chain.ChainId}
 	method := "/zetachain.zetacore.observer.Query/ChainNonces"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 

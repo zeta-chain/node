@@ -105,7 +105,7 @@ func (k msgServer) WhitelistERC20(
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain params not found for chain id (%d)", msg.ChainId)
 	}
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, msg.ChainId)
+	medianGasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, msg.ChainId)
 	if !isFound {
 		return nil, errorsmod.Wrapf(
 			types.ErrUnableToGetGasPrice,
@@ -113,7 +113,21 @@ func (k msgServer) WhitelistERC20(
 			msg.ChainId,
 		)
 	}
-	medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
+	// overpays gas price by 2x
+	const multiplier = 2
+
+	medianGasPrice = medianGasPrice.MulUint64(multiplier)
+	priorityFee = priorityFee.MulUint64(multiplier)
+
+	// should not happen
+	if priorityFee.GT(medianGasPrice) {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidGasAmount,
+			"priorityFee %s is greater than median gasPrice %s",
+			priorityFee.String(),
+			medianGasPrice.String(),
+		)
+	}
 
 	// calculate the cctx index
 	// we use the deployed zrc20 contract address to generate a unique index
@@ -155,6 +169,7 @@ func (k msgServer) WhitelistERC20(
 				TssNonce:               0,
 				GasLimit:               100_000,
 				GasPrice:               medianGasPrice.String(),
+				GasPriorityFee:         priorityFee.String(),
 				Hash:                   "",
 				BallotIndex:            "",
 				ObservedExternalHeight: 0,

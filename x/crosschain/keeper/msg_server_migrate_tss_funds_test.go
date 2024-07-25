@@ -61,16 +61,16 @@ func setupTssMigrationParams(
 		Tss:       currentTss.TssPubkey,
 	})
 	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
-		Creator:     "",
-		Index:       "",
-		ChainId:     chain.ChainId,
-		Signers:     nil,
-		BlockNums:   nil,
-		Prices:      []uint64{100000, 100000, 100000},
-		MedianIndex: 1,
+		Creator:      "",
+		Index:        "",
+		ChainId:      chain.ChainId,
+		Signers:      nil,
+		BlockNums:    nil,
+		Prices:       []uint64{100000, 100000, 100000},
+		PriorityFees: []uint64{100, 300, 200},
+		MedianIndex:  1,
 	})
 	k.GetObserverKeeper().SetChainNonces(ctx, observertypes.ChainNonces{
-		Index:   chain.ChainName.String(),
 		ChainId: chain.ChainId,
 		Nonce:   1,
 	})
@@ -99,7 +99,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
-		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+		gp, priorityFee, found := k.GetMedianGasValues(ctx, chain.ChainId)
 		require.True(t, found)
 		msg := crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -117,6 +117,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		multipliedValue, err := gas.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
 		require.NoError(t, err)
 		require.Equal(t, multipliedValue.String(), cctx.GetCurrentOutboundParam().GasPrice)
+		require.Equal(t, priorityFee.MulUint64(2).String(), cctx.GetCurrentOutboundParam().GasPriorityFee)
 	})
 
 	t.Run("test btc chain", func(t *testing.T) {
@@ -132,7 +133,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, chain, amount, true, true)
-		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+		gp, priorityFee, found := k.GetMedianGasValues(ctx, chain.ChainId)
 		require.True(t, found)
 
 		msg := crosschaintypes.MsgMigrateTssFunds{
@@ -149,6 +150,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
 		require.Equal(t, gp.MulUint64(2).String(), cctx.GetCurrentOutboundParam().GasPrice)
+		require.Equal(t, priorityFee.MulUint64(2).String(), cctx.GetCurrentOutboundParam().GasPriorityFee)
 	})
 }
 

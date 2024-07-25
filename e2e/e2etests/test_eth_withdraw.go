@@ -14,18 +14,11 @@ import (
 func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	approvedAmount := big.NewInt(1e18)
 	withdrawalAmount, ok := new(big.Int).SetString(args[0], 10)
 	require.True(r, ok, "Invalid withdrawal amount specified for TestEtherWithdraw.")
-	require.Equal(
-		r,
-		-1,
-		withdrawalAmount.Cmp(approvedAmount),
-		"Withdrawal amount must be less than the approved amount (1e18).",
-	)
 
-	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approvedAmount)
+	// approve 1 unit of the gas token to cover the gas fee transfer
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	require.NoError(r, err)
 
 	r.Logger.EVMTransaction(*tx, "approve")

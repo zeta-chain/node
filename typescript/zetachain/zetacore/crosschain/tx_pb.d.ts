@@ -420,14 +420,14 @@ export declare class MsgVoteGasPrice extends Message<MsgVoteGasPrice> {
   price: bigint;
 
   /**
+   * @generated from field: uint64 priority_fee = 6;
+   */
+  priorityFee: bigint;
+
+  /**
    * @generated from field: uint64 block_number = 4;
    */
   blockNumber: bigint;
-
-  /**
-   * @generated from field: string supply = 5;
-   */
-  supply: string;
 
   constructor(data?: PartialMessage<MsgVoteGasPrice>);
 

@@ -21,27 +21,28 @@ func (s *CliTestSuite) TestShowChainNonces() {
 	}
 	for _, tc := range []struct {
 		desc string
-		id   string
+		id   int64
 		args []string
 		err  error
 		obj  types.ChainNonces
 	}{
 		{
 			desc: "found",
-			id:   objs[0].Index,
+			id:   objs[0].ChainId,
 			args: common,
 			obj:  objs[0],
 		},
 		{
 			desc: "not found",
-			id:   "not_found",
+			id:   1000,
 			args: common,
 			err:  status.Error(codes.InvalidArgument, "not found"),
 		},
 	} {
 		tc := tc
 		s.Run(tc.desc, func() {
-			args := []string{tc.id}
+			chainIDStr := fmt.Sprintf("%d", tc.id)
+			args := []string{chainIDStr}
 			args = append(args, tc.args...)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowChainNonces(), args)
 			if tc.err != nil {

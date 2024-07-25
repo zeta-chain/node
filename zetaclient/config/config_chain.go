@@ -43,6 +43,7 @@ func New(setDefaults bool) Config {
 
 	if setDefaults {
 		cfg.BitcoinConfig = bitcoinConfigRegnet()
+		cfg.SolanaConfig = solanaConfigLocalnet()
 		cfg.EVMChainConfigs = evmChainsConfigs()
 	}
 
@@ -56,6 +57,13 @@ func bitcoinConfigRegnet() BTCConfig {
 		RPCPassword: "123",
 		RPCHost:     "bitcoin:18443",
 		RPCParams:   "regtest",
+	}
+}
+
+// solanaConfigLocalnet contains config for Solana localnet
+func solanaConfigLocalnet() SolanaConfig {
+	return SolanaConfig{
+		Endpoint: "http://solana:8899",
 	}
 }
 

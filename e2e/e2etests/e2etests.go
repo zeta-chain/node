@@ -52,6 +52,11 @@ const (
 	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
+	 Solana tests
+	*/
+	TestSolanaDepositName = "solana_deposit"
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -94,12 +99,13 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestDepositEtherLiquidityCapName = "deposit_eth_liquidity_cap"
-	TestMigrateChainSupportName      = "migrate_chain_support"
-	TestPauseZRC20Name               = "pause_zrc20"
-	TestUpdateBytecodeZRC20Name      = "update_bytecode_zrc20"
-	TestUpdateBytecodeConnectorName  = "update_bytecode_connector"
-	TestRateLimiterName              = "rate_limiter"
+	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
+	TestMigrateChainSupportName       = "migrate_chain_support"
+	TestPauseZRC20Name                = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name       = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
+	TestRateLimiterName               = "rate_limiter"
+	TestCriticalAdminTransactionsName = "critical_admin_transactions"
 
 	TestMigrateTSSName = "migrate_TSS"
 
@@ -326,6 +332,17 @@ var AllE2ETests = []runner.E2ETest{
 		TestERC20DepositAndCallRefund,
 	),
 	/*
+	 Solana tests
+	*/
+	runner.NewE2ETest(
+		TestSolanaDepositName,
+		"deposit SOL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in SOL", DefaultValue: "0.1"},
+		},
+		TestSolanaDeposit,
+	),
+	/*
 	 Bitcoin tests
 	*/
 	runner.NewE2ETest(
@@ -532,6 +549,12 @@ var AllE2ETests = []runner.E2ETest{
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
 		TestRateLimiter,
+	),
+	runner.NewE2ETest(
+		TestCriticalAdminTransactionsName,
+		"test critical admin transactions",
+		[]runner.ArgDefinition{},
+		TestCriticalAdminTransactions,
 	),
 	/*
 	 Special tests

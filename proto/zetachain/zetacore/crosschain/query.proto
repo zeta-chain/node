@@ -45,6 +45,12 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/inboundTrackers";
   }
 
+  rpc InboundTracker(QueryInboundTrackerRequest)
+      returns (QueryInboundTrackerResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/crosschain/inboundTracker/{chain_id}/{tx_hash}";
+  }
+
   // Queries a InboundHashToCctx by index.
   rpc InboundHashToCctx(QueryGetInboundHashToCctxRequest)
       returns (QueryGetInboundHashToCctxResponse) {
@@ -382,4 +388,13 @@ message QueryRateLimiterFlagsRequest {}
 
 message QueryRateLimiterFlagsResponse {
   RateLimiterFlags rateLimiterFlags = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryInboundTrackerRequest {
+  int64 chain_id = 1;
+  string tx_hash = 2;
+}
+
+message QueryInboundTrackerResponse {
+  InboundTracker inbound_tracker = 1 [ (gogoproto.nullable) = false ];
 }
