@@ -12,31 +12,31 @@ var (
 		"/zetachain.zetacore.crosschain.MsgRefundAbortedCCTX",
 		"/zetachain.zetacore.crosschain.MsgAbortStuckCCTX",
 		"/zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlags",
-		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",
-		"/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
 		"/zetachain.zetacore.fungible.MsgDeploySystemContracts",
-		"/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap",
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee",
 		"/zetachain.zetacore.fungible.MsgUnpauseZRC20",
-		"/zetachain.zetacore.observer.MsgAddObserver",
-		"/zetachain.zetacore.observer.MsgRemoveChainParams",
 		"/zetachain.zetacore.observer.MsgResetChainNonces",
 		"/zetachain.zetacore.observer.MsgUpdateChainParams",
 		"/zetachain.zetacore.observer.MsgEnableCCTX",
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
-		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 	}
 	// AdminPolicyMessages keeps track of the message URLs that can, by default, only be executed by admin policy address
 	AdminPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
 		"/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
+		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",
 		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
+		"/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
+		"/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
+		"/zetachain.zetacore.observer.MsgAddObserver",
+		"/zetachain.zetacore.observer.MsgRemoveChainParams",
 		"/zetachain.zetacore.authority.MsgAddAuthorization",
 		"/zetachain.zetacore.authority.MsgRemoveAuthorization",
 		"/zetachain.zetacore.authority.MsgUpdateChainInfo",
+		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
 	EmergencyPolicyMessages = []string{

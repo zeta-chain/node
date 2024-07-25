@@ -74,34 +74,35 @@ func (r *E2ERunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
+	addresses, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
 		e2eutils.OperationalPolicyName,
+		e2eutils.AdminPolicyName,
 		r.ERC20Addr.Hex(),
 	)
 	require.NoError(r, err)
 
 	// Set ERC20ZRC20Addr
-	r.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
+	r.ERC20ZRC20Addr = ethcommon.HexToAddress(addresses.ERC20zrc20Addr)
 	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// UniswapV2FactoryAddr
-	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(uniswapV2FactoryAddr)
+	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(addresses.UniswapV2FactoryAddr)
 	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// UniswapV2RouterAddr
-	r.UniswapV2RouterAddr = ethcommon.HexToAddress(uniswapV2RouterAddr)
+	r.UniswapV2RouterAddr = ethcommon.HexToAddress(addresses.UniswapV2RouterAddr)
 	r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// ZevmConnectorAddr
-	r.ConnectorZEVMAddr = ethcommon.HexToAddress(zevmConnectorAddr)
+	r.ConnectorZEVMAddr = ethcommon.HexToAddress(addresses.ZEVMConnectorAddr)
 	r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// WZetaAddr
-	r.WZetaAddr = ethcommon.HexToAddress(wzetaAddr)
+	r.WZetaAddr = ethcommon.HexToAddress(addresses.WZETAAddr)
 	r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
@@ -229,7 +230,7 @@ func (r *E2ERunner) SetupSOLZRC20() {
 func (r *E2ERunner) EnableHeaderVerification(chainIDList []int64) error {
 	r.Logger.Print("⚙️ enabling verification flags for block headers")
 
-	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.OperationalPolicyName, chainIDList)
+	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.AdminPolicyName, chainIDList)
 }
 
 // FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)
