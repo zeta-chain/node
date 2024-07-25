@@ -110,3 +110,69 @@ func TestKeeper_GetSupportedChains(t *testing.T) {
 		require.EqualValues(t, supported4.ChainId, supportedChains[3].ChainId)
 	})
 }
+
+func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
+	t.Run("return empty list if not chans are supported", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		require.Empty(t, k.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum))
+	})
+
+	t.Run("return list of supported chains for ethereum consensus", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+		consensus := chains.Consensus_ethereum
+
+		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
+		require.NotEmpty(t, supportedChainsList)
+
+		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+	})
+
+	t.Run("return list of supported chains for bitcoin consensus", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+		consensus := chains.Consensus_bitcoin
+
+		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
+		require.NotEmpty(t, supportedChainsList)
+		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+	})
+
+	t.Run("return list of supported chains for solana consensus", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+		consensus := chains.Consensus_solana_consensus
+
+		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
+		require.NotEmpty(t, supportedChainsList)
+		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+	})
+
+}
+
+func getForeignChains(consensus chains.Consensus) []chains.Chain {
+	evmChains := chains.ChainListByConsensus(consensus, []chains.Chain{})
+	foreignEvmChains := make([]chains.Chain, 0)
+
+	for _, chain := range evmChains {
+		if !chain.IsZetaChain() {
+			foreignEvmChains = append(foreignEvmChains, chain)
+		}
+	}
+	return foreignEvmChains
+}

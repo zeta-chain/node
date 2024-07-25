@@ -39,10 +39,8 @@ func (k msgServer) UpdateTssAddress(
 
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
 
-	supportedChains := append(k.zetaObserverKeeper.GetSupportedChainsByConsensus(ctx, chains.Consensus_ethereum),
-		k.zetaObserverKeeper.GetSupportedChainsByConsensus(ctx, chains.Consensus_bitcoin)...)
 	// Each connected chain should have its own tss migrator
-	if len(supportedChains) != len(tssMigrators) {
+	if len(k.GetChainsSupportingMigration(ctx)) != len(tssMigrators) {
 		return nil, errorsmod.Wrap(
 			types.ErrUnableToUpdateTss,
 			"cannot update tss address incorrect number of migrations have been created and completed",
@@ -73,4 +71,9 @@ func (k msgServer) UpdateTssAddress(
 	k.zetaObserverKeeper.RemoveAllExistingMigrators(ctx)
 
 	return &types.MsgUpdateTssAddressResponse{}, nil
+}
+
+func (k *Keeper) GetChainsSupportingMigration(ctx sdk.Context) []chains.Chain {
+	return append(k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum),
+		k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_bitcoin)...)
 }
