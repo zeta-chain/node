@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -20,8 +21,9 @@ import (
 )
 
 // GetTxID returns a unique id for Solana outbound
-func (ob *Observer) GetTxID(_ uint64) string {
-	return ""
+func (ob *Observer) GetTxID(nonce uint64) string {
+	tssAddr := ob.TSS().EVMAddress().String()
+	return fmt.Sprintf("%d-%s-%d", ob.Chain().ChainId, tssAddr, nonce)
 }
 
 // WatchOutbound watches evm chain for outgoing txs status
@@ -110,52 +112,77 @@ func (ob *Observer) IsOutboundProcessed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
 ) (bool, bool, error) {
-	outParams := cctx.GetCurrentOutboundParam()
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	if outParams == nil {
+	// get outbound params from cctx
+	params := cctx.GetCurrentOutboundParam()
+	if params == nil {
 		return false, false, fmt.Errorf("outbound param not found from cctx")
 	}
-	tracker, err := ob.ZetacoreClient().GetOutboundTracker(ctx, ob.Chain(), outParams.TssNonce)
-	if err != nil {
+
+	// skip if outbound is not finalized yet
+	nonce := params.TssNonce
+	txResult := ob.GetTxResult(nonce)
+	if txResult == nil {
 		return false, false, nil
 	}
-	for _, hash := range tracker.HashList {
-		sig, err := solana.SignatureFromBase58(hash.TxHash)
-		if err != nil {
-			ob.Logger().Outbound.Warn().Err(err).Msgf("solana.SignatureFromBase58 error: %s", hash.TxHash)
-			continue
-		}
-		txResult, err := ob.solClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
-			Commitment: rpc.CommitmentFinalized, // must be finalized state so this tx will not be re-org'ed later
-		})
-		if err != nil {
-			ob.Logger().Outbound.Warn().Err(err).Msgf("solana.GetTransaction error: %s", hash.TxHash)
-			continue
-		}
 
-		outboundAmount := outParams.Amount.BigInt()   // FIXME: parse this amount from txRes itself, not from cctx
-		outboundStatus := chains.ReceiveStatus_failed // tx was failed/reverted: FIXME: see the note in function comment
-		coinType := cctx.InboundParams.CoinType
-		if txResult.Meta.Err == nil { // this indicates tx was successful
-			outboundStatus = chains.ReceiveStatus_success
-		}
+	// extract tx signature
+	tx, err := txResult.Transaction.GetTransaction()
+	if err != nil {
+		return false, false, errors.Wrapf(err, "GetTransaction error for nonce %d", nonce)
+	}
+	txSig := tx.Signatures[0]
 
-		// post vote to zetacore
-		ob.PostVoteOutbound(
-			ctx,
-			cctx.Index,
-			sig.String(),
-			txResult,
-			outboundAmount,
-			outboundStatus,
-			nonce,
-			coinType,
-		)
-
-		break // outbound tx confirmed on Solana and reported to zetacore; skip the rest of the list
+	outboundAmount := params.Amount.BigInt()      // FIXME: parse this amount from txRes itself, not from cctx
+	outboundStatus := chains.ReceiveStatus_failed // tx was failed/reverted: FIXME: see the note in function comment
+	coinType := cctx.InboundParams.CoinType
+	if txResult.Meta.Err == nil { // this indicates tx was successful
+		outboundStatus = chains.ReceiveStatus_success
 	}
 
-	return false, false, nil
+	// post vote to zetacore
+	ob.PostVoteOutbound(ctx, cctx.Index, txSig.String(), txResult, outboundAmount, outboundStatus, nonce, coinType)
+
+	// tracker, err := ob.ZetacoreClient().GetOutboundTracker(ctx, ob.Chain(), nonce)
+	// if err != nil {
+	// 	return false, false, nil
+	// }
+	// for _, hash := range tracker.HashList {
+	// 	sig, err := solana.SignatureFromBase58(hash.TxHash)
+	// 	if err != nil {
+	// 		ob.Logger().Outbound.Warn().Err(err).Msgf("solana.SignatureFromBase58 error: %s", hash.TxHash)
+	// 		continue
+	// 	}
+	// 	txResult, err := ob.solClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+	// 		Commitment: rpc.CommitmentFinalized, // must be finalized state so this tx will not be re-org'ed later
+	// 	})
+	// 	if err != nil {
+	// 		ob.Logger().Outbound.Warn().Err(err).Msgf("solana.GetTransaction error: %s", hash.TxHash)
+	// 		continue
+	// 	}
+
+	// 	outboundAmount := params.Amount.BigInt()      // FIXME: parse this amount from txRes itself, not from cctx
+	// 	outboundStatus := chains.ReceiveStatus_failed // tx was failed/reverted: FIXME: see the note in function comment
+	// 	coinType := cctx.InboundParams.CoinType
+	// 	if txResult.Meta.Err == nil { // this indicates tx was successful
+	// 		outboundStatus = chains.ReceiveStatus_success
+	// 	}
+
+	// 	// post vote to zetacore
+	// 	ob.PostVoteOutbound(
+	// 		ctx,
+	// 		cctx.Index,
+	// 		sig.String(),
+	// 		txResult,
+	// 		outboundAmount,
+	// 		outboundStatus,
+	// 		nonce,
+	// 		coinType,
+	// 	)
+
+	// 	break // outbound tx confirmed on Solana and reported to zetacore; skip the rest of the list
+	// }
+
+	return true, true, nil
 }
 
 // PostVoteOutbound posts vote to zetacore for the finalized outbound

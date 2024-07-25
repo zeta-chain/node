@@ -14,9 +14,8 @@ type PdaInfo struct {
 	// Authority is the authority for the PDA
 	Authority [32]byte
 
-	// ChainId is the chain ID for the gateway program
-	// Note: this field exists in latest version of gateway program, but not in the current e2e test program
-	// ChainId uint64
+	// ChainId is the Solana chain id
+	ChainID uint64
 }
 
 // InitializeParams contains the parameters for a gateway initialize instruction

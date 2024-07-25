@@ -1,7 +1,7 @@
 package runner
 
 import (
-	"time"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
@@ -13,18 +13,8 @@ import (
 	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 )
 
+// SetupSolanaAccount imports the deployer's private key
 func (r *E2ERunner) SetupSolanaAccount() {
-	r.Logger.Print("⚙️ setting up Solana account")
-	startTime := time.Now()
-	defer func() {
-		r.Logger.Print("✅ Solana account setup in %s", time.Since(startTime))
-	}()
-
-	r.SetSolanaAddress()
-}
-
-// SetSolanaAddress imports the deployer's private key
-func (r *E2ERunner) SetSolanaAddress() {
 	privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 	r.SolanaDeployerAddress = privateKey.PublicKey()
 
@@ -79,6 +69,7 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	pda := solanacontract.PdaInfo{}
 	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
 	require.NoError(r, err)
+	fmt.Printf("pda parsed: %+v\n", pda)
 	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])
 
 	// check the TSS address

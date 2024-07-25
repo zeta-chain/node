@@ -58,7 +58,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 	// post gas price to zetacore
 	// FIXME: what's the fee rate of compute unit? How to query?
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), 1, "", slot)
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), 1, 0, slot)
 	if err != nil {
 		return errors.Wrap(err, "PostVoteGasPrice error")
 	}

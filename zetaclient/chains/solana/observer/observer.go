@@ -64,28 +64,30 @@ func NewObserver(
 		return nil, err
 	}
 
-	pubKey, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
+	gatewayID, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid gateway address %s", chainParams.GatewayAddress)
 	}
 
-	// create solana observer
-	ob := Observer{
-		Observer:  *baseObserver,
-		solClient: solClient,
-		gatewayID: pubKey,
-	}
-
 	// compute gateway PDA
 	seed := []byte(solanacontract.PDASeed)
-	ob.pda, _, err = solana.FindProgramAddress([][]byte{seed}, ob.gatewayID)
+	pda, _, err := solana.FindProgramAddress([][]byte{seed}, gatewayID)
 	if err != nil {
 		return nil, err
 	}
 
+	// create solana observer
+	ob := &Observer{
+		Observer:           *baseObserver,
+		solClient:          solClient,
+		gatewayID:          gatewayID,
+		pda:                pda,
+		finalizedTxResults: make(map[string]*rpc.GetTransactionResult),
+	}
+
 	ob.Observer.LoadLastTxScanned()
 
-	return &ob, nil
+	return ob, nil
 }
 
 // SolClient returns the solana rpc client
@@ -125,6 +127,9 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	// watch Solana chain for incoming txs and post votes to zetacore
 	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
+
+	// watch Solana chain for outbound trackers
+	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
 
 	// watch Solana chain for fee rate and post to zetacore
 	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
