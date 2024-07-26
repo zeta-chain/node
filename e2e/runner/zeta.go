@@ -244,7 +244,7 @@ func (r *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 			event.From.Hex(),
 			event.To,
 			event.Value,
-			event.Gasfee,
+			event.GasFee,
 		)
 	}
 

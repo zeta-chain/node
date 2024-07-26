@@ -302,7 +302,7 @@ func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {
 		From:            EthAddress(),
 		To:              to,
 		Value:           value,
-		Gasfee:          big.NewInt(Int64InRange(100000, 10000000)),
+		GasFee:          big.NewInt(Int64InRange(100000, 10000000)),
 		ProtocolFlatFee: big.NewInt(Int64InRange(100000, 10000000)),
 	}
 }

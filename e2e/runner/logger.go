@@ -194,7 +194,7 @@ func (l *Logger) ZRC20Withdrawal(
 			event.From.Hex(),
 			event.To,
 			event.Value,
-			event.Gasfee,
+			event.GasFee,
 		)
 	}
 }
