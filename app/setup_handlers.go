@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -19,14 +18,11 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -102,18 +98,22 @@ func SetupHandlers(app *App) {
 					return vm, nil
 				},
 			},
-			{
-				index: 1715624665,
-				storeUpgrade: &storetypes.StoreUpgrades{
-					Added: []string{capabilitytypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName},
-				},
-			},
-			{
-				index: 1715707436,
-				storeUpgrade: &storetypes.StoreUpgrades{
-					Added: []string{ibccrosschaintypes.ModuleName},
-				},
-			},
+			//{
+			//	index: 1715624665,
+			//	storeUpgrade: &storetypes.StoreUpgrades{
+			//		Added: []string{
+			//			capabilitytypes.ModuleName,
+			//			ibcexported.ModuleName,
+			//			ibctransfertypes.ModuleName,
+			//		},
+			//	},
+			//},
+			//{
+			//	index: 1715707436,
+			//	storeUpgrade: &storetypes.StoreUpgrades{
+			//		Added: []string{ibccrosschaintypes.ModuleName},
+			//	},
+			//},
 		},
 		stateFileDir: DefaultNodeHome,
 	}
