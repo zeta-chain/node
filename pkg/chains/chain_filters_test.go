@@ -101,6 +101,18 @@ func TestFilterChains(t *testing.T) {
 			},
 		},
 		{
+			name: "test three same filters",
+			filters: []chains.ChainFilter{
+				chains.FilterExternalChains,
+				chains.FilterExternalChains,
+				chains.FilterExternalChains,
+			},
+			expected: func() []chains.Chain {
+				externalChains := chains.ExternalChainList([]chains.Chain{})
+				return externalChains
+			},
+		},
+		{
 			name: "Test multiple filters in random order",
 			filters: []chains.ChainFilter{
 				chains.FilterGatewayObserver,
@@ -125,6 +137,7 @@ func TestFilterChains(t *testing.T) {
 			chainList := chains.ExternalChainList([]chains.Chain{})
 			filteredChains := chains.FilterChains(chainList, tc.filters...)
 			require.ElementsMatch(t, tc.expected(), filteredChains)
+			require.Len(t, filteredChains, len(tc.expected()))
 		})
 	}
 }
