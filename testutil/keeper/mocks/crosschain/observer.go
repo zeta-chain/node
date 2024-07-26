@@ -109,33 +109,6 @@ func (_m *CrosschainObserverKeeper) CheckIfTssPubkeyHasBeenGenerated(ctx types.C
 	return r0, r1
 }
 
-// FilterChains provides a mock function with given fields: ctx, filters
-func (_m *CrosschainObserverKeeper) FilterChains(ctx types.Context, filters ...chains.ChainFilter) []chains.Chain {
-	_va := make([]interface{}, len(filters))
-	for _i := range filters {
-		_va[_i] = filters[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FilterChains")
-	}
-
-	var r0 []chains.Chain
-	if rf, ok := ret.Get(0).(func(types.Context, ...chains.ChainFilter) []chains.Chain); ok {
-		r0 = rf(ctx, filters...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]chains.Chain)
-		}
-	}
-
-	return r0
-}
-
 // FindBallot provides a mock function with given fields: ctx, index, chain, observationType
 func (_m *CrosschainObserverKeeper) FindBallot(ctx types.Context, index string, chain chains.Chain, observationType observertypes.ObservationType) (observertypes.Ballot, bool, error) {
 	ret := _m.Called(ctx, index, chain, observationType)
@@ -622,46 +595,6 @@ func (_m *CrosschainObserverKeeper) GetSupportedChains(ctx types.Context) []chai
 	var r0 []chains.Chain
 	if rf, ok := ret.Get(0).(func(types.Context) []chains.Chain); ok {
 		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]chains.Chain)
-		}
-	}
-
-	return r0
-}
-
-// GetSupportedForeignChains provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) GetSupportedForeignChains(ctx types.Context) []chains.Chain {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSupportedForeignChains")
-	}
-
-	var r0 []chains.Chain
-	if rf, ok := ret.Get(0).(func(types.Context) []chains.Chain); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]chains.Chain)
-		}
-	}
-
-	return r0
-}
-
-// GetSupportedForeignChainsByConsensus provides a mock function with given fields: ctx, consensus
-func (_m *CrosschainObserverKeeper) GetSupportedForeignChainsByConsensus(ctx types.Context, consensus chains.Consensus) []chains.Chain {
-	ret := _m.Called(ctx, consensus)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSupportedForeignChainsByConsensus")
-	}
-
-	var r0 []chains.Chain
-	if rf, ok := ret.Get(0).(func(types.Context, chains.Consensus) []chains.Chain); ok {
-		r0 = rf(ctx, consensus)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]chains.Chain)

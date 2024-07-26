@@ -80,17 +80,16 @@ func (k msgServer) UpdateTssAddress(
 // 3. Consensus is bitcoin or ethereum (Other consensus types are not supported)
 func (k *Keeper) GetChainsSupportingTSSMigration(ctx sdk.Context) []chains.Chain {
 	supportedChains := k.zetaObserverKeeper.GetSupportedChains(ctx)
-	evmChainsForTSSMigration := chains.FilterChains(supportedChains, []chains.ChainFilter{
-		chains.FilterExternalChains,
-		chains.FilterGatewayObserver,
-		chains.FilterConsensusBitcoin,
+	return chains.CombineFilterChains([][]chains.Chain{
+		chains.FilterChains(supportedChains, []chains.ChainFilter{
+			chains.FilterExternalChains,
+			chains.FilterGatewayObserver,
+			chains.FilterConsensusEthereum,
+		}...),
+		chains.FilterChains(supportedChains, []chains.ChainFilter{
+			chains.FilterExternalChains,
+			chains.FilterGatewayObserver,
+			chains.FilterConsensusBitcoin,
+		}...),
 	}...)
-
-	bitcoinChainsForTSSMigration := chains.FilterChains(supportedChains, []chains.ChainFilter{
-		chains.FilterExternalChains,
-		chains.FilterGatewayObserver,
-		chains.FilterConsensusEthereum,
-	}...)
-
-	return append(evmChainsForTSSMigration, bitcoinChainsForTSSMigration...)
 }

@@ -337,7 +337,10 @@ func TestKeeper_GetChainsSupportingMigration(t *testing.T) {
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
-			chainParamsList.ChainParams = append(chainParamsList.ChainParams, sample.ChainParamsSupported(chain.ChainId))
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
 		}
 		zk.ObserverKeeper.SetChainParamsList(ctx, chainParamsList)
 
