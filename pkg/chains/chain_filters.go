@@ -8,21 +8,15 @@ func FilterExternalChains(c Chain) bool {
 	return c.IsExternal
 }
 
-// FilterGatewayObserver filters chains that are gateway observers
-func FilterGatewayObserver(c Chain) bool {
-	return c.CctxGateway == CCTXGateway_observers
+// FilterByGateway filters chains by gateway
+func FilterByGateway(gw CCTXGateway) ChainFilter {
+	return func(chain Chain) bool { return chain.CctxGateway == gw }
 }
 
-// FilterConsensusEthereum filters chains that have the ethereum consensus
-func FilterConsensusEthereum(c Chain) bool {
-	return c.Consensus == Consensus_ethereum
+// FilterByConsensus filters chains by consensus type
+func FilterByConsensus(cs Consensus) ChainFilter {
+	return func(chain Chain) bool { return chain.Consensus == cs }
 }
-
-// FilterConsensusBitcoin filters chains that have the bitcoin consensus
-func FilterConsensusBitcoin(c Chain) bool { return c.Consensus == Consensus_bitcoin }
-
-// FilterConsensusSolana filters chains that have the solana consensus
-func FilterConsensusSolana(c Chain) bool { return c.Consensus == Consensus_solana_consensus }
 
 // FilterChains applies a list of filters to a list of chains
 func FilterChains(chainList []Chain, filters ...ChainFilter) []Chain {

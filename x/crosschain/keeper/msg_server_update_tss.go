@@ -83,13 +83,13 @@ func (k *Keeper) GetChainsSupportingTSSMigration(ctx sdk.Context) []chains.Chain
 	return chains.CombineFilterChains([][]chains.Chain{
 		chains.FilterChains(supportedChains, []chains.ChainFilter{
 			chains.FilterExternalChains,
-			chains.FilterGatewayObserver,
-			chains.FilterConsensusEthereum,
+			chains.FilterByGateway(chains.CCTXGateway_observers),
+			chains.FilterByConsensus(chains.Consensus_ethereum),
 		}...),
 		chains.FilterChains(supportedChains, []chains.ChainFilter{
 			chains.FilterExternalChains,
-			chains.FilterGatewayObserver,
-			chains.FilterConsensusBitcoin,
+			chains.FilterByGateway(chains.CCTXGateway_observers),
+			chains.FilterByConsensus(chains.Consensus_bitcoin),
 		}...),
 	}...)
 }

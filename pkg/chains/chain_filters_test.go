@@ -22,35 +22,35 @@ func TestFilterChains(t *testing.T) {
 		},
 		{
 			name:    "Filter gateway observer chains",
-			filters: []chains.ChainFilter{chains.FilterGatewayObserver},
+			filters: []chains.ChainFilter{chains.FilterByGateway(chains.CCTXGateway_observers)},
 			expected: func() []chains.Chain {
 				return chains.ChainListByGateway(chains.CCTXGateway_observers, []chains.Chain{})
 			},
 		},
 		{
 			name:    "Filter consensus ethereum chains",
-			filters: []chains.ChainFilter{chains.FilterConsensusEthereum},
+			filters: []chains.ChainFilter{chains.FilterByConsensus(chains.Consensus_ethereum)},
 			expected: func() []chains.Chain {
 				return chains.ChainListByConsensus(chains.Consensus_ethereum, []chains.Chain{})
 			},
 		},
 		{
 			name:    "Filter consensus bitcoin chains",
-			filters: []chains.ChainFilter{chains.FilterConsensusBitcoin},
+			filters: []chains.ChainFilter{chains.FilterByConsensus(chains.Consensus_bitcoin)},
 			expected: func() []chains.Chain {
 				return chains.ChainListByConsensus(chains.Consensus_bitcoin, []chains.Chain{})
 			},
 		},
 		{
 			name:    "Filter consensus solana chains",
-			filters: []chains.ChainFilter{chains.FilterConsensusSolana},
+			filters: []chains.ChainFilter{chains.FilterByConsensus(chains.Consensus_solana_consensus)},
 			expected: func() []chains.Chain {
 				return chains.ChainListByConsensus(chains.Consensus_solana_consensus, []chains.Chain{})
 			},
 		},
 		{
 			name:    "Apply multiple filters external chains and gateway observer",
-			filters: []chains.ChainFilter{chains.FilterExternalChains, chains.FilterGatewayObserver},
+			filters: []chains.ChainFilter{chains.FilterExternalChains, chains.FilterByGateway(chains.CCTXGateway_observers)},
 			expected: func() []chains.Chain {
 				externalChains := chains.ExternalChainList([]chains.Chain{})
 				var gatewayObserverChains []chains.Chain
@@ -66,8 +66,8 @@ func TestFilterChains(t *testing.T) {
 			name: "Apply multiple filters external chains with gateway observer and consensus ethereum",
 			filters: []chains.ChainFilter{
 				chains.FilterExternalChains,
-				chains.FilterGatewayObserver,
-				chains.FilterConsensusEthereum,
+				chains.FilterByGateway(chains.CCTXGateway_observers),
+				chains.FilterByConsensus(chains.Consensus_ethereum),
 			},
 			expected: func() []chains.Chain {
 				externalChains := chains.ExternalChainList([]chains.Chain{})
@@ -85,8 +85,8 @@ func TestFilterChains(t *testing.T) {
 			name: "Apply multiple filters external chains with gateway observer and consensus bitcoin",
 			filters: []chains.ChainFilter{
 				chains.FilterExternalChains,
-				chains.FilterGatewayObserver,
-				chains.FilterConsensusBitcoin,
+				chains.FilterByGateway(chains.CCTXGateway_observers),
+				chains.FilterByConsensus(chains.Consensus_bitcoin),
 			},
 			expected: func() []chains.Chain {
 				externalChains := chains.ExternalChainList([]chains.Chain{})
@@ -115,8 +115,8 @@ func TestFilterChains(t *testing.T) {
 		{
 			name: "Test multiple filters in random order",
 			filters: []chains.ChainFilter{
-				chains.FilterGatewayObserver,
-				chains.FilterConsensusEthereum,
+				chains.FilterByGateway(chains.CCTXGateway_observers),
+				chains.FilterByConsensus(chains.Consensus_ethereum),
 				chains.FilterExternalChains,
 			},
 			expected: func() []chains.Chain {
@@ -156,15 +156,15 @@ func TestCombineFilterChains(t *testing.T) {
 						chains.ExternalChainList([]chains.Chain{}),
 						[]chains.ChainFilter{
 							chains.FilterExternalChains,
-							chains.FilterGatewayObserver,
-							chains.FilterConsensusEthereum,
+							chains.FilterByGateway(chains.CCTXGateway_observers),
+							chains.FilterByConsensus(chains.Consensus_ethereum),
 						}...),
 					chains.FilterChains(
 						chains.ExternalChainList([]chains.Chain{}),
 						[]chains.ChainFilter{
 							chains.FilterExternalChains,
-							chains.FilterGatewayObserver,
-							chains.FilterConsensusBitcoin,
+							chains.FilterByGateway(chains.CCTXGateway_observers),
+							chains.FilterByConsensus(chains.Consensus_bitcoin),
 						}...),
 				}
 			},
@@ -188,22 +188,22 @@ func TestCombineFilterChains(t *testing.T) {
 						chains.ExternalChainList([]chains.Chain{}),
 						[]chains.ChainFilter{
 							chains.FilterExternalChains,
-							chains.FilterGatewayObserver,
-							chains.FilterConsensusEthereum,
+							chains.FilterByGateway(chains.CCTXGateway_observers),
+							chains.FilterByConsensus(chains.Consensus_ethereum),
 						}...),
 					chains.FilterChains(
 						chains.ExternalChainList([]chains.Chain{}),
 						[]chains.ChainFilter{
 							chains.FilterExternalChains,
-							chains.FilterGatewayObserver,
-							chains.FilterConsensusBitcoin,
+							chains.FilterByGateway(chains.CCTXGateway_observers),
+							chains.FilterByConsensus(chains.Consensus_bitcoin),
 						}...),
 					chains.FilterChains(
 						chains.ExternalChainList([]chains.Chain{}),
 						[]chains.ChainFilter{
 							chains.FilterExternalChains,
-							chains.FilterGatewayObserver,
-							chains.FilterConsensusSolana,
+							chains.FilterByGateway(chains.CCTXGateway_observers),
+							chains.FilterByConsensus(chains.Consensus_solana_consensus),
 						}...),
 				}
 			},
