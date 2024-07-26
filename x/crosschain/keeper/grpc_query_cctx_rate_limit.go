@@ -74,7 +74,7 @@ func (k Keeper) RateLimiterInput(
 	}
 
 	// get foreign chains and conversion rates of foreign coins
-	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+	chains := k.zetaObserverKeeper.FilterChains(ctx, chains.FilterExternalChains)
 	_, assetRates, found := k.GetRateLimiterAssetRateList(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "asset rates not found")
