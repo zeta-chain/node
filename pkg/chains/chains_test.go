@@ -8,6 +8,14 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
+func TestChain_Name(t *testing.T) {
+	t.Run("new Name field is compatible with ChainName enum", func(t *testing.T) {
+		for _, chain := range chains.DefaultChainsList() {
+			require.EqualValues(t, chain.Name, chain.ChainName.String())
+		}
+	})
+}
+
 func TestChainListByNetworkType(t *testing.T) {
 	listTests := []struct {
 		name        string
