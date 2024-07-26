@@ -41,6 +41,7 @@ func FilterChains(chainList []Chain, filters ...ChainFilter) []Chain {
 	return chainList
 }
 
+// CombineFilterChains combines multiple lists of chains into a single list
 func CombineFilterChains(chainLists ...[]Chain) []Chain {
 	chainMap := make(map[Chain]bool)
 	var combinedChains []Chain
