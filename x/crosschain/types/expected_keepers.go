@@ -105,6 +105,7 @@ type ObserverKeeper interface {
 	GetSupportedChains(ctx sdk.Context) []chains.Chain
 	GetSupportedForeignChains(ctx sdk.Context) []chains.Chain
 	GetSupportedForeignChainsByConsensus(ctx sdk.Context, consensus chains.Consensus) []chains.Chain
+	FilterChains(ctx sdk.Context, filters ...chains.ChainFilter) []chains.Chain
 }
 
 type FungibleKeeper interface {

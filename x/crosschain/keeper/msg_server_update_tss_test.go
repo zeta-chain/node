@@ -66,7 +66,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetChainsSupportingMigration(ctx) {
+		for _, chain := range k.GetChainsSupportingTSSMigration(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -79,7 +79,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(
 			t,
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
-			len(k.GetChainsSupportingMigration(ctx)),
+			len(k.GetChainsSupportingTSSMigration(ctx)),
 		)
 
 		msg := crosschaintypes.MsgUpdateTssAddress{
@@ -110,7 +110,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetChainsSupportingMigration(ctx) {
+		for _, chain := range k.GetChainsSupportingTSSMigration(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -123,7 +123,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(
 			t,
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
-			len(k.GetChainsSupportingMigration(ctx)),
+			len(k.GetChainsSupportingTSSMigration(ctx)),
 		)
 
 		msg := crosschaintypes.MsgUpdateTssAddress{
@@ -140,7 +140,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(
 			t,
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
-			len(k.GetChainsSupportingMigration(ctx)),
+			len(k.GetChainsSupportingTSSMigration(ctx)),
 		)
 	})
 
@@ -157,7 +157,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetChainsSupportingMigration(ctx) {
+		for _, chain := range k.GetChainsSupportingTSSMigration(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -170,7 +170,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(
 			t,
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
-			len(k.GetChainsSupportingMigration(ctx)),
+			len(k.GetChainsSupportingTSSMigration(ctx)),
 		)
 
 		msg := crosschaintypes.MsgUpdateTssAddress{
@@ -187,7 +187,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		require.Equal(
 			t,
 			len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)),
-			len(k.GetChainsSupportingMigration(ctx)),
+			len(k.GetChainsSupportingTSSMigration(ctx)),
 		)
 	})
 
@@ -208,7 +208,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
 
 		// set a single migrator while there are 2 supported chains
-		chain := k.GetChainsSupportingMigration(ctx)[0]
+		chain := k.GetChainsSupportingTSSMigration(ctx)[0]
 		index := chain.ChainName.String() + "_migration_tx_index"
 		k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 			ChainId:            chain.ChainId,
@@ -255,7 +255,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
 
-		for _, chain := range k.GetChainsSupportingMigration(ctx) {
+		for _, chain := range k.GetChainsSupportingTSSMigration(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -302,7 +302,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
 		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
 
-		for _, chain := range k.GetChainsSupportingMigration(ctx) {
+		for _, chain := range k.GetChainsSupportingTSSMigration(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -341,7 +341,7 @@ func TestKeeper_GetChainsSupportingMigration(t *testing.T) {
 		}
 		zk.ObserverKeeper.SetChainParamsList(ctx, chainParamsList)
 
-		chainsSupportingMigration := k.GetChainsSupportingMigration(ctx)
+		chainsSupportingMigration := k.GetChainsSupportingTSSMigration(ctx)
 		for _, chain := range chainsSupportingMigration {
 			require.NotEqual(t, chain.Consensus, chains.Consensus_solana_consensus)
 			require.NotEqual(t, chain.Consensus, chains.Consensus_op_stack)

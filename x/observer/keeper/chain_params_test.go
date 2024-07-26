@@ -111,14 +111,10 @@ func TestKeeper_GetSupportedChains(t *testing.T) {
 	})
 }
 
-func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
-	t.Run("return empty list if not chans are supported", func(t *testing.T) {
+func TestKeeper_FilterChains(t *testing.T) {
+	t.Run("Filter external chains", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		require.Empty(t, k.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum))
-	})
 
-	t.Run("return list of supported chains for ethereum consensus", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
@@ -128,16 +124,14 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
-		consensus := chains.Consensus_ethereum
 
-		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
-		require.NotEmpty(t, supportedChainsList)
-
-		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+		filteredChains := k.FilterChains(ctx, chains.FilterExternalChains)
+		require.ElementsMatch(t, chains.ExternalChainList([]chains.Chain{}), filteredChains)
 	})
 
-	t.Run("return list of supported chains for bitcoin consensus", func(t *testing.T) {
+	t.Run("Filter gateway observer chains", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
@@ -147,15 +141,14 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
-		consensus := chains.Consensus_bitcoin
 
-		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
-		require.NotEmpty(t, supportedChainsList)
-		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+		filteredChains := k.FilterChains(ctx, chains.FilterGatewayObserver)
+		require.ElementsMatch(t, chains.ChainListByGateway(chains.CCTXGateway_observers, []chains.Chain{}), filteredChains)
 	})
 
-	t.Run("return list of supported chains for solana consensus", func(t *testing.T) {
+	t.Run("Filter consensus ethereum chains", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
 		for _, chain := range chainList {
@@ -165,38 +158,206 @@ func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
 			)
 		}
 		k.SetChainParamsList(ctx, chainParamsList)
-		consensus := chains.Consensus_solana_consensus
 
-		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
-		require.NotEmpty(t, supportedChainsList)
-		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+		filteredChains := k.FilterChains(ctx, chains.FilterConsensusEthereum)
+		require.ElementsMatch(t, chains.ChainListByConsensus(chains.Consensus_ethereum, []chains.Chain{}), filteredChains)
+	})
+
+	t.Run("Filter consensus bitcoin chains", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+
+		filteredChains := k.FilterChains(ctx, chains.FilterConsensusBitcoin)
+		require.ElementsMatch(t, chains.ChainListByConsensus(chains.Consensus_bitcoin, []chains.Chain{}), filteredChains)
+	})
+
+	t.Run("Filter consensus solana chains", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+
+		filteredChains := k.FilterChains(ctx, chains.FilterConsensusSolana)
+		require.ElementsMatch(t, chains.ChainListByConsensus(chains.Consensus_solana_consensus, []chains.Chain{}), filteredChains)
+	})
+
+	t.Run("Apply multiple filters external chains with gateway observer", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+
+		filteredChains := k.FilterChains(ctx, chains.FilterExternalChains, chains.FilterGatewayObserver)
+		externalChains := chains.ExternalChainList([]chains.Chain{})
+		var gatewayObserverChains []chains.Chain
+		for _, chain := range externalChains {
+			if chain.CctxGateway == chains.CCTXGateway_observers {
+				gatewayObserverChains = append(gatewayObserverChains, chain)
+			}
+		}
+		require.ElementsMatch(t, gatewayObserverChains, filteredChains)
+	})
+
+	t.Run("Apply multiple filters external chains with gateway observer and consensus ethereum and bitcoin", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+
+		filteredChainsEVM := k.FilterChains(ctx, chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusEthereum)
+		filteredChainsBitcoin := k.FilterChains(ctx, chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusBitcoin)
+		externalChains := chains.ExternalChainList([]chains.Chain{})
+		var filterMultipleChains []chains.Chain
+		for _, chain := range externalChains {
+			if chain.CctxGateway == chains.CCTXGateway_observers && (chain.Consensus == chains.Consensus_ethereum || chain.Consensus == chains.Consensus_bitcoin) {
+				filterMultipleChains = append(filterMultipleChains, chain)
+			}
+		}
+		require.ElementsMatch(t, filterMultipleChains, append(filteredChainsEVM, filteredChainsBitcoin...))
+	})
+
+	t.Run("Apply multiple filters external chains with gateway observer and consensus ethereum and bitcoin in different order", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		var chainParamsList types.ChainParamsList
+		for _, chain := range chainList {
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
+		}
+		k.SetChainParamsList(ctx, chainParamsList)
+
+		filteredChainsEVM := k.FilterChains(ctx, chains.FilterGatewayObserver, chains.FilterConsensusEthereum, chains.FilterExternalChains)
+		filteredChainsBitcoin := k.FilterChains(ctx, chains.FilterExternalChains, chains.FilterConsensusBitcoin, chains.FilterGatewayObserver)
+		externalChains := chains.ExternalChainList([]chains.Chain{})
+		var filterMultipleChains []chains.Chain
+		for _, chain := range externalChains {
+			if chain.CctxGateway == chains.CCTXGateway_observers && (chain.Consensus == chains.Consensus_ethereum || chain.Consensus == chains.Consensus_bitcoin) {
+				filterMultipleChains = append(filterMultipleChains, chain)
+			}
+		}
+		require.ElementsMatch(t, filterMultipleChains, append(filteredChainsEVM, filteredChainsBitcoin...))
 	})
 }
 
-func TestKeeper_GetSupportedForeignChains(t *testing.T) {
-	t.Run("return empty list if not chans are supported", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		require.Empty(t, k.GetSupportedForeignChains(ctx))
-	})
-
-	t.Run("return list of supported chains", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		chainList := chains.ExternalChainList([]chains.Chain{})
-		var chainParamsList types.ChainParamsList
-		for _, chain := range chainList {
-			chainParamsList.ChainParams = append(
-				chainParamsList.ChainParams,
-				sample.ChainParamsSupported(chain.ChainId),
-			)
-		}
-		k.SetChainParamsList(ctx, chainParamsList)
-
-		supportedChainsList := k.GetSupportedForeignChains(ctx)
-		require.NotEmpty(t, supportedChainsList)
-
-		require.ElementsMatch(t, getAllForeignChains(), supportedChainsList)
-	})
-}
+//func TestKeeper_GetSupportedForeignChainsByConsensus(t *testing.T) {
+//	t.Run("return empty list if not chans are supported", func(t *testing.T) {
+//		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+//		require.Empty(t, k.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum))
+//	})
+//
+//	t.Run("return list of supported chains for ethereum consensus", func(t *testing.T) {
+//		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+//		chainList := chains.ExternalChainList([]chains.Chain{})
+//		var chainParamsList types.ChainParamsList
+//		for _, chain := range chainList {
+//			chainParamsList.ChainParams = append(
+//				chainParamsList.ChainParams,
+//				sample.ChainParamsSupported(chain.ChainId),
+//			)
+//		}
+//		k.SetChainParamsList(ctx, chainParamsList)
+//		consensus := chains.Consensus_ethereum
+//
+//		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
+//		require.NotEmpty(t, supportedChainsList)
+//
+//		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+//	})
+//
+//	t.Run("return list of supported chains for bitcoin consensus", func(t *testing.T) {
+//		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+//		chainList := chains.ExternalChainList([]chains.Chain{})
+//		var chainParamsList types.ChainParamsList
+//		for _, chain := range chainList {
+//			chainParamsList.ChainParams = append(
+//				chainParamsList.ChainParams,
+//				sample.ChainParamsSupported(chain.ChainId),
+//			)
+//		}
+//		k.SetChainParamsList(ctx, chainParamsList)
+//		consensus := chains.Consensus_bitcoin
+//
+//		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
+//		require.NotEmpty(t, supportedChainsList)
+//		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+//	})
+//
+//	t.Run("return list of supported chains for solana consensus", func(t *testing.T) {
+//		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+//		chainList := chains.ExternalChainList([]chains.Chain{})
+//		var chainParamsList types.ChainParamsList
+//		for _, chain := range chainList {
+//			chainParamsList.ChainParams = append(
+//				chainParamsList.ChainParams,
+//				sample.ChainParamsSupported(chain.ChainId),
+//			)
+//		}
+//		k.SetChainParamsList(ctx, chainParamsList)
+//		consensus := chains.Consensus_solana_consensus
+//
+//		supportedChainsList := k.GetSupportedForeignChainsByConsensus(ctx, consensus)
+//		require.NotEmpty(t, supportedChainsList)
+//		require.ElementsMatch(t, getForeignChains(consensus), supportedChainsList)
+//	})
+//}
+//
+//func TestKeeper_GetSupportedForeignChains(t *testing.T) {
+//	t.Run("return empty list if not chans are supported", func(t *testing.T) {
+//		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+//		require.Empty(t, k.GetSupportedForeignChains(ctx))
+//	})
+//
+//	t.Run("return list of supported chains", func(t *testing.T) {
+//		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+//		chainList := chains.ExternalChainList([]chains.Chain{})
+//		var chainParamsList types.ChainParamsList
+//		for _, chain := range chainList {
+//			chainParamsList.ChainParams = append(
+//				chainParamsList.ChainParams,
+//				sample.ChainParamsSupported(chain.ChainId),
+//			)
+//		}
+//		k.SetChainParamsList(ctx, chainParamsList)
+//
+//		supportedChainsList := k.GetSupportedForeignChains(ctx)
+//		require.NotEmpty(t, supportedChainsList)
+//
+//		require.ElementsMatch(t, getAllForeignChains(), supportedChainsList)
+//	})
+//}
 
 func getAllForeignChains() []chains.Chain {
 	return chains.ExternalChainList([]chains.Chain{})

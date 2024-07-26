@@ -109,6 +109,33 @@ func (_m *CrosschainObserverKeeper) CheckIfTssPubkeyHasBeenGenerated(ctx types.C
 	return r0, r1
 }
 
+// FilterChains provides a mock function with given fields: ctx, filters
+func (_m *CrosschainObserverKeeper) FilterChains(ctx types.Context, filters ...chains.ChainFilter) []chains.Chain {
+	_va := make([]interface{}, len(filters))
+	for _i := range filters {
+		_va[_i] = filters[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FilterChains")
+	}
+
+	var r0 []chains.Chain
+	if rf, ok := ret.Get(0).(func(types.Context, ...chains.ChainFilter) []chains.Chain); ok {
+		r0 = rf(ctx, filters...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]chains.Chain)
+		}
+	}
+
+	return r0
+}
+
 // FindBallot provides a mock function with given fields: ctx, index, chain, observationType
 func (_m *CrosschainObserverKeeper) FindBallot(ctx types.Context, index string, chain chains.Chain, observationType observertypes.ObservationType) (observertypes.Ballot, bool, error) {
 	ret := _m.Called(ctx, index, chain, observationType)

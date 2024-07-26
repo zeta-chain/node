@@ -76,6 +76,25 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) []chains.Chain {
 	return c
 }
 
+func (k Keeper) FilterChains(ctx sdk.Context, filters ...chains.ChainFilter) []chains.Chain {
+	// Retrieve all supported chains
+	supportedChains := k.GetSupportedChains(ctx)
+
+	// Apply each filter to the list of supported chains
+	for _, filter := range filters {
+		var filteredChains []chains.Chain
+		for _, chain := range supportedChains {
+			if filter(chain) {
+				filteredChains = append(filteredChains, chain)
+			}
+		}
+		supportedChains = filteredChains
+	}
+
+	// Return the filtered list of chains
+	return supportedChains
+}
+
 // GetSupportedChainsByConsensus returns the list of supported chains by consensus
 func (k Keeper) GetSupportedForeignChainsByConsensus(ctx sdk.Context, consensus chains.Consensus) []chains.Chain {
 	allChains := k.GetSupportedChains(ctx)
