@@ -2,6 +2,8 @@ package runner
 
 import (
 	"context"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/erc20custodynew.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/zevm/gatewayzevm.sol"
 	"os"
 	"sync"
 	"time"
@@ -20,6 +22,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
@@ -133,6 +136,16 @@ type E2ERunner struct {
 	Logger        *Logger
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
+
+	// evm v2
+	GatewayEVMAddr      ethcommon.Address
+	GatewayEVM          *gatewayevm.GatewayEVM
+	ERC20CustodyNewAddr ethcommon.Address
+	ERC20CustodyNew     *erc20custodynew.ERC20CustodyNew
+
+	// zevm v2
+	GatewayZEVMAddr ethcommon.Address
+	GatewayZEVM     *gatewayzevm.GatewayZEVM
 }
 
 func NewE2ERunner(
@@ -278,6 +291,25 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// v2 contracts
+	r.GatewayEVMAddr = other.GatewayEVMAddr
+	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(r.GatewayEVMAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+	r.ERC20CustodyNewAddr = other.ERC20CustodyNewAddr
+	r.ERC20CustodyNew, err = erc20custodynew.NewERC20CustodyNew(r.ERC20CustodyNewAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+
+	r.GatewayZEVMAddr = other.GatewayZEVMAddr
+	r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(r.GatewayZEVMAddr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

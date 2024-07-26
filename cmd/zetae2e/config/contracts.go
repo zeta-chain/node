@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/erc20custodynew.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/zevm/gatewayzevm.sol"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
@@ -208,6 +211,41 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.EvmTestDAppAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid EvmTestDappAddr: %w", err)
+		}
+	}
+
+	// v2 contracts
+
+	if c := conf.Contracts.EVM.Gateway; c != "" {
+		r.GatewayEVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid GatewayAddr: %w", err)
+		}
+		r.GatewayEVM, err = gatewayevm.NewGatewayEVM(r.GatewayEVMAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.EVM.ERC20CustodyNew; c != "" {
+		r.ERC20CustodyNewAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ERC20CustodyNewAddr: %w", err)
+		}
+		r.ERC20CustodyNew, err = erc20custodynew.NewERC20CustodyNew(r.ERC20CustodyNewAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.Gateway; c != "" {
+		r.GatewayZEVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid GatewayAddr: %w", err)
+		}
+		r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(r.GatewayZEVMAddr, r.ZEVMClient)
+		if err != nil {
+			return err
 		}
 	}
 
