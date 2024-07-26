@@ -451,16 +451,16 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		}
 
 		// try confirming the outbound
-		included, _, err := observer.IsOutboundProcessed(ctx, cctx)
+		_, confirmed, err := observer.IsOutboundProcessed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxEVM: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxEVM: IsOutboundProcessed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if included {
+		if confirmed {
 			oc.logger.Info().
-				Msgf("ScheduleCctxEVM: outbound %s already included; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxEVM: outbound %s already confirmed; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -546,7 +546,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxBTC: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxBTC: IsOutboundProcessed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if included || confirmed {
@@ -614,16 +614,16 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		}
 
 		// try confirming the outbound
-		included, confirmed, err := solObserver.IsOutboundProcessed(ctx, cctx)
+		_, finalized, err := solObserver.IsOutboundProcessed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxSolana: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxSolana: IsOutboundProcessed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if included || confirmed {
+		if finalized {
 			oc.logger.Info().
-				Msgf("ScheduleCctxSolana: outbound %s already included; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxSolana: outbound %s already finalized; do not schedule keysign", outboundID)
 			continue
 		}
 

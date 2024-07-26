@@ -23,6 +23,9 @@ type Signer struct {
 	// logger contains the loggers used by signer
 	logger Logger
 
+	// outboundBeingReported is a map of outbound being reported to tracker
+	outboundBeingReported map[string]bool
+
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
 	mu sync.Mutex
@@ -38,6 +41,7 @@ func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, ts *metrics.Telemet
 			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
 			Compliance: logger.Compliance,
 		},
+		outboundBeingReported: make(map[string]bool),
 	}
 }
 
@@ -77,6 +81,36 @@ func (s *Signer) WithTelemetryServer(ts *metrics.TelemetryServer) *Signer {
 // Logger returns the logger for the signer
 func (s *Signer) Logger() *Logger {
 	return &s.logger
+}
+
+// SetBeingReportedFlag sets the outbound as being reported if not already set
+// Returns true if the outbound is already being reported
+func (s *Signer) SetBeingReportedFlag(hash string) (alreadySet bool) {
+	s.Lock()
+	defer s.Unlock()
+
+	alreadySet = s.outboundBeingReported[hash]
+	if !alreadySet {
+		// mark as being reported
+		s.outboundBeingReported[hash] = true
+	}
+	return
+}
+
+// ClearBeingReportedFlag clears the being reported flag for the outbound
+func (s *Signer) ClearBeingReportedFlag(hash string) {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.outboundBeingReported, hash)
+}
+
+// Exported for unit tests
+
+// GetReportedTxList returns a list of outboundHash being reported
+// TODO: investigate pointer usage
+// https://github.com/zeta-chain/node/issues/2084
+func (s *Signer) GetReportedTxList() *map[string]bool {
+	return &s.outboundBeingReported
 }
 
 // Lock locks the signer

@@ -74,9 +74,6 @@ type Signer struct {
 
 	// er20CustodyAddress is the address of the ERC20Custody contract
 	er20CustodyAddress ethcommon.Address
-
-	// outboundHashBeingReported is a map of outboundHash being reported
-	outboundHashBeingReported map[string]bool
 }
 
 // NewSigner creates a new EVM signer
@@ -113,14 +110,13 @@ func NewSigner(
 	}
 
 	return &Signer{
-		Signer:                    baseSigner,
-		client:                    client,
-		ethSigner:                 ethSigner,
-		zetaConnectorABI:          connectorABI,
-		erc20CustodyABI:           custodyABI,
-		zetaConnectorAddress:      zetaConnectorAddress,
-		er20CustodyAddress:        erc20CustodyAddress,
-		outboundHashBeingReported: make(map[string]bool),
+		Signer:               baseSigner,
+		client:               client,
+		ethSigner:            ethSigner,
+		zetaConnectorABI:     connectorABI,
+		erc20CustodyABI:      custodyABI,
+		zetaConnectorAddress: zetaConnectorAddress,
+		er20CustodyAddress:   erc20CustodyAddress,
 	}, nil
 }
 
@@ -645,15 +641,6 @@ func (signer *Signer) SignERC20WithdrawTx(ctx context.Context, txData *OutboundD
 	return tx, nil
 }
 
-// Exported for unit tests
-
-// GetReportedTxList returns a list of outboundHash being reported
-// TODO: investigate pointer usage
-// https://github.com/zeta-chain/node/issues/2084
-func (signer *Signer) GetReportedTxList() *map[string]bool {
-	return &signer.outboundHashBeingReported
-}
-
 // EvmClient returns the EVM RPC client
 func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
 	return signer.client
@@ -749,22 +736,18 @@ func (signer *Signer) reportToOutboundTracker(
 	outboundHash string,
 	logger zerolog.Logger,
 ) {
-	// skip if already being reported
-	signer.Lock()
-	defer signer.Unlock()
-	if _, found := signer.outboundHashBeingReported[outboundHash]; found {
+	// set being reported flag to avoid duplicate reporting
+	alreadySet := signer.Signer.SetBeingReportedFlag(outboundHash)
+	if alreadySet {
 		logger.Info().
 			Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
 		return
 	}
-	signer.outboundHashBeingReported[outboundHash] = true // mark as being reported
 
 	// report to outbound tracker with goroutine
 	go func() {
 		defer func() {
-			signer.Lock()
-			delete(signer.outboundHashBeingReported, outboundHash)
-			signer.Unlock()
+			signer.Signer.ClearBeingReportedFlag(outboundHash)
 		}()
 
 		// try monitoring tx inclusion status for 10 minutes
