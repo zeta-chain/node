@@ -65,6 +65,8 @@
 * [2428](https://github.com/zeta-chain/node/pull/2428) - propagate context across codebase & refactor zetacore client
 * [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 * [2515](https://github.com/zeta-chain/node/pull/2515) - replace chainName by chainID for ChainNonces indexing
+* [2541](https://github.com/zeta-chain/node/pull/2541) - deprecate ChainName field in Chain object
+* [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
 * [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
 
 ### Tests
@@ -103,6 +105,8 @@
 * [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
+* [2545](https://github.com/zeta-chain/node/pull/2545) - check solana minimum rent exempt to avoid outbound failure
+* [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
 
 ### CI
 

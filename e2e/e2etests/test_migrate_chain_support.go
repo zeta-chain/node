@@ -68,9 +68,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// setup the gas token
 	require.NoError(r, err)
 	_, err = newRunner.ZetaTxServer.BroadcastTx(
-		utils.OperationalPolicyName,
+		utils.AdminPolicyName,
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
-			r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+			r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 			"",
 			chainParams.ChainId,
 			18,
@@ -156,8 +156,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	newRunner.Logger.Info("whitelisting ERC20 on new network")
-	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, crosschaintypes.NewMsgWhitelistERC20(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		newRunner.ERC20Addr.Hex(),
 		chains.Sepolia.ChainId,
 		"USDT",
@@ -203,6 +203,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.Account,
 		r.EVMClient,
 		r.ZEVMClient,
+		r.AutorithyClient,
 		r.CctxClient,
 		r.FungibleClient,
 		r.AuthClient,

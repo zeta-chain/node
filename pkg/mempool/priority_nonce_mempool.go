@@ -19,6 +19,8 @@ var (
 	_ mempool.Iterator = (*PriorityNonceIterator)(nil)
 )
 
+const DefaultMaxTxs = 3000
+
 // PriorityNonceMempool is a mempool implementation that stores txs
 // in a partially ordered set by 2 dimensions: priority, and sender-nonce
 // (sequence number). Internally it uses one priority ordered skip list and one
