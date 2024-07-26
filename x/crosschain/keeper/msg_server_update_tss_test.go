@@ -331,7 +331,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	})
 }
 
-func TestKeeper_GetChainsSupportingMigration(t *testing.T) {
+func TestKeeper_GetChainsSupportingTSSMigration(t *testing.T) {
 	t.Run("should return only ethereum and bitcoin chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
 		chainList := chains.ExternalChainList([]chains.Chain{})
