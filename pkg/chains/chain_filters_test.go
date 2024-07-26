@@ -49,8 +49,11 @@ func TestFilterChains(t *testing.T) {
 			},
 		},
 		{
-			name:    "Apply multiple filters external chains and gateway observer",
-			filters: []chains.ChainFilter{chains.FilterExternalChains, chains.FilterByGateway(chains.CCTXGateway_observers)},
+			name: "Apply multiple filters external chains and gateway observer",
+			filters: []chains.ChainFilter{
+				chains.FilterExternalChains,
+				chains.FilterByGateway(chains.CCTXGateway_observers),
+			},
 			expected: func() []chains.Chain {
 				externalChains := chains.ExternalChainList([]chains.Chain{})
 				var gatewayObserverChains []chains.Chain
