@@ -20,7 +20,7 @@ func newScriptTokenizer(script []byte) scriptTokenizer {
 // one should consider upgrading txscript and remove this implementation
 type scriptTokenizer struct {
 	script []byte
-	offset int32
+	offset int
 	op     byte
 	data   []byte
 	err    error
@@ -29,7 +29,7 @@ type scriptTokenizer struct {
 // Done returns true when either all opcodes have been exhausted or a parse
 // failure was encountered and therefore the state has an associated error.
 func (t *scriptTokenizer) Done() bool {
-	return t.err != nil || t.offset >= int32(len(t.script))
+	return t.err != nil || t.offset >= len(t.script)
 }
 
 // Data returns the data associated with the most recently successfully parsed
@@ -88,8 +88,8 @@ func (t *scriptTokenizer) Next() bool {
 		script := t.script[t.offset:]
 
 		// add 2 instead of 1 because script includes the opcode as well
-		length := int32(op) - txscript.OP_DATA_1 + 2
-		if int32(len(script)) < length {
+		length := int(op) - txscript.OP_DATA_1 + 2
+		if len(script) < length {
 			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
 				"has %d remaining", op, length, len(script))
 			return false
@@ -106,7 +106,7 @@ func (t *scriptTokenizer) Next() bool {
 		return false
 	// Data pushes with parsed lengths -- OP_PUSHDATA{1,2,4}.
 	default:
-		var length int32
+		var length int
 		switch op {
 		case txscript.OP_PUSHDATA1:
 			length = 1
@@ -117,21 +117,21 @@ func (t *scriptTokenizer) Next() bool {
 		}
 
 		script := t.script[t.offset+1:]
-		if int32(len(script)) < length {
+		if len(script) < length {
 			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
 				"has %d remaining", op, length, len(script))
 			return false
 		}
 
 		// Next -length bytes are little endian length of data.
-		var dataLen int32
+		var dataLen int
 		switch length {
 		case 1:
-			dataLen = int32(script[0])
+			dataLen = int(script[0])
 		case 2:
-			dataLen = int32(binary.LittleEndian.Uint16(script[:2]))
+			dataLen = int(binary.LittleEndian.Uint16(script[:2]))
 		case 4:
-			dataLen = int32(binary.LittleEndian.Uint32(script[:4]))
+			dataLen = int(binary.LittleEndian.Uint32(script[:4]))
 		default:
 			t.err = fmt.Errorf("invalid opcode length %d", length)
 			return false
@@ -141,7 +141,7 @@ func (t *scriptTokenizer) Next() bool {
 		script = script[length:]
 
 		// Disallow entries that do not fit script or were sign extended.
-		if dataLen > int32(len(script)) || dataLen < 0 {
+		if dataLen > len(script) || dataLen < 0 {
 			t.err = fmt.Errorf("opcode %d pushes %d bytes, but script only "+
 				"has %d remaining", op, dataLen, len(script))
 			return false
