@@ -40,10 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	// TODO: enable back IBC
-	_ "github.com/cosmos/cosmos-sdk/x/capability"
-	_ "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -82,14 +78,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	// TODO: enable back IBC
-	_ "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	_ "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
-	_ "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	_ "github.com/cosmos/ibc-go/v7/modules/core"
-	_ "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	_ "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	_ "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	evmante "github.com/evmos/ethermint/app/ante"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm"
@@ -119,10 +107,6 @@ import (
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	// TODO: enable back IBC
-	_ "github.com/zeta-chain/zetacore/x/ibccrosschain"
-	_ "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-	_ "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
 	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -130,6 +114,21 @@ import (
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// TODO: enable back IBC
+// "github.com/cosmos/cosmos-sdk/x/capability"
+// capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+// capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+// "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+// transferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+// transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+// ibccore "github.com/cosmos/ibc-go/v7/modules/core"
+// ibctypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
+// ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+// ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+// "github.com/zeta-chain/zetacore/x/ibccrosschain"
+// ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
+// ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 
 const Name = "zetacore"
 
