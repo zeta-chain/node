@@ -35,6 +35,7 @@
 * [2497](https://github.com/zeta-chain/node/pull/2416) - support for runtime chain (de)provisioning
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
+* [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
 
 ### Refactor
 

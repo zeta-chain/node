@@ -110,7 +110,7 @@ var (
 		Namespace: ZetaClientNamespace,
 		Name:      "sign_latency",
 		Help:      "Histogram of the TSS keysign latency",
-		Buckets:   []float64{1, 15, 30, 60, 120, 240},
+		Buckets:   []float64{1, 7, 15, 30, 60, 120, 240},
 	}, []string{"result"})
 )
 
