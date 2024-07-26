@@ -74,7 +74,10 @@ func (k Keeper) RateLimiterInput(
 	}
 
 	// get foreign chains and conversion rates of foreign coins
-	externalSupportedChains := chains.FilterChains(k.GetObserverKeeper().GetSupportedChains(ctx), chains.FilterExternalChains)
+	externalSupportedChains := chains.FilterChains(
+		k.GetObserverKeeper().GetSupportedChains(ctx),
+		chains.FilterExternalChains,
+	)
 
 	_, assetRates, found := k.GetRateLimiterAssetRateList(ctx)
 	if !found {

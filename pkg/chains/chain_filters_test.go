@@ -139,8 +139,20 @@ func TestCombineFilterChains(t *testing.T) {
 			name: "test support TSS migration filter",
 			chainLists: func() [][]chains.Chain {
 				return [][]chains.Chain{
-					chains.FilterChains(chains.ExternalChainList([]chains.Chain{}), []chains.ChainFilter{chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusEthereum}...),
-					chains.FilterChains(chains.ExternalChainList([]chains.Chain{}), []chains.ChainFilter{chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusBitcoin}...),
+					chains.FilterChains(
+						chains.ExternalChainList([]chains.Chain{}),
+						[]chains.ChainFilter{
+							chains.FilterExternalChains,
+							chains.FilterGatewayObserver,
+							chains.FilterConsensusEthereum,
+						}...),
+					chains.FilterChains(
+						chains.ExternalChainList([]chains.Chain{}),
+						[]chains.ChainFilter{
+							chains.FilterExternalChains,
+							chains.FilterGatewayObserver,
+							chains.FilterConsensusBitcoin,
+						}...),
 				}
 			},
 			expected: func() []chains.Chain {
@@ -159,9 +171,27 @@ func TestCombineFilterChains(t *testing.T) {
 			name: "test support TSS migration filter with solana",
 			chainLists: func() [][]chains.Chain {
 				return [][]chains.Chain{
-					chains.FilterChains(chains.ExternalChainList([]chains.Chain{}), []chains.ChainFilter{chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusEthereum}...),
-					chains.FilterChains(chains.ExternalChainList([]chains.Chain{}), []chains.ChainFilter{chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusBitcoin}...),
-					chains.FilterChains(chains.ExternalChainList([]chains.Chain{}), []chains.ChainFilter{chains.FilterExternalChains, chains.FilterGatewayObserver, chains.FilterConsensusSolana}...),
+					chains.FilterChains(
+						chains.ExternalChainList([]chains.Chain{}),
+						[]chains.ChainFilter{
+							chains.FilterExternalChains,
+							chains.FilterGatewayObserver,
+							chains.FilterConsensusEthereum,
+						}...),
+					chains.FilterChains(
+						chains.ExternalChainList([]chains.Chain{}),
+						[]chains.ChainFilter{
+							chains.FilterExternalChains,
+							chains.FilterGatewayObserver,
+							chains.FilterConsensusBitcoin,
+						}...),
+					chains.FilterChains(
+						chains.ExternalChainList([]chains.Chain{}),
+						[]chains.ChainFilter{
+							chains.FilterExternalChains,
+							chains.FilterGatewayObserver,
+							chains.FilterConsensusSolana,
+						}...),
 				}
 			},
 			expected: func() []chains.Chain {
