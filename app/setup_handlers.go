@@ -98,6 +98,9 @@ func SetupHandlers(app *App) {
 					return vm, nil
 				},
 			},
+			// TODO: enable back IBC
+			// these commented lines allow for the IBC modules to be added to the upgrade tracker
+			// https://github.com/zeta-chain/node/issues/2573
 			//{
 			//	index: 1715624665,
 			//	storeUpgrade: &storetypes.StoreUpgrades{

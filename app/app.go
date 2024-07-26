@@ -116,6 +116,9 @@ import (
 )
 
 // TODO: enable back IBC
+// IBC has been turned off for v19, all necessary code has been commented out
+// to enable IBC, uncomment the following imports and all logic using these packages in the code
+// https://github.com/zeta-chain/node/issues/2573
 // "github.com/cosmos/cosmos-sdk/x/capability"
 // capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 // capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"

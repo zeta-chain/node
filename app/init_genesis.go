@@ -29,6 +29,9 @@ import (
 
 // InitGenesisModuleList returns the module list for genesis initialization
 // NOTE: Capability module must occur first so that it can initialize any capabilities
+// TODO: enable back IBC
+// all commented lines in this function are modules related to IBC
+// https://github.com/zeta-chain/node/issues/2573
 func InitGenesisModuleList() []string {
 	return []string{
 		//capabilitytypes.ModuleName,
