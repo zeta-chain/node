@@ -41,8 +41,6 @@ zetacored query [flags]
 * [zetacored query fungible](zetacored_query_fungible.md)	 - Querying commands for the fungible module
 * [zetacored query gov](zetacored_query_gov.md)	 - Querying commands for the governance module
 * [zetacored query group](zetacored_query_group.md)	 - Querying commands for the group module
-* [zetacored query ibc](zetacored_query_ibc.md)	 - Querying commands for the IBC module
-* [zetacored query ibc-transfer](zetacored_query_ibc-transfer.md)	 - IBC fungible token transfer query subcommands
 * [zetacored query lightclient](zetacored_query_lightclient.md)	 - Querying commands for the lightclient module
 * [zetacored query observer](zetacored_query_observer.md)	 - Querying commands for the observer module
 * [zetacored query params](zetacored_query_params.md)	 - Querying commands for the params module
@@ -52,5 +50,4 @@ zetacored query [flags]
 * [zetacored query tx](zetacored_query_tx.md)	 - Query for a transaction by hash, "[addr]/[seq]" combination or comma-separated signatures in a committed block
 * [zetacored query txs](zetacored_query_txs.md)	 - Query for paginated transactions that match a set of events
 * [zetacored query upgrade](zetacored_query_upgrade.md)	 - Querying commands for the upgrade module
-* [zetacored query zetaibccrosschain](zetacored_query_zetaibccrosschain.md)	 - Querying commands for the zetaibccrosschain module
 
