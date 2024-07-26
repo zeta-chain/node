@@ -18,10 +18,9 @@ func TestKeySignManager_StartMsgSign(t *testing.T) {
 
 func TestKeySignManager_EndMsgSign(t *testing.T) {
 	ksman := NewKeysignsTracker(zerolog.Logger{})
-	ksman.StartMsgSign()
-	ksman.StartMsgSign()
-	ksman.EndMsgSign()
-	ksman.EndMsgSign()
-	ksman.EndMsgSign()
+	end1 := ksman.StartMsgSign()
+	end2 := ksman.StartMsgSign()
+	end1(true)
+	end2(false)
 	require.Equal(t, int64(0), ksman.GetNumActiveMessageSigns())
 }

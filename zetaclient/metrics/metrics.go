@@ -104,6 +104,14 @@ var (
 		Name:      "percentage_of_rate_reached",
 		Help:      "Percentage of the rate limiter rate reached",
 	})
+
+	// SignLatency is a histogram of of the TSS keysign latency
+	SignLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "sign_latency",
+		Help:      "Histogram of the TSS keysign latency",
+		Buckets:   []float64{1, 15, 30, 60, 120, 240},
+	}, []string{"result"})
 )
 
 // NewMetrics creates a new Metrics instance
