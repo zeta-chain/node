@@ -11,7 +11,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -160,7 +159,6 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	require.LessOrEqual(r, btcTSSBalanceNew*1e8, btcTSSBalanceOld*1e8)
 
 	// ETH
-
 	r.TSSAddress = common.HexToAddress(newTss.Eth)
 	ethTSSBalanceNew, err := r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
 	require.NoError(r, err)

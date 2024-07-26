@@ -3,10 +3,12 @@ package local
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -399,6 +401,32 @@ func waitKeygenHeight(
 	}
 }
 
+func updateTssAddressForConnector(runner *runner.E2ERunner) {
+
+	tssAddress, err := runner.ConnectorEth.TssAddress(&bind.CallOpts{Context: runner.Ctx})
+	require.NoError(runner, err)
+	runner.Logger.Print(fmt.Sprintf("TSS Address Before: %s", tssAddress.String()))
+
+	tssUpdater, err := runner.ConnectorEth.TssAddressUpdater(&bind.CallOpts{Context: runner.Ctx})
+	require.NoError(runner, err)
+	runner.Logger.Print(fmt.Sprintf("TSS Updater: %s", tssUpdater.String()))
+
+	runner.Logger.Print("Update TSS")
+	noError(runner.SetTSSAddresses())
+	runner.Logger.Print("TSS Deployer Address: %s", runner.TSSAddress)
+
+	tx, err := runner.ConnectorEth.UpdateTssAddress(runner.EVMAuth, runner.TSSAddress)
+	require.NoError(runner, err)
+	runner.Logger.Print(fmt.Sprintf("TSS Address Update Tx: %s", tx.Hash().String()))
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+	utils.RequireTxSuccessful(runner, receipt)
+
+	tssAddress, err = runner.ConnectorEth.TssAddress(&bind.CallOpts{Context: runner.Ctx})
+	require.NoError(runner, err)
+	runner.Logger.Print(fmt.Sprintf("TSS Address After: %s", tssAddress.String()))
+
+}
+
 func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
 	migrationStartTime := time.Now()
 	logger.Print("🏁 starting tss migration")
@@ -426,11 +454,13 @@ func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger
 	}
 
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
+	//updateTssAddressForConnector(deployerRunner)
 	logger.Print("🏁 starting post migration tests")
 
 	tests := []string{
 		e2etests.TestBitcoinWithdrawSegWitName,
 		e2etests.TestEtherWithdrawName,
+		e2etests.TestZetaWithdrawName,
 	}
 	fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
 
@@ -439,6 +469,7 @@ func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger
 		logger.Print("❌ post migration tests failed")
 		os.Exit(1)
 	}
+
 }
 
 func must[T any](v T, err error) T {

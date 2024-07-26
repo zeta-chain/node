@@ -77,6 +77,7 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	r.Logger.Info("ZetaEth contract address: %s, tx hash: %s", zetaEthAddr.Hex(), zetaEthAddr.Hash().Hex())
 
 	r.Logger.Info("Deploying ZetaConnectorEth contract")
+	r.Logger.Print("Connector constructor args: ZetaETH %s, TSS  %s, Updated %s, Pauser %s\n", zetaEthAddr.Hex(), r.TSSAddress.Hex(), r.EVMAddress().Hex(), r.EVMAddress().Hex())
 	connectorEthAddr, txConnector, ConnectorEth, err := zetaconnectoreth.DeployZetaConnectorEth(
 		r.EVMAuth,
 		r.EVMClient,

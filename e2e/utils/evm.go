@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	DefaultReceiptTimeout = 30 * time.Second
+	DefaultReceiptTimeout = 300 * time.Second
 )
 
 func CheckNonce(
