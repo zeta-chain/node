@@ -13,9 +13,13 @@ import (
 
 // ChainRegistry is a registry of supported chains
 type ChainRegistry struct {
-	chains           map[int64]Chain
+	chains map[int64]Chain
+
+	// additionalChains is a list of additional static chain information to use when searching from
+	// chain IDs. It's stored in the protocol to dynamically support new chains without doing an upgrade
 	additionalChains []chains.Chain
-	mu               sync.Mutex
+
+	mu sync.Mutex
 }
 
 // Chain represents chain with its parameters
@@ -49,10 +53,10 @@ func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 	return chain, nil
 }
 
-// Set sets a chain in the registry. Note that chain must be SUPPORTED and NOT ZetaChain itself
-// otherwise it will return ErrChainNotSupported
+// Set sets a chain in the registry.
+// A chain must be SUPPORTED and NOT ZetaChain itself; otherwise returns ErrChainNotSupported
 func (cr *ChainRegistry) Set(chainID int64, chain *chains.Chain, params *observer.ChainParams) error {
-	item, err := newChain(chainID, chain, params)
+	item, err := newChain(cr, chainID, chain, params)
 	if err != nil {
 		return err
 	}
@@ -67,7 +71,6 @@ func (cr *ChainRegistry) Set(chainID int64, chain *chains.Chain, params *observe
 	return nil
 }
 
-// SetAdditionalChains sets additional chains
 func (cr *ChainRegistry) SetAdditionalChains(chains []chains.Chain) {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
@@ -99,7 +102,7 @@ func (cr *ChainRegistry) ChainIDs() []int64 {
 	return maps.Keys(cr.chains)
 }
 
-func newChain(chainID int64, chain *chains.Chain, params *observer.ChainParams) (Chain, error) {
+func newChain(cr *ChainRegistry, chainID int64, chain *chains.Chain, params *observer.ChainParams) (Chain, error) {
 	switch {
 	case chainID < 1:
 		return Chain{}, fmt.Errorf("invalid chain id %d", chainID)
@@ -113,14 +116,15 @@ func newChain(chainID int64, chain *chains.Chain, params *observer.ChainParams) 
 		return Chain{}, fmt.Errorf("chain id %d does not match params.ChainId %d", chainID, params.ChainId)
 	case !params.IsSupported:
 		return Chain{}, ErrChainNotSupported
-	case chains.IsZetaChain(chainID, nil):
+	case chains.IsZetaChain(chainID, nil) || !chain.IsExternal:
 		return Chain{}, errors.Wrap(ErrChainNotSupported, "ZetaChain itself cannot be in the registry")
 	}
 
 	return Chain{
-		id:     chainID,
-		chain:  chain,
-		params: params,
+		id:       chainID,
+		chain:    chain,
+		params:   params,
+		registry: cr,
 	}, nil
 }
 
