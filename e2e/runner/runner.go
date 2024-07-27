@@ -33,6 +33,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -65,6 +66,7 @@ type E2ERunner struct {
 	SolanaClient *rpc.Client
 
 	// grpc clients
+	AutorithyClient   authoritytypes.QueryClient
 	CctxClient        crosschaintypes.QueryClient
 	FungibleClient    fungibletypes.QueryClient
 	AuthClient        authtypes.QueryClient
@@ -140,6 +142,7 @@ func NewE2ERunner(
 	account config.Account,
 	evmClient *ethclient.Client,
 	zevmClient *ethclient.Client,
+	authorityClient authoritytypes.QueryClient,
 	cctxClient crosschaintypes.QueryClient,
 	fungibleClient fungibletypes.QueryClient,
 	authClient authtypes.QueryClient,
@@ -161,6 +164,7 @@ func NewE2ERunner(
 
 		ZEVMClient:        zevmClient,
 		EVMClient:         evmClient,
+		AutorithyClient:   authorityClient,
 		CctxClient:        cctxClient,
 		FungibleClient:    fungibleClient,
 		AuthClient:        authClient,

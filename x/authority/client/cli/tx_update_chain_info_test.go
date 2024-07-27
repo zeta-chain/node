@@ -19,22 +19,22 @@ func TestReadChainInfoFromFile(t *testing.T) {
 	require.Len(t, chainInfo.Chains, 2)
 	require.EqualValues(t, chains.Chain{
 		ChainId:     42,
-		ChainName:   chains.ChainName_empty,
 		Network:     chains.Network_eth,
 		NetworkType: chains.NetworkType_mainnet,
 		Vm:          chains.Vm_no_vm,
 		Consensus:   chains.Consensus_ethereum,
 		IsExternal:  false,
 		CctxGateway: chains.CCTXGateway_zevm,
+		Name:        "foo",
 	}, chainInfo.Chains[0])
 	require.EqualValues(t, chains.Chain{
 		ChainId:     84,
-		ChainName:   chains.ChainName_eth_mainnet,
 		Network:     chains.Network_zeta,
 		NetworkType: chains.NetworkType_testnet,
 		Vm:          chains.Vm_evm,
 		Consensus:   chains.Consensus_tendermint,
 		IsExternal:  true,
 		CctxGateway: chains.CCTXGateway_observers,
+		Name:        "bar",
 	}, chainInfo.Chains[1])
 }

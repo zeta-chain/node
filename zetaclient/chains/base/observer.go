@@ -230,7 +230,7 @@ func (ob *Observer) LastBlockScanned() uint64 {
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
-	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(blockNumber))
+	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
 	return ob
 }
 

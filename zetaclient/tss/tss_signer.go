@@ -246,9 +246,9 @@ func (tss *TSS) Sign(
 		nil,
 		"0.14.0",
 	)
-	tss.KeysignsTracker.StartMsgSign()
+	end := tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
-	tss.KeysignsTracker.EndMsgSign()
+	end(err != nil || ksRes.Status == thorcommon.Fail)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
@@ -328,9 +328,9 @@ func (tss *TSS) SignBatch(
 	// #nosec G115 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
-	tss.KeysignsTracker.StartMsgSign()
+	end := tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
-	tss.KeysignsTracker.EndMsgSign()
+	end(err != nil || ksRes.Status == thorcommon.Fail)
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")
 	}

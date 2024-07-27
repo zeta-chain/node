@@ -94,8 +94,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		chainID := 5
 		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
 			{
-				ChainName: chains.ChainName(chainID),
-				ChainId:   int64(chainID),
+				ChainId: int64(chainID),
 			},
 		})
 
@@ -114,8 +113,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		chainID := 5
 		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
 			{
-				ChainName: chains.ChainName(chainID),
-				ChainId:   int64(chainID),
+				ChainId: int64(chainID),
 			},
 		})
 

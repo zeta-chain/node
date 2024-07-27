@@ -18,8 +18,6 @@ services:
     hostname: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.31

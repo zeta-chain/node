@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"math/rand"
 	"strings"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -292,6 +294,16 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 		TxOrigin:           EthAddress().String(),
 		Asset:              "",
 		EventIndex:         EventIndex(),
+	}
+}
+
+func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {
+	return &zrc20.ZRC20Withdrawal{
+		From:            EthAddress(),
+		To:              to,
+		Value:           value,
+		Gasfee:          big.NewInt(Int64InRange(100000, 10000000)),
+		ProtocolFlatFee: big.NewInt(Int64InRange(100000, 10000000)),
 	}
 }
 

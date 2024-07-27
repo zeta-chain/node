@@ -28,10 +28,16 @@ func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (types.GasPrice, boo
 		return types.GasPrice{}, false
 	}
 
-	var val types.GasPrice
-	k.cdc.MustUnmarshal(b, &val)
+	var gp types.GasPrice
+	k.cdc.MustUnmarshal(b, &gp)
 
-	return val, true
+	// this might happen when genesis state
+	// has X price points, but node upgrade containing priorityFee is not completed yet
+	if len(gp.PriorityFees) == 0 && len(gp.Prices) > 0 {
+		gp.PriorityFees = make([]uint64, len(gp.Prices))
+	}
+
+	return gp, true
 }
 
 // GetMedianGasValues returns *median* gas price and priority fee (for EIP-1559) from the store or false if it doesn't exist.

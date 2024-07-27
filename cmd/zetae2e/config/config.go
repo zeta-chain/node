@@ -32,6 +32,7 @@ func RunnerFromConfig(
 		account,
 		e2eClients.EvmClient,
 		e2eClients.ZevmClient,
+		e2eClients.AuthorityClient,
 		e2eClients.CctxClient,
 		e2eClients.FungibleClient,
 		e2eClients.AuthClient,
