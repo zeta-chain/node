@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/retry"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
