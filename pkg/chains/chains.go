@@ -413,6 +413,16 @@ func ChainListByConsensus(consensus Consensus, additionalChains []Chain) []Chain
 	return chainList
 }
 
+func ChainListByGateway(gateway CCTXGateway, additionalChains []Chain) []Chain {
+	var chainList []Chain
+	for _, chain := range CombineDefaultChainsList(additionalChains) {
+		if chain.CctxGateway == gateway {
+			chainList = append(chainList, chain)
+		}
+	}
+	return chainList
+}
+
 // ChainListForHeaderSupport returns a list of chains that support headers
 func ChainListForHeaderSupport(additionalChains []Chain) []Chain {
 	var chainList []Chain
