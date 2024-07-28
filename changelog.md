@@ -68,6 +68,7 @@
 * [2515](https://github.com/zeta-chain/node/pull/2515) - replace chainName by chainID for ChainNonces indexing
 * [2541](https://github.com/zeta-chain/node/pull/2541) - deprecate ChainName field in Chain object
 * [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
+* [2572](https://github.com/zeta-chain/node/pull/2572) - turn off IBC modules
 * [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
 
 ### Tests
