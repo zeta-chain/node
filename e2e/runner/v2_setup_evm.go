@@ -1,7 +1,11 @@
 package runner
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
+	"log"
 	"math/big"
+	"strings"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -21,6 +25,11 @@ var (
 
 // SetupEVMV2 setup contracts on EVM with v2 contracts
 func (r *E2ERunner) SetupEVMV2() {
+	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		r.requireTxSuccessful(receipt, failMessage)
+	}
+
 	r.Logger.Print("⚙️ setting up EVM v2 network")
 	startTime := time.Now()
 	defer func() {
@@ -36,6 +45,21 @@ func (r *E2ERunner) SetupEVMV2() {
 
 	r.Logger.Info("Deploying Gateway EVM")
 	gatewayEVMAddr, txGateway, gatewayEVM, err := gatewayevm.DeployGatewayEVM(r.EVMAuth, r.EVMClient)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txGateway, "Gateway deployment failed")
+
+	gatewayEVMABI, err := abi.JSON(strings.NewReader(gatewayevm.GatewayEVMMetaData.ABI))
+	if err != nil {
+		log.Fatalf("Failed to parse ABI: %v", err)
+	}
+
+	// Encode the initializer data
+	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, zeroAddress)
+	require.NoError(r, err)
+
+	// Deploy the proxy contract
+	_, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(r.EVMAuth, r.EVMClient, gatewayEVMAddr, initializerData)
 	require.NoError(r, err)
 
 	r.GatewayEVMAddr = gatewayEVMAddr
@@ -67,23 +91,9 @@ func (r *E2ERunner) SetupEVMV2() {
 	r.ERC20Addr = erc20Addr
 	r.Logger.Info("ERC20 contract address: %s, tx hash: %s", erc20Addr.Hex(), txERC20.Hash().Hex())
 
-	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-		r.requireTxSuccessful(receipt, failMessage)
-	}
-
 	// check contract deployment receipt
 	ensureTxReceipt(txDonation, "EVM donation tx failed")
-	ensureTxReceipt(txGateway, "GatewayEVM deployment failed")
 	ensureTxReceipt(txCustody, "ERC20CustodyNew deployment failed")
 	ensureTxReceipt(txERC20, "ERC20 deployment failed")
-
-	// initialize contracts
-	r.Logger.Info("Initialize Gateway EVM")
-	txCustody, err = r.GatewayEVM.Initialize(r.EVMAuth, r.TSSAddress, zeroAddress)
-	require.NoError(r, err)
-
-	ensureTxReceipt(txCustody, "ERC20 update TSS address failed")
-
-	r.Logger.Info("TSS set receipt tx hash: %s", txCustody.Hash().Hex())
+	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 }
