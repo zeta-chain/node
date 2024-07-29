@@ -69,11 +69,6 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 // TODO(revamp): simplify this function into smaller functions
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
 	zetaCoreClient := ob.ZetacoreClient()
 
 	// get and update latest block height

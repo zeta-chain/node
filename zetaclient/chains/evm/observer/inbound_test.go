@@ -83,17 +83,17 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act if emitter is not ZetaConnector", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
-			t,
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t,
 			TestDataDir,
-			chainID,
+			1, // ETH CHAIN
 			inboundHash,
 			coin.CoinType_Zeta,
 		)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		chainID = 56 // use BSC chain connector
+		params := mocks.MockChainParams(chain.ChainId, confirmation)
+
 		ob := MockEVMObserver(
 			t,
 			chain,
@@ -102,8 +102,9 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 			nil,
 			nil,
 			lastBlock,
-			mocks.MockChainParams(chainID, confirmation),
+			params,
 		)
+
 		_, err := ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
 		require.ErrorContains(t, err, "emitter address mismatch")
 	})

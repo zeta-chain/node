@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -93,7 +93,7 @@ func (txData *OutboundData) SetupGas(
 		if chain.Network == chains.Network_eth {
 			suggested, err := client.SuggestGasPrice(context.Background())
 			if err != nil {
-				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain.String()))
+				return errors.Wrapf(err, "cannot get gas price from chain %s ", chain.String())
 			}
 			txData.gasPrice = roundUpToNearestGwei(suggested)
 		} else {
@@ -139,9 +139,11 @@ func NewOutboundData(
 		return nil, false, err
 	}
 
-	toChain, err := app.GetChain(txData.toChainID.Int64())
+	chainID := txData.toChainID.Int64()
+
+	toChain, err := app.GetChain(chainID)
 	if err != nil {
-		return nil, true, err
+		return nil, true, errors.Wrapf(err, "unable to get chain %d from app context", chainID)
 	}
 
 	rawChain := toChain.RawChain()
@@ -160,7 +162,7 @@ func NewOutboundData(
 	// Set up gas limit and gas price
 	err = txData.SetupGas(cctx, logger, evmRPC, *rawChain)
 	if err != nil {
-		return nil, true, err
+		return nil, true, errors.Wrap(err, "unable to setup gas")
 	}
 
 	// Get sendHash

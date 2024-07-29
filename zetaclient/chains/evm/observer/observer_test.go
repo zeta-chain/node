@@ -36,6 +36,7 @@ var TestDataDir = "../../../"
 
 // getAppContext creates an AppContext for unit tests
 func getAppContext(
+	t *testing.T,
 	evmChain chains.Chain,
 	endpoint string,
 	evmChainParams *observertypes.ChainParams,
@@ -45,6 +46,8 @@ func getAppContext(
 		endpoint = "http://localhost:8545"
 	}
 
+	require.Equal(t, evmChain.ChainId, evmChainParams.ChainId, "chain id mismatch between chain and params")
+
 	// create config
 	cfg := config.New(false)
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
@@ -52,24 +55,24 @@ func getAppContext(
 		Endpoint: endpoint,
 	}
 
+	logger := zerolog.New(zerolog.NewTestWriter(t))
+
 	// create AppContext
-	appContext := zctx.New(cfg, zerolog.Nop())
-	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
-	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+	appContext := zctx.New(cfg, logger)
+	chainParams := make(map[int64]*observertypes.ChainParams)
+	chainParams[evmChain.ChainId] = evmChainParams
 
 	// feed chain params
-	appContext.Update(
-		&observertypes.Keygen{},
+	err := appContext.Update(
+		observertypes.Keygen{},
 		[]chains.Chain{evmChain},
-		evmChainParamsMap,
 		nil,
-		nil,
-		"",
+		chainParams,
+		"tssPubKey",
 		*sample.CrosschainFlags(),
-		[]chains.Chain{},
-		sample.HeaderSupportedChains(),
-		true,
 	)
+	require.NoError(t, err)
+
 	// create AppContext
 	return appContext, cfg.EVMChainConfigs[evmChain.ChainId]
 }
@@ -105,7 +108,7 @@ func MockEVMObserver(
 		tss = mocks.NewTSSMainnet()
 	}
 	// create AppContext
-	_, evmCfg := getAppContext(chain, "", &params)
+	_, evmCfg := getAppContext(t, chain, "", &params)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)

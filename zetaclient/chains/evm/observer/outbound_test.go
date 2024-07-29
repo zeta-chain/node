@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -199,7 +198,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetacore client and post outbound vote
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, observertypes.ChainParams{})
+		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(chain.ChainId, 100))
 		ob.PostVoteOutbound(
 			ctx,
 			cctx.Index,

@@ -508,7 +508,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 	}
 
 	// get erc20 custody contract
-	addrCustory, custody, err := ob.GetERC20CustodyContract()
+	addrCustody, custody, err := ob.GetERC20CustodyContract()
 	if err != nil {
 		return "", err
 	}
@@ -520,7 +520,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err == nil && zetaDeposited != nil {
 			// sanity check tx event
-			err = evm.ValidateEvmTxLog(&zetaDeposited.Raw, addrCustory, tx.Hash, evm.TopicsDeposited)
+			err = evm.ValidateEvmTxLog(&zetaDeposited.Raw, addrCustody, tx.Hash, evm.TopicsDeposited)
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {

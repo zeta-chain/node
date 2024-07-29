@@ -239,6 +239,8 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:9090")
 	require.NoError(t, err)
 
+	ethChainParams := mocks.MockChainParams(chains.Ethereum.ChainId, 100)
+
 	server := grpcmock.MockUnstartedServer(
 		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
 		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
@@ -271,9 +273,8 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 				WithPayload(observertypes.QueryGetChainParamsRequest{}).
 				Return(observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 					ChainParams: []*observertypes.ChainParams{
-						{
-							ChainId: 7000,
-						},
+						{ChainId: 7000}, // ZetaChain
+						&ethChainParams,
 					},
 				}})
 
@@ -341,21 +342,6 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 					GasPriceIncreaseFlags: nil,
 				}})
 
-			method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
-				Return(lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
-					{
-						ChainId: chains.Ethereum.ChainId,
-						Enabled: true,
-					},
-					{
-						ChainId: chains.BitcoinMainnet.ChainId,
-						Enabled: false,
-					},
-				}})
-
 			method = "/zetachain.zetacore.authority.Query/ChainInfo"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
@@ -384,7 +370,7 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.New(false)
 		appContext := zctx.New(cfg, zerolog.Nop())
-		err := client.UpdateAppContext(ctx, appContext, false, zerolog.Logger{})
+		err := client.UpdateAppContext(ctx, appContext, zerolog.New(zerolog.NewTestWriter(t)))
 		require.NoError(t, err)
 	})
 }
