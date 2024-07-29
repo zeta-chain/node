@@ -53,41 +53,44 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 		require.EqualValues(t, connectorAddr.Hex(), sc.ConnectorZevm)
 	})
 
-	t.Run("can update and overwrite the gateway contract if system contract state variable not found", func(t *testing.T) {
-		// ARRANGE
-		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseAuthorityMock: true,
-		})
+	t.Run(
+		"can update and overwrite the gateway contract if system contract state variable not found",
+		func(t *testing.T) {
+			// ARRANGE
+			k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+				UseAuthorityMock: true,
+			})
 
-		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-		admin := sample.AccAddress()
+			msgServer := keeper.NewMsgServerImpl(*k)
+			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+			admin := sample.AccAddress()
 
-		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
-		newGatewayAddr := sample.EthAddress()
+			newGatewayAddr := sample.EthAddress()
 
-		_, found := k.GetSystemContract(ctx)
-		require.False(t, found)
+			_, found := k.GetSystemContract(ctx)
+			require.False(t, found)
 
-		msg := types.NewMsgUpdateGatewayContract(admin, newGatewayAddr.Hex())
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+			msg := types.NewMsgUpdateGatewayContract(admin, newGatewayAddr.Hex())
+			keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
-		// ACT
-		_, err := msgServer.UpdateGatewayContract(ctx, msg)
+			// ACT
+			_, err := msgServer.UpdateGatewayContract(ctx, msg)
 
-		// ASSERT
-		require.NoError(t, err)
-		sc, found := k.GetSystemContract(ctx)
-		require.True(t, found)
+			// ASSERT
+			require.NoError(t, err)
+			sc, found := k.GetSystemContract(ctx)
+			require.True(t, found)
 
-		// gateway is updated
-		require.EqualValues(t, newGatewayAddr.Hex(), sc.Gateway)
+			// gateway is updated
+			require.EqualValues(t, newGatewayAddr.Hex(), sc.Gateway)
 
-		// system contract and connector are not updated
-		require.EqualValues(t, "", sc.SystemContract)
-		require.EqualValues(t, "", sc.ConnectorZevm)
-	})
+			// system contract and connector are not updated
+			require.EqualValues(t, "", sc.SystemContract)
+			require.EqualValues(t, "", sc.ConnectorZevm)
+		},
+	)
 
 	t.Run("should prevent update the gateway contract if not admin", func(t *testing.T) {
 		// ARRANGE
