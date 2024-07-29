@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/slices"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -69,23 +70,21 @@ func CreateAppContext(
 	}
 	// new AppContext
 	appContext := zctx.New(cfg, zerolog.Nop())
-	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
-	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+	params := map[int64]*observertypes.ChainParams{
+		evmChain.ChainId:       evmChainParams,
+		btcChainParams.ChainId: btcChainParams,
+	}
+
 	ccFlags := sample.CrosschainFlags()
-	verificationFlags := sample.HeaderSupportedChains()
 
 	// feed chain params
 	appContext.Update(
-		&observertypes.Keygen{},
+		observertypes.Keygen{},
 		[]chains.Chain{evmChain, btcChain},
-		evmChainParamsMap,
-		btcChainParams,
 		nil,
+		params,
 		"",
 		*ccFlags,
-		[]chains.Chain{},
-		verificationFlags,
-		true,
 	)
 	return appContext
 }
@@ -369,8 +368,10 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			// create orchestrator
 			orchestrator := MockOrchestrator(t, client, ethChain, btcChain, ethChainParams, btcChainParams)
 
+			chainIDs := slices.Map(foreignChains, func(c chains.Chain) int64 { return c.ChainId })
+
 			// run the test
-			cctxsMap, err := orchestrator.GetPendingCctxsWithinRateLimit(ctx, foreignChains)
+			cctxsMap, err := orchestrator.GetPendingCctxsWithinRateLimit(ctx, chainIDs)
 			if tt.fail {
 				assert.Error(t, err)
 				assert.Empty(t, cctxsMap)

@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -153,18 +152,18 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 		return nil, err
 	}
 
-	// noop for non-EVM chains
-	if !chains.IsEVMChain(chainID, app.GetAdditionalChains()) {
-		return signer, nil
+	chain, err := app.GetChain(chainID)
+	if err != nil {
+		return nil, err
 	}
 
-	evmParams, found := app.GetEVMChainParams(chainID)
-	if !found {
+	// noop for non-EVM chains
+	if !chain.IsEVM() {
 		return signer, nil
 	}
 
 	// update zeta connector and ERC20 custody addresses
-	zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
+	zetaConnectorAddress := ethcommon.HexToAddress(chain.Params().GetConnectorContractAddress())
 	if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
 		signer.SetZetaConnectorAddress(zetaConnectorAddress)
 		oc.logger.Info().
@@ -172,7 +171,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 			Msgf("updated zeta connector address for chain %d", chainID)
 	}
 
-	erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
+	erc20CustodyAddress := ethcommon.HexToAddress(chain.Params().GetErc20CustodyContractAddress())
 	if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
 		signer.SetERC20CustodyAddress(erc20CustodyAddress)
 		oc.logger.Info().
@@ -202,24 +201,22 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 		return nil, err
 	}
 
+	chain, err := app.GetChain(chainID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get chain %d", chainID)
+	}
+
 	// update chain observer chain parameters
-	curParams := observer.GetChainParams()
-	if chains.IsEVMChain(chainID, app.GetAdditionalChains()) {
-		evmParams, found := app.GetEVMChainParams(chainID)
-		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
-			observer.SetChainParams(*evmParams)
-			oc.logger.Info().
-				Interface("observer.chain_params", *evmParams).
-				Msgf("updated chain params for EVM chainID %d", chainID)
-		}
-	} else if chains.IsBitcoinChain(chainID, app.GetAdditionalChains()) {
-		_, btcParams, found := app.GetBTCChainParams()
-		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
-			observer.SetChainParams(*btcParams)
-			oc.logger.Info().
-				Interface("observer.chain_params", *btcParams).
-				Msgf("updated chain params for UTXO chainID %d", btcParams.ChainId)
-		}
+	var (
+		curParams   = observer.GetChainParams()
+		freshParams = chain.Params()
+	)
+
+	if !observertypes.ChainParamsEqual(curParams, *freshParams) {
+		observer.SetChainParams(*freshParams)
+		oc.logger.Info().
+			Interface("observer.chain_params", *freshParams).
+			Msgf("updated chain params for chainID %d", chainID)
 	}
 
 	return observer, nil
@@ -238,10 +235,10 @@ func (oc *Orchestrator) getObserver(chainID int64) (interfaces.ChainObserver, er
 }
 
 // GetPendingCctxsWithinRateLimit get pending cctxs across foreign chains within rate limit
-func (oc *Orchestrator) GetPendingCctxsWithinRateLimit(
-	ctx context.Context,
-	foreignChains []chains.Chain,
-) (map[int64][]*types.CrossChainTx, error) {
+func (oc *Orchestrator) GetPendingCctxsWithinRateLimit(ctx context.Context, chainIDs []int64) (
+	map[int64][]*types.CrossChainTx,
+	error,
+) {
 	// get rate limiter flags
 	rateLimitFlags, err := oc.zetacoreClient.GetRateLimiterFlags(ctx)
 	if err != nil {
@@ -254,10 +251,10 @@ func (oc *Orchestrator) GetPendingCctxsWithinRateLimit(
 	// fallback to non-rate-limited query if rate limiter is not usable
 	cctxsMap := make(map[int64][]*types.CrossChainTx)
 	if !rateLimiterUsable {
-		for _, chain := range foreignChains {
-			resp, _, err := oc.zetacoreClient.ListPendingCCTX(ctx, chain.ChainId)
+		for _, chainID := range chainIDs {
+			resp, _, err := oc.zetacoreClient.ListPendingCCTX(ctx, chainID)
 			if err == nil && resp != nil {
-				cctxsMap[chain.ChainId] = resp
+				cctxsMap[chainID] = resp
 			}
 		}
 		return cctxsMap, nil
@@ -337,49 +334,58 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					// set current hot key burn rate
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
-					// get supported external chains
-					externalChains := app.GetEnabledExternalChains()
+					chainIDs := app.ListChainIDs()
 
 					// query pending cctxs across all external chains within rate limit
-					cctxMap, err := oc.GetPendingCctxsWithinRateLimit(ctx, externalChains)
+					cctxMap, err := oc.GetPendingCctxsWithinRateLimit(ctx, chainIDs)
 					if err != nil {
 						oc.logger.Error().Err(err).Msgf("runScheduler: GetPendingCctxsWithinRatelimit failed")
 					}
 
 					// schedule keysign for pending cctxs on each chain
-					for _, c := range externalChains {
+					for _, chain := range app.ListChains() {
+						chainID := chain.ID()
+
 						// get cctxs from map and set pending transactions prometheus gauge
-						cctxList := cctxMap[c.ChainId]
-						metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(len(cctxList)))
+						cctxList := cctxMap[chainID]
+
+						metrics.PendingTxsPerChain.
+							WithLabelValues(fmt.Sprintf("%d", chainID)).
+							Set(float64(len(cctxList)))
+
 						if len(cctxList) == 0 {
 							continue
 						}
 
 						// update chain parameters for signer and chain observer
-						signer, err := oc.resolveSigner(app, c.ChainId)
+						signer, err := oc.resolveSigner(app, chainID)
 						if err != nil {
 							oc.logger.Error().Err(err).
-								Msgf("runScheduler: unable to resolve signer for chain %d", c.ChainId)
+								Msgf("runScheduler: unable to resolve signer for chain %d", chainID)
 							continue
 						}
-						ob, err := oc.resolveObserver(app, c.ChainId)
+
+						ob, err := oc.resolveObserver(app, chainID)
 						if err != nil {
 							oc.logger.Error().Err(err).
-								Msgf("runScheduler: resolveObserver failed for chain %d", c.ChainId)
+								Msgf("runScheduler: resolveObserver failed for chain %d", chainID)
 							continue
 						}
-						if !app.IsOutboundObservationEnabled(ob.GetChainParams()) {
+
+						if !app.IsOutboundObservationEnabled() {
 							continue
 						}
 
 						// #nosec G115 range is verified
 						zetaHeight := uint64(bn)
-						if chains.IsEVMChain(c.ChainId, app.GetAdditionalChains()) {
-							oc.ScheduleCctxEVM(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else if chains.IsBitcoinChain(c.ChainId, app.GetAdditionalChains()) {
-							oc.ScheduleCctxBTC(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else {
-							oc.logger.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)
+
+						switch {
+						case chain.IsEVM():
+							oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
+						case chain.IsUTXO():
+							oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
+						default:
+							oc.logger.Error().Msgf("runScheduler: no scheduler found chain %d", chainID)
 							continue
 						}
 					}

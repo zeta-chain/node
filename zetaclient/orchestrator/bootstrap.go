@@ -82,19 +82,8 @@ func syncSignerMap(
 		}
 	)
 
-	// EVM signers
-	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
-		chainID := evmConfig.Chain.ChainId
-
-		evmChainParams, found := app.GetEVMChainParams(chainID)
-		switch {
-		case !found:
-			logger.Std.Warn().Msgf("Unable to find chain params for EVM chain %d", chainID)
-			continue
-		case !evmChainParams.IsSupported:
-			logger.Std.Warn().Msgf("EVM chain %d is not supported", chainID)
-			continue
-		}
+	for _, chain := range app.ListChains() {
+		chainID := chain.ID()
 
 		presentChainIDs = append(presentChainIDs, chainID)
 
@@ -103,62 +92,56 @@ func syncSignerMap(
 			continue
 		}
 
-		var (
-			mpiAddress          = ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
-			erc20CustodyAddress = ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
-		)
+		rawChain := chain.RawChain()
 
-		signer, err := evmsigner.NewSigner(
-			ctx,
-			evmConfig.Chain,
-			tss,
-			ts,
-			logger,
-			evmConfig.Endpoint,
-			config.GetConnectorABI(),
-			config.GetERC20CustodyABI(),
-			mpiAddress,
-			erc20CustodyAddress,
-		)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("Unable to construct signer for EVM chain %d", chainID)
-			continue
-		}
-
-		addSigner(chainID, signer)
-	}
-
-	// BTC signer
-	// Emulate same loop semantics as for EVM chains
-	for i := 0; i < 1; i++ {
-		btcChain, btcChainParams, btcChainParamsFound := app.GetBTCChainParams()
 		switch {
-		case !btcChainParamsFound:
-			logger.Std.Warn().Msgf("Unable to find chain params for BTC chain")
-			continue
-		case !btcChainParams.IsSupported:
-			logger.Std.Warn().Msgf("BTC chain is not supported")
-			continue
+		case chain.IsEVM():
+			var (
+				mpiAddress          = ethcommon.HexToAddress(chain.Params().ConnectorContractAddress)
+				erc20CustodyAddress = ethcommon.HexToAddress(chain.Params().Erc20CustodyContractAddress)
+			)
+
+			cfg, found := app.Config().GetEVMConfig(chainID)
+			if !found || cfg.Empty() {
+				logger.Std.Warn().Msgf("Unable to find EVM config for chain %d", chainID)
+				continue
+			}
+
+			signer, err := evmsigner.NewSigner(
+				ctx,
+				*rawChain,
+				tss,
+				ts,
+				logger,
+				cfg.Endpoint,
+				config.GetConnectorABI(),
+				config.GetERC20CustodyABI(),
+				mpiAddress,
+				erc20CustodyAddress,
+			)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to construct signer for EVM chain %d", chainID)
+				continue
+			}
+
+			addSigner(chainID, signer)
+		case chain.IsUTXO():
+			cfg, found := app.Config().GetBTCConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find UTXO config for chain %d", chainID)
+				continue
+			}
+
+			signer, err := btcsigner.NewSigner(*rawChain, tss, ts, logger, cfg)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
+				continue
+			}
+
+			addSigner(chainID, signer)
+		default:
+			logger.Std.Warn().Msgf("Unable to create signer for chain %d", chainID)
 		}
-
-		chainID := btcChainParams.ChainId
-
-		presentChainIDs = append(presentChainIDs, chainID)
-
-		// noop
-		if mapHas(signers, chainID) {
-			continue
-		}
-
-		cfg, _ := app.Config().GetBTCConfig()
-
-		utxoSigner, err := btcsigner.NewSigner(btcChain, tss, ts, logger, cfg)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
-			continue
-		}
-
-		addSigner(chainID, utxoSigner)
 	}
 
 	// Remove all disabled signers
@@ -225,179 +208,136 @@ func syncObserverMap(
 		}
 	)
 
-	// EVM observers
-	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
-		var (
-			chainID   = evmConfig.Chain.ChainId
-			chainName = evmConfig.Chain.ChainName.String()
-		)
-
-		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
-		switch {
-		case !found:
-			logger.Std.Error().Msgf("Unable to find chain params for EVM chain %d", chainID)
-			continue
-		case !chainParams.IsSupported:
-			logger.Std.Error().Msgf("EVM chain %d is not supported", chainID)
-			continue
-		}
+	for _, chain := range app.ListChains() {
+		chainID := chain.ID()
 
 		presentChainIDs = append(presentChainIDs, chainID)
 
 		// noop
 		if mapHas(observerMap, chainID) {
-			continue
-		}
-
-		// create EVM client
-		evmClient, err := ethclient.DialContext(ctx, evmConfig.Endpoint)
-		if err != nil {
-			logger.Std.Error().Err(err).Str("rpc.endpoint", evmConfig.Endpoint).Msgf("Unable to dial EVM RPC")
-			continue
-		}
-
-		database, err := db.NewFromSqlite(dbpath, chainName, true)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
-			continue
-		}
-
-		// create EVM chain observer
-		observer, err := evmobserver.NewObserver(
-			ctx,
-			evmConfig,
-			evmClient,
-			*chainParams,
-			client,
-			tss,
-			database,
-			logger,
-			ts,
-		)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %s", evmConfig.Chain.String())
-			continue
-		}
-
-		addObserver(chainID, observer)
-	}
-
-	// Emulate same loop semantics as for EVM chains
-	// create BTC chain observer
-	for i := 0; i < 1; i++ {
-		btcChain, btcConfig, btcEnabled := app.GetBTCChainAndConfig()
-		if !btcEnabled {
-			continue
-		}
-
-		chainID := btcChain.ChainId
-
-		_, btcChainParams, found := app.GetBTCChainParams()
-		switch {
-		case !found:
-			logger.Std.Warn().Msgf("Unable to find chain params for BTC chain %d", chainID)
-			continue
-		case !btcChainParams.IsSupported:
-			logger.Std.Warn().Msgf("BTC chain %d is not supported", chainID)
-			continue
-		}
-
-		presentChainIDs = append(presentChainIDs, chainID)
-
-		// noop
-		if mapHas(observerMap, chainID) {
-			continue
-		}
-
-		btcRPC, err := rpc.NewRPCClient(btcConfig)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("unable to create rpc client for BTC chain %d", chainID)
-			continue
-		}
-
-		database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
-			continue
-		}
-
-		btcObserver, err := btcobserver.NewObserver(
-			btcChain,
-			btcRPC,
-			*btcChainParams,
-			client,
-			tss,
-			database,
-			logger,
-			ts,
-		)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %d", chainID)
-			continue
-		}
-
-		addObserver(chainID, btcObserver)
-	}
-
-	// Emulate same loop semantics as for EVM chains
-	// create SOL chain observer
-	for i := 0; i < 1; i++ {
-		solChain, solConfig, solEnabled := app.GetSolanaChainAndConfig()
-		if !solEnabled {
 			continue
 		}
 
 		var (
-			chainID   = solChain.ChainId
-			chainName = solChain.ChainName.String()
+			params    = chain.Params()
+			rawChain  = chain.RawChain()
+			chainName = rawChain.ChainName.String()
 		)
 
-		_, solanaChainParams, found := app.GetSolanaChainParams()
 		switch {
-		case !found:
-			logger.Std.Warn().Msgf("Unable to find chain params for SOL chain %d", chainID)
-			continue
-		case !solanaChainParams.IsSupported:
-			logger.Std.Warn().Msgf("SOL chain %d is not supported", chainID)
+		case chain.IsEVM():
+			cfg, found := app.Config().GetEVMConfig(chainID)
+			if !found || cfg.Empty() {
+				logger.Std.Warn().Msgf("Unable to find EVM config for chain %d", chainID)
+				continue
+			}
+
+			// create EVM client
+			evmClient, err := ethclient.DialContext(ctx, cfg.Endpoint)
+			if err != nil {
+				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to dial EVM RPC")
+				continue
+			}
+
+			database, err := db.NewFromSqlite(dbpath, chainName, true)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
+				continue
+			}
+
+			// create EVM chain observer
+			observer, err := evmobserver.NewObserver(
+				ctx,
+				cfg,
+				evmClient,
+				*params,
+				client,
+				tss,
+				database,
+				logger,
+				ts,
+			)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %d", chainID)
+				continue
+			}
+
+			addObserver(chainID, observer)
+		case chain.IsUTXO():
+			cfg, found := app.Config().GetBTCConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find chain params for BTC chain %d", chainID)
+				continue
+			}
+
+			btcRPC, err := rpc.NewRPCClient(cfg)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("unable to create rpc client for BTC chain %d", chainID)
+				continue
+			}
+
+			database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
+				continue
+			}
+
+			btcObserver, err := btcobserver.NewObserver(
+				*rawChain,
+				btcRPC,
+				*params,
+				client,
+				tss,
+				database,
+				logger,
+				ts,
+			)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %d", chainID)
+				continue
+			}
+
+			addObserver(chainID, btcObserver)
+		case chain.IsSolana():
+			cfg, found := app.Config().GetSolanaConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find chain params for SOL chain %d", chainID)
+				continue
+			}
+
+			rpcClient := solrpc.New(cfg.Endpoint)
+			if rpcClient == nil {
+				// should never happen
+				logger.Std.Error().Msg("solana create Solana client error")
+				continue
+			}
+
+			database, err := db.NewFromSqlite(dbpath, chainName, true)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("unable to open database for SOL chain %d", chainID)
+				continue
+			}
+
+			solObserver, err := solbserver.NewObserver(
+				*rawChain,
+				rpcClient,
+				*params,
+				client,
+				tss,
+				database,
+				logger,
+				ts,
+			)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("NewObserver error for SOL chain %d", chainID)
+				continue
+			}
+
+			addObserver(chainID, solObserver)
+		default:
+			logger.Std.Warn().Msgf("Unable to create observer for chain %d", chainID)
 			continue
 		}
-
-		presentChainIDs = append(presentChainIDs, chainID)
-
-		// noop
-		if mapHas(observerMap, chainID) {
-			continue
-		}
-
-		rpcClient := solrpc.New(solConfig.Endpoint)
-		if rpcClient == nil {
-			// should never happen
-			logger.Std.Error().Msg("solana create Solana client error")
-			continue
-		}
-
-		database, err := db.NewFromSqlite(dbpath, chainName, true)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("unable to open database for SOL chain %d", chainID)
-			continue
-		}
-
-		solObserver, err := solbserver.NewObserver(
-			solChain,
-			rpcClient,
-			*solanaChainParams,
-			client,
-			tss,
-			database,
-			logger,
-			ts,
-		)
-		if err != nil {
-			logger.Std.Error().Err(err).Msgf("NewObserver error for SOL chain %d", chainID)
-			continue
-		}
-
-		addObserver(chainID, solObserver)
 	}
 
 	// Remove all disabled observers
