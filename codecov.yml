@@ -15,11 +15,11 @@ coverage:
         target: 60%
         flags:
           - zetaclient
-      common:
+      pkg:
         if_ci_failed: error
         target: 60%
         flags:
-          - common
+          - pkg
 
 comment:
   layout: "reach, diff, files"
@@ -33,9 +33,9 @@ flags:
   zetaclient:
     paths:
       - "zetaclient/"
-  common:
+  pkg:
     paths:
-      - "common/"
+      - "pkg/"
 
 ignore:
   - "x/**/client/**/*"
@@ -53,8 +53,6 @@ ignore:
   - "x/**/migrator.go"
   - "x/**/module_simulation.go"
   - "x/**/simulation/**/*"
-  - "zetaclient/testdata/**/*"
-  - "zetaclient/testutils/**/*"
   - "**/*.proto"
   - "**/*.md"
   - "**/*.yml"
@@ -63,15 +61,18 @@ ignore:
   - "**/*.pb.gw.go"
   - "**/*_legacy.go"
   - "**/*.json"
-  - ".github/**/*"
-  - "app/**/*"
-  - "cmd/**/*"
-  - "contrib/**/*"
-  - "docs/**/*"
-  - "proto/**/*"
-  - "scripts/**/*"
-  - "server/**/*"
-  - "testutil/**/*"
-  - "testutils/**/*"
-  - "errors/**/*"
+  - "zetaclient/testdata/**/*"
+  - "zetaclient/testutils/**/*"
+  - ".github"
+  - "app"
+  - "cmd"
+  - "contrib"
+  - "docs"
+  - "e2e"
+  - "proto"
+  - "rpc"
+  - "scripts"
+  - "server"
+  - "testutil"
+  - "tool"
   - "typescript/**/*"
