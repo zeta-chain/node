@@ -21,7 +21,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -143,11 +142,11 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	err = zetacoreClient.UpdateAppContext(ctx, appContext, true, startLogger)
-	if err != nil {
+	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
+
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
@@ -214,16 +213,16 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	bitcoinChainID := chains.BitcoinRegtest.ChainId
-	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
-	if btcEnabled {
-		bitcoinChainID = btcChain.ChainId
+	btcChain, err := appContext.FirstChain(zctx.Chain.IsUTXO)
+	if err != nil {
+		return errors.Wrap(err, "unable to find BTC chain")
 	}
+
 	tss, err := mc.NewTSS(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
-		bitcoinChainID,
+		btcChain.ID(),
 		hotkeyPass,
 		server,
 	)
@@ -266,7 +265,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().
 		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.GetEnabledChains()) == 0 {
+	if len(appContext.ListChainIDs()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 

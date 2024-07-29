@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observer "github.com/zeta-chain/zetacore/x/observer/types"
@@ -44,6 +45,7 @@ func NewChainRegistry() *ChainRegistry {
 	}
 }
 
+// Get returns a chain by ID.
 func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 	chain, ok := cr.chains[chainID]
 	if !ok {
@@ -51,6 +53,15 @@ func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 	}
 
 	return chain, nil
+}
+
+// All returns all chains in the registry sorted by chain ID.
+func (cr *ChainRegistry) All() []Chain {
+	items := maps.Values(cr.chains)
+
+	slices.SortFunc(items, func(a, b Chain) bool { return a.id < b.id })
+
+	return items
 }
 
 // Set sets a chain in the registry.
@@ -71,6 +82,7 @@ func (cr *ChainRegistry) Set(chainID int64, chain *chains.Chain, params *observe
 	return nil
 }
 
+// SetAdditionalChains sets additional chains to the registry
 func (cr *ChainRegistry) SetAdditionalChains(chains []chains.Chain) {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
@@ -128,8 +140,17 @@ func newChain(cr *ChainRegistry, chainID int64, chain *chains.Chain, params *obs
 	}, nil
 }
 
+func (c Chain) ID() int64 {
+	return c.id
+}
+
 func (c Chain) Params() *observer.ChainParams {
 	return c.params
+}
+
+// RawChain returns the underlying Chain object. Better not to use this method
+func (c Chain) RawChain() *chains.Chain {
+	return c.chain
 }
 
 func (c Chain) IsEVM() bool {

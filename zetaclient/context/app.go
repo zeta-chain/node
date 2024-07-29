@@ -60,6 +60,28 @@ func (a *AppContext) ListChainIDs() []int64 {
 	return a.chainRegistry.ChainIDs()
 }
 
+func (a *AppContext) ListChains() []Chain {
+	return a.chainRegistry.All()
+}
+
+// FirstChain returns the first chain that satisfies the filter
+func (a *AppContext) FirstChain(filter func(Chain) bool) (Chain, error) {
+	ids := a.ListChainIDs()
+
+	for _, id := range ids {
+		chain, err := a.GetChain(id)
+		if err != nil {
+			return Chain{}, errors.Wrapf(err, "unable to get chain %d", id)
+		}
+
+		if filter(chain) {
+			return chain, nil
+		}
+	}
+
+	return Chain{}, errors.Wrap(ErrChainNotFound, "no chain satisfies the filter")
+}
+
 // IsOutboundObservationEnabled returns true if outbound flag is enabled
 func (a *AppContext) IsOutboundObservationEnabled() bool {
 	return a.GetCrossChainFlags().IsOutboundEnabled
