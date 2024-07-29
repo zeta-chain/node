@@ -40,9 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -81,15 +78,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	evmante "github.com/evmos/ethermint/app/ante"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm"
@@ -119,9 +107,6 @@ import (
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain"
-	ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
 	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
@@ -129,6 +114,24 @@ import (
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// TODO: enable back IBC
+// IBC has been turned off for v19, all necessary code has been commented out
+// to enable IBC, uncomment the following imports and all logic using these packages in the code
+// https://github.com/zeta-chain/node/issues/2573
+// "github.com/cosmos/cosmos-sdk/x/capability"
+// capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+// capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+// "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+// transferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+// transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+// ibccore "github.com/cosmos/ibc-go/v7/modules/core"
+// ibctypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
+// ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+// ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+// "github.com/zeta-chain/zetacore/x/ibccrosschain"
+// ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
+// ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
 
 const Name = "zetacore"
 
@@ -174,8 +177,8 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		paramsclient.ProposalHandler,
 		upgradeclient.LegacyProposalHandler,
 		upgradeclient.LegacyCancelProposalHandler,
-		ibcclientclient.UpdateClientProposalHandler,
-		ibcclientclient.UpgradeProposalHandler,
+		//ibcclientclient.UpdateClientProposalHandler,
+		//ibcclientclient.UpgradeProposalHandler,
 	)
 	return govProposalHandlers
 }
@@ -185,18 +188,18 @@ var (
 		auth.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
+		//capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(getGovProposalHandlers()),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
-		ibc.AppModuleBasic{},
-		ibctm.AppModuleBasic{},
+		//ibc.AppModuleBasic{},
+		//ibctm.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
-		transfer.AppModuleBasic{},
+		//transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		evm.AppModuleBasic{},
@@ -204,7 +207,7 @@ var (
 		authoritymodule.AppModuleBasic{},
 		lightclientmodule.AppModuleBasic{},
 		crosschainmodule.AppModuleBasic{},
-		ibccrosschain.AppModuleBasic{},
+		//ibccrosschain.AppModuleBasic{},
 		observermodule.AppModuleBasic{},
 		fungiblemodule.AppModuleBasic{},
 		emissionsmodule.AppModuleBasic{},
@@ -214,14 +217,14 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                      nil,
-		distrtypes.ModuleName:                           nil,
-		stakingtypes.BondedPoolName:                     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:                  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                             {authtypes.Burner},
-		ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
-		ibccrosschaintypes.ModuleName:                   nil,
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
+		//ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+		crosschaintypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		//ibccrosschaintypes.ModuleName:                   nil,
 		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
 		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 		emissionstypes.ModuleName:                       nil,
@@ -265,42 +268,42 @@ type App struct {
 	configurator module.Configurator
 
 	// sdk keepers
-	AccountKeeper         authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	CapabilityKeeper      *capabilitykeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             govkeeper.Keeper
-	CrisisKeeper          crisiskeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	ParamsKeeper          paramskeeper.Keeper
-	IBCKeeper             *ibckeeper.Keeper
-	TransferKeeper        ibctransferkeeper.Keeper
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	//CapabilityKeeper *capabilitykeeper.Keeper
+	StakingKeeper  *stakingkeeper.Keeper
+	SlashingKeeper slashingkeeper.Keeper
+	DistrKeeper    distrkeeper.Keeper
+	GovKeeper      govkeeper.Keeper
+	CrisisKeeper   crisiskeeper.Keeper
+	UpgradeKeeper  *upgradekeeper.Keeper
+	ParamsKeeper   paramskeeper.Keeper
+	//IBCKeeper             *ibckeeper.Keeper
+	//TransferKeeper        ibctransferkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	GroupKeeper           groupkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	// scoped keepers
-	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
-	ScopedIBCCrosschainKeeper capabilitykeeper.ScopedKeeper
+	//ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
+	//ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
+	//ScopedIBCCrosschainKeeper capabilitykeeper.ScopedKeeper
 
 	// evm keepers
 	EvmKeeper       *evmkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// zetachain keepers
-	AuthorityKeeper     authoritykeeper.Keeper
-	LightclientKeeper   lightclientkeeper.Keeper
-	CrosschainKeeper    crosschainkeeper.Keeper
-	IBCCrosschainKeeper ibccrosschainkeeper.Keeper
-	ObserverKeeper      *observerkeeper.Keeper
-	FungibleKeeper      fungiblekeeper.Keeper
-	EmissionsKeeper     emissionskeeper.Keeper
+	AuthorityKeeper   authoritykeeper.Keeper
+	LightclientKeeper lightclientkeeper.Keeper
+	CrosschainKeeper  crosschainkeeper.Keeper
+	//IBCCrosschainKeeper ibccrosschainkeeper.Keeper
+	ObserverKeeper  *observerkeeper.Keeper
+	FungibleKeeper  fungiblekeeper.Keeper
+	EmissionsKeeper emissionskeeper.Keeper
 
-	transferModule transfer.AppModule
+	//transferModule transfer.AppModule
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -337,16 +340,16 @@ func New(
 		group.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
-		ibcexported.StoreKey,
-		ibctransfertypes.StoreKey,
-		capabilitytypes.StoreKey,
+		//ibcexported.StoreKey,
+		//ibctransfertypes.StoreKey,
+		//capabilitytypes.StoreKey,
 		authzkeeper.StoreKey,
 		evmtypes.StoreKey,
 		feemarkettypes.StoreKey,
 		authoritytypes.StoreKey,
 		lightclienttypes.StoreKey,
 		crosschaintypes.StoreKey,
-		ibccrosschaintypes.StoreKey,
+		//ibccrosschaintypes.StoreKey,
 		observertypes.StoreKey,
 		fungibletypes.StoreKey,
 		emissionstypes.StoreKey,
@@ -354,7 +357,9 @@ func New(
 		crisistypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(
+	//capabilitytypes.MemStoreKey,
+	)
 
 	app := &App{
 		BaseApp:           bApp,
@@ -382,14 +387,14 @@ func New(
 	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
 	// add capability keeper and ScopeToModule for ibc module
-	app.CapabilityKeeper = capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
+	//app.CapabilityKeeper = capabilitykeeper.NewKeeper(
+	//	appCodec,
+	//	keys[capabilitytypes.StoreKey],
+	//	memKeys[capabilitytypes.MemStoreKey],
+	//)
 
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	//scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	//scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	// add keepers
 	// use custom Ethermint account for contracts
@@ -457,36 +462,36 @@ func New(
 
 	// IBC keepers
 
-	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec,
-		keys[ibcexported.StoreKey],
-		app.GetSubspace(ibcexported.ModuleName),
-		app.StakingKeeper,
-		app.UpgradeKeeper,
-		scopedIBCKeeper,
-	)
-
-	ibcRouter := porttypes.NewRouter()
-
-	app.TransferKeeper = ibctransferkeeper.NewKeeper(
-		appCodec,
-		keys[ibctransfertypes.StoreKey],
-		app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		&app.IBCKeeper.PortKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-		scopedTransferKeeper,
-	)
-	app.transferModule = transfer.NewAppModule(app.TransferKeeper)
-
-	// create IBC module from bottom to top of stack
-	var transferStack porttypes.IBCModule
-	transferStack = transfer.NewIBCModule(app.TransferKeeper)
-
-	// Add transfer stack to IBC Router
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
+	//app.IBCKeeper = ibckeeper.NewKeeper(
+	//	appCodec,
+	//	keys[ibcexported.StoreKey],
+	//	app.GetSubspace(ibcexported.ModuleName),
+	//	app.StakingKeeper,
+	//	app.UpgradeKeeper,
+	//	scopedIBCKeeper,
+	//)
+	//
+	//ibcRouter := porttypes.NewRouter()
+	//
+	//app.TransferKeeper = ibctransferkeeper.NewKeeper(
+	//	appCodec,
+	//	keys[ibctransfertypes.StoreKey],
+	//	app.GetSubspace(ibctransfertypes.ModuleName),
+	//	app.IBCKeeper.ChannelKeeper,
+	//	app.IBCKeeper.ChannelKeeper,
+	//	&app.IBCKeeper.PortKeeper,
+	//	app.AccountKeeper,
+	//	app.BankKeeper,
+	//	scopedTransferKeeper,
+	//)
+	//app.transferModule = transfer.NewAppModule(app.TransferKeeper)
+	//
+	//// create IBC module from bottom to top of stack
+	//var transferStack porttypes.IBCModule
+	//transferStack = transfer.NewIBCModule(app.TransferKeeper)
+	//
+	//// Add transfer stack to IBC Router
+	//ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 
 	// ZetaChain keepers
 
@@ -598,21 +603,21 @@ func New(
 
 	// initialize ibccrosschain keeper and set it to the crosschain keeper
 	// there is a circular dependency between the two keepers, crosschain keeper must be initialized first
-
-	scopedIBCCrosschainKeeper := app.CapabilityKeeper.ScopeToModule(ibccrosschaintypes.ModuleName)
-	app.ScopedIBCCrosschainKeeper = scopedIBCCrosschainKeeper
-
-	app.IBCCrosschainKeeper = *ibccrosschainkeeper.NewKeeper(
-		appCodec,
-		keys[ibccrosschaintypes.StoreKey],
-		keys[ibccrosschaintypes.MemStoreKey],
-		&app.CrosschainKeeper,
-		app.TransferKeeper,
-	)
-
-	ibcRouter.AddRoute(ibccrosschaintypes.ModuleName, ibccrosschain.NewIBCModule(app.IBCCrosschainKeeper))
-
-	app.CrosschainKeeper.SetIBCCrosschainKeeper(app.IBCCrosschainKeeper)
+	//
+	//scopedIBCCrosschainKeeper := app.CapabilityKeeper.ScopeToModule(ibccrosschaintypes.ModuleName)
+	//app.ScopedIBCCrosschainKeeper = scopedIBCCrosschainKeeper
+	//
+	//app.IBCCrosschainKeeper = *ibccrosschainkeeper.NewKeeper(
+	//	appCodec,
+	//	keys[ibccrosschaintypes.StoreKey],
+	//	keys[ibccrosschaintypes.MemStoreKey],
+	//	&app.CrosschainKeeper,
+	//	app.TransferKeeper,
+	//)
+	//
+	//ibcRouter.AddRoute(ibccrosschaintypes.ModuleName, ibccrosschain.NewIBCModule(app.IBCCrosschainKeeper))
+	//
+	//app.CrosschainKeeper.SetIBCCrosschainKeeper(app.IBCCrosschainKeeper)
 
 	app.GroupKeeper = groupkeeper.NewKeeper(
 		keys[group.StoreKey],
@@ -660,7 +665,7 @@ func New(
 	))
 
 	// seal the IBC router
-	app.IBCKeeper.SetRouter(ibcRouter)
+	//app.IBCKeeper.SetRouter(ibcRouter)
 
 	/****  Module Options ****/
 
@@ -679,7 +684,7 @@ func New(
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		//capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		gov.NewAppModule(
 			appCodec,
@@ -715,16 +720,16 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		app.transferModule,
-		ibc.NewAppModule(app.IBCKeeper),
-		transfer.NewAppModule(app.TransferKeeper),
+		//app.transferModule,
+		//ibc.NewAppModule(app.IBCKeeper),
+		//transfer.NewAppModule(app.TransferKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
-		ibccrosschain.NewAppModule(appCodec, app.IBCCrosschainKeeper),
+		//ibccrosschain.NewAppModule(appCodec, app.IBCCrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
 		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
@@ -736,7 +741,7 @@ func New(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		capabilitytypes.ModuleName,
+		//capabilitytypes.ModuleName,
 		upgradetypes.ModuleName,
 		evmtypes.ModuleName,
 		distrtypes.ModuleName,
@@ -751,11 +756,11 @@ func New(
 		paramstypes.ModuleName,
 		group.ModuleName,
 		vestingtypes.ModuleName,
-		ibcexported.ModuleName,
-		ibctransfertypes.ModuleName,
+		//ibcexported.ModuleName,
+		//ibctransfertypes.ModuleName,
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
-		ibccrosschaintypes.ModuleName,
+		//ibccrosschaintypes.ModuleName,
 		observertypes.ModuleName,
 		fungibletypes.ModuleName,
 		emissionstypes.ModuleName,
@@ -765,7 +770,7 @@ func New(
 		consensusparamtypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
-		capabilitytypes.ModuleName,
+		//capabilitytypes.ModuleName,
 		banktypes.ModuleName,
 		authtypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -776,15 +781,15 @@ func New(
 		vestingtypes.ModuleName,
 		govtypes.ModuleName,
 		paramstypes.ModuleName,
-		ibcexported.ModuleName,
-		ibctransfertypes.ModuleName,
+		//ibcexported.ModuleName,
+		//ibctransfertypes.ModuleName,
 		genutiltypes.ModuleName,
 		group.ModuleName,
 		crisistypes.ModuleName,
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
-		ibccrosschaintypes.ModuleName,
+		//ibccrosschaintypes.ModuleName,
 		observertypes.ModuleName,
 		fungibletypes.ModuleName,
 		emissionstypes.ModuleName,
@@ -849,8 +854,8 @@ func New(
 		}
 	}
 
-	app.ScopedIBCKeeper = scopedIBCKeeper
-	app.ScopedTransferKeeper = scopedTransferKeeper
+	//app.ScopedIBCKeeper = scopedIBCKeeper
+	//app.ScopedTransferKeeper = scopedTransferKeeper
 
 	return app
 }
@@ -1018,8 +1023,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibcexported.ModuleName)
+	//paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	//paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	paramsKeeper.Subspace(group.ModuleName)
