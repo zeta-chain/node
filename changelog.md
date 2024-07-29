@@ -65,6 +65,7 @@
 * [2428](https://github.com/zeta-chain/node/pull/2428) - propagate context across codebase & refactor zetacore client
 * [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 * [2515](https://github.com/zeta-chain/node/pull/2515) - replace chainName by chainID for ChainNonces indexing
+* [2568](https://github.com/zeta-chain/node/pull/2568) - improve AppContext
 
 ### Tests
 
