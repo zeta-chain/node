@@ -393,9 +393,9 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
-	if !found {
-		logger.Warn().Msgf("unknown chain: %d", txData.toChainID.Int64())
+	toChain, err := app.GetChain(txData.toChainID.Int64())
+	if err != nil {
+		logger.Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
 		return
 	}
 
@@ -447,27 +447,27 @@ func (signer *Signer) TryProcessOutbound(
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msgf(
-				"SignWithdrawTx: %d => %s, nonce %d, gasPrice %d",
+				"SignWithdrawTx: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
-				toChain.String(),
+				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
 			tx, err = signer.SignWithdrawTx(ctx, txData)
 		case coin.CoinType_ERC20:
 			logger.Info().Msgf(
-				"SignERC20WithdrawTx: %d => %s, nonce %d, gasPrice %d",
+				"SignERC20WithdrawTx: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
-				toChain.String(),
+				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
 			tx, err = signer.SignERC20WithdrawTx(ctx, txData)
 		case coin.CoinType_Zeta:
 			logger.Info().Msgf(
-				"SignOutbound: %d => %s, nonce %d, gasPrice %d",
+				"SignOutbound: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
-				toChain.String(),
+				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
@@ -481,9 +481,9 @@ func (signer *Signer) TryProcessOutbound(
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Zeta:
 			logger.Info().Msgf(
-				"SignRevertTx: %d => %s, nonce %d, gasPrice %d",
+				"SignRevertTx: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
-				toChain.String(), cctx.GetCurrentOutboundParam().TssNonce,
+				toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
 			txData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
@@ -491,17 +491,17 @@ func (signer *Signer) TryProcessOutbound(
 			tx, err = signer.SignRevertTx(ctx, txData)
 		case coin.CoinType_Gas:
 			logger.Info().Msgf(
-				"SignWithdrawTx: %d => %s, nonce %d, gasPrice %d",
+				"SignWithdrawTx: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
-				toChain.String(),
+				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
 			tx, err = signer.SignWithdrawTx(ctx, txData)
 		case coin.CoinType_ERC20:
-			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasPrice %d",
+			logger.Info().Msgf("SignERC20WithdrawTx: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
-				toChain.String(),
+				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
 				txData.gasPrice,
 			)
@@ -513,9 +513,9 @@ func (signer *Signer) TryProcessOutbound(
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		logger.Info().Msgf(
-			"SignRevertTx: %d => %s, nonce %d, gasPrice %d",
+			"SignRevertTx: %d => %d, nonce %d, gasPrice %d",
 			cctx.InboundParams.SenderChainId,
-			toChain.String(),
+			toChain.ID(),
 			cctx.GetCurrentOutboundParam().TssNonce,
 			txData.gasPrice,
 		)
@@ -529,9 +529,9 @@ func (signer *Signer) TryProcessOutbound(
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf(
-			"SignOutbound: %d => %s, nonce %d, gasPrice %d",
+			"SignOutbound: %d => %d, nonce %d, gasPrice %d",
 			cctx.InboundParams.SenderChainId,
-			toChain.String(),
+			toChain.ID(),
 			cctx.GetCurrentOutboundParam().TssNonce,
 			txData.gasPrice,
 		)
@@ -543,9 +543,9 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	logger.Info().Msgf(
-		"Key-sign success: %d => %s, nonce %d",
+		"Key-sign success: %d => %d, nonce %d",
 		cctx.InboundParams.SenderChainId,
-		toChain.String(),
+		toChain.ID(),
 		cctx.GetCurrentOutboundParam().TssNonce,
 	)
 
@@ -569,10 +569,9 @@ func (signer *Signer) BroadcastOutbound(
 		return
 	}
 
-	// Get destination chain for logging
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
-	if !found {
-		logger.Warn().Msgf("BroadcastOutbound: unknown chain %d", txData.toChainID.Int64())
+	toChain, err := app.GetChain(txData.toChainID.Int64())
+	if err != nil {
+		logger.Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
 		return
 	}
 
@@ -593,15 +592,15 @@ func (signer *Signer) BroadcastOutbound(
 			log.Warn().
 				Err(err).
 				Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d signer %s",
-					outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, i, myID)
+					outboundHash, toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce, i, myID)
 			retry, report := zetacore.HandleBroadcastError(
 				err,
 				strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10),
-				toChain.String(),
+				fmt.Sprintf("%d", toChain.ID()),
 				outboundHash,
 			)
 			if report {
-				signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
+				signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
 			}
 			if !retry {
 				break
@@ -610,8 +609,8 @@ func (signer *Signer) BroadcastOutbound(
 			continue
 		}
 		logger.Info().Msgf("BroadcastOutbound: broadcasted tx %s on chain %d nonce %d signer %s",
-			outboundHash, toChain.ChainId, cctx.GetCurrentOutboundParam().TssNonce, myID)
-		signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ChainId, tx.Nonce(), outboundHash, logger)
+			outboundHash, toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce, myID)
+		signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
 		break // successful broadcast; no need to retry
 	}
 }

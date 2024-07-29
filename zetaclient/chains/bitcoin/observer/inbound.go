@@ -49,7 +49,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -123,14 +123,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// https://github.com/zeta-chain/node/issues/1847
 	// TODO: move this logic in its own routine
 	// https://github.com/zeta-chain/node/issues/2204
-	blockHeaderVerification, found := app.GetBlockHeaderEnabledChains(ob.Chain().ChainId)
-	if found && blockHeaderVerification.Enabled {
-		// #nosec G115 always in range
-		err = ob.postBlockHeader(ctx, int64(blockNumber))
-		if err != nil {
-			ob.logger.Inbound.Warn().Err(err).Msgf("observeInboundBTC: error posting block header %d", blockNumber)
-		}
-	}
 	if len(res.Block.Tx) > 1 {
 		// get depositor fee
 		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)
@@ -206,7 +198,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				continue
 			}
 			err := ob.ProcessInboundTrackers(ctx)

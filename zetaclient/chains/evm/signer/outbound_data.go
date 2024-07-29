@@ -139,10 +139,12 @@ func NewOutboundData(
 		return nil, false, err
 	}
 
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
-	if !found {
-		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
+	toChain, err := app.GetChain(txData.toChainID.Int64())
+	if err != nil {
+		return nil, true, err
 	}
+
+	rawChain := toChain.RawChain()
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
@@ -156,14 +158,14 @@ func NewOutboundData(
 	}
 
 	// Set up gas limit and gas price
-	err = txData.SetupGas(cctx, logger, evmRPC, toChain)
+	err = txData.SetupGas(cctx, logger, evmRPC, *rawChain)
 	if err != nil {
 		return nil, true, err
 	}
 
 	// Get sendHash
 	logger.Info().
-		Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain.String(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
+		Msgf("chain %d minting %d to %s, nonce %d, finalized zeta bn %d", toChain.ID(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
 	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(cctxIndex) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)

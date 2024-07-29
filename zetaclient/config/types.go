@@ -157,3 +157,7 @@ func (c Config) GetKeyringBackend() KeyringBackend {
 	defer c.mu.RUnlock()
 	return c.KeyringBackend
 }
+
+func (c EVMConfig) Empty() bool {
+	return c.Endpoint == "" && c.Chain == chains.Chain{}
+}
