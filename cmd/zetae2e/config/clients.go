@@ -58,12 +58,12 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	E2EClients,
 	error,
 ) {
-	if conf.RPCs.Solana == "" {
-		return E2EClients{}, fmt.Errorf("solana rpc is empty")
-	}
-	solanaClient := rpc.New(conf.RPCs.Solana)
-	if solanaClient == nil {
-		return E2EClients{}, fmt.Errorf("failed to get solana client")
+	var solanaClient *rpc.Client
+	if conf.RPCs.Solana != "" {
+		solanaClient = rpc.New(conf.RPCs.Solana)
+		if solanaClient == nil {
+			return E2EClients{}, fmt.Errorf("failed to get solana client")
+		}
 	}
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {

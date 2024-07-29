@@ -4,17 +4,18 @@ default_account:
   evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"
   private_key: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 rpcs:
-  zevm: "http://0.0.0.0:9545"
-  evm: "http://0.0.0.0:8545"
+  zevm: "http://localhost:9545"
+  evm: "http://localhost:8545"
   bitcoin:
-    host: "0.0.0.0:18443"
+    host: "localhost:18443"
     user: "smoketest"
     pass: "123"
     http_post_mode: true
     disable_tls: true
     params: regnet
-  zetacore_grpc: "0.0.0.0:9090"
-  zetacore_rpc: "http://0.0.0.0:26657"
+  zetacore_grpc: "localhost:9090"
+  zetacore_rpc: "http://localhost:26657"
+  solana: "http://solana:8899"
 contracts:
   zevm:
     system_contract: "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
