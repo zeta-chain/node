@@ -180,7 +180,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		// 999 satoshis cannot be withdrawn
 		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount - 1)
 		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
-		require.ErrorContains(t, err, "less than minimum amount")
+		require.ErrorContains(t, err, "less than dust amount")
 	})
 
 	t.Run("unable to validate a event with an invalid chain ID", func(t *testing.T) {
@@ -203,6 +203,37 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
 		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "unsupported address")
+	})
+
+	t.Run("unable to validate an event with an invalid solana address", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// create a withdrawal event with an invalid address (contains invalid character 'l')
+		to := []byte("DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFl")
+		value := big.NewInt(constant.SolanaWalletRentExempt)
+		solWithdrawalEvent := sample.ZRC20Withdrawal(to, value)
+
+		err := k.ValidateZrc20WithdrawEvent(ctx, solWithdrawalEvent, chains.SolanaMainnet.ChainId)
+		require.ErrorContains(t, err, "invalid address")
+	})
+
+	t.Run("unable to validate a solana withdrawal event with an invalid amount", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// 1000000 lamports is the minimum amount (rent exempt) that can be withdrawn
+		chainID := chains.SolanaMainnet.ChainId
+		to := []byte(sample.SolanaAddress(t))
+		value := big.NewInt(constant.SolanaWalletRentExempt)
+		solWithdrawalEvent := sample.ZRC20Withdrawal(to, value)
+
+		// 1000000 lamports can be withdrawn
+		err := k.ValidateZrc20WithdrawEvent(ctx, solWithdrawalEvent, chainID)
+		require.NoError(t, err)
+
+		// 999999 lamports cannot be withdrawn
+		solWithdrawalEvent.Value = big.NewInt(constant.SolanaWalletRentExempt - 1)
+		err = k.ValidateZrc20WithdrawEvent(ctx, solWithdrawalEvent, chainID)
+		require.ErrorContains(t, err, "less than rent exempt")
 	})
 }
 

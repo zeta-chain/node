@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v19.0.0
+
 ### Breaking Changes
 
 * [2460](https://github.com/zeta-chain/node/pull/2460) - Upgrade to go 1.22. This required us to temporarily remove the QUIC backend from [go-libp2p](https://github.com/libp2p/go-libp2p). If you are a zetaclient operator and have configured quic peers, you need to switch to tcp peers.
@@ -35,6 +37,7 @@
 * [2497](https://github.com/zeta-chain/node/pull/2416) - support for runtime chain (de)provisioning
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
+* [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
 
 ### Refactor
 
@@ -65,6 +68,10 @@
 * [2428](https://github.com/zeta-chain/node/pull/2428) - propagate context across codebase & refactor zetacore client
 * [2464](https://github.com/zeta-chain/node/pull/2464) - move common voting logic to voting.go and add new function VoteOnBallot
 * [2515](https://github.com/zeta-chain/node/pull/2515) - replace chainName by chainID for ChainNonces indexing
+* [2541](https://github.com/zeta-chain/node/pull/2541) - deprecate ChainName field in Chain object
+* [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
+* [2572](https://github.com/zeta-chain/node/pull/2572) - turn off IBC modules
+* [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
 * [2568](https://github.com/zeta-chain/node/pull/2568) - improve AppContext
 
 ### Tests
@@ -103,6 +110,7 @@
 * [2396](https://github.com/zeta-chain/node/issues/2386) - special handle bitcoin testnet gas price estimator
 * [2434](https://github.com/zeta-chain/node/pull/2434) - the default database when running `zetacored init` is now pebbledb
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
+* [2545](https://github.com/zeta-chain/node/pull/2545) - check solana minimum rent exempt to avoid outbound failure
 * [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
 
 ### CI
