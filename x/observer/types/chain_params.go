@@ -152,7 +152,6 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultBtcTestnetChainParams(),
 			GetDefaultBtcRegtestChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
-			GetDefaultZetaPrivnetChainParams(),
 		},
 	}
 }
