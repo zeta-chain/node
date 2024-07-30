@@ -477,3 +477,39 @@ func GetBtcEvent(
 	}
 	return nil, nil
 }
+
+// GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
+// This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
+// It will first prioritize OP_RETURN over tapscript.
+func GetBtcEventWithWitness(
+	client interfaces.BTCRPCClient,
+	tx btcjson.TxRawResult,
+	tssAddress string,
+	blockNumber uint64,
+	logger zerolog.Logger,
+	netParams *chaincfg.Params,
+	depositorFee float64,
+) (*BTCInboundEvent, error) {
+	// first check for OP_RETURN data
+	event, err := GetBtcEvent(
+		client,
+		tx,
+		tssAddress,
+		blockNumber,
+		logger,
+		netParams,
+		depositorFee,
+	)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get btc event")
+	}
+
+	if event != nil {
+		return event, nil
+	}
+
+	// TODO: integrate parsing script
+
+	return nil, nil
+}

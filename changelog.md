@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## Unreleased
+## v19.1.0
+
+* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envolop parsing 
+
 
 ## v19.0.1
 
