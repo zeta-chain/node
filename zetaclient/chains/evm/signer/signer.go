@@ -17,6 +17,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
@@ -866,11 +867,16 @@ func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, e
 		client := &mocks.MockEvmClient{}
 		return client, ethSigner, nil
 	}
+	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	client, err := ethclient.Dial(endpoint)
+	rpcClient, err := ethrpc.DialHTTPWithClient(endpoint, httpClient)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "unable to dial EVM client (endpoint %q)", endpoint)
 	}
+	client := ethclient.NewClient(rpcClient)
 
 	chainID, err := client.ChainID(ctx)
 	if err != nil {

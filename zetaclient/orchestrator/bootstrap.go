@@ -8,6 +8,7 @@ import (
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
@@ -279,12 +280,17 @@ func syncObserverMap(
 				continue
 			}
 
-			// create EVM client
-			evmClient, err := ethclient.DialContext(ctx, cfg.Endpoint)
+			httpClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
+			if err != nil {
+				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to create HTTP client")
+				continue
+			}
+			rpcClient, err := ethrpc.DialHTTPWithClient(cfg.Endpoint, httpClient)
 			if err != nil {
 				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to dial EVM RPC")
 				continue
 			}
+			evmClient := ethclient.NewClient(rpcClient)
 
 			database, err := db.NewFromSqlite(dbpath, chainName, true)
 			if err != nil {
