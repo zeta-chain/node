@@ -131,9 +131,9 @@ func (t *scriptTokenizer) Next() bool {
 		case 1:
 			dataLen = int(script[0])
 		case 2:
-			dataLen = int(binary.LittleEndian.Uint16(script[:2]))
+			dataLen = int(binary.LittleEndian.Uint16(script[:length]))
 		case 4:
-			dataLen = int(binary.LittleEndian.Uint32(script[:4]))
+			dataLen = int(binary.LittleEndian.Uint32(script[:length]))
 		default:
 			t.err = fmt.Errorf("invalid opcode length %d", length)
 			return false
