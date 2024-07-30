@@ -112,8 +112,10 @@ func (t *scriptTokenizer) Next() bool {
 			length = 1
 		case txscript.OP_PUSHDATA2:
 			length = 2
+		case txscript.OP_PUSHDATA4:
+		        length = 4
 		default:
-			length = 4
+			return fmt.Errorf("unexpected op code %d", op)
 		}
 
 		script := t.script[t.offset+1:]
