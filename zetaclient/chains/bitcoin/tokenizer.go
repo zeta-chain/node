@@ -87,8 +87,10 @@ func (t *scriptTokenizer) Next() bool {
 	case op >= txscript.OP_DATA_1 && op <= txscript.OP_DATA_75:
 		script := t.script[t.offset:]
 
+		// the length should be: int(op) - txscript.OP_DATA_1 + 2
 		// add 2 instead of 1 because script includes the opcode as well
-		length := int(op) - txscript.OP_DATA_1 + 2
+		// since txscript.OP_DATA_1 is 1, then length is just int(op) + 1
+		length := int(op) + 1
 		if len(script) < length {
 			t.err = fmt.Errorf("opcode %d detected, but script only %d bytes remaining", op, len(script))
 			return false
