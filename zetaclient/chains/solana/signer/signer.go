@@ -63,14 +63,14 @@ func NewSigner(
 	}, nil
 }
 
-// SignWithdrawTx signs a message for Solana gateway 'withdraw' transaction
+// SignMsgWithdraw signs a message for Solana gateway withdraw/withdraw_spl instruction
 func (signer *Signer) SignMsgWithdraw(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
 ) (*contract.MsgWithdraw, error) {
-	// #nosec G115 always positive
 	chain := signer.Chain()
+	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
 	amount := params.Amount.Uint64()
@@ -91,10 +91,10 @@ func (signer *Signer) SignMsgWithdraw(
 	if err != nil {
 		return nil, errors.Wrap(err, "Key-sign failed")
 	}
-	msg.WithSignature(signature)
-
 	signer.Logger().Std.Info().Msgf("Key-sign succeed for chain %d nonce %d", chainID, nonce)
-	return msg, nil
+
+	// attach the signature and return
+	return msg.WithSignature(signature), nil
 }
 
 // SignWithdrawTx signs the Solana gateway 'withdraw' transaction specified by 'msg'
@@ -189,7 +189,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	// support gas token only for Solana outbound
 	coinType := cctx.InboundParams.CoinType
-	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
+	if coinType != coin.CoinType_Gas {
 		logger.Error().Msgf("TryProcessOutbound: can only send SOL to the Solana network")
 		return
 	}
@@ -197,14 +197,14 @@ func (signer *Signer) TryProcessOutbound(
 	// sign gateway withdraw message by TSS
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
-	msgWithdraw, err := signer.SignMsgWithdraw(ctx, params, height)
+	msg, err := signer.SignMsgWithdraw(ctx, params, height)
 	if err != nil {
 		logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
 		return
 	}
 
 	// sign the withdraw transaction by fee payer
-	tx, err := signer.SignWithdrawTx(ctx, *msgWithdraw)
+	tx, err := signer.SignWithdrawTx(ctx, *msg)
 	if err != nil {
 		logger.Error().Err(err).Msgf("TryProcessOutbound: SignWithdrawTx error for chain %d nonce %d", chainID, nonce)
 		return
@@ -220,7 +220,7 @@ func (signer *Signer) TryProcessOutbound(
 		// Commitment "processed" will simulate tx against more recent state
 		// thus fails faster once a tx is already broadcasted and processed by the cluster.
 		// This reduces the number of "failed" txs due to repeated broadcast attempts.
-		rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentConfirmed},
+		rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 	)
 	if err != nil {
 		signer.Logger().

@@ -8,11 +8,13 @@ import (
 	"cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/near/borsh-go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -69,10 +71,21 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 					continue
 				}
 
+				// get original cctx parameters
+				cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+				if err != nil {
+					// take a rest if zetacore RPC breaks
+					ob.Logger().Outbound.Error().
+						Err(err).
+						Msgf("WatchOutbound: can't find cctx for chain %d nonce %d", chainID, tracker.Nonce)
+					break
+				}
+				coinType := cctx.InboundParams.CoinType
+
 				txCount := 0
 				var txResult *rpc.GetTransactionResult
 				for _, txHash := range tracker.HashList {
-					if result, ok := ob.checkFinalizedTx(ctx, txHash.TxHash, nonce); ok {
+					if result, ok := ob.CheckFinalizedTx(ctx, txHash.TxHash, nonce, coinType); ok {
 						txCount++
 						txResult = result
 						ob.Logger().Outbound.Info().
@@ -100,14 +113,8 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 }
 
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isFinalized, error)
-// NOTE: There is a critical difference from EVM/Bitcoin chains regarding nonce and transaction status
-// On EVM/Bitcoin chains, for each scheduled outbound nonce, there can be exactly 1 tx (successful or failed)
-// included in the blockchain.  On Solana, this is no longer the case: there can be AT MOST 1 SUCCESSFUL tx
-// corresponding to a scheduled outbound nonce. However, there can be multiple FAILED txs corresponding to
-// the same nonce. Therefore, we must distinguish between failed tx due to 1) nonce rejected; 2) tx reverted.
-// The first case, we should ignore it (in other chains, this tx should not be mined at all). The second case,
-// we should report it to zetacore as a real failed tx.
-// FIXME: implement the above logic that distinguishes between nonce-rejected and tx-reverted failed tx.
+// It also posts vote to zetacore if the tx is finalized
+// TODO(revamp): rename as it also vote the outbound
 func (ob *Observer) IsOutboundProcessed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
@@ -208,32 +215,130 @@ func (ob *Observer) PostVoteOutbound(
 	}
 }
 
-// checkFinalizedTx checks if a txHash is finalized for given nonce
+// CheckFinalizedTx checks if a txHash is finalized for given nonce and coinType
 // returns (tx result, true) if finalized or (nil, false) otherwise
-func (ob *Observer) checkFinalizedTx(ctx context.Context, txHash string, _ uint64) (*rpc.GetTransactionResult, bool) {
+func (ob *Observer) CheckFinalizedTx(
+	ctx context.Context,
+	txHash string,
+	nonce uint64,
+	coinType coin.CoinType,
+) (*rpc.GetTransactionResult, bool) {
+	// prepare logger
+	logger := ob.Logger().Outbound.With().
+		Str("method", "checkFinalizedTx").
+		Int64("chain", ob.Chain().ChainId).
+		Uint64("nonce", nonce).
+		Str("tx", txHash).Logger()
+
 	// convert txHash to signature
 	sig, err := solana.SignatureFromBase58(txHash)
 	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msgf("checkFinalizedTx: err SignatureFromBase58 for tx hash %s", txHash)
+		logger.Error().Err(err).Msg("SignatureFromBase58 err")
 		return nil, false
 	}
 
-	// must get tx result with finalized commitment to avoid re-org
+	// query transaction using "finalized" commitment to avoid re-org
 	txResult, err := ob.solClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
 		Commitment: rpc.CommitmentFinalized,
 	})
 	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msgf("checkFinalizedTx: err GetTransaction for sig %s", sig)
+		logger.Error().Err(err).Msg("GetTransaction err")
 		return nil, false
 	}
 
-	// TODO:
-	// - decode tx message and 'withdraw' instruction
-	// - check tx sender and nonce
-	// - for successful tx, simply return txResult
-	// - for failed tx, find out if it's due to nonce rejection, signature rejection, or reverted tx
-	//     - ignore nonce rejection, report signature rejection
-	//     - report reverted tx back to zetacore
+	// the tx must be successful in order to effectively increment the nonce
+	if txResult.Meta.Err != nil {
+		logger.Error().Msg("tx is not successful")
+		return nil, false
+	}
+
+	// parse gateway instruction from tx result
+	inst, err := ob.ParseGatewayInstruction(txResult, coinType)
+	if err != nil {
+		logger.Error().Err(err).Msg("ParseGatewayInstruction err")
+		return nil, false
+	}
+	txNonce := inst.GatewayNonce()
+
+	// recover ECDSA signer from instruction
+	signerECDSA, err := inst.Signer()
+	if err != nil {
+		logger.Error().Err(err).Msg("cannot get instruction signer")
+		return nil, false
+	}
+
+	// check tx authorization
+	if signerECDSA != ob.TSS().EVMAddress() {
+		logger.Error().Msgf("tx signer %s is not matching TSS address %s", signerECDSA, ob.TSS().EVMAddress())
+		return nil, false
+	}
+
+	// check tx nonce
+	if txNonce != nonce {
+		logger.Error().Msgf("tx nonce %d is not matching cctx nonce %d", txNonce, nonce)
+		return nil, false
+	}
 
 	return txResult, true
+}
+
+// ParseGatewayInstruction parses the instruction signer and nonce from tx result
+func (ob *Observer) ParseGatewayInstruction(
+	txResult *rpc.GetTransactionResult,
+	coinType coin.CoinType,
+) (contract.OutboundInstruction, error) {
+	// unmarshal transaction
+	tx, err := txResult.Transaction.GetTransaction()
+	if err != nil {
+		return nil, errors.Wrap(err, "error unmarshaling transaction")
+	}
+
+	// there should be only one single instruction ('withdraw' or 'withdraw_spl_token')
+	if len(tx.Message.Instructions) != 1 {
+		return nil, fmt.Errorf("want 1 instruction, got %d", len(tx.Message.Instructions))
+	}
+	instruction := tx.Message.Instructions[0]
+
+	// get the program ID
+	programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting program ID")
+	}
+
+	// the instruction should be an invocation of the gateway program
+	if !programPk.Equals(ob.gatewayID) {
+		return nil, errors.New("not a gateway program invocation")
+	}
+
+	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
+	switch coinType {
+	case coin.CoinType_Gas:
+		return ob.ParseInstructionWithdraw(tx, 0)
+	default:
+		return nil, errors.New("unsupported outbound coin type")
+	}
+}
+
+// ParseInstructionWithdraw tries to parse an instruction as a 'withdraw'.
+// It returns nil if the instruction can't be parsed as a 'withdraw'.
+func (ob *Observer) ParseInstructionWithdraw(
+	tx *solana.Transaction,
+	instructionIndex int,
+) (*contract.WithdrawInstructionParams, error) {
+	// locate instruction by index
+	instruction := tx.Message.Instructions[instructionIndex]
+
+	// try deserializing instruction as a 'withdraw'
+	inst := &contract.WithdrawInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'withdraw' instruction
+	if inst.Discriminator != contract.DiscriminatorWithdraw() {
+		return nil, errors.New("not a withdraw instruction")
+	}
+
+	return inst, nil
 }

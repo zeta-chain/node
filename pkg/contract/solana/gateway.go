@@ -1,7 +1,7 @@
 package solana
 
 import (
-	solanago "github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go"
 )
 
 const (
@@ -42,16 +42,16 @@ func DiscriminatorWithdrawSPL() [8]byte {
 }
 
 // ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
-func ParseGatewayIDAndPda(address string) (gatewayID solanago.PublicKey, pda solanago.PublicKey, err error) {
+func ParseGatewayIDAndPda(address string) (gatewayID solana.PublicKey, pda solana.PublicKey, err error) {
 	// decode gateway address
-	gatewayID, err = solanago.PublicKeyFromBase58(address)
+	gatewayID, err = solana.PublicKeyFromBase58(address)
 	if err != nil {
 		return
 	}
 
 	// compute gateway PDA
 	seed := []byte(PDASeed)
-	pda, _, err = solanago.FindProgramAddress([][]byte{seed}, gatewayID)
+	pda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
 
 	return
 }

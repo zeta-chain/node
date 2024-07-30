@@ -34,9 +34,6 @@ func (signer *Signer) reportToOutboundTracker(
 			Msgf("reportToOutboundTracker: outbound %s for chain %d nonce %d is being reported", txSig, chainID, nonce)
 		return
 	}
-	signer.Logger().
-		Std.Info().
-		Msgf("reportToOutboundTracker: reporting outbound %s for chain %d nonce %d", txSig, chainID, nonce)
 
 	// launch a goroutine to monitor tx confirmation status
 	go func() {
@@ -53,12 +50,12 @@ func (signer *Signer) reportToOutboundTracker(
 			if time.Since(start) > SolanaTransactionTimeout {
 				logger.Info().
 					Msgf("reportToOutboundTracker: outbound %s expired for chain %d nonce %d", txSig, chainID, nonce)
-				break
+				return
 			}
 
-			// get confirmed tx with metadata
-			tx, err := signer.client.GetConfirmedTransactionWithOpts(ctx, txSig, &rpc.GetTransactionOpts{
-				// commitment "CommitmentProcessed" seems to be a better choice but it's not supported
+			// query tx using optimistic commitment level "confirmed"
+			tx, err := signer.client.GetTransaction(ctx, txSig, &rpc.GetTransactionOpts{
+				// commitment "processed" seems to be a better choice but it's not supported
 				// see: https://solana.com/docs/rpc/http/gettransaction
 				Commitment: rpc.CommitmentConfirmed,
 			})
@@ -66,26 +63,28 @@ func (signer *Signer) reportToOutboundTracker(
 				continue
 			}
 
-			// successfully included in a block; report and exit goroutine
-			if tx.Meta.Err == nil {
-				zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, txSig.String(), nil, "", -1)
-				if err != nil {
-					logger.Err(err).
-						Msgf("reportToOutboundTracker: error adding outbound %s for chain %d nonce %d", txSig, chainID, nonce)
-				} else if zetaHash != "" {
-					logger.Info().Msgf("reportToOutboundTracker: added outbound %s for chain %d nonce %d; zeta txhash %s", txSig, chainID, nonce, zetaHash)
-				} else {
-					// stop if the tracker already contains the outboundHash
-					logger.Info().Msgf("reportToOutboundTracker: outbound %s already in tracker for chain %d nonce %d", txSig, chainID, nonce)
-					return
-				}
+			// exit goroutine if tx failed.
+			if tx.Meta.Err != nil {
+				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced by the gateway program.
+				// a failed outbound (e.g. signature err, balance err) will never be able to increment the gateway program nonce.
+				// a good/valid candidate of outbound tracker hash must come with a successful tx.
+				logger.Warn().
+					Msgf("reportToOutboundTracker: outbound %s failed for chain %d nonce %d", txSig, chainID, nonce)
+				return
 			}
 
-			// it's included by failed (likely competing txs succeeded). exit goroutine.
-			// FIXME: we should report this failed tx ONLY IF it failed not due to nonce mismatch error
-			// FIXME: add a check for nonce mismatch error
-			logger.Warn().Msgf("tx %s failed: %v", txSig, tx.Meta.Err)
-			return
+			// report outbound hash to zetacore
+			zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, txSig.String(), nil, "", -1)
+			if err != nil {
+				logger.Err(err).
+					Msgf("reportToOutboundTracker: error adding outbound %s for chain %d nonce %d", txSig, chainID, nonce)
+			} else if zetaHash != "" {
+				logger.Info().Msgf("reportToOutboundTracker: added outbound %s for chain %d nonce %d; zeta txhash %s", txSig, chainID, nonce, zetaHash)
+			} else {
+				// exit goroutine if the tracker already contains the hash (reported by other signer)
+				logger.Info().Msgf("reportToOutboundTracker: outbound %s already in tracker for chain %d nonce %d", txSig, chainID, nonce)
+				return
+			}
 		}
 	}()
 }

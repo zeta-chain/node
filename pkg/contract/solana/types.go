@@ -1,6 +1,9 @@
-package solana
+package solana // PdaInfo represents the PDA for the gateway program
+import (
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+)
 
-// PdaInfo represents the PDA for the gateway program
 type PdaInfo struct {
 	// Discriminator is the unique identifier for the PDA
 	Discriminator [8]byte
@@ -42,6 +45,17 @@ type DepositInstructionParams struct {
 	Memo []byte
 }
 
+// OutboundInstruction is the interface for all gateway outbound instructions
+type OutboundInstruction interface {
+	// Signer returns the signer of the instruction
+	Signer() (common.Address, error)
+
+	// GatewayNonce returns the nonce of the instruction
+	GatewayNonce() uint64
+}
+
+var _ OutboundInstruction = (*WithdrawInstructionParams)(nil)
+
 // WithdrawInstructionParams contains the parameters for a gateway withdraw instruction
 type WithdrawInstructionParams struct {
 	// Discriminator is the unique identifier for the withdraw instruction
@@ -61,4 +75,29 @@ type WithdrawInstructionParams struct {
 
 	// Nonce is the nonce for the withdraw
 	Nonce uint64
+}
+
+// Signer returns the signer of the signature contained
+func (inst *WithdrawInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *WithdrawInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// RecoverSigner recover the ECDSA signer from given message hash and signature
+func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err error) {
+	// recover the public key
+	pubKey, err := crypto.SigToPub(msgHash, msgSig)
+	if err != nil {
+		return
+	}
+
+	return crypto.PubkeyToAddress(*pubKey), nil
 }
