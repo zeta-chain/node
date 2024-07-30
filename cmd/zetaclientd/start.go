@@ -213,16 +213,16 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	btcChain, err := appContext.FirstChain(zctx.Chain.IsUTXO)
-	if err != nil {
-		return errors.Wrap(err, "unable to find BTC chain")
+	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	if len(btcChains) == 0 {
+		return errors.New("no BTC chains found")
 	}
 
 	tss, err := mc.NewTSS(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
-		btcChain.ID(),
+		btcChains[0].ID(),
 		hotkeyPass,
 		server,
 	)

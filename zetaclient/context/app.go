@@ -60,26 +60,25 @@ func (a *AppContext) ListChainIDs() []int64 {
 	return a.chainRegistry.ChainIDs()
 }
 
+// ListChains returns the list of existing chains in the registry.
 func (a *AppContext) ListChains() []Chain {
 	return a.chainRegistry.All()
 }
 
-// FirstChain returns the first chain that satisfies the filter
-func (a *AppContext) FirstChain(filter func(Chain) bool) (Chain, error) {
-	ids := a.ListChainIDs()
+// FilterChains returns the list of chains that satisfy the filter
+func (a *AppContext) FilterChains(filter func(Chain) bool) []Chain {
+	var (
+		all = a.ListChains()
+		out = make([]Chain, 0, len(all))
+	)
 
-	for _, id := range ids {
-		chain, err := a.GetChain(id)
-		if err != nil {
-			return Chain{}, errors.Wrapf(err, "unable to get chain %d", id)
-		}
-
+	for _, chain := range all {
 		if filter(chain) {
-			return chain, nil
+			out = append(out, chain)
 		}
 	}
 
-	return Chain{}, errors.Wrap(ErrChainNotFound, "no chain satisfies the filter")
+	return out
 }
 
 // IsOutboundObservationEnabled returns true if outbound flag is enabled
@@ -264,4 +263,8 @@ func isZeta(chainID int64) bool {
 // actually chainParams is a concept of observer
 func zetaObserverChainParams(chainID int64) *observertypes.ChainParams {
 	return &observertypes.ChainParams{ChainId: chainID, IsSupported: true}
+}
+
+func ChainIsNotZeta(c Chain) bool {
+	return !c.IsZeta()
 }
