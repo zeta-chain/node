@@ -49,7 +49,9 @@ func bitcoinTestRoutine(
 		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		bitcoinRunner.SetupBitcoinAccount(initBitcoinNetwork)
-		bitcoinRunner.DepositBTC(testHeader)
+		if initBitcoinNetwork {
+			bitcoinRunner.DepositBTC(testHeader)
+		}
 
 		// run bitcoin test
 		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first

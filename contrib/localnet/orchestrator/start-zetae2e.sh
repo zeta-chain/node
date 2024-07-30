@@ -86,6 +86,43 @@ address=$(yq -r '.additional_accounts.user_migration.evm_address' config.yml)
 echo "funding migration tester address ${address} with 10000 Ether"
 geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
 
+
+if [ "$LOCALNET_MODE" == "migrate" ]; then
+  if [[ ! -f deployed.yml ]]; then
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
+    if [ $? -ne 0 ]; then
+      echo "e2e setup failed"
+      exit 1
+    fi
+  else
+    echo "skipping e2e setup because it has already been completed"
+  fi
+
+  echo "running e2e test before migrating TSS"
+
+  # Use light flag to ensure tests can complete before the upgrade height
+  zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-header-proof
+  if [ $? -ne 0 ]; then
+    echo "first e2e failed"
+    exit 1
+  fi
+
+  echo "waiting 10 seconds for node to restart"
+    sleep 10
+
+  zetae2e local --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
+
+  ZETAE2E_EXIT_CODE=$?
+  if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+    echo "E2E passed after migration"
+    exit 0
+  else
+    echo "E2E failed after migration"
+    exit 1
+  fi
+fi
+
+
 ### Run zetae2e command depending on the option passed
 
 if [ "$LOCALNET_MODE" == "upgrade" ]; then
