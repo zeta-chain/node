@@ -114,10 +114,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		blockNumber, len(res.Block.Tx), cnt, lastScanned)
 
 	// add block header to zetacore
-	// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
-	// https://github.com/zeta-chain/node/issues/1847
-	// TODO: move this logic in its own routine
-	// https://github.com/zeta-chain/node/issues/2204
 	if len(res.Block.Tx) > 1 {
 		// get depositor fee
 		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)
