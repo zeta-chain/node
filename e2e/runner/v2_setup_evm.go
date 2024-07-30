@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
 	"math/big"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/erc20custodynew.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/gatewayevm.sol"
 
+	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 )
@@ -48,7 +48,12 @@ func (r *E2ERunner) SetupEVMV2() {
 	require.NoError(r, err)
 
 	// Deploy the proxy contract
-	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(r.EVMAuth, r.EVMClient, gatewayEVMAddr, initializerData)
+	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
+		r.EVMAuth,
+		r.EVMClient,
+		gatewayEVMAddr,
+		initializerData,
+	)
 	require.NoError(r, err)
 
 	r.GatewayEVMAddr = proxyAddress

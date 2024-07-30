@@ -1,12 +1,14 @@
 package runner
 
 import (
+	"time"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/zevm/gatewayzevm.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"time"
 )
 
 // SetZEVMContractsV2 set contracts for the ZEVM
@@ -36,7 +38,12 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// Deploy the proxy contract
-	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(r.EVMAuth, r.EVMClient, gatewayZEVMAddr, initializerData)
+	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
+		r.EVMAuth,
+		r.EVMClient,
+		gatewayZEVMAddr,
+		initializerData,
+	)
 	require.NoError(r, err)
 
 	r.GatewayZEVMAddr = proxyAddress
