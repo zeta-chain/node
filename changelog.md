@@ -7,6 +7,7 @@
 ### Breaking Changes
 
 * [2460](https://github.com/zeta-chain/node/pull/2460) - Upgrade to go 1.22. This required us to temporarily remove the QUIC backend from [go-libp2p](https://github.com/libp2p/go-libp2p). If you are a zetaclient operator and have configured quic peers, you need to switch to tcp peers.
+* [List of the other breaking changes can be found in this document](docs/releases/v19_breaking_changes.md)
 
 ### Features
 
