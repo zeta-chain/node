@@ -87,9 +87,10 @@ func (t *scriptTokenizer) Next() bool {
 	case op >= txscript.OP_DATA_1 && op <= txscript.OP_DATA_75:
 		script := t.script[t.offset:]
 
-		// the length should be: int(op) - txscript.OP_DATA_1 + 2
-		// add 2 instead of 1 because script includes the opcode as well
-		// since txscript.OP_DATA_1 is 1, then length is just int(op) + 1
+		// The length should be: int(op) - txscript.OP_DATA_1 + 2, i.e. op is txscript.OP_DATA_10, that means
+		// the data length should be 10, which is txscript.OP_DATA_10 - txscript.OP_DATA_1 + 1.
+		// Here, 2 instead of 1 because `script` also includes the opcode which means it contains one more byte.
+		// Since txscript.OP_DATA_1 is 1, then length is just int(op) - 1 + 2 = int(op) + 1
 		length := int(op) + 1
 		if len(script) < length {
 			t.err = fmt.Errorf("opcode %d detected, but script only %d bytes remaining", op, len(script))
@@ -123,8 +124,7 @@ func (t *scriptTokenizer) Next() bool {
 
 		script := t.script[t.offset+1:]
 		if len(script) < length {
-			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
-				"has %d remaining", op, length, len(script))
+			t.err = fmt.Errorf("opcode %d requires %d bytes, only %d remaining", op, length, len(script))
 			return false
 		}
 
@@ -147,8 +147,7 @@ func (t *scriptTokenizer) Next() bool {
 
 		// Disallow entries that do not fit script or were sign extended.
 		if dataLen > len(script) || dataLen < 0 {
-			t.err = fmt.Errorf("opcode %d pushes %d bytes, but script only "+
-				"has %d remaining", op, dataLen, len(script))
+			t.err = fmt.Errorf("opcode %d pushes %d bytes, only %d remaining", op, dataLen, len(script))
 			return false
 		}
 
