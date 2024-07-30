@@ -1,14 +1,11 @@
 package runner
 
 import (
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
-	"log"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"math/big"
-	"strings"
 	"time"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/prototypes/evm/erc20custodynew.sol"
@@ -17,10 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/constant"
-)
-
-var (
-	zeroAddress = ethcommon.HexToAddress("0x0000000000000000000000000000000000000000")
 )
 
 // SetupEVMV2 setup contracts on EVM with v2 contracts
@@ -49,13 +42,12 @@ func (r *E2ERunner) SetupEVMV2() {
 
 	ensureTxReceipt(txGateway, "Gateway deployment failed")
 
-	gatewayEVMABI, err := abi.JSON(strings.NewReader(gatewayevm.GatewayEVMMetaData.ABI))
-	if err != nil {
-		log.Fatalf("Failed to parse ABI: %v", err)
-	}
+	gatewayEVMABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
+	require.NoError(r, err)
 
 	// Encode the initializer data
-	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, zeroAddress)
+	// Note: set a random address for connector as not used for now
+	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, sample.EthAddress())
 	require.NoError(r, err)
 
 	// Deploy the proxy contract
