@@ -130,6 +130,15 @@ func TestAppContext(t *testing.T) {
 				assert func(*testing.T, *AppContext, error)
 			}{
 				{
+					name: "update with empty chains results in an error",
+					act: func(a *AppContext) error {
+						return appContext.Update(keyGen, newChains, nil, nil, ttsPubKey, ccFlags)
+					},
+					assert: func(t *testing.T, a *AppContext, err error) {
+						assert.ErrorContains(t, err, "no chain params present")
+					},
+				},
+				{
 					name: "trying to add non-supported chain results in an error",
 					act: func(a *AppContext) error {
 						// ASSERT

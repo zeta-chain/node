@@ -116,7 +116,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		cctx := getInvalidCCTX(t)
 
 		_, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
-		assert.ErrorContains(t, err, "unable to get chain 13378337 from app context: chain not found")
+		assert.ErrorContains(t, err, "unable to get chain 13378337 from app context: id=13378337: chain not found")
 		assert.True(t, skip)
 	})
 

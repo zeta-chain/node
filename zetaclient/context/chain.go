@@ -51,7 +51,7 @@ func NewChainRegistry() *ChainRegistry {
 func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 	chain, ok := cr.chains[chainID]
 	if !ok {
-		return Chain{}, ErrChainNotFound
+		return Chain{}, errors.Wrapf(ErrChainNotFound, "id=%d", chainID)
 	}
 
 	return chain, nil
@@ -118,7 +118,7 @@ func (cr *ChainRegistry) ChainIDs() []int64 {
 
 func newChain(cr *ChainRegistry, chainID int64, chain *chains.Chain, params *observer.ChainParams) (Chain, error) {
 	if err := validateNewChain(chainID, chain, params); err != nil {
-		return Chain{}, err
+		return Chain{}, errors.Wrap(err, "invalid input")
 	}
 
 	return Chain{

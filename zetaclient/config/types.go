@@ -159,5 +159,5 @@ func (c Config) GetKeyringBackend() KeyringBackend {
 }
 
 func (c EVMConfig) Empty() bool {
-	return c.Endpoint == "" && c.Chain == chains.Chain{}
+	return c.Endpoint == "" && c.Chain.IsEmpty()
 }
