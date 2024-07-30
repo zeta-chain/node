@@ -9,6 +9,8 @@
 # - An orchestrator to manage interaction with the localnet (orchestrator)
 # - An upgrade host to serve binaries for the upgrade tests (upgrade-host). Only enabled when profile is set to upgrade.
 # - An upgrade orchestrator to send the upgrade governance proposal (upgrade-orchestrator). Only enabled when profile is set to upgrade.
+#
+# If you are using third party images in CI, you should copy them into ghcr via https://github.com/zeta-chain/copy-docker-images
 
 networks:
   mynetwork:
@@ -181,7 +183,7 @@ services:
       - preparams:/root/preparams
 
   eth:
-    image: ethereum/client-go:v1.10.26
+    image: ghcr.io/zeta-chain/ethereum-client-go:v1.10.26
     container_name: eth
     hostname: eth
     ports:
@@ -207,7 +209,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
+    image: ghcr.io/zeta-chain/ruimarinho-bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
     container_name: bitcoin
     hostname: bitcoin
     networks:
