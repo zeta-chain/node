@@ -52,6 +52,9 @@ type OutboundInstruction interface {
 
 	// GatewayNonce returns the nonce of the instruction
 	GatewayNonce() uint64
+
+	// TokenAmount returns the amount of the instruction
+	TokenAmount() uint64
 }
 
 var _ OutboundInstruction = (*WithdrawInstructionParams)(nil)
@@ -89,6 +92,11 @@ func (inst *WithdrawInstructionParams) Signer() (signer common.Address, err erro
 // GatewayNonce returns the nonce of the instruction
 func (inst *WithdrawInstructionParams) GatewayNonce() uint64 {
 	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *WithdrawInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
 }
 
 // RecoverSigner recover the ECDSA signer from given message hash and signature

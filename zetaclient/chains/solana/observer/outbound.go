@@ -119,28 +119,36 @@ func (ob *Observer) IsOutboundProcessed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
 ) (bool, bool, error) {
-	// early return if outbound is not finalized yet
+	// get outbound params
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
+	coinType := cctx.InboundParams.CoinType
+
+	// early return if outbound is not finalized yet
 	txResult := ob.GetTxResult(nonce)
 	if txResult == nil {
 		return false, false, nil
 	}
 
-	// extract tx signature of the finalized tx
+	// extract tx signature from tx result
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
+		// should never happen
 		return true, true, errors.Wrapf(err, "GetTransaction error for nonce %d", nonce)
 	}
 	txSig := tx.Signatures[0]
 
-	outboundAmount := params.Amount.BigInt()      // FIXME: parse this amount from txRes itself, not from cctx
-	outboundStatus := chains.ReceiveStatus_failed // tx was failed/reverted: FIXME: see the note in function comment
-	coinType := cctx.InboundParams.CoinType
-	if txResult.Meta.Err == nil {
-		// tx was successful
-		outboundStatus = chains.ReceiveStatus_success
+	// parse gateway instruction from tx result
+	inst, err := ob.ParseGatewayInstruction(txResult, coinType)
+	if err != nil {
+		// should never happen
+		return true, true, errors.Wrapf(err, "ParseGatewayInstruction error for sig %s", txSig)
 	}
+
+	// the amount and status of the outbound
+	outboundAmount := new(big.Int).SetUint64(inst.TokenAmount())
+	// status was already verified as successful in CheckFinalizedTx
+	outboundStatus := chains.ReceiveStatus_success
 
 	// post vote to zetacore
 	ob.PostVoteOutbound(ctx, cctx.Index, txSig.String(), txResult, outboundAmount, outboundStatus, nonce, coinType)

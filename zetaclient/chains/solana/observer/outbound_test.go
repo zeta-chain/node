@@ -142,6 +142,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 	// the test chain and transaction hash
 	chain := chains.SolanaDevnet
 	txHash := withdrawTxTest
+	txAmount := uint64(890880)
 
 	// create observer
 	ob := createTestObserver(t, chain, nil, nil)
@@ -154,11 +155,12 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_Gas)
 		require.NoError(t, err)
 
-		// check sender and nonce
+		// check sender, nonce and amount
 		sender, err := inst.Signer()
 		require.NoError(t, err)
 		require.Equal(t, tssAddressTest, sender.String())
 		require.EqualValues(t, inst.GatewayNonce(), 0)
+		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
 	t.Run("should return error on invalid number of instructions", func(t *testing.T) {
 		// load and unmarshal archived transaction
@@ -226,6 +228,7 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 	// the test chain and transaction hash
 	chain := chains.SolanaDevnet
 	txHash := withdrawTxTest
+	txAmount := uint64(890880)
 
 	// create observer
 	ob := createTestObserver(t, chain, nil, nil)
@@ -239,11 +242,12 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		inst, err := ob.ParseInstructionWithdraw(tx, 0)
 		require.NoError(t, err)
 
-		// check sender and nonce
+		// check sender, nonce and amount
 		sender, err := inst.Signer()
 		require.NoError(t, err)
 		require.Equal(t, tssAddressTest, sender.String())
 		require.EqualValues(t, inst.GatewayNonce(), 0)
+		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
 	t.Run("should return error on invalid instruction data", func(t *testing.T) {
 		// load and unmarshal archived transaction
