@@ -152,6 +152,8 @@ func (t *scriptTokenizer) Next() bool {
 		}
 
 		// Move the offset forward and set the opcode and data accordingly.
+		// 1 is the opcode size, which is just 1 byte. int(op) is the opcode value,
+		// it should not be mixed with the size.
 		t.offset += 1 + length + dataLen
 		t.op = op
 		t.data = script[:dataLen]
