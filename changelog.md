@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+
 ## v19.0.0
 
 ### Breaking Changes

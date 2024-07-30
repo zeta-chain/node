@@ -57653,6 +57653,8 @@ definitions:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
     type: object
+  fungibleMsgUpdateGatewayContractResponse:
+    type: object
   fungibleMsgUpdateSystemContractResponse:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
@@ -57710,6 +57712,8 @@ definitions:
       system_contract:
         type: string
       connector_zevm:
+        type: string
+      gateway:
         type: string
   googlerpcStatus:
     type: object
