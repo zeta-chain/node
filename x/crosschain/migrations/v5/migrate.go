@@ -49,11 +49,11 @@ func ResetTestnetNonce(
 	for _, chainNonce := range CurrentTestnetChains() {
 		cn, found := observerKeeper.GetChainNonces(ctx, chainNonce.chain.ChainId)
 		if !found {
-			ctx.Logger().Info("ResetTestnetNonce: Chain nonce not found", "chain", chainNonce.chain.ChainName.String())
+			ctx.Logger().Info("ResetTestnetNonce: Chain nonce not found", "chain", chainNonce.chain.Name)
 			continue
 		}
 
-		ctx.Logger().Info("ResetTestnetNonce: Resetting chain nonce", "chain", chainNonce.chain.ChainName.String())
+		ctx.Logger().Info("ResetTestnetNonce: Resetting chain nonce", "chain", chainNonce.chain.Name)
 
 		cn.Nonce = chainNonce.nonceHigh
 		observerKeeper.SetChainNonces(ctx, cn)

@@ -121,7 +121,6 @@ func GenDoc(t *testing.T) *types.GenesisDoc {
 func Chain(chainID int64) chains.Chain {
 	r := newRandFromSeed(chainID)
 
-	chainNameLen := len(chains.ChainName_name)
 	networkLen := len(chains.Network_name)
 	networkTypeLen := len(chains.NetworkType_name)
 	vmLen := len(chains.Vm_name)
@@ -129,12 +128,12 @@ func Chain(chainID int64) chains.Chain {
 
 	return chains.Chain{
 		ChainId:     chainID,
-		ChainName:   chains.ChainName(r.Intn(chainNameLen)),
 		Network:     chains.Network(r.Intn(networkLen)),
 		NetworkType: chains.NetworkType(r.Intn(networkTypeLen)),
 		Vm:          chains.Vm(r.Intn(vmLen)),
 		Consensus:   chains.Consensus(r.Intn(consensusLen)),
 		IsExternal:  true,
+		Name:        StringRandom(r, 10),
 	}
 }
 

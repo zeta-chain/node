@@ -8,6 +8,14 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
+func TestChain_Name(t *testing.T) {
+	t.Run("new Name field is compatible with ChainName enum", func(t *testing.T) {
+		for _, chain := range chains.DefaultChainsList() {
+			require.EqualValues(t, chain.Name, chain.ChainName.String())
+		}
+	})
+}
+
 func TestChainListByNetworkType(t *testing.T) {
 	listTests := []struct {
 		name        string
@@ -149,6 +157,56 @@ func TestDefaultChainList(t *testing.T) {
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
 	}, chains.DefaultChainsList())
+}
+
+func TestChainListByGateway(t *testing.T) {
+	listTests := []struct {
+		name     string
+		gateway  chains.CCTXGateway
+		expected []chains.Chain
+	}{
+		{
+			"observers",
+			chains.CCTXGateway_observers,
+			[]chains.Chain{
+				chains.BitcoinMainnet,
+				chains.BscMainnet,
+				chains.Ethereum,
+				chains.BitcoinTestnet,
+				chains.Mumbai,
+				chains.Amoy,
+				chains.BscTestnet,
+				chains.Goerli,
+				chains.Sepolia,
+				chains.BitcoinRegtest,
+				chains.GoerliLocalnet,
+				chains.Polygon,
+				chains.OptimismMainnet,
+				chains.OptimismSepolia,
+				chains.BaseMainnet,
+				chains.BaseSepolia,
+				chains.SolanaMainnet,
+				chains.SolanaDevnet,
+				chains.SolanaLocalnet,
+			},
+		},
+		{
+			"zevm",
+			chains.CCTXGateway_zevm,
+			[]chains.Chain{
+				chains.ZetaChainMainnet,
+				chains.ZetaChainTestnet,
+				chains.ZetaChainDevnet,
+				chains.ZetaChainPrivnet,
+			},
+		},
+	}
+
+	for _, lt := range listTests {
+		t.Run(lt.name, func(t *testing.T) {
+			require.ElementsMatch(t, lt.expected, chains.ChainListByGateway(lt.gateway, []chains.Chain{}))
+		})
+	}
 }
 
 func TestExternalChainList(t *testing.T) {
