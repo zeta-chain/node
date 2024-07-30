@@ -352,6 +352,15 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
+
+	// v2 contracts
+
+	r.Logger.Print(" --- 📜zEVM v2 contracts ---")
+	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
+
+	r.Logger.Print(" --- 📜EVM v2 contracts ---")
+	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
+	r.Logger.Print("ERC20CustodyNew:%s", r.ERC20CustodyNewAddr.Hex())
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf
