@@ -60,8 +60,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 ) {
 	var solanaClient *rpc.Client
 	if conf.RPCs.Solana != "" {
-		solanaClient = rpc.New(conf.RPCs.Solana)
-		if solanaClient == nil {
+		if solanaClient = rpc.New(conf.RPCs.Solana); solanaClient == nil {
 			return E2EClients{}, fmt.Errorf("failed to get solana client")
 		}
 	}
