@@ -501,9 +501,10 @@ func GetBtcEventWithWitness(
 		depositorFee,
 	)
 
-	if err != nil { // should never happen
+	if err != nil {
 		return nil, errors.Wrap(err, "unable to get btc event")
 	}
+
 	if event != nil {
 		return event, nil
 	}
