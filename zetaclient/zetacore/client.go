@@ -396,16 +396,13 @@ func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppConte
 		return errors.Wrap(err, "unable to fetch current TSS")
 	}
 
-	var (
-		freshChains = make([]chains.Chain, 0, len(supportedChains))
-		freshParams = make(map[int64]*observertypes.ChainParams, len(chainParams))
-	)
+	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
 
 	// check and update chain params for each chain
 	for chainID := range chainParams {
 		cp := chainParams[chainID]
 		if err := observertypes.ValidateChainParams(cp); err != nil {
-			logger.Warn().Err(err).Int64("chain", cp.ChainId).Msg("Skipping invalid chain params")
+			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
 			continue
 		}
 
@@ -414,26 +411,12 @@ func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppConte
 			continue
 		}
 
-		if chains.IsZetaChain(cp.ChainId, additionalChains) {
-			logger.Warn().Int64("chain.id", cp.ChainId).Msg("Skipping zeta chain itself")
-			continue
-		}
-
 		freshParams[cp.ChainId] = cp
-	}
-
-	for _, chain := range supportedChains {
-		if !chain.IsExternal {
-			logger.Warn().Int64("chain.id", chain.ChainId).Msg("Skipping non-external chain")
-			continue
-		}
-
-		freshChains = append(freshChains, chain)
 	}
 
 	return appContext.Update(
 		keyGen,
-		freshChains,
+		supportedChains,
 		additionalChains,
 		freshParams,
 		tss.GetTssPubkey(),
