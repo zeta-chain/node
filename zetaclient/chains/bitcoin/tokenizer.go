@@ -99,11 +99,12 @@ func (t *scriptTokenizer) Next() bool {
 		t.offset += length
 		t.op = op
 		t.data = script[1:length]
-
 		return true
+
 	case op > txscript.OP_PUSHDATA4:
 		t.err = fmt.Errorf("unexpected op code %d", op)
 		return false
+
 	// Data pushes with parsed lengths -- OP_PUSHDATA{1,2,4}.
 	default:
 		var length int
