@@ -13,6 +13,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/ptr"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -59,13 +60,17 @@ func getAppContext(
 
 	// create AppContext
 	appContext := zctx.New(cfg, logger)
-	chainParams := make(map[int64]*observertypes.ChainParams)
-	chainParams[evmChain.ChainId] = evmChainParams
+	chainParams := map[int64]*observertypes.ChainParams{
+		evmChain.ChainId: evmChainParams,
+		chains.ZetaChainMainnet.ChainId: ptr.Ptr(
+			mocks.MockChainParams(chains.ZetaChainMainnet.ChainId, 10),
+		),
+	}
 
 	// feed chain params
 	err := appContext.Update(
 		observertypes.Keygen{},
-		[]chains.Chain{evmChain},
+		[]chains.Chain{evmChain, chains.ZetaChainMainnet},
 		nil,
 		chainParams,
 		"tssPubKey",
@@ -87,7 +92,7 @@ func MockEVMObserver(
 	tss interfaces.TSSSigner,
 	lastBlock uint64,
 	params observertypes.ChainParams,
-) *observer.Observer {
+) (*observer.Observer, *zctx.AppContext) {
 	ctx := context.Background()
 
 	// use default mock evm client if not provided
@@ -108,18 +113,21 @@ func MockEVMObserver(
 		tss = mocks.NewTSSMainnet()
 	}
 	// create AppContext
-	_, evmCfg := getAppContext(t, chain, "", &params)
+	appContext, evmCfg := getAppContext(t, chain, "", &params)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
+	testLogger := zerolog.New(zerolog.NewTestWriter(t))
+	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+
 	// create observer
-	ob, err := observer.NewObserver(ctx, evmCfg, evmClient, params, zetacoreClient, tss, database, base.Logger{}, nil)
+	ob, err := observer.NewObserver(ctx, evmCfg, evmClient, params, zetacoreClient, tss, database, logger, nil)
 	require.NoError(t, err)
 	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
 
-	return ob
+	return ob, appContext
 }
 
 func Test_NewObserver(t *testing.T) {
@@ -245,7 +253,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 
 	// create observer using mock evm client
 	evmClient := mocks.NewMockEvmClient().WithBlockNumber(100)
-	ob := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
+	ob, _ := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// create db and write 123 as last block scanned
@@ -268,7 +276,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer on separate path, as we need to reset last block scanned
-		obOther := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
+		obOther, _ := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC
 		obOther.WithLastBlockScanned(0)

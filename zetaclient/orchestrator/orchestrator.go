@@ -157,7 +157,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 	switch {
 	case err != nil:
 		return nil, err
-	case chain.IsEVM():
+	case !chain.IsEVM():
 		// noop for non-EVM chains
 		return signer, nil
 	case chain.IsZeta():

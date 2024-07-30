@@ -311,18 +311,17 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 		guard[event.Raw.TxHash.Hex()] = true
 
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(app, event)
-		if msg != nil {
-			_, err = ob.PostVoteInbound(
-				ctx,
-				msg,
-				zetacore.PostVoteInboundMessagePassingExecutionGasLimit,
-			)
-			if err != nil {
-				// we have to re-scan from this block next time
-				return beingScanned - 1, err
-			}
+		if msg == nil {
+			continue
+		}
+
+		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
+		if _, err = ob.PostVoteInbound(ctx, msg, gasLimit); err != nil {
+			// we have to re-scan from this block next time
+			return beingScanned - 1, err
 		}
 	}
+
 	// successful processed all events in [startBlock, toBlock]
 	return toBlock, nil
 }
@@ -647,6 +646,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	appContext *zctx.AppContext,
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 ) *types.MsgVoteInbound {
+	// not that this is most likely zeta chain
 	destChain, err := appContext.GetChain(event.DestinationChainId.Int64())
 	if err != nil {
 		ob.Logger().Inbound.Warn().Err(err).Msgf("chain id %d not supported", event.DestinationChainId.Int64())
@@ -663,13 +663,13 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 		return nil
 	}
 
-	if strings.EqualFold(destAddr, destChain.Params().ZetaTokenContractAddress) {
-		ob.Logger().Inbound.Warn().
-			Msgf("potential attack attempt: destination address is ZETA token contract address %s", destAddr)
-
-		return nil
+	if !destChain.IsZeta() {
+		if strings.EqualFold(destAddr, destChain.Params().ZetaTokenContractAddress) {
+			ob.Logger().Inbound.Warn().
+				Msgf("potential attack attempt: %s destination address is ZETA token contract address", destAddr)
+			return nil
+		}
 	}
-
 	message := base64.StdEncoding.EncodeToString(event.Message)
 	ob.Logger().Inbound.Info().Msgf("ZetaSent inbound detected on chain %d tx %s block %d from %s value %s message %s",
 		ob.Chain().

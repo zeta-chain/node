@@ -70,7 +70,7 @@ func CreateAppContext(
 		RPCHost: "localhost",
 	}
 	// new AppContext
-	appContext := zctx.New(cfg, zerolog.Nop())
+	appContext := zctx.New(cfg, zerolog.New(zerolog.NewTestWriter(t)))
 	params := map[int64]*observertypes.ChainParams{
 		evmChain.ChainId:       evmChainParams,
 		btcChainParams.ChainId: btcChainParams,
