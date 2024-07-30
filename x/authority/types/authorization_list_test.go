@@ -420,6 +420,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgDeployFungibleCoinZRC20{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgUpdateGatewayContract{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgRemoveForeignCoin{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
 			sdk.MsgTypeURL(&observertypes.MsgAddObserver{}),
