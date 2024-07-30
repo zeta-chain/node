@@ -80,15 +80,21 @@ func (k msgServer) VoteOutbound(
 		return nil, cosmoserrors.Wrap(err, voteOutboundID)
 	}
 
+	fmt.Printf("Voted on outbound ballot: Cctx %s ,voter %s \n", cctx.Index, msg.Creator)
+
 	// If the ballot is new, set the index to the CCTX.
 	if isNew {
 		observerkeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutboundHash, observationChain)
 	}
 
+	fmt.Printf("Check if finalized: Cctx %s ,voter %s , %v\n", cctx.Index, msg.Creator, isFinalizingVote)
+
 	// If not finalized commit state here.
 	if !isFinalizingVote {
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
+
+	fmt.Printf("isFinalizingVote: Cctx %s ,outbound : %d\n", cctx.Index, len(cctx.OutboundParams))
 
 	// If ballot is successful, the value received should be the out tx amount.
 	err = cctx.AddOutbound(ctx, *msg, ballot.BallotStatus)
@@ -96,16 +102,25 @@ func (k msgServer) VoteOutbound(
 		return nil, cosmoserrors.Wrap(err, voteOutboundID)
 	}
 
+	fmt.Printf("AddOutbound: Cctx %s outbound : %d\n", cctx.Index, len(cctx.OutboundParams))
+
 	// Fund the gas stability pool with the remaining funds.
 	k.FundStabilityPool(ctx, &cctx)
+
+	fmt.Printf("FundStabilityPool: Cctx %s outbound : %d\n", cctx.Index, len(cctx.OutboundParams))
 
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
 		k.SaveFailedOutbound(ctx, &cctx, err.Error(), ballotIndex)
+		fmt.Printf("SaveFailedOutbound: %s,outbound : %d\n", cctx.Index, len(cctx.OutboundParams))
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
+	fmt.Printf("ValidateOutboundObservers: %s outbound : %d\n", cctx.Index, len(cctx.OutboundParams))
+
 	k.SaveSuccessfulOutbound(ctx, &cctx, ballotIndex)
+
+	fmt.Printf("SaveSuccessfulOutbound: Cctx %s outbound : %d\n", cctx.Index, len(cctx.OutboundParams))
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 

@@ -77,6 +77,7 @@ func (k Keeper) ValidateOutboundObservers(
 		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
 			k.validateSuccessfulOutbound(tmpCtx, cctx, valueReceived, true)
 		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
+			fmt.Printf("Outbound failed, start validateFailedOutboundObservers : %s ", cctx.Index)
 			err := k.validateFailedOutboundObservers(tmpCtx, cctx, valueReceived)
 			if err != nil {
 				return err
@@ -139,6 +140,7 @@ func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.Cro
 			}
 		}
 	} else {
+		fmt.Printf("Outbound failed, start revert : %s ", cctx.Index)
 		err := k.validateFailedOutbound(ctx, cctx, oldStatus, "Outbound failed, start revert", cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "validateFailedOutbound")
@@ -195,6 +197,7 @@ func (k Keeper) validateFailedOutbound(
 		// Not setting the finalization status here, the required changes have been made while creating the revert tx
 		cctx.SetPendingRevert(revertMsg)
 	case types.CctxStatus_PendingRevert:
+		fmt.Printf("Outbound failed, aborting : %s ", cctx.Index)
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort("Outbound failed: revert failed; abort TX")
 	}
