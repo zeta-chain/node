@@ -168,6 +168,7 @@ jobs:
       make-target: ${{ matrix.make-target }}
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
+      timeout-minutes: "${{ matrix.timeout-minutes || 25 }}"
     secrets: inherit
   # this allows you to set a required status check
   e2e-ok:
