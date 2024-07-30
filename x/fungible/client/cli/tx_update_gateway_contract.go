@@ -11,7 +11,7 @@ import (
 
 func CmdUpdateGatewayContract() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-gateway-contract [contract-address] ",
+		Use:   "update-gateway-contract [contract-address]",
 		Short: "Broadcast message UpdateGatewayContract to update the gateway contract address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
