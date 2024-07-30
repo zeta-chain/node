@@ -25,9 +25,11 @@ type ChainRegistry struct {
 
 // Chain represents chain with its parameters
 type Chain struct {
-	id       int64
-	chain    *chains.Chain
-	params   *observer.ChainParams
+	chainInfo      *chains.Chain
+	observerParams *observer.ChainParams
+
+	// reference to the registry it necessary for some operations
+	// like checking if the chain is EVM or not because it uses some "global" context state
 	registry *ChainRegistry
 }
 
@@ -59,7 +61,7 @@ func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 func (cr *ChainRegistry) All() []Chain {
 	items := maps.Values(cr.chains)
 
-	slices.SortFunc(items, func(a, b Chain) bool { return a.id < b.id })
+	slices.SortFunc(items, func(a, b Chain) bool { return a.ID() < b.ID() })
 
 	return items
 }
@@ -77,7 +79,7 @@ func (cr *ChainRegistry) Set(chainID int64, chain *chains.Chain, params *observe
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
 
-	cr.chains[item.id] = item
+	cr.chains[chainID] = item
 
 	return nil
 }
@@ -115,52 +117,61 @@ func (cr *ChainRegistry) ChainIDs() []int64 {
 }
 
 func newChain(cr *ChainRegistry, chainID int64, chain *chains.Chain, params *observer.ChainParams) (Chain, error) {
-	switch {
-	case chainID < 1:
-		return Chain{}, fmt.Errorf("invalid chain id %d", chainID)
-	case chain == nil:
-		return Chain{}, fmt.Errorf("chain is nil")
-	case params == nil:
-		return Chain{}, fmt.Errorf("chain params is nil")
-	case chain.ChainId != chainID:
-		return Chain{}, fmt.Errorf("chain id %d does not match chain.ChainId %d", chainID, chain.ChainId)
-	case params.ChainId != chainID:
-		return Chain{}, fmt.Errorf("chain id %d does not match params.ChainId %d", chainID, params.ChainId)
-	case !params.IsSupported:
-		return Chain{}, ErrChainNotSupported
-	case chains.IsZetaChain(chainID, nil) || !chain.IsExternal:
-		return Chain{}, errors.Wrap(ErrChainNotSupported, "ZetaChain itself cannot be in the registry")
+	if err := validateNewChain(chainID, chain, params); err != nil {
+		return Chain{}, err
 	}
 
 	return Chain{
-		id:       chainID,
-		chain:    chain,
-		params:   params,
-		registry: cr,
+		chainInfo:      chain,
+		observerParams: params,
+		registry:       cr,
 	}, nil
 }
 
 func (c Chain) ID() int64 {
-	return c.id
+	return c.chainInfo.ChainId
 }
 
 func (c Chain) Params() *observer.ChainParams {
-	return c.params
+	return c.observerParams
 }
 
 // RawChain returns the underlying Chain object. Better not to use this method
 func (c Chain) RawChain() *chains.Chain {
-	return c.chain
+	return c.chainInfo
 }
 
 func (c Chain) IsEVM() bool {
-	return chains.IsEVMChain(c.id, c.registry.additionalChains)
+	return chains.IsEVMChain(c.ID(), c.registry.additionalChains)
+}
+
+func (c Chain) IsZeta() bool {
+	return chains.IsZetaChain(c.ID(), c.registry.additionalChains)
 }
 
 func (c Chain) IsUTXO() bool {
-	return chains.IsBitcoinChain(c.id, c.registry.additionalChains)
+	return chains.IsBitcoinChain(c.ID(), c.registry.additionalChains)
 }
 
 func (c Chain) IsSolana() bool {
-	return chains.IsSolanaChain(c.id, c.registry.additionalChains)
+	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
+}
+
+func validateNewChain(chainID int64, chain *chains.Chain, params *observer.ChainParams) error {
+	switch {
+	case chainID < 1:
+		return fmt.Errorf("invalid chain id %d", chainID)
+	case chain == nil:
+		return fmt.Errorf("chain is nil")
+	case params == nil:
+		return fmt.Errorf("chain params is nil")
+	case chain.ChainId != chainID:
+		return fmt.Errorf("chain id %d does not match chain.ChainId %d", chainID, chain.ChainId)
+	case params.ChainId != chainID:
+		return fmt.Errorf("chain id %d does not match params.ChainId %d", chainID, params.ChainId)
+	case !params.IsSupported:
+		return ErrChainNotSupported
+	}
+
+	return nil
 }

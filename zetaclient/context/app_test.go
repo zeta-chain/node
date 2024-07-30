@@ -152,33 +152,39 @@ func TestAppContext(t *testing.T) {
 					},
 				},
 				{
-					name: "trying to add zetachain without chain params is allowed but skipped",
+					name: "trying to add zeta chain without chain params is allowed",
 					act: func(a *AppContext) error {
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
 						return a.Update(keyGen, chainsWithZeta, additionalChains, chainParams, ttsPubKey, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
-						mustBeNotFound(t, a, chains.ZetaChainMainnet.ChainId)
+
+						zc := mustBePresent(t, a, chains.ZetaChainMainnet.ChainId)
+						assert.True(t, zc.IsZeta())
 					},
 				},
 				{
-					name: "trying to add zetachain with chain params results in an error",
+					name: "trying to add zetachain with chain params is allowed but forces fake params",
 					act: func(a *AppContext) error {
 						zetaParams := types.GetDefaultZetaPrivnetChainParams()
+						zetaParams.ChainId = chains.ZetaChainMainnet.ChainId
 						zetaParams.IsSupported = true
+						zetaParams.GatewayAddress = "ABC123"
 
 						chainParamsWithZeta := maps.Clone(chainParams)
 						chainParamsWithZeta[zetaParams.ChainId] = zetaParams
 
-						chainsWithZeta := append(newChains, chains.ZetaChainPrivnet)
+						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
 
 						return a.Update(keyGen, chainsWithZeta, additionalChains, chainParamsWithZeta, ttsPubKey, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
-						assert.ErrorIs(t, err, ErrChainNotSupported)
-						assert.ErrorContains(t, err, "ZetaChain itself cannot be in the registry")
-						mustBeNotFound(t, a, chains.ZetaChainMainnet.ChainId)
+						assert.NoError(t, err)
+
+						zc := mustBePresent(t, a, chains.ZetaChainMainnet.ChainId)
+						assert.True(t, zc.IsZeta())
+						assert.Equal(t, "", zc.Params().GatewayAddress)
 					},
 				},
 				{
@@ -192,6 +198,7 @@ func TestAppContext(t *testing.T) {
 
 						updatedChainParams := maps.Clone(chainParams)
 						updatedChainParams[maticParams.ChainId] = maticParams
+						delete(updatedChainParams, chains.ZetaChainMainnet.ChainId)
 
 						return a.Update(keyGen, newChains, additionalChains, updatedChainParams, ttsPubKey, ccFlags)
 					},
@@ -218,4 +225,12 @@ func mustBeNotFound(t *testing.T, a *AppContext, chainID int64) {
 	t.Helper()
 	_, err := a.GetChain(chainID)
 	require.ErrorIs(t, err, ErrChainNotFound)
+}
+
+func mustBePresent(t *testing.T, a *AppContext, chainID int64) Chain {
+	t.Helper()
+	c, err := a.GetChain(chainID)
+	require.NoError(t, err)
+
+	return c
 }

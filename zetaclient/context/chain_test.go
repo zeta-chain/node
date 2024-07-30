@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	observer "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
 func TestChainRegistry(t *testing.T) {
@@ -41,6 +42,7 @@ func TestChainRegistry(t *testing.T) {
 		require.NoError(t, r.Set(eth.ChainId, eth, ethParams))
 		require.NoError(t, r.Set(matic.ChainId, matic, maticParams))
 		require.NoError(t, r.Set(sol.ChainId, sol, solParams))
+		require.NoError(t, r.Set(zeta.ChainId, zeta, zetaParams))
 
 		// With failures on invalid data
 		require.Error(t, r.Set(0, btc, btcParams))
@@ -51,11 +53,16 @@ func TestChainRegistry(t *testing.T) {
 		// With failure on adding unsupported chains
 		require.ErrorIs(t, r.Set(opt.ChainId, opt, optParams), ErrChainNotSupported)
 
-		// With failure on adding ZetaChain itself
-		require.ErrorIs(t, r.Set(zeta.ChainId, zeta, zetaParams), ErrChainNotSupported)
-
 		// Should return a proper chain list
-		require.ElementsMatch(t, []int64{btc.ChainId, eth.ChainId, matic.ChainId, sol.ChainId}, r.ChainIDs())
+		expectedChains := []int64{
+			btc.ChainId,
+			eth.ChainId,
+			matic.ChainId,
+			sol.ChainId,
+			zeta.ChainId,
+		}
+
+		require.ElementsMatch(t, expectedChains, r.ChainIDs())
 
 		// Should return not found error
 		_, err := r.Get(123)
@@ -72,8 +79,8 @@ func TestChainRegistry(t *testing.T) {
 }
 
 func makeParams(id int64, supported bool) *observer.ChainParams {
-	return &observer.ChainParams{
-		ChainId:     id,
-		IsSupported: supported,
-	}
+	cp := mocks.MockChainParams(id, 123)
+	cp.IsSupported = supported
+
+	return &cp
 }

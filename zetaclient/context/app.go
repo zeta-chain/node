@@ -8,9 +8,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/slices"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
@@ -166,13 +166,24 @@ func (a *AppContext) Update(
 	return nil
 }
 
+// updateChainRegistry updates the chain registry with fresh chains and chain params.
+// Note that there's an edge-case for ZetaChain itself because we WANT to have it in chains list,
+// but it doesn't have chain params.
 func (a *AppContext) updateChainRegistry(
-	freshChains, additionalChains []chains.Chain,
+	freshChains []chains.Chain,
+	additionalChains []chains.Chain,
 	freshChainParams map[int64]*observertypes.ChainParams,
 ) error {
+	var zetaChainID int64
+
+	// 1. build map[chainId]Chain
 	freshChainsByID := make(map[int64]chains.Chain, len(freshChains)+len(additionalChains))
 	for _, c := range freshChains {
 		freshChainsByID[c.ChainId] = c
+
+		if isZeta(c.ChainId) && zetaChainID == 0 {
+			zetaChainID = c.ChainId
+		}
 	}
 
 	for _, c := range additionalChains {
@@ -189,7 +200,8 @@ func (a *AppContext) updateChainRegistry(
 		existingChainIDs = a.chainRegistry.ChainIDs()
 	)
 
-	if len(existingChainIDs) > 0 && !elementsMatch(existingChainIDs, freshChainIDs) {
+	// 2. Compare existing chains with fresh ones
+	if len(existingChainIDs) > 0 && !slices.ElementsMatch(existingChainIDs, freshChainIDs) {
 		a.logger.Warn().
 			Ints64("chains.current", existingChainIDs).
 			Ints64("chains.new", freshChainIDs).
@@ -198,23 +210,31 @@ func (a *AppContext) updateChainRegistry(
 
 	// Log warn if somehow chain doesn't chainParam
 	for _, chainID := range freshChainIDs {
-		if _, ok := freshChainParams[chainID]; !ok {
+		if _, ok := freshChainParams[chainID]; !ok && !isZeta(chainID) {
 			a.logger.Warn().
 				Int64("chain.id", chainID).
 				Msg("Chain doesn't have according ChainParams present. Skipping.")
 		}
 	}
 
+	// 3. If we have zeta chain, we want to force "fake" chainParams for it
+	if zetaChainID != 0 {
+		freshChainParams[zetaChainID] = zetaObserverChainParams(zetaChainID)
+	}
+
+	// 3. Update chain registry
 	// okay, let's update the chains.
 	// Set() ensures that chain, chainID, and params are consistent and chain is not zeta + chain is supported
 	for chainID, params := range freshChainParams {
-		if err := observertypes.ValidateChainParams(params); err != nil {
-			return errors.Wrapf(err, "invalid chain params for chain %d", chainID)
-		}
-
 		chain, ok := freshChainsByID[chainID]
 		if !ok {
 			return fmt.Errorf("unable to locate fresh chain %d based on chain params", chainID)
+		}
+
+		if !isZeta(chainID) {
+			if err := observertypes.ValidateChainParams(params); err != nil {
+				return errors.Wrapf(err, "invalid chain params for chain %d", chainID)
+			}
 		}
 
 		if err := a.chainRegistry.Set(chainID, &chain, params); err != nil {
@@ -224,7 +244,7 @@ func (a *AppContext) updateChainRegistry(
 
 	a.chainRegistry.SetAdditionalChains(additionalChains)
 
-	toBeDeleted := diff(existingChainIDs, freshChainIDs)
+	toBeDeleted := slices.Diff(existingChainIDs, freshChainIDs)
 	if len(toBeDeleted) > 0 {
 		a.logger.Warn().
 			Ints64("chains.deleted", toBeDeleted).
@@ -236,39 +256,12 @@ func (a *AppContext) updateChainRegistry(
 	return nil
 }
 
-func elementsMatch(a, b []int64) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	slices.Sort(a)
-	slices.Sort(b)
-
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-
-	return true
+func isZeta(chainID int64) bool {
+	return chains.IsZetaChain(chainID, nil)
 }
 
-// diff returns the elements in `a` that are not in `b`
-func diff(a, b []int64) []int64 {
-	var (
-		cache  = map[int64]struct{}{}
-		result []int64
-	)
-
-	for _, v := range b {
-		cache[v] = struct{}{}
-	}
-
-	for _, v := range a {
-		if _, ok := cache[v]; !ok {
-			result = append(result, v)
-		}
-	}
-
-	return result
+// zetaObserverChainParams returns "fake" chain params because
+// actually chainParams is a concept of observer
+func zetaObserverChainParams(chainID int64) *observertypes.ChainParams {
+	return &observertypes.ChainParams{ChainId: chainID, IsSupported: true}
 }
