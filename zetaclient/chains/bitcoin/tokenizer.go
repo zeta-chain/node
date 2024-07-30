@@ -90,8 +90,7 @@ func (t *scriptTokenizer) Next() bool {
 		// add 2 instead of 1 because script includes the opcode as well
 		length := int(op) - txscript.OP_DATA_1 + 2
 		if len(script) < length {
-			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
-				"has %d remaining", op, length, len(script))
+			t.err = fmt.Errorf("opcode %d detected, but script only %d bytes remaining", op, len(script))
 			return false
 		}
 
