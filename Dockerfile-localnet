@@ -46,6 +46,7 @@ ENV PATH /root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/cu
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/ssh_config /etc/ssh/ssh_config.d/localnet.conf
 COPY contrib/localnet/zetacored /root/zetacored
+COPY contrib/localnet/preparams /root/static-preparams
 COPY cmd/zetae2e/config/localnet.yml /root/config.yml
 
 RUN chmod 755 /root/*.sh && \
