@@ -394,8 +394,13 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	toChain, err := app.GetChain(txData.toChainID.Int64())
-	if err != nil {
-		logger.Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
+	switch {
+	case err != nil:
+		logger.Error().Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
+		return
+	case toChain.IsZeta():
+		// should not happen
+		logger.Error().Msgf("unable to TryProcessOutbound when toChain is zetaChain (%d)", toChain.ID())
 		return
 	}
 
@@ -570,12 +575,15 @@ func (signer *Signer) BroadcastOutbound(
 	}
 
 	toChain, err := app.GetChain(txData.toChainID.Int64())
-	if err != nil {
-		logger.Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
+	switch {
+	case err != nil:
+		logger.Error().Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
 		return
-	}
-
-	if tx == nil {
+	case toChain.IsZeta():
+		// should not happen
+		logger.Error().Msgf("unable to broadcast when toChain is zetaChain (%d)", toChain.ID())
+		return
+	case tx == nil:
 		logger.Warn().Msgf("BroadcastOutbound: no tx to broadcast %s", cctx.Index)
 		return
 	}

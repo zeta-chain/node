@@ -15,6 +15,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
+	"github.com/zeta-chain/zetacore/pkg/slices"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -153,13 +154,15 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 	}
 
 	chain, err := app.GetChain(chainID)
-	if err != nil {
+	switch {
+	case err != nil:
 		return nil, err
-	}
-
-	// noop for non-EVM chains
-	if !chain.IsEVM() {
+	case chain.IsEVM():
+		// noop for non-EVM chains
 		return signer, nil
+	case chain.IsZeta():
+		// should not happen
+		return nil, fmt.Errorf("unable to resolve signer for zeta chain %d", chainID)
 	}
 
 	// update zeta connector and ERC20 custody addresses
@@ -202,8 +205,12 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 	}
 
 	chain, err := app.GetChain(chainID)
-	if err != nil {
+	switch {
+	case err != nil:
 		return nil, errors.Wrapf(err, "unable to get chain %d", chainID)
+	case chain.IsZeta():
+		// should not happen
+		return nil, fmt.Errorf("unable to resolve observer for zeta chain %d", chainID)
 	}
 
 	// update chain observer chain parameters
@@ -334,7 +341,11 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					// set current hot key burn rate
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
-					chainIDs := app.ListChainIDs()
+					// get chain ids without zeta chain
+					chainIDs := slices.Map(
+						app.FilterChains(zctx.ChainIsNotZeta),
+						zctx.Chain.ID,
+					)
 
 					// query pending cctxs across all external chains within rate limit
 					cctxMap, err := oc.GetPendingCctxsWithinRateLimit(ctx, chainIDs)
@@ -344,6 +355,11 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 
 					// schedule keysign for pending cctxs on each chain
 					for _, chain := range app.ListChains() {
+						// skip zeta chain
+						if chain.IsZeta() {
+							continue
+						}
+
 						chainID := chain.ID()
 
 						// get cctxs from map and set pending transactions prometheus gauge

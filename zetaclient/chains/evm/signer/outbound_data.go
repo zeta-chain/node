@@ -142,8 +142,12 @@ func NewOutboundData(
 	chainID := txData.toChainID.Int64()
 
 	toChain, err := app.GetChain(chainID)
-	if err != nil {
+	switch {
+	case err != nil:
 		return nil, true, errors.Wrapf(err, "unable to get chain %d from app context", chainID)
+	case toChain.IsZeta():
+		// should not happen
+		return nil, true, errors.New("destination chain is Zeta")
 	}
 
 	rawChain := toChain.RawChain()

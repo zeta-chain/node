@@ -83,6 +83,11 @@ func syncSignerMap(
 	)
 
 	for _, chain := range app.ListChains() {
+		// skip ZetaChain
+		if chain.IsZeta() {
+			continue
+		}
+
 		chainID := chain.ID()
 
 		presentChainIDs = append(presentChainIDs, chainID)
@@ -209,8 +214,12 @@ func syncObserverMap(
 	)
 
 	for _, chain := range app.ListChains() {
-		chainID := chain.ID()
+		// skip ZetaChain
+		if chain.IsZeta() {
+			continue
+		}
 
+		chainID := chain.ID()
 		presentChainIDs = append(presentChainIDs, chainID)
 
 		// noop
