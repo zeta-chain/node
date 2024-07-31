@@ -110,6 +110,20 @@ const (
 	TestMigrateTSSName = "migrate_TSS"
 
 	/*
+	 V2 smart contract tests
+	*/
+	TestV2EthDeposit        = "v2_eth_deposit"
+	TestV2EthDepositAndCall = "v2_eth_deposit_and_call"
+	TestV2EthWithdraw       = "v2_eth_withdraw"
+	TestV2EthWithdrawCall   = "v2_eth_withdraw_and_call"
+	TestV2ERC20Deposit      = "v2_erc20_deposit"
+	TestV2ERC20DepositCall  = "v2_erc20_deposit_and_call"
+	TestV2ERC20Withdraw     = "v2_erc20_withdraw"
+	TestV2ERC20WithdrawCall = "v2_erc20_withdraw_and_call"
+	TestV2ZEVMToEVMCall     = "v2_zevm_to_evm_call"
+	TestV2EVMToZEVMCall     = "v2_evm_to_zevm_call"
+
+	/*
 	 Special tests
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
