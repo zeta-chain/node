@@ -110,6 +110,20 @@ const (
 	TestMigrateTSSName = "migrate_TSS"
 
 	/*
+	 V2 smart contract tests
+	*/
+	TestV2ETHDepositName           = "v2_eth_deposit"
+	TestV2ETHDepositAndCallName    = "v2_eth_deposit_and_call"
+	TestV2ETHWithdrawName          = "v2_eth_withdraw"
+	TestV2ETHWithdrawAndCallName   = "v2_eth_withdraw_and_call"
+	TestV2ERC20DepositName         = "v2_erc20_deposit"
+	TestV2ERC20DepositAndCallName  = "v2_erc20_deposit_and_call"
+	TestV2ERC20WithdrawName        = "v2_erc20_withdraw"
+	TestV2ERC20WithdrawAndCallName = "v2_erc20_withdraw_and_call"
+	TestV2ZEVMToEVMCallName        = "v2_zevm_to_evm_call"
+	TestV2EVMToZEVMCallName        = "v2_evm_to_zevm_call"
+
+	/*
 	 Special tests
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
@@ -555,6 +569,85 @@ var AllE2ETests = []runner.E2ETest{
 		"test critical admin transactions",
 		[]runner.ArgDefinition{},
 		TestCriticalAdminTransactions,
+	),
+	/*
+	 V2 smart contract tests
+	*/
+	runner.NewE2ETest(
+		TestV2ETHDepositName,
+		"deposit Ether into ZEVM using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestV2ERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestV2ETHDepositAndCallName,
+		"deposit Ether into ZEVM and call a contract using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestV2ETHDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ETHWithdrawName,
+		"withdraw Ether from ZEVM using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestV2ETHWithdraw,
+	),
+	runner.NewE2ETest(
+		TestV2ETHWithdrawAndCallName,
+		"withdraw Ether from ZEVM and call a contract using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestV2ETHWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20DepositName,
+		"deposit ERC20 into ZEVM using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestV2ERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20DepositAndCallName,
+		"deposit ERC20 into ZEVM and call a contract using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestV2ERC20DepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20WithdrawName,
+		"withdraw ERC20 from ZEVM using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestV2ERC20Withdraw,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20WithdrawAndCallName,
+		"withdraw ERC20 from ZEVM and call a contract using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestV2ERC20WithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ZEVMToEVMCallName,
+		"zevm -> evm call using V2 contract",
+		[]runner.ArgDefinition{},
+		TestV2ZEVMToEVMCall,
+	),
+	runner.NewE2ETest(
+		TestV2EVMToZEVMCallName,
+		"evm -> zevm call using V2 contract",
+		[]runner.ArgDefinition{},
+		TestV2EVMToZEVMCall,
 	),
 	/*
 	 Special tests
