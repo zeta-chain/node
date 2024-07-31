@@ -28,8 +28,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-20.04
     timeout-minutes: 15
-    concurrency:
-      group: "build-and-test"
     steps:
       - uses: actions/checkout@v4
 
