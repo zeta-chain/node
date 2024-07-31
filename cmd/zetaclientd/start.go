@@ -27,6 +27,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/maintenance"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
@@ -207,14 +208,6 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
-	// Create a notification context for background threads.
-	// These threads are responsible for sending shutdown signals to the main thread.
-	notifyCtx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
-
-	// Start background threads which monitors zeta core for state changes related to TSS migration
-	cancelBackgroundThreads := zetacoreClient.StartTssMigrationRoutines(notifyCtx, cancel, masterLogger)
-	defer cancelBackgroundThreads()
-
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
 	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
@@ -349,18 +342,23 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	startLogger.Info().Msgf("zetaclientd is running")
+	startLogger.Info().Msgf("Zetaclientd is running")
 
-	<-notifyCtx.Done()
+	// Creating a channel to listen for os signals (or other signals)
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 
-	startLogger.Info().Msgf("initiating zetaclientd shut down")
+	// Maintenance workers ============
+	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
+		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
+		signalChannel <- syscall.SIGTERM
+	})
 
-	//stop chain observers
-	for _, observer := range observerMap {
-		observer.Stop()
-	}
+	sig := <-signalChannel
+	startLogger.Info().Msgf("Stop signal received: %q", sig)
+
 	zetacoreClient.Stop()
-	startLogger.Info().Msgf("zetaclientd stopped")
+
 	return nil
 }
 

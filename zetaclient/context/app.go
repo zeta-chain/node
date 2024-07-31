@@ -62,10 +62,6 @@ func (a *AppContext) Config() config.Config {
 	return a.config
 }
 
-func (a *AppContext) Logger() zerolog.Logger {
-	return a.logger
-}
-
 // GetBTCChainAndConfig returns btc chain and config if enabled
 func (a *AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, bool) {
 	cfg, configEnabled := a.Config().GetBTCConfig()
