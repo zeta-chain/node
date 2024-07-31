@@ -2,7 +2,6 @@ package runner
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"sort"
 	"time"
@@ -19,16 +18,11 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
 )
-
-var blockHeaderBTCTimeout = 5 * time.Minute
 
 // ListDeployerUTXOs list the deployer's UTXOs
 func (r *E2ERunner) ListDeployerUTXOs() ([]btcjson.ListUnspentResult, error) {
@@ -113,7 +107,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64) *chainhash.Hash {
 }
 
 // DepositBTC deposits BTC on ZetaChain
-func (r *E2ERunner) DepositBTC(testHeader bool) {
+func (r *E2ERunner) DepositBTC() {
 	r.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -143,7 +137,7 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 
 	// send two transactions to the TSS address
 	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
-	txHash1, err := r.SendToTSSFromDeployerToDeposit(amount1, utxos[:2])
+	_, err = r.SendToTSSFromDeployerToDeposit(amount1, utxos[:2])
 	require.NoError(r, err)
 
 	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
@@ -169,12 +163,6 @@ func (r *E2ERunner) DepositBTC(testHeader bool) {
 	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, 1, balance.Sign(), "balance should be positive")
-
-	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
-	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
-	if testHeader {
-		r.ProveBTCTransaction(txHash1)
-	}
 }
 
 func (r *E2ERunner) SendToTSSFromDeployerToDeposit(amount float64, inputUTXOs []btcjson.ListUnspentResult) (
@@ -345,85 +333,4 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 	return func() {
 		close(stopChan)
 	}
-}
-
-// ProveBTCTransaction proves that a BTC transaction is in a block header and that the block header is in ZetaChain
-func (r *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
-	// get tx result
-	btc := r.BtcRPCClient
-	txResult, err := btc.GetTransaction(txHash)
-	require.NoError(r, err, "should get tx result")
-	require.True(r, txResult.Confirmations > 0, "tx should have already confirmed")
-
-	txBytes, err := hex.DecodeString(txResult.Hex)
-	require.NoError(r, err)
-
-	// get the block with verbose transactions
-	blockHash, err := chainhash.NewHashFromStr(txResult.BlockHash)
-	require.NoError(r, err)
-
-	blockVerbose, err := btc.GetBlockVerboseTx(blockHash)
-	require.NoError(r, err, "should get block verbose tx")
-
-	// get the block header
-	header, err := btc.GetBlockHeader(blockHash)
-	require.NoError(r, err, "should get block header")
-
-	// collect all the txs in the block
-	txns := []*btcutil.Tx{}
-	for _, res := range blockVerbose.Tx {
-		txBytes, err := hex.DecodeString(res.Hex)
-		require.NoError(r, err)
-
-		tx, err := btcutil.NewTxFromBytes(txBytes)
-		require.NoError(r, err)
-
-		txns = append(txns, tx)
-	}
-
-	// build merkle proof
-	mk := bitcoin.NewMerkle(txns)
-	path, index, err := mk.BuildMerkleProof(int(txResult.BlockIndex))
-	require.NoError(r, err, "should build merkle proof")
-
-	// verify merkle proof statically
-	pass := bitcoin.Prove(*txHash, header.MerkleRoot, path, index)
-	require.True(r, pass, "should verify merkle proof")
-
-	// wait for block header to show up in ZetaChain
-	startTime := time.Now()
-	hash := header.BlockHash()
-	for {
-		// timeout
-		reachedTimeout := time.Since(startTime) > blockHeaderBTCTimeout
-		require.False(r, reachedTimeout, "timed out waiting for block header to show up in observer")
-
-		_, err := r.LightclientClient.BlockHeader(r.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
-			BlockHash: hash.CloneBytes(),
-		})
-		if err != nil {
-			r.Logger.Info(
-				"waiting for block header to show up in observer... current hash %s; err %s",
-				hash.String(),
-				err.Error(),
-			)
-		}
-		if err == nil {
-			break
-		}
-		time.Sleep(2 * time.Second)
-	}
-
-	// verify merkle proof through RPC
-	res, err := r.LightclientClient.Prove(r.Ctx, &lightclienttypes.QueryProveRequest{
-		ChainId:   chains.BitcoinRegtest.ChainId,
-		TxHash:    txHash.String(),
-		BlockHash: blockHash.String(),
-		Proof:     proofs.NewBitcoinProof(txBytes, path, index),
-		TxIndex:   0, // bitcoin doesn't use txIndex
-	})
-	require.NoError(r, err)
-	require.True(r, res.Valid, "txProof should be valid")
-
-	r.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }
