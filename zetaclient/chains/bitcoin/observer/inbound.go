@@ -539,10 +539,9 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 		return nil
 	}
 
-	vout1 := tx.Vout[1]
-	memo, found, err := bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
+	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex, tx.Txid)
 	if err != nil {
-		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", tx.Vout[1].ScriptPubKey.Hex)
 		return nil
 	}
 
