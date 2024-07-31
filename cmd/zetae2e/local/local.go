@@ -329,7 +329,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, e2etests.TestSolanaDepositName))
 	}
 	if testV2 {
-		eg.Go(v2TestRoutine(conf, deployerRunner, verbose))
+		eg.Go(v2TestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestV2ETHDepositName,
+			e2etests.TestV2ETHDepositAndCallName,
+			e2etests.TestV2ETHWithdrawName,
+			e2etests.TestV2ETHWithdrawAndCallName,
+			e2etests.TestV2ERC20DepositName,
+			e2etests.TestV2ERC20DepositAndCallName,
+			e2etests.TestV2ERC20WithdrawName,
+			e2etests.TestV2ERC20WithdrawAndCallName,
+			e2etests.TestV2ZEVMToEVMCallName,
+			e2etests.TestV2EVMToZEVMCallName,
+		))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
