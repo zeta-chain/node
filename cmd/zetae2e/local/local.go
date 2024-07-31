@@ -362,8 +362,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ network report validation failed %v", err)
 		os.Exit(1)
 	}
+	checkTrackers(ctx, deployerRunner)
 
 	os.Exit(0)
+}
+
+func checkTrackers(ctx context.Context, deployRunner *runner.E2ERunner) {
+	// get all trackers
+	res, err := deployRunner.CctxClient.OutTxTrackerAll(ctx, &crosschaintypes.QueryAllOutboundTrackerRequest{})
+	require.NoError(deployRunner, err)
+	require.Empty(deployRunner, res.OutboundTracker, "there should be no trackers")
 }
 
 // waitKeygenHeight waits for keygen height

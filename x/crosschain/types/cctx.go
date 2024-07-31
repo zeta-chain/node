@@ -164,6 +164,10 @@ func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
 	return sendHash, nil
 }
 
+func (m CrossChainTx) SetOutboundBallotIndex(index string) {
+	m.GetCurrentOutboundParam().BallotIndex = index
+}
+
 func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
