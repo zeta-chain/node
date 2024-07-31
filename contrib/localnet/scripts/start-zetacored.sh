@@ -224,8 +224,6 @@ then
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
   operational_policy=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
 
-
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
   zetacored add-genesis-account "$emergency_policy" 100000000000000000000000000azeta
   zetacored add-genesis-account "$admin_policy" 100000000000000000000000000azeta
   zetacored add-genesis-account "$operational_policy" 100000000000000000000000000azeta
@@ -252,16 +250,7 @@ then
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # ethers tester
   address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# emergency policy account
-  address=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-#  admin policy account
-  address=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-#  operational policy account
-  address=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta 
 # migration tester
   address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
