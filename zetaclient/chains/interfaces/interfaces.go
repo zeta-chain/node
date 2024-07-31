@@ -195,6 +195,10 @@ type SolanaRPCClient interface {
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
 	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
+	GetRecentPrioritizationFees(
+		ctx context.Context,
+		accounts solana.PublicKeySlice,
+	) ([]solrpc.PriorizationFeeResult, error)
 	GetTransaction(
 		ctx context.Context,
 		txSig solana.Signature, // transaction signature

@@ -135,6 +135,36 @@ func (_m *SolanaRPCClient) GetRecentBlockhash(ctx context.Context, commitment rp
 	return r0, r1
 }
 
+// GetRecentPrioritizationFees provides a mock function with given fields: ctx, accounts
+func (_m *SolanaRPCClient) GetRecentPrioritizationFees(ctx context.Context, accounts solana.PublicKeySlice) ([]rpc.PriorizationFeeResult, error) {
+	ret := _m.Called(ctx, accounts)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRecentPrioritizationFees")
+	}
+
+	var r0 []rpc.PriorizationFeeResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, solana.PublicKeySlice) ([]rpc.PriorizationFeeResult, error)); ok {
+		return rf(ctx, accounts)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, solana.PublicKeySlice) []rpc.PriorizationFeeResult); ok {
+		r0 = rf(ctx, accounts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]rpc.PriorizationFeeResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, solana.PublicKeySlice) error); ok {
+		r1 = rf(ctx, accounts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetSignaturesForAddressWithOpts provides a mock function with given fields: ctx, account, opts
 func (_m *SolanaRPCClient) GetSignaturesForAddressWithOpts(ctx context.Context, account solana.PublicKey, opts *rpc.GetSignaturesForAddressOpts) ([]*rpc.TransactionSignature, error) {
 	ret := _m.Called(ctx, account, opts)

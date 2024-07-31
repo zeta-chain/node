@@ -8,22 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s", r.SOLZRC20Addr.String())
-
+	// print balance of from address
 	solZRC20 := r.SOLZRC20
-	supply, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
-	if err != nil {
-		r.Logger.Error("Error getting total supply of sol zrc20: %v", err)
-		panic(err)
-	}
-	r.Logger.Print(" from %s supply of %s sol zrc20: %d", r.ZEVMAuth.From, r.EVMAddress(), supply)
+	balance, err := solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	require.NoError(r, err)
+	r.Logger.Info("from address %s balance of SOL before: %d", r.ZEVMAuth.From, balance)
 
 	// parse withdraw amount (in lamports), approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
@@ -38,32 +32,12 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 
 	// load deployer private key
 	privkey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
-	r.Logger.Print("TestSolanaWithdraw...sol zrc20 %s", r.SOLZRC20Addr.String())
-
-	// approve
-	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, big.NewInt(1e18))
-	require.NoError(r, err)
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
 
 	// withdraw
-	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privkey.PublicKey().String()), withdrawAmount)
+	r.WithdrawSOLZRC20(privkey.PublicKey(), withdrawAmount)
+
+	// print balance of from address after withdraw
+	balance, err = solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw")
-
-	// wait for tx receipt
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
-	r.Logger.Print("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-
-	supply, err = solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
-	if err != nil {
-		r.Logger.Error("Error getting total supply of sol zrc20: %v", err)
-		panic(err)
-	}
-	r.Logger.Print(" from %s supply of %s sol zrc20 after: %d", r.ZEVMAuth.From, r.EVMAddress(), supply)
-
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	r.Logger.Info("from address %s balance of SOL after: %d", r.ZEVMAuth.From, balance)
 }

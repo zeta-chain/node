@@ -136,7 +136,12 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contract.MsgWithdr
 
 	// create a transaction that wraps the instruction
 	tx, err := solana.NewTransaction(
-		[]solana.Instruction{&inst},
+		[]solana.Instruction{
+			// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
+			// https://github.com/zeta-chain/node/issues/2599
+			// programs.ComputeBudgetSetComputeUnitLimit(computeUnitLimit),
+			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
+			&inst},
 		recent.Value.Blockhash,
 		solana.TransactionPayer(privkey.PublicKey()),
 	)
@@ -210,7 +215,6 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// fee := 5000 // FIXME: this is the fixed fee (for signatures), explore priority fee for compute units
 	// broadcast the signed tx to the Solana network with preflight check
 	txSig, err := signer.client.SendTransactionWithOpts(
 		ctx,

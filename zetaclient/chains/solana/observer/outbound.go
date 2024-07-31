@@ -133,7 +133,7 @@ func (ob *Observer) IsOutboundProcessed(
 	// extract tx signature from tx result
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
-		// should never happen
+		// should not happen
 		return true, true, errors.Wrapf(err, "GetTransaction error for nonce %d", nonce)
 	}
 	txSig := tx.Signatures[0]
@@ -141,7 +141,7 @@ func (ob *Observer) IsOutboundProcessed(
 	// parse gateway instruction from tx result
 	inst, err := ob.ParseGatewayInstruction(txResult, coinType)
 	if err != nil {
-		// should never happen
+		// should never happen as it was already successfully parsed in CheckFinalizedTx
 		return true, true, errors.Wrapf(err, "ParseGatewayInstruction error for sig %s", txSig)
 	}
 
@@ -167,41 +167,34 @@ func (ob *Observer) PostVoteOutbound(
 	coinType coin.CoinType,
 ) {
 	chainID := ob.Chain().ChainId
-	computeUnitsConsumed := uint64(0)
-	cuPrice := big.NewInt(0)
-	if txResult.Meta.ComputeUnitsConsumed == nil {
-		ob.Logger().Outbound.Warn().Msgf("solana.GetTransaction: compute units consumed is nil")
-	} else {
-		computeUnitsConsumed = *txResult.Meta.ComputeUnitsConsumed
-		if computeUnitsConsumed <= 0 {
-			ob.Logger().Outbound.Warn().Msgf("solana.GetTransaction: compute units consumed is %d", computeUnitsConsumed)
-			computeUnitsConsumed = 5001 // default to 5000, for a single signature tx; make it 5001 to distinguish
-		}
-		cuPrice.SetUint64(txResult.Meta.Fee / computeUnitsConsumed)
-	}
+
+	const (
+		// Solana implements a different gas fee model than Ethereum, below values are not used.
+		// Solana tx fee is based on both static fee and dynamic fee (priority fee), setting
+		// zero values to by pass incorrectly funded gas stability pool.
+		outboundGasUsed  = 0
+		outboundGasPrice = 0
+		outboundGasLimit = 0
+
+		gasLimit      = zetacore.PostVoteOutboundGasLimit
+		retryGasLimit = 0
+	)
 
 	creator := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-
 	msg := crosschaintypes.NewMsgVoteOutbound(
 		creator.String(),
 		cctxIndex,
 		outboundHash,
-		txResult.Slot, // TODO: check this; is slot equivalent to block height?
-		computeUnitsConsumed,
-		math.NewIntFromBigInt(cuPrice),
-		200_000,                               // this is default compute unit budget;
-		math.NewUintFromBigInt(valueReceived), // FIXME: parse this amount from txRes itself, not from cctx
+		txResult.Slot, // instead of using block, Solana explorer uses slot for indexing
+		outboundGasUsed,
+		math.NewInt(outboundGasPrice),
+		outboundGasLimit,
+		math.NewUintFromBigInt(valueReceived),
 		status,
 		chainID,
-		nonce, // FIXME: parse this from the txRes/tx ?
+		nonce,
 		coinType,
 	)
-
-	const gasLimit = zetacore.PostVoteOutboundGasLimit
-	var retryGasLimit uint64
-	if msg.Status == chains.ReceiveStatus_failed {
-		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
-	}
 
 	// post vote to zetacore
 	logFields := map[string]any{
