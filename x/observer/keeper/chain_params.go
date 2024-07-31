@@ -75,16 +75,3 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) []chains.Chain {
 	}
 	return c
 }
-
-// GetSupportedForeignChains returns the list of supported foreign chains
-func (k Keeper) GetSupportedForeignChains(ctx sdk.Context) []chains.Chain {
-	allChains := k.GetSupportedChains(ctx)
-
-	foreignChains := make([]chains.Chain, 0)
-	for _, chain := range allChains {
-		if !chain.IsZetaChain() {
-			foreignChains = append(foreignChains, chain)
-		}
-	}
-	return foreignChains
-}

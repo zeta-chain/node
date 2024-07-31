@@ -145,6 +145,7 @@ jobs:
           - make-target: "start-upgrade-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS == 'true' }}
+            timeout-minutes: 40
           - make-target: "start-e2e-admin-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_TESTS == 'true' }}
@@ -154,6 +155,7 @@ jobs:
           - make-target: "start-e2e-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
+            timeout-minutes: 40
           - make-target: "start-tss-migration-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
@@ -166,6 +168,7 @@ jobs:
       make-target: ${{ matrix.make-target }}
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
+      timeout-minutes: "${{ matrix.timeout-minutes || 25 }}"
     secrets: inherit
   # this allows you to set a required status check
   e2e-ok:
@@ -177,7 +180,7 @@ jobs:
     steps:
       - name: Send slack message with results
         uses: actions/github-script@v7
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'push' && needs.e2e.result == 'failed') }}
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'push' && needs.e2e.result == 'failure') }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
         with:

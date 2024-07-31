@@ -8,6 +8,7 @@ import (
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
@@ -285,12 +286,15 @@ func syncObserverMap(
 
 	// EVM observers
 	for _, evmConfig := range app.Config().GetAllEVMConfigs() {
-		var (
-			chainID   = evmConfig.Chain.ChainId
-			chainName = evmConfig.Chain.ChainName.String()
-		)
+		var chainID = evmConfig.Chain.ChainId
 
-		chainParams, found := app.GetEVMChainParams(evmConfig.Chain.ChainId)
+		chain, found := chains.GetChainFromChainID(chainID, app.GetAdditionalChains())
+		if !found {
+			logger.Std.Error().Msgf("Unable to find chain %d", chainID)
+			continue
+		}
+
+		chainParams, found := app.GetEVMChainParams(chainID)
 		switch {
 		case !found:
 			logger.Std.Error().Msgf("Unable to find chain params for EVM chain %d", chainID)
@@ -314,9 +318,9 @@ func syncObserverMap(
 			continue
 		}
 
-		database, err := db.NewFromSqlite(dbpath, chainName, true)
+		database, err := db.NewFromSqlite(dbpath, chain.Name, true)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
+			logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chain.Name)
 			continue
 		}
 
@@ -406,9 +410,14 @@ func syncObserverMap(
 		}
 
 		var (
-			chainID   = solChain.ChainId
-			chainName = solChain.ChainName.String()
+			chainID = solChain.ChainId
 		)
+
+		chain, found := chains.GetChainFromChainID(chainID, app.GetAdditionalChains())
+		if !found {
+			logger.Std.Error().Msgf("Unable to find chain %d", chainID)
+			continue
+		}
 
 		_, solanaChainParams, found := app.GetSolanaChainParams()
 		switch {
@@ -434,9 +443,9 @@ func syncObserverMap(
 			continue
 		}
 
-		database, err := db.NewFromSqlite(dbpath, chainName, true)
+		database, err := db.NewFromSqlite(dbpath, chain.Name, true)
 		if err != nil {
-			logger.Std.Error().Err(err).Msgf("unable to open database for SOL chain %d", chainID)
+			logger.Std.Error().Err(err).Msgf("unable to open database for SOL chain %s", chain.Name)
 			continue
 		}
 

@@ -77,8 +77,6 @@ zetacored tx gov submit-legacy-proposal [flags]
 
 * [zetacored tx gov](zetacored_tx_gov.md)	 - Governance transactions subcommands
 * [zetacored tx gov submit-legacy-proposal cancel-software-upgrade](zetacored_tx_gov_submit-legacy-proposal_cancel-software-upgrade.md)	 - Cancel the current software upgrade proposal
-* [zetacored tx gov submit-legacy-proposal ibc-upgrade](zetacored_tx_gov_submit-legacy-proposal_ibc-upgrade.md)	 - Submit an IBC upgrade proposal
 * [zetacored tx gov submit-legacy-proposal param-change](zetacored_tx_gov_submit-legacy-proposal_param-change.md)	 - Submit a parameter change proposal
 * [zetacored tx gov submit-legacy-proposal software-upgrade](zetacored_tx_gov_submit-legacy-proposal_software-upgrade.md)	 - Submit a software upgrade proposal
-* [zetacored tx gov submit-legacy-proposal update-client](zetacored_tx_gov_submit-legacy-proposal_update-client.md)	 - Submit an update IBC client proposal
 

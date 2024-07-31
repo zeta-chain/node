@@ -276,11 +276,12 @@ func (k Keeper) ProcessZetaSentEvent(
 func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
-	if chains.IsBitcoinChain(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
+	if chains.IsBitcoinChain(chainID, additionalChains) {
 		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
-				"withdraw amount %s is less than minimum amount %d",
+				"withdraw amount %s is less than dust amount %d",
 				event.Value.String(),
 				constant.BTCWithdrawalDustAmount,
 			)
@@ -292,7 +293,21 @@ func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Wi
 		if !chains.IsBtcAddressSupported(addr) {
 			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(event.To))
 		}
+	} else if chains.IsSolanaChain(chainID, additionalChains) {
+		if event.Value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidWithdrawalAmount,
+				"withdraw amount %s is less than rent exempt %d",
+				event.Value.String(),
+				constant.SolanaWalletRentExempt,
+			)
+		}
+		_, err := chains.DecodeSolanaWalletAddress(string(event.To))
+		if err != nil {
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(event.To))
+		}
 	}
+
 	return nil
 }
 

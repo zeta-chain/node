@@ -516,3 +516,51 @@ export declare class MsgUnpauseZRC20Response extends Message<MsgUnpauseZRC20Resp
   static equals(a: MsgUnpauseZRC20Response | PlainMessage<MsgUnpauseZRC20Response> | undefined, b: MsgUnpauseZRC20Response | PlainMessage<MsgUnpauseZRC20Response> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateGatewayContract
+ */
+export declare class MsgUpdateGatewayContract extends Message<MsgUpdateGatewayContract> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string new_gateway_contract_address = 2;
+   */
+  newGatewayContractAddress: string;
+
+  constructor(data?: PartialMessage<MsgUpdateGatewayContract>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateGatewayContract";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateGatewayContract;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateGatewayContract;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateGatewayContract;
+
+  static equals(a: MsgUpdateGatewayContract | PlainMessage<MsgUpdateGatewayContract> | undefined, b: MsgUpdateGatewayContract | PlainMessage<MsgUpdateGatewayContract> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateGatewayContractResponse
+ */
+export declare class MsgUpdateGatewayContractResponse extends Message<MsgUpdateGatewayContractResponse> {
+  constructor(data?: PartialMessage<MsgUpdateGatewayContractResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateGatewayContractResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateGatewayContractResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateGatewayContractResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateGatewayContractResponse;
+
+  static equals(a: MsgUpdateGatewayContractResponse | PlainMessage<MsgUpdateGatewayContractResponse> | undefined, b: MsgUpdateGatewayContractResponse | PlainMessage<MsgUpdateGatewayContractResponse> | undefined): boolean;
+}
+

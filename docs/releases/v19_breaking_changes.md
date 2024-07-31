@@ -1,5 +1,5 @@
 
-# V17 Breaking Changes
+# V19 Breaking Changes
 
 ### Verification Flags update
 
@@ -62,3 +62,7 @@
 ### `MsgAddBlameVote` renaming
 
 * `MsgAddBlameVote` has been renamed to `MsgVoteBlame` to maintain consistency with other voting messages
+
+### `Chain.ChainName` deprecated
+
+* `Chain.ChainName` has been deprecated and will be removed from the `Chain` structure. The `Chain.Name` should be used instead.

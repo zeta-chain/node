@@ -89,7 +89,7 @@ func (t *TelemetryServer) GetLastStartTimestamp() time.Time {
 func (t *TelemetryServer) SetLastScannedBlockNumber(chain chains.Chain, blockNumber uint64) {
 	t.mu.Lock()
 	t.lastScannedBlockNumber[chain.ChainId] = blockNumber
-	LastScannedBlockNumber.WithLabelValues(chain.ChainName.String()).Set(float64(blockNumber))
+	LastScannedBlockNumber.WithLabelValues(chain.Name).Set(float64(blockNumber))
 	t.mu.Unlock()
 }
 

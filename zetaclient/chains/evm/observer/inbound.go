@@ -182,7 +182,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	ob.WithLastBlock(blockNumber)
 
 	// increment prom counter
-	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().ChainName.String()).Inc()
+	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// skip if current height is too low
 	if blockNumber < ob.GetChainParams().ConfirmationCount {
@@ -229,7 +229,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
 	if lastScannedLowest > lastScanned {
 		sampledLogger.Info().
-			Msgf("observeInbound: lasstScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
+			Msgf("observeInbound: lastScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
 				ob.Chain().ChainId, lastScannedZetaSent, lastScannedDeposited, lastScannedTssRecvd)
 		if err := ob.SaveLastBlockScanned(lastScannedLowest); err != nil {
 			ob.Logger().Inbound.Error().
@@ -292,7 +292,7 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 	})
 
 	// increment prom counter
-	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().ChainName.String()).Inc()
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// post to zetacore
 	beingScanned := uint64(0)
@@ -373,7 +373,7 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 	})
 
 	// increment prom counter
-	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().ChainName.String()).Inc()
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// post to zeatcore
 	guard := make(map[string]bool)

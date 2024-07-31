@@ -1,21 +1,9 @@
-# tx ibc client upgrade
+# tx fungible update-gateway-contract
 
-upgrade an IBC client
-
-### Synopsis
-
-upgrade the IBC client associated with the provided client identifier while providing proof committed by the counterparty chain to the new client and consensus states
-	- ClientState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}
-	- ConsensusState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"}
+Broadcast message UpdateGatewayContract to update the gateway contract address
 
 ```
-zetacored tx ibc client upgrade [client-identifier] [path/to/client_state.json] [path/to/consensus_state.json] [upgrade-client-proof] [upgrade-consensus-state-proof] [flags]
-```
-
-### Examples
-
-```
-zetacored tx ibc client upgrade [client-identifier] [path/to/client_state.json] [path/to/consensus_state.json] [client-state-proof] [consensus-state-proof] --from node0 --home ../node0/[app]cli --chain-id $CID
+zetacored tx fungible update-gateway-contract [contract-address]  [flags]
 ```
 
 ### Options
@@ -34,7 +22,7 @@ zetacored tx ibc client upgrade [client-identifier] [path/to/client_state.json] 
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for upgrade
+  -h, --help                     help for update-gateway-contract
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -61,5 +49,5 @@ zetacored tx ibc client upgrade [client-identifier] [path/to/client_state.json] 
 
 ### SEE ALSO
 
-* [zetacored tx ibc client](zetacored_tx_ibc_client.md)	 - IBC client transaction subcommands
+* [zetacored tx fungible](zetacored_tx_fungible.md)	 - fungible transactions subcommands
 
