@@ -339,7 +339,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		)
 	}
 	// overpays gas price
-	const multiplier = 2
+	const multiplier = 6
 	gasPrice = gasPrice.MulUint64(multiplier)
 	priorityFee = priorityFee.MulUint64(multiplier)
 

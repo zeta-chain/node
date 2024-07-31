@@ -40,7 +40,7 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
 		DestinationAddress:  r.EVMAddress().Bytes(),
-		DestinationGasLimit: big.NewInt(400_000),
+		DestinationGasLimit: big.NewInt(1800_000),
 		Message: []byte(
 			"revert",
 		), // non-empty message will cause revert, because the dest address is not a contract
@@ -59,13 +59,13 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 	for _, log := range receipt.Logs {
 		sentLog, err := r.ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
-			r.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			r.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
-			r.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
-			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			r.Logger.Print("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			r.Logger.Print("    Dest Chain: %d", sentLog.DestinationChainId)
+			r.Logger.Print("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			r.Logger.Print("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
-
+	r.Logger.Print("  Inbound Tx Hash: %s", receipt.TxHash.String())
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))

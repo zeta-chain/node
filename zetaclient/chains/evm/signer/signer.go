@@ -165,7 +165,8 @@ func (signer *Signer) Sign(
 	nonce uint64,
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
-	log.Debug().Str("tss.pub_key", signer.TSS().EVMAddress().String()).Msg("Sign: TSS signer")
+	log.Info().Str("tss.pub_key", signer.TSS().EVMAddress().String()).Msg("Sign: TSS signer")
+	fmt.Println("Sign: TSS signer", signer.TSS().EVMAddress().String())
 
 	// TODO: use EIP-1559 transaction type
 	// https://github.com/zeta-chain/node/issues/1952
@@ -588,6 +589,7 @@ func (signer *Signer) BroadcastOutbound(
 	backOff := broadcastBackoff
 	for i := 0; i < broadcastRetries; i++ {
 		time.Sleep(backOff)
+		fmt.Println("Broadcasting TX : ", tx.GasPrice(), tx.Gas(), tx.Nonce(), tx.ChainId(), tx.To().String())
 		err := signer.Broadcast(tx)
 		if err != nil {
 			log.Warn().

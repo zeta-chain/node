@@ -21,7 +21,7 @@ import (
 
 const (
 	MinGasLimit = 100_000
-	MaxGasLimit = 1_000_000
+	MaxGasLimit = 1_000_000_0
 )
 
 // OutboundData is a data structure containing input fields used to construct each type of transaction.
@@ -102,6 +102,18 @@ func (txData *OutboundData) SetupGas(
 	} else {
 		txData.gasPrice = specified
 	}
+
+	fmt.Println("Speficied: ", specified)
+	suggested, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		fmt.Println("Error Getting Gas price: ", err)
+	}
+	fmt.Println("Suggested: ", suggested)
+
+	if txData.gasPrice.Cmp(suggested) < 0 {
+		txData.gasPrice = suggested
+	}
+
 	return nil
 }
 

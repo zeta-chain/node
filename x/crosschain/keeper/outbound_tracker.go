@@ -51,6 +51,7 @@ func (k Keeper) RemoveOutboundTrackerFromStore(
 ) {
 	index := getOutboundTrackerIndex(chainID, nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutboundTrackerKeyPrefix))
+	fmt.Println("Removing outbound tracker ", chainID, nonce)
 	store.Delete(types.OutboundTrackerKey(
 		index,
 	))
