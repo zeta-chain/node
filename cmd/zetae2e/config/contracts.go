@@ -7,8 +7,15 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
@@ -225,7 +232,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		if err != nil {
 			return fmt.Errorf("invalid ERC20CustodyNewAddr: %w", err)
 		}
-		r.ERC20CustodyNew, err = erc20custodynew.NewERC20CustodyNew(r.ERC20CustodyNewAddr, r.EVMClient)
+		r.ERC20CustodyNew, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyNewAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
