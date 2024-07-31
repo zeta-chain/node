@@ -13,7 +13,8 @@ import (
 
 // SetupSolanaAccount imports the deployer's private key
 func (r *E2ERunner) SetupSolanaAccount() {
-	privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	privateKey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
 	r.SolanaDeployerAddress = privateKey.PublicKey()
 
 	r.Logger.Info("SolanaDeployerAddress: %s", r.SolanaDeployerAddress)
@@ -21,13 +22,14 @@ func (r *E2ERunner) SetupSolanaAccount() {
 
 // SetSolanaContracts set Solana contracts
 func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
-	r.Logger.Print("⚙️ deploying gateway program on Solana")
+	r.Logger.Print("⚙️ initializing gateway program on Solana")
 
 	// set Solana contracts
 	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
 
 	// get deployer account balance
-	privkey := solana.MustPrivateKeyFromBase58(deployerPrivateKey)
+	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
+	require.NoError(r, err)
 	bal, err := r.SolanaClient.GetBalance(r.Ctx, privkey.PublicKey(), rpc.CommitmentFinalized)
 	require.NoError(r, err)
 	r.Logger.Info("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)

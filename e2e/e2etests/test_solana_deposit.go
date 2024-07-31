@@ -15,11 +15,12 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount (in lamports)
-	depositAmount, ok := new(big.Int).SetString(args[0], 10)
-	require.True(r, ok, "Invalid deposit amount specified for TestSolanaDeposit.")
+	// #nosec G115 e2e - always in range
+	depositAmount := big.NewInt(int64(parseInt(r, args[0])))
 
 	// load deployer private key
-	privkey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
 
 	// create 'deposit' instruction
 	instruction := r.CreateDepositInstruction(privkey.PublicKey(), r.EVMAddress(), depositAmount.Uint64())

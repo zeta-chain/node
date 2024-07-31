@@ -21,8 +21,8 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 
 	// parse withdraw amount (in lamports), approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
-	withdrawAmount, ok := new(big.Int).SetString(args[0], 10)
-	require.True(r, ok, "Invalid withdrawal amount specified for TestSolanaWithdraw.")
+	// #nosec G115 e2e - always in range
+	withdrawAmount := big.NewInt(int64(parseInt(r, args[0])))
 	require.Equal(
 		r,
 		-1,
@@ -31,10 +31,11 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	)
 
 	// load deployer private key
-	privkey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
 
 	// withdraw
-	r.WithdrawSOLZRC20(privkey.PublicKey(), withdrawAmount)
+	r.WithdrawSOLZRC20(privkey.PublicKey(), withdrawAmount, approvedAmount)
 
 	// print balance of from address after withdraw
 	balance, err = solZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)

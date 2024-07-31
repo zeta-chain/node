@@ -110,9 +110,9 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 }
 
 // WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
-func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int) {
+func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int, approveAmount *big.Int) {
 	// approve
-	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, big.NewInt(1e18))
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)

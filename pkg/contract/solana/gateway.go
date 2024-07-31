@@ -42,16 +42,18 @@ func DiscriminatorWithdrawSPL() [8]byte {
 }
 
 // ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
-func ParseGatewayIDAndPda(address string) (gatewayID solana.PublicKey, pda solana.PublicKey, err error) {
+func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, error) {
+	var gatewayID, pda solana.PublicKey
+
 	// decode gateway address
-	gatewayID, err = solana.PublicKeyFromBase58(address)
+	gatewayID, err := solana.PublicKeyFromBase58(address)
 	if err != nil {
-		return
+		return gatewayID, pda, err
 	}
 
 	// compute gateway PDA
 	seed := []byte(PDASeed)
 	pda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
 
-	return
+	return gatewayID, pda, err
 }

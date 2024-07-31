@@ -155,7 +155,7 @@ func syncSignerMap(
 		// get BTC config
 		cfg, found := app.Config().GetBTCConfig()
 		if !found {
-			logger.Std.Error().Msgf("Unable to find BTC config")
+			logger.Std.Error().Msgf("Unable to find BTC config for chain %d", chainID)
 			continue
 		}
 
@@ -192,7 +192,7 @@ func syncSignerMap(
 		// get Solana config
 		cfg, found := app.Config().GetSolanaConfig()
 		if !found {
-			logger.Std.Error().Msgf("Unable to find Solana config")
+			logger.Std.Error().Msgf("Unable to find Solana config for chain %d", chainID)
 			continue
 		}
 

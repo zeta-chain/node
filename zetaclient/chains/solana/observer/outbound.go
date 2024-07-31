@@ -61,6 +61,10 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 			}
 			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
 			if err != nil {
+				ob.Logger().
+					Outbound.Error().
+					Err(err).
+					Msgf("WatchOutbound: GetAllOutboundTrackerByChain error for chain %d", chainID)
 				continue
 			}
 
@@ -198,9 +202,9 @@ func (ob *Observer) PostVoteOutbound(
 
 	// post vote to zetacore
 	logFields := map[string]any{
-		"chain":    chainID,
-		"nonce":    nonce,
-		"outbound": outboundHash,
+		"chain": chainID,
+		"nonce": nonce,
+		"tx":    outboundHash,
 	}
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
@@ -224,17 +228,18 @@ func (ob *Observer) CheckFinalizedTx(
 	nonce uint64,
 	coinType coin.CoinType,
 ) (*rpc.GetTransactionResult, bool) {
-	// prepare logger
+	// prepare logger fields
+	chainID := ob.Chain().ChainId
 	logger := ob.Logger().Outbound.With().
 		Str("method", "checkFinalizedTx").
-		Int64("chain", ob.Chain().ChainId).
+		Int64("chain", chainID).
 		Uint64("nonce", nonce).
 		Str("tx", txHash).Logger()
 
 	// convert txHash to signature
 	sig, err := solana.SignatureFromBase58(txHash)
 	if err != nil {
-		logger.Error().Err(err).Msg("SignatureFromBase58 err")
+		logger.Error().Err(err).Msgf("SignatureFromBase58 err for chain %d nonce %d", chainID, nonce)
 		return nil, false
 	}
 
@@ -243,20 +248,20 @@ func (ob *Observer) CheckFinalizedTx(
 		Commitment: rpc.CommitmentFinalized,
 	})
 	if err != nil {
-		logger.Error().Err(err).Msg("GetTransaction err")
+		logger.Error().Err(err).Msgf("GetTransaction err for chain %d nonce %d", chainID, nonce)
 		return nil, false
 	}
 
 	// the tx must be successful in order to effectively increment the nonce
 	if txResult.Meta.Err != nil {
-		logger.Error().Msg("tx is not successful")
+		logger.Error().Msgf("tx is not successful for chain %d nonce %d", chainID, nonce)
 		return nil, false
 	}
 
 	// parse gateway instruction from tx result
 	inst, err := ob.ParseGatewayInstruction(txResult, coinType)
 	if err != nil {
-		logger.Error().Err(err).Msg("ParseGatewayInstruction err")
+		logger.Error().Err(err).Msgf("ParseGatewayInstruction err for chain %d nonce %d", chainID, nonce)
 		return nil, false
 	}
 	txNonce := inst.GatewayNonce()
@@ -264,19 +269,19 @@ func (ob *Observer) CheckFinalizedTx(
 	// recover ECDSA signer from instruction
 	signerECDSA, err := inst.Signer()
 	if err != nil {
-		logger.Error().Err(err).Msg("cannot get instruction signer")
+		logger.Error().Err(err).Msgf("cannot get instruction signer for chain %d nonce %d", chainID, nonce)
 		return nil, false
 	}
 
 	// check tx authorization
 	if signerECDSA != ob.TSS().EVMAddress() {
-		logger.Error().Msgf("tx signer %s is not matching TSS address %s", signerECDSA, ob.TSS().EVMAddress())
+		logger.Error().Msgf("tx signer %s is not matching TSS, chain %d nonce %d", signerECDSA, chainID, nonce)
 		return nil, false
 	}
 
 	// check tx nonce
 	if txNonce != nonce {
-		logger.Error().Msgf("tx nonce %d is not matching cctx nonce %d", txNonce, nonce)
+		logger.Error().Msgf("tx nonce %d is not matching cctx, chain %d nonce %d", txNonce, chainID, nonce)
 		return nil, false
 	}
 

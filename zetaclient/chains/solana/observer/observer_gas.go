@@ -72,7 +72,7 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 // PostGasPrice posts gas price to zetacore
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// get current slot
-	slot, err := ob.solClient.GetSlot(context.Background(), rpc.CommitmentConfirmed)
+	slot, err := ob.solClient.GetSlot(ctx, rpc.CommitmentConfirmed)
 	if err != nil {
 		return errors.Wrap(err, "GetSlot error")
 	}
@@ -96,7 +96,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// there is no Ethereum-like gas price in Solana, we only post priority fee for now
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), 1, medianFee, slot)
 	if err != nil {
-		return errors.Wrap(err, "PostVoteGasPrice error")
+		return errors.Wrapf(err, "PostVoteGasPrice error for chain %d", ob.Chain().ChainId)
 	}
 
 	return nil

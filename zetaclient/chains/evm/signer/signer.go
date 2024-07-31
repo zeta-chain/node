@@ -136,7 +136,8 @@ func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
 
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(_ string) {
-	// do nothing for now
+	// Note: do nothing for now
+	// gateway address will be needed in the future contract architecture
 }
 
 // GetZetaConnectorAddress returns the zeta connector address
@@ -155,7 +156,8 @@ func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	// return empty string for now
+	// Note: return empty string for now
+	// gateway address will be needed in the future contract architecture
 	return ""
 }
 

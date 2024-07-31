@@ -100,7 +100,7 @@ func (signer *Signer) SignMsgWithdraw(
 	signer.Logger().Std.Info().Msgf("Key-sign succeed for chain %d nonce %d", chainID, nonce)
 
 	// attach the signature and return
-	return msg.WithSignature(signature), nil
+	return msg.SetSignature(signature), nil
 }
 
 // SignWithdrawTx signs the Solana gateway 'withdraw' transaction specified by 'msg'
@@ -110,11 +110,11 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contract.MsgWithdr
 	var inst solana.GenericInstruction
 	inst.DataBytes, err = borsh.Serialize(contract.WithdrawInstructionParams{
 		Discriminator: contract.DiscriminatorWithdraw(),
-		Amount:        msg.Amount,
+		Amount:        msg.Amount(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
-		Nonce:         msg.Nonce,
+		Nonce:         msg.Nonce(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
@@ -125,7 +125,7 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contract.MsgWithdr
 	var accountSlice []*solana.AccountMeta
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(signer.pda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(msg.To).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(msg.To()).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(signer.gatewayID))
 	inst.ProgID = signer.gatewayID
 	inst.AccountValues = accountSlice

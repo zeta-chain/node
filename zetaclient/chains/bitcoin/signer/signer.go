@@ -87,16 +87,14 @@ func NewSigner(
 	}, nil
 }
 
+// TODO: get rid of below four get/set functions for Bitcoin, as they are not needed in future
+// https://github.com/zeta-chain/node/issues/2532
 // SetZetaConnectorAddress does nothing for BTC
 func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
 }
 
 // SetERC20CustodyAddress does nothing for BTC
 func (signer *Signer) SetERC20CustodyAddress(_ ethcommon.Address) {
-}
-
-// SetGatewayAddress does nothing for BTC
-func (signer *Signer) SetGatewayAddress(_ string) {
 }
 
 // GetZetaConnectorAddress returns dummy address
@@ -107,6 +105,10 @@ func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
 // GetERC20CustodyAddress returns dummy address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.Address{}
+}
+
+// SetGatewayAddress does nothing for BTC
+func (signer *Signer) SetGatewayAddress(_ string) {
 }
 
 // GetGatewayAddress returns empty address
@@ -346,26 +348,25 @@ func (signer *Signer) TryProcessOutbound(
 	}()
 
 	// prepare logger
-	logger := signer.Logger().Std.With().
-		Str("OutboundID", outboundID).
-		Str("SendHash", cctx.Index).
-		Logger()
-
 	params := cctx.GetCurrentOutboundParam()
-	logger.Info().
-		Msgf("BTC TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+	logger := signer.Logger().Std.With().
+		Str("method", "TryProcessOutbound").
+		Int64("chain", signer.Chain().ChainId).
+		Uint64("nonce", params.TssNonce).
+		Str("cctx", cctx.Index).
+		Logger()
 
 	// support gas token only for Bitcoin outbound
 	coinType := cctx.InboundParams.CoinType
 	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
-		logger.Error().Msgf("BTC TryProcessOutbound: can only send BTC to a BTC network")
+		logger.Error().Msg("can only send BTC to a BTC network")
 		return
 	}
 
 	// convert chain observer to BTC observer
 	btcObserver, ok := chainObserver.(*observer.Observer)
 	if !ok {
-		logger.Error().Msgf("chain observer is not a bitcoin observer")
+		logger.Error().Msg("chain observer is not a bitcoin observer")
 		return
 	}
 
@@ -373,7 +374,7 @@ func (signer *Signer) TryProcessOutbound(
 	outboundTssNonce := params.TssNonce
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get signer address")
+		logger.Error().Err(err).Msg("cannot get signer address")
 		return
 	}
 
