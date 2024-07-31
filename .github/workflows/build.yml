@@ -7,12 +7,6 @@ on:
       - release/*
   merge_group:
   pull_request:
-    branches:
-      - "*"
-    types:
-      - synchronize
-      - opened
-      - reopened
 
 concurrency: 
   group: pr-testing-${{ github.head_ref || github.run_id }}
