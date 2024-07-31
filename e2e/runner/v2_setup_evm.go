@@ -70,16 +70,22 @@ func (r *E2ERunner) SetupEVMV2() {
 	)
 	require.NoError(r, err)
 
-	r.ERC20CustodyNewAddr = erc20CustodyNewAddr
-	r.ERC20CustodyNew = erc20CustodyNew
+	r.ERC20CustodyV2Addr = erc20CustodyNewAddr
+	r.ERC20CustodyV2 = erc20CustodyNew
 	r.Logger.Info(
-		"ERC20CustodyNew contract address: %s, tx hash: %s",
+		"ERC20CustodyV2 contract address: %s, tx hash: %s",
 		erc20CustodyNewAddr.Hex(),
 		txCustody.Hash().Hex(),
 	)
 
+	ensureTxReceipt(txCustody, "ERC20CustodyV2 deployment failed")
+
+	// set custody contract in gateway
+	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyNewAddr)
+	require.NoError(r, err)
+
 	// check contract deployment receipt
 	ensureTxReceipt(txDonation, "EVM donation tx failed")
-	ensureTxReceipt(txCustody, "ERC20CustodyNew deployment failed")
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
+	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 }

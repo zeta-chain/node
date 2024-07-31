@@ -228,11 +228,11 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	if c := conf.Contracts.EVM.ERC20CustodyNew; c != "" {
-		r.ERC20CustodyNewAddr, err = c.AsEVMAddress()
+		r.ERC20CustodyV2Addr, err = c.AsEVMAddress()
 		if err != nil {
-			return fmt.Errorf("invalid ERC20CustodyNewAddr: %w", err)
+			return fmt.Errorf("invalid ERC20CustodyV2Addr: %w", err)
 		}
-		r.ERC20CustodyNew, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyNewAddr, r.EVMClient)
+		r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyV2Addr, r.EVMClient)
 		if err != nil {
 			return err
 		}

@@ -138,10 +138,10 @@ type E2ERunner struct {
 	mutex         sync.Mutex
 
 	// evm v2
-	GatewayEVMAddr      ethcommon.Address
-	GatewayEVM          *gatewayevm.GatewayEVM
-	ERC20CustodyNewAddr ethcommon.Address
-	ERC20CustodyNew     *erc20custodyv2.ERC20Custody
+	GatewayEVMAddr     ethcommon.Address
+	GatewayEVM         *gatewayevm.GatewayEVM
+	ERC20CustodyV2Addr ethcommon.Address
+	ERC20CustodyV2     *erc20custodyv2.ERC20Custody
 
 	// zevm v2
 	GatewayZEVMAddr ethcommon.Address
@@ -298,8 +298,8 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	r.ERC20CustodyNewAddr = other.ERC20CustodyNewAddr
-	r.ERC20CustodyNew, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyNewAddr, r.EVMClient)
+	r.ERC20CustodyV2Addr = other.ERC20CustodyV2Addr
+	r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyV2Addr, r.EVMClient)
 	if err != nil {
 		return err
 	}
@@ -360,7 +360,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	r.Logger.Print(" --- 📜EVM v2 contracts ---")
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
-	r.Logger.Print("ERC20CustodyNew:%s", r.ERC20CustodyNewAddr.Hex())
+	r.Logger.Print("ERC20CustodyV2:%s", r.ERC20CustodyV2Addr.Hex())
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf
