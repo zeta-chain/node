@@ -24,6 +24,8 @@ service Msg {
       returns (MsgUpdateZRC20LiquidityCapResponse);
   rpc PauseZRC20(MsgPauseZRC20) returns (MsgPauseZRC20Response);
   rpc UnpauseZRC20(MsgUnpauseZRC20) returns (MsgUnpauseZRC20Response);
+  rpc UpdateGatewayContract(MsgUpdateGatewayContract)
+      returns (MsgUpdateGatewayContractResponse);
 }
 
 message MsgDeploySystemContracts { string creator = 1; }
@@ -110,3 +112,10 @@ message MsgUnpauseZRC20 {
 }
 
 message MsgUnpauseZRC20Response {}
+
+message MsgUpdateGatewayContract {
+  string creator = 1;
+  string new_gateway_contract_address = 2;
+}
+
+message MsgUpdateGatewayContractResponse {}
