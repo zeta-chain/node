@@ -261,7 +261,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
 	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
-	currentTss, err := zetacoreClient.GetCurrentTSS(ctx)
+	currentTss, err := zetacoreClient.GetTSS(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetCurrentTSS error")
 		return err

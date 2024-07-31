@@ -136,17 +136,7 @@ func (c *Client) GetBallot(
 	return resp, nil
 }
 
-// GetCurrentTSS returns the current TSS
-func (c *Client) GetCurrentTSS(ctx context.Context) (types.TSS, error) {
-	resp, err := c.client.observer.TSS(ctx, &types.QueryGetTSSRequest{})
-	if err != nil {
-		return types.TSS{}, errors.Wrap(err, "failed to get current tss")
-	}
-
-	return resp.TSS, nil
-}
-
-// GetEVMTSSAddress returns the EVM TSS address.
+// GetEVMTSSAddress returns the current EVM TSS address.
 func (c *Client) GetEVMTSSAddress(ctx context.Context) (string, error) {
 	resp, err := c.client.observer.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
 	if err != nil {
@@ -156,7 +146,7 @@ func (c *Client) GetEVMTSSAddress(ctx context.Context) (string, error) {
 	return resp.Eth, nil
 }
 
-// GetBTCTSSAddress returns the BTC TSS address
+// GetBTCTSSAddress returns the current BTC TSS address
 func (c *Client) GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error) {
 	in := &types.QueryGetTssAddressRequest{BitcoinChainId: chainID}
 
@@ -167,6 +157,7 @@ func (c *Client) GetBTCTSSAddress(ctx context.Context, chainID int64) (string, e
 	return resp.Btc, nil
 }
 
+// GetTSS returns the current TSS
 func (c *Client) GetTSS(ctx context.Context) (types.TSS, error) {
 	resp, err := c.client.observer.TSS(ctx, &types.QueryGetTSSRequest{})
 	if err != nil {
@@ -175,7 +166,7 @@ func (c *Client) GetTSS(ctx context.Context) (types.TSS, error) {
 	return resp.TSS, nil
 }
 
-// GetTSSHistory returns the TSS history
+// GetTSSHistory returns the historical list of TSS
 func (c *Client) GetTSSHistory(ctx context.Context) ([]types.TSS, error) {
 	resp, err := c.client.observer.TssHistory(ctx, &types.QueryTssHistoryRequest{})
 	if err != nil {

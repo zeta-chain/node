@@ -415,7 +415,7 @@ func (c *Client) UpdateAppContext(
 		return fmt.Errorf("failed to get keygen: %w", err)
 	}
 
-	tss, err := c.GetCurrentTSS(ctx)
+	tss, err := c.GetTSS(ctx)
 	if err != nil {
 		c.logger.Info().Err(err).Msg("Unable to fetch TSS from zetacore")
 		return fmt.Errorf("failed to get current tss: %w", err)
