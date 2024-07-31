@@ -41,6 +41,7 @@ const (
 	flagTestTSSMigration  = "test-tss-migration"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
+	flagTestV2            = "test-v2"
 )
 
 var (
@@ -73,6 +74,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
+	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
 
 	return cmd
 }
@@ -95,6 +97,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testV2            = must(cmd.Flags().GetBool(flagTestV2))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -324,6 +327,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testSolana {
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, e2etests.TestSolanaDepositName))
+	}
+	if testV2 {
+		eg.Go(v2TestRoutine(conf, deployerRunner, verbose))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
