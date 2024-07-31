@@ -399,15 +399,21 @@ func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppConte
 	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
 
 	// check and update chain params for each chain
-	for chainID := range chainParams {
-		cp := chainParams[chainID]
-		if err := observertypes.ValidateChainParams(cp); err != nil {
-			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
-			continue
-		}
+	// Note that we are EXCLUDING ZetaChain from the chainParams if it's present
+	for i := range chainParams {
+		cp := chainParams[i]
 
 		if !cp.IsSupported {
 			logger.Warn().Int64("chain.id", cp.ChainId).Msg("Skipping unsupported chain")
+			continue
+		}
+
+		if chains.IsZetaChain(cp.ChainId, nil) {
+			continue
+		}
+
+		if err := observertypes.ValidateChainParams(cp); err != nil {
+			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
 			continue
 		}
 

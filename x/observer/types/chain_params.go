@@ -57,7 +57,7 @@ func ValidateChainParams(params *ChainParams) error {
 	}
 
 	if chains.IsZetaChain(params.ChainId, nil) {
-		return fmt.Errorf("zeta chain cannot have observer chain parameters")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
 	}
 
 	if params.ConfirmationCount == 0 {

@@ -140,7 +140,8 @@ func (a *AppContext) Update(
 		return fmt.Errorf("no chains present")
 	case len(freshChainParams) == 0:
 		return fmt.Errorf("no chain params present")
-	case tssPubKey == "":
+	case tssPubKey == "" && a.currentTssPubKey != "":
+		// note that if we're doing a fresh start, we ALLOW an empty tssPubKey
 		return fmt.Errorf("tss pubkey is empty")
 	case len(additionalChains) > 0:
 		for _, c := range additionalChains {

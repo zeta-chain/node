@@ -145,7 +145,10 @@ func syncSignerMap(
 
 			addSigner(chainID, signer)
 		default:
-			logger.Std.Warn().Msgf("Unable to create signer for chain %d", chainID)
+			logger.Std.Warn().
+				Int64("signer.chain_id", chain.ID()).
+				Str("signer.chain_name", chain.RawChain().Name).
+				Msgf("Unable to create a signer")
 		}
 	}
 
@@ -230,7 +233,7 @@ func syncObserverMap(
 		var (
 			params    = chain.Params()
 			rawChain  = chain.RawChain()
-			chainName = rawChain.ChainName.String()
+			chainName = rawChain.Name
 		)
 
 		switch {
@@ -344,8 +347,10 @@ func syncObserverMap(
 
 			addObserver(chainID, solObserver)
 		default:
-			logger.Std.Warn().Msgf("Unable to create observer for chain %d", chainID)
-			continue
+			logger.Std.Warn().
+				Int64("observer.chain_id", chain.ID()).
+				Str("observer.chain_name", chain.RawChain().Name).
+				Msgf("Unable to create an observer")
 		}
 	}
 
